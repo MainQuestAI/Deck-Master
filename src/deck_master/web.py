@@ -548,13 +548,22 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
             "review_url": None,
             "view_status": "unavailable",
             "detail": "project has no current Document; run create first",
+            "ui": ui,
         }
     try:
         state = ensure_service(project_dir)
     except ServiceUnavailable as exc:
-        return {"review_url": None, "view_status": "unavailable", "detail": str(exc)}
+        return {"review_url": None, "view_status": "unavailable", "detail": str(exc), "ui": ui}
     except Exception as exc:  # noqa: BLE001 - spawn/health failures surface as a real reason
-        return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}"}
+        return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}", "ui": ui}
+    # same incomplete-install guard as the launcher: never point the browser
+    # at a /v2/ entry the installed static tree cannot serve
+    ui_available = ui != "v2" or (_static_dir() / "v2" / "index.html").is_file()
+    if not ui_available:
+        return {"review_url": state["url"], "view_status": "core_ready_ui_unavailable",
+                "detail": "the v2 workbench UI is not present in this installation; use the default entry",
+                "port": state["port"], "pid": state.get("pid"),
+                "reused": state.get("reused", False), "ui": ui}
     url = state["url"] + ("v2/" if ui == "v2" else "")
     if open_browser:
         opened = False

@@ -29,9 +29,9 @@
 
 ## B02：有效能力与主入口（已实施，切片见 evidence/b02-slice.json）
 
-保留 `/api/health.ui_capabilities` 作为server支持（单一常量 `web.UI_CAPABILITIES`）。`/api/project` 已增 `effective_actions`，每项 `action`、`supported`、`writable`、`reason_code`；响应同时携带 `project_format`、`minimum_writer`、`core_readers`、`core_writers`。动作族：`drafts`（个人journal，无需workbench.v3）与 `annotations/changes/candidates/content/inputs/styles/run_desk/exports/restoration`（文档动作，镜像 changes/annotation 服务的 workbench.v3 门槛）。指针级不可读（未来format/writer）时返回降级载荷：`read_status.reason_code` + 全部动作禁用，不使 /api/project 整体失败。历史视图由A根据fixed模式进一步禁写（`fixed_revision` 由前端按route组合，服务端不产生）；服务写接口仍独立验证，不信任前端disabled。
+保留 `/api/health.ui_capabilities` 作为server支持（单一常量 `web.UI_CAPABILITIES`）。`/api/project` 已增 `effective_actions`，每项 `action`、`supported`、`writable`、`reason_code`；响应同时携带 `project_format`、`minimum_writer`、`core_readers`、`core_writers`。动作族：`drafts`（个人journal，无需workbench.v3）、`annotations/changes/content/styles`（镜像各自服务的真实 workbench.v3 门槛，v1 格式禁用）、`candidates/inputs/run_desk/exports/restoration`（写路径当前无格式门，投影如实报告可写；端点补门缺口见 GAP-MATRIX G54，归 B07）。`reason_code` 是投影词汇表而非写端点的 error envelope 码（`sample_readonly` 与真实 403 码一致，其余为投影描述）。指针级不可读（未来format/writer）时返回降级载荷：`read_status.reason_code` + 全部动作禁用，不使 /api/project 整体失败。历史视图由A根据fixed模式进一步禁写（`fixed_revision` 由前端按route组合，服务端不产生）；服务写接口仍独立验证，不信任前端disabled。
 
-行为原因覆盖 `unsupported_project_format`、`reader_upgrade_required`、`writer_upgrade_required`、`sample_readonly`、`fixed_revision`；全部沿用既有错误族，无新码。`deck-master view --project … --open --ui v2` 已实施（`--ui` 不带 `--open` 报 invalid_input/退出码2；选项非法退出码2）；既有不带--ui行为保留；workbench现有入口复用，不固定端口，Skill 指向显式新入口。
+行为原因覆盖 `unsupported_project_format`、`reader_upgrade_required`、`writer_upgrade_required`、`sample_readonly`、`fixed_revision`；除 `sample_readonly` 对应真实 403 码外，其余为投影词汇表（真实写拒绝仍以其服务层 envelope 码为准）。`deck-master view --project … --open --ui v2` 已实施（`--ui` 不带 `--open` 报 invalid_input/退出码2；选项非法退出码2）；既有不带--ui行为保留；workbench现有入口复用，不固定端口，Skill 指向显式新入口。
 
 ## B03：Page/内容变更集候选与Task结果
 

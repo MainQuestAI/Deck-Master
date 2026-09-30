@@ -40,8 +40,11 @@ def context(project):
 CORE_READERS = ("deckmaster-current.v1", "deckmaster-current.v2")
 
 # (action, capability the serving core must advertise). "drafts" lives in the
-# personal journal and needs no workbench.v3 project; document actions mirror
-# the explicit workbench.v3 gate in changes/annotation/content services.
+# personal journal and needs no workbench.v3 project. FORMAT_GATED families
+# mirror the real workbench.v3 gates in annotation_service/changes/content_ops/
+# styles; the remaining document families have no format gate in their write
+# paths today, so the projection reports them truthfully as writable and the
+# missing endpoint gates are backfilled as gap G54 (not fixed from this card).
 PROJECT_ACTIONS = (
     ("drafts", "ui_draft.v1"),
     ("annotations", "annotations.v1"),
@@ -54,6 +57,7 @@ PROJECT_ACTIONS = (
     ("exports", "exports.v1"),
     ("restoration", "restoration.v1"),
 )
+FORMAT_GATED = frozenset({"annotations", "changes", "content", "styles"})
 
 
 def _capabilities(server_capabilities):
@@ -64,13 +68,14 @@ def _capabilities(server_capabilities):
 
 
 def _effective_actions(*, project_format, sample_readonly, server_capabilities=None):
-    """Project-level availability with the gate's own reason codes.
+    """Project-level availability, truthful to the real write gates.
 
-    Reason vocabulary (shared with the write paths, no new error family):
-    sample_readonly, unsupported_project_format, and - when the pointer itself
-    cannot be read by this core - reader_upgrade_required /
-    writer_upgrade_required. The historical-view reason fixed_revision is
-    composed by the UI from its route, never by the server.
+    reason_code is a projection vocabulary, not the endpoints' error-envelope
+    codes: sample_readonly matches the real 403 code, unsupported_project_format
+    describes the format gate the gated families really enforce, and the two
+    upgrade reasons mirror store.read_current's pointer refusals. The
+    historical-view reason fixed_revision is composed by the UI from its route,
+    never by the server.
     """
     capabilities = _capabilities(server_capabilities)
     actions = []
@@ -81,7 +86,7 @@ def _effective_actions(*, project_format, sample_readonly, server_capabilities=N
             writable = False
         elif sample_readonly:
             writable, reason = False, "sample_readonly"
-        elif action != "drafts" and project_format != "workbench.v3":
+        elif action in FORMAT_GATED and project_format != "workbench.v3":
             writable, reason = False, "unsupported_project_format"
         actions.append({"action": action, "supported": supported,
                         "writable": writable, "reason_code": reason})

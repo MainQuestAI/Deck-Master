@@ -16,6 +16,7 @@ from deck_master import changes, cli, service, ui_journal, workbench
 from deck_master.samples import create_sample
 from deck_master.store import SUPPORTED_WRITERS, Store
 from deck_master.web import UI_CAPABILITIES, WorkbenchServer, stop_service
+from test_workbench_services import auth, http
 
 SKILL = Path(__file__).resolve().parents[2] / "skills" / "deck-master" / "SKILL.md"
 
@@ -66,19 +67,45 @@ def test_effective_actions_modern_project(modern):
                for item in actions.values())
 
 
-def test_v1_format_disables_document_actions_but_not_drafts(v1_project):
+def test_v1_format_disables_only_real_gates_and_stays_truthful(v1_project):
     info = ui_journal.project_info(v1_project, server_capabilities=UI_CAPABILITIES)
     assert info["project_format"] == "deck_document.v1"
     actions = actions_by_name(info)
-    assert actions["drafts"]["writable"] is True
-    for name in ("annotations", "changes", "candidates", "content", "inputs",
-                 "styles", "run_desk", "exports", "restoration"):
+    # drafts (journal) and the ungated families stay writable: their write
+    # paths really accept v1 projects today, and the projection must not
+    # over-disable with a false reason (gap G54 tracks the missing gates)
+    for name in ("drafts", "candidates", "inputs", "run_desk", "exports", "restoration"):
+        assert actions[name]["writable"] is True and actions[name]["reason_code"] is None
+    # only these four mirror a real workbench.v3 gate in their services
+    for name in ("annotations", "changes", "content", "styles"):
         assert actions[name]["writable"] is False
         assert actions[name]["reason_code"] == "unsupported_project_format"
     # reading the projection must not upgrade or migrate the project in place
     pointer = json.loads((v1_project / ".deckmaster" / "current.json").read_text("utf-8"))
     assert pointer["format"] == "deckmaster-current.v1"
     assert Store(v1_project).load_document().get("compatibility") is None
+
+
+def test_v1_drafts_save_works_over_http_and_does_not_migrate(v1_project):
+    # the projection's one positive claim on v1 projects is backed by the real
+    # write path: a personal draft saves over HTTP without touching the
+    # pointer or the document's compatibility
+    server = WorkbenchServer(v1_project)
+    try:
+        url = server.start()
+        doc = Store(v1_project).load_document()
+        value = {"schema_version": "ui_draft.v1", "project_id": doc["project_id"],
+                 "project_identity": ui_journal.project_info(v1_project)["project_identity"],
+                 "draft_id": "d-v1", "target": {"scope": "project", "page_id": None, "layer": "notes"},
+                 "base_revision": doc["revision_id"], "base_ref": None,
+                 "content": {"text": "v1 项目上的个人草稿"}, "pending": None}
+        status, saved = http(url, "/api/drafts/save", {"draft": value}, headers=auth(url))
+        assert status == 200 and saved["status"] == "saved"
+        pointer = (v1_project / ".deckmaster" / "current.json").read_text("utf-8")
+        assert json.loads(pointer)["format"] == "deckmaster-current.v1"
+        assert Store(v1_project).load_document().get("compatibility") is None
+    finally:
+        server.stop()
 
 
 def test_v1_write_gate_is_unchanged(v1_project):

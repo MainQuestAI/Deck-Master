@@ -16,15 +16,8 @@
   "actions_contract": {
     "families": [
       "drafts(journal,无格式门槛)",
-      "annotations",
-      "changes",
-      "candidates",
-      "content",
-      "inputs",
-      "styles",
-      "run_desk",
-      "exports",
-      "restoration"
+      "annotations/changes/content/styles(真实 workbench.v3 门,v1 禁用)",
+      "candidates/inputs/run_desk/exports/restoration(写路径无格式门,如实可写;缺口 G54 归 B07)"
     ],
     "fields": [
       "action",
@@ -41,7 +34,8 @@
       ],
       "client_composed": [
         "fixed_revision（A按route组合，服务端不产生）"
-      ]
+      ],
+      "note": "reason_code 是投影词汇表；仅 sample_readonly 对应真实 403 码（评审 P3-1 修正）"
     },
     "degraded_payload": "指针级不可读时 read_status.reason_code + 全动作禁用，/api/project 仍 200；真实场景为运行中服务被独立 CLI writer 升级",
     "independent_gates": "写端点门槛不信任投影：v1 项目 changes.plan 仍按 'explicit workbench.v3' 拒绝（测试覆盖）"
@@ -50,14 +44,14 @@
     {
       "layer": "核心/HTTP",
       "commands": [
-        "PYTHONPATH=src python -m pytest tests/rebuild/test_entry_capabilities.py -q（11 passed）"
+        "PYTHONPATH=src python -m pytest tests/rebuild/test_entry_capabilities.py -q（12 passed）"
       ],
       "result": "pass"
     },
     {
       "layer": "回归",
       "commands": [
-        "PYTHONPATH=src python -m pytest tests/rebuild -q（929 passed）",
+        "PYTHONPATH=src python -m pytest tests/rebuild -q（930 passed）",
         "python -m ruff check（改动文件 All checks passed）"
       ],
       "result": "pass"
@@ -78,5 +72,20 @@
   ],
   "synthetic_evidence_only": true,
   "real_host_calls": 0,
-  "production_acceptance": false
+  "production_acceptance": false,
+  "review": {
+    "date": "2026-09-30",
+    "reviewer": "独立 code-review（ZCode code-reviewer 子代理，含 /tmp 合成项目实测）+ 人工复核",
+    "verdict": "可进入合并（无 P1）",
+    "findings_fixed": [
+      "P2-1 unsupported_project_format 收窄到有真实门槛的四个动作族（annotations/changes/content/styles）；其余文档族如实报告可写，端点补门回填 GAP-MATRIX G54（归 B07，不在本卡顺手改）",
+      "P2-2 新增 v1 项目 HTTP 层 /api/drafts/save 正向测试（200 saved + 指针/compatibility 不变）",
+      "P3-1 INTERFACES/evidence 的『无新码』表述修正为投影词汇表；P3-3 open_view 补 v2 静态缺失检查（core_ready_ui_unavailable，不开浏览器）；P3-5 早退载荷补 ui 键"
+    ],
+    "findings_noted_not_fixed": [
+      "P3-2 store.py SUPPORTED_WRITERS 抽常量超出卡内声明归属（行为等价、单一来源正确做法，已在卡内注明归属偏离）",
+      "P3-4 _pointer_gate 与 store.read_current 的指针读取语义分叉（safe_path/O_NOFOLLOW/2MB vs 跟随符号链接；方向为收紧）",
+      "P2-1 的端点补门属 G54/B07"
+    ]
+  }
 }
