@@ -99,7 +99,7 @@ Review works without a PPT and excludes internal source objects and prompts.
 Delivery checks the selected snapshot and refuses unresolved dimensions.
 Engineering retains source material, full prompts and recoverable history and
 is for internal use. Sanitized copies do not modify immutable original bytes.
-`history plan-restore --project … --revision-id … --base-revision …` previews
+`history plan-restore --project … --revision … --base-revision …` previews
 restoration; `history commit-restore --project … --plan-id … --base-revision …
 --operation-id …` creates a new revision while retaining execution and stop facts.
 
