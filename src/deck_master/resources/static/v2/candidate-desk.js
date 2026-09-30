@@ -3,9 +3,10 @@ import {el, button, heading, empty, modal, version} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {imageView} from './images.js';
 import {routeHash} from './routes.js';
+import {diffView} from './text-diff.js';
 import {openCandidate} from './trial-actions.js';
 
-const stageName = stage => stage === 'blueprint' ? '原图' : 'SVG';
+const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content' ? '逐页稿' : 'SVG';
 const clock = value => new Date(value).toLocaleString('zh-CN', {hour12: false});
 function operationDraft(app) {
   app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
@@ -29,26 +30,32 @@ function blocked(app, busy) { return busy || app.readonly || Boolean(app.busines
 
 export function candidateDesk(app, data) {
   if (!app.health.ui_capabilities?.includes('candidates.v1')) return empty('核心需要升级', '候选读取与采用需要匹配的核心版本。');
-  const stage = app.route.layer === 'original_image' ? 'blueprint' : 'svg';
+  const stage = app.route.layer === 'original_image' ? 'blueprint' : app.route.layer === 'content' ? 'content' : 'svg';
   const pageNumber = app.summary.pages.findIndex(page => page.page_id === data.page_id) + 1;
   const root = el('div', {class: 'candidate-desk stack'}), title = heading(`第 ${pageNumber} 页 · ${stageName(stage)}候选`, '当前采用与候选固定比较；参考原图作为辅助。');
   const select = el('select', {'aria-label': '选择本页候选'}), status = el('div', {role: 'status', class: 'candidate-state'});
   const columns = el('div', {class: 'candidate-columns'}), sources = el('div', {class: 'candidate-reference-row'}), evidence = el('div'), impact = el('div', {class: 'candidate-impact stack'});
   const draft = operationDraft(app);
-  let selected, live, list = [], disposed = false, busy = false, polling = false, serial = 0, currentPlan = null, planInvalid = false, lastSync = null;
+  let selected, live, list = [], disposed = false, busy = false, polling = false, serial = 0, currentPlan = null, planInvalid = false, lastSync = null, keepBusy = false;
   const releases = [], auxReleases = [], modalReleases = [];
   const choosePlan = button('预览采用这个候选', planAdoption, false), adopt = button('采用这个候选', adoptSelected, true, {disabled: true});
-  const keep = button('保留当前，返回本页', () => app.go({candidate_id: null}));
+  const keep = button('保留当前', keepCurrent);
+  const reopen = button('重新打开候选', reopenCandidate, false, {hidden: true});
   const retry = button('回本页调整并再试', () => app.go({candidate_id: null, revision: live?.revision_id || app.route.revision}));
   root.append(title, el('div', {class: 'toolbar'}, el('label', {}, '候选 ', select), button('刷新候选与当前状态', refresh)), status, columns, sources, evidence,
-    el('div', {class: 'row wrap'}, choosePlan, adopt, keep, retry), impact, draft);
+    el('div', {class: 'row wrap'}, choosePlan, adopt, keep, reopen, retry), impact, draft);
   function controls() {
     select.disabled = busy;
     const unavailable = !selected || selected.candidate.page_id !== data.page_id;
     const changed = live?.generation_basis.status === 'changed';
     const alreadyCurrent = selected && canonical(live?.adoption_target.current_ref) === canonical(selected.candidate.result_ref);
-    choosePlan.disabled = blocked(app, busy) || unavailable || changed || alreadyCurrent;
-    adopt.disabled = blocked(app, busy) || !currentPlan || planInvalid || changed || alreadyCurrent;
+    const kept = live?.decision?.state === 'keep_current';
+    keep.hidden = Boolean(kept);
+    reopen.hidden = !kept;
+    reopen.disabled = blocked(app, busy) || keepBusy;
+    keep.disabled = blocked(app, busy) || keepBusy || alreadyCurrent;
+    choosePlan.disabled = blocked(app, busy) || unavailable || changed || alreadyCurrent || kept;
+    adopt.disabled = blocked(app, busy) || !currentPlan || planInvalid || changed || alreadyCurrent || kept;
     choosePlan.textContent = currentPlan && planInvalid ? '重新预览采用影响' : '预览采用这个候选';
   }
   function renderState() {
@@ -58,14 +65,26 @@ export function candidateDesk(app, data) {
     status.replaceChildren(el('div', {class: 'stack'}, el('strong', {}, current ? '这个候选已是当前采用' : live?.generation_basis.status === 'changed' ? '生成依据已变化，暂不能采用' : '候选可比较，采用前请检查事实与数字'),
       el('span', {}, ` · ${candidate.page_id} · ${stageName(candidate.stage)} · 返回 ${clock(candidate.created_at)}`),
       live?.generation_basis.status === 'changed' && el('p', {class: 'field-error'}, `Page、设计、输入或原图依据已变化（${live.generation_basis.changed_fields.join('、')}）。固定比较仍保留；请按新依据重新试作。`),
+      live?.decision?.state === 'keep_current' && el('p', {class: 'status ok'}, `已保留当前（决定 ${version(live.decision.decision_ref?.sha256)} · ${live.decision.decided_at ? clock(live.decision.decided_at) : ''}）。候选与比较保留，可随时重新打开。`),
       live?.adoption_target.status === 'changed' && !current && el('p', {}, '当前采用产物已更新。这里仍显示原固定比较，重新预览后才能决定是否覆盖新的采用目标。'),
       planInvalid && el('p', {class: 'field-error'}, '项目版本已前进，旧采用计划已禁用。请重新预览；不会重新生成候选。'),
       candidate.status === 'available' && live?.adopted_revisions.length > 0 && el('p', {class: 'muted'}, '曾采用到：' + live.adopted_revisions.map(version).join('、')),
       lastSync && el('p', {class: 'muted'}, '最后同步：' + lastSync.toLocaleTimeString('zh-CN', {hour12: false}))));
     controls();
   }
-  function drawColumns(leftStage, leftRevision, label = '当前采用（原固定基准）') {
+  function drawColumns(leftStage, leftRevision, label = '当前采用（原固定基准）', leftPage = null) {
     releases.splice(0).forEach(fn => fn());
+    if (selected.candidate.result_kind === 'page') {
+      // G18：正文候选左右差异；不伪造图片预览。左=当前逐页稿正文，右=候选 Page 正文。
+      const candidatePage = selected.page || {};
+      columns.replaceChildren(el('section', {class: 'candidate-column', 'data-side': 'current', 'data-revision': leftRevision},
+        el('h2', {}, label), el('p', {class: 'muted'}, version(leftRevision)),
+        diffView(leftPage?.customer_visible?.title || '（当前正文暂不可读）', '', '当前正文', '（空）')),
+        el('section', {class: 'candidate-column', 'data-side': 'candidate', 'data-candidate-id': selected.candidate_id},
+          el('h2', {}, '所选候选 · 正文'), el('p', {class: 'muted'}, `${clock(selected.candidate.created_at)}`),
+          diffView(candidatePage.customer_visible?.title || '（候选正文暂不可读）', '', '候选正文', '（空）')));
+      return;
+    }
     columns.replaceChildren(el('section', {class: 'candidate-column', 'data-side': 'current', 'data-revision': leftRevision},
       el('h2', {}, label), el('p', {class: 'muted'}, version(leftRevision)), picture(app, leftStage, '固定当前采用', releases)),
       el('section', {class: 'candidate-column', 'data-side': 'candidate', 'data-candidate-id': selected.candidate_id},
@@ -111,10 +130,11 @@ export function candidateDesk(app, data) {
         get('/api/pages/' + encodeURIComponent(data.page_id) + '/lineage' + revisionQuery(value.candidate.base_revision)),
         value.attempt ? get('/api/attempts/' + encodeURIComponent(value.attempt.attempt_id) + revisionQuery(value.revision_id)) : Promise.resolve(null)]);
       if (disposed || token !== serial || location.hash !== routeAtStart) return;
-      if (canonical(base.stages[stage].ref) !== canonical(value.candidate.target_ref)) throw new Error('固定采用目标与候选记录不一致，保留旧比较。');
+      if (value.candidate.result_kind !== 'page' && canonical(base.stages[stage].ref) !== canonical(value.candidate.target_ref)) throw new Error('固定采用目标与候选记录不一致，保留旧比较。');
       selected = value; live = value; lastSync = new Date(); select.value = id;
       root.dataset.candidateId = id; app.route.candidate_id = id; history.replaceState(null, '', routeHash(app.info, app.route));
-      drawColumns(base.stages[stage], base.revision_id); drawEvidence(attempt, base); impact.replaceChildren(); renderState();
+      const currentDoc = value.candidate.result_kind === 'page' ? await get('/api/pages/' + encodeURIComponent(data.page_id) + '/lineage' + revisionQuery(app.route.revision)) : null;
+      drawColumns(base.stages[stage], base.revision_id, undefined, currentDoc?.page); drawEvidence(attempt, base); impact.replaceChildren(); renderState();
     } catch (error) { if (!disposed && token === serial) { impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || ''; } }
     finally { if (token === serial) { busy = false; if (!disposed) controls(); } }
   }
@@ -135,6 +155,36 @@ export function candidateDesk(app, data) {
       renderState();
     } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error) + ' 已读的固定比较仍保留。')); }
     finally { polling = false; }
+  }
+  async function keepCurrent() {
+    if (!selected || busy || keepBusy) return; keepBusy = true; busy = true; controls();
+    try {
+      await app.business.available();
+      const latest = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
+      const input = {schema_version: 'candidate_decision.v1', project_id: app.info.project_id,
+                     base_revision: latest.revision_id, candidate_id: selected.candidate_id,
+                     decision: 'keep_current', expected_decision_ref: latest.decision?.decision_ref || null};
+      await app.business.submit(app.editor, 'candidates.decision', {input, base_revision: latest.revision_id}, input, async () => {
+        live = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
+        renderState();
+      });
+    } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); }
+    finally { keepBusy = false; busy = false; if (!disposed) controls(); }
+  }
+  async function reopenCandidate() {
+    if (!selected || busy || keepBusy) return; keepBusy = true; busy = true; controls();
+    try {
+      await app.business.available();
+      const latest = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
+      const input = {schema_version: 'candidate_decision.v1', project_id: app.info.project_id,
+                     base_revision: latest.revision_id, candidate_id: selected.candidate_id,
+                     decision: 'reopen', expected_decision_ref: latest.decision?.decision_ref || null};
+      await app.business.submit(app.editor, 'candidates.decision', {input, base_revision: latest.revision_id}, input, async () => {
+        live = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
+        renderState();
+      });
+    } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); }
+    finally { keepBusy = false; busy = false; if (!disposed) controls(); }
   }
   async function planAdoption() {
     if (!selected || busy) return; busy = true; controls(); const id = selected.candidate_id;
@@ -217,7 +267,7 @@ export function candidateBatch(app) {
       });
       return el('article', {class: 'candidate-batch-row', 'data-candidate-id': id}, el('label', {}, input,
         el('span', {}, `${record.page_id} · ${stageName(record.stage)}候选 ${index + 1}`)),
-        el('p', {class: 'muted'}, `${clock(record.created_at)} · ${row.generation_basis.status === 'changed' ? '依据已变化' : canonical(row.adoption_target.current_ref) === canonical(record.result_ref) ? '当前采用' : row.status === 'adopted' ? '曾采用' : '待决定'}`),
+        el('p', {class: 'muted'}, `${clock(record.created_at)} · ${row.generation_basis.status === 'changed' ? '依据已变化' : canonical(row.adoption_target.current_ref) === canonical(record.result_ref) ? '当前采用' : row.status === 'adopted' ? '曾采用' : row.decision?.state === 'keep_current' ? '已保留当前' : '待决定'}`),
         button('比较这个候选', () => openCandidate(app, record, revision)));
     }));
     if (!records.length) rows.append(el('p', {class: 'muted'}, '还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务仍在下方交接面板。'));

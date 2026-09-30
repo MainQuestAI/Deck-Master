@@ -1,5 +1,5 @@
 import {cancelRecovery} from './run-recovery.js';
-import {get, readableError, revisionQuery, fileURL} from './api.js';
+import {get, post, readableError, revisionQuery, fileURL} from './api.js';
 import {el, button, empty, version, modal, loading, errorNote, disabledReason} from './dom.js';
 
 const names = {compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
@@ -7,6 +7,44 @@ const statuses = {queued: '等待执行', awaiting_host: '待交接', running: '
 const actions = {handoff: '需要交接', verify_unknown_call: '核实未知调用', verify_execution: '核实原执行', inspect_failure: '查看失败原因', replan: '按当前依据重新计划', compare_candidates: '候选待决定', review_results: '结果待阅读'};
 const seenKey = task => JSON.stringify([task.task_id, task.result_refs?.map(ref => ref.sha256)]);
 const clock = value => value ? new Date(value).toLocaleString('zh-CN', {hour12: false}) : '未记录';
+
+// B05（INTERFACES 个人状态清理）：只读计划先行，确认后按同 etag 清理；
+// 备份可下载；任务/候选/调用事实不在范围（服务端强制，UI 如实转述）。
+function personalClearPanel(app) {
+  const notice = el('p', {class: 'muted', role: 'status'});
+  const scopeView = el('div', {class: 'stack'});
+  let plan = null, keepBusy = false;
+  const planButton = button('生成清理计划', async () => {
+    if (keepBusy) return; keepBusy = true; planButton.disabled = true; scopeView.replaceChildren();
+    try {
+      const current = await get('/api/view/summary');
+      plan = await post('/api/ui-state/plan-clear', {input: {project_id: current.project_id, scope: 'current_project',
+                                                             draft_ids: 'all', reading_preferences: true}});
+      scopeView.replaceChildren(
+        el('p', {}, `将清理 ${plan.items.length} 项：${plan.items.map(item => ({draft: '草稿', gallery_state: '画廊选择', reading_position: '阅读位置'})[item.kind]).join('、') || '无'}；恢复备份将保存在本机。`),
+        plan.blockers.length && el('p', {class: 'field-error'}, `${plan.blockers.length} 项暂不清理（未确认的提交）：请先用 operations show 核对原 operation。`),
+        plan.kept_out.length && el('p', {class: 'muted'}, `损伤保留：${plan.kept_out.join('；')}`),
+        el('p', {class: 'muted'}, '任务、候选、调用记录与项目文件不在清理范围。'));
+      for (const blocker of plan.blockers) notice.textContent = '';
+    } catch (error) { notice.textContent = readableError(error); }
+    finally { keepBusy = false; commit.disabled = !plan || !plan.items.length; }
+  });
+  const commit = button('确认清理并保留备份', async () => {
+    if (keepBusy || !plan) return; keepBusy = true; commit.disabled = true;
+    try {
+      const result = await post('/api/ui-state/commit-clear', {operation_id: crypto.randomUUID(),
+        input: {project_id: plan.project_id, scope: 'current_project', draft_ids: 'all', reading_preferences: true},
+        plan_id: plan.plan_id, manifest_digest: plan.manifest_digest});
+      notice.textContent = `已清理 ${result.cleared.length} 项；恢复备份在本机 ${result.backup_ref}。任务与候选未受影响。`;
+      scopeView.replaceChildren();
+      plan = null;
+    } catch (error) { notice.textContent = readableError(error) + ' 未清理任何对象。'; }
+    finally { keepBusy = false; planButton.disabled = false; }
+  }, true, {disabled: true});
+  return el('details', {class: 'panel personal-clear'}, el('summary', {}, '清理本机个人状态（草稿与阅读设置）'),
+    el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。'),
+      el('div', {class: 'row wrap'}, planButton, commit), scopeView, notice));
+}
 
 export function runDesk(app, data) {
   const recovery = cancelRecovery(app);
@@ -22,7 +60,8 @@ export function runDesk(app, data) {
   let pinned = app.route.revision, live = !app.historical, pendingRefresh = false, choiceMade = false;
   root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), button('核实最新执行状态', () => { choiceMade = true; live = true; state.offset = 0; persist(); read(); })),
     el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '当前执行状态与顶栏的页面阅读版本分开。正常处理中无需你操作；查看结果不代表采用或质量通过。'),
-      el('div', {class: 'row wrap run-filters'}, group, status, el('label', {}, attention, '只看需我处理')), notice, detail, rows, pager));
+      el('div', {class: 'row wrap run-filters'}, group, status, el('label', {}, attention, '只看需我处理')), notice, detail, rows, pager),
+    personalClearPanel(app));
   function persist() {
     const editor = app.editor;
     if (!editor || editor.readonly || editor.disposed || !editor.draft) return;
