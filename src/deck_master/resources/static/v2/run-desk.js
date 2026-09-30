@@ -12,7 +12,7 @@ export function runDesk(app, data) {
   const recovery = cancelRecovery(app);
   const root = el('section', {class: 'panel run-desk', 'aria-label': '运行记录'});
   const rows = el('div', {class: 'run-rows stack'}), pager = el('div', {class: 'row wrap run-pagination'});
-  const notice = el('div', {role: 'status', class: 'muted run-notice'});
+  const notice = el('div', {class: 'muted run-notice'});
   const detail = el('div', {class: 'run-detail stack'});
   const group = el('select', {'aria-label': '按修改组筛选'}), status = el('select', {'aria-label': '按执行状态筛选'}, el('option', {value: ''}, '所有执行状态'),
     Object.entries(statuses).map(([key, label]) => el('option', {value: key}, label)));
@@ -35,6 +35,7 @@ export function runDesk(app, data) {
   function render() {
     group.replaceChildren(el('option', {value: ''}, '所有修改组'), ...page.groups.filter(item => item.change_id).map(item =>
       el('option', {value: item.change_id}, `${item.change_id} · ${item.completed_count}/${item.total_count} 项`)));
+    if (state.group && !page.groups.some(item => item.change_id === state.group)) state.group = '';
     group.value = state.group; status.value = state.status; attention.checked = state.attention;
     notice.textContent = `${live ? '当前执行状态' : '固定执行记录'} · ${version(page.revision_id)} · 共 ${page.pagination.total} 项`;
     const tasks = page.tasks.filter(task => !state.attention || todo(task).length);
@@ -86,7 +87,7 @@ export function runDesk(app, data) {
         app.readonly ? '当前视图只读，不能取消任务。' : recovery.sending.has(task.task_id) ? '取消请求已发送，等待核实结果。' : '')),
       el('div', {class: 'stack'}, resultLinks),
       task.result_refs.length > 0 && !task.candidate_refs.length && button(state.seen.includes(seenKey(task)) ? '已标记读过这些结果' : '标记这些结果已读', () => {
-        state.seen = [...new Set([...state.seen, seenKey(task)])].slice(-500); persist(); render();
+        choiceMade = true; state.seen = [...new Set([...state.seen, seenKey(task)])].slice(-500); persist(); render();
       }, false, {disabled: app.readonly || state.seen.includes(seenKey(task))}),
       el('details', {}, el('summary', {}, '请求、Attempt 与调用额度'),
         el('div', {class: 'stack'}, selected.links.generation_requests.map(link => button(link.request_id, () => showEvidence('requests', link.request_id, revision))),
@@ -110,7 +111,8 @@ export function runDesk(app, data) {
       if (disposed || token !== serial) return;
       page = value; selected = nextDetail; loaded = true; render();
     } catch (error) {
-      if (!disposed) notice.replaceChildren(errorBox({...error.details, message: readableError(error)}), button('重试读取', () => read()));
+      if (!disposed) notice.replaceChildren(errorBox({...error.details, message: readableError(error)}),
+        button('重试读取', () => { notice.replaceChildren(loading(live ? '正在读取当前执行状态…' : '正在读取固定执行记录…')); read(); }));
     } finally { busy = false; if (pendingRefresh && !disposed) { pendingRefresh = false; read(); } }
   }
   for (const input of [group, status, attention]) input.addEventListener('change', () => {

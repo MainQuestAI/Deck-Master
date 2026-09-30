@@ -51,6 +51,17 @@ PYTHONPATH=src pytest tests/rebuild -q                                          
 - G02 roving→Tab、G12 画廊焦点归 A03/A04，未在本卡顺带修改。
 - 真实制作工具与最终安装层不在本卡闸门（见 EXECUTION）。
 
+## 独立评审与修复（2026-09-30 追加）
+
+由独立 code-review 子代理评审 + 人工复核，结论**可进入合并评审**（无 P1）。已修复：
+
+- **P2** `disabledReason` 不可见模式不再写 `aria-describedby`（此前引用未挂载节点，属悬空引用；本文件早前"aria-describedby -> reason-*"的记录口径一并更正——该模式实际只有 title）。
+- **P2** “标记这些结果已读”现在置位 `choiceMade`，慢草稿水合不会回滚用户的已读标记。
+- **P2** `.download-link` 点击目标 40px → 44px。
+- **P3** run-notice 去掉外层 `role=status`（loading/errorNote 子组件自带 live 语义）；`sortHeading` 增加 direction 白名单；hydrate 恢复的失效修改组重置为“所有修改组”；重试读取先显示加载提示；`.nav button` 颜色交还设计覆盖层。
+
+未修复仅记录：runs 面无 DraftEditor（candidateBatch 早退）时 run-desk 持久化为 no-op，属候选桌结构性问题，A06/A07 消费时处理。
+
 ## 附录：浏览器 fixture 脚本
 
 全文见 [a01-browser-fixture.py](a01-browser-fixture.py)（复用 `tests/rebuild/test_candidates.py` 的合成任务/结果助手：`create_sample(page_count=3, readonly=False)` + 32 次 dispatch + 5 次 task_start + 1 次 SVG 结果接受，`WorkbenchServer` 输出真实 HTTP API；运行方式 `PYTHONPATH=src python a01-browser-fixture.py`，stdin 保持打开即服务存活）。

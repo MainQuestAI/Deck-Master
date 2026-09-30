@@ -36,9 +36,15 @@
     ]
   },
   "browser_verification": {
-    "viewports": ["1280x800", "1440x900"],
+    "viewports": [
+      "1280x800",
+      "1440x900"
+    ],
     "ac01": {
-      "buttons_under_44px": {"1280x800": "0 of 59 visible", "1440x900": "0 of 59 visible"},
+      "buttons_under_44px": {
+        "1280x800": "0 of 59 visible",
+        "1440x900": "0 of 59 visible"
+      },
       "controls_under_44px": "0",
       "computed": {
         "primary_button": "background rgb(13,13,13), color rgb(255,255,255), min-height 44px, radius 12px",
@@ -58,7 +64,7 @@
       "loading": "run desk shows 正在读取当前执行状态… during an in-flight read while the previous 30 rows stay visible",
       "empty_state": "status filter=failed -> 没有匹配的运行记录 + guidance + 阅读内容/查看整稿 actions",
       "partial_error": "aborted /api/tasks -> '本机服务暂时无法连接，已读内容与本机输入仍保留。' + docs/agent-recovery-playbook.md#run-desk-recovery + 重试读取 button; rows kept; retry recovers to 共 33 项",
-      "disabled_reason_invisible": "pagination 上一页任务 on page 1: title 已在第一页。 + aria-describedby -> reason-*",
+      "disabled_reason_invisible": "pagination 上一页任务 on page 1: title 已在第一页。 (invisible mode intentionally keeps title only; the earlier aria-describedby claim was corrected in review - the note node is not mounted in that mode)",
       "disabled_reason_visible": "historical revision task detail: cancel button disabled with visible 当前视图只读，不能取消任务。 + aria-describedby + title",
       "sample_identity": "banner 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。 + sidebar 合成验证项目 label + 历史版本 · 只读 banner",
       "mock_actions_in_production": "grep over src/deck_master/resources/static/v2 found no 模拟/mock/initialArtifact/task-claim; simulated adopt/return/failure controls exist only in docs/design/webui-opendesign-20260930 prototype which stays design reference"
@@ -86,5 +92,25 @@
     "aria-sort as product behavior lands with A03 (matrix) / A07 (run list); A01 delivers the shared component only",
     "PR66 remains OPEN; its W12 install/evidence files are intentionally not merged",
     "G02 roving-grid -> Tab conversion and G12 gallery roving focus stay with A03/A04 per gap matrix"
-  ]
+  ],
+  "review": {
+    "date": "2026-09-30",
+    "reviewer": "独立 code-review（ZCode code-reviewer 子代理）+ 人工复核",
+    "verdict": "可进入合并评审",
+    "findings_fixed": [
+      "P2-1 disabledReason 不可见模式悬空 aria-describedby：现在仅保留 title，不再引用未挂载节点",
+      "P2-2 标记这些结果已读 未置位 choiceMade：慢水合不再回滚用户的已读标记",
+      "P2-3 .download-link 40px -> 44px（链接型主动作也按点击目标规范）",
+      "P3 notice 去掉外层 role=status（子组件 loading/errorNote 自带 live 语义，避免嵌套双读）",
+      "P3 sortHeading 增加 direction 白名单校验",
+      "P3 hydrate 恢复的 group 失效时重置为所有修改组，不再带旧 change_id 查询",
+      "P3 重试读取先显示加载提示",
+      "P3 .nav button 移除 color 覆盖，交还设计覆盖层的 fg-2"
+    ],
+    "findings_noted_not_fixed": [
+      "runs 面无 DraftEditor 时 persist() no-op（candidateBatch 早退路径，属候选桌结构，A06/A07 消费时处理）",
+      "verify 单原因等信息密度问题不适用于 A 线"
+    ]
+  },
+  "head_after_review_fixes": "见本分支评审修复提交（36deca6 之上）"
 }

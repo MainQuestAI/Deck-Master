@@ -71,18 +71,21 @@ export function errorNote({what, kept = '', next = '', ref = ''}) {
   if (ref) node.append(el('code', {class: 'muted'}, ref));
   return node;
 }
-// 禁用控件必须给出原因；可见原因同时作为可访问描述，不可见时至少保留 title。
+// 禁用控件必须给出原因；可见原因同时作为可访问描述，不可见时只保留 title（不引用未挂载的节点）。
 export function disabledReason(control, reason, {visible = true} = {}) {
   if (!reason) return control;
+  control.title = reason;
+  if (!visible) return control;
   const note = el('p', {class: 'disabled-reason muted', id: `reason-${crypto.randomUUID()}`}, reason);
   control.setAttribute('aria-describedby', [control.getAttribute('aria-describedby'), note.id].filter(Boolean).join(' '));
-  control.title = reason;
-  return visible ? el('div', {class: 'control-reason'}, control, note) : control;
+  return el('div', {class: 'control-reason'}, control, note);
 }
 // 表头排序基础组件（设计系统第 07 节）：scope 声明列，排序列声明 aria-sort，控件保持普通 Tab 顺序。
 export function sortHeading(label, direction, onToggle) {
+  if (!['ascending', 'descending', 'none', null, undefined].includes(direction)) throw new Error('Unknown sort direction: ' + direction);
+  const sorted = direction === 'ascending' || direction === 'descending';
   const state = direction === 'ascending' ? '升序' : direction === 'descending' ? '降序' : '未排序';
-  return el('th', {scope: 'col', ...(direction ? {'aria-sort': direction} : {})},
+  return el('th', {scope: 'col', ...(sorted ? {'aria-sort': direction} : {})},
     button(`${label} · ${state}`, onToggle, false, {class: 'quiet'}));
 }
 export function downloadJSON(value, name) {
