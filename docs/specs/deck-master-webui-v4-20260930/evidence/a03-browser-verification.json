@@ -1,0 +1,52 @@
+{
+  "card": "A03",
+  "recorded_at": "2026-09-30T22:40:00+08:00",
+  "base": "931f19c（origin/main，含 A01/B01/B02/A02）",
+  "branch": "codex/webui-a-implementation",
+  "environment": {
+    "worktree": "/Users/dingcheng/.codex/worktrees/webui-a/Deck-Master",
+    "browser": "Playwright Chromium via playwright-cli, session a03, 1440x900",
+    "service": "真实 WorkbenchServer + 24 页混合阶段合成项目（待交接任务/未知调用任务/待决候选/未协调 brief/缺层），无 mock"
+  },
+  "changed_files": [
+    "src/deck_master/resources/static/v2/overview.js（新增：待办面板消费 B01 next_actions；8 列矩阵——选择/页面(排序)/逐页稿/提示词/原图/SVG/PPT/下一步；筛选/搜索/章节行/批量选择；异步读取 /api/content-plan 章节投影）",
+    "src/deck_master/resources/static/v2/views.js（移除旧 overview 与 roving keydown 网格，改为再导出）",
+    "src/deck_master/resources/static/v2/style.css（追加设计尾部 31 行——A01 时预留的矩阵/待办样式；现与收讫设计 style.css 逐字节一致）",
+    "src/deck_master/resources/static/v2/workbench.css（矩阵规则对齐 8 列结构：选择列 44px、移除旧 5 列宽度/内边距覆盖、小屏 min-width 820px）"
+  ],
+  "browser_verification": {
+    "ac01": {
+      "baseline": "/api/view/summary 投影：6 动作（verify_execution p01 / handoff p01 / compare_candidates p01 / reconcile_inputs 全项目 / prepare_stage 24页缺层 / review_results），attention 共 27 项",
+      "todos_match": "待办面板优先项=1 页执行待核实（原因：任务记录了未知调用…；meta 第 p01 页）+ 接下来 5 类事项（1 页制作任务待交接 / 1 页候选待决定 / 输入待协调 / 24 页产物待补齐 / 结果待阅读）——数量、原因、顺序与 B01 投影逐项一致",
+      "no_sample_conclusions": "页面全文不含 风格偏离/风格待校准 等无证据结论（DOM 断言）",
+      "links": "优先项与各行按钮按 kind 映射真实路由（verify/handoff/review→runs，compare→runs，reconcile→content，prepare/refresh→page+layer）"
+    },
+    "ac02": {
+      "matrix": "24 行 + 1 章节行（异步 content-plan 投影）；表头 8 列含 选择/页面·升序(aria-sort=ascending，A01 sortHeading 组件首次消费)/逐页稿/提示词/原图/SVG/PPT/下一步；计数 24 / 24 页",
+      "search": "p05→1/24 一行；zzz→没有符合条件的页面 空态 + 清除筛选恢复 24/24（修复了清除后计数 0/24 的早退缺陷）；标题关键词同样命中",
+      "filter": "只看需要处理按钮显示实时数量；本 fixture 全部 24 页有待办（提示词缺失即计），排除路径由代码逻辑覆盖（filter === 'all' || needsWork）",
+      "sort": "表头点击翻转 aria-sort=descending，首行=最后一页、末行=第一页；排序保留选择（仅筛选/搜索清空）",
+      "selection": "行选择→已选择 2 页 + 表头半选态；表头全选（搜索 p0 范围内 9 行）→已选择 9 页；切换筛选/修改搜索均清空为 未选择页面；清除选择可用；批量动作=用所选页开始风格校准（所选页均有原图时可用）",
+      "keyboard": "普通 Tab 顺序（view-title→主动作→skip→五工作面导航→…），overview.js 无 roving tabindex/无方向键网格（G02 关闭）"
+    },
+    "ac03": {
+      "historical_fixed": "旧修订（24 页、0 原图的早期状态）标题与矩阵显示该修订事实（R d09c0e93 · 0 页已有原图），不随当前漂移；风格批量按钮禁用并附title 当前视图只读，不能开始风格校准",
+      "no_business_writes": "历史视图资源请求仅 thumbnails/GET、/api/history、/api/session（读），无任何业务写 POST",
+      "thirty_second_observation": "待验：本轮无真实受试者在场观察（EXECUTION：没有受试者观察时保持待验）；界面结构已按可30秒理解组织（优先待办面板+矩阵计数）"
+    },
+    "defect_found_and_fixed": "空态 清除筛选 后计数显示 0/24（setFilter('all') 在当前已是 all 时早退未重渲染）——修复为直接置状态并 render，复验恢复 24/24",
+    "screenshots": ["output/playwright/a03/ac01-overview-todos-matrix-1440.png"],
+    "console": "0 errors / 0 warnings"
+  },
+  "boundaries": [
+    "批量生成请求（为所选缺图页保存请求）属 A05/G21 范围，本卡只交付选择机制与既有的风格校准批量入口",
+    "矩阵缩略图经 images.js 池化读取（kind=thumb），无蓝图页显示占位图标",
+    "章节行在 content plan 缺失/不可读时静默关闭，矩阵仍完整",
+    "本 fixture 全页均有待办，筛选排除路径未在浏览器中形成对照（逻辑覆盖+代码评审）"
+  ],
+  "test_layers": {
+    "core": "PYTHONPATH=src pytest tests/rebuild -q（见提交记录）",
+    "browser": "本文件；真实服务 24 页混合项目",
+    "real_authoring_tool": "不在本卡闸门"
+  }
+}

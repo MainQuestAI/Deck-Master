@@ -2,6 +2,7 @@
 
 本轮核验代码为 main `66da345c84de48933a76de577114f08dcebf4f0e`，没有改生产代码。
 
+- `a03-browser-verification.json` / `output/playwright/a03/*.png`：**A03 实施后新增**（基线 931f19c）：overview.js 待办面板消费 B01 next_actions 与 8 列矩阵（排序/搜索/章节/批量选择，普通 Tab）的 24 页混合项目真实服务浏览器验证。
 - `a02-browser-verification.json` / `output/playwright/a02/*.png`：**A02 实施后新增**（基线 e58d2df，含 B01/B02）：launcher 搜索与项目卡、五工作面外壳、连接面板消费 effective_actions（含 fixed_revision 前端组合）的真实服务浏览器验证；macOS 目录选择取消路径因终端无 UI 自动化权限保持待验。
 - `a01-verification.md` / `a01-browser-verification.json` / `output/playwright/a01/*.png`：**A01 实施后新增**。在 `codex/webui-a-implementation` 分支完成设计基础落地与 PR66 有限移植后的分层验证（核心 905 项通过 + 真实服务双视口浏览器证据）；head/base 与缺项见该文件。基线核验（下述其余条目）仍对应 `66da345` 未实施状态。
 - `current-core-tests.log` / XML：本轮运行9个相关测试文件，**148 passed / 24.94秒**；这是定向核心回归，不是完整905项回归，也不是新版浏览器验收。
