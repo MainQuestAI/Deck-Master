@@ -3,7 +3,6 @@
   "route": "B · 功能补齐",
   "slice": "正文与结构变更候选（工程切片，待单独评审）",
   "base": "50535eec0b29e2146159ee2346f96636d7cbbe3e",
-  "head": "69cee5ba7ca4b37c57c6297c283593e075683528",
   "branch": "codex/webui-b-capabilities",
   "environment": "macOS darwin 27.0.0 arm64; Python 3.12.12 venv（主仓库 .venv，dev依赖），PYTHONPATH=src 指向 webui-b 工作树",
   "changed_files": [
@@ -102,6 +101,23 @@
       "P3 inputs trial 登记时 supersede 开放任务与 content_ops trial 的语义差异：与 auto inputs 行为一致，保留（本条为登记语义，非候选语义）",
       "P3 新页 mapping source_page_ids=[]：inputs 材料不页域化，保留"
     ],
-    "tests_after_fix": "test_content_candidates 22 passed；全量 952 passed（935+17 install）；ruff clean"
+    "tests_after_fix": "test_content_candidates 22 passed；全量 952 passed（935+17 install）；ruff clean",
+    "review_round_2": {
+      "reviewer": "同一独立 code-reviewer 代理",
+      "verdict": "通过（P0/P1/P2 在原始触发向量上实证封死；遗留均为 P3 不阻塞）",
+      "closing_commit": "见 closing_commit 字段",
+      "closing_fixes": [
+        "补 svg stage=repair trial 回归测试：同页 auto 写 svg 槽后 trial 返回不再被误判 stale（复核确认的动机场景，此前无套件覆盖）",
+        "补 P0 毒化的 inputs-trial 路径变体测试（原始向量路径，validate_host_result 早退的唯一不设防路由）"
+      ],
+      "accepted_not_fixed_addendum": [
+        "P3 _apply_page_selection 与 adopt artifact 分支的 next() 无默认值：当前被 _plan 门挡住不可达，逻辑漂移时抛 StopIteration 而非 OperationError；评审遗漏登记，此处补登并接受"
+      ],
+      "remaining_open": [
+        "no-op changeset 采用仍推进 plan 版本（与 auto content_update 路径一致，属对齐取舍，与 page no-op 不对称）",
+        "AC03 部分返回/保存超时重放的内容候选直接用例（依赖共享机制与间接覆盖，后续测试债）"
+      ],
+      "tests_after_closing": "test_content_candidates 24 passed；全量 954 passed（937 除 install + 17 install）；ruff clean"
+    }
   }
 }

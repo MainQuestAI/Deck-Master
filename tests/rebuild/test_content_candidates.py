@@ -616,3 +616,65 @@ def test_noop_page_adoption_keeps_outputs_and_plan_version(project):
     assert after['outputs'] == before['outputs']
     assert store.read_object_json(after['content_plan'])['version'] == plan_version
     assert all(record['candidate_id'] == cid for record in after['candidate_adoptions'])
+
+
+def test_malformed_content_plan_via_inputs_trial_is_refused(project, tmp_path):
+    """The original P0 vector: the inputs-trial path skips validate_host_result,
+    so the record-side plan validation is the only gate on that route."""
+    path, store = project
+    material = tmp_path / 'material.md'
+    material.write_text('# 材料\n- 一条事实。\n')
+    doc = store.load_document()
+    result = content_ops.inputs(path, input={'reason': 'inputs trial', 'mode': 'trial',
+                                             'source_changes': {'add': [{'path': str(material)}]}},
+                                base_revision=doc['revision_id'],
+                                operation_id=str(uuid.uuid4()))['operation_result']
+    task = tasks._lookup_task(store.load_document(), result['pending_tasks'][0]['task_id'], store)
+    start_task(path, task)
+    envelope = {'kind': 'compose', 'content_update': {
+        'input_digest': task['input_digest'], 'upsert_pages': [], 'remove_page_ids': [],
+        'page_order': [p['page_id'] for p in store.load_document()['pages']],
+        'unchanged_reason': '无影响。'},
+        'content_plan': {'garbage': True}}
+    with pytest.raises(Exception) as caught:
+        accept(path, task, envelope)
+    assert 'content_plan' in str(caught.value)
+    assert store.load_document().get('candidates') is None
+    assert candidates.listing(path)['candidates'] == []
+
+
+def test_svg_repair_trial_survives_sibling_auto_slot_write(project):
+    """The routing regression guard: an SVG trial at stage='repair' must read
+    freshness through the generation basis (which does not include the svg
+    slot itself), so a sibling auto result writing the same slot does not
+    stale the trial's late return."""
+    from test_candidates import start as svg_start, envelope as svg_envelope, accept as svg_accept
+    path, store = project
+    doc = store.load_document(); entry = next(e for e in doc['pages'] if e['page_id'] == 'p01')
+    value = {'schema_version': 'change_intent.v1', 'project_id': doc['project_id'],
+             'base_revision': doc['revision_id'], 'intent': 'repair', 'instruction': 'Improve the spacing.',
+             'annotation_refs': [], 'max_calls': 0, 'mode': 'trial',
+             'targets': [{'page_id': 'p01', 'page_ref': entry['page'], 'layer': 'svg',
+                          'artifact_ref': entry.get('svg'), 'stage': 'repair'}]}
+    plan = changes.plan(path, input=value)
+    trial_result = changes.commit(path, plan_id=plan['plan_id'], base_revision=doc['revision_id'],
+                                  operation_id=str(uuid.uuid4()))['operation_result']
+    trial = tasks._lookup_task(store.load_document(), trial_result['task_ids'][0], store)
+    assert trial['stage_request']['stage'] == 'repair'
+    doc = store.load_document(); entry = next(e for e in doc['pages'] if e['page_id'] == 'p01')
+    auto_value = {'schema_version': 'change_intent.v1', 'project_id': doc['project_id'],
+                  'base_revision': doc['revision_id'], 'intent': 'repair',
+                  'instruction': 'auto sibling', 'annotation_refs': [], 'max_calls': 0, 'mode': 'auto',
+                  'targets': [{'page_id': 'p01', 'page_ref': entry['page'], 'layer': 'svg',
+                               'artifact_ref': entry.get('svg'), 'stage': 'repair'}]}
+    plan = changes.plan(path, input=auto_value)
+    auto = changes.commit(path, plan_id=plan['plan_id'], base_revision=doc['revision_id'],
+                          operation_id=str(uuid.uuid4()))['operation_result']
+    auto_task = tasks._lookup_task(store.load_document(), auto['task_ids'][0], store)
+    svg_start(store, trial)
+    svg_start(store, auto_task)
+    from test_candidates import accept as svg_accept
+    svg_accept(store, auto_task, svg_envelope(store, auto_task, 40))
+    result = svg_accept(store, trial)
+    assert result['status'] == 'candidate_ready' and result['result_kind'] == 'artifact'
+    assert candidates.listing(path)['candidates']
