@@ -1,5 +1,6 @@
 import {get, post, readableError} from './api.js';
 import {el, button, heading, empty, field, modal, version, toast} from './dom.js';
+import {surfaces, layers} from './routes.js';
 
 export function localURL(value) {
   try {
@@ -12,29 +13,52 @@ export async function launcher(root, health) {
   root.className = 'launcher';
   const list = el('section', {class: 'stack', 'aria-label': '最近项目'});
   const message = el('p', {role: 'status', class: 'field-error'});
+  const search = el('input', {type: 'search', placeholder: '搜索项目名称', 'aria-label': '搜索项目名称', autocomplete: 'off'});
+  const count = el('span', {class: 'muted', role: 'status'});
+  let entries = [];
+  const surfaceLabels = {...surfaces, page: '单页'};
+  const positionText = entry => {
+    const position = entry.position?.position;
+    if (!position) return version(entry.revision_id);
+    const surface = surfaceLabels[position.surface] || position.surface;
+    const layer = position.surface === 'page' && layers[position.layer] ? ' · ' + layers[position.layer] : '';
+    return `可继续上次阅读 · ${surface}${layer}${position.page_id ? ' · ' + position.page_id : ''} · ${version(position.revision || entry.revision_id)}`;
+  };
+  const renderList = () => {
+    const term = search.value.trim().toLowerCase();
+    const visible = entries.filter(entry => !term || entry.title.toLowerCase().includes(term));
+    count.textContent = entries.length ? (term ? `${visible.length} / ${entries.length} 个项目` : `${entries.length} 个项目`) : '';
+    list.replaceChildren();
+    if (!entries.length) list.append(empty('从一个项目开始', '选入材料，阅读整稿，追溯每一页的制作依据。项目保存在你选择的本机目录。'));
+    else if (!visible.length) list.append(empty('没有匹配的项目', '换一个名称关键词，或清除搜索查看全部项目。'));
+    for (const entry of visible) {
+      const rowError = el('p', {class: 'field-error', role: 'alert'});
+      list.append(el('article', {class: 'project-card'},
+        el('div', {class: 'project-card-main'}, el('h2', {}, entry.title),
+          el('p', {class: 'muted'}, entry.available ? positionText(entry) : '位置不可用 · 请重新选择目录'),
+          el('div', {class: 'row wrap'},
+            entry.available && el('span', {class: 'status'}, entry.position?.position ? '有阅读进度' : '尚未打开过'),
+            typeof entry.page_count === 'number' && el('span', {class: 'status'}, `${entry.page_count} 页`),
+            entry.sample?.readonly && el('span', {class: 'status'}, '示例 · 只读')),
+          el('details', {}, el('summary', {}, '保存位置'), el('p', {class: 'path'}, entry.path)), rowError),
+        el('div', {class: 'row wrap'}, button('打开项目', async event => {
+          const trigger = event.currentTarget; trigger.disabled = true;
+          try { await open(entry.entry_id); } catch (error) { rowError.textContent = readableError(error); trigger.disabled = false; }
+        }, false, {disabled: !entry.available}), button('从列表移除', () => {
+          const dialog = modal('从最近项目移除', el('p', {}, `仅取消“${entry.title}”的注册，项目文件和历史继续保留。`),
+            [button('移除条目', async () => {
+              try { await post('/api/projects/remove', {entry_id: entry.entry_id}); dialog.close(); await refresh(); }
+              catch (error) { rowError.textContent = readableError(error); dialog.close(); }
+            })]);
+        }, false, {class: 'quiet'}))));
+    }
+  };
+  search.addEventListener('input', renderList);
   const refresh = async () => {
     try {
       const data = await get('/api/projects');
-      list.replaceChildren();
-      if (!data.projects.length) list.append(empty('从一个项目开始', '选入材料，阅读整稿，追溯每一页的制作依据。项目保存在你选择的本机目录。'));
-      for (const entry of data.projects) {
-        const rowError = el('p', {class: 'field-error', role: 'alert'});
-        const position = entry.position?.position;
-        list.append(el('article', {class: 'project-card'},
-          el('div', {class: 'project-card-main'}, el('h2', {}, entry.title),
-            el('p', {class: 'muted'}, entry.available ? `${position ? '可继续上次阅读 · ' : ''}${version(position?.revision || entry.revision_id)}` : '位置不可用 · 请重新选择目录'),
-            el('details', {}, el('summary', {}, '保存位置'), el('p', {class: 'path'}, entry.path)), rowError),
-          el('div', {class: 'row wrap'}, button('打开项目', async event => {
-            const trigger = event.currentTarget; trigger.disabled = true;
-            try { await open(entry.entry_id); } catch (error) { rowError.textContent = readableError(error); trigger.disabled = false; }
-          }, false, {disabled: !entry.available}), button('从列表移除', () => {
-            const dialog = modal('从最近项目移除', el('p', {}, `仅取消“${entry.title}”的注册，项目文件和历史继续保留。`),
-              [button('移除条目', async () => {
-                try { await post('/api/projects/remove', {entry_id: entry.entry_id}); dialog.close(); await refresh(); }
-                catch (error) { rowError.textContent = readableError(error); dialog.close(); }
-              })]);
-          }, false, {class: 'quiet'}))));
-      }
+      entries = data.projects || [];
+      renderList();
       message.textContent = '';
     } catch (error) { message.textContent = readableError(error); }
   };
@@ -45,12 +69,12 @@ export async function launcher(root, health) {
     location.assign(url.href);
   }
   root.replaceChildren(el('header', {class: 'launcher-brand'}, el('strong', {}, 'Deck Master'), el('span', {class: 'muted'}, '本机制作工作台')),
-    el('main', {id: 'main'}, heading('项目', '看整稿、追溯制作依据，保留每一次局部修改的来路。', button('新建项目', createForm, true)),
+    el('main', {id: 'main'}, heading('项目', '打开正在制作的方案。材料、逐页内容、制作依据和每版产物，都在同一个地方。', button('新建项目', createForm, true)),
       el('div', {class: 'toolbar'}, el('div', {class: 'row wrap'}, button('选择项目文件夹', registerForm), button('打开只读示例', async event => {
         const trigger = event.currentTarget; trigger.disabled = true;
         try { const data = await post('/api/projects/sample', {}); await open(data.project.entry_id); }
         catch (error) { message.textContent = readableError(error); trigger.disabled = false; }
-      })), button('刷新项目列表', refresh)), message, list,
+      }), button('刷新项目列表', refresh)), el('div', {class: 'row wrap'}, search, count)), message, list,
       el('footer', {class: 'launcher-foot muted'}, `本机服务 ${health.service_version} · 项目目录仅按你的选择登记。`)));
   await refresh();
   async function picker(input, error, trigger) {

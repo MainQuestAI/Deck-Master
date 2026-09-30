@@ -134,6 +134,41 @@ export class Project {
     this.notice.replaceChildren(el('span', {}, message)); this.notice.hidden = !message;
     if (retry) this.notice.append(button('重试读取', () => this.loadRoute()));
   }
+  connectionInfo() {
+    // 连接面板按真实事实显示（DESIGN-ADAPTATION）：分开服务可达、当前项目可做动作、
+    // 制作工具实际接手与导出真实可用性；云端同步当前不提供。
+    // 历史视图的 fixed_revision 由前端按路由组合，服务端不产生该原因。
+    const reasons = {sample_readonly: '只读示例，请新建自己的项目后编辑。',
+      unsupported_project_format: '旧格式项目，该动作需要 workbench.v3 项目。',
+      reader_upgrade_required: '项目指针需要更新的核心读取，请用匹配的核心打开。',
+      writer_upgrade_required: '项目由更新的核心写入，请用匹配的核心继续。',
+      fixed_revision: '正在看历史版本，只读；回到当前版本后可操作。'};
+    const actions = (this.info.effective_actions || []).map(item => {
+      // 历史视图的 fixed_revision 组合：个人草稿与按固定版本导出不受影响——
+      // 交付面在同一路由真实提供按该历史版本固定的导出（服务端按 revision 生成）。
+      const fixed = this.historical && item.writable && !['drafts', 'exports'].includes(item.action);
+      return {action: item.action, supported: item.supported,
+        writable: fixed ? false : item.writable, reason: fixed ? 'fixed_revision' : item.reason_code};
+    });
+    const blocked = actions.filter(item => !item.writable);
+    const writable = actions.filter(item => item.writable);
+    const fact = (term, value) => el('div', {}, el('dt', {}, term), el('dd', {}, value));
+    const exportsAction = actions.find(item => item.action === 'exports');
+    modal('连接状态', el('div', {class: 'stack'},
+      el('p', {}, '本机工作区，项目数据仅保存在这台电脑。服务可达不等于制作工具已接手；生成任务仍需复制制作要求后交接。'),
+      el('dl', {class: 'request-facts stack'},
+        fact('本机服务', `已连接 · ${this.health.service_version || '本机核心'}`),
+        fact('当前项目动作', writable.length ? `${writable.length} 项可用（${writable.map(item => actionLabels[item.action] || item.action).join('、')}）` : '没有可写动作'),
+        fact('制作工具', '需交接 · 复制制作要求后到制作工具执行，不会自动开始'),
+        fact('文件导出', exportsAction && exportsAction.writable
+          ? (this.historical ? '可用（按正在阅读的历史版本固定导出）' : '可用（按当前版本固定导出）')
+          : `不可用 · ${exportsAction && !exportsAction.supported ? '该核心未提供此能力' : (reasons[exportsAction?.reason] || exportsAction?.reason || '')}`),
+        fact('云端同步', '不提供')),
+      blocked.length > 0 && el('details', {}, el('summary', {}, `受限动作 ${blocked.length} 项`),
+        el('div', {class: 'stack'}, blocked.map(item => el('p', {class: 'muted'},
+          `${actionLabels[item.action] || item.action}：${item.supported ? (reasons[item.reason] || item.reason || '该核心未提供此能力') : '该核心未提供此能力'}`)))),
+      el('p', {class: 'muted'}, '能力为当前核心与项目的实时投影；写操作仍由服务端独立校验。')));
+  }
   render(data) {
     const nav = el('nav', {class: 'nav', 'aria-label': '项目工作区'});
     for (const [key, label] of Object.entries(surfaces)) nav.append(button([icon(key), el('span', {class: 'nav-label'}, label)], () => this.go({surface: key}), false,
@@ -144,7 +179,7 @@ export class Project {
       nav, el('div', {class: 'side-project'}, el('span', {class: 'muted'}, '当前项目'), el('strong', {}, this.info.title),
         this.info.sample && el('span', {class: 'status'}, infoSampleLabel(this.info))),
       el('div', {class: 'sidebar-footer stack'}, launcher ? el('a', {href: launcher.href}, '返回项目列表') : el('p', {class: 'muted'}, '当前为项目独立入口'),
-        el('a', {href: '/'}, '原有工作区')));
+        el('a', {href: '/'}, '原有工作区'), button('连接状态', () => this.connectionInfo(), false, {class: 'text-link'})));
     this.notice = el('div', {class: 'notice', role: 'status', hidden: true});
     const banners = el('div', {class: 'banners'}, this.notice);
     if (this.business) banners.append(this.business.node);
@@ -188,3 +223,5 @@ export class Project {
 }
 
 function infoSampleLabel(info) { return info.sample.readonly ? '合成示例 · 只读' : '合成验证项目'; }
+const actionLabels = {drafts: '个人草稿', annotations: '标注与意见', changes: '修改任务', candidates: '候选采用',
+  content: '内容与结构', inputs: '输入更新', styles: '风格校准', run_desk: '任务操作', exports: '文件导出', restoration: '历史恢复'};

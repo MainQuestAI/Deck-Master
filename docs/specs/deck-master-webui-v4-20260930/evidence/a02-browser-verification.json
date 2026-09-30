@@ -1,0 +1,73 @@
+{
+  "card": "A02",
+  "recorded_at": "2026-09-30T21:30:00+08:00",
+  "base": "e58d2df（origin/main，含 A01+B01+B02）",
+  "branch": "codex/webui-a-implementation",
+  "environment": {
+    "worktree": "/Users/dingcheng/.codex/worktrees/webui-a/Deck-Master",
+    "browser": "Playwright Chromium via playwright-cli, session a02, 1280x800",
+    "service": "真实 launcher 服务（隔离 registry，5 个合成项目：可编辑示例/只读示例/v1 格式/空项目/缺失目录）+ 各项目真实独立服务；无 mock"
+  },
+  "changed_files": [
+    "src/deck_master/resources/static/v2/launcher-ui.js（搜索 + 项目卡富化：阅读进度/页数/示例标签可选字段 + 匹配计数 + 空搜索态）",
+    "src/deck_master/resources/static/v2/project.js（侧栏 连接状态 入口 + connectionInfo 面板：消费 B02 effective_actions，组合 fixed_revision，真实服务版本/制作工具需交接/导出真实可用性/云端不提供）"
+  ],
+  "not_changed": "routes.js/app.js——五工作面导航与路由在 A01 基线已符合设计（顺序与图标核对无差），未做无意义改动",
+  "browser_verification": {
+    "ac01": {
+      "launcher_cards": "5 张项目卡（可编辑/只读示例、v1、空项目、缺失目录）；缺失目录卡显示 位置不可用·请重新选择目录 且 打开项目 禁用",
+      "search": "输入关键词实时过滤；Deck→2 张；不存在的名字→0/5 + 没有匹配的项目空态；清除→恢复 5 张；计数 N/N 个项目",
+      "create_form": "新建项目弹窗打开（标题核对）后 Escape 取消",
+      "register_form": "选择项目文件夹弹窗打开；填写不存在的路径提交报 project directory does not exist；Escape 取消",
+      "open_existing": "打开可编辑项目→五工作面外壳（制作总览/内容与来源/整稿画廊/风格校准/任务与交付）+ 示例横幅",
+      "return_to_list": "返回项目列表链接多轮往返均回到 launcher",
+      "empty_project": "0 页项目路由到 内容与来源，页面头部唯一主动作 交接待整理内容（待交接 1 项）；不出现页数矩阵",
+      "readonly_sample_open": "打开只读示例→只读横幅正常"
+    },
+    "ac02": {
+      "modern": "连接面板：本机服务=已连接·1.0.0.dev2；当前项目动作=10 项可用；制作工具=需交接·复制制作要求后到制作工具执行，不会自动开始；文件导出=可用（按当前版本固定导出）；云端同步=不提供；受限 0 项",
+      "readonly_sample": "当前项目动作=没有可写动作；文件导出=不可用·只读示例，请新建自己的项目后编辑；10 项受限全部 sample_readonly",
+      "v1_project": "6 项可用（drafts、candidates、inputs、run_desk、exports、restoration）；4 项受限（标注与意见/修改任务/内容与结构/风格校准=旧格式项目，该动作需要 workbench.v3 项目）——与 B02 评审修复后的真实门槛一致",
+      "historical": "历史版本横幅 + 连接面板（评审修复后复验）：2 项可用（个人草稿、文件导出——中文标签）；8 项受限全部 fixed_revision（正在看历史版本，只读；回到当前版本后可操作）；文件导出=可用（按正在阅读的历史版本固定导出）——与交付面同路由真实提供的固定版本导出一致；fixed_revision 由前端按路由组合，服务端不产生。修复前该面板错误地将 exports 组合为不可用（9 项受限），与交付面自相矛盾，已按评审豁免。",
+      "service_vs_host": "制作工具条目固定为 需交接 文案；导出按 effective_actions 真实显示（不照抄原型未连接）"
+    },
+    "ac03": {
+      "choose": "已留证：点击 浏览文件夹 触发真实 osascript choose folder 对话框（POST 阻塞数秒），对话框以真实目录完成，表单输入框收到 /Users/dingcheng/Coding-Project/02-key-project/Deck-Master（真实选择路径端到端）",
+      "cancel": "待验：本终端无 System Events 按键权限（osascript 报 不允许发送按键 1002），无法程序化点击对话框取消；按卡内条款保持待验，未注入成功。screencapture 亦无屏幕录制权限，无对话框截图",
+      "note": "选择的确认交互来自人工在位操作（非自动化），对话框与完成路径本身为真实系统行为"
+    },
+    "screenshots": [
+      "output/playwright/a02/ac01-launcher-1280.png",
+      "output/playwright/a02/ac02-connection-modal-readonly-1280.png",
+      "output/playwright/a02/ac01-launcher-position-1280.png"
+    ],
+    "console": "无 JS 错误"
+  },
+  "boundaries": [
+    "项目卡的页数/示例标签按可选字段渲染（page_count、sample.readonly）；当前 /api/projects 清单未提供这些字段，B 侧清单扩展后自动生效——回填记录见下",
+    "设计原型的缩略图预览需要逐项目 stage 读取，不在本轮 launcher 清单能力内",
+    "原型 localStorage 项目草稿不移植（G51）"
+  ],
+  "backfill": "建议 B 线在后续卡扩展 registry.listing：每条目增加 page_count 与 sample 标记（一次 load_snapshot 已有 doc，成本一行），A 侧卡片已按可选字段就绪",
+  "test_layers": {
+    "core": "PYTHONPATH=src pytest tests/rebuild -q（见提交记录，静态资源改动不改行为面）",
+    "browser": "本文件；真实 launcher + 项目服务",
+    "macos_picker": "选择已证、取消待验（权限）",
+    "real_authoring_tool": "不在本卡闸门"
+  },
+  "review": {
+    "date": "2026-09-30",
+    "reviewer": "独立 code-review（ZCode code-reviewer 子代理）+ 人工复核",
+    "verdict": "可进入合并评审（无 P1）",
+    "findings_fixed": [
+      "P2-1 历史视图连接面板与交付面矛盾：exports 与 drafts 同样豁免 fixed_revision 组合（固定版本导出是读取/产出动作而非文档写入，服务端按 revision 生成）；面板措辞区分 按正在阅读的历史版本固定导出；浏览器复验 2 项可用/8 项受限",
+      "P3-2 可用动作列表改用 actionLabels 中文（与受限列表同源）",
+      "P3-3 exports supported=false 时显示 该核心未提供此能力 兜底",
+      "P3-1 项目卡位置文本：surface 含 page 映射为 单页+层名，不泄漏内部路由名",
+      "P3-5 entries 空载荷兜底 || []"
+    ],
+    "findings_noted_not_fixed": [
+      "P3-4 历史视图 drafts 面板宣称与各工作面只读编辑器的跨面一致性——留待 A03+/对应工作面卡收敛（服务端能力宣称本身真实）"
+    ]
+  }
+}
