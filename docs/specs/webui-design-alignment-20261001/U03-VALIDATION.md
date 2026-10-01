@@ -15,3 +15,9 @@
 [单元](evidence/u03/unit.log) · [核心/清理](evidence/u03/core.log) · [浏览器](evidence/u03/browser.log) · [最后展示复验](evidence/u03/final-detail.log) · [390px 冲突](evidence/u03/overview-conflict-mobile.png) · [机器记录](evidence/u03/validation.json)。
 
 无 ui_overview.v1 的旧核心使用窗口会话态，不能假报项目已保存。严格 ui_position.v1 不增加字段。B05 清理 schema 的 item kind 增加 overview_preferences；旧业务 Document 格式和制作协议保持不变。全部样本是合成工程证据，真实 Host/质量仍未验。
+
+## 托管复验与环境交接
+
+首次托管 run `36901488237` 的四组合单元与真实渲染通过；浏览器为 17 通过、1 失败，安装阶段未执行。失败发生在迟到预览测试：慢 runner 在 POST 发出前就改变选页，代码正确取消发送，测试却假设已经持有响应。`6d64fe1` 只增加真实请求已被拦截的等待屏障，保留原范围/迟到结果断言，不删除断言或改 skip。修正通过原 PR87 的 GitHub 提交渠道完成，后续托管 CI 负责实际执行验证；此前本地结果仍是上述候选时的证据。
+
+同时本地 exec-server 握手持续失败，无法读写工作区或运行浏览器；U04 未实施，U05/U06 保持 open。远端分支已经领先本地 U04 起点，环境恢复后先 fetch/合入 U03 最终候选，再继续后续包。真实 30 页材料、Host、HOME/macOS/真人观察仍未取得，不以合成测试关闭。
