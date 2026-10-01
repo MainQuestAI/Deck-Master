@@ -39,5 +39,15 @@
   "browser": "本记录 12 图",
   "install": "归 B07"
  },
- "head": "40776a9（初版）"
+ "head": "40776a9（初版）",
+ "ui_entry_diagnosis": {
+  "concern": "用户本地发起测试看到的是老版 Web UI，新版是否生效存疑",
+  "root_cause": "web.py do_GET 将 / 与 /index.html 服务为 static_dir/index.html（旧版 Review Workbench）；新版工作台只在 /v2/ 显式路径提供。deck-master view 不带 --ui v2 时打开旧入口（web.py: url = state[url] + (v2/ if ui == v2 else '')）。这是 B02 起刻意保留的发布纪律：无发布授权不切默认入口（CONSOLIDATION §4 / G49）",
+  "verification": "同一真实服务（:64054 fixture）：GET / 返回 Deck Master · Review Workbench 旧版页面；GET /v2/ 返回 制作工作台 新版且 #view-title=制作总览 正常渲染（截图 diagnosis-default-entry-old-ui.png / diagnosis-v2-entry-new-ui.png）；deck-master view --open --ui v2 为显式新入口命令",
+  "conclusion": "新 UI 已生效且经九卡全部验收；默认入口未切换是设计内发布门（G49 用户执行项），非缺陷。切换默认入口需要用户发布授权",
+  "screenshots": [
+   "output/playwright/a08/diagnosis-default-entry-old-ui.png",
+   "output/playwright/a08/diagnosis-v2-entry-new-ui.png"
+  ]
+ }
 }

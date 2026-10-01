@@ -122,65 +122,6 @@ def test_page_text_table_semantics_follow_render_join():
     node = shutil.which('node')
     if not node:
         pytest.skip('Node is needed to run the shipped pure page-text module')
-    table_of = lambda doc_value: doc_value['customer_visible']['body_blocks'][2]
-
-    def run(doc_value):
-        script = ('import {pageText} from ' + json.dumps((V2 / 'page-text.js').as_uri()) + ';'
-                  'console.log(JSON.stringify(pageText(' + json.dumps(doc_value, ensure_ascii=False) + ')));')
-        result = subprocess.run([node, '--experimental-default-type=module', '--input-type=module', '-e', script],
-                                capture_output=True, text=True, check=True)
-        return json.loads(result.stdout)
-
-    baseline_doc = mutated(**{'customer_visible/body_blocks/2/columns/0/label': '金额（万元）'})
-    baseline = run(baseline_doc)
-
-    # (a) 列归属变化：实际显示的 金额=80→100、口径=100→80，文本化必须同步反映
-    swapped = copy.deepcopy(baseline_doc)
-    table = table_of(swapped)
-    table['rows'][0]['cells'] = [
-        {'column_id': 'c1', 'display_text': '100'},
-        {'column_id': 'c2', 'display_text': '80'}]
-    swapped_text = run(swapped)
-    assert swapped_text != baseline, '列归属变化必须出现在比较文本中'
-
-    # (b) 仅存储顺序变化：column_id↔数值关联不变 → 实际显示不变，文本化也不变
-    reordered = copy.deepcopy(baseline_doc)
-    cells = table_of(reordered)['rows'][0]['cells']
-    assert [c['column_id'] for c in cells] == ['c1', 'c2']
-    table_of(reordered)['rows'][0]['cells'] = list(reversed(cells))
-    reordered_text = run(reordered)
-    assert reordered_text == baseline, '仅存储顺序变化不得制造差异'
-
-    # (c) 列定义顺序调整：输出跟随新列序（与实际页面渲染一致）
-    recolumned = copy.deepcopy(baseline_doc)
-    table = table_of(recolumned)
-    table['columns'] = list(reversed(table['columns']))
-    table['rows'][0]['cells'] = list(reversed(table['rows'][0]['cells']))
-    recolumned_text = run(recolumned)
-    assert recolumned_text != baseline, '列定义顺序变化会改变实际显示，文本化必须跟随'
-
-
-def test_page_text_table_semantics_follow_render_join():
-    """终审补丁 P2 回归：表格文本化必须与实际渲染器同规则——按 columns 定义顺序、
-    用 cell.column_id === col.id 关联数值。
-    (a) 交换单元格的 column_id（数值换业务含义）→ 输出必须变化；
-    (b) 仅打乱 cells 存储顺序（关联不变）→ 输出必须不变；
-    (c) 调整 columns 定义顺序 → 输出跟随新列序。"""
-    node = shutil.which('node')
-    if not node:
-        pytest.skip('Node is needed to run the shipped pure page-text module')
-    table_of = lambda doc_value: doc_value['customer_visible']['body_blocks'][2]
-
-
-def test_page_text_table_semantics_follow_render_join():
-    """终审补丁 P2 回归：表格文本化必须与实际渲染器同规则——按 columns 定义顺序、
-    用 cell.column_id === col.id 关联数值。
-    (a) 交换单元格的 column_id（数值换业务含义）→ 输出必须变化；
-    (b) 仅打乱 cells 存储顺序（关联不变）→ 输出必须不变；
-    (c) 调整 columns 定义顺序 → 输出跟随新列序。"""
-    node = shutil.which('node')
-    if not node:
-        pytest.skip('Node is needed to run the shipped pure page-text module')
 
     def run(doc_value):
         script = ('import {pageText} from ' + json.dumps((V2 / 'page-text.js').as_uri()) + ';'

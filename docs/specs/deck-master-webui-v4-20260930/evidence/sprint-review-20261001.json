@@ -106,7 +106,7 @@
    "receipt_production_impl": "新增 receipt-verdict.js（零 DOM：LEGACY_ACTIONS/canonicalAction/expectedRequestDigest/receiptTerminal）；business-operations.js 删除本地终态判定副本改为导入生产实现；test_decision_receipts.py 的 SNIPPET 复制品删除、直接 import receipt-verdict.js——生产 accept() 若退回只认 committed，回归测试将失败（评审要求的长期保护达成）",
    "interfaces_sync": "B04 unchanged 契约改写为双终态表述（committed=产生记录携带修订 / unchanged=无变更但须过身份校验）+ 丢包后 operations show 收口 + legacy 映射说明"
   },
-  "gates": "984+5=989 passed + ruff clean + 模块语法门",
+  "gates": "989 基线 + 净增 1 个收集测试（三份同名定义折叠为 1）= 990 passed + ruff clean + 模块语法门（终审 P3-3 算术更正）",
   "open_remainder": "真实 Host/30 页/安装/压力/30 秒观察维持 open（与补丁无关）"
  }
 }

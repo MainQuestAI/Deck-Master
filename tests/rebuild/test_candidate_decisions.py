@@ -346,6 +346,9 @@ def test_client_action_kind_matches_server_digest_kind():
     assert 'candidates.decision' not in paths_line
     verdict_src = (Path(__file__).resolve().parents[2] / 'src/deck_master/resources/static/v2/receipt-verdict.js').read_text(encoding='utf-8')
     assert "LEGACY_ACTIONS = {'candidates.decision': 'candidates.decide'}" in verdict_src
+    # 终审 P2-2 锚定：accept() 必须调用生产 receiptTerminal（含 unchanged 终态）——
+    # 若退回内联只认 committed 的判定，本断言失败
+    assert 'receiptTerminal' in source
     import inspect
     assert 'candidates.decide' in inspect.getsource(candidates.decide)
 
