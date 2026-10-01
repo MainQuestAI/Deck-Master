@@ -25,7 +25,7 @@ def open_workbench(*, project=None, registry_file=None, ui="v2", port=0, open_br
     entry = registry.register(registry_file, project)["project"] if project else None
     state = runtime.ensure(desc, port=port)
     available = ui == "legacy" or (_static_dir() / "v2" / "index.html").is_file()
-    url = state["url"] + ("v2/" if ui == "v2" else "")
+    url = state["url"] + ("legacy/" if ui == "legacy" else "v2/")
     opened = False
     if open_browser and available:
         try:

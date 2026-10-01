@@ -8,7 +8,7 @@ async function start() {
     const health = await get('/api/health');
     if (health.protocol_version !== 'workbench-service.v1' || !health.instance_id || !health.build_id || !['project', 'launcher'].includes(health.role)) {
       root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('当前核心尚不支持新版工作台',
-        '请升级项目服务后重新打开。已停止新版写入，原项目没有迁移。', el('a', {href: '/'}, '打开原有入口'))));
+        '请升级项目服务后重新打开。已停止新版写入，原项目没有迁移。', el('a', {href: '/legacy/'}, '打开原有入口'))));
       return;
     }
     if (health.role === 'launcher') await launcher(root, health);

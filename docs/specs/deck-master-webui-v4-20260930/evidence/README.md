@@ -2,6 +2,7 @@
 
 本轮核验代码为 main `66da345c84de48933a76de577114f08dcebf4f0e`，没有改生产代码。
 
+- `default-entry-switch.json` / `screenshots/entry-switch-*.png`：**G49 默认入口切换**（2026-10-01 用户发布授权，基线 8be6461）：`/` 服务 v2 工作台、`/legacy/` 保留旧版回退、`view` 默认打开 v2；992 passed + ruff clean + 真实服务双入口浏览器验证。
 - `sprint-review-20261001.json`：**冲刺终审**（用户要求的四层 subagent 评审：核心/前端阅读/前端决策/证据；4 P1+10 P2 结论与修复记录）。
 - `a08-browser-verification.json` / `output/playwright/a08/*.png`：**A08 实施后新增**（基线 b8bbf59）：两视口（1440/1280）×六工作面 12 图矩阵 + 设计差异单 5 项；30 秒真实使用者观察 open。
 - `b06-slice.json`：**B06 实施后新增**（基线 0ccd8dd）：preserve_dimensions 投影/范围校验/instruction 核心证据；AC02/AC03 真实层 open。

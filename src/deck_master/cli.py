@@ -144,7 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
     view_cmd.add_argument("--project", required=True)
     view_cmd.add_argument("--open", action="store_true", default=False)
     view_cmd.add_argument("--no-open", action="store_true")
-    view_cmd.add_argument("--ui", choices=("v2",), help="open the explicit new workbench UI with --open; the default entry stays unchanged without it")
+    view_cmd.add_argument("--ui", choices=("v2", "legacy"), help="open the legacy review entry with --open; the default opens the v2 workbench")
     view_cmd.add_argument("--json", dest="as_json", action="store_true")
     view_cmd.add_argument("--revision", help="read a fixed committed Document snapshot")
     view_cmd.add_argument("--summary", action="store_true", help="read the lightweight workbench summary")
