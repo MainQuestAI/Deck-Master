@@ -233,3 +233,6 @@ textarea{font-size:14px;line-height:1.7}
 .style-targets .inline-control{min-height:44px;align-items:flex-start;padding:8px;line-height:1.5}
 .style-targets input{margin-top:3px}
 @media(max-width:767px){.matrix-search,.matrix-search input{width:100%}.style-targets{grid-template-columns:1fr}}
+/* Fixed changeset comparison shares candidate geometry, keeping prose readable. */
+.changeset-copy { white-space: pre-wrap; overflow-wrap: anywhere; }
+.action-target h2 { font-size: 18px; }

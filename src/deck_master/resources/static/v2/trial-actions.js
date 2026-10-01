@@ -3,6 +3,10 @@ import {el, button, version} from './dom.js';
 import {imageView} from './images.js';
 
 export function openCandidate(app, record, revision) {
+  if (record.result_kind === 'content_update') {
+    app.go({surface: 'content', layer: 'content', page_id: null, revision, candidate_id: record.candidate_id, task_id: null});
+    return;
+  }
   app.go({surface: 'page', page_id: record.page_id, layer: record.stage === 'blueprint' ? 'original_image' : record.stage === 'content' ? 'content' : 'svg',
     revision, candidate_id: record.candidate_id, task_id: null});
 }

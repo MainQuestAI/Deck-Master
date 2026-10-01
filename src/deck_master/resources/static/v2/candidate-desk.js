@@ -127,7 +127,7 @@ export function candidateDesk(app, data) {
     const token = ++serial, routeAtStart = location.hash; busy = true; currentPlan = null; planInvalid = false; controls();
     impact.replaceChildren(el('p', {}, '正在读取所选候选；已读比较在新数据完整前保持不变。'));
     try {
-      const value = await get('/api/candidates/' + encodeURIComponent(id));
+      const value = await get('/api/candidates/' + encodeURIComponent(id) + (app.historical ? revisionQuery(app.route.revision) : ''));
       if (disposed || token !== serial || location.hash !== routeAtStart) return;
       if (value.candidate.page_id !== data.page_id || value.candidate.stage !== stage) throw new Error('候选不属于这页或这一层，未替换比较画面。');
       const [base, attempt] = await Promise.all([
@@ -146,12 +146,12 @@ export function candidateDesk(app, data) {
   async function refresh() {
     if (busy || disposed || polling) return; polling = true; const token = serial;
     try {
-      const result = await get('/api/candidates?' + new URLSearchParams({page_id: data.page_id})); if (disposed || busy) return;
+      const result = await get('/api/candidates?' + new URLSearchParams({page_id: data.page_id, ...(app.historical ? {revision: app.route.revision} : {})})); if (disposed || busy) return;
       list = result.candidates.filter(row => row.candidate.stage === stage);
       select.replaceChildren(...list.map((row, index) => el('option', {value: row.candidate.candidate_id}, `候选 ${index + 1} · ${clock(row.candidate.created_at)}`)));
       select.value = selected?.candidate_id || app.route.candidate_id;
       if (!selected) { await choose(app.route.candidate_id); return; }
-      const id = selected.candidate_id, state = await get('/api/candidates/' + encodeURIComponent(id));
+      const id = selected.candidate_id, state = await get('/api/candidates/' + encodeURIComponent(id) + (app.historical ? revisionQuery(app.route.revision) : ''));
       if (disposed || busy || token !== serial || selected.candidate_id !== id) return;
       if (canonical(state.candidate_ref) !== canonical(selected.candidate_ref)) throw new Error('候选身份发生异常变化，比较仍固定。');
       live = state; lastSync = new Date();

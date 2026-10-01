@@ -1,0 +1,43 @@
+{
+  "base_sha": "de9dcd6a03cd9fb5fd8252478befbe04bf22a91f",
+  "code_sha": "7807fc5c812c4d6e578153cd0470cb13d0b801b6",
+  "u00_ci": {
+    "run_id": 36889969387,
+    "unit_four_pairs": "success",
+    "render": "success",
+    "browser_installed": "success",
+    "report": "success"
+  },
+  "u00_merge": {
+    "pr84": "5a6fa461b7c9caf52b59e603494d61513294e30d",
+    "pr83": "de9dcd6a03cd9fb5fd8252478befbe04bf22a91f",
+    "merged_pr83_head_tree_equal_to_tested_24496c7": true
+  },
+  "unit": {
+    "tests": "981",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "time": "107.875"
+  },
+  "commands": [
+    "PATH=/workspace/scratch/u00-toolchain/usr/bin:$PATH .venv/bin/python -m pytest tests/rebuild -m 'not render and not browser' -q",
+    "PATH=/workspace/scratch/u00-toolchain/usr/bin:$PATH .venv/bin/python -m pytest tests/rebuild/test_action_targets.py tests/rebuild/test_action_targets_browser.py tests/rebuild/test_ui_design_browser.py --require-browser -q",
+    ".venv/bin/python -m pytest tests/rebuild/test_static_modules.py tests/rebuild/test_action_targets_browser.py tests/rebuild/test_ui_design_browser.py --require-browser -q"
+  ],
+  "new_core_http_tests": 17,
+  "browser_tests": 6,
+  "final_browser_command_passed": 7,
+  "static_module_check_included": true,
+  "ruff": "passed",
+  "diff_check": "passed",
+  "hosted_u01_ci": "not_evaluated",
+  "synthetic": true,
+  "model_calls": 0,
+  "limits": [
+    "U01 read-only navigation; batch operation and preferences belong to later packages.",
+    "Render pipeline unchanged; U00 real rendering evidence inherited until U01 hosted gate runs.",
+    "Local browser command executed after last focus routing adjustment; full unit ran before that UI-only adjustment.",
+    "U06 real Host, authorized 30-page project, actual HOME/macOS/human checks remain unavailable."
+  ]
+}

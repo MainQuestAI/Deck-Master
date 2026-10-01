@@ -3,6 +3,7 @@ import {el, button, heading, empty, version, sortHeading, icon, disabledReason} 
 import {imageView} from './images.js';
 import {layers} from './routes.js';
 import {stageKey} from './gallery.js';
+import {openAction} from './action-targets.js';
 
 // A03 总览：待办与矩阵全部来自 B01 的实时投影（next_actions/attention/prompt_summary），
 // 不硬编码页数、不出现无证据的风格结论；矩阵保持普通 Tab 顺序（设计系统第 07 节）。
@@ -30,7 +31,7 @@ const routeLayer = {blueprint: 'original_image', svg: 'svg', svg_preview: 'svg',
 const layerKeys = ['content', 'original_image', 'svg', 'ppt'];
 
 function actionRoute(action) {
-  if (['prepare_stage', 'refresh_stage'].includes(action.kind) && action.page_ids?.length && routeLayer[action.layer])
+  if (['prepare_stage', 'refresh_stage'].includes(action.kind) && action.page_ids?.length === 1 && routeLayer[action.layer])
     return {surface: 'page', page_id: action.page_ids[0], layer: routeLayer[action.layer]};
   if (action.kind === 'reconcile_inputs') return {surface: 'content'};
   return {surface: 'runs'};
@@ -53,7 +54,8 @@ function todoMeta(app, action) {
 }
 function todoButton(app, action, primary = false) {
   const blocked = action.enabled === false;
-  return disabledReason(button(nextLabels[action.kind] || '查看', () => app.go(actionRoute(action)), primary,
+  const precise = app.health.ui_capabilities?.includes('action_targets.v1');
+  return disabledReason(button((nextLabels[action.kind] || '查看') + (precise ? '' : ' · 通用入口'), () => openAction(app, action, actionRoute(action)), primary,
     {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
 }
 
@@ -170,7 +172,7 @@ function matrixPanel(app) {
     const item = page.attention?.items?.[0];
     if (!item) return button('查看页面', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'}), false, {class: 'quiet'});
     const blocked = item.enabled === false;
-    return disabledReason(button(nextLabels[item.kind] || '查看', () => app.go(actionRoute(item)), false,
+    return disabledReason(button((nextLabels[item.kind] || '查看') + (app.health.ui_capabilities?.includes('action_targets.v1') ? '' : ' · 通用入口'), () => openAction(app, item, actionRoute(item)), false,
       {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离）。' : '');
   }
   function render() {

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "action_targets.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "revision_id",
+    "action_id",
+    "total",
+    "limit",
+    "offset",
+    "targets"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "action_targets.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "revision_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "action_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "targets": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target_id",
+          "kind",
+          "object_id",
+          "page_ids",
+          "layer",
+          "status",
+          "enabled",
+          "blocked_reason"
+        ],
+        "properties": {
+          "target_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          },
+          "kind": {
+            "enum": [
+              "task",
+              "page_layer",
+              "candidate",
+              "content_changeset",
+              "content_reconciliation",
+              "review"
+            ]
+          },
+          "object_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128,
+            "minLength": 1
+          },
+          "page_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "layer": {
+            "enum": [
+              null,
+              "content",
+              "original_image",
+              "svg",
+              "ppt",
+              "prepared_prompt",
+              "submitted_prompt",
+              "source"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "blocked_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128,
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

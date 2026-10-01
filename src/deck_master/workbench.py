@@ -284,10 +284,10 @@ def _verification_reason(task, *, live, now):
 
 
 def _fact(kind, reason_code, identity, *, page_ids, source_refs, layer=None,
-          enabled=True, blocked_reason=None, state="derived"):
+          enabled=True, blocked_reason=None, state="derived", target=None):
     return {"kind": kind, "reason_code": reason_code, "identity": identity, "page_ids": list(page_ids),
             "layer": layer, "source_refs": source_refs, "enabled": enabled,
-            "blocked_reason": blocked_reason, "state": state}
+            "blocked_reason": blocked_reason, "state": state, "target": target}
 
 
 def _overview_facts(ctx, *, live, now):
@@ -454,9 +454,18 @@ def _candidate_facts(ctx, tasks_by_id):
         result_ref = candidate.get("result_ref")
         if isinstance(result_ref, dict) and isinstance(result_ref.get("sha256"), str):
             source_refs.append(result_ref)
+        candidate_id = candidate.get("candidate_id")
+        identity_valid = isinstance(candidate_id, str) and 1 <= len(candidate_id) <= 128
+        target_valid = identity_valid and candidate.get("project_id") == doc["project_id"] and (
+            candidate.get("result_kind") == "content_update" or page_id in ctx.pages)
         facts.append(_fact("compare_candidates", "candidate_pending", ref["sha256"],
                            page_ids=page_ids, source_refs=source_refs,
-                           layer=stage if stage in ("blueprint", "svg") else None))
+                           layer=stage if stage in ("blueprint", "svg") else None,
+                           target={"kind": "content_changeset" if candidate.get("result_kind") == "content_update" else "candidate",
+                                   "object_id": candidate_id if identity_valid else None, "page_ids": page_ids,
+                                   "layer": {"blueprint": "original_image", "svg": "svg", "content": "content"}.get(stage),
+                                   "enabled": target_valid,
+                                   "blocked_reason": None if target_valid else "target_identity_mismatch"}))
     block = ({"status": "recorded", "count": len(refs), "pending_count": len(refs) - adopted - kept,
               "adopted_count": adopted, "kept_count": kept, "unreadable_count": unreadable} if refs
              else {"status": "not_recorded"})
@@ -510,7 +519,7 @@ def _action_sort_key(action):
             action["layer"] or "", action["page_ids"][0] if action["page_ids"] else "")
 
 
-def _assemble_actions(ctx, facts):
+def _assemble_actions(ctx, facts, member_index=None):
     """Group per-fact actions by (kind, reason, layer, enabled, blocked, state)
     into the ordered deck list and the per-page attention projections."""
     doc = ctx.document
@@ -528,6 +537,8 @@ def _assemble_actions(ctx, facts):
                         "source_refs": _merge_refs(m["source_refs"] for m in members),
                         "enabled": enabled, "blocked_reason": blocked, "state": state,
                         "revision_id": doc["revision_id"]})
+        if member_index is not None:
+            member_index[actions[-1]["action_id"]] = members
         by_page = defaultdict(list)
         for member in members:
             for page_id in member["page_ids"]:
@@ -540,6 +551,8 @@ def _assemble_actions(ctx, facts):
                  "source_refs": _merge_refs(m["source_refs"] for m in page_members),
                  "enabled": enabled, "blocked_reason": blocked, "state": state,
                  "revision_id": doc["revision_id"]})
+            if member_index is not None:
+                member_index[per_page[page_id][-1]["action_id"]] = page_members
     actions.sort(key=_action_sort_key)
     for items in per_page.values():
         items.sort(key=_action_sort_key)
@@ -590,10 +603,15 @@ def _next_actions_block(ctx, actions):
 
 
 def workbench_summary(project_dir, *, revision=None):
-    from .content_plan import projection
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
     ctx = _ReadContext(store, doc)
+    return _summary(ctx, revision=revision)
+
+
+def _summary(ctx, *, revision, member_index=None):
+    from .content_plan import projection
+    store, doc = ctx.store, ctx.document
     now = datetime.now(timezone.utc)
     overview = _overview_facts(ctx, live=revision is None, now=now)
     candidates_block, candidate_facts = _candidate_facts(ctx, overview["tasks_by_id"])
@@ -618,7 +636,7 @@ def workbench_summary(project_dir, *, revision=None):
                       "execution": copy.deepcopy(by_page[entry["page_id"]]),
                       "prompt_summary": _prompt_summary(ctx, entry, overview["prepared"], overview["frozen"]),
                       "attention": {"status": "not_recorded"}})
-    actions, per_page = _assemble_actions(ctx, facts)
+    actions, per_page = _assemble_actions(ctx, facts, member_index)
     for page in pages:
         items = per_page.get(page["page_id"])
         if items:
@@ -637,6 +655,81 @@ def workbench_summary(project_dir, *, revision=None):
             if any(t.get("attempt_count") for t in tasks) else {"status": "not_recorded"},
             "next_actions": _next_actions_block(ctx, actions),
             "evidence_level": "engineering"}
+
+
+def _fact_targets(ctx, fact):
+    """Resolve explicit fact semantics, never decode a hash into an identity."""
+    target = fact.get("target")
+    if target is not None:
+        yield {**target, "status": fact["state"]}
+        return
+    kind, reason = fact["kind"], fact["reason_code"]
+    if kind == "compare_candidates":
+        yield {"kind": "candidate", "object_id": None, "page_ids": fact["page_ids"], "layer": None,
+               "status": "unreadable", "enabled": False, "blocked_reason": "candidate_unreadable"}
+    elif kind in ("verify_execution", "handoff", "inspect_failure", "replan", "review_results"):
+        unreadable = reason == "task_unreadable"
+        yield {"kind": "task", "object_id": None if unreadable else fact["identity"],
+               "page_ids": fact["page_ids"], "layer": None,
+               "status": "unreadable" if unreadable else reason,
+               "enabled": not unreadable, "blocked_reason": "task_unreadable" if unreadable else None}
+    elif kind in ("prepare_stage", "refresh_stage"):
+        layer = {"blueprint": "original_image", "svg": "svg", "svg_preview": "svg",
+                 "ppt_preview": "ppt", "pptx": "ppt"}.get(fact["layer"])
+        for page_id in fact["page_ids"] or [None]:
+            yield {"kind": "page_layer" if page_id else "review", "object_id": page_id,
+                   "page_ids": [page_id] if page_id else [], "layer": layer,
+                   "status": reason, "enabled": True, "blocked_reason": None}
+    elif kind == "reconcile_inputs":
+        yield {"kind": "content_reconciliation", "object_id": None, "page_ids": [], "layer": "content",
+               "status": reason, "enabled": True, "blocked_reason": None}
+    elif kind == "review_quality":
+        for ref in fact["source_refs"]:
+            try:
+                review = ctx.read(ref)
+                validate_schema("review", review)
+                yield {"kind": "review", "object_id": review["review_id"], "page_ids": [], "layer": None,
+                       "status": review["status"], "enabled": True, "blocked_reason": None,
+                       "member_identity": ref["sha256"]}
+            except READ_FAILURES:
+                yield {"kind": "review", "object_id": None, "page_ids": [], "layer": None,
+                       "status": "unreadable", "enabled": False, "blocked_reason": "review_unreadable",
+                       "member_identity": ref["sha256"]}
+
+
+def action_targets(project_dir, action_id, *, revision, limit=30, offset=0):
+    """A fixed-snapshot, bounded page of an action's members. No history scan."""
+    import re
+    if not isinstance(revision, str) or not revision:
+        raise ReadModelError("invalid_revision", "revision", "one fixed revision is required", http_status=400)
+    if (type(limit) is not int or not 1 <= limit <= 100 or type(offset) is not int or offset < 0):
+        raise ReadModelError("invalid_action_query", "pagination", "limit must be 1–100 and offset nonnegative", http_status=400)
+    if not isinstance(action_id, str) or not re.fullmatch(r"[a-f0-9]{32}", action_id):
+        raise ReadModelError("action_not_found", "action_id", "action is not present in this snapshot", http_status=404)
+    store = Store(project_dir)
+    doc = load_snapshot(store, revision)
+    ctx, members = _ReadContext(store, doc), {}
+    _summary(ctx, revision=revision, member_index=members)
+    # A live clock warning has no historical truth. It may resolve while the
+    # requested snapshot is still current, but never invent it for old history.
+    if action_id not in members and doc["revision_id"] == store.current_revision_id():
+        _summary(ctx, revision=None, member_index=members)
+    if action_id not in members:
+        raise ReadModelError("action_not_found", "action_id", "action is not present in this snapshot", http_status=404)
+    targets, seen = [], set()
+    for fact in members[action_id]:
+        for target in _fact_targets(ctx, fact):
+            identity = target.pop("member_identity", fact["identity"])
+            key = (target["kind"], target["object_id"] or identity, tuple(target["page_ids"]), target["layer"])
+            if key in seen:
+                continue
+            seen.add(key)
+            targets.append({"target_id": sha256_bytes(repr(key).encode())[:32], **target})
+    result = {"schema_version": "action_targets.v1", "project_id": doc["project_id"],
+              "revision_id": doc["revision_id"], "action_id": action_id, "total": len(targets),
+              "limit": limit, "offset": offset, "targets": targets[offset:offset + limit]}
+    validate_schema("action_targets", result)
+    return result
 
 
 def _prompt_records(ctx, entry, artifact):

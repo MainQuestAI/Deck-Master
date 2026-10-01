@@ -50,6 +50,8 @@ export function readableError(error) {
     style_conflict: '风格要求或目标页基准已变化，未覆盖任何新内容；请核对逐项冲突后另建计划。',
     style_invalid: '本次风格要求或扩展条件不满足，请检查所选版本、目标与已采用候选。',
     candidate_not_found: '所选版本没有这个候选，未跳转到其它候选。',
+    action_not_found: '这个固定版本无法再解析该项待办。已保留当前工作面，请重新读取待办或查看对应历史。',
+    invalid_action_query: '待办读取范围无效，当前工作面仍保留。请重新打开所选版本。',
     port_conflict: '端口已被占用，未关闭其它服务。请使用自动端口重新打开。',
   };
   return labels[error.code] || error.message || '操作未完成，当前输入仍保留。';

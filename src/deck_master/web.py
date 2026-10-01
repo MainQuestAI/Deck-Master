@@ -58,7 +58,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
-                   "restoration.v1", "workbench_actions.v1")
+                   "restoration.v1", "workbench_actions.v1", "action_targets.v1")
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
@@ -373,7 +373,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_error(exc)
             return
-        if parsed.path in ("/api/view", "/api/view/summary", "/api/workbench", "/api/tasks", "/api/reviews", "/api/content-plan") or parsed.path.startswith(("/api/pages/", "/api/requests/", "/api/attempts/", "/api/tasks/")):
+        if parsed.path in ("/api/view", "/api/view/summary", "/api/workbench", "/api/tasks", "/api/reviews", "/api/content-plan") or parsed.path.startswith(("/api/pages/", "/api/requests/", "/api/attempts/", "/api/tasks/", "/api/actions/")):
             self._read_projection(parsed)
             return
         if parsed.path=='/api/session':
@@ -433,6 +433,17 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 payload = view_mod.project_view(project, revision=revision)
             elif parsed.path in ("/api/view/summary", "/api/workbench"):
                 payload = workbench_mod.workbench_summary(project, revision=revision)
+            elif parsed.path.startswith('/api/actions/'):
+                parts = parsed.path.split('/')
+                if len(parts) != 5 or parts[-1] != 'targets':
+                    raise workbench_mod.ReadModelError('action_not_found', 'action_id', 'unknown action endpoint', http_status=404)
+                if set(query) - {'revision', 'limit', 'offset'} or any(len(v) != 1 or not v[0] for v in query.values()):
+                    raise workbench_mod.ReadModelError('invalid_action_query', 'query', 'use one value per supported query field', http_status=400)
+                try:
+                    limit, offset = int(query.get('limit', ['30'])[0]), int(query.get('offset', ['0'])[0])
+                except ValueError as exc:
+                    raise workbench_mod.ReadModelError('invalid_action_query', 'pagination', 'pagination must use integers', http_status=400) from exc
+                payload = workbench_mod.action_targets(project, parts[3], revision=revision, limit=limit, offset=offset)
             elif parsed.path == "/api/tasks":
                 from . import run_desk
                 fields = ('limit', 'offset', 'change_id', 'status', 'attention')
