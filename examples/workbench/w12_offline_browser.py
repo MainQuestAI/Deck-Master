@@ -26,6 +26,8 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--font", default="Arial")
     parser.add_argument("--require-installed", action="store_true")
+    parser.add_argument("--chromium-executable", type=Path,
+                        help="Use an explicitly installed Chromium instead of Playwright's bundled browser.")
     args = parser.parse_args()
     root = args.out.resolve()
     root.mkdir(parents=True, exist_ok=False)
@@ -45,7 +47,9 @@ def main():
     try:
         url = server.start()
         with sync_playwright() as pw:
-            browser = pw.chromium.launch()
+            browser = pw.chromium.launch(
+                executable_path=str(args.chromium_executable) if args.chromium_executable else None,
+            )
             context = browser.new_context(accept_downloads=True, record_har_path=str(root / "local-only.har"), record_har_content="omit")
 
             def gate(route):
@@ -92,18 +96,41 @@ def main():
                 downloads.append({"purpose": purpose, "revision": revision, "sha256": digest, "files": len(manifest["files"])})
             checks["three_fixed_offline_downloads_hash_verified"] = True
             static = files("deck_master").joinpath("resources/static/v2")
-            for asset in sorted(static.iterdir(), key=lambda p: p.name):
-                if not asset.is_file():
-                    continue
-                response = context.request.get(url + "v2/" + asset.name)
-                assert response.status == 200 and response.body() == asset.read_bytes(), asset.name
+
+            def public_assets(directory, prefix=""):
+                for asset in sorted(directory.iterdir(), key=lambda p: p.name):
+                    name = prefix + asset.name
+                    if asset.is_dir():
+                        yield from public_assets(asset, name + "/")
+                    elif Path(asset.name).suffix in (".html", ".js", ".css", ".woff2", ".svg"):
+                        yield name, asset
+
+            served = []
+            for name, asset in public_assets(static):
+                response = context.request.get(url + "v2/" + name)
+                assert response.status == 200 and response.body() == asset.read_bytes(), name
+                served.append(name)
+            assert "assets/deck-master-logo/logo-horizontal-light.svg" in served
+            assert "assets/deck-master-logo/favicon.svg" in served
+            assert static.joinpath("assets/deck-master-logo/IBMPlexMono-OFL.txt").is_file()
+            assert json.loads(static.joinpath("package.json").read_text())["type"] == "module"
             checks["every_v2_asset_served_from_installed_package"] = True
-            # Read old entry from the same installed core without changing project.
+            # All supported entries serve the current UI; retired routes stay absent.
             before = store.read_current()
-            page.goto(url)
-            assert page.locator("body").inner_text().strip()
+            current_index = static.joinpath("index.html").read_bytes()
+            for path in ("", "index.html", "v2/", "v2/index.html"):
+                response = context.request.get(url + path)
+                assert response.status == 200 and response.body() == current_index, path
+            page.goto(url + "#" + urlencode({"project": identity, "revision": revision, "surface": "overview", "layer": "content"}))
+            expect(page.get_by_role("heading", name="制作总览", exact=True)).to_be_visible()
+            assert page.locator(".brand-logo").evaluate("image => image.complete && image.naturalWidth > 0")
+            for path in ("legacy", "legacy/", "app.js", "style.css"):
+                assert context.request.get(url + path).status == 404, path
+            old_static = files("deck_master").joinpath("resources/static")
+            assert all(not old_static.joinpath(name).is_file() for name in ("index.html", "app.js", "style.css"))
             assert store.read_current() == before
-            checks["legacy_entry_read_without_write"] = True
+            checks["current_entries_and_retired_routes_without_write"] = True
+            checks["installed_brand_license_and_esm_metadata"] = True
             assert not external and not errors and all(f["status"] == "loaded" for f in fonts)
             checks["no_cdn_external_font_or_runtime_request"] = True
             context.close()
@@ -120,6 +147,7 @@ def main():
                 "python": platform.python_version(),
                 "platform": platform.platform(),
                 "installed": "site-packages" in module.parts,
+                "chromium": browser.version,
             },
             "synthetic": True,
             "model_calls": 0,

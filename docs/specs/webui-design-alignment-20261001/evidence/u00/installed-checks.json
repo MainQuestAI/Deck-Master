@@ -1,0 +1,527 @@
+{
+  "checks": {
+    "viewport_1440_900_focus_and_overflow": true,
+    "viewport_1280_800_focus_and_overflow": true,
+    "three_fixed_offline_downloads_hash_verified": true,
+    "every_v2_asset_served_from_installed_package": true,
+    "current_entries_and_retired_routes_without_write": true,
+    "installed_brand_license_and_esm_metadata": true,
+    "no_cdn_external_font_or_runtime_request": true
+  },
+  "downloads": [
+    {
+      "purpose": "review",
+      "revision": "a6b17763b24f42208dbea1e07be0fa90",
+      "sha256": "4b151a1be44b7dc2fe772faf78b7c9008b6705ec460596efc659674d1d571e3a",
+      "files": 8
+    },
+    {
+      "purpose": "delivery",
+      "revision": "a6b17763b24f42208dbea1e07be0fa90",
+      "sha256": "9c53828dccb03132076e2aed58c78083d48d0267dd71df1ef24415431c3e8f33",
+      "files": 8
+    },
+    {
+      "purpose": "engineering",
+      "revision": "a6b17763b24f42208dbea1e07be0fa90",
+      "sha256": "bb39454e30c4b7b87899c83b86a43faef974b695cecf67fa22f57fd3800284a6",
+      "files": 29
+    }
+  ],
+  "external_requests": [],
+  "page_errors": [],
+  "font_checks": [
+    {
+      "status": "loaded",
+      "body": "Söhne, Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    {
+      "status": "loaded",
+      "body": "Söhne, Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    }
+  ],
+  "resources": [
+    {
+      "path": "/v2/",
+      "status": 200
+    },
+    {
+      "path": "/v2/tokens.css",
+      "status": 200
+    },
+    {
+      "path": "/v2/style.css",
+      "status": 200
+    },
+    {
+      "path": "/v2/workbench.css",
+      "status": 200
+    },
+    {
+      "path": "/v2/app.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/icons.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/api.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/project.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/dom.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/launcher-ui.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/summary-poll.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/drafts.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/routes.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/views.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/business-operations.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/gallery.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/run-desk.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/overview.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/delivery-desk.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/candidate-desk.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/change-handoff.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/content-sources.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/gallery-state.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/page-workbench.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/images.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/style-calibration.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/receipt-verdict.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/run-recovery.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/production-view.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/text-diff.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/page-text.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/trial-actions.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/annotations.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/text-selection.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/request-view.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/content-edit.js",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
+      "status": 200
+    },
+    {
+      "path": "/api/ui-state",
+      "status": 200
+    },
+    {
+      "path": "/api/project",
+      "status": 200
+    },
+    {
+      "path": "/api/view/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/project",
+      "status": 200
+    },
+    {
+      "path": "/api/drafts",
+      "status": 200
+    },
+    {
+      "path": "/api/view/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/history",
+      "status": 200
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/logo-horizontal-light.svg",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/drafts",
+      "status": 200
+    },
+    {
+      "path": "/api/session",
+      "status": 200
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
+      "status": 200
+    },
+    {
+      "path": "/api/candidates",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/ui-state",
+      "status": 200
+    },
+    {
+      "path": "/api/project",
+      "status": 200
+    },
+    {
+      "path": "/api/view/summary",
+      "status": 200
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/history",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/drafts",
+      "status": 200
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
+      "status": 200
+    },
+    {
+      "path": "/api/ui-state",
+      "status": 200
+    },
+    {
+      "path": "/api/candidates",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/exports",
+      "status": 200
+    },
+    {
+      "path": "/api/exports",
+      "status": 200
+    },
+    {
+      "path": "/api/exports",
+      "status": 200
+    },
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/v2/tokens.css",
+      "status": 200
+    },
+    {
+      "path": "/v2/style.css",
+      "status": 200
+    },
+    {
+      "path": "/v2/workbench.css",
+      "status": 200
+    },
+    {
+      "path": "/v2/icons.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/app.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/api.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/dom.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/launcher-ui.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/project.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/routes.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/summary-poll.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/drafts.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/views.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/business-operations.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/gallery.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/delivery-desk.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/run-desk.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/overview.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/change-handoff.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/candidate-desk.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/content-sources.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/production-view.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/gallery-state.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/page-workbench.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/images.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/style-calibration.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/receipt-verdict.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/trial-actions.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/run-recovery.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/page-text.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/text-diff.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/content-edit.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/request-view.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/text-selection.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/annotations.js",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
+      "status": 200
+    },
+    {
+      "path": "/api/view/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/project",
+      "status": 200
+    },
+    {
+      "path": "/api/ui-state",
+      "status": 200
+    },
+    {
+      "path": "/api/drafts",
+      "status": 200
+    },
+    {
+      "path": "/api/view/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/project",
+      "status": 200
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/logo-horizontal-light.svg",
+      "status": 200
+    },
+    {
+      "path": "/api/content-plan",
+      "status": 200
+    },
+    {
+      "path": "/api/session",
+      "status": 200
+    },
+    {
+      "path": "/api/thumbnails",
+      "status": 202
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
+      "status": 200
+    },
+    {
+      "path": "/api/ui-state",
+      "status": 200
+    }
+  ],
+  "environment": {
+    "module": "/workspace/scratch/u00-installed/lib/python3.12/site-packages/deck_master/__init__.py",
+    "python": "3.12.14",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "installed": true,
+    "chromium": "151.0.7922.173"
+  },
+  "synthetic": true,
+  "model_calls": 0,
+  "professional_evidence": "not_evaluated"
+}

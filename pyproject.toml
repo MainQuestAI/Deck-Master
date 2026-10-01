@@ -57,4 +57,5 @@ deck_master = [
 [tool.pytest.ini_options]
 markers = [
     "render: tests that need the real renderer toolchain (soffice/pdftoppm/rsvg-convert)",
+    "browser: tests that execute the shipped UI in a real Chromium browser",
 ]

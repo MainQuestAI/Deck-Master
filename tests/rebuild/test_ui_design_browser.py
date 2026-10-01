@@ -8,6 +8,8 @@ import pytest
 from deck_master.samples import create_gallery_sample
 from deck_master.web import WorkbenchServer
 
+pytestmark = pytest.mark.browser
+
 
 @pytest.fixture
 def workbench_page(tmp_path):
