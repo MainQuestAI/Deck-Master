@@ -487,7 +487,7 @@
     "existing_packages": "W12",
     "status": "未最终闭合",
     "final_owner": "B07",
-    "remaining": "临时目录回退演练；默认发布及实际HOME迁移独立授权"
+    "remaining": "临时目录回退演练与实际HOME迁移仍待用户执行；默认入口已按用户发布授权切换（2026-10-01：/ 与 /index.html 服务 /v2/ 内容，旧版审阅保留为 /legacy/ 回退，view 默认打开 v2）"
   },
   {
     "id": "G50",

@@ -1,0 +1,43 @@
+{
+  "action": "G49 默认入口切换（用户发布授权）",
+  "date": "2026-10-01",
+  "authorization": "用户在冲刺终审汇报后明确选择「现在就切换」：默认入口切到新版制作工作台，旧版保留回退路径。授权前状态与诊断见 a08-browser-verification.json 的 ui_entry_diagnosis 节。",
+  "base": "8be6461c86c1db5fa01bbd6594f810edf65a45da (PR #81 合并点)",
+  "changes": {
+    "src/deck_master/web.py": "/ 与 /index.html 服务 /v2/ 内容（v2 资源为绝对 /v2/ 路径，任意宿主路径安全，与 launcher 同模式）；新增 /legacy 与 /legacy/ 服务旧版 index.html（旧版资源保持根路径 /style.css、/app.js 不变）；open_view 默认打开 /v2/，ui=\"legacy\" 打开 /legacy/，v2 静态缺失时 core_ready_ui_unavailable 并指引 --ui legacy",
+    "src/deck_master/cli.py": "view --ui choices 从 (\"v2\",) 扩展为 (\"v2\", \"legacy\")，帮助文案更新为默认打开 v2 工作台",
+    "src/deck_master/launcher.py": "open_workbench 的 legacy 模式 URL 从根路径改为 /legacy/（切换后根路径即 v2，原指向会自引用）",
+    "src/deck_master/resources/static/v2/project.js": "侧栏「原有工作区」链接 / → /legacy/",
+    "src/deck_master/resources/static/v2/app.js": "服务过旧时的「打开原有入口」降级链接 / → /legacy/"
+  },
+  "docs": [
+    "skills/deck-master/SKILL.md：自动工作台指引注明默认入口已切换、--ui legacy 回退",
+    "docs/specs/deck-master-webui-v4-20260930/INTERFACES.md：B02 入口契约补记切换事实",
+    "docs/specs/deck-master-webui-v4-20260930/GAP-MATRIX.{csv,md,json}：G49 remaining 更新（临时目录回退演练与实际HOME迁移仍待用户执行）"
+  ],
+  "tests": {
+    "updated": [
+      "tests/rebuild/test_entry_capabilities.py：默认入口断言翻转为 endswith(/v2/)，新增 --ui legacy 断言 endswith(/legacy/)，源码锚定改为 choices=(\"v2\", \"legacy\")",
+      "tests/rebuild/test_workbench_e2e.py：旧版静态资产断言改走 /legacy/ 回退入口",
+      "tests/rebuild/test_web.py：accept 自动打开 URL 锚定 /v2/ 结尾，/api/health 改从 origin 拼"
+    ],
+    "added": [
+      "tests/rebuild/test_web.py::test_default_entry_serves_v2_and_legacy_keeps_the_review_ui：/ 与 /index.html 服务 v2 内容、/legacy/ 服务旧版壳",
+      "tests/rebuild/test_static_modules.py::test_v2_rollback_links_point_at_the_legacy_entry：v2 内回退链接锚定 /legacy/"
+    ],
+    "gate": "pytest tests/rebuild：992 passed（基线 990 + 新增 2）；ruff check src/ tests/rebuild/：clean"
+  },
+  "browser_verification": {
+    "service": "真实 view 服务（open_view 派生 detached 进程，合成项目 create_sample page_count=2）",
+    "root": "GET / 渲染「Deck Master · 制作工作台」（新版五工作面外壳），截图 evidence/screenshots/entry-switch-root-v2.png",
+    "legacy": "GET /legacy/ 渲染「Deck Master · Review Workbench」，截图 evidence/screenshots/entry-switch-legacy.png",
+    "rollback_link": "v2 侧栏「原有工作区」snapshot /url 为 /legacy/，点击后落地 /legacy/ 且标题为旧版",
+    "cli_default": "open_view(project, open_browser=False).review_url 以 /v2/ 结尾",
+    "nature": "真实服务浏览器验证；项目为合成样本（fixture 惯例）",
+    "console_note": "唯一 console 错误为 /favicon.ico 404，属服务本就没有该文件，非本次改动引入"
+  },
+  "still_open": [
+    "临时目录回退演练与实际 HOME 迁移（用户执行项）",
+    "真实 Host 正向证据、30 页真实项目、安装摘要重建（G46）、压力失败根因复验（G47）、30 秒真实使用者观察（A08）"
+  ]
+}

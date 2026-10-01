@@ -47,7 +47,7 @@ G45,交付readiness和专业质量,design-system.html:status,src/deck_master/edi
 G46,wheel/sdist离线资源/Skill,index.html; style.css,pyproject.toml; tools/build_hook.py,W12,未最终闭合,B07,旧安装93c76a1摘要可追回，最终SHA必须重建
 G47,300×5×3压力/20分钟内存,app.js:gallery,src/deck_master/resources/static/v2/images.js; src/deck_master/workbench.py,W01 W04 W10 W12,未最终闭合,B07,已有pressure failure；保持原门槛，修根因后重测
 G48,30页真实项目与两轮视觉修改,app.js:全链路,docs/reports/workbench-v3-execution-20260926/W12.md,W12,缺实际验收材料/记录,B06,真实项目选定后执行；不得合成样本冒充真实项目
-G49,正常安装/回退/默认切换,product-ui-language.md,src/deck_master/install.py; src/deck_master/cli.py,W12,未最终闭合,B07,临时目录回退演练；默认发布及实际HOME迁移独立授权
+G49,正常安装/回退/默认切换,product-ui-language.md,src/deck_master/install.py; src/deck_master/cli.py,W12,未最终闭合,B07,临时目录回退演练与实际HOME迁移仍待用户执行；默认入口已按用户发布授权切换（2026-10-01，/legacy/ 回退保留）
 G50,六状态规范与完整动线,states.html; states.js,src/deck_master/resources/static/v2/app.js,W12,设计已收讫，产品待验,A08,逐状态实际HTTP/浏览器证据；状态规范页不进产品导航
 G51,原型localStorage/硬编码示例/模拟执行,app.js:initialArtifact; task-claim; reset,src/deck_master/resources/static/v2/app.js,不适用,仅设计参考，禁止移植为真状态,A01,保留原文件作设计；生产使用Python真数据，模拟只用于独立状态参考
 G52,合并/拆分回传后采用,states.js:return-structure / confirm-adopt-structure,src/deck_master/content_ops.py; src/deck_master/tasks.py,W09,采用时机功能差距，源码确认,B03,当前_accept_content_update接受结果即改稿；先存内容变更集候选，查看影响后原子采用

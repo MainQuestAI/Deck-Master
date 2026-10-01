@@ -54,7 +54,7 @@
 | G46 | wheel/sdist离线资源/Skill | 未最终闭合（W12） | [B07](task-cards/B07.md) | 旧安装93c76a1摘要可追回，最终SHA必须重建 | `index.html; style.css` / `pyproject.toml; tools/build_hook.py` |
 | G47 | 300×5×3压力/20分钟内存 | 未最终闭合（W01 W04 W10 W12） | [B07](task-cards/B07.md) | 已有pressure failure；保持原门槛，修根因后重测 | `app.js:gallery` / `src/deck_master/resources/static/v2/images.js; src/deck_master/workbench.py` |
 | G48 | 30页真实项目与两轮视觉修改 | 缺实际验收材料/记录（W12） | [B06](task-cards/B06.md) | 真实项目选定后执行；不得合成样本冒充真实项目 | `app.js:全链路` / `docs/reports/workbench-v3-execution-20260926/W12.md` |
-| G49 | 正常安装/回退/默认切换 | 未最终闭合（W12） | [B07](task-cards/B07.md) | 临时目录回退演练；默认发布及实际HOME迁移独立授权 | `product-ui-language.md` / `src/deck_master/install.py; src/deck_master/cli.py` |
+| G49 | 正常安装/回退/默认切换 | 未最终闭合（W12） | [B07](task-cards/B07.md) | 临时目录回退演练与实际HOME迁移仍待用户执行；默认入口已按用户发布授权切换（2026-10-01，/legacy/ 回退保留） | `product-ui-language.md` / `src/deck_master/install.py; src/deck_master/cli.py` |
 | G50 | 六状态规范与完整动线 | 设计已收讫，产品待验（W12） | [A08](task-cards/A08.md) | 逐状态实际HTTP/浏览器证据；状态规范页不进产品导航 | `states.html; states.js` / `src/deck_master/resources/static/v2/app.js` |
 | G51 | 原型localStorage/硬编码示例/模拟执行 | 仅设计参考，禁止移植为真状态（不适用） | [A01](task-cards/A01.md) | 保留原文件作设计；生产使用Python真数据，模拟只用于独立状态参考 | `app.js:initialArtifact; task-claim; reset` / `src/deck_master/resources/static/v2/app.js` |
 | G52 | 合并/拆分回传后采用 | 采用时机功能差距，源码确认（W09） | [B03](task-cards/B03.md) | 当前_accept_content_update接受结果即改稿；先存内容变更集候选，查看影响后原子采用 | `states.js:return-structure / confirm-adopt-structure` / `src/deck_master/content_ops.py; src/deck_master/tasks.py` |

@@ -105,6 +105,24 @@ def server(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Entry selection: `/` is the v2 workbench by default; `/legacy/` keeps the
+# old review UI as the rollback path.
+
+
+def test_default_entry_serves_v2_and_legacy_keeps_the_review_ui(server):
+    url, _, _ = server
+    status, _, body = _get(f"{url}/")
+    assert status == 200
+    assert b"/v2/app.js" in body and b"/v2/tokens.css" in body
+    status, _, body = _get(f"{url}/index.html")
+    assert status == 200 and b"/v2/app.js" in body
+    status, _, body = _get(f"{url}/legacy/")
+    assert status == 200
+    legacy_page = body.decode("utf-8")
+    assert 'href="/style.css"' in legacy_page and 'src="/app.js"' in legacy_page
+
+
+# ---------------------------------------------------------------------------
 # AC-U02: one current revision and one check interpretation everywhere.
 
 
@@ -176,8 +194,10 @@ def test_cli_accept_auto_opens_workbench_after_first_content(tmp_path, monkeypat
         assert payload["review_url"], "first content triggers the automatic workbench URL"
         assert payload["view_status"] == "opened"
         assert opened and opened[0] == payload["review_url"]
+        assert payload["review_url"].endswith("/v2/"), "the default entry is the v2 workbench"
         # The service is real and healthy without any further user command.
-        status, _, health = _get_json(payload["review_url"].rstrip("/") + "/api/health")
+        origin = urllib.parse.urlsplit(payload["review_url"])._replace(path="", query="").geturl()
+        status, _, health = _get_json(origin + "/api/health")
         assert status == 200 and health["status"] == "ok"
     finally:
         stop_service(project)

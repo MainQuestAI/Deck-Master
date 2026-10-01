@@ -1,6 +1,8 @@
 """B02 entry selection and project-effective capabilities; synthetic only.
 
-Covers the explicit `view --open --ui v2` entry (JSON, exit codes, service
+Covers the `view --open` entry selection — the default opens the v2
+workbench, `--ui legacy` opens the rollback review entry (JSON, exit codes,
+service
 reuse with `workbench`), the /api/project effective_actions projection
 (modern, v1-format, readonly sample, missing capability, future-writer and
 unknown-format pointers), and that reading the projection never upgrades or
@@ -189,7 +191,13 @@ def test_view_ui_flag_reuses_service_and_matches_workbench(modern, capsys):
         assert rc == 0
         default_entry = json.loads(capsys.readouterr().out)
         assert default_entry["ui"] is None
-        assert not default_entry["review_url"].rstrip("/").endswith("/v2")
+        assert default_entry["review_url"].endswith("/v2/")
+
+        rc = cli.main(["view", "--project", str(modern), "--open", "--ui", "legacy", "--no-open", "--json"])
+        assert rc == 0
+        legacy_entry = json.loads(capsys.readouterr().out)
+        assert legacy_entry["ui"] == "legacy" and legacy_entry["review_url"].endswith("/legacy/")
+        assert legacy_entry["port"] == default_entry["port"] and legacy_entry["reused"] is True
 
         rc = cli.main(["view", "--project", str(modern), "--open", "--ui", "v2", "--no-open", "--json"])
         assert rc == 0
@@ -226,6 +234,7 @@ def test_view_ui_requires_open_and_validates_choice(modern, capsys):
     capsys.readouterr()
 
 
-def test_skill_and_cli_expose_the_explicit_v2_entry():
-    assert "view --open --ui v2" in SKILL.read_text("utf-8")
-    assert '"--ui", choices=("v2",)' in (Path(cli.__file__).resolve()).read_text("utf-8")
+def test_skill_and_cli_expose_the_entry_contract():
+    skill = SKILL.read_text("utf-8")
+    assert "view --open --ui v2" in skill and "默认入口已切换为新工作台" in skill
+    assert '"--ui", choices=("v2", "legacy")' in (Path(cli.__file__).resolve()).read_text("utf-8")

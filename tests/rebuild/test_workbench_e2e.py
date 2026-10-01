@@ -306,7 +306,9 @@ def test_static_assets_carry_keyboard_zoom_and_text_status(tmp_path: Path) -> No
         script = app_js.decode("utf-8")
         assert 'addEventListener("keydown"' in script and "ArrowRight" in script and "ArrowLeft" in script
         assert "zoom-in" in script and "zoom-fit" in script and "applyZoom" in script
-        _, _, html = _get_raw(f"{url}/index.html")
+        # the legacy entry keeps the rollback review UI assets after the
+        # default-entry switch to the v2 workbench
+        _, _, html = _get_raw(f"{url}/legacy/")
         page = html.decode("utf-8")
         assert 'id="zoom-in"' in page and 'id="zoom-fit"' in page and 'id="zoom-out"' in page
         assert 'role="status"' in page and "aria-live" in page

@@ -179,7 +179,7 @@ export class Project {
       nav, el('div', {class: 'side-project'}, el('span', {class: 'muted'}, '当前项目'), el('strong', {}, this.info.title),
         this.info.sample && el('span', {class: 'status'}, infoSampleLabel(this.info))),
       el('div', {class: 'sidebar-footer stack'}, launcher ? el('a', {href: launcher.href}, '返回项目列表') : el('p', {class: 'muted'}, '当前为项目独立入口'),
-        el('a', {href: '/'}, '原有工作区'), button('连接状态', () => this.connectionInfo(), false, {class: 'text-link'})));
+        el('a', {href: '/legacy/'}, '原有工作区'), button('连接状态', () => this.connectionInfo(), false, {class: 'text-link'})));
     this.notice = el('div', {class: 'notice', role: 'status', hidden: true});
     const banners = el('div', {class: 'banners'}, this.notice);
     if (this.business) banners.append(this.business.node);

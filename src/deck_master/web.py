@@ -382,6 +382,11 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             from .editing import history
             self._send_json(history(self.store.project_root));return
         if parsed.path in ("/", "/index.html"):
+            # the v2 entry content is safe to serve on any path: its assets
+            # use absolute /v2/ URLs
+            self._serve_v2("/v2/")
+            return
+        if parsed.path in ("/legacy", "/legacy/"):
             self._send_bytes(
                 (self.static_dir / "index.html").read_bytes(), "text/html; charset=utf-8"
             )
@@ -554,8 +559,8 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
     The server runs in its own process (``python -m deck_master.view_server``),
     so it keeps serving after the CLI exits. Startup waits bounded on a health
     check; failures return ``unavailable`` with the real reason (spec 09.5).
-    ``ui="v2"`` opens the explicit new workbench entry; without it the default
-    entry is preserved unchanged.
+    The default entry is the v2 workbench; ``ui="legacy"`` opens the legacy
+    review entry kept as the rollback path.
     """
     project_dir = Path(project_dir).expanduser().resolve()
     if not (project_dir / ".deckmaster" / "current.json").is_file():
@@ -573,13 +578,13 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
         return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}", "ui": ui}
     # same incomplete-install guard as the launcher: never point the browser
     # at a /v2/ entry the installed static tree cannot serve
-    ui_available = ui != "v2" or (_static_dir() / "v2" / "index.html").is_file()
+    ui_available = ui == "legacy" or (_static_dir() / "v2" / "index.html").is_file()
     if not ui_available:
         return {"review_url": state["url"], "view_status": "core_ready_ui_unavailable",
-                "detail": "the v2 workbench UI is not present in this installation; use the default entry",
+                "detail": "the v2 workbench UI is not present in this installation; use --ui legacy",
                 "port": state["port"], "pid": state.get("pid"),
                 "reused": state.get("reused", False), "ui": ui}
-    url = state["url"] + ("v2/" if ui == "v2" else "")
+    url = state["url"] + ("legacy/" if ui == "legacy" else "v2/")
     if open_browser:
         opened = False
         try:
