@@ -9,8 +9,11 @@ const blockText = block => {
   if (block.type === 'paragraph') return ['[段落]', block.text];
   if (block.type === 'bullets') return ['[列表]', block.heading, ...bulletItems(block.items)];
   if (block.type === 'table') return ['[表格]', block.title,
-    ...((block.columns || []).map(col => col.label).filter(Boolean).length ? ['表头：' + block.columns.map(col => col.label || '').join(' | ')] : []),
-    ...(block.rows || []).map(row => (row.cells || []).map(cell => cell.display_text || '').join(' | '))];
+    ...((block.columns || []).length ? ['表头：' + block.columns.map(col => col.label || '').join(' | ')] : []),
+    // 与实际渲染器（page-workbench.js bodyBlocks）同规则：按列定义顺序、用
+    // column_id 关联单元格——cells 存储顺序/列归属变化才与页面显示同步反映。
+    ...(block.rows || []).map(row => (block.columns || []).map(col =>
+      row.cells.find(cell => cell.column_id === col.id)?.display_text ?? '').join(' | '))];
   return ['[块]', JSON.stringify(block)];
 };
 

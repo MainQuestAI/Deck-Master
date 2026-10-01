@@ -21,51 +21,27 @@ from deck_master.store import Store
 
 V2 = Path(__file__).resolve().parents[2] / 'src/deck_master/resources/static/v2'
 
-SNIPPET = '''
-import {wireCanonical} from ${wireUri};
-const LEGACY_ACTIONS = ${legacy};
-const canonicalAction = action => LEGACY_ACTIONS[action] || action;
-const encoder = new TextEncoder();
-async function sha256Hex(text) {
-  const bytes = await crypto.subtle.digest('SHA-256', encoder.encode(text));
-  return [...new Uint8Array(bytes)].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-// 与 business-operations.expectedRequestDigest 相同的重算：
-// {protocol, kind: canonical(action), project_id, base_revision, payload} 的 wireCanonical 序列化
-async function expectedRequestDigest(entry, projectId) {
-  const {action, request} = entry.pending.payload;
-  return await sha256Hex(wireCanonical({protocol: 'changes.v1', kind: canonicalAction(action),
-    project_id: projectId, base_revision: request.base_revision, payload: request.input}));
-}
-async function acceptVerdict(entry, response, projectId) {
-  const expected = await expectedRequestDigest(entry, projectId);
-  const terminal = Boolean(response.operation_id === entry.pending.operation_id &&
-    response.request_digest === expected &&
-    (response.status === 'committed' && response.operation_result?.revision_id || response.status === 'unchanged'));
-  return {terminal, expected};
-}
-const result = await (async () => { ${body} })();
-console.log(JSON.stringify(result));
-'''
+# 直接导入生产收据实现（receipt-verdict.js 为零 DOM 依赖纯函数模块，
+# business-operations.js 与本测试共用同一终态判定/摘要重算——终审补丁 P2：
+# 回归测试不得维护仅存在于测试中的判定副本）。
+RECEIPT = (V2 / 'receipt-verdict.js').as_uri()
+
+SNIPPET = (
+    'import {canonicalAction, expectedRequestDigest, receiptTerminal} from ' + json.dumps(RECEIPT) + ';\n'
+    'const result = await (async () => { ${body} })();\n'
+    'console.log(JSON.stringify(result));')
 
 
-def run_node(body: str, legacy: dict) -> dict:
+def run_node(body: str) -> dict:
     import os
-    if os.environ.get('DUMP_BODY'):
-        print('BODY>>>', body[:260], file=sys.stderr)
     node = shutil.which('node')
     assert node, 'node required'
-    script = (SNIPPET.replace('${wireUri}', json.dumps((V2 / 'api.js').as_uri()))
-              .replace('${legacy}', json.dumps(legacy))
-              .replace('${body}', body))
+    script = SNIPPET.replace('${body}', body)
     result = subprocess.run([node, '--experimental-default-type=module', '--input-type=module', '-e', script],
                             capture_output=True, text=True)
     if result.returncode != 0 or not result.stdout.strip():
-        import os
         detail = 'node failed rc=' + str(result.returncode) + '; stderr: ' + result.stderr[:600]
-        if os.environ.get('DUMP_NODE_SCRIPT'):
-            detail += '||SCRIPT||' + script
-        raise AssertionError(detail + ('||SCRIPT||' + script if os.environ.get('DUMP_NODE_SCRIPT') else ''))
+        raise AssertionError(detail)
     return json.loads(result.stdout)
 
 
@@ -131,9 +107,10 @@ def test_legacy_decision_pending_recovers_with_reekind_digest(tmp_path):
         'const response = {status: "committed", operation_id: ' + json.dumps(op) + ','
         ' request_digest: ' + json.dumps(shown['request_digest']) + ','
         ' operation_result: {revision_id: ' + json.dumps(committed['revision_id']) + '}};'
-        'return await acceptVerdict(entry, response, ' + json.dumps(doc['project_id']) + ');',
-        {'candidates.decision': 'candidates.decide'})
-    assert verdict['terminal'] is True, verdict
+        'const expected = await expectedRequestDigest(entry.pending.payload, ' + json.dumps(doc['project_id']) + ');'
+        'const terminal = await receiptTerminal(entry, response, ' + json.dumps(doc['project_id']) + ');'
+        'return {terminal, expected};')
+    assert verdict['terminal'] is True and verdict['expected'] == shown['request_digest'], verdict
     # 旧 kind 摘要与规范 kind 摘要不同（证明必须重算，不能直接比对冻结值）
     assert shown['request_digest'] != legacy_kind_digest
 
@@ -194,10 +171,11 @@ def test_unchanged_response_is_terminal_for_client(tmp_path):
                        'request': {'input': {'schema_version': 'candidate_decision.v1', 'project_id': doc['project_id'],
                                              'base_revision': current_revision, 'candidate_id': candidate_id,
                                              'decision': 'keep_current', 'expected_decision_ref': first_result['decision_ref']},
-                                   'base_revision': current_revision, 'operation_id': op}}
+                                   'base_revision': current_revision, 'operation_id': op},
+                       'request_digest': unchanged['request_digest']}
     verdict = run_node(
         'const entry = {pending: {payload: ' + json.dumps(pending_payload) + ', operation_id: ' + json.dumps(op) + '}};'
         'const response = ' + json.dumps(unchanged) + ';'
-        'return await acceptVerdict(entry, response, ' + json.dumps(doc['project_id']) + ');',
-        {'candidates.decision': 'candidates.decide'})
+        'const terminal = await receiptTerminal(entry, response, ' + json.dumps(doc['project_id']) + ');'
+        'return {terminal};')
     assert verdict['terminal'] is True, verdict
