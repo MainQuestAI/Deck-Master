@@ -331,3 +331,15 @@ def test_readonly_sample_http_refuses_decision_writes(tmp_path):
             assert json.load(error)['error']['code'] == 'sample_readonly'
     finally:
         server.stop()
+
+
+def test_client_action_kind_matches_server_digest_kind():
+    from pathlib import Path
+    """A06 评审 P1 回归：business.submit 的 action 字符串必须与服务端 decide 的
+    request_digest kind 完全一致，否则收据核对链路断裂（待核实死循环）。"""
+    module = Path(__file__).resolve().parents[2] / 'src/deck_master/resources/static/v2/business-operations.js'
+    source = module.read_text(encoding='utf-8')
+    assert "'candidates.decide': '/api/candidates/decision'" in source
+    assert "'candidates.decision'" not in source
+    import inspect
+    assert 'candidates.decide' in inspect.getsource(candidates.decide)

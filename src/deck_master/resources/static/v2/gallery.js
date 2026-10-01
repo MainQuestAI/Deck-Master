@@ -79,7 +79,11 @@ export function gallery(app, data) {
   function resetReading(patch, preserveAnchor = false) {
     if (patch.mode && patch.mode !== state().mode) invalidatePitch();
     rememberAnchor(); memory.update(patch); rowsKey = ''; renderControls();
-    restoring = true; viewPort.scrollTop = state().mode !== 'compare' && preserveAnchor ? anchorTop() : 0; restoring = false; renderRows(true);
+    // 先渲染新模式瓷片再测量：连续节距首测若发生在旧模式 DOM 上，会把网格
+    // 瓷片高写入模块级缓存并污染整个会话的虚拟化（评审 reading-P1b）。
+    restoring = true; renderRows(true);
+    viewPort.scrollTop = state().mode !== 'compare' && preserveAnchor ? anchorTop() : 0;
+    renderRows(true); restoring = false;
     if (!preserveAnchor) rememberAnchor();
   }
   // 设计尾部的列宽规则由这里等效执行：可用宽度放不下 280px 时降为 2 列。
@@ -92,10 +96,10 @@ export function gallery(app, data) {
   }
   function rowHeight() {
     if (state().mode === 'continuous') {
-      if (continuousPitch) return continuousPitch;
-      const first = grid.querySelector('.slide-tile');
-      if (first) { const measured = first.getBoundingClientRect().height + 32; if (measured > 200) { continuousPitch = measured; return measured; } }
-      return Math.min(920, viewPort.clientWidth - 20) * 9 / 16 + 130;
+      // 连续节距的唯一事实源是 renderRows 尾部的 DOM 实测校准；这里只读缓存，
+      // 未校准时用几何估算回落（与实测差 ~1px）。绝不在渲染前测量写入——
+      // 那会测到上一模式的旧瓷片并污染整个会话（终审 reading-P1b）。
+      return continuousPitch || Math.min(920, viewPort.clientWidth - 20) * 9 / 16 + 130;
     }
     return ((viewPort.clientWidth - 20 - (columnsNow() - 1) * 20) / columnsNow()) * 9 / 16 + 130;
   }
@@ -171,7 +175,8 @@ export function gallery(app, data) {
     const parts = [el('span', {}, '当前显示：', el('strong', {}, layers[s.layer])),
       el('span', {class: 'muted'}, `${version(s.revision_id)} · ${counts}${outside ? ` · 筛选外选中 ${outside} 页，比较仍保留` : ''}`)];
     if (stale > 0) parts.push(el('span', {class: 'accent'}, `${stale} 页依据已变化`));
-    legend.replaceChildren(...parts);
+    const text = parts.map(part => part.textContent).join('\u0000');
+    if (text !== legend.dataset.text) { legend.dataset.text = text; legend.replaceChildren(...parts); }
   }
   const searchSlot = el('span', {class: 'gallery-search'});
   const search = el('input', {'aria-label': '搜索页面', placeholder: '搜索页码或标题'});
@@ -276,27 +281,35 @@ export function gallery(app, data) {
     if (!visible.length) grid.append(empty(query ? '没有匹配的页面' : '没有符合筛选的页面', query ? '可更换搜索词，或清除搜索查看全部。' : '已选页面仍保留，可更换章节或状态。'));
     renderLegend();
     viewPort.dataset.mode = state().mode; viewPort.dataset.visiblePages = String(cards.size);
+    // 连续模式渲染后校准节距：窗口内相邻瓷片的实测 top 差是唯一事实源。
+    // 校准发生在 replaceChildren 之后，测到的必是当前模式瓷片；后续滚动/
+    // 锚点计算随下一次渲染自然收敛到同一节距。
+    if (state().mode === 'continuous') {
+      const rendered = [...grid.querySelectorAll('.slide-tile')];
+      if (rendered.length >= 2) {
+        const pitch = rendered[1].getBoundingClientRect().top - rendered[0].getBoundingClientRect().top;
+        if (pitch > 200 && Math.abs(pitch - (continuousPitch || 0)) > 0.5) continuousPitch = pitch;
+      }
+    }
     if (!cards.has(focusId) && cards.size) cards.values().next().value.tabIndex = 0;
     if (focused && cards.has(focused)) cards.get(focused).focus({preventScroll: true});
   }
   function alignAnchorTile() {
-    // 解析式锚点定位：锚点行渲染在窗口首位（first×估算节距），行内位移用
-    // 锚点瓷片实测节距表达——瓷片高度不均不再累计到跨行估算里，且设置后
-    // 重渲染的 topSpace 同式重算，落点稳定（不依赖迭代收敛）。
+    // 仅连续模式需要解析式校正：网格模式 anchorTop() 的行基公式本身正确，
+    // 而这里的平铺索引×节距推导在多列布局下不成立（评审 reading-P1a）。
     const anchor = state().anchor;
-    if (disposed || state().mode === 'compare' || !anchor.page_id) return;
+    if (disposed || state().mode !== 'continuous' || !anchor.page_id) return;
     const anchorIndex = filtered().findIndex(page => page.page_id === anchor.page_id);
     if (anchorIndex < 0) return;
     const tiles = [...grid.querySelectorAll('.slide-tile')];
     const tile = grid.querySelector(`[data-page-id="${anchor.page_id}"]`);
-    const gap = state().mode === 'continuous' ? 32 : 24;
     const measured = tile && tiles[tiles.indexOf(tile) + 1]
       ? tiles[tiles.indexOf(tile) + 1].getBoundingClientRect().top - tile.getBoundingClientRect().top
-      : (tile ? tile.getBoundingClientRect().height : rowHeight() - 130) + gap;
-    // 行号与节距统一用锚点瓷片实测值：渲染后 rowHeight() 测的正是首块（锚点）
-    // 瓷片的实测节距，因此 topSpace = anchorIndex×pitch 与分片位移同基准，
-    // 重渲染后 first 仍等于锚点行，tileRel = -offset×pitch 解析成立且不动点稳定。
+      : (tile ? tile.getBoundingClientRect().height : 0) + 32;
+    // 实测节距写回会话缓存后再定位+重渲染：topSpace=first×pitch 与分片位移
+    // 同基准，瓷片高度不均时落点误差不再随锚点序号放大（评审 reading-P2）。
     const pitch = Math.max(200, measured);
+    continuousPitch = pitch;
     viewPort.scrollTop = anchorIndex * pitch + Math.min(anchor.offset * pitch, pitch - 1);
     renderRows(true);
   }

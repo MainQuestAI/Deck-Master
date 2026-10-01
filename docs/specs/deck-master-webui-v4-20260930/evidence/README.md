@@ -2,6 +2,12 @@
 
 本轮核验代码为 main `66da345c84de48933a76de577114f08dcebf4f0e`，没有改生产代码。
 
+- `sprint-review-20261001.json`：**冲刺终审**（用户要求的四层 subagent 评审：核心/前端阅读/前端决策/证据；4 P1+10 P2 结论与修复记录）。
+- `a08-browser-verification.json` / `output/playwright/a08/*.png`：**A08 实施后新增**（基线 b8bbf59）：两视口（1440/1280）×六工作面 12 图矩阵 + 设计差异单 5 项；30 秒真实使用者观察 open。
+- `b06-slice.json`：**B06 实施后新增**（基线 0ccd8dd）：preserve_dimensions 投影/范围校验/instruction 核心证据；AC02/AC03 真实层 open。
+- `a07-browser-verification.json` / `output/playwright/a07/*.png`：**A07 实施后新增**（基线 2120421）：任务与交付面接入 B05 两阶段清理的端到端验证（清理后 drafts 空、revision 不变）。
+- `a06-browser-verification.json` / `output/playwright/a06/*.png`：**A06 实施后新增**（基线 2120421）：候选台消费 B04 决定 + 正文候选文本差异的验证；含终审 P1（digest kind）修复后的收据解除与 reopen 端到端记录。
+- `b07-slice.json`：**B07 实施后新增**（基线 fa41aae）：G54 三层收口（含终审修正）与 open 项记录。
 - `a05-browser-verification.json` / `output/playwright/a05/*.png`：**A05 实施后新增**（基线 0ccd8dd）：内容面 content-layout 双栏与材料四态、大纲块导航、标注 segmented+键盘百分比区域、文本 code point 选段、草稿按页/基准隔离与刷新保留、保存意见不创建任务、页序/移除/合并/拆分影响预览、材料更新进入待协调流的真实服务浏览器验证；合成证据。
 - `a04-browser-verification.json` / `output/playwright/a04/*.png`：**A04 实施后新增**（基线 a8f698e，冲刺支线 codex/webui-v4-completion）：整稿画廊设计布局（segmented/legend/slide-tile/有效列降级/页面搜索）、六段制作链（含来源段与提示词阶段切换）、连续阅读返回逐像素定位、并排同版比较与筛选外选中、历史固定只读无业务写、大图加载中切换工作面与离开零请求泄漏（W12 根因引 629d625，压力复测归 B07）的真实服务浏览器验证；24 页 create_gallery_sample 混合层项目，合成证据。
 - `a03-browser-verification.json` / `output/playwright/a03/*.png`：**A03 实施后新增**（基线 931f19c）：overview.js 待办面板消费 B01 next_actions 与 8 列矩阵（排序/搜索/章节/批量选择，普通 Tab）的 24 页混合项目真实服务浏览器验证。

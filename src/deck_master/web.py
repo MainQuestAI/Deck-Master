@@ -147,7 +147,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 self._send_json({'error': {'code': 'sample_readonly', 'message': 'this synthetic example is read-only; create your own project'}}, 403)
                 return
             # G54（B07 回填）：document 写族端点补与 FORMAT_GATED 投影一致的格式门。
-            if self.path in ('/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble'):
+            # G54 defensive copy only: candidates plan/adopt/decision are gated
+            # at the service layer (_require_workbench); stages.assemble keeps its
+            # existing service-layer stage_format_required error, not masked here.
+            if self.path in ('/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision'):
                 document = self.store.load_document()
                 if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
                     self._send_json({'error': {'code': 'unsupported_project_format', 'message': 'this action requires a workbench.v3 project'}}, 409)

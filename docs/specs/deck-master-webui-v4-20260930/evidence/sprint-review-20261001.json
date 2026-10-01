@@ -1,0 +1,86 @@
+{
+ "review": "sprint-terminal-review-round1",
+ "date": "2026-10-01",
+ "scope": "a8f698e..9fa14db（PR #73-#77，九卡全部产物）",
+ "method": "四层并行独立 subagent（code-reviewer 类型提供方故障两次后改 general-purpose）：核心服务层/前端阅读内容层/前端决策交付层/证据交付完整性；各层只读评审+可复核命令验证",
+ "summary": {
+  "core": "fail 1P1/2P2/5P3",
+  "frontend-reading": "fail 2P1/3P2/4P3",
+  "frontend-decisions": "fail 1P1/3P2/3P3",
+  "evidence": "pass 0P1/2P2/6P3"
+ },
+ "p1_findings": [
+  {
+   "layer": "core",
+   "id": "core-P1",
+   "title": "G54 投影与端点口径不一致",
+   "detail": "web.py 已对 candidates plan/adopt/decision+assemble 加 409 格式门，但 ui_journal.FORMAT_GATED 仍为 {annotations,changes,content,styles}——v1 项目投影继续报 candidates 可写，与端点 409 相反；b07 卡面与 b07-slice.json 声称口径一致与事实不符；G54 一致性测试为恒真伪断言",
+   "fix_hint": "candidates 纳入 FORMAT_GATED（run_desk 家族需细分，feedback 对 v1 仍 200）；门下沉服务层消除 CLI 旁路；替换伪测试"
+  },
+  {
+   "layer": "frontend-reading",
+   "id": "reading-P1a",
+   "title": "网格模式锚点恢复公式错误",
+   "detail": "alignAnchorTile 解析式只在连续模式（单列）成立；网格模式 anchorIndex 是平铺索引、measured 取同行相邻瓷片 top 差恒 0→pitch=200，挂载恢复被错误覆盖（模拟：正确 1787.5 被改为 3100，深锚点落空白区）。默认网格模式 Escape 返回即触发；a04 证据只验证了连续模式路径",
+   "fix_hint": "alignAnchorTile 对 grid 模式直接 return（保留 anchorTop 结果），或推广公式为行号×行节距"
+  },
+  {
+   "layer": "frontend-reading",
+   "id": "reading-P1b",
+   "title": "continuousPitch 被旧模式瓷片污染",
+   "detail": "resetReading 中 anchorTop() 在 renderRows 重渲前执行 rowHeight()，测到的是上一模式（网格）瓷片高并写入模块级缓存；真实连续节距 ~655 被记为 ~333，切换后虚拟化总高失真约一半，第 14 页后不可达。segmented 切入连续即触发；证据未覆盖切换路径",
+   "fix_hint": "首测移到 renderRows 完成后（或 resetReading 先 renderRows 再设 scrollTop）"
+  },
+  {
+   "layer": "frontend-decisions",
+   "id": "decisions-P1",
+   "title": "决定流收据永久卡死（digest kind 一字之差）",
+   "detail": "前端 business.submit action='candidates.decision'，服务端 decide 用 kind='candidates.decide' 计算 request_digest——两侧哈希必然不等，accept() 永远抛不一致：keep/reopen 服务端成功但 UI 收据永远待核实，verify 死循环，available() 持续抛错→该项目全部新业务提交被永久暂停（localStorage+草稿 pending 持久化）。a06 证据记录的暂停症状即此 bug，当时误归因为保守纪律",
+   "fix_hint": "前端统一改 'candidates.decide'（paths/label/candidate-desk 两处 submit）；补客户端-服务端 kind 对照测试"
+  }
+ ],
+ "p2_notable": [
+  "decisions: 正文候选 diff 为假对比（右侧恒空串+只比 title 忽略 body_blocks）；fixture 文档串声称含 content 候选但实际未创建（合成标注不实）",
+  "decisions: kept×adopted 并存矛盾态（reopen 可点必 409）；清理面板渲染游离 00 文本（length&&el 数字 0 转 DOMString，已在提交截图中可见）",
+  "reading: 不等高瓷片残余漂移与锚点序号成正比（等高样本下为 0——round2 复验通过的原因）；历史版本内容面显示材料 0 份虚假陈述；annotations 工具组缺 role=group",
+  "core: G54 门仅 HTTP 层（CLI/服务层旁路）；G54 测试恒真",
+  "evidence: README 索引未随冲刺收尾（a06/a07/a08/b06/b07 五份无条目）；每卡独立评审门与最终评审包工件未落地（卡片如实标注进行中，非冒充）"
+ ],
+ "pass_highlights": [
+  "B04/B05/B06 核心工程面扎实：事务/重放/CAS/三锁互斥/零业务触碰全部实测通过；9 份合同+镜像逐字节一致；test_workbench_actions 未弱化",
+  "gallery 既有行为保持（CAS/4页上限/参考/比较/键盘）；CSS 边界（style.css 逐字节一致、旧类零残留）；可访问性主体达标",
+  "决定流 input 组装/白名单匹配/CAS 传参/清理面板输入契约全部正确（P1 仅 kind 字符串）",
+  "证据层无造假无冒充：合成标注齐全、open 项如实、980 passed 可复核、PR 结构与 CI 全绿、截图双向引用（a04/a05/a08）"
+ ],
+ "verdict": "四层中三层 fail（4 项 P1）——P1 集中在：G54 声明失实（core）、A04 锚点两处路径性缺陷（reading）、决定流收据链断裂（decisions）。证据层 pass。修复建议按 P1→P2 顺序，P1 修复量均小（各 1-3 处）但需补浏览器复验路径（网格挂载恢复/模式切换连续滚动/决定流端到端收据解除）",
+ "fix_round": {
+  "date": "2026-10-01",
+  "p1_fixed": {
+   "core-P1": "FORMAT_GATED 纳入 candidates；candidates.plan/adopt/decide 服务层 _require_workbench（CLI/HTTP 同源）；web 门缩为防御副本且移除 assemble（保留服务层 stage_format_required 精确码）；伪测试替换为投影↔端点↔服务层真实一致性断言；test_entry_capabilities truthfulness 更新为终态事实",
+   "reading-P1a": "alignAnchorTile 非连续模式直接 return（网格 anchorTop 行基公式正确）",
+   "reading-P1b": "连续节距唯一事实源改为 renderRows 尾部 DOM 实测校准（replaceChildren 后必为当前模式瓷片）；rowHeight 首测写入删除，改几何估算回落；resetReading 先渲再定位顺序保留",
+   "decisions-P1": "前端 action 统一 'candidates.decide'（paths/label/desk 两处 submit）；新增 kind 对照测试。浏览器复验：keep 收据自动解除、reopen 端到端成功（A06-AC03 关闭）——初版证据的『待核实暂停』确系本 bug 症状，归因已更正"
+  },
+  "p2_fixed": [
+   "正文候选真 diff（pageText 文本化+单次 diffView，fixture 补 Page 候选并修正文档串）",
+   "kept×adopted 并存矛盾态（decided 组合禁用+状态段落分支）",
+   "清理面板 0/null 字符串化（数组过滤后展开）",
+   "历史版本材料侧栏如实文案",
+   "annotations 工具组 role=group+segmented 类+Esc 行为如实文案",
+   "不等高瓷片漂移（实测节距写回缓存同基准渲染）",
+   "evidence README 索引补齐 6 条",
+   "renderLegend 未变不重建"
+  ],
+  "p3_fixed": [
+   "B04 异常收窄至 READ_FAILURES+文档级保守 docstring 澄清",
+   "unchanged 双形状 INTERFACES 标注",
+   "B06 diff 比投影 preserve+旧 proposal confirm 兼容（含测试）",
+   "B05 context 复用重构（plan 1 次/commit 2 次 ancestry）+文案统一+4 类负例+锁互斥测试",
+   "content-sources 死代码/遮蔽清理",
+   "candidate-desk keep 守卫/变更集标签/正文依据文案",
+   "a05-a08 证据 head/结构补全"
+  ],
+  "verification": "全量 984 passed + ruff clean + 模块语法门；浏览器复验 7 项全过（网格恢复/连续可达/切换恢复/收据解除/reopen/正文 diff/清理面板无游离文本）；修复发现并消除同族 null 字符串化新缺陷",
+  "open_remainder": "B06-AC02/AC03 真实 Host 与 30 页项目、B07 安装/摘要/压力/回退、A08 30 秒观察、G39 待核实收据恢复 UX（决定流 P1 修复后该暂停已可自动解除，恢复 UX 细化降级为低优先）、run_desk 族投影粒度（G54 后续）"
+ }
+}

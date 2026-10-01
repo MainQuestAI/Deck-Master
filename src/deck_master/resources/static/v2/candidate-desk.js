@@ -13,6 +13,16 @@ function operationDraft(app) {
   const node = app.editor.mount();
   return el('details', {class: 'candidate-recovery'}, el('summary', {}, '个人记录与操作恢复'), node);
 }
+function pageText(page) {
+  // G18：正文候选差异须覆盖完整正文（标题/副标题/正文块），不只比标题。
+  const visible = page?.customer_visible;
+  if (!visible) return '（正文暂不可读）';
+  const blocks = (visible.body_blocks || []).map(block => block.type === 'paragraph' ? block.text
+    : block.type === 'bullets' ? [block.heading, ...(block.items || []).map(item => typeof item === 'string' ? item : item.text)].filter(Boolean).join('\n')
+    : block.type === 'table' ? [block.title, ...(block.rows || []).map(row => (row.cells || []).map(cell => cell.display_text || '').join(' | '))].filter(Boolean).join('\n')
+    : '').filter(Boolean).join('\n');
+  return [visible.title, visible.subtitle, blocks].filter(Boolean).join('\n');
+}
 function picture(app, stage, label, releases, kind = 'large') {
   if (!stage?.file) return empty('尚无这一层的当前产物', '这里保留空位，不用其它图层代替。');
   const view = imageView(app, stage, label, {kind}); releases.push(() => view.dispose()); return view.node;
@@ -23,7 +33,7 @@ function errorItems(error) {
 }
 function impactBox(plan) {
   return el('div', {class: 'stack'}, el('strong', {}, `本次采用 ${plan.selections.length} 页 · 不调用图像工具`),
-    el('ul', {}, plan.selections.map(item => el('li', {}, `${item.page_id}：采用${stageName(item.stage)}；${item.stage === 'blueprint' ? '本页 SVG、' : ''}预览与整稿 PPT 需要更新。`))),
+    el('ul', {}, plan.selections.map(item => el('li', {}, `${item.page_id || '整稿变更集'}：采用${stageName(item.stage)}；${item.stage === 'blueprint' ? '本页 SVG、' : ''}预览与整稿 PPT 需要更新。`))),
     el('p', {class: 'muted'}, `全部成功或全部不采用 · 提交基准 ${version(plan.base_revision)} · 采用不代表质量通过。`));
 }
 function blocked(app, busy) { return busy || app.readonly || Boolean(app.business?.entries.size || app.business?.loadWarning); }
@@ -50,10 +60,13 @@ export function candidateDesk(app, data) {
     const changed = live?.generation_basis.status === 'changed';
     const alreadyCurrent = selected && canonical(live?.adoption_target.current_ref) === canonical(selected.candidate.result_ref);
     const kept = live?.decision?.state === 'keep_current';
+    // 已采用候选与 kept 决定并存时（先保留后经批次采用），决定只读：服务端会以
+    // candidate_adopted 拒绝 reopen——按钮必须先一步禁用，不引导用户点向 409。
+    const decided = kept && (alreadyCurrent || live?.status === 'adopted');
     keep.hidden = Boolean(kept);
     reopen.hidden = !kept;
-    reopen.disabled = blocked(app, busy) || keepBusy;
-    keep.disabled = blocked(app, busy) || keepBusy || alreadyCurrent;
+    reopen.disabled = blocked(app, busy) || keepBusy || decided;
+    keep.disabled = blocked(app, busy) || keepBusy || unavailable || alreadyCurrent;
     choosePlan.disabled = blocked(app, busy) || unavailable || changed || alreadyCurrent || kept;
     adopt.disabled = blocked(app, busy) || !currentPlan || planInvalid || changed || alreadyCurrent || kept;
     choosePlan.textContent = currentPlan && planInvalid ? '重新预览采用影响' : '预览采用这个候选';
@@ -65,7 +78,8 @@ export function candidateDesk(app, data) {
     status.replaceChildren(el('div', {class: 'stack'}, el('strong', {}, current ? '这个候选已是当前采用' : live?.generation_basis.status === 'changed' ? '生成依据已变化，暂不能采用' : '候选可比较，采用前请检查事实与数字'),
       el('span', {}, ` · ${candidate.page_id} · ${stageName(candidate.stage)} · 返回 ${clock(candidate.created_at)}`),
       live?.generation_basis.status === 'changed' && el('p', {class: 'field-error'}, `Page、设计、输入或原图依据已变化（${live.generation_basis.changed_fields.join('、')}）。固定比较仍保留；请按新依据重新试作。`),
-      live?.decision?.state === 'keep_current' && el('p', {class: 'status ok'}, `已保留当前（决定 ${version(live.decision.decision_ref?.sha256)} · ${live.decision.decided_at ? clock(live.decision.decided_at) : ''}）。候选与比较保留，可随时重新打开。`),
+      live?.decision?.state === 'keep_current' && !current && live?.status !== 'adopted' && el('p', {class: 'status ok'}, `已保留当前（决定 ${version(live.decision.decision_ref?.sha256)} · ${live.decision.decided_at ? clock(live.decision.decided_at) : ''}）。候选与比较保留，可随时重新打开。`),
+      live?.decision?.state === 'keep_current' && (current || live?.status === 'adopted') && el('p', {class: 'status ok'}, `此前保留决定仍留档（${version(live.decision.decision_ref?.sha256)}）；该候选现已是当前采用，决定不再适用。`),
       live?.adoption_target.status === 'changed' && !current && el('p', {}, '当前采用产物已更新。这里仍显示原固定比较，重新预览后才能决定是否覆盖新的采用目标。'),
       planInvalid && el('p', {class: 'field-error'}, '项目版本已前进，旧采用计划已禁用。请重新预览；不会重新生成候选。'),
       candidate.status === 'available' && live?.adopted_revisions.length > 0 && el('p', {class: 'muted'}, '曾采用到：' + live.adopted_revisions.map(version).join('、')),
@@ -75,14 +89,12 @@ export function candidateDesk(app, data) {
   function drawColumns(leftStage, leftRevision, label = '当前采用（原固定基准）', leftPage = null) {
     releases.splice(0).forEach(fn => fn());
     if (selected.candidate.result_kind === 'page') {
-      // G18：正文候选左右差异；不伪造图片预览。左=当前逐页稿正文，右=候选 Page 正文。
-      const candidatePage = selected.page || {};
+      // G18：正文候选单次真实左右差异（完整正文文本化）；不伪造图片预览。
       columns.replaceChildren(el('section', {class: 'candidate-column', 'data-side': 'current', 'data-revision': leftRevision},
-        el('h2', {}, label), el('p', {class: 'muted'}, version(leftRevision)),
-        diffView(leftPage?.customer_visible?.title || '（当前正文暂不可读）', '', '当前正文', '（空）')),
-        el('section', {class: 'candidate-column', 'data-side': 'candidate', 'data-candidate-id': selected.candidate_id},
-          el('h2', {}, '所选候选 · 正文'), el('p', {class: 'muted'}, `${clock(selected.candidate.created_at)}`),
-          diffView(candidatePage.customer_visible?.title || '（候选正文暂不可读）', '', '候选正文', '（空）')));
+        el('h2', {}, label), el('p', {class: 'muted'}, version(leftRevision))),
+        el('section', {class: 'candidate-column candidate-text-diff', 'data-side': 'candidate', 'data-candidate-id': selected.candidate_id},
+          diffView(pageText(leftPage), pageText(selected.page), '当前正文', '候选正文'),
+          el('p', {class: 'muted'}, `候选返回 ${clock(selected.candidate.created_at)}`)));
       return;
     }
     columns.replaceChildren(el('section', {class: 'candidate-column', 'data-side': 'current', 'data-revision': leftRevision},
@@ -111,7 +123,8 @@ export function candidateDesk(app, data) {
     const actual = observations.find(record => record.observer === 'tool_observed' && record.output?.sha256 === selected.artifact.file.sha256);
     evidence.replaceChildren(el('details', {class: 'panel candidate-basis'}, el('summary', {}, '所选候选的生成依据'),
       el('div', {class: 'panel-body stack'},
-        el('p', {}, selected.request ? `已绑定请求与 Attempt · ${selected.attempt?.attempt_id || '未记录'}` : 'SVG 重建结果；没有新增图像调用。原图与实际提示词保留。'),
+        el('p', {}, selected.candidate.result_kind === 'page' ? '正文试作候选；没有图像调用记录，原图与实际提示词不受影响。'
+          : selected.request ? `已绑定请求与 Attempt · ${selected.attempt?.attempt_id || '未记录'}` : 'SVG 重建结果；没有新增图像调用。原图与实际提示词保留。'),
         selected.request && el('div', {}, el('h3', {}, '冻结的请求全文'), el('pre', {class: 'prompt-copy'}, selected.request.input.prompt)),
         selected.request && el('div', {}, el('h3', {}, '当次实际提交'), actual ? el('pre', {class: 'prompt-copy'}, actual.submitted.prompt) : el('p', {}, '当次实际提交未能读取；不会用预备稿补造。')),
         actual && el('p', {class: 'muted'}, '来源：本机原生工具事件；不代表独立质量验收。'),
@@ -164,7 +177,7 @@ export function candidateDesk(app, data) {
       const input = {schema_version: 'candidate_decision.v1', project_id: app.info.project_id,
                      base_revision: latest.revision_id, candidate_id: selected.candidate_id,
                      decision: 'keep_current', expected_decision_ref: latest.decision?.decision_ref || null};
-      await app.business.submit(app.editor, 'candidates.decision', {input, base_revision: latest.revision_id}, input, async () => {
+      await app.business.submit(app.editor, 'candidates.decide', {input, base_revision: latest.revision_id}, input, async () => {
         live = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
         renderState();
       });
@@ -179,7 +192,7 @@ export function candidateDesk(app, data) {
       const input = {schema_version: 'candidate_decision.v1', project_id: app.info.project_id,
                      base_revision: latest.revision_id, candidate_id: selected.candidate_id,
                      decision: 'reopen', expected_decision_ref: latest.decision?.decision_ref || null};
-      await app.business.submit(app.editor, 'candidates.decision', {input, base_revision: latest.revision_id}, input, async () => {
+      await app.business.submit(app.editor, 'candidates.decide', {input, base_revision: latest.revision_id}, input, async () => {
         live = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
         renderState();
       });
@@ -196,7 +209,7 @@ export function candidateDesk(app, data) {
       const page = await get('/api/pages/' + encodeURIComponent(data.page_id) + '/lineage' + revisionQuery(result.plan.base_revision));
       if (disposed || selected.candidate_id !== id) return;
       currentPlan = result.plan; planInvalid = false; live = latest;
-      drawColumns(page.stages[stage], page.revision_id, '本次采用目标（新固定基准）');
+      drawColumns(page.stages[stage], page.revision_id, '本次采用目标（新固定基准）', page.page);
       impact.replaceChildren(impactBox(currentPlan)); renderState();
     } catch (error) { currentPlan = null; if (!disposed) impact.replaceChildren(el('div', {class: 'stack'}, el('p', {class: 'field-error'}, readableError(error)), errorItems(error))); }
     finally { busy = false; if (!disposed) controls(); }
@@ -266,7 +279,7 @@ export function candidateBatch(app) {
         persist(); renderRows();
       });
       return el('article', {class: 'candidate-batch-row', 'data-candidate-id': id}, el('label', {}, input,
-        el('span', {}, `${record.page_id} · ${stageName(record.stage)}候选 ${index + 1}`)),
+        el('span', {}, `${record.page_id || '整稿变更集'} · ${stageName(record.stage)}候选 ${index + 1}`)),
         el('p', {class: 'muted'}, `${clock(record.created_at)} · ${row.generation_basis.status === 'changed' ? '依据已变化' : canonical(row.adoption_target.current_ref) === canonical(record.result_ref) ? '当前采用' : row.status === 'adopted' ? '曾采用' : row.decision?.state === 'keep_current' ? '已保留当前' : '待决定'}`),
         button('比较这个候选', () => openCandidate(app, record, revision)));
     }));

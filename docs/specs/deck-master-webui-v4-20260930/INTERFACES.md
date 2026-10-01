@@ -45,11 +45,13 @@
 
 ## B04：候选决定
 
+【终审修正 2026-10-01】G54 收口终态：candidates 属 FORMAT_GATED（投影 reason=unsupported_project_format），服务层 candidates.plan/adopt/decide 首行 `_require_workbench` 强制（CLI 与 HTTP 同源；web.py 仅留防御副本）；stages.assemble 维持服务层既有 stage_format_required（不经 web 门，避免遮蔽精确错误码）。已知粒度限制：run_desk 族混合 /api/feedback（v1 合法）与 v3-only assemble，族级投影无法区分，记为 G54 后续。
+
 拟增 POST `/api/candidates/decision`（对应单一CLI子命令 `deck-master candidates decision`；实施前按现有CLI树核对命名并同步help）。输入：`operation_id, base_revision, candidate_id, decision=keep_current|reopen, expected_decision_ref`。同源session与既有Origin校验；Host/脚本经CLI调用共享服务。
 
 决定写入不可变对象，并在Document记录引用；与operation结果同事务。输出 `decision_ref, candidate_id, status, revision_id`。候选本身及当前产物不改变。show/list投影加decision及pending状态；adopted历史记录不删除。重开不自动采用，基准变更仍阻断旧plan。expected_decision_ref冲突返回409及当前决定引用，重复operation返回原结果，跨项目候选404。状态命名应映射现有OperationError而不是吞掉异常。
 
-决定记录合同 `candidate-decision.v1`（Document新增可选数组 `candidate_decisions`，引用不可变对象；镜像同步至 deck-master-workbench-v3/contracts）。workbench summary 的 candidates 块新增 `kept_count`（required，recorded 分支）：pending_count=count−adopted−kept；已采用候选的决定历史不影响 adopted_count。show/list 的候选投影新增 `decision`（state/decision_ref/decided_at）与 `pending`；已采用候选 `pending` 恒 false。keep_current 与 reopen 幂等：重复同向决定返回 `unchanged` 不新增修订。
+决定记录合同 `candidate-decision.v1`（Document新增可选数组 `candidate_decisions`，引用不可变对象；镜像同步至 deck-master-workbench-v3/contracts）。workbench summary 的 candidates 块新增 `kept_count`（required，recorded 分支）：pending_count=count−adopted−kept；已采用候选的决定历史不影响 adopted_count。show/list 的候选投影新增 `decision`（state/decision_ref/decided_at）与 `pending`；已采用候选 `pending` 恒 false。keep_current 与 reopen 幂等：重复同向决定返回 `unchanged` 不新增修订。注意双形状：提交路径返回 operations 信封（status=committed/operation_result），unchanged 分支返回裸结果（无 operation_id/request_digest）——前端 `business.submit` 的收据核对只覆盖提交路径；unchanged 由 UI 以隐藏已决按钮规避（终审 P3 记录）。
 
 ## B05：个人状态清理
 

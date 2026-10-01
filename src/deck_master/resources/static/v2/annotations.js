@@ -28,7 +28,7 @@ export class Annotations {
     this.scope.querySelector('[value=chapter]').disabled = !data.content_plan.ref || !this.chapter.options.length;
     const image = ['original_image', 'svg', 'ppt'].includes(layer);
     // 设计 annotation-form：segmented 模式切换 + 行为提示（阅读不产生标注）。
-    this.tools = el('div', {class: 'row wrap annotation-tools', 'aria-label': '画面操作模式'});
+    this.tools = el('div', {class: 'segmented annotation-tools', role: 'group', 'aria-label': '画面操作模式'});
     this.modeHint = el('p', {class: 'form-hint'});
     this.modes = [['read', '阅读模式'], ['whole', '整页意见'], ...(image ? [['point', '点标注'], ['rect', '框选模式']] : [['text', '文本意见']])];
     for (const [mode, label] of this.modes) this.tools.append(button(label, () => this.setMode(mode), false, {'data-mode': mode}));
@@ -109,9 +109,9 @@ export class Annotations {
   setMode(mode) {
     this.mode = mode; this.drag = null;
     this.modeHint.textContent = mode === 'read' ? '阅读不会产生标注；无需框选，也可以针对整页写意见。'
-      : mode === 'rect' ? '拖动框选画面；按 Esc 取消框选，返回阅读。'
-      : mode === 'point' ? '在画面上点击放置标注点；按 Esc 返回阅读。'
-      : mode === 'text' ? '在逐页稿原文中选择文本，再校验保存；按 Esc 返回阅读。'
+      : mode === 'rect' ? '拖动框选画面；按 Esc 取消拖拽或移除最近一个区域，并返回阅读。'
+      : mode === 'point' ? '在画面上点击放置标注点；按 Esc 移除最近一个区域，返回阅读。'
+      : mode === 'text' ? '在逐页稿原文中选择文本，再校验保存；按 Esc 移除最近一个区域，返回阅读。'
       : '针对整页写意见，不绑定具体区域。';
     if (['point', 'rect', 'text'].includes(mode)) this.scope.value = 'artifact';
     this.geometry.hidden = !['point', 'rect'].includes(mode);
