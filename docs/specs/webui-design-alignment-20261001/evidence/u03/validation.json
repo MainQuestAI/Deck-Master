@@ -1,0 +1,37 @@
+{
+  "implementation_sha": "f73b9e84d991f5ade8a5fb8daf71d1354260d6fa",
+  "base_sha": "b7e90405e9aa51e8d86d282b9b4309b56fca4a8d",
+  "unit": {
+    "passed": 1013,
+    "skipped": 0,
+    "deselected": 49
+  },
+  "browser": {
+    "passed": 18,
+    "skipped": 0,
+    "deselected": 1044
+  },
+  "final_presentation_and_module_check": {
+    "passed": 2,
+    "skipped": 0
+  },
+  "core_and_existing_clear": {
+    "passed": 33,
+    "skipped": 0
+  },
+  "hosted_ci": "pending",
+  "prior_hosted_ci": {
+    "U01": {
+      "run_id": 36895430303,
+      "all_groups": "success",
+      "merge_sha": "f8505d4f01af74bbe0ed2e06c834d4019d1f3dbf"
+    },
+    "U02": {
+      "run_id": 36898848132,
+      "all_groups": "success",
+      "merge_sha": "b7e90405e9aa51e8d86d282b9b4309b56fca4a8d"
+    }
+  },
+  "model_calls": 0,
+  "professional_quality": "not_evaluated"
+}
