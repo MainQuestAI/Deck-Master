@@ -88,7 +88,7 @@ export function content(app, data) {
           el('h3', {}, chapter.title),
           el('p', {}, goals.find(goal => ids.includes(goal.page_id))?.purpose || ''),
           el('p', {class: 'small-text', style: 'margin-top:7px'},
-            pageList.length > 1 ? `第 ${order.indexOf(first.page_id) + 1}–${order.indexOf(last.page_id) + 1} 页` : `第 ${order.indexOf(first.page_id) + 1} 页`,
+            chapterPagesList.length > 1 ? `第 ${order.indexOf(first.page_id) + 1}–${order.indexOf(last.page_id) + 1} 页` : `第 ${order.indexOf(first.page_id) + 1} 页`,
             links.length ? ` · ${links.join('、')}` : ' · 未记录来源关联'),
           app.summary.pages.some(p => ids.includes(p.page_id)) && button('看逐页稿', () => app.go({surface: 'page', page_id: first.page_id, layer: 'content'}), false, {class: 'quiet'})));
     }).filter(Boolean);

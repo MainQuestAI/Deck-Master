@@ -154,11 +154,16 @@ def confirm(project, *, proposal_id, base_revision, operation_id):
         if document['revision_id'] != base_revision or proposal['base_revision'] != base_revision:
             raise StyleConflict('base_revision', 'project changed; review a new suggestion', [])
         rederived = _proposal(store, document, proposal['input'])
-        # 兼容旧核心产出的 proposal（无 preserve_dimensions 键）：该键按重推导
-        # 值补齐后整体比较，其余字段必须逐字节一致。
+        # 兼容两类旧核心产物：顶层缺 preserve_dimensions 键（按重推导补齐），
+        # 以及 diff 不含 preserve_dimensions 条目（旧 diff 算法）。diff 是派生
+        # 展示数据——比较时两侧统一过滤该派生条目；业务事实（input/targets/
+        # reference_sources/dimensions/conflicts/preserve_dimensions 顶层值）
+        # 仍逐字段严格一致（终审补丁 P2）。
         normalized = dict(proposal)
         normalized.setdefault('preserve_dimensions', rederived['preserve_dimensions'])
-        if rederived != normalized:
+        strip_derived = lambda value: {**value, 'diff': [item for item in value.get('diff', [])
+                                                                     if item.get('field') != 'preserve_dimensions']}
+        if strip_derived(rederived) != strip_derived(normalized):
             fail('proposal', 'suggestion changed; review the original recorded sources')
         unresolved = [c for c in proposal['conflicts'] if c['resolution'] is None]
         if unresolved:

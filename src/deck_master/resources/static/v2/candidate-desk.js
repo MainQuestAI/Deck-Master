@@ -4,6 +4,7 @@ import {DraftEditor} from './drafts.js';
 import {imageView} from './images.js';
 import {routeHash} from './routes.js';
 import {diffView} from './text-diff.js';
+import {pageText} from './page-text.js';
 import {openCandidate} from './trial-actions.js';
 
 const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content' ? '逐页稿' : 'SVG';
@@ -12,16 +13,6 @@ function operationDraft(app) {
   app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
   const node = app.editor.mount();
   return el('details', {class: 'candidate-recovery'}, el('summary', {}, '个人记录与操作恢复'), node);
-}
-function pageText(page) {
-  // G18：正文候选差异须覆盖完整正文（标题/副标题/正文块），不只比标题。
-  const visible = page?.customer_visible;
-  if (!visible) return '（正文暂不可读）';
-  const blocks = (visible.body_blocks || []).map(block => block.type === 'paragraph' ? block.text
-    : block.type === 'bullets' ? [block.heading, ...(block.items || []).map(item => typeof item === 'string' ? item : item.text)].filter(Boolean).join('\n')
-    : block.type === 'table' ? [block.title, ...(block.rows || []).map(row => (row.cells || []).map(cell => cell.display_text || '').join(' | '))].filter(Boolean).join('\n')
-    : '').filter(Boolean).join('\n');
-  return [visible.title, visible.subtitle, blocks].filter(Boolean).join('\n');
 }
 function picture(app, stage, label, releases, kind = 'large') {
   if (!stage?.file) return empty('尚无这一层的当前产物', '这里保留空位，不用其它图层代替。');
@@ -169,14 +160,20 @@ export function candidateDesk(app, data) {
     } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error) + ' 已读的固定比较仍保留。')); }
     finally { polling = false; }
   }
-  async function keepCurrent() {
+  async function submitDecision(decision) {
     if (!selected || busy || keepBusy) return; keepBusy = true; busy = true; controls();
     try {
       await app.business.available();
       const latest = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
+      // 预检：最新状态已满足本次操作（另一窗口刚做过同向决定）时刷新并返回，
+      // 不再提交——同向重复只会得到 unchanged，不该进入收据路径（终审补丁 P1）。
+      if (latest.decision?.state === decision) {
+        live = latest; renderState();
+        return;
+      }
       const input = {schema_version: 'candidate_decision.v1', project_id: app.info.project_id,
                      base_revision: latest.revision_id, candidate_id: selected.candidate_id,
-                     decision: 'keep_current', expected_decision_ref: latest.decision?.decision_ref || null};
+                     decision, expected_decision_ref: latest.decision?.decision_ref || null};
       await app.business.submit(app.editor, 'candidates.decide', {input, base_revision: latest.revision_id}, input, async () => {
         live = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
         renderState();
@@ -184,21 +181,8 @@ export function candidateDesk(app, data) {
     } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); }
     finally { keepBusy = false; busy = false; if (!disposed) controls(); }
   }
-  async function reopenCandidate() {
-    if (!selected || busy || keepBusy) return; keepBusy = true; busy = true; controls();
-    try {
-      await app.business.available();
-      const latest = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
-      const input = {schema_version: 'candidate_decision.v1', project_id: app.info.project_id,
-                     base_revision: latest.revision_id, candidate_id: selected.candidate_id,
-                     decision: 'reopen', expected_decision_ref: latest.decision?.decision_ref || null};
-      await app.business.submit(app.editor, 'candidates.decide', {input, base_revision: latest.revision_id}, input, async () => {
-        live = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
-        renderState();
-      });
-    } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); }
-    finally { keepBusy = false; busy = false; if (!disposed) controls(); }
-  }
+  function keepCurrent() { submitDecision('keep_current'); }
+  function reopenCandidate() { submitDecision('reopen'); }
   async function planAdoption() {
     if (!selected || busy) return; busy = true; controls(); const id = selected.candidate_id;
     try {

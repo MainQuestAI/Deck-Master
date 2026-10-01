@@ -732,7 +732,13 @@ def decide(project, *, input, base_revision, operation_id):
             raise DecisionConflict(candidate_id, last[1] if last else None)
         kept = bool(last) and last[0]['decision'] == 'keep_current'
         if (input['decision'] == 'keep_current') == kept:
-            return {'status': 'unchanged', 'candidate_id': candidate_id,
+            # 无变化、不写入：仍是确定终态。携带与请求一致的 operation 身份与
+            # request_digest，让前端收据核对（含核实/重放路径）完整校验后清除，
+            # 不落入只认提交收据的待核实循环（终审补丁 P1）。
+            return {'status': 'unchanged', 'operation_id': operation_id,
+                    'request_digest': digest,
+                    'committed_revision_id': None, 'current_revision_id': document['revision_id'],
+                    'candidate_id': candidate_id,
                     'decision': last[0]['decision'] if last else None,
                     'decision_ref': last[1] if last else None,
                     'revision_id': document['revision_id'], 'max_calls': 0}
