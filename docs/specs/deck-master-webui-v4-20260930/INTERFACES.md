@@ -51,7 +51,7 @@
 
 决定写入不可变对象，并在Document记录引用；与operation结果同事务。输出 `decision_ref, candidate_id, status, revision_id`。候选本身及当前产物不改变。show/list投影加decision及pending状态；adopted历史记录不删除。重开不自动采用，基准变更仍阻断旧plan。expected_decision_ref冲突返回409及当前决定引用，重复operation返回原结果，跨项目候选404。状态命名应映射现有OperationError而不是吞掉异常。
 
-决定记录合同 `candidate-decision.v1`（Document新增可选数组 `candidate_decisions`，引用不可变对象；镜像同步至 deck-master-workbench-v3/contracts）。workbench summary 的 candidates 块新增 `kept_count`（required，recorded 分支）：pending_count=count−adopted−kept；已采用候选的决定历史不影响 adopted_count。show/list 的候选投影新增 `decision`（state/decision_ref/decided_at）与 `pending`；已采用候选 `pending` 恒 false。keep_current 与 reopen 幂等：重复同向决定返回 `unchanged` 不新增修订。注意双形状：提交路径返回 operations 信封（status=committed/operation_result），unchanged 分支返回裸结果（无 operation_id/request_digest）——前端 `business.submit` 的收据核对只覆盖提交路径；unchanged 由 UI 以隐藏已决按钮规避（终审 P3 记录）。
+决定记录合同 `candidate-decision.v1`（Document新增可选数组 `candidate_decisions`，引用不可变对象；镜像同步至 deck-master-workbench-v3/contracts）。workbench summary 的 candidates 块新增 `kept_count`（required，recorded 分支）：pending_count=count−adopted−kept；已采用候选的决定历史不影响 adopted_count。show/list 的候选投影新增 `decision`（state/decision_ref/decided_at）与 `pending`；已采用候选 `pending` 恒 false。keep_current 与 reopen 幂等：重复同向决定返回 `unchanged` 不新增修订。终审补丁 P1 后契约——两种终态信封：`committed` 表示产生并记录业务提交（operations 信封，携带修订号）；`unchanged` 表示本次无业务变更（committed_revision_id=null，不新增修订），但回包仍携带与请求一致的 operation_id 与 request_digest，前端按同一身份校验视为终态并清除收据。同向重复提交丢包后，经 `operations show`（not_found → 重放原请求）收口，不产生新修订。legacy 兼容：升级前以 `candidates.decision`（旧 action）冻结的待核实记录，恢复/核实/重放经 `receipt-verdict.js` 的 LEGACY_ACTIONS 映射与按规范 kind 的摘要重算识别（终审补丁 P2）。
 
 ## B05：个人状态清理
 

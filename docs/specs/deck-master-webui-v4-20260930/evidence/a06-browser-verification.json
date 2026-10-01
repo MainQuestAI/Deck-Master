@@ -31,10 +31,8 @@
   ],
   "patch_round2": {
    "date": "2026-10-01",
-   "p1_repeat_decision": "预检拦截验证：kept×adopted 并存时 reopen 按钮禁用（decided 组合）；unchanged 服务端信封逐字段验证（status=unchanged + operation_id 一致 + sha256 request_digest + current_revision_id）——前端 terminal 判定通过（node 侧 test_decision_receipts 双用例）",
-   "p2_legacy_pending": "两类 legacy pending 浏览器端到端：已提交（服务端规范 kind digest）核实后收据清除；未提交（not_found）核实→重放按钮出现→重放成功→收据清除、服务端 reopen 决定落库、无业务冻结。恢复列表不再静默跳过旧 action 记录（LEGACY_ACTIONS 映射）",
-   "p2_content_diff": "p02 正文候选（改写标题）diff 验证：removed=1/added=1、added 行内容为改写后标题（pageText 完整化后真实左右对比）",
-   "defects_found": "测试注入的 pending 结构少了 pending 包装层（产品 valid() 对 localStorage 直存的裸 payload 拒绝是正确防御）——修正测试而非产品"
+   "p1_unchanged_terminal": "决定流双终态端到端复验（receipt-verdict.js 生产实现）：keep 按钮启用→点击后收据清除（noPendingOps=true）、无业务冻结（notBlocked=true）、状态显示已保留当前；重复 keep 预检（按钮隐藏）；reopen 启用→恢复待决。上一轮因 expectedRequestDigest 读错层级（payload.request_digest 为 undefined）导致的 kept×adopted 后按钮禁用问题随 receipt-verdict 抽取一并消除",
+   "table_column_join": "表格文本化改为与渲染器同规则（按 columns 序、column_id 关联 cell）；三场景回归：列归属交换→文本变化、仅 cells 存储顺序打乱→文本不变、列定义顺序调整→文本跟随新列序（test_page_text.py::test_page_text_table_semantics_follow_render_join）"
   }
  },
  "boundaries": [

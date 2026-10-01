@@ -97,5 +97,16 @@
    "outlineBlocks 章节范围使用改名后的章节页数组（多页范围恢复，复验 1-8/9-16/17-24）"
   ],
   "gates": "989 passed + ruff clean（净增 5 项测试）"
+ },
+ "fix_round3": {
+  "date": "2026-10-01",
+  "scope": "合并后复核（基线 32e2aa2→ddfdbdf）三项：表格按列 ID 比较、收据测试调用生产实现、INTERFACES unchanged 契约同步",
+  "fixes": {
+   "table_column_join": "page-text.js 表格行改为按 columns 定义顺序、cell.column_id===col.id 关联（与 page-workbench.js bodyBlocks 渲染器同规则）；fixture 修正为 schema 合法形状（列定义 id）；三场景回归（列归属交换→变化、存储顺序打乱→不变、列定义顺序→跟随）",
+   "receipt_production_impl": "新增 receipt-verdict.js（零 DOM：LEGACY_ACTIONS/canonicalAction/expectedRequestDigest/receiptTerminal）；business-operations.js 删除本地终态判定副本改为导入生产实现；test_decision_receipts.py 的 SNIPPET 复制品删除、直接 import receipt-verdict.js——生产 accept() 若退回只认 committed，回归测试将失败（评审要求的长期保护达成）",
+   "interfaces_sync": "B04 unchanged 契约改写为双终态表述（committed=产生记录携带修订 / unchanged=无变更但须过身份校验）+ 丢包后 operations show 收口 + legacy 映射说明"
+  },
+  "gates": "984+5=989 passed + ruff clean + 模块语法门",
+  "open_remainder": "真实 Host/30 页/安装/压力/30 秒观察维持 open（与补丁无关）"
  }
 }

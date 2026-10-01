@@ -340,11 +340,12 @@ def test_client_action_kind_matches_server_digest_kind():
     module = Path(__file__).resolve().parents[2] / 'src/deck_master/resources/static/v2/business-operations.js'
     source = module.read_text(encoding='utf-8')
     assert "'candidates.decide': '/api/candidates/decision'" in source
-    # 旧名只允许作为显式兼容映射的键存在（终审补丁 P2），不得出现在端点表或调用点
+    # 旧名只允许作为 LEGACY_ACTIONS 兼容映射的键（现居于生产 receipt-verdict.js），
+    # 不得出现在端点表或任何 submit 调用点
     paths_line = next(line for line in source.splitlines() if line.startswith('const paths'))
     assert 'candidates.decision' not in paths_line
-    assert "LEGACY_ACTIONS = {'candidates.decision': 'candidates.decide'}" in source
-    assert 'canonicalAction' in source and 'expectedRequestDigest' in source
+    verdict_src = (Path(__file__).resolve().parents[2] / 'src/deck_master/resources/static/v2/receipt-verdict.js').read_text(encoding='utf-8')
+    assert "LEGACY_ACTIONS = {'candidates.decision': 'candidates.decide'}" in verdict_src
     import inspect
     assert 'candidates.decide' in inspect.getsource(candidates.decide)
 

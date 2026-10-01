@@ -1,12 +1,11 @@
 import {get, post, digest, readableError} from './api.js';
 import {el, button, modal, version} from './dom.js';
+import {canonicalAction, expectedRequestDigest, receiptTerminal} from './receipt-verdict.js';
 
 const paths = {'history.restore':'/api/history/commit-restore', 'content.commit':'/api/content/commit', 'content.inputs':'/api/content/inputs', 'styles.confirm': '/api/styles/confirm', 'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit', 'candidates.adopt': '/api/candidates/adopt', 'candidates.decide': '/api/candidates/decision', 'stages.assemble': '/api/stages/assemble'};
 // 升级前的待核实记录以旧 action 名冻结（digest 也用旧 kind）。规范化映射让它们
 // 进入恢复/核实/重放路径：端点与显示走规范名，身份核对按兼容规则重算（见
 // expectedRequestDigest），绝不可静默跳过或覆盖（终审补丁 P2）。
-const LEGACY_ACTIONS = {'candidates.decision': 'candidates.decide'};
-const canonicalAction = action => LEGACY_ACTIONS[action] || action;
 export class BusinessOperations {
   constructor(app) {
     this.app = app; this.entries = new Map(); this.completed = new Map();
@@ -123,24 +122,16 @@ export class BusinessOperations {
     }
   }
   async expectedRequestDigest(entry) {
-    const {action, request} = entry.pending.payload;
-    if (!LEGACY_ACTIONS[action]) return entry.pending.payload.request_digest;
-    // 旧记录以旧 kind 冻结摘要；服务端记录使用规范 kind。按兼容规则用同一
-    // payload（decision 请求的 basis 即 request.input）与规范 kind 重算后比对。
-    // 与服务端 request_digest 同字段：project_id（非 project_identity）。
-    return await digest({protocol: 'changes.v1', kind: canonicalAction(action), project_id: this.app.info.project_id,
-      base_revision: request.base_revision, payload: request.input});
+    // decision 的收据核对基准即请求的 input（business.submit 的 basisPayload 与之同构）。
+    return await expectedRequestDigest(entry.pending.payload, this.app.info.project_id);
   }
   async accept(entry, response) {
     // 确定终态有两种：已提交（committed，必须命名其修订）与无变化（unchanged，
     // 服务端未写入，但携带与请求一致的 operation 身份与摘要）。两者都做完整
     // 身份校验后清除收据；其余形状维持待核实（终审补丁 P1）。
-    const expected = await this.expectedRequestDigest(entry);
-    const terminal = Boolean(response.operation_id === entry.pending.operation_id &&
-      response.request_digest === expected &&
-      (response.status === 'committed' && response.operation_result?.revision_id ||
-       response.status === 'unchanged'));
-    if (!terminal) throw new Error('回包与原请求不一致，继续保留待核实状态。');
+    await this.expectedRequestDigest(entry);
+    if (!await receiptTerminal(entry, response, this.app.info.project_id))
+      throw new Error('回包与原请求不一致，继续保留待核实状态。');
     const result = response.operation_result || response;
     this.completed.set(entry.pending.operation_id, result);
     await this.clear(entry);
