@@ -160,10 +160,12 @@ function matrixPanel(app, saved) {
     try {
       const result = await memory.verify(); if (disposed || result.confirmed) return;
       const stored = result.saved;
+      const description = value => el('p', {class:'read-text'}, `搜索：${value?.search || '未设置'}\n范围：${value?.filter === 'todo' ? '只看需要处理' : '全部页面'}\n页序：${value?.sort === 'descending' ? '从后向前' : '从前向后'}`);
       modal('总览阅读偏好：选择保留哪一份', el('div', {class:'stack'},
         el('p', {}, '当前输入保留。读取或保存偏好不会改变稿件、选页任务或调用。'),
-        el('h3', {}, '此窗口'), el('pre', {class:'evidence-json'}, JSON.stringify(memory.state, null, 2)),
-        el('h3', {}, '项目保存的偏好'), el('pre', {class:'evidence-json'}, stored.record ? JSON.stringify(stored.record.state, null, 2) : '没有保存的偏好（默认全部、正序、无搜索）。')),
+        el('h3', {}, '此窗口'), description(memory.state),
+        el('h3', {}, '项目保存的偏好'), description(stored.record?.state),
+        el('details', {}, el('summary', {}, '固定版本与恢复详情'), el('pre', {class:'evidence-json'}, JSON.stringify({window:memory.state, saved:stored.record}, null, 2)))),
         [button('读取项目保存的偏好', () => { document.querySelector('#modal').close(); memory.useSaved(stored); reflectURL(); }),
           button('明确保存此窗口偏好', () => { document.querySelector('#modal').close(); memory.useWindow(stored); })]);
     } catch { if (!disposed) preferenceStatus.textContent = '总览偏好核实未完成，当前输入保留；连接恢复后重试。'; }
