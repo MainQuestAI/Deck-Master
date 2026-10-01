@@ -7,6 +7,8 @@ import {DraftEditor} from './drafts.js';
 import {overview, content, pageDetail, runs, style} from './views.js';
 import {gallery} from './gallery.js';
 import {BusinessOperations} from './business-operations.js';
+import {actionTargets} from './action-targets.js';
+import {changesetDesk} from './changeset-desk.js';
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
@@ -70,11 +72,17 @@ export class Project {
       if (summary.project_id !== this.info.project_id) throw new Error('服务中的项目与当前窗口不一致，未替换已读内容。');
       const q = revisionQuery(summary.revision_id);
       let data = {};
-      if (route.surface === 'page') data = await get('/api/pages/' + encodeURIComponent(route.page_id) + '/lineage' + q);
+      if (route.action_id) data = await get('/api/actions/' + encodeURIComponent(route.action_id) + '/targets' + q);
+      else if (route.surface === 'page') data = await get('/api/pages/' + encodeURIComponent(route.page_id) + '/lineage' + q);
       else if (route.surface === 'content') {
-        const plan = await get('/api/content-plan' + q);
-        data = {plan: plan.content_plan, inputs: route.revision === latest.revision_id ? await get('/api/inputs') : null};
-        if (data.inputs && data.inputs.revision_id !== route.revision) data.inputs = null;
+        if (route.candidate_id) {
+          data = await get('/api/candidates/' + encodeURIComponent(route.candidate_id) + q);
+          if (data.result_kind !== 'content_update') throw new Error('这个候选不是整稿正文变更集，未替换为其它候选。');
+        } else {
+          const plan = await get('/api/content-plan' + q);
+          data = {plan: plan.content_plan, inputs: route.revision === latest.revision_id ? await get('/api/inputs') : null};
+          if (data.inputs && data.inputs.revision_id !== route.revision) data.inputs = null;
+        }
       } else if (route.surface === 'gallery') {
         if (!this.health.ui_capabilities?.includes('ui_gallery.v1')) data = {unsupported: true};
         else {
@@ -87,6 +95,11 @@ export class Project {
           modern && route.task_id ? get('/api/tasks/' + encodeURIComponent(route.task_id) + q) : Promise.resolve(null)]);
         data = {tasks: tasks.tasks, runPage: modern ? tasks : null, runDetail: detail, history};
         if (route.task_id && !(detail || tasks.tasks.some(task => task.task_id === route.task_id))) throw new Error('此版本没有链接中的任务。请检查任务与版本，未跳到其它任务。');
+        if (route.review_id) {
+          const result = await get('/api/reviews' + q);
+          data.review = result.reviews.find(review => review.review_id === route.review_id);
+          if (!data.review) throw new Error('此版本没有链接中的质量记录，未替换为其它记录。');
+        }
       }
       if (serial !== this.generation) return;
       this.editor?.dispose(); this.editor = null;
@@ -97,7 +110,11 @@ export class Project {
       history.replaceState(null, '', routeHash(this.info, route));
       this.render(data);
       this.savePosition();
-      if (focus) document.querySelector('#view-title')?.focus();
+      if (focus) {
+        const title = route.surface === 'runs' && route.layer === 'ppt' && !route.task_id && !route.review_id
+          ? document.querySelector('#delivery-desk h2') || document.querySelector('#view-title') : document.querySelector('#view-title');
+        title?.focus();
+      }
       announce(`${route.surface === 'page' ? '单页 · ' + layers[route.layer] : surfaces[route.surface]}，${version(route.revision)}`);
     } catch (error) {
       if (serial !== this.generation) return;
@@ -111,12 +128,14 @@ export class Project {
   go(patch) {
     const route = {...this.route, ...patch};
     if (patch.surface && patch.surface !== 'runs') route.task_id = null;
+    if (!('action_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.action_id = null;
+    if (!('review_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.review_id = null;
     if (!('candidate_id' in patch) && (patch.surface || patch.page_id || patch.layer)) route.candidate_id = null;
     if (patch.surface && patch.surface !== 'page' && !('page_id' in patch)) route.page_id = null;
     const hash = routeHash(this.info, route);
     if (location.hash === hash) this.loadRoute(route); else location.hash = hash;
   }
-  current() { this.loadRoute({...this.route, revision: null, task_id: null}); }
+  current() { this.loadRoute({...this.route, revision: null, task_id: null, action_id: null, review_id: null, candidate_id: null}); }
   savePosition() {
     const saved = position(this.info, this.route);
     this.positionQueue = this.positionQueue.catch(() => {}).then(async () => {
@@ -191,7 +210,8 @@ export class Project {
     if (this.info.sample) banners.append(el('div', {class: 'sample-banner'}, this.info.sample.readonly ? '这是合成的只读示例，未调用模型，也未进行专业质量验收。' : '这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。'));
     banners.append(el('p', {class: 'compact-note'}, '此宽度保留阅读与个人意见；多页比较和精细编辑请使用更宽的窗口。'));
     this.main = el('main', {id: 'main', class: 'workspace', tabindex: '-1'});
-    const view = {overview, content, gallery, page: pageDetail, runs, style}[this.route.surface];
+    const view = this.route.action_id ? actionTargets : this.route.surface === 'content' && this.route.candidate_id ? changesetDesk :
+      {overview, content, gallery, page: pageDetail, runs, style}[this.route.surface];
     this.main.append(view(this, data));
     if (this.route.surface === 'page') this.main.addEventListener('keydown', event => {
       const typing = event.target.closest('textarea,input,select,button,a,summary,[contenteditable]');

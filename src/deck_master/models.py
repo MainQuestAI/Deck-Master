@@ -23,6 +23,7 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
 
 SCHEMA_FILES = {
+    "action_targets": "action-targets.v1.schema.json",
     "restore_plan": "restore-plan.v1.schema.json",
     "export_manifest": "export-manifest.v1.schema.json",
     "content_operation_input": "content-operation-input.v1.schema.json",
