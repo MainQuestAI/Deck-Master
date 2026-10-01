@@ -19,6 +19,30 @@ from deck_master.models import new_document  # noqa: E402
 from deck_master.store import Store  # noqa: E402
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--require-browser", action="store_true",
+        help="Require selected browser tests to execute; missing tools or skips fail the gate.",
+    )
+
+
+def pytest_collection_finish(session):
+    if session.config.getoption("--require-browser") and not any(
+        item.get_closest_marker("browser") for item in session.items
+    ):
+        raise pytest.UsageError("--require-browser selected no browser tests")
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+    if (item.config.getoption("--require-browser")
+            and item.get_closest_marker("browser") and report.skipped):
+        report.outcome = "failed"
+        report.longrepr = f"Required browser gate did not execute: {report.longrepr}"
+
+
 @pytest.fixture()
 def store(tmp_path: Path) -> Store:
     st = Store(tmp_path / "project")

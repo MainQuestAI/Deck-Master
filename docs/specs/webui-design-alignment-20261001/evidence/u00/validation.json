@@ -1,0 +1,138 @@
+{
+  "date": "2026-10-01",
+  "base_sha": "7a73b2dc9f302d707039ecc532adcd10c97952cf",
+  "code_sha": "75e5304c8cfdd30f0214647891af24cde1e78383",
+  "local_status": "passed",
+  "hosted_ci_status": "not_evaluated",
+  "environment": {
+    "python_unit": [
+      "Python 3.11.16",
+      "Python 3.12.14"
+    ],
+    "node": [
+      "v22.23.3",
+      "v24.19.0"
+    ],
+    "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+    "rsvg_convert": "rsvg-convert version 2.60.0",
+    "soffice": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "pdftoppm": "pdftoppm version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+    "font": "DejaVu Sans",
+    "rsvg_deb_sha256": "f34154cb30c8a96dfa9e8e33ecc4320278495b48d3b36ecbdf6d3a1d06e2e900"
+  },
+  "groups": {
+    "py311-node22-unit": {
+      "tests": "964",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "118.637",
+      "exit_code": 0,
+      "expected": "pass",
+      "command": "PATH=/workspace/scratch/u00-node22/node_modules/.bin:/workspace/scratch/u00-toolchain/usr/bin:$PATH /workspace/scratch/u00-py311/bin/python -m pytest tests/rebuild -m 'not render and not browser' -q"
+    },
+    "py312-node24-unit": {
+      "tests": "964",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "107.984",
+      "exit_code": 0,
+      "expected": "pass",
+      "command": "PATH=/workspace/scratch/u00-toolchain/usr/bin:$PATH .venv/bin/python -m pytest tests/rebuild -m 'not render and not browser' -q"
+    },
+    "render": {
+      "tests": "31",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "47.572",
+      "exit_code": 0,
+      "expected": "pass",
+      "command": "PATH=/workspace/scratch/u00-toolchain/usr/bin:$PATH .venv/bin/python -m pytest tests/rebuild -m render -q"
+    },
+    "browser": {
+      "tests": "2",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "6.969",
+      "exit_code": 0,
+      "expected": "pass",
+      "command": ".venv/bin/python -m pytest tests/rebuild -m browser --require-browser -q"
+    },
+    "required-browser-missing": {
+      "tests": "2",
+      "errors": "2",
+      "failures": "0",
+      "skipped": "0",
+      "time": "0.677",
+      "exit_code": 1,
+      "expected": "failure proves missing Chromium cannot pass",
+      "command": "PLAYWRIGHT_BROWSERS_PATH=/workspace/scratch/u00-empty-browsers PATH=/workspace/scratch/u00-missing-browser .venv/bin/python -m pytest tests/rebuild/test_ui_design_browser.py --require-browser -q"
+    }
+  },
+  "distinct_suite_tests": 997,
+  "additional_runs": {
+    "py312_node22_modules": {
+      "passed": 5,
+      "exit_code": 0
+    },
+    "py311_node24_modules": {
+      "passed": 5,
+      "exit_code": 0
+    },
+    "final_package_metadata": {
+      "passed": 1,
+      "exit_code": 0,
+      "note": "Added ESM metadata assertion after full unit collection; this follow-up executes that assertion."
+    },
+    "legacy_cli": {
+      "exit_code": 2,
+      "expected": "legacy is not an accepted --ui choice"
+    },
+    "installed_browser": {
+      "exit_code": 0,
+      "checks": 7,
+      "purpose_downloads": 3,
+      "page_errors": [],
+      "external_requests": [],
+      "command": "PATH=/workspace/scratch/u00-toolchain/usr/bin:$PATH /workspace/scratch/u00-installed/bin/python examples/workbench/w12_offline_browser.py --require-installed --chromium-executable /usr/bin/chromium --font 'DejaVu Sans' --out /workspace/scratch/u00-installed-browser-verified"
+    }
+  },
+  "first_attempts": [
+    {
+      "node_baseline": {
+        "failed": 5,
+        "exit_code": 1,
+        "reason": "Node 24 rejects --experimental-default-type=module"
+      }
+    },
+    {
+      "parallel_render": {
+        "passed": 30,
+        "failed": 1,
+        "exit_code": 1,
+        "reason": "Local concurrent packaging tasks shared checkout build directory; serial render rerun passed. CI jobs use separate checkouts."
+      }
+    },
+    {
+      "installed_browser": {
+        "exit_code": 1,
+        "reason": "Root entry correctly restored saved runs surface; gate now supplies an explicit overview URL, preserving production restore behavior."
+      }
+    }
+  ],
+  "wheel": {
+    "name": "deck_master-1.0.0.dev2-py3-none-any.whl",
+    "sha256": "5aff7d215dfbfbbafb0919fcc4eef29dd6b2f4192b9f593d3fe54debe5a661f7",
+    "installed_in_isolated_venv": true
+  },
+  "limits": [
+    "Full unit suite locally executed for Python 3.11/Node 22 and Python 3.12/Node 24; cross-pair pure JS module tests pass. All four full combinations are configured in hosted CI, not claimed locally.",
+    "LibreOffice in this cloud is a development build; local results do not establish stable LibreOffice or desktop PowerPoint acceptance.",
+    "Synthetic project and explicit quality test inputs; zero model calls; professional evidence not evaluated.",
+    "No authorized real 30-page project/Host execution environment supplied. U06 real work, HOME migration, macOS chooser and human observation remain open.",
+    "PR83 remains an unmerged prerequisite; U00 is stacked on its branch and does not authorize U01 on an unfrozen mainline baseline."
+  ]
+}

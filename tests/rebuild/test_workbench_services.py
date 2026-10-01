@@ -300,7 +300,7 @@ def test_folder_picker_cancel_and_unsupported_do_not_register(tmp_path, monkeypa
     assert not list(tmp_path.iterdir())
 
 
-def test_cli_no_open_legacy_port_and_help(tmp_path, monkeypatch, capsys):
+def test_cli_no_open_workbench_port_and_help(tmp_path, monkeypatch, capsys):
     reg = tmp_path / 'registry.json'
     monkeypatch.setattr(launcher.webbrowser, 'open', lambda *_args, **_kw: pytest.fail('no browser requested'))
     result_code = cli.main(['workbench', '--registry', str(reg), '--no-open', '--json'])
@@ -312,9 +312,9 @@ def test_cli_no_open_legacy_port_and_help(tmp_path, monkeypatch, capsys):
     capsys.readouterr()
     p = project(tmp_path / 'project')
     try:
-        assert cli.main(['workbench', '--project', str(p), '--registry', str(reg), '--ui', 'legacy', '--no-open']) == 0
+        assert cli.main(['workbench', '--project', str(p), '--registry', str(reg), '--ui', 'v2', '--no-open']) == 0
         payload = json.loads(capsys.readouterr().out)
-        assert payload['url'].endswith('/') and not payload['url'].endswith('/v2/')
+        assert payload['url'].endswith('/v2/')
         assert http(payload['url'], '/')[0] == 200
         assert cli.main(['workbench', '--project', str(p), '--registry', str(reg), '--port', '-1', '--no-open']) == 2
         error = json.loads(capsys.readouterr().err)

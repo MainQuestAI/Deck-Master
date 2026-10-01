@@ -681,11 +681,12 @@ def test_pptx_artifact_and_export_declare_shape_text_editability(tmp_path):
 
 
 def test_no_office_native_editing_claims_in_ui_or_export(tmp_path):
-    static = Path(__file__).resolve().parents[2] / "src" / "deck_master" / "resources" / "static"
-    ui_text = (static / "index.html").read_text("utf-8") + (static / "app.js").read_text("utf-8")
-    for forbidden in ("编辑数据", "Edit Data", "编辑图表数据", "native chart", "原生图表编辑"):
+    static = Path(__file__).resolve().parents[2] / "src" / "deck_master" / "resources" / "static" / "v2"
+    ui_text = (static / "index.html").read_text("utf-8") + (static / "production-view.js").read_text("utf-8")
+    for forbidden in ("编辑数据", "编辑图表数据", "native chart", "原生图表编辑"):
         assert forbidden not in ui_text, f"UI must not claim Office-native capability: {forbidden}"
-    assert "可编辑形状与文字" in ui_text, "UI states the real shape/text editability scope"
+    assert "不等于 Office Edit Data" in ui_text
+    assert "形状与文本可编辑" in ui_text, "UI states the real shape/text editability scope"
 
     project = tmp_path / "proj"
     service.create(project, brief="诚实声明", draft={"pages": [_draft_page("p1", "声明页", "正文。")]})

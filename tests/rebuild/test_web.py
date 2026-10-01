@@ -105,21 +105,24 @@ def server(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Entry selection: `/` is the v2 workbench by default; `/legacy/` keeps the
-# old review UI as the rollback path.
+# The workbench is the only UI; retired resources must not be served.
 
 
-def test_default_entry_serves_v2_and_legacy_keeps_the_review_ui(server):
+def test_only_workbench_entry_and_brand_assets_are_served(server):
     url, _, _ = server
     status, _, body = _get(f"{url}/")
     assert status == 200
     assert b"/v2/app.js" in body and b"/v2/tokens.css" in body
     status, _, body = _get(f"{url}/index.html")
     assert status == 200 and b"/v2/app.js" in body
-    status, _, body = _get(f"{url}/legacy/")
-    assert status == 200
-    legacy_page = body.decode("utf-8")
-    assert 'href="/style.css"' in legacy_page and 'src="/app.js"' in legacy_page
+    for path in ('/legacy', '/legacy/', '/app.js', '/style.css'):
+        assert _get_json(url + path)[0] == 404
+    for name in ('favicon.svg', 'logo-horizontal-light.svg'):
+        status, headers, body = _get(f"{url}/v2/assets/deck-master-logo/{name}")
+        assert status == 200 and headers['Content-Type'].startswith('image/svg+xml')
+        assert b'<svg' in body
+    assert _get_json(url + '/v2/../../pyproject.toml')[0] != 200
+
 
 
 # ---------------------------------------------------------------------------
@@ -305,7 +308,7 @@ def test_user_text_is_served_as_data_not_markup(server):
     payload = json.loads(body.decode("utf-8"))
     assert payload["pages"][0]["title"] == "<img src=x onerror=alert(1)>"
     # The served UI renders user text through textContent, not HTML injection.
-    _, _, app_js = _get(f"{url}/app.js")
+    _, _, app_js = _get(f"{url}/v2/dom.js")
     script = app_js.decode("utf-8")
     assert "textContent" in script
     assert "insertAdjacentHTML" not in script

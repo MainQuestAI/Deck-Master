@@ -35,7 +35,7 @@ def diagnose(step, *, fonts=(), host_imagegen=False):
                 break
             path=method_root/relative
             add(f'method:{relative}','ready' if path.is_file() else 'unavailable',str(path))
-    if step=='view':required+=['resources/static/index.html','resources/static/app.js','resources/static/style.css']
+    if step=='view':required+=['resources/static/v2/'+name for name in ('index.html','app.js','style.css','tokens.css','workbench.css','assets/deck-master-logo/logo-horizontal-light.svg','assets/deck-master-logo/favicon.svg')]
     for resource in required:
         add(resource,'ready' if root.joinpath(resource).is_file() else 'unavailable',str(root.joinpath(resource)))
     if step=='blueprint':

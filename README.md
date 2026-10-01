@@ -73,14 +73,15 @@ deck-master inputs update --project ./my-deck --patch update.json \
   --base-revision <revision_id> --operation-id <unique_id>
 ```
 
-## Review Workbench
+## Workbench
 
-The review workbench is the local browser interface for the rebuilt core:
-page list, editable content, blueprint/SVG/PPT comparison slots, findings and
-feedback, history and restore. `deck-master view --open --project <dir>`
+The workbench provides a project launcher, production overview, content and
+sources, gallery, style calibration, tasks and delivery. Each page retains its
+source, content, prompts, original image, SVG and PPT views. `deck-master view --open --project <dir>`
 starts (or reuses) one loopback service per project.
 
-![Review Desk](docs/assets/review-desk.png)
+The workbench is the only UI. The retired `/legacy/` interface and `--ui legacy`
+option have been removed; existing project data and CLI workflows remain supported.
 
 Workbench writes require a per-server session token and same-origin origin
 check; reads are open on loopback. The server binds to `127.0.0.1` only.

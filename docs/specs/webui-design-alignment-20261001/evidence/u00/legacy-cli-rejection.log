@@ -1,0 +1,4 @@
+usage: deck-master view [-h] --project PROJECT [--open] [--no-open]
+                        [--ui {v2}] [--json] [--revision REVISION] [--summary]
+                        [--page-id PAGE_ID] [--lineage] [--content-plan]
+deck-master view: error: argument --ui: invalid choice: 'legacy' (choose from v2)

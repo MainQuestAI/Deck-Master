@@ -3,7 +3,7 @@ include LICENSE
 include NOTICE
 include THIRD_PARTY_NOTICES.md
 include pyproject.toml
-recursive-include src/deck_master/resources *.json *.css *.js *.html *.md
+recursive-include src/deck_master/resources *.json *.css *.js *.html *.md *.svg *.txt
 include setup.py
 include tools/build_hook.py
 recursive-include skills/deck-master/references *.md

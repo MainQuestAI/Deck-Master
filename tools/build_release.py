@@ -11,7 +11,7 @@ def build_release(output):
     wheel=next(output.glob('*.whl'))
     with zipfile.ZipFile(wheel) as z:
         names=z.namelist()
-        required=['deck_master/resources/skill/SKILL.md','deck_master/resources/static/app.js']
+        required=['deck_master/resources/skill/SKILL.md','deck_master/resources/static/v2/app.js']
         required += ['deck_master/resources/contracts/'+name+'.schema.json' for name in ('document.v1','page.v2','artifact.v1','task.v1','review.v1')]
         for name in required:
             if name not in names:raise RuntimeError('missing resource: '+name)

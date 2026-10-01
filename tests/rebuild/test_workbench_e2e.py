@@ -302,19 +302,17 @@ def test_static_assets_carry_keyboard_zoom_and_text_status(tmp_path: Path) -> No
     server = WorkbenchServer(project)
     url = server.start().rstrip("/")
     try:
-        _, _, app_js = _get_raw(f"{url}/app.js")
-        script = app_js.decode("utf-8")
-        assert 'addEventListener("keydown"' in script and "ArrowRight" in script and "ArrowLeft" in script
-        assert "zoom-in" in script and "zoom-fit" in script and "applyZoom" in script
-        # the legacy entry keeps the rollback review UI assets after the
-        # default-entry switch to the v2 workbench
-        _, _, html = _get_raw(f"{url}/legacy/")
+        _, _, project_js = _get_raw(f"{url}/v2/project.js")
+        script = project_js.decode("utf-8")
+        assert "addEventListener('keydown'" in script and "ArrowRight" in script and "ArrowLeft" in script
+        _, _, page_js = _get_raw(f"{url}/v2/page-workbench.js")
+        page_script = page_js.decode("utf-8")
+        assert '阅读缩放' in page_script and 'app.savePosition()' in page_script
+        _, _, html = _get_raw(f"{url}/")
         page = html.decode("utf-8")
-        assert 'id="zoom-in"' in page and 'id="zoom-fit"' in page and 'id="zoom-out"' in page
         assert 'role="status"' in page and "aria-live" in page
-        assert 'role="tablist"' in page and "aria-selected" in page
-        _, _, css = _get_raw(f"{url}/style.css")
-        assert b".zoom-bar" in css
+        _, _, css = _get_raw(f"{url}/v2/workbench.css")
+        assert b".page-image-viewport" in css
     finally:
         server.stop()
 

@@ -37,3 +37,10 @@ before each release.
 
 This inventory is maintained per release candidate; it is not a claim of a
 completed third-party legal audit beyond the package metadata above.
+
+## Deck Master wordmark
+
+The user-supplied horizontal wordmark contains IBM Plex Mono glyph outlines.
+The accompanying SIL Open Font License 1.1 is distributed at
+`src/deck_master/resources/static/v2/assets/deck-master-logo/IBMPlexMono-OFL.txt`.
+No font binary or external font service is used.

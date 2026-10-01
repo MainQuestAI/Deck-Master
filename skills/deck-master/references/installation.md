@@ -79,7 +79,7 @@ After installing this wheel in a supported Python 3.11/3.12 environment, run
 Open the returned URL and choose **打开只读示例**. This bundled synthetic sample
 requires no model account and does not authorize generation. Use **新建项目**
 or **选择项目文件夹** for your own material. `--project /path/to/project` opens
-one explicit project; `--ui legacy` reads the old interface with the same core.
+one explicit project; the workbench is the sole UI; the retired review interface is no longer packaged.
 `deck-master view --project … --open --ui v2` opens the same project service at
 the explicit new workbench entry; `view --open` without `--ui` keeps the default
 entry.

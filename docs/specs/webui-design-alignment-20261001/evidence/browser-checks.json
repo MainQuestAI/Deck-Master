@@ -1,0 +1,157 @@
+{
+  "checks": [
+    {
+      "viewport": [
+        360,
+        800
+      ],
+      "width": 360,
+      "scroll": 360,
+      "title": 330.390625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "width": 390,
+      "scroll": 390,
+      "title": 330.390625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        430,
+        932
+      ],
+      "width": 430,
+      "scroll": 430,
+      "title": 330.390625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        600,
+        960
+      ],
+      "width": 600,
+      "scroll": 600,
+      "title": 330.390625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        820,
+        1180
+      ],
+      "width": 820,
+      "scroll": 820,
+      "title": 330.390625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        1024,
+        768
+      ],
+      "width": 1024,
+      "scroll": 1024,
+      "title": 330.390625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "width": 1280,
+      "scroll": 1280,
+      "title": 330.390625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        1366,
+        768
+      ],
+      "width": 1366,
+      "scroll": 1366,
+      "title": 330.390625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "width": 1440,
+      "scroll": 1440,
+      "title": 334.875,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "viewport": [
+        1920,
+        1080
+      ],
+      "width": 1920,
+      "scroll": 1920,
+      "title": 432.15625,
+      "logo": 365,
+      "nav": true
+    },
+    {
+      "surface": "内容与来源",
+      "headings": [
+        "内容与来源"
+      ]
+    },
+    {
+      "surface": "整稿画廊",
+      "headings": [
+        "整稿画廊"
+      ]
+    },
+    {
+      "surface": "风格校准",
+      "headings": [
+        "风格校准"
+      ]
+    },
+    {
+      "surface": "任务与交付",
+      "headings": [
+        "任务与交付"
+      ]
+    },
+    {
+      "surface": "制作总览",
+      "headings": [
+        "制作总览"
+      ]
+    },
+    {
+      "keyboard_control_preserves_page": true
+    },
+    {
+      "keyboard_content_next_page": true
+    },
+    {
+      "escape_closes_dialog_only": true
+    },
+    {
+      "launcher_brand_loaded": true
+    }
+  ],
+  "page_errors": []
+}

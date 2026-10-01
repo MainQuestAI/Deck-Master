@@ -386,17 +386,6 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             # use absolute /v2/ URLs
             self._serve_v2("/v2/")
             return
-        if parsed.path in ("/legacy", "/legacy/"):
-            self._send_bytes(
-                (self.static_dir / "index.html").read_bytes(), "text/html; charset=utf-8"
-            )
-            return
-        if parsed.path == "/style.css":
-            self._send_bytes((self.static_dir / "style.css").read_bytes(), "text/css; charset=utf-8")
-            return
-        if parsed.path == "/app.js":
-            self._send_bytes((self.static_dir / "app.js").read_bytes(), "text/javascript; charset=utf-8")
-            return
         if parsed.path == "/api/health":
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
@@ -424,7 +413,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         try:
             target = safe_path(self.static_dir, 'v2', *name.split('/'))
             media = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
-                     '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2'}.get(target.suffix)
+                     '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.svg': 'image/svg+xml'}.get(target.suffix)
             if not media or not target.is_file():
                 raise FileNotFoundError
             self._send_bytes(target.read_bytes(), media)
@@ -559,9 +548,11 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
     The server runs in its own process (``python -m deck_master.view_server``),
     so it keeps serving after the CLI exits. Startup waits bounded on a health
     check; failures return ``unavailable`` with the real reason (spec 09.5).
-    The default entry is the v2 workbench; ``ui="legacy"`` opens the legacy
-    review entry kept as the rollback path.
+    The v2 workbench is the only supported UI entry.
     """
+    if ui not in (None, "v2"):
+        return {"review_url": None, "view_status": "unavailable",
+                "detail": "only the v2 workbench UI is available", "ui": ui}
     project_dir = Path(project_dir).expanduser().resolve()
     if not (project_dir / ".deckmaster" / "current.json").is_file():
         return {
@@ -578,13 +569,13 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
         return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}", "ui": ui}
     # same incomplete-install guard as the launcher: never point the browser
     # at a /v2/ entry the installed static tree cannot serve
-    ui_available = ui == "legacy" or (_static_dir() / "v2" / "index.html").is_file()
+    ui_available = (_static_dir() / "v2" / "index.html").is_file()
     if not ui_available:
         return {"review_url": state["url"], "view_status": "core_ready_ui_unavailable",
-                "detail": "the v2 workbench UI is not present in this installation; use --ui legacy",
+                "detail": "the v2 workbench UI is not present in this installation; reinstall the complete workbench package",
                 "port": state["port"], "pid": state.get("pid"),
                 "reused": state.get("reused", False), "ui": ui}
-    url = state["url"] + ("legacy/" if ui == "legacy" else "v2/")
+    url = state["url"] + "v2/"
     if open_browser:
         opened = False
         try:

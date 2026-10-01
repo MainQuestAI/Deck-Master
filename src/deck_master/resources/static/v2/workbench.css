@@ -190,3 +190,46 @@ textarea{font-size:14px;line-height:1.7}
 .control-reason{display:flex;flex-direction:column;gap:4px;min-width:0}
 .disabled-reason{font-size:12px}
 .run-notice{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+
+/* 2026-10-01 design alignment: production has a selection column in addition
+   to the design's seven columns. Keep column geometry explicit and shared. */
+.matrix{min-width:1120px;table-layout:fixed}
+.matrix thead th:first-child{width:44px}
+.matrix thead th:nth-child(2){width:32%}
+.matrix thead th:last-child{width:14%}
+.matrix .title-button{min-width:0;padding:0;text-align:left}
+.matrix .title-button>span:last-child{min-width:0}
+.matrix-thumbnail .pooled-image{width:100%;height:100%}
+.matrix-thumbnail img,.matrix-thumbnail canvas{width:100%;height:100%;object-fit:contain}
+.brand-logo{display:block;width:176px;max-width:100%;height:auto;aspect-ratio:365/96;object-fit:contain}
+.nav button>.ui-icon{width:20px;height:20px}
+.sidebar .nav{order:2}.side-project{order:1}.sidebar-footer{order:3}
+.panel{border-color:var(--border-soft)}.panel-head{padding:18px 20px}.panel-body{padding:24px}
+@media(min-width:768px) and (max-width:1279px){
+  .shell{grid-template-columns:200px minmax(0,1fr)}
+  .sidebar{width:200px;padding:28px 16px}
+  .logo{margin:0 8px 32px;justify-content:flex-start}
+  .nav-label,.side-project{display:block}
+  .nav button{justify-content:flex-start;padding:11px 12px}
+  .sidebar-footer{padding:24px 8px 0;font-size:12px}
+  .sidebar-footer p{display:block}
+}
+@media(min-width:768px) and (max-width:1000px){
+  .shell{grid-template-columns:184px minmax(0,1fr)}.sidebar{width:184px}
+}
+@media(max-width:767px){
+  .shell{padding-top:0}.sidebar{position:relative;inset:auto;display:flex;flex-direction:column;height:auto;width:100%;padding:16px;align-items:stretch}
+  .logo{margin:0 0 16px;justify-content:flex-start}.brand-logo{width:144px}
+  .sidebar .nav{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:4px}
+  .nav button{width:auto;height:auto;flex:1 1 140px;justify-content:flex-start;padding:10px 12px}
+  .nav-label{display:inline}.side-project{display:none}
+  .sidebar-footer{display:flex;flex-direction:row;flex-wrap:wrap;padding:12px 0 0;font-size:12px}
+  .sidebar-footer p{display:none}.panel-body{padding:18px}
+  .topbar .crumb{flex:1}.topbar strong{white-space:normal;overflow-wrap:anywhere}
+  .workspace,.content,.toolbar,.section-head{min-width:0}
+}
+.matrix-search{justify-content:flex-end}.matrix-search input{width:240px}
+.style-targets{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 16px;padding:8px 0}
+.style-targets .inline-control{min-height:44px;align-items:flex-start;padding:8px;line-height:1.5}
+.style-targets input{margin-top:3px}
+@media(max-width:767px){.matrix-search,.matrix-search input{width:100%}.style-targets{grid-template-columns:1fr}}
