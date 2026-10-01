@@ -82,5 +82,20 @@
   ],
   "verification": "全量 984 passed + ruff clean + 模块语法门；浏览器复验 7 项全过（网格恢复/连续可达/切换恢复/收据解除/reopen/正文 diff/清理面板无游离文本）；修复发现并消除同族 null 字符串化新缺陷",
   "open_remainder": "B06-AC02/AC03 真实 Host 与 30 页项目、B07 安装/摘要/压力/回退、A08 30 秒观察、G39 待核实收据恢复 UX（决定流 P1 修复后该暂停已可自动解除，恢复 UX 细化降级为低优先）、run_desk 族投影粒度（G54 后续）"
+ },
+ "fix_round2": {
+  "date": "2026-10-01",
+  "pr": 79,
+  "merged_main": "5fc002f",
+  "p1": {
+   "unchanged_terminal": "服务端 unchanged 信封携带 operation 身份与 request_digest；前端 accept() 认可双终态；点击处理器预检最新决定状态（已满足则刷新返回不提交）。浏览器复验：重复 keep 无额外决定记录、无全局锁残留；node 双用例回归"
+  },
+  "p2": [
+   "legacy candidates.decision pending 经 LEGACY_ACTIONS 映射进入恢复/核实/重放全链路（已提交核实清除、未提交 not_found→重放→unchanged 终态，浏览器端到端验证）",
+   "正文 diff 完整化：page-text.js 纯函数覆盖嵌套列表/表头/标签/脚注/强调说明，node 五样例字段级修改回归",
+   "styles.confirm 剥离派生 diff 条目比较（业务字段严格），真实旧形态双用例可确认+篡改拒绝",
+   "outlineBlocks 章节范围使用改名后的章节页数组（多页范围恢复，复验 1-8/9-16/17-24）"
+  ],
+  "gates": "989 passed + ruff clean（净增 5 项测试）"
  }
 }
