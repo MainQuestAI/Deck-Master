@@ -34,7 +34,8 @@ def batch_browser(tmp_path):
         if not executable and not Path(runtime.chromium.executable_path).exists():
             pytest.skip('Chromium is required for batch interaction checks')
         browser = runtime.chromium.launch(executable_path=executable, args=['--no-sandbox'])
-        page = browser.new_page(viewport={'width': 1440, 'height': 900})
+        context = browser.new_context(viewport={'width': 1440, 'height': 900})
+        page = context.new_page()
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(server.start())

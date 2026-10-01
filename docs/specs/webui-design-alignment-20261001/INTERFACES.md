@@ -25,3 +25,11 @@ URL 新增 action、review 参数；action 仅允许 overview，review 仅允许
 总览勾选和未提交预览仅保留在当前工作面内存，不存进偏好或草稿。提交只冻结已确认计划到现有收据协议，响应丢失仍核实/重放同一 operation_id。刷新不重派任务。
 
 风格交接复用 app.styleSelection，但携带 project_identity、revision、target_refs、target_ids、可选固定 reference 和原样短要求。到达时校验身份/版本/内容引用并消费一次；仍由用户确认参考、风格版本、单页试作与采用后扩展。参考同时在目标中时必须明确调整，不自动删除目标。既有风格业务草稿的恢复保持其原协议，不把它当作总览偏好。
+
+## U03：总览阅读偏好与清理屏障
+
+新增 `ui_overview.v1` capability / 活动 schema；严格只含项目身份、固定 revision_id、search（最多 200 字符）、filter（all/todo）、sort（ascending/descending）。GET `/api/overview?revision=...` 返回该版本记录、整个偏好文件 CAS etag 与保留问题；POST `/api/overview` 接受 state 和 expected_etag。个人文件最多保留 12 个阅读版本，按明确修改顺序淘汰，轮询不产生偏好历史。
+
+恢复采用显式有效 URL 的 q/filter/sort → 此项目此固定版本的已保存偏好 → 默认值。离开、刷新恢复不恢复批量勾选、计划或 operation_id。无 capability 使用当前窗口会话态，读写失败保留输入，冲突须明确选择项目保存稿或此窗口稿后再保存；结果未知先按原内容/etag 核实。
+
+清理 reading_preferences 覆盖 `overview_preferences`，纳入计划、同 etag 复核、原记录备份和日志。清理持有 overview.lock，并保留空的 CAS 屏障；即使清理前尚无偏好记录，也写空屏障，阻止旧窗口延迟的 expected_etag=null 保存复活偏好。屏障不是阅读偏好，不计入下一次清理范围。损坏/外项目文件保留供恢复。清理不写 Document、任务、调用或业务收据。
