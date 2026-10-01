@@ -155,9 +155,10 @@ export function gallery(app, data) {
     if (s.selected_page_ids.length && app.health.ui_capabilities?.includes('style_recipes.v1')) extras.append(button('用选页开始风格校准', () => {
       const first = pages.find(p => p.page_id === s.selected_page_ids[0]);
       app.styleSelection = {reference: first.stages.blueprint.existence === 'recorded' ? {page_id:first.page_id, revision_id:app.route.revision, artifact_ref:first.stages.blueprint.ref, file:first.stages.blueprint.file, role:'reference'} : null,
-        target_ids:s.selected_page_ids.slice(1)};
-      app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.latest.revision_id});
-    }));
+        project_identity:app.info.project_identity, revision:app.route.revision,
+        target_ids:s.selected_page_ids.slice(1), target_refs:s.selected_page_ids.slice(1).map(id => ({page_id:id, page_ref:pages.find(page => page.page_id === id).stages.content.ref}))};
+      app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.route.revision});
+    }, false, {disabled:app.readonly}));
     controls.replaceChildren(
       el('div', {class: 'row wrap'}, tabs, chapter, filter),
       el('div', {class: 'row wrap'}, searchSlot, modes, columns),

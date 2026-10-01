@@ -4,6 +4,7 @@ import {imageView} from './images.js';
 import {layers} from './routes.js';
 import {stageKey} from './gallery.js';
 import {openAction} from './action-targets.js';
+import {batchActions} from './batch-actions.js';
 
 // A03 总览：待办与矩阵全部来自 B01 的实时投影（next_actions/attention/prompt_summary），
 // 不硬编码页数、不出现无证据的风格结论；矩阵保持普通 Tab 顺序（设计系统第 07 节）。
@@ -142,19 +143,20 @@ function matrixPanel(app) {
   const selected = new Set();
   const count = el('span', {class: 'muted', role: 'status'});
   const selectionNote = el('span', {class: 'muted', role: 'status'});
-  const clearButton = button('清除选择', () => { selected.clear(); render(); });
-  // 批量消费方随 A05（生成请求）/A06（风格目标）接入；本卡只交付选择范围机制，
-  // 不提供不传递选择的按钮。
+  const clearButton = button('清除选择', () => { selected.clear(); batch.invalidate(); render(); });
   const searchInput = el('input', {type: 'search', placeholder: '搜索页码或标题', 'aria-label': '搜索页码或标题', autocomplete: 'off'});
   const filterAll = button('', () => setFilter('all'), false, {'aria-pressed': 'true'});
   const filterTodo = button('只看需要处理', () => setFilter('todo'), false, {'aria-pressed': 'false'});
   const allCheckbox = el('input', {type: 'checkbox', 'aria-label': '选择当前筛选内所有可操作页面'});
   const table = el('table', {class: 'matrix', 'aria-label': '逐页制作进展'});
+  let batch;
+  batch = batchActions(app, selected, () => { if (batch) render(); });
 
   function setFilter(value) {
     if (filter === value) return;
     filter = value;
     selected.clear();
+    batch.invalidate();
     render();
   }
   function visiblePages() {
@@ -177,7 +179,7 @@ function matrixPanel(app) {
   }
   function render() {
     const list = visiblePages();
-    const operable = list.filter(needsWork);
+    const operable = list.filter(batch.eligible);
     count.textContent = `${list.length} / ${pages.length} 页`;
     filterAll.textContent = `全部 ${pages.length} 页`;
     filterTodo.textContent = `只看需要处理 ${pages.filter(needsWork).length} 页`;
@@ -195,7 +197,7 @@ function matrixPanel(app) {
 
     const head = el('tr', {},
       el('th', {scope: 'col'}, el('label', {class: 'check-target'}, allCheckbox)),
-      sortHeading('页面', ascending ? 'ascending' : 'descending', () => { ascending = !ascending; render(); }),
+      sortHeading('页面', ascending ? 'ascending' : 'descending', () => { ascending = !ascending; batch.invalidate(); render(); }),
       el('th', {scope: 'col'}, layers.content), el('th', {scope: 'col'}, '提示词'),
       el('th', {scope: 'col'}, layers.original_image), el('th', {scope: 'col'}, layers.svg),
       el('th', {scope: 'col'}, layers.ppt), el('th', {scope: 'col'}, '下一步'));
@@ -203,7 +205,7 @@ function matrixPanel(app) {
     if (!list.length) {
       body.append(el('tr', {}, el('td', {colspan: 8}, el('div', {class: 'matrix-empty stack'},
         el('h3', {}, '没有符合条件的页面'), el('p', {}, '尝试其他页码或标题，或清除筛选查看全部页面。'),
-        button('清除筛选', () => { search = ''; searchInput.value = ''; filter = 'all'; selected.clear(); render(); })))));
+        button('清除筛选', () => { search = ''; searchInput.value = ''; filter = 'all'; selected.clear(); batch.invalidate(); render(); })))));
     }
     let lastChapter = Symbol();
     for (const page of list) {
@@ -227,10 +229,10 @@ function matrixPanel(app) {
       } else thumb.append(icon('minus'));
       const row = el('tr', {},
         el('td', {}, el('label', {class: 'check-target'}, el('input', {type: 'checkbox',
-          checked: selected.has(page.page_id), disabled: !needsWork(page),
+          checked: selected.has(page.page_id), disabled: !batch.eligible(page) && !selected.has(page.page_id),
           'aria-label': `选择第 ${number} 页`, onchange: event => {
             if (event.target.checked) selected.add(page.page_id); else selected.delete(page.page_id);
-            render();
+            batch.invalidate(); render();
           }}))),
         el('th', {scope: 'row'}, button([thumb, el('span', {class: 'mono faint'}, number), el('span', {}, page.title || '未命名页面')],
           () => app.go({surface: 'page', page_id: page.page_id, layer: 'original_image'}),
@@ -241,17 +243,17 @@ function matrixPanel(app) {
         el('td', {}, cellButton(page, 'svg', cellView(stageState(page.stages[stageKey.svg])))),
         el('td', {}, cellButton(page, 'ppt', cellView(stageState(page.stages[stageKey.ppt])))),
         el('td', {class: 'matrix-next'}, nextButton(page)));
-      if (!needsWork(page)) row.title = '本页当前没有需要处理的动作';
       body.append(row);
     }
     table.replaceChildren(el('thead', {}, head), body);
+    batch.render();
   }
-  searchInput.addEventListener('input', () => { search = searchInput.value; selected.clear(); render(); });
+  searchInput.addEventListener('input', () => { search = searchInput.value; selected.clear(); batch.invalidate(); render(); });
   allCheckbox.addEventListener('change', () => {
-    for (const page of visiblePages().filter(needsWork)) {
+    for (const page of visiblePages().filter(batch.eligible)) {
       if (allCheckbox.checked) selected.add(page.page_id); else selected.delete(page.page_id);
     }
-    render();
+    batch.invalidate(); render();
   });
 
   // 章节行来自 content plan 的固定投影；读取失败或没有计划时矩阵仍完整，只是没有章节分组。
@@ -274,11 +276,11 @@ function matrixPanel(app) {
   const node = el('section', {class: 'stack', 'aria-label': '逐页制作进展'},
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     el('div', {class: 'toolbar'}, el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo),
-      el('div', {class: 'row wrap matrix-search'}, searchInput, selectionNote, clearButton)),
+      el('div', {class: 'row wrap matrix-search'}, searchInput, batch.toolbar, selectionNote, clearButton)),
     el('div', {class: 'matrix-wrap'}, table),
     el('div', {class: 'matrix-caption'},
       el('span', {}, icon('check'), ' 可查看　', icon('attention'), ' 需要处理　', icon('minus'), ' 尚未生成'),
-      el('span', {}, '按 Tab 访问产物与操作；窄屏可横向滚动查看完整进度。')));
+      el('span', {}, '按 Tab 访问产物与操作；窄屏可横向滚动查看完整进度。')), batch.node);
   render();
   return node;
 }
