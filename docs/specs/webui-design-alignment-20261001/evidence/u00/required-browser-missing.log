@@ -1,0 +1,10 @@
+EE                                                                       [100%]
+==================================== ERRORS ====================================
+______ ERROR at setup of test_matrix_title_geometry_and_mobile_navigation ______
+Required browser gate did not execute: ('/workspace/Deck-Master/tests/rebuild/test_ui_design_browser.py', 35, 'Skipped: Chromium is required for real UI geometry and keyboard checks')
+______ ERROR at setup of test_page_shortcuts_respect_controls_and_dialogs ______
+Required browser gate did not execute: ('/workspace/Deck-Master/tests/rebuild/test_ui_design_browser.py', 56, 'Skipped: Chromium is required for real UI geometry and keyboard checks')
+=========================== short test summary info ============================
+ERROR tests/rebuild/test_ui_design_browser.py::test_matrix_title_geometry_and_mobile_navigation
+ERROR tests/rebuild/test_ui_design_browser.py::test_page_shortcuts_respect_controls_and_dialogs
+2 errors in 0.68s
