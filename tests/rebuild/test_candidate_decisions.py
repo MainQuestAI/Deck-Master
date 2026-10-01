@@ -340,6 +340,38 @@ def test_client_action_kind_matches_server_digest_kind():
     module = Path(__file__).resolve().parents[2] / 'src/deck_master/resources/static/v2/business-operations.js'
     source = module.read_text(encoding='utf-8')
     assert "'candidates.decide': '/api/candidates/decision'" in source
-    assert "'candidates.decision'" not in source
+    # 旧名只允许作为显式兼容映射的键存在（终审补丁 P2），不得出现在端点表或调用点
+    paths_line = next(line for line in source.splitlines() if line.startswith('const paths'))
+    assert 'candidates.decision' not in paths_line
+    assert "LEGACY_ACTIONS = {'candidates.decision': 'candidates.decide'}" in source
+    assert 'canonicalAction' in source and 'expectedRequestDigest' in source
     import inspect
     assert 'candidates.decide' in inspect.getsource(candidates.decide)
+
+
+def test_unchanged_is_a_verifiable_terminal_envelope(store):
+    """终审补丁 P1：同向 unchanged 必须携带与请求一致的 operation 身份与摘要，
+    且不新增决定记录——前端据此做完整身份校验后清除收据，不落入待核实循环。"""
+    cid, _task = candidate(store)
+    keep = decide(store, cid, 'keep_current')
+    before = len(store.load_document()['candidate_decisions'])
+    doc = store.load_document()
+    op = str(uuid.uuid4())
+    unchanged = candidates.decide(store.project_root,
+                                  input={'schema_version': 'candidate_decision.v1', 'project_id': doc['project_id'],
+                                         'base_revision': doc['revision_id'], 'candidate_id': cid,
+                                         'decision': 'keep_current', 'expected_decision_ref': keep['decision_ref']},
+                                  base_revision=doc['revision_id'], operation_id=op)
+    assert unchanged['status'] == 'unchanged'
+    assert unchanged['operation_id'] == op
+    assert unchanged['request_digest'] and unchanged['request_digest'] == unchanged['request_digest']
+    assert unchanged['current_revision_id'] == doc['revision_id']
+    assert len(store.load_document()['candidate_decisions']) == before
+    # 同向 reopen 预检后（expected=当前决定）的 unchanged 同样是终态
+    reopened = decide(store, cid, 'reopen', expected=keep['decision_ref'])
+    again = candidates.decide(store.project_root,
+                              input={'schema_version': 'candidate_decision.v1', 'project_id': doc['project_id'],
+                                     'base_revision': store.load_document()['revision_id'], 'candidate_id': cid,
+                                     'decision': 'reopen', 'expected_decision_ref': reopened['decision_ref']},
+                              base_revision=store.load_document()['revision_id'], operation_id=str(uuid.uuid4()))
+    assert again['status'] == 'unchanged' and again['operation_id']

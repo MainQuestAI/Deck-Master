@@ -2,6 +2,11 @@ import {get, post, digest, readableError} from './api.js';
 import {el, button, modal, version} from './dom.js';
 
 const paths = {'history.restore':'/api/history/commit-restore', 'content.commit':'/api/content/commit', 'content.inputs':'/api/content/inputs', 'styles.confirm': '/api/styles/confirm', 'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit', 'candidates.adopt': '/api/candidates/adopt', 'candidates.decide': '/api/candidates/decision', 'stages.assemble': '/api/stages/assemble'};
+// 升级前的待核实记录以旧 action 名冻结（digest 也用旧 kind）。规范化映射让它们
+// 进入恢复/核实/重放路径：端点与显示走规范名，身份核对按兼容规则重算（见
+// expectedRequestDigest），绝不可静默跳过或覆盖（终审补丁 P2）。
+const LEGACY_ACTIONS = {'candidates.decision': 'candidates.decide'};
+const canonicalAction = action => LEGACY_ACTIONS[action] || action;
 export class BusinessOperations {
   constructor(app) {
     this.app = app; this.entries = new Map(); this.completed = new Map();
@@ -10,7 +15,7 @@ export class BusinessOperations {
     this.ready = this.restore();
   }
   async valid(pending) {
-    return pending && paths[pending.payload?.action] && pending.operation_id === pending.payload.request?.operation_id &&
+    return pending && paths[canonicalAction(pending.payload?.action)] && pending.operation_id === pending.payload.request?.operation_id &&
       pending.payload_digest === await digest(pending.payload) && /^[a-f0-9]{64}$/.test(pending.payload.request_digest || '');
   }
   async observe(editor) {
@@ -50,7 +55,7 @@ export class BusinessOperations {
       this.storageWarning && el('p', {}, this.storageWarning), this.loadWarning && el('p', {}, this.loadWarning),
       this.loadWarning && button('重新读取待核实请求', async () => { this.loadWarning = ''; this.ready = this.restore(); await this.ready; }),
       [...this.entries.values()].map(entry => el('div', {class: 'pending-operation stack'},
-        el('p', {}, ({'history.restore':'历史恢复', 'content.commit':'内容变更', 'content.inputs':'材料与任务要求', 'styles.confirm': '风格版本确认', 'annotations.save': '意见保存', 'changes.commit': '修改计划提交', 'candidates.adopt': '候选采用', 'candidates.decide': '候选决定', 'stages.assemble': '整稿制作'})[entry.pending.payload.action]),
+        el('p', {}, ({'history.restore':'历史恢复', 'content.commit':'内容变更', 'content.inputs':'材料与任务要求', 'styles.confirm': '风格版本确认', 'annotations.save': '意见保存', 'changes.commit': '修改计划提交', 'candidates.adopt': '候选采用', 'candidates.decide': '候选决定', 'stages.assemble': '整稿制作'})[canonicalAction(entry.pending.payload.action)]),
         el('p', {role: 'status'}, entry.note || (entry.state === 'sending' ? '正在确认保存结果，输入仍可继续写。' : '保留原请求和编号，后写草稿不会替换它。')),
         el('div', {class: 'row wrap'}, button('核实保存结果', () => this.verify(entry), false, {disabled: ['preparing', 'sending', 'checking'].includes(entry.state)}),
           entry.state === 'not_found' && button('重放已保存的原请求', () => this.execute(entry)),
@@ -93,7 +98,7 @@ export class BusinessOperations {
     if (!await this.valid(entry.pending)) { entry.note = '请求副本校验失败，保留恢复文件并重新读取原项目。'; this.render(); return; }
     entry.state = 'sending'; entry.note = ''; this.persist(); this.render();
     try {
-      const result = await post(paths[entry.pending.payload.action], entry.pending.payload.request);
+      const result = await post(paths[canonicalAction(entry.pending.payload.action)], entry.pending.payload.request);
       await this.accept(entry, result);
     } catch (error) {
       if (!error.status || error.status >= 500 || error.code === 'invalid_response') {
@@ -117,17 +122,33 @@ export class BusinessOperations {
       this.persist(); this.render();
     }
   }
+  async expectedRequestDigest(entry) {
+    const {action, request} = entry.pending.payload;
+    if (!LEGACY_ACTIONS[action]) return entry.pending.payload.request_digest;
+    // 旧记录以旧 kind 冻结摘要；服务端记录使用规范 kind。按兼容规则用同一
+    // payload（decision 请求的 basis 即 request.input）与规范 kind 重算后比对。
+    // 与服务端 request_digest 同字段：project_id（非 project_identity）。
+    return await digest({protocol: 'changes.v1', kind: canonicalAction(action), project_id: this.app.info.project_id,
+      base_revision: request.base_revision, payload: request.input});
+  }
   async accept(entry, response) {
-    if (response.status !== 'committed' || response.operation_id !== entry.pending.operation_id ||
-        response.request_digest !== entry.pending.payload.request_digest || !response.operation_result?.revision_id)
-      throw new Error('回包与原请求不一致，继续保留待核实状态。');
-    this.completed.set(entry.pending.operation_id, response.operation_result);
+    // 确定终态有两种：已提交（committed，必须命名其修订）与无变化（unchanged，
+    // 服务端未写入，但携带与请求一致的 operation 身份与摘要）。两者都做完整
+    // 身份校验后清除收据；其余形状维持待核实（终审补丁 P1）。
+    const expected = await this.expectedRequestDigest(entry);
+    const terminal = Boolean(response.operation_id === entry.pending.operation_id &&
+      response.request_digest === expected &&
+      (response.status === 'committed' && response.operation_result?.revision_id ||
+       response.status === 'unchanged'));
+    if (!terminal) throw new Error('回包与原请求不一致，继续保留待核实状态。');
+    const result = response.operation_result || response;
+    this.completed.set(entry.pending.operation_id, result);
     await this.clear(entry);
     if (!entry.editor?.disposed) {
-      try { await entry.onComplete?.(response.operation_result); }
+      try { await entry.onComplete?.(result); }
       catch { this.app.setNotice('业务保存已确认；工作面暂未刷新，可从任务或意见列表重新打开。'); }
     }
-    this.app.root.dispatchEvent(new CustomEvent('business-committed', {detail: {action: entry.pending.payload.action, result: response.operation_result}}));
+    this.app.root.dispatchEvent(new CustomEvent('business-committed', {detail: {action: entry.pending.payload.action, result}}));
     this.render();
   }
   async clear(entry) {

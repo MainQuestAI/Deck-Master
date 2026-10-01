@@ -283,3 +283,36 @@ def test_b06_diff_tracks_preserve_and_legacy_proposal_confirms(flow):
                                base_revision=_Store(flow.project).current_revision_id(),
                                operation_id=str(uuid.uuid4()))['operation_result']
     assert confirmed['status'] == 'confirmed'
+
+
+def test_b06_real_legacy_proposal_shapes_confirm_and_tampering_refused(flow):
+    """终审补丁 P2：真实旧形态 proposal（diff 无 preserve 条目／顶层缺键）可确认；
+    篡改业务字段的 proposal 仍被拒绝。旧形态按旧 diff 算法输出构造（等价于在
+    新推导结果上剥离派生 preserve 条目/顶层键）。"""
+    from deck_master.store import Store as _Store
+
+    def fresh_proposal():
+        return styles.propose(flow.project, input=value(flow))['proposal']
+
+    def confirm_raw(proposal_object):
+        ref = _Store(flow.project).put_json_object(proposal_object)
+        return styles.confirm(flow.project, proposal_id='style-proposal-' + ref['sha256'],
+                              base_revision=proposal_object['base_revision'],
+                              operation_id=str(uuid.uuid4()))['operation_result']
+
+    # 形态一：diff 无 preserve 条目（B06 初版 diff 算法输出）；confirm 会推进基准，
+    # 故每个形态用各自新鲜 propose 的当前基准。
+    shape_one = fresh_proposal()
+    legacy_diff = {**shape_one, 'diff': [item for item in shape_one['diff'] if item.get('field') != 'preserve_dimensions']}
+    assert confirm_raw(legacy_diff)['status'] == 'confirmed'
+    # 形态二：顶层缺 preserve_dimensions 键（B06 之前的核心产物）
+    shape_two = fresh_proposal()
+    legacy_nokey = {k: v for k, v in shape_two.items() if k != 'preserve_dimensions'}
+    legacy_nokey = {**legacy_nokey, 'diff': [item for item in legacy_nokey['diff'] if item.get('field') != 'preserve_dimensions']}
+    assert confirm_raw(legacy_nokey)['status'] == 'confirmed'
+    # 篡改业务字段（instruction）的 proposal 必须被拒绝
+    shape_three = fresh_proposal()
+    tampered = {**shape_three, 'input': {**shape_three['input'], 'instruction': '篡改后的要求'}}
+    with pytest.raises(OperationError) as refused:
+        confirm_raw(tampered)
+    assert 'suggestion changed' in refused.value.payload()['error']['message']
