@@ -1,4 +1,4 @@
-# Deck Master Web UI 设计基线 · 2026-09-30
+# Deck Master Web UI 设计基线 · 2026-10-01
 
 用户本轮已明确采用OpenDesign项目 **Deck Master · 全链路生成工作台 v3** 的现行设计；此文件替代旧Review Desk视觉及三栏布局约束。旧文档仅存于 [历史归档](docs/design/archive/DESIGN-review-desk-v1.md)。
 
@@ -8,8 +8,8 @@ Web UI是Deck Master本机生成链路工作台：连接材料、内容整合/�
 
 ## 设计源与优先级
 
-1. [收讫设计体系](docs/design/webui-opendesign-20260930/design-system.html)及[产品语言](docs/design/webui-opendesign-20260930/product-ui-language.md)。应用产品覆盖，不只截取OpenAI基础token。
-2. [当前index原型](docs/design/webui-opendesign-20260930/index.html)及[状态规范](docs/design/webui-opendesign-20260930/states.html)。样本动作不等于已有服务。
+1. [收讫设计体系](docs/design/webui-opendesign-20261001/design-system.html)及[产品语言](docs/design/webui-opendesign-20261001/product-ui-language.md)。应用产品覆盖，不只截取OpenAI基础token。
+2. [当前index原型](docs/design/webui-opendesign-20261001/index.html)及[状态规范](docs/design/webui-opendesign-20261001/states.html)。样本动作不等于已有服务。
 3. [生产适配决策](docs/specs/deck-master-webui-v4-20260930/DESIGN-ADAPTATION.md)、[A实现Spec](docs/specs/deck-master-webui-v4-20260930/A-UI-SPEC.md)与[B能力Spec](docs/specs/deck-master-webui-v4-20260930/B-CAPABILITIES-SPEC.md)。
 
 ## 视觉规则
@@ -26,4 +26,4 @@ Web UI是Deck Master本机生成链路工作台：连接材料、内容整合/�
 
 ## 验证
 
-设计样本、核心测试、真实浏览器、真实制作工具与最终安装验收分别记录。主验收视口1280×800和1440×900，窄屏按规范降级。状态参考页及模拟按钮不进入正式导航。默认切换与回退遵循现行发布门槛。
+设计样本、核心测试、真实浏览器、真实制作工具与最终安装验收分别记录。主验收视口1280×800和1440×900，窄屏按规范降级。状态参考页及模拟按钮不进入正式导航。本轮按用户要求移除旧版 UI；历史设计仅归档，生产只提供新版工作台。

@@ -32,7 +32,7 @@ decision that affects this task.
 | Calibrate selected pages from a fixed reference | `styles propose/confirm/plan`, then existing `changes commit/handoff` | [Style recipe protocol](../skills/deck-master/references/style-calibration.md); one trial before expansion |
 | Explicitly assemble reviewed current SVGs | `stages assemble --project … --base-revision … --operation-id <UUIDv4>` | Same normal pipeline, all current page visual gates required; final review still required |
 | Read a change handoff | `deck-master changes handoff --project … --change-id …` | Core plan and task identities; copy does not claim execution |
-| Independent project launcher | `deck-master workbench --registry <file> --no-open` | Separate launcher; optional `--project <absolute-dir>`, `--port 0`, `--ui legacy`, `--stop`; core-only installs report missing v2 UI honestly |
+| Independent project launcher | `deck-master workbench --registry <file> --no-open` | Separate launcher; optional `--project <absolute-dir>`, `--port 0`, `--stop`; core-only installs report missing v2 UI honestly |
 | Workbench service status | `deck-master view --project <dir>` | Existing service status; does not launch a browser |
 | Read paged run facts | `deck-master task list --project <dir> --limit 30 --offset 0 --revision <id>` | Optional `--change-id`, `--status`, `--attention`; next page stays on the returned revision; no execution |
 | Inspect run recovery links | `deck-master task status --project <dir> --task-id <id> --details --revision <id>` | Core claim time, call facts and existing request/Attempt links; [run recovery](agent-recovery-playbook.md#run-desk-recovery) |

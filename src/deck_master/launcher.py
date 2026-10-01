@@ -16,16 +16,16 @@ from .web import WorkbenchHandler, _static_dir
 
 
 def open_workbench(*, project=None, registry_file=None, ui="v2", port=0, open_browser=True, stop=False):
-    if ui not in ("v2", "legacy") or (ui == "legacy" and project is None):
-        raise LocalStateError("ui", "legacy UI requires an explicit project")
+    if ui != "v2":
+        raise LocalStateError("ui", "only the v2 workbench UI is available")
     runtime._check_port(port)
     desc = runtime.descriptor(project=project) if project else runtime.descriptor(registry=registry.registry_path(registry_file))
     if stop:
         return runtime.stop(desc)
     entry = registry.register(registry_file, project)["project"] if project else None
     state = runtime.ensure(desc, port=port)
-    available = ui == "legacy" or (_static_dir() / "v2" / "index.html").is_file()
-    url = state["url"] + ("legacy/" if ui == "legacy" else "v2/")
+    available = (_static_dir() / "v2" / "index.html").is_file()
+    url = state["url"] + "v2/"
     opened = False
     if open_browser and available:
         try:

@@ -1,0 +1,96 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * tokens.css — 全项目唯一的 design token 来源（OpenAI design system）
+ *
+ * states.html 通过 <link> 引用；其他入口由 scripts/sync-tokens.py 内联同步。
+ * 入口内联块为自动生成副本，不手动维护。禁止在组件中书写色板
+ * 外的原始 hex；派生色一律用 color-mix(in oklab, var(--accent), …)。
+ * ─────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ─── Surface ──────────────────────────────────────────────────── */
+  --bg:           #ffffff;
+  --surface:      #f5f5f5;             /* pearl — card surface, elevated panel */
+  --surface-warm: #fafafa;             /* mist — section break, footer */
+
+  /* ─── Foreground ───────────────────────────────────────────────── */
+  --fg:   #0d0d0d;                     /* ink black — primary text, brand mark */
+  --fg-2: #1a1a1a;                     /* soft black — alternative headings */
+  --muted: #6e6e6e;                    /* slate — secondary text, captions */
+  --meta:  #9b9b9b;                    /* ash — tertiary, placeholder */
+
+  /* ─── Border ───────────────────────────────────────────────────── */
+  --border:      #e5e5e5;             /* hairline — standard separator */
+  --border-soft: #ededed;             /* card outline on white surface */
+
+  /* ─── Accent ───────────────────────────────────────────────────── */
+  --accent:        #10a37f;           /* OpenAI Teal — links, highlight, CTA */
+  --accent-on:     #ffffff;
+  --accent-hover:  #0a7a5e;           /* teal deep — hover/pressed */
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+
+  /* ─── Semantic ─────────────────────────────────────────────────── */
+  --success: #10a37f;                 /* teal — success path */
+  --warn:    #f5a623;                 /* amber — advisory */
+  --danger:  #ef4146;                 /* error — validation, destructive */
+
+  /* ─── Typography ───────────────────────────────────────────────── */
+  --font-display: "Signifier", "Source Serif Pro", Georgia, ui-serif, serif;
+  --font-body:    "Söhne", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "Söhne Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Type scale */
+  --text-xs:   12px;                  /* label — eyebrow, uppercase nav */
+  --text-sm:   13px;                  /* caption — metadata, badges */
+  --text-base: 16px;                  /* body — standard reading */
+  --text-lg:   18px;                  /* body large — lede paragraphs */
+  --text-xl:   20px;                  /* h3 — sub-section */
+  --text-2xl:  28px;                  /* h2 — section heading */
+  --text-3xl:  40px;                  /* h1 — page heading */
+  --text-4xl:  56px;                  /* display — Signifier editorial hero */
+
+  /* Leading + tracking */
+  --leading-body:     1.65;
+  --leading-tight:    1.08;
+  --tracking-display: -0.02em;
+
+  /* ─── Spacing ──────────────────────────────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Section rhythm */
+  --section-y-desktop: 96px;
+  --section-y-tablet:  64px;
+  --section-y-phone:   48px;
+
+  /* ─── Radius ───────────────────────────────────────────────────── */
+  --radius-sm:   12px;
+  --radius-md:   16px;
+  --radius-lg:   16px;
+  --radius-pill: 9999px;
+
+  /* ─── Elevation ────────────────────────────────────────────────── */
+  --elev-flat:   none;
+  --elev-ring:   0 0 0 1px var(--border);
+  --elev-raised: 0 4px 16px rgba(13, 13, 13, 0.06);
+
+  /* ─── Focus ────────────────────────────────────────────────────── */
+  --focus-ring: 0 0 0 3px rgba(16, 163, 127, 0.12);
+
+  /* ─── Motion ───────────────────────────────────────────────────── */
+  --motion-fast:   150ms;
+  --motion-base:   220ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ─── Layout ───────────────────────────────────────────────────── */
+  --container-max:            1200px;
+  --container-gutter-desktop: 48px;
+  --container-gutter-tablet:  24px;
+  --container-gutter-phone:   24px;
+}

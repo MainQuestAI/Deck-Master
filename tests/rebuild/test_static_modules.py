@@ -21,12 +21,3 @@ def test_every_v2_module_and_entry_parses():
     for module in modules:
         result = subprocess.run([node, '--check', str(module)], capture_output=True, text=True)
         assert result.returncode == 0, f'{module.name}: {result.stderr}'
-
-
-def test_v2_rollback_links_point_at_the_legacy_entry():
-    # since the default-entry switch the root path serves the v2 workbench
-    # itself; the in-app rollback links must target /legacy/, not /
-    for module in ('project.js', 'app.js'):
-        text = V2.joinpath(module).read_text('utf-8')
-        assert "href: '/legacy/'" in text, module
-        assert "href: '/'" not in text, module

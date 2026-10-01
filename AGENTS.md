@@ -116,7 +116,7 @@ Stop and report when:
 ## UI And Design Work
 
 For visual or UI changes, read `DESIGN.md` before editing. The active design is
-`docs/design/webui-opendesign-20260930/`: the received OpenDesign design system,
+`docs/design/webui-opendesign-20261001/`: the received OpenDesign design system,
 product UI language, current prototype, and state references. Use its Deck Master
 product overrides: light neutral surfaces, black primary actions, sans-serif
 product typography, and factual task/candidate states. The old cold-ink Review

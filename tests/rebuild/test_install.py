@@ -46,8 +46,9 @@ def test_wheel_carries_schema_static_and_methods(tmp_path: Path) -> None:
         names = set(archive.namelist())
     for schema in ("document.v1.schema.json", "page.v2.schema.json", "artifact.v1.schema.json", "task.v1.schema.json", "review.v1.schema.json"):
         assert f"deck_master/resources/contracts/{schema}" in names, f"missing schema in wheel: {schema}"
-    for static in ("index.html", "app.js", "style.css"):
-        assert f"deck_master/resources/static/{static}" in names, f"missing static in wheel: {static}"
+    for static in ("index.html", "app.js", "style.css", "tokens.css", "workbench.css", "assets/deck-master-logo/favicon.svg", "assets/deck-master-logo/logo-horizontal-light.svg"):
+        assert f"deck_master/resources/static/v2/{static}" in names, f"missing static in wheel: {static}"
+    assert not any(f"deck_master/resources/static/{name}" in names for name in ("index.html", "app.js", "style.css"))
     assert "deck_master/resources/skill/SKILL.md" in names
     # T7 single source: every packaged method file is byte-identical to the
     # canonical skills/deck-master source, and skills-references is gone.
@@ -253,8 +254,8 @@ def test_wheel_and_sdist_exclude_customer_material_and_secrets(tmp_path: Path) -
     wheel_names = {name for name, _ in wheel_files}
     for schema in ("document.v1", "page.v2", "artifact.v1", "task.v1", "review.v1"):
         assert f"deck_master/resources/contracts/{schema}.schema.json" in wheel_names
-    for static in ("index.html", "app.js", "style.css"):
-        assert f"deck_master/resources/static/{static}" in wheel_names
+    for static in ("index.html", "app.js", "style.css", "tokens.css", "workbench.css", "assets/deck-master-logo/favicon.svg", "assets/deck-master-logo/logo-horizontal-light.svg"):
+        assert f"deck_master/resources/static/v2/{static}" in wheel_names
     assert "deck_master/resources/skill/SKILL.md" in wheel_names
     assert any(n.startswith("deck_master/resources/skill/references/") for n in wheel_names)
 
@@ -463,7 +464,7 @@ def test_isolated_resources_resolve_inside_package(tmp_path, wheel_venv):
         "root = resources.files('deck_master')\n"
         "paths = {name: str(root.joinpath(name)) for name in (\n"
         "    'resources/contracts/page.v2.schema.json',\n"
-        "    'resources/static/index.html',\n"
+        "    'resources/static/v2/index.html',\n"
         "    'resources/skill/SKILL.md',\n"
         "    'resources/skill/references/source-reading.md')}\n"
         "print(json.dumps(paths))")
@@ -764,11 +765,16 @@ def test_warm_build_removes_retired_resources(tmp_path):
     with zipfile.ZipFile(build('baseline')) as archive:
         assert any('resources/skills-references/' in n for n in archive.namelist())
     assert (checkout / 'build/lib/deck_master/resources/skills-references').is_dir()
+    retired_ui = checkout / 'build/lib/deck_master/resources/static'
+    for name in ('index.html', 'app.js', 'style.css'):
+        (retired_ui / name).write_text('retired UI build residue')
     hook.write_bytes(current_hook)
     # The second hook must actually be reimported even on coarse timestamp filesystems.
     shutil.rmtree(checkout / 'tools/__pycache__', ignore_errors=True)
     with zipfile.ZipFile(build('updated')) as archive:
         assert not any('resources/skills-references/' in n for n in archive.namelist())
+        for name in ('index.html', 'app.js', 'style.css'):
+            assert f'deck_master/resources/static/{name}' not in archive.namelist()
         for source in (REPO / 'skills/deck-master').rglob('*'):
             if source.is_file():
                 relative = source.relative_to(REPO / 'skills/deck-master')

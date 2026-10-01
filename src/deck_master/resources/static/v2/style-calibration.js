@@ -19,7 +19,10 @@ export function style(app) {
   let disposed = false, loaded = false, busy = false, serial = 0, sourceSerial = 0, proposal = null, plan = null, recipe = null;
   let fixed = null, selected = new Set(), resolutions = {}, promptSelection = null, parent = null, release;
   const options = new Map(), pages = app.summary.pages;
-  const label = id => pages.find(p => p.page_id === id)?.title || id;
+  const label = id => {
+    const index = pages.findIndex(p => p.page_id === id);
+    return index < 0 ? id : `第 ${index + 1} 页 · ${pages[index].title || '未命名页面'}`;
+  };
   const reference = el('select', {'aria-label': '风格参考原图'}, el('option', {value: ''}, '选择一页已有原图'));
   for (const page of pages) if (page.stages.blueprint.existence === 'recorded') {
     options.set(page.page_id, {page_id: page.page_id, revision_id: app.route.revision, artifact_ref: page.stages.blueprint.ref, file: page.stages.blueprint.file, role: 'reference'});

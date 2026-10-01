@@ -1,7 +1,7 @@
 """B02 entry selection and project-effective capabilities; synthetic only.
 
 Covers the `view --open` entry selection — the default opens the v2
-workbench, `--ui legacy` opens the rollback review entry (JSON, exit codes,
+workbench; the retired legacy choice is rejected (JSON, exit codes,
 service
 reuse with `workbench`), the /api/project effective_actions projection
 (modern, v1-format, readonly sample, missing capability, future-writer and
@@ -193,12 +193,6 @@ def test_view_ui_flag_reuses_service_and_matches_workbench(modern, capsys):
         assert default_entry["ui"] is None
         assert default_entry["review_url"].endswith("/v2/")
 
-        rc = cli.main(["view", "--project", str(modern), "--open", "--ui", "legacy", "--no-open", "--json"])
-        assert rc == 0
-        legacy_entry = json.loads(capsys.readouterr().out)
-        assert legacy_entry["ui"] == "legacy" and legacy_entry["review_url"].endswith("/legacy/")
-        assert legacy_entry["port"] == default_entry["port"] and legacy_entry["reused"] is True
-
         rc = cli.main(["view", "--project", str(modern), "--open", "--ui", "v2", "--no-open", "--json"])
         assert rc == 0
         v2_entry = json.loads(capsys.readouterr().out)
@@ -229,7 +223,7 @@ def test_view_ui_requires_open_and_validates_choice(modern, capsys):
     assert "--open" in json.loads(capsys.readouterr().err)["error"]["message"]
     # an unknown choice is argparse's own exit code 2
     with pytest.raises(SystemExit) as exc:
-        cli.main(["view", "--project", str(modern), "--open", "--ui", "v3", "--json"])
+        cli.main(["view", "--project", str(modern), "--open", "--ui", "legacy", "--json"])
     assert exc.value.code == 2
     capsys.readouterr()
 
@@ -237,4 +231,4 @@ def test_view_ui_requires_open_and_validates_choice(modern, capsys):
 def test_skill_and_cli_expose_the_entry_contract():
     skill = SKILL.read_text("utf-8")
     assert "view --open --ui v2" in skill and "默认入口已切换为新工作台" in skill
-    assert '"--ui", choices=("v2", "legacy")' in (Path(cli.__file__).resolve()).read_text("utf-8")
+    assert '"--ui", choices=("v2",)' in (Path(cli.__file__).resolve()).read_text("utf-8")

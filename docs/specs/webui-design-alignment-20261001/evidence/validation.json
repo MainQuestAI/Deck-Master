@@ -1,0 +1,28 @@
+{
+  "base_sha": "fc3813264fa5342f6888ba68c323c28bdd0bcca6",
+  "date": "2026-10-01",
+  "implementation_head": "git log -1 --format=%H -- src/deck_master/resources/static/v2/workbench.css",
+  "targeted_tests": {
+    "result": "56 passed in 22.00s",
+    "exit_code": 0,
+    "command": ".venv/bin/python -m pytest tests/rebuild/test_web.py tests/rebuild/test_entry_capabilities.py tests/rebuild/test_workbench_services.py tests/rebuild/test_workbench_e2e.py tests/rebuild/test_static_modules.py tests/rebuild/test_ui_design_browser.py tests/rebuild/test_install.py::test_wheel_carries_schema_static_and_methods tests/rebuild/test_install.py::test_wheel_and_sdist_exclude_customer_material_and_secrets tests/rebuild/test_install.py::test_warm_build_removes_retired_resources tests/rebuild/test_service_flow.py::test_no_office_native_editing_claims_in_ui_or_export -q"
+  },
+  "ruff": {
+    "command": ".venv/bin/ruff check src/ tests/rebuild/",
+    "exit_code": 0
+  },
+  "doctor_view": "ready",
+  "browser": {
+    "engine": "Chromium via Playwright",
+    "data": "24-page synthetic gallery sample, no model calls",
+    "evidence": "browser-checks.json",
+    "screenshots": "this directory; current-run screenshots inspected",
+    "checks": "10 overview viewport sizes, 7 surfaces, native-control arrow keys, content arrow keys, dialog Escape, loaded brand images",
+    "page_errors": []
+  },
+  "limits": [
+    "No full-suite pass claimed: earlier baseline had missing rsvg-convert and unsupported Node experimental flag.",
+    "No real Host / real 30-page / delivery / long stress / HOME migration acceptance.",
+    "Other surfaces captured at desktop; the 10-viewport matrix applies to overview only."
+  ]
+}

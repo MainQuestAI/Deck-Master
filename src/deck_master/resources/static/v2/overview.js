@@ -43,8 +43,11 @@ function reasonText(action) {
   return (reasonLabels[action.reason_code] || action.reason_code || '') +
     (action.blocked_reason === 'candidate_unreadable' ? ' 候选记录损坏，已隔离。' : '');
 }
-function todoMeta(action) {
-  const pages = action.page_ids || [];
+function todoMeta(app, action) {
+  const pages = (action.page_ids || []).map(id => {
+    const index = app.summary.pages.findIndex(page => page.page_id === id);
+    return index < 0 ? id : index + 1;
+  });
   if (!pages.length) return '项目级事项';
   return pages.length > 4 ? `第 ${pages.slice(0, 4).join('、')} 等共 ${pages.length} 页` : `第 ${pages.join('、')} 页`;
 }
@@ -63,7 +66,7 @@ function todoPanel(app) {
         el('div', {class: 'row between'}, el('span', {class: 'todo-kicker'}, '优先处理'),
           el('span', {class: 'status'}, kindLabels[first.kind] || first.kind)),
         el('h2', {}, todoTitle(first)), el('p', {}, reasonText(first)),
-        el('div', {class: 'todo-bottom'}, el('span', {}, todoMeta(first)), todoButton(app, first, true))),
+        el('div', {class: 'todo-bottom'}, el('span', {}, todoMeta(app, first)), todoButton(app, first, true))),
       el('div', {class: 'todo-secondary'},
         el('div', {class: 'todo-list-head'}, el('h3', {}, '接下来'), el('span', {}, `${rest.length} 类事项`)),
         rest.length ? rest.map(action => el('article', {class: 'todo-row'},
@@ -176,10 +179,14 @@ function matrixPanel(app) {
     count.textContent = `${list.length} / ${pages.length} 页`;
     filterAll.textContent = `全部 ${pages.length} 页`;
     filterTodo.textContent = `只看需要处理 ${pages.filter(needsWork).length} 页`;
+    filterAll.classList.toggle('active', filter === 'all');
     filterAll.setAttribute('aria-pressed', String(filter === 'all'));
+    filterTodo.classList.toggle('active', filter === 'todo');
     filterTodo.setAttribute('aria-pressed', String(filter === 'todo'));
     selectionNote.textContent = selected.size ? `已选择 ${selected.size} 页` : '未选择页面';
     clearButton.disabled = !selected.size;
+    clearButton.hidden = !selected.size;
+    selectionNote.hidden = !selected.size;
     allCheckbox.checked = operable.length > 0 && operable.every(page => selected.has(page.page_id));
     allCheckbox.indeterminate = operable.some(page => selected.has(page.page_id)) && !allCheckbox.checked;
     allCheckbox.disabled = !operable.length;
@@ -265,8 +272,7 @@ function matrixPanel(app) {
   const node = el('section', {class: 'stack', 'aria-label': '逐页制作进展'},
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     el('div', {class: 'toolbar'}, el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo),
-      el('label', {class: 'row wrap'}, searchInput, selectionNote)),
-    el('div', {class: 'row wrap'}, clearButton),
+      el('div', {class: 'row wrap matrix-search'}, searchInput, selectionNote, clearButton)),
     el('div', {class: 'matrix-wrap'}, table),
     el('div', {class: 'matrix-caption'},
       el('span', {}, icon('check'), ' 可查看　', icon('attention'), ' 需要处理　', icon('minus'), ' 尚未生成'),

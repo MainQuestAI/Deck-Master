@@ -50,7 +50,8 @@ where = ["src"]
 deck_master = [
   "resources/contracts/*.json",
   "resources/compiler/*.mjs",
-  "resources/static/*",
+  "resources/static/v2/*",
+  "resources/static/v2/assets/deck-master-logo/*",
 ]
 
 [tool.pytest.ini_options]

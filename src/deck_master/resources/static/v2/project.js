@@ -175,11 +175,11 @@ export class Project {
       {class: (this.route.surface === key || this.route.surface === 'page' && key === 'gallery') ? 'active' : '',
         'aria-current': (this.route.surface === key || this.route.surface === 'page' && key === 'gallery') ? 'page' : null, title: label}));
     const launcher = localURL(new URLSearchParams(location.search).get('launcher'));
-    const aside = el('aside', {class: 'sidebar'}, el('div', {class: 'logo'}, el('span', {class: 'mark', 'aria-hidden': true}, 'D'), el('span', {class: 'brand-name'}, 'Deck Master')),
+    const aside = el('aside', {class: 'sidebar'}, el('div', {class: 'logo'}, el('img', {class: 'brand-logo', src: '/v2/assets/deck-master-logo/logo-horizontal-light.svg', alt: 'Deck Master', width: 176, height: 46})),
       nav, el('div', {class: 'side-project'}, el('span', {class: 'muted'}, '当前项目'), el('strong', {}, this.info.title),
         this.info.sample && el('span', {class: 'status'}, infoSampleLabel(this.info))),
       el('div', {class: 'sidebar-footer stack'}, launcher ? el('a', {href: launcher.href}, '返回项目列表') : el('p', {class: 'muted'}, '当前为项目独立入口'),
-        el('a', {href: '/legacy/'}, '原有工作区'), button('连接状态', () => this.connectionInfo(), false, {class: 'text-link'})));
+        button('连接状态', () => this.connectionInfo(), false, {class: 'text-link'})));
     this.notice = el('div', {class: 'notice', role: 'status', hidden: true});
     const banners = el('div', {class: 'banners'}, this.notice);
     if (this.business) banners.append(this.business.node);
@@ -194,7 +194,8 @@ export class Project {
     const view = {overview, content, gallery, page: pageDetail, runs, style}[this.route.surface];
     this.main.append(view(this, data));
     if (this.route.surface === 'page') this.main.addEventListener('keydown', event => {
-      const typing = event.target.closest('textarea,input,select,[contenteditable]');
+      const typing = event.target.closest('textarea,input,select,button,a,summary,[contenteditable]');
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
       if (event.key === 'Escape' && !typing) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
       // ←/→ 切换页（输入与可滚动阅读区除外），与单页制作链的上一页/下一页一致。
       if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing && !event.target.closest('.page-image-viewport,.selectable-text,.evidence-json,.diff-lines')) {

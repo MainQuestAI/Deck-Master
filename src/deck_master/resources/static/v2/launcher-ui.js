@@ -68,7 +68,7 @@ export async function launcher(root, health) {
     if (!url) throw new Error('项目服务返回的位置无效，请从工作台重新打开。');
     location.assign(url.href);
   }
-  root.replaceChildren(el('header', {class: 'launcher-brand'}, el('strong', {}, 'Deck Master'), el('span', {class: 'muted'}, '本机制作工作台')),
+  root.replaceChildren(el('header', {class: 'launcher-brand'}, el('img', {class: 'brand-logo', src: '/v2/assets/deck-master-logo/logo-horizontal-light.svg', alt: 'Deck Master', width: 176, height: 46}), el('span', {class: 'muted'}, '本机制作工作台')),
     el('main', {id: 'main'}, heading('项目', '打开正在制作的方案。材料、逐页内容、制作依据和每版产物，都在同一个地方。', button('新建项目', createForm, true)),
       el('div', {class: 'toolbar'}, el('div', {class: 'row wrap'}, button('选择项目文件夹', registerForm), button('打开只读示例', async event => {
         const trigger = event.currentTarget; trigger.disabled = true;
