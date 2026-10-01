@@ -84,9 +84,11 @@ export function style(app) {
   function state() { return {reference: fixed, targets: [...selected], instruction: instruction.value, dimensions: Object.fromEntries([...dimensions].filter(([,v]) => v.check.checked).map(([k,v]) => [k,v.text.value])), host_suggestion: suggestion.value, prompt_selection: promptSelection, resolutions, parent_recipe_id: parent}; }
   function controls() {
     const blocked = !loaded || busy || app.readonly || editor()?.readonly || app.business.entries.size || app.business.loadWarning;
-    proposeButton.disabled = blocked; confirmButton.disabled = blocked || !proposal || proposal.proposal.conflicts.some(c => !c.resolution);
+    const referenceConflict = fixed && selected.has(fixed.page_id);
+    proposeButton.disabled = blocked || referenceConflict; confirmButton.disabled = blocked || referenceConflict || !proposal || proposal.proposal.conflicts.some(c => !c.resolution);
     firstButton.disabled = blocked || !recipe; expandButton.disabled = blocked || !recipe; dispatchButton.disabled = blocked || !plan;
-    for (const input of [reference, instruction, suggestion, ...targets.querySelectorAll('input'), ...dimensions.values()].flatMap(v => v.check ? [v.check, v.text] : [v])) input.disabled = !loaded || app.readonly || busy;
+    for (const input of [reference, instruction, suggestion, ...targets.querySelectorAll('input'), ...dimensions.values()].flatMap(v => v.check ? [v.check, v.text] : [v])) input.disabled = !loaded || app.readonly || busy || (input.dataset.reference === 'true' && !input.checked);
+    if (referenceConflict) notice.textContent = '参考页同时在目标中。目标未被自动移除，请明确取消这页目标后再检查要求。';
   }
   function persist() { if (loaded && !editor().readonly && !editor().disposed) { editor().draft.content.style_calibration = state(); editor().changed(); } }
   function changed() { serial++; proposal = null; preview.replaceChildren(); confirmButton.disabled = true; persist(); controls(); }
@@ -96,10 +98,11 @@ export function style(app) {
   }
   function invalidatePlan(save = true) { serial++; plan = null; impact.replaceChildren(); if (save) persistTrial(); controls(); }
   function renderTargets() {
-    targets.replaceChildren(...pages.filter(p => p.page_id !== fixed?.page_id).map(p => {
+    targets.replaceChildren(...pages.map(p => {
       const check = el('input', {type: 'checkbox', checked: selected.has(p.page_id), 'aria-label': '风格目标 ' + label(p.page_id)});
-      check.addEventListener('change', () => { check.checked ? selected.add(p.page_id) : selected.delete(p.page_id); resolutions = {}; changed(); });
-      return el('label', {class: 'inline-control'}, check, label(p.page_id));
+      check.dataset.reference = String(p.page_id === fixed?.page_id);
+      check.addEventListener('change', () => { check.checked ? selected.add(p.page_id) : selected.delete(p.page_id); resolutions = {}; notice.textContent = ''; changed(); });
+      return el('label', {class: 'inline-control'}, check, label(p.page_id) + (p.page_id === fixed?.page_id ? ' · 固定参考，不作为试作目标' : ''));
     }));
   }
   async function showReference() {
@@ -124,7 +127,7 @@ export function style(app) {
     } catch (error) { if (!disposed && token === sourceSerial) sourceView.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); }
   }
   function renderExcerpt() { excerpt.replaceChildren(...(promptSelection ? [el('p', {}, '仅借用已校验选段：'), el('blockquote', {}, promptSelection.selection.excerpt), button('移除风格选段', () => { promptSelection = null; renderExcerpt(); changed(); })] : [])); }
-  reference.addEventListener('change', () => { fixed = options.get(reference.value) || null; selected.delete(fixed?.page_id); promptSelection = null; resolutions = {}; renderExcerpt(); renderTargets(); showReference(); changed(); });
+  reference.addEventListener('change', () => { fixed = options.get(reference.value) || null; promptSelection = null; resolutions = {}; renderExcerpt(); renderTargets(); showReference(); changed(); });
   instruction.addEventListener('input', changed); suggestion.addEventListener('input', changed);
   async function propose() {
     if (busy) return; busy = true; const token = ++serial; proposal = null; controls();
@@ -229,7 +232,7 @@ export function style(app) {
     reference.querySelector('option[value="saved"]')?.remove();
     if (fixed) { options.set('saved', fixed); reference.append(el('option', {value:'saved'}, label(fixed.page_id)+' · '+version(fixed.revision_id))); reference.value = 'saved'; } else reference.value = '';
     for (const [key,v] of dimensions) { v.check.checked = key in (value.dimensions || defaults); v.text.value = value.dimensions?.[key] || defaults[key] || '借用参考页'+names[key]; }
-    selected.delete(fixed?.page_id); renderTargets(); renderExcerpt(); showReference();
+    renderTargets(); renderExcerpt(); showReference();
   }
   function hydrate() {
     const current = editor(); loaded = false; serial++; proposal = null; plan = null; preview.replaceChildren(); impact.replaceChildren(); controls(); current.ready.then(() => {
@@ -238,7 +241,11 @@ export function style(app) {
       if (saved) hydrateState(saved); else renderTargets();
       if (app.styleSelection && !app.readonly) {
         const seed = app.styleSelection; delete app.styleSelection;
-        hydrateState({...state(), reference:seed.reference || fixed, targets:seed.target_ids || []}); persist();
+        const validContext = (!seed.project_identity || seed.project_identity === app.info.project_identity) && (!seed.revision || seed.revision === app.route.revision);
+        const validTargets = (seed.target_ids || []).every(id => pages.some(page => page.page_id === id)) && (!seed.target_refs || seed.target_refs.length === seed.target_ids.length && seed.target_refs.every(ref => canonical(ref.page_ref) === canonical(pages.find(page => page.page_id === ref.page_id)?.stages.content.ref)));
+        if (validContext && validTargets) {
+          hydrateState({...state(), reference:seed.reference ?? null, targets:seed.target_ids || [], instruction:seed.instruction ?? state().instruction}); persist();
+        } else notice.textContent = '带入的选页属于其它项目或版本，未替换当前输入。请返回原总览明确重选。';
       }
       loadRecipes(); controls();
     });

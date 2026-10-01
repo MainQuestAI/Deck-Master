@@ -1,0 +1,19 @@
+{
+  "implementation_sha": "a9398c8f2bc83a1f13ffac059964cbec3748e809",
+  "base_sha": "893e355df4830390c8c2d6460b4b2552e5378a35",
+  "python": "3.12.14",
+  "node": "24.19.0",
+  "browser": {
+    "passed": 11,
+    "skipped": 0,
+    "deselected": 1026
+  },
+  "unit": {
+    "passed": 995,
+    "skipped": 0,
+    "deselected": 42
+  },
+  "model_calls": 0,
+  "professional_quality": "not_evaluated",
+  "hosted_ci": "pending"
+}
