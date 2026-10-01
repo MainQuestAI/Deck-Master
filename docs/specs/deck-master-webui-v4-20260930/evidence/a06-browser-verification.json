@@ -33,6 +33,11 @@
    "date": "2026-10-01",
    "p1_unchanged_terminal": "决定流双终态端到端复验（receipt-verdict.js 生产实现）：keep 按钮启用→点击后收据清除（noPendingOps=true）、无业务冻结（notBlocked=true）、状态显示已保留当前；重复 keep 预检（按钮隐藏）；reopen 启用→恢复待决。上一轮因 expectedRequestDigest 读错层级（payload.request_digest 为 undefined）导致的 kept×adopted 后按钮禁用问题随 receipt-verdict 抽取一并消除",
    "table_column_join": "表格文本化改为与渲染器同规则（按 columns 序、column_id 关联 cell）；三场景回归：列归属交换→文本变化、仅 cells 存储顺序打乱→文本不变、列定义顺序调整→文本跟随新列序（test_page_text.py::test_page_text_table_semantics_follow_render_join）"
+  },
+  "patch_round3": {
+   "date": "2026-10-01",
+   "p1_unchanged_terminal": "决定流双终态端到端复验（receipt-verdict.js 生产实现）：keep 按钮启用→点击后收据清除（noPendingOps=true）、无业务冻结（notBlocked=true）、状态显示已保留当前；重复 keep 预检（按钮隐藏）；reopen 启用→恢复待决。上一轮因 expectedRequestDigest 读错层级（payload.request_digest 为 undefined）导致的 kept×adopted 后按钮禁用问题随 receipt-verdict 抽取一并消除",
+   "table_column_join": "表格文本化改为与渲染器同规则（按 columns 序、column_id 关联 cell）；三场景回归：列归属交换→文本变化、仅 cells 存储顺序打乱→文本不变、列定义顺序调整→文本跟随新列序（test_page_text.py::test_page_text_table_semantics_follow_render_join）"
   }
  },
  "boundaries": [
