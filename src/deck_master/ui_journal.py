@@ -44,10 +44,12 @@ CORE_READERS = ("deckmaster-current.v1", "deckmaster-current.v2")
 
 # (action, capability the serving core must advertise). "drafts" lives in the
 # personal journal and needs no workbench.v3 project. FORMAT_GATED families
-# mirror the real workbench.v3 gates in annotation_service/changes/content_ops/
-# styles; the remaining document families have no format gate in their write
-# paths today, so the projection reports them truthfully as writable and the
-# missing endpoint gates are backfilled as gap G54 (not fixed from this card).
+# mirror the real workbench.v3 gates enforced at the service layer of
+# annotation_service/changes/content_ops/styles/candidates (B07/G54 also added
+# the candidates gate to plan/adopt/decide). Known granularity limit: the
+# run_desk family mixes /api/feedback (serves v1 projects by design) with
+# /api/stages/assemble (v3-only) — a single family-level projection cannot
+# separate them, recorded as an open G54 follow-up.
 PROJECT_ACTIONS = (
     ("drafts", "ui_draft.v1"),
     ("annotations", "annotations.v1"),
@@ -60,7 +62,7 @@ PROJECT_ACTIONS = (
     ("exports", "exports.v1"),
     ("restoration", "restoration.v1"),
 )
-FORMAT_GATED = frozenset({"annotations", "changes", "content", "styles"})
+FORMAT_GATED = frozenset({"annotations", "changes", "content", "styles", "candidates"})
 
 
 def _capabilities(server_capabilities):
@@ -394,7 +396,7 @@ def _reading_items(store, doc, identity):
     if record is not None:
         items.append({"kind": "gallery_state", "id": "gallery.json", "etag": record["etag"]})
     elif safe_path(store.deck_root, "workbench", "gallery.json").exists():
-        kept_out.append("gallery_state: saved gallery record is damaged; kept for manual recovery")
+        kept_out.append("gallery_state: saved gallery record is damaged or foreign; kept for manual recovery")
     position = read_json(_position_path(store))
     if position is not None:
         try:
@@ -423,15 +425,32 @@ def _clear_selection(input, records):
     raise LocalStateError("draft_ids", "draft_ids is 'all' or a list of draft identities")
 
 
-def _clear_manifest(project, input):
-    """Derive the deletable items, blockers and damage notes from live state."""
-    store, doc, identity = context(project)
+def _clear_draft_records(store, doc, identity):
+    """Draft records on an established context (same rules as list_drafts)."""
+    directory = _directory(store)
+    records, errors = {}, []
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.json")):
+            try:
+                record = _read(store, path.stem)
+                _validate(store, doc, identity, record["draft"])
+                records[record["draft"]["draft_id"]] = record
+            except (ValueError, RuntimeError, OSError, KeyError, TypeError):
+                errors.append({"draft_id": path.stem, "status": "unreadable"})
+    return records, errors
+
+
+def _clear_manifest(store, doc, identity, input):
+    """Derive the deletable items, blockers and damage notes from live state.
+
+    Callers pass one established context so plan walks the project ancestry once
+    and commit twice (its own + the re-derivation), not once per nested helper.
+    """
     if input.get("project_id") != doc["project_id"]:
         raise LocalStateError("project_id", "clear plan belongs to the current project")
     if not isinstance(input.get("reading_preferences"), bool):
         raise LocalStateError("reading_preferences", "reading_preferences is true or false")
-    listing = list_drafts(project)
-    records = {record["draft"]["draft_id"]: record for record in listing["records"]}
+    records, listing_errors = _clear_draft_records(store, doc, identity)
     items, blockers = [], []
     explicit = input.get("draft_ids", "all") != "all"
     for draft_id in _clear_selection(input, records):
@@ -447,8 +466,8 @@ def _clear_manifest(project, input):
                              "next_action": "query deck-master operations show with this operation ID before clearing"})
             continue
         items.append({"kind": "draft", "id": draft_id, "etag": record["etag"]})
-    kept_out = [f"draft {error['draft_id']}: saved record is unreadable; kept for manual recovery"
-                for error in listing["errors"]]
+    kept_out = [f"draft {error['draft_id']}: saved record is unreadable or foreign; kept for manual recovery"
+                for error in listing_errors]
     if input["reading_preferences"]:
         reading, damage = _reading_items(store, doc, identity)
         items.extend(reading)
@@ -466,7 +485,8 @@ def plan_clear(project, *, input):
     if not isinstance(input, dict) or input.get("scope") != "current_project":
         raise LocalStateError("scope", "clearing scope is current_project")
     _reject_unknown_clear_keys(input)
-    doc, identity, items, blockers, kept_out, manifest_digest = _clear_manifest(project, input)
+    store, doc, identity = context(project)
+    _, _, items, blockers, kept_out, manifest_digest = _clear_manifest(store, doc, identity, input)
     plan = {"schema_version": "ui_clear_plan.v1", "project_id": doc["project_id"], "project_identity": identity,
             "scope": "current_project", "items": items, "blockers": blockers, "kept_out": kept_out,
             "manifest_digest": manifest_digest, "plan_id": "clear-plan-" + manifest_digest[:16],
@@ -503,7 +523,7 @@ def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
             raise LocalStateError("manifest_digest", "manifest digest is required for the commit")
         if expected_plan_id != "clear-plan-" + expected_digest[:16]:
             raise LocalStateError("plan_id", "plan identifier does not match the manifest digest")
-        _doc, _identity, items, _blockers, _kept_out, live_digest = _clear_manifest(project, input)
+        _, _, items, _, _, live_digest = _clear_manifest(store, doc, identity, input)
         if live_digest != expected_digest:
             raise LocalStateConflict("manifest_digest",
                                      "personal state changed since the plan; nothing was cleared, plan again")

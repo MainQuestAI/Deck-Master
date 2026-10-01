@@ -75,16 +75,11 @@ export function content(app, data) {
   }
   function outlineBlocks() {
     // 设计大纲块：章节编号、页范围与来源关联导航；编辑仍在下方内容计划面板。
-    const chapterOf = new Map();
-    for (const chapter of chapters) for (const goal of goals) {
-      const ids = chapterPages(chapter);
-      if (ids.has(goal.page_id)) chapterOf.set(goal.page_id, chapter);
-    }
     return chapters.map((chapter, index) => {
       const ids = [...chapterPages(chapter)].sort();
-      const pageList = ids.map(id => pageMap.get(id)).filter(Boolean);
-      if (!pageList.length) return null;
-      const first = pageList[0], last = pageList[pageList.length - 1];
+      const chapterPagesList = ids.map(id => pageMap.get(id)).filter(Boolean);
+      if (!chapterPagesList.length) return null;
+      const first = chapterPagesList[0], last = chapterPagesList[chapterPagesList.length - 1];
       const links = [...new Set(goals.filter(goal => ids.includes(goal.page_id))
         .flatMap(goal => goal.source_links.map(link => link.locator || '材料')))];
       return el('div', {class: 'outline-block'},
@@ -155,9 +150,10 @@ export function content(app, data) {
   const aligned=app.summary.input_alignment==='current';
   const editable = node => app.readonly ? node : operation.guard(node);
   // 材料四态分呈（G15）：已登记（无提取）、制作工具已读取（有提取）、影响判断（Host 已采用/待协调）、采用对齐（input_alignment）。
+  // 历史修订不加载当前输入的材料清单：不显示虚假的 0 份断言（评审 reading-P2）。
   const materialAside=el('aside',{class:'panel materials-aside','aria-label':'使用中的材料'},
-    el('div',{class:'panel-head'},el('h2',{},'使用中的材料'),el('span',{class:'status'},(inputs?.sources || []).length+' 份')),
-    el('div',{class:'panel-body stack'},sourceList,
+    el('div',{class:'panel-head'},el('h2',{},'使用中的材料'),el('span',{class:'status'},inputs?(inputs.sources.length+' 份'):'历史版本')),
+    el('div',{class:'panel-body stack'},inputs?sourceList:el('p',{class:'muted'},'材料清单按当前输入读取；正在看历史版本，未加载材料列表。'),
       el('p',{class:'muted'},aligned?'当前输入已由内容结果对齐；这不是独立事实核验。':'输入待协调：制作工具尚需按最新材料判断影响。'),
       !app.readonly&&inputs&&el('details',{},el('summary',{},'调整任务要求与材料'),editable(el('div',{class:'stack'},brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),
         additions.node,reason.node,button('预览材料与任务变化',inputPreview)))),

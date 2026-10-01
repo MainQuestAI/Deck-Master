@@ -73,11 +73,13 @@ def test_v1_format_disables_only_real_gates_and_stays_truthful(v1_project):
     actions = actions_by_name(info)
     # drafts (journal) and the ungated families stay writable: their write
     # paths really accept v1 projects today, and the projection must not
-    # over-disable with a false reason (gap G54 tracks the missing gates)
-    for name in ("drafts", "candidates", "inputs", "run_desk", "exports", "restoration"):
+    # over-disable with a false reason. run_desk keeps a known granularity
+    # limit: the family mixes v1-capable /api/feedback with v3-only assemble.
+    for name in ("drafts", "inputs", "run_desk", "exports", "restoration"):
         assert actions[name]["writable"] is True and actions[name]["reason_code"] is None
-    # only these four mirror a real workbench.v3 gate in their services
-    for name in ("annotations", "changes", "content", "styles"):
+    # these mirror a real workbench.v3 gate at the service layer (B07/G54
+    # moved candidates into the gated set together with its endpoint gate)
+    for name in ("annotations", "changes", "content", "styles", "candidates"):
         assert actions[name]["writable"] is False
         assert actions[name]["reason_code"] == "unsupported_project_format"
     # reading the projection must not upgrade or migrate the project in place

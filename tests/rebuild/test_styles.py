@@ -260,3 +260,26 @@ def test_b06_preserve_dimensions_projected_scoped_and_in_instruction(flow):
 
 DIMENSION_TEXT = {'palette': '借用参考页配色', 'typography': '借用参考页文字层级',
                   'density': '借用参考页密度', 'lines': '借用参考页线条', 'composition': '借用参考页构图'}
+
+
+def test_b06_diff_tracks_preserve_and_legacy_proposal_confirms(flow):
+    """B06 终审 P3：diff 记录未选维度集合变化；旧核心无 preserve 键的 proposal 可确认。"""
+    first = confirm(flow)  # version 1: palette+typography → preserve density/lines/composition
+    recipe_one = styles.show(flow.project, recipe_id=first['recipe_id'])['recipe']
+    # 子提案改选 palette+composition → preserve 集合变化应出现在 diff
+    child = value(flow, parent_recipe_id=recipe_one['recipe_id'],
+                  dimensions={'palette': '配色', 'composition': '构图'})
+    proposed = styles.propose(flow.project, input=child)['proposal']
+    fields = [entry['field'] for entry in proposed['diff']]
+    assert 'preserve_dimensions' in fields
+    entry = next(e for e in proposed['diff'] if e['field'] == 'preserve_dimensions')
+    assert entry['before'] == {'density': '密度', 'lines': '线条', 'composition': '构图'}
+    assert entry['after'] == {'typography': '文字层级', 'density': '密度', 'lines': '线条'}
+    # 旧核心兼容：手工剥掉 preserve_dimensions 的 proposal 仍可确认（按重推导补齐比较）
+    legacy = {k: v for k, v in proposed.items() if k != 'preserve_dimensions'}
+    from deck_master.store import Store as _Store
+    ref = _Store(flow.project).put_json_object(legacy)
+    confirmed = styles.confirm(flow.project, proposal_id='style-proposal-' + ref['sha256'],
+                               base_revision=_Store(flow.project).current_revision_id(),
+                               operation_id=str(uuid.uuid4()))['operation_result']
+    assert confirmed['status'] == 'confirmed'

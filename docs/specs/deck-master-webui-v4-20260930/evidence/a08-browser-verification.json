@@ -38,5 +38,6 @@
   "core": "979 passed + ruff clean（随各卡提交）",
   "browser": "本记录 12 图",
   "install": "归 B07"
- }
+ },
+ "head": "40776a9（初版）"
 }

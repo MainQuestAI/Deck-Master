@@ -8,14 +8,27 @@
  "browser_verification": {
   "ac03_clear": "真实服务端到端：生成清理计划（将清理 N 项：草稿/画廊选择/阅读位置 + 范围声明 任务、候选、调用记录与项目文件不在清理范围）→ 确认清理并保留备份 → 已清理 1 项；恢复备份在本机 .deckmaster/workbench/clear-backups/<digest>.json；/api/drafts 清空、view/summary revision 不变（不新增业务 revision）",
   "ac01_ac02": "交接/进度/部分返回/候选/历史与轮询节奏由既有 run-desk/run-recovery/summary-poll/business-operations 机制承担（W10/W11 迁移+PR66 移植），本轮复核未改其行为；六状态对应与 3/15 秒轮询的浏览器证据归 A08 全工作面走查",
-  "defects": "无新增"
+  "defects": "无新增",
+  "ac03_stray_text_fix": "终审 P2（length&&el 数字 0 → '00' 文本）及其同族 null 字符串化（'nullnull'）修复：计划面板条件节点改为数组过滤后展开，复验 zeroNodes=[]（无游离数字/null 文本节点），截图 fix-clear-no-zeros-1440.png；初版截图 ac03-clear-plan-1440.png 中可见该缺陷（当时未识别）",
+  "screenshots": [
+   "output/playwright/a07/fix-clear-no-zeros-1440.png",
+   "output/playwright/a07/ac03-clear-plan-1440.png",
+   "output/playwright/a07/ac03-clear-done-1440.png"
+  ]
  },
  "boundaries": [
   "AC03 恢复生成新版本的既有 restoration 流（delivery-desk/historyDesk）未改动，按 W11 证据延续",
   "真实制作工具/安装 open"
  ],
  "test_layers": {
-  "core": "979 passed + ruff clean（B05 服务端测试覆盖清理语义）",
+  "core": "全量 984 passed + ruff clean（B05 服务端测试 14 项含新增负例与锁互斥）",
   "browser": "本记录（合成项目）"
- }
+ },
+ "head": "cb61c39（初版）；终审修复随修复提交",
+ "environment": {
+  "worktree": "webui-a",
+  "browser": "Playwright Chromium session a05/a06，1440x900",
+  "service": "真实 WorkbenchServer + a05 fixture（材料/大纲/意见）与 a06 fixture；合成证据"
+ },
+ "recorded_at": "2026-10-01（随提交更新）"
 }

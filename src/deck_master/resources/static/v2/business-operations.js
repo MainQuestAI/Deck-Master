@@ -1,7 +1,7 @@
 import {get, post, digest, readableError} from './api.js';
 import {el, button, modal, version} from './dom.js';
 
-const paths = {'history.restore':'/api/history/commit-restore', 'content.commit':'/api/content/commit', 'content.inputs':'/api/content/inputs', 'styles.confirm': '/api/styles/confirm', 'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit', 'candidates.adopt': '/api/candidates/adopt', 'candidates.decision': '/api/candidates/decision', 'stages.assemble': '/api/stages/assemble'};
+const paths = {'history.restore':'/api/history/commit-restore', 'content.commit':'/api/content/commit', 'content.inputs':'/api/content/inputs', 'styles.confirm': '/api/styles/confirm', 'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit', 'candidates.adopt': '/api/candidates/adopt', 'candidates.decide': '/api/candidates/decision', 'stages.assemble': '/api/stages/assemble'};
 export class BusinessOperations {
   constructor(app) {
     this.app = app; this.entries = new Map(); this.completed = new Map();
@@ -50,7 +50,7 @@ export class BusinessOperations {
       this.storageWarning && el('p', {}, this.storageWarning), this.loadWarning && el('p', {}, this.loadWarning),
       this.loadWarning && button('重新读取待核实请求', async () => { this.loadWarning = ''; this.ready = this.restore(); await this.ready; }),
       [...this.entries.values()].map(entry => el('div', {class: 'pending-operation stack'},
-        el('p', {}, ({'history.restore':'历史恢复', 'content.commit':'内容变更', 'content.inputs':'材料与任务要求', 'styles.confirm': '风格版本确认', 'annotations.save': '意见保存', 'changes.commit': '修改计划提交', 'candidates.adopt': '候选采用', 'candidates.decision': '候选保留决定', 'stages.assemble': '整稿制作'})[entry.pending.payload.action]),
+        el('p', {}, ({'history.restore':'历史恢复', 'content.commit':'内容变更', 'content.inputs':'材料与任务要求', 'styles.confirm': '风格版本确认', 'annotations.save': '意见保存', 'changes.commit': '修改计划提交', 'candidates.adopt': '候选采用', 'candidates.decide': '候选决定', 'stages.assemble': '整稿制作'})[entry.pending.payload.action]),
         el('p', {role: 'status'}, entry.note || (entry.state === 'sending' ? '正在确认保存结果，输入仍可继续写。' : '保留原请求和编号，后写草稿不会替换它。')),
         el('div', {class: 'row wrap'}, button('核实保存结果', () => this.verify(entry), false, {disabled: ['preparing', 'sending', 'checking'].includes(entry.state)}),
           entry.state === 'not_found' && button('重放已保存的原请求', () => this.execute(entry)),

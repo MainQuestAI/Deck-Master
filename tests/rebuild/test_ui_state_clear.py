@@ -290,16 +290,124 @@ def test_http_plan_clear_and_readonly_refusal(tmp_path):
         server.stop()
 
 
-def test_g54_gated_endpoints_match_effective_actions_projection():
-    """B07/G54：document 写族的格式门端点与 ui_journal 投影口径一致（defense-in-depth）。"""
-    from deck_master import web
+def test_g54_candidates_gate_projection_endpoint_and_service_layer_agree(tmp_path):
+    """B07/G54 一致性：candidates 族在投影（effective_actions）、HTTP 端点与服务层
+    三处同口径拒绝 v1 项目；run_desk 族内 feedback 对 v1 保持可写（族粒度已知
+    限制，见 ui_journal.FORMAT_GATED 注释）。"""
+    import json as json_module
+    import urllib.error
+    import urllib.request
 
-    import inspect
-    handler_src = inspect.getsource(web)
-    gated = ('/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble')
-    open_paths = ('/api/export', '/api/history/plan-restore')
-    for endpoint in open_paths:
-        assert endpoint not in handler_src or True
-    for endpoint in gated:
-        assert endpoint in handler_src, endpoint
-    assert "unsupported_project_format" in handler_src
+    from deck_master import candidates as candidates_service, service, ui_journal
+    from deck_master.web import WorkbenchServer
+
+    project = tmp_path / 'v1-g54'
+    service.create(project, brief='G54 consistency', draft={'pages': [{'schema_version': 'deck_page_package.v2',
+                   'page_id': 'p01', 'customer_visible': {'title': 'v1', 'body_blocks': []},
+                   'visual_spec': {'intent': 'g54', 'reference_mode': 'new_design'}}]})
+    info = ui_journal.project_info(project)
+    candidates_action = next(item for item in info['effective_actions'] if item['action'] == 'candidates')
+    assert candidates_action['writable'] is False and candidates_action['reason_code'] == 'unsupported_project_format'
+
+    # 服务层同拒（CLI 与 HTTP 共享的真相源）
+    doc = Store(project).load_document()
+    from deck_master.operations import OperationError
+    with pytest.raises(OperationError) as service_gate:
+        candidates_service.plan(project, input={'schema_version': 'candidate_selection.v1',
+                                                'project_id': doc['project_id'], 'base_revision': doc['revision_id'],
+                                                'candidate_ids': ['missing']})
+    assert service_gate.value.payload()['error']['code'] == 'unsupported_project_format'
+
+    server = WorkbenchServer(project)
+    url = server.start()
+    try:
+        base = url.rstrip('/')
+        token = json_module.load(urllib.request.urlopen(base + '/api/session'))['token']
+        headers = {'Origin': base, 'X-Deck-Token': token, 'Content-Type': 'application/json'}
+        body = json_module.dumps({'input': {'schema_version': 'candidate_selection.v1', 'project_id': doc['project_id'],
+                                            'base_revision': doc['revision_id'], 'candidate_ids': []}}).encode()
+        request = urllib.request.Request(base + '/api/candidates/plan', data=body, headers=headers)
+        try:
+            urllib.request.urlopen(request)
+            raise AssertionError('candidates plan must refuse v1 projects')
+        except urllib.error.HTTPError as error:
+            assert error.code == 409 and json_module.load(error)['error']['code'] == 'unsupported_project_format'
+        # run_desk 家族粒度限制的实证：feedback 对 v1 仍可写（assemble 走服务层 stage_format_required）
+        feedback = json_module.dumps({'page_id': 'p01', 'instruction': 'g54', 'base_revision': doc['revision_id']}).encode()
+        request = urllib.request.Request(base + '/api/feedback', data=feedback, headers=headers)
+        response = urllib.request.urlopen(request)
+        assert response.status == 200
+    finally:
+        server.stop()
+
+
+def test_b05_specified_negative_paths(project, store):
+    """INTERFACES B05 明示规格的负例：空列表=只清阅读设置、未知键拒绝、
+    plan_id 不匹配拒绝、clear-log 残行隔离。"""
+    save_draft(store, project, 'draft-kept', text='保留')
+    identity = ui_journal.list_drafts(project)['project_identity']
+    doc = store.load_document()
+    ui_journal.save_position(project, position={'schema_version': 'ui_position.v1', 'project_id': doc['project_id'],
+                                                'project_identity': identity, 'page_id': None, 'surface': 'overview',
+                                                'layer': 'original_image', 'revision': doc['revision_id'], 'zoom': 1,
+                                                'task_id': None})
+    # (a) draft_ids: [] 只清阅读设置，草稿保留
+    value = ui_journal.plan_clear(project, input={'project_id': doc['project_id'], 'scope': 'current_project',
+                                                  'draft_ids': [], 'reading_preferences': True})
+    assert [item['kind'] for item in value['items']] == ['reading_position']
+    result = ui_journal.commit_clear(project, operation_id=str(uuid.uuid4()),
+                                     input={'project_id': doc['project_id'], 'scope': 'current_project',
+                                            'draft_ids': [], 'reading_preferences': True},
+                                     plan_id=value['plan_id'], manifest_digest=value['manifest_digest'])
+    assert [item['kind'] for item in result['cleared']] == ['reading_position']
+    assert [r['draft']['draft_id'] for r in ui_journal.list_drafts(project)['records']] == ['draft-kept']
+    # (b) 未知键拒绝（plan 与 commit 双侧）
+    with pytest.raises(LocalStateError):
+        ui_journal.plan_clear(project, input={'project_id': doc['project_id'], 'scope': 'current_project',
+                                              'draft_ids': 'all', 'reading_preferences': True, 'extra': 1})
+    # (c) plan_id 与 manifest 不匹配拒绝
+    value = ui_journal.plan_clear(project, input={'project_id': doc['project_id'], 'scope': 'current_project',
+                                                  'draft_ids': 'all', 'reading_preferences': False})
+    with pytest.raises(LocalStateError):
+        ui_journal.commit_clear(project, operation_id=str(uuid.uuid4()),
+                                input={'project_id': doc['project_id'], 'scope': 'current_project',
+                                       'draft_ids': 'all', 'reading_preferences': False},
+                                plan_id='clear-plan-' + '0' * 16, manifest_digest=value['manifest_digest'])
+    # (d) clear-log 残行隔离：坏 JSON 行被跳过，后续 commit 不被阻断
+    log = store.project_root / '.deckmaster' / 'workbench' / 'clear-log.jsonl'
+    log.write_text(log.read_text() + '{"broken": tru', encoding='utf-8')
+    value = ui_journal.plan_clear(project, input={'project_id': doc['project_id'], 'scope': 'current_project',
+                                                  'draft_ids': 'all', 'reading_preferences': False})
+    result = ui_journal.commit_clear(project, operation_id=str(uuid.uuid4()),
+                                     input={'project_id': doc['project_id'], 'scope': 'current_project',
+                                            'draft_ids': 'all', 'reading_preferences': False},
+                                     plan_id=value['plan_id'], manifest_digest=value['manifest_digest'])
+    assert result['status'] == 'cleared'
+
+
+def test_b05_save_locks_mutually_exclude_commit(project, store):
+    """三锁互斥回归：持 position.lock 时 commit_clear 阻塞，释放后完成。"""
+    import threading
+    from deck_master.local_state import local_lock, safe_path
+    save_draft(store, project)
+    value = plan(project)
+    held = threading.Event()
+    release = threading.Event()
+    def hold():
+        with local_lock(safe_path(store.project_root, '.deckmaster', 'workbench', 'position.lock')):
+            held.set()
+            release.wait(timeout=10)
+    holder = threading.Thread(target=hold)
+    holder.start()
+    assert held.wait(timeout=5)
+    outcome = {}
+    def run_commit():
+        outcome['result'] = commit(project, value)
+    worker = threading.Thread(target=run_commit)
+    worker.start()
+    worker.join(timeout=0.8)
+    assert worker.is_alive(), 'commit must block while a save lock is held'
+    release.set()
+    holder.join(timeout=5)
+    worker.join(timeout=10)
+    assert not worker.is_alive() and outcome['result']['status'] == 'cleared'

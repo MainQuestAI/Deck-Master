@@ -2,9 +2,10 @@
  "card": "B07",
  "head": "随提交（git log 本文件），基线 fa41aae",
  "g54_done": {
-  "what": "candidates 族（plan/adopt/decision）与 stages.assemble 的写端点补 workbench.v3 格式门（409 unsupported_project_format），与 ui_journal FORMAT_GATED 投影口径一致",
-  "scope_decision": "/api/export 与 /api/history/plan-restore 保持开放——test_versioned_exports 证明 legacy（deck_document.v1）项目的导出/恢复是合法能力，格式门只限 workbench.v3-only 族（candidates/assemble）",
-  "test": "test_ui_state_clear.py::test_g54_gated_endpoints_match_effective_actions_projection（端点清单与投影一致性）+ 全量 980 passed"
+  "what": "candidates 族三层一致：FORMAT_GATED 投影（reason=unsupported_project_format）+ 服务层 candidates.plan/adopt/decide 首行 _require_workbench（CLI/HTTP 同源真相）+ web.py 防御副本；stages.assemble 维持服务层既有 stage_format_required（不遮蔽精确错误码）",
+  "initial_claim_correction": "初版声称『与 ui_journal FORMAT_GATED 投影口径一致』与事实不符（终审 core-P1）：当时投影未纳入 candidates。终审修复后三层一致并有真实一致性测试（test_entry_capabilities + test_ui_state_clear 的投影↔端点↔服务层断言）",
+  "scope": "export/history-restore 保持开放（test_versioned_exports 证明 v1 是设计内能力）；run_desk 族粒度限制（feedback v1 合法 vs assemble v3-only）记为 G54 后续",
+  "test": "test_ui_state_clear.py::test_g54_candidates_gate_projection_endpoint_and_service_layer_agree + test_entry_capabilities.py 更新后的 truthfulness 断言"
  },
  "open_items": {
   "G43_G44_export_final": "review/delivery/engineering 三用途导出与下载越界防护：既有单测覆盖（test_versioned_exports 979 套件内），最终安装环境重验需真实安装（open：需用户授权的本机安装演练）",

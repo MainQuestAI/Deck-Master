@@ -107,8 +107,14 @@ def _proposal(store, document, value):
     previous = _owned(store, document, recipe_id=value['parent_recipe_id'])[0] if value.get('parent_recipe_id') else None
     before = previous['input'] if previous else {}
     diff = [{'field': key, 'before': before.get(key), 'after': value.get(key)} for key in
-            ('reference', 'target_page_ids', 'instruction', 'dimensions', 'preserve_dimensions', 'prompt_selection', 'host_suggestion', 'resolutions')
+            ('reference', 'target_page_ids', 'instruction', 'dimensions', 'prompt_selection', 'host_suggestion', 'resolutions')
             if before.get(key) != value.get(key)]
+    # preserve_dimensions 是投影值（input 上不存在）：与父版本的投影比较，
+    # 未选维度集合变化才产生条目——否则 diff 对它永远沉默。
+    prev_preserve = {key: DIMENSIONS[key] for key in DIMENSIONS
+                     if key not in (previous.get('dimensions') if previous else {})}
+    if prev_preserve != preserve_dimensions:
+        diff.append({'field': 'preserve_dimensions', 'before': prev_preserve, 'after': preserve_dimensions})
     return {'schema_version': 'style_proposal.v1', 'project_id': document['project_id'],
             'base_revision': document['revision_id'], 'input': copy.deepcopy(value), 'targets': targets,
             'reference_sources': _sources(store, reference), 'dimensions': dimensions,
@@ -147,7 +153,12 @@ def confirm(project, *, proposal_id, base_revision, operation_id):
             return previous
         if document['revision_id'] != base_revision or proposal['base_revision'] != base_revision:
             raise StyleConflict('base_revision', 'project changed; review a new suggestion', [])
-        if _proposal(store, document, proposal['input']) != proposal:
+        rederived = _proposal(store, document, proposal['input'])
+        # 兼容旧核心产出的 proposal（无 preserve_dimensions 键）：该键按重推导
+        # 值补齐后整体比较，其余字段必须逐字节一致。
+        normalized = dict(proposal)
+        normalized.setdefault('preserve_dimensions', rederived['preserve_dimensions'])
+        if rederived != normalized:
             fail('proposal', 'suggestion changed; review the original recorded sources')
         unresolved = [c for c in proposal['conflicts'] if c['resolution'] is None]
         if unresolved:

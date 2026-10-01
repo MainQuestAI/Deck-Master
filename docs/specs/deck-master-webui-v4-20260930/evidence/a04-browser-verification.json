@@ -139,5 +139,12 @@
   "a04_anchor": "代码推演七项 PASS（模块缓存/消费/双失效/解析式/无钳制/first 公式）；浏览器三轮（1200/6200/11000，CDP clearBrowserCache 后）：scrollTop 逐像素复原 ×3、锚点页=窗口首瓷片 ×3",
   "b04": "decide 输入白名单/冲突完整 ref/投影容错 代码核验 PASS；11 测试在套件内通过",
   "b05": "三锁固定顺序/verify→备份→删除次序/备份校验/missing_ok/去重/空列表/白名单/残行隔离/position 归属 代码核验 PASS；死锁推演（保存方单锁、清理方固定序多锁，无环）；11 测试在套件内通过"
+ },
+ "sprint_terminal_review": {
+  "verdict": "reading 层 2 P1（网格锚点公式错误 / continuousPitch 被旧模式瓷片污染）——均已修复并复验",
+  "p1a_grid_anchor": "alignAnchorTile 解析式只在单列布局成立；网格模式 anchorTop() 行基公式本身正确 → 修复为非连续模式直接 return。复验：网格单例 2305→2305 逐像素（2500/6000/9500 为浏览器对 SVG 层虚拟总高的物理 clamp，保存与恢复均基于 clamp 后真实位置）",
+  "p1b_pitch_pollution": "根因深挖：首测写入无论放 resetReading 哪一步都在 renderRows 内部（replaceChildren 之前）执行→必测旧模式瓷片。终版架构：连续节距唯一事实源=renderRows 尾部对当前 DOM 相邻瓷片 top 差的校准（replaceChildren 之后必为当前模式）；rowHeight 只读缓存或几何估算（差~1px）。复验：切换后首帧 autoRows 即 610（=634-24 正确）；scrollHeight 15201 全稿可达 p24；切换后往返 delta=0×2",
+  "p2_residual_drift": "alignAnchorTile 把锚点处实测节距写回缓存再渲染 → topSpace 与落点同基准，不等高瓷片误差不再随锚点序号放大（等高样本下原已为 0）",
+  "verification_note": "本轮复验曾两度被假象误导：goto 同 hash URL 不重载文档（页面跑旧 ES module）——必须先 about:blank 再进入；探针数值需区分物理 clamp 与计算误差。教训已记入 sprint-review"
  }
 }

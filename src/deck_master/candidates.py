@@ -193,11 +193,14 @@ def _decision_projection(store, document, candidate, adoptions):
 
     pending 不等于未采用：曾采用仍是 adopted；keep_current 把待决变为已决定，
     reopen 恢复待决。决定与采用分别保存，互不顶替。决定记录属辅助审阅元数据：
-    单条引用损伤时按 unreadable 如实投影并按待决处理，不阻断候选采用规划。
+    任一决定引用损伤（无法确认归属哪条候选）时，全部决定按 unreadable 保守
+    投影并按待决处理——文档级保守是有意取舍，不阻断候选采用规划；瞬时
+    IO/解析异常按同样的损伤面处理（收窄自 broad except）。
     """
+    from .snapshots import READ_FAILURES
     try:
         decision = _decision_state(store, document, candidate['candidate_id'])
-    except Exception:
+    except READ_FAILURES + (ValueError, KeyError, TypeError):
         decision = {'state': 'unreadable', 'decision_ref': None, 'decided_at': None}
     return {'decision': decision,
             'pending': not adoptions and decision['state'] != 'keep_current'}
@@ -240,6 +243,15 @@ def _changeset_projection(store, document, candidate, task):
     for pid in sorted(set(changeset.get('remove_page_ids') or [])):
         mapping.append({'page_id': pid, 'source_page_ids': [pid], 'relation': 'removed'})
     return {'changeset': changeset, 'upserts': upserts, 'mapping': mapping}
+
+
+def _require_workbench(document):
+    """G54: candidates are a workbench.v3 family; the gate lives at the service
+    layer so CLI and HTTP share one truth (web.py keeps a defensive copy)."""
+    if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
+        raise operations.OperationError('unsupported_project_format', 'project',
+                                        'candidate planning, adoption and decisions require a workbench.v3 project',
+                                        http_status=409)
 
 
 def _superseded_tasks(store, document, affected_ids):
@@ -505,6 +517,7 @@ def _plan(store, document, candidate_ids):
 def plan(project, *, input):
     validate_schema('candidate_selection', input)
     store = Store(project_path(project)); document = load_snapshot(store)
+    _require_workbench(document)
     if input['project_id'] != document['project_id'] or input['base_revision'] != document['revision_id']:
         raise operations.OperationError('conflict', 'base_revision', 'read current state and preview adoption again', exit_code=5)
     value = _plan(store, document, input['candidate_ids']); ref = store.put_json_object(value)
@@ -580,6 +593,7 @@ def adopt(project, *, input, base_revision, operation_id):
     store = Store(project_path(project))
     with store._locked():
         document = store.load_document()
+        _require_workbench(document)
         digest = operations.request_digest(document, 'candidates.adopt', base_revision, input)
         previous = operations.recover(store, operation_id, digest)
         if previous:
@@ -697,6 +711,7 @@ def decide(project, *, input, base_revision, operation_id):
     store = Store(project_path(project))
     with store._locked():
         document = store.load_document()
+        _require_workbench(document)
         digest = operations.request_digest(document, 'candidates.decide', base_revision, input)
         previous = operations.recover(store, operation_id, digest)
         if previous:
