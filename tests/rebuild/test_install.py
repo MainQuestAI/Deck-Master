@@ -46,7 +46,7 @@ def test_wheel_carries_schema_static_and_methods(tmp_path: Path) -> None:
         names = set(archive.namelist())
     for schema in ("document.v1.schema.json", "page.v2.schema.json", "artifact.v1.schema.json", "task.v1.schema.json", "review.v1.schema.json"):
         assert f"deck_master/resources/contracts/{schema}" in names, f"missing schema in wheel: {schema}"
-    for static in ("index.html", "app.js", "style.css", "tokens.css", "workbench.css", "assets/deck-master-logo/favicon.svg", "assets/deck-master-logo/logo-horizontal-light.svg"):
+    for static in ("index.html", "app.js", "style.css", "tokens.css", "workbench.css", "package.json", "assets/deck-master-logo/favicon.svg", "assets/deck-master-logo/logo-horizontal-light.svg"):
         assert f"deck_master/resources/static/v2/{static}" in names, f"missing static in wheel: {static}"
     assert not any(f"deck_master/resources/static/{name}" in names for name in ("index.html", "app.js", "style.css"))
     assert "deck_master/resources/skill/SKILL.md" in names

@@ -37,7 +37,7 @@ def run_node(body: str) -> dict:
     node = shutil.which('node')
     assert node, 'node required'
     script = SNIPPET.replace('${body}', body)
-    result = subprocess.run([node, '--experimental-default-type=module', '--input-type=module', '-e', script],
+    result = subprocess.run([node, '--input-type=module', '-e', script],
                             capture_output=True, text=True)
     if result.returncode != 0 or not result.stdout.strip():
         detail = 'node failed rc=' + str(result.returncode) + '; stderr: ' + result.stderr[:600]

@@ -22,7 +22,7 @@ def test_browser_wire_canonical_matches_python_for_coordinates_and_unicode_keys(
     script = (f'import {{wireCanonical}} from {json.dumps(module.as_uri())};'
               f'const values={json.dumps(values)};'
               'console.log(JSON.stringify(values.map(v=>[JSON.stringify(v),wireCanonical(v)])));')
-    result = subprocess.run([node, '--experimental-default-type=module', '--input-type=module', '-e', script],
+    result = subprocess.run([node, '--input-type=module', '-e', script],
                             capture_output=True, text=True, check=True)
     for wire, browser_canonical in json.loads(result.stdout):
         assert browser_canonical.encode('utf-8') == canonical_json_bytes(json.loads(wire))
