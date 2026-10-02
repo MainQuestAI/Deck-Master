@@ -14,12 +14,13 @@ import shutil
 import tempfile
 import threading
 import zipfile
+import uuid
 import xml.etree.ElementTree as ET
 
 from . import candidates, icons, operations, pipeline
 from .compiler import CompileOptions, SvgInput, compile_deck
 from .compiler.svg import parse_svg
-from .local_state import project_path
+from .local_state import project_path, local_lock, read_json, write_json
 from .models import canonical_json_bytes
 from .snapshots import load_snapshot
 from .store import Store, _atomic_write_bytes
@@ -62,6 +63,37 @@ def _folder(store):
     path=store.deck_root/'cache/candidate-previews';path.mkdir(parents=True,exist_ok=True);return path
 
 
+def _state_path(store,key):
+    folder=_folder(store)/key;folder.mkdir(exist_ok=True)
+    return folder/'state.json'
+
+
+def _state(store,key):
+    path=_state_path(store,key);state=read_json(path)
+    if state and state['status'] in ('queued','running'):
+        # A lease is held from enqueue to completion, including the queue wait.
+        with (path.parent/'worker.lock').open('a+b') as lease:
+            try:fcntl.flock(lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError:return state
+            state={**state,'status':'interrupted','error':{'code':'candidate_preview_interrupted','message':'检查执行者已退出；请明确重试。'}}
+            write_json(path,state)
+    return state
+
+
+def _publish(store,key,check_id,value):
+    with local_lock(_folder(store)/'state.lock'):
+        path=_state_path(store,key);state=read_json(path)
+        if state and state['check_id']==check_id:
+            write_json(path,{**state,**value})
+
+
+def _result(store,key,identity):
+    state=_state(store,key);cached=_cached(store,key,identity)
+    if state and (not cached or state['check_id']!=cached.get('check_id')):return state
+    if cached:return _public(cached)
+    return state or {'status':'not_requested','cache_key':key}
+
+
 def _cached(store,key,identity):
     folder=_folder(store)/key;path=folder/'report.json'
     if not path.exists():return None
@@ -85,18 +117,14 @@ def _public(report):
     return result
 
 
-def _generate(project,candidate_id,context):
+def _generate(project,candidate_id,context,check_id,lease):
     store,doc,base,entry,candidate,task,data,scope,fonts,identity,key=context
     folder=_folder(store);job=(str(store.project_root),key)
     try:
         # Cross-process serialization also isolates LibreOffice invocations.
         with (folder/'compile.lock').open('a+b') as lock:
             fcntl.flock(lock,fcntl.LOCK_EX)
-            existing=_cached(store,key,identity)
-            if existing and existing['status']=='ready':
-                with _LOCK:_JOBS.pop(job,None)
-                return
-            with _LOCK:_JOBS[job]={'status':'running','cache_key':key}
+            _publish(store,key,check_id,{'status':'running'})
             with tempfile.TemporaryDirectory(prefix='candidate-check-',dir=store.staging_dir) as tmp:
                 work=Path(tmp);assets=pipeline.page_asset_paths(store,base,entry,work)
                 path=work/'page.svg';path.write_bytes(data)
@@ -119,47 +147,56 @@ def _generate(project,candidate_id,context):
                        'readback.json':canonical_json_bytes(readback)}
                 destination=folder/key;destination.mkdir(exist_ok=True)
                 report={'schema_version':'candidate_preview.v1','status':'ready' if readback['status']=='pass' and native_ok else 'failed',
-                        'cache_key':key,'candidate_id':candidate_id,'candidate_ref':identity['candidate_ref'],
+                        'cache_key':key,'check_id':check_id,'candidate_id':candidate_id,'candidate_ref':identity['candidate_ref'],
                         'identity':identity,'scope_check':scope,'readback':readback,'native_shapes':native,'pictures':pictures,
                         'native_check':'pass' if native_ok else 'fail','visual_review':'not_evaluated','files':{}}
                 for name,raw in files.items():
                     _atomic_write_bytes(destination/name,raw);report['files'][name]={'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
                 _atomic_write_bytes(destination/'report.json',canonical_json_bytes(report))
-                with _LOCK:_JOBS.pop(job,None)
+                _publish(store,key,check_id,{'status':report['status']})
     except Exception as exc:
-        with _LOCK:_JOBS[job]={'status':'needs_tool' if isinstance(exc,pipeline.NeedsTool) else 'failed','cache_key':key,
-                              'error':{'code':'candidate_preview_failed','message':str(exc)}}
+        _publish(store,key,check_id,{'status':'needs_tool' if isinstance(exc,pipeline.NeedsTool) else 'failed',
+                 'error':{'code':'candidate_preview_failed','message':str(exc)}})
+    finally:
+        lease.close()
+        with _LOCK:_JOBS.pop(job,None)
 
 
 @operations.public
 def request(project, *, candidate_id, retry=False, wait=True):
     try:context=_context(project,candidate_id)
     except pipeline.NeedsTool as exc:return {'status':'needs_tool','error':{'code':'needs_tool','message':str(exc)}}
-    store=context[0];identity,key=context[-2:];cached=_cached(store,key,identity)
-    if cached and (cached['status']=='ready' or not retry):return _public(cached)
-    job=(str(store.project_root),key)
-    with _LOCK:
-        state=_JOBS.get(job)
-        if state and (state['status'] in ('queued','running') or not retry):return dict(state)
-        if sum(v['status'] in ('queued','running') for v in _JOBS.values()) >= 64:
-            return {'status':'busy','cache_key':key,'retry_after_ms':2000}
-        for old in list(_JOBS):
-            if len(_JOBS) < 128: break
-            if _JOBS[old]['status'] not in ('queued','running'): _JOBS.pop(old)
-        _JOBS[job]={'status':'queued','cache_key':key}
+    store=context[0];identity,key=context[-2:];job=(str(store.project_root),key)
+    with _LOCK,local_lock(_folder(store)/'state.lock'):
+        current=_result(store,key,identity)
+        if current['status'] in ('queued','running','ready') or (current['status']!='not_requested' and not retry):return current
+        if len(_JOBS)>=64:return {'status':'busy','cache_key':key,'retry_after_ms':2000}
+        check_id=uuid.uuid4().hex
+        lease=(_state_path(store,key).parent/'worker.lock').open('a+b')
+        try:fcntl.flock(lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:
+            lease.close();return _result(store,key,identity)
+        state={'status':'queued','cache_key':key,'check_id':check_id,'candidate_id':candidate_id}
+        try:write_json(_state_path(store,key),state)
+        except Exception:
+            lease.close();raise
+        _JOBS[job]=state
     if wait:
-        _generate(project,candidate_id,context);return status(project,candidate_id=candidate_id)
-    _EXECUTOR.submit(_generate,project,candidate_id,context)
-    return {'status':'queued','cache_key':key}
+        _generate(project,candidate_id,context,check_id,lease);return status(project,candidate_id=candidate_id)
+    try:_EXECUTOR.submit(_generate,project,candidate_id,context,check_id,lease)
+    except Exception:
+        _publish(store,key,check_id,{'status':'interrupted'});lease.close()
+        with _LOCK:_JOBS.pop(job,None)
+        raise
+    return state
 
 
 @operations.public
 def status(project, *, candidate_id):
     try:context=_context(project,candidate_id)
     except pipeline.NeedsTool as exc:return {'status':'needs_tool','error':{'code':'needs_tool','message':str(exc)}}
-    store=context[0];identity,key=context[-2:];cached=_cached(store,key,identity)
-    if cached:return _public(cached)
-    with _LOCK:return dict(_JOBS.get((str(store.project_root),key),{'status':'not_requested','cache_key':key}))
+    store=context[0];identity,key=context[-2:]
+    with local_lock(_folder(store)/'state.lock'):return _result(store,key,identity)
 
 
 def require_ready(project,candidate_id):

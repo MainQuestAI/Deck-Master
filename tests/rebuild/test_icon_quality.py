@@ -226,6 +226,30 @@ def test_preview_failure_retry_and_corrupt_files(icon_store,monkeypatch):
         (folder/name).write_bytes(b'failed diagnostic')
         files[name]={'sha256':hashlib.sha256(b'failed diagnostic').hexdigest(),'bytes':17}
     (folder/'report.json').write_text(json.dumps({'identity':identity,'cache_key':key,'candidate_ref':identity['candidate_ref'],'candidate_id':cid,'status':'failed','files':files}))
+    import threading
+    entered=threading.Event();release=threading.Event()
+    original=candidate_preview.compile_deck
+    def paused_compile(*args,**kwargs):
+        entered.set();assert release.wait(15);return original(*args,**kwargs)
+    monkeypatch.setattr(candidate_preview,'compile_deck',paused_compile)
+    queued=candidate_preview.request(icon_store.project_root,candidate_id=cid,retry=True,wait=False)
+    assert queued['status']=='queued' and queued['check_id']
+    assert entered.wait(10)
+    active=candidate_preview.status(icon_store.project_root,candidate_id=cid)
+    assert active['status']=='running' and active['check_id']==queued['check_id']
+    assert candidate_preview.request(icon_store.project_root,candidate_id=cid,retry=True,wait=False)==active
+    release.set()
+    import time
+    for _ in range(100):
+        current=candidate_preview.status(icon_store.project_root,candidate_id=cid)
+        if current['status'] not in ('queued','running'):break
+        time.sleep(.1)
+    assert current['status']=='ready' and current['check_id']==queued['check_id']
+    # A dead worker's persisted state outranks a previous report.
+    state_path=folder/'state.json'
+    state_path.write_text(json.dumps({'cache_key':key,'check_id':'dead-worker','status':'running'}))
+    assert candidate_preview.status(icon_store.project_root,candidate_id=cid)['status']=='interrupted'
+    assert candidate_preview.request(icon_store.project_root,candidate_id=cid)['status']=='interrupted'
     calls=[]
     def broken_compile(*args,**kwargs):calls.append(True);raise ValueError('retry probe')
     monkeypatch.setattr(candidate_preview,'compile_deck',broken_compile)
@@ -276,3 +300,15 @@ def test_empty_auxiliary_subtree_keeps_visible_icon(icon_store):
     root[2][0][1].set('opacity','0')
     with pytest.raises(OperationError,match='visible native geometry'):
         icons.check_scope(icon_store,doc,task,ET.tostring(root))
+
+
+def test_icon_proposal_status_preserves_stale_comparison(icon_store):
+    proposal=icons.propose(icon_store.project_root,input=input_for(icon_store))
+    assert icons.listing(icon_store.project_root,include_stale=True)['proposals'][0]['status']=='pending'
+    value=input_for(icon_store);value['instruction']='Different opinion';other=icons.propose(icon_store.project_root,input=value)
+    recipe=confirm(icon_store)
+    listing=icons.listing(icon_store.project_root,include_stale=True)
+    states={p['proposal_id']:p['status'] for p in listing['proposals']}
+    assert states=={proposal['proposal_id']:'confirmed',other['proposal_id']:'stale'}
+    dispatch(icon_store,recipe)
+    assert next(p for p in icons.listing(icon_store.project_root,include_stale=True)['proposals'] if p['proposal_id']==proposal['proposal_id'])['status']=='handed_off'

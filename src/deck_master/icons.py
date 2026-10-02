@@ -255,12 +255,19 @@ def propose(project, *, input):
 
 
 @operations.public
-def listing(project, *, revision=None):
+def listing(project, *, revision=None, include_stale=False):
+    if include_stale not in (True,False,'true','false'):fail('include_stale','expected true or false')
+    include_stale=include_stale in (True,'true')
     store=Store(project_path(project));doc=load_snapshot(store,revision); proposals=[]
+    recipes=[{'ref':r,'recipe':_owned(store,doc,ref=r)[0]} for r in doc.get('icon_recipes',[])]
+    confirmed={r['recipe']['proposal_ref']['sha256']:r for r in recipes}
+    dispatched={store.read_object_json(t).get('stage_request',{}).get('icon_recipe_ref',{}).get('sha256') for t in doc.get('tasks',[])}
     for p in sorted((store.deck_root/'cache/icon-proposals').glob('*.json')):
         ref=json.loads(p.read_text());v=store.read_object_json(ref);validate_schema('icon_recipe',v)
-        if v['project_id']==doc['project_id'] and v['base_revision']==doc['revision_id']:
-            proposals.append({'proposal_id':'icon-proposal-'+ref['sha256'],'proposal_ref':ref,'proposal':v})
+        if v['project_id']==doc['project_id'] and (include_stale or v['base_revision']==doc['revision_id']):
+            record=confirmed.get(ref['sha256'])
+            state=('handed_off' if record['ref']['sha256'] in dispatched else 'confirmed') if record else ('pending' if v['base_revision']==doc['revision_id'] else 'stale')
+            proposals.append({'proposal_id':'icon-proposal-'+ref['sha256'],'proposal_ref':ref,'proposal':v,'status':state})
     samples=[]
     from . import candidates
     records=candidates._records(store,doc) if doc.get('candidate_adoptions') else {}
@@ -275,7 +282,7 @@ def listing(project, *, revision=None):
             try:_sample(store,doc,sample)
             except operations.OperationError:continue
             if not any(s['sample_candidate_id']==sample['sample_candidate_id'] and s['sample_icon_index']==i for s in samples):samples.append({**sample,'page_id':candidate['page_id'],'label':icon['label'],'style':icon['style']})
-    return {'revision_id':doc['revision_id'],'proposals':proposals,'samples':samples,'recipes':[{'ref':r,'recipe':_owned(store,doc,ref=r)[0]} for r in doc.get('icon_recipes',[])]}
+    return {'revision_id':doc['revision_id'],'proposals':proposals,'samples':samples,'recipes':recipes}
 
 
 @operations.public
