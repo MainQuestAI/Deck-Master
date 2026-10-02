@@ -38,6 +38,12 @@ class PortConflict(ServiceUnavailable):
     exit_code = 5
 
 
+class _LoopbackServer(ThreadingHTTPServer):
+    # A reload opens entry-script connections while thumbnail requests cancel.
+    # Python 3.11/3.12's five-connection backlog can reset those new sockets.
+    request_queue_size = 64
+
+
 def identity(path):
     return hashlib.sha256(str(Path(path).resolve()).encode()).hexdigest()
 
@@ -114,7 +120,7 @@ def bind_server(desc, *, port=0, instance_id=None):
         handler_class = LauncherHandler
     handler = type("BoundHandler", (handler_class,), attrs)
     try:
-        server = ThreadingHTTPServer(("127.0.0.1", port), handler)
+        server = _LoopbackServer(("127.0.0.1", port), handler)
     except OSError as exc:
         if exc.errno in (48, 98, 10048):
             raise PortConflict("port", "requested port is in use; select 0 or another port") from exc
