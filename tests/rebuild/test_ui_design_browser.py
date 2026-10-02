@@ -34,7 +34,7 @@ def workbench_page(tmp_path):
 
 def test_matrix_title_geometry_and_mobile_navigation(workbench_page):
     page = workbench_page
-    for width in (360, 390, 600, 820, 1024, 1280, 1440, 1920):
+    for width in (360, 390, 430, 600, 820, 1024, 1280, 1366, 1440, 1920):
         page.set_viewport_size({'width': width, 'height': 900})
         # Seven design columns plus a production-only selection column must not
         # squeeze the title into one-character lines or overflow the document.
@@ -53,6 +53,34 @@ def test_matrix_title_geometry_and_mobile_navigation(workbench_page):
     assert page.locator('.brand-logo').evaluate('(image) => image.complete && image.naturalWidth > 0')
 
 
+def test_matrix_keyboard_selection_sort_and_search_keep_focus(workbench_page):
+    from playwright.sync_api import expect
+    page = workbench_page
+    first = page.get_by_role('checkbox', name='选择第 01 页', exact=True)
+    first.focus()
+    first.press('Space')
+    expect(first).to_be_checked()
+    expect(first).to_be_focused()
+    page.keyboard.press('Space')
+    expect(first).not_to_be_checked()
+    expect(first).to_be_focused()
+    all_pages = page.get_by_role('checkbox', name='选择当前筛选内所有可操作页面', exact=True)
+    all_pages.focus()
+    page.keyboard.press('Space')
+    expect(all_pages).to_be_checked()
+    expect(all_pages).to_be_focused()
+    sort = page.get_by_role('button', name='页面 · 升序', exact=True)
+    sort.focus()
+    page.keyboard.press('Enter')
+    expect(page.get_by_role('button', name='页面 · 降序', exact=True)).to_be_focused()
+    expect(page.locator('.matrix thead th[aria-sort]')).to_have_attribute('aria-sort', 'descending')
+    search = page.get_by_role('searchbox', name='搜索页码或标题', exact=True)
+    search.fill('p02')
+    expect(search).to_be_focused()
+    expect(page.locator('.matrix tbody .title-button')).to_have_count(1)
+    expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).not_to_be_checked()
+
+
 def test_page_shortcuts_respect_controls_and_dialogs(workbench_page):
     page = workbench_page
     page.get_by_role('button', name='打开第 01 页', exact=True).click()
@@ -68,3 +96,5 @@ def test_page_shortcuts_respect_controls_and_dialogs(workbench_page):
     url = page.url
     page.keyboard.press('Escape')
     assert page.locator('dialog[open]').count() == 0 and page.url == url
+    from playwright.sync_api import expect
+    expect(page.get_by_role('button', name='连接状态', exact=True)).to_be_focused()

@@ -12,7 +12,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   let loaded = false, disposed = false, serial = 0, pending = null; const guards = [];
   const notice = el('p', {role:'status', class:'content-operation-note'}), impact = el('div', {class:'stack'});
   const submit = button('确认内容变更', async () => {
-    if (!pending || !canWrite()) return;
+    if (!pending || !canWrite() || !currentBasis()) return;
     const frozen = pending, typed = canonical(read()); submit.disabled = true;
     try {
       await app.business.submit(app.editor, frozen.action, frozen.request, frozen.basis, async result => {
@@ -26,7 +26,14 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
     finally { controls(); }
   }, true, {disabled:true});
   function canWrite() { return loaded && !disposed && !app.readonly && !app.editor?.readonly && canonical(app.editor?.draft.base_ref) === canonical(ref) && (!app.editor.exactRevision || app.editor.draft.base_revision === app.route.revision); }
-  function controls() { for (const guard of guards) guard.disabled = !canWrite(); submit.disabled = !canWrite() || !pending || Boolean(app.business.entries.size || app.business.loadWarning); }
+  function currentBasis() { return app.latest?.revision_id === app.route.revision; }
+  function controls() { for (const guard of guards) guard.disabled = !canWrite(); submit.disabled = !canWrite() || !currentBasis() || !pending || Boolean(app.business.entries.size || app.business.loadWarning); }
+  function versionChanged() {
+    if (currentBasis() || disposed) return;
+    serial++; pending = null; impact.replaceChildren();
+    notice.textContent = '项目已有新版本，旧内容计划已禁用。当前输入仍保留为草稿；读取当前版本并核对后重新预览。';
+    controls();
+  }
   function changed() {
     serial++; pending = null; impact.replaceChildren(); controls();
     if (!canWrite()) return;
@@ -45,12 +52,14 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   }
   async function preview(input) {
     if (!canWrite()) return;
+    if (!currentBasis()) { versionChanged(); return; }
     const token = ++serial; pending = null; controls();
     try {
       await app.business.available();
       const value = {schema_version:'content_operation_input.v1', project_id:app.info.project_id, base_revision:app.route.revision, ...input};
       const result = await post('/api/content/plan', {input:value});
       if (disposed || token !== serial) return;
+      if (!currentBasis()) { versionChanged(); return; }
       pending = {action:'content.commit', request:{plan_id:result.plan_id, base_revision:value.base_revision}, basis:{plan_id:result.plan_id, plan:result.plan}};
       const info = result.plan.impact;
       impact.replaceChildren(el('strong', {}, '本次影响预览'),
@@ -65,6 +74,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   }
   function previewInputs(input, differences = []) {
     if (!canWrite()) return;
+    if (!currentBasis()) { versionChanged(); return; }
     pending = {action:'content.inputs', request:{input, base_revision:app.route.revision}, basis:{input}};
     impact.replaceChildren(el('strong', {}, '材料与任务要求变更'), el('p', {}, '确认后旧材料版本保留，输入进入待协调；原有未完任务会由新内容整理接续。只有制作工具判断并采用后才说明内容已对齐，不默认整套重制。'));
     impact.append(el('ul', {}, differences.map(text=>el('li',{},text)))); impact.scrollIntoView({block:'center'});
@@ -72,7 +82,8 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   }
   const reject = event => { if (event.detail.action.startsWith('content.')) { pending = null; controls(); } };
   app.root.addEventListener('draft-editor-replaced', bind); app.root.addEventListener('business-state-changed', controls); app.root.addEventListener('business-rejected', reject);
-  app.disposables.push(() => { disposed = true; serial++; app.root.removeEventListener('draft-editor-replaced', bind); app.root.removeEventListener('business-state-changed', controls); app.root.removeEventListener('business-rejected', reject); });
+  app.root.addEventListener('summary-refreshed', versionChanged);
+  app.disposables.push(() => { disposed = true; serial++; app.root.removeEventListener('summary-refreshed', versionChanged); app.root.removeEventListener('draft-editor-replaced', bind); app.root.removeEventListener('business-state-changed', controls); app.root.removeEventListener('business-rejected', reject); });
   bind();
   return {changed, preview, previewInputs, canWrite, guard(node) { const fieldset = el('fieldset', {class:'content-form-fields', disabled:!canWrite()}, node); guards.push(fieldset); return fieldset; }, node:el('div', {class:'content-operation stack'}, notice, impact, submit)};
 }
