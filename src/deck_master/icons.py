@@ -103,6 +103,22 @@ def isolated(root, path):
     return parsed
 
 
+def visible_geometry(parsed):
+    """Check effective painting, not visual quality or background contrast."""
+    def painted(paint):
+        if isinstance(paint,dict):
+            return any(stop['opacity']>0 and stop['color'] not in ('none','transparent') for stop in paint['stops'])
+        return paint not in ('none','transparent')
+    for shape in parsed['shapes']:
+        if shape['opacity']<=0:continue
+        stroke=painted(shape['stroke']) and shape['stroke_width']>0 and shape['stroke_opacity']>0
+        fill=shape['kind']!='line' and painted(shape['fill']) and shape['fill_opacity']>0
+        if not (stroke or fill):continue
+        box=bounds({**parsed,'shapes':[shape]})
+        if box and box['width']>0 and box['height']>0:return True
+    return False
+
+
 def bounds(parsed):
     points = []
     for shape in parsed['shapes']:
@@ -335,8 +351,8 @@ def check_scope(store,doc,task,data):
         region=icon['svg_region']
         has_geometry=False
         for loc in icon['objects']:
-            box=bounds(isolated(after,loc['path']))
-            has_geometry=has_geometry or bool(box and box['width']>0 and box['height']>0)
+            parsed=isolated(after,loc['path']);box=bounds(parsed)
+            has_geometry=has_geometry or visible_geometry(parsed)
             if box and (box['x'] < region['x']-.002 or box['y'] < region['y']-.002 or box['x']+box['width'] > region['x']+region['width']+.002 or box['y']+box['height'] > region['y']+region['height']+.002):
                 fail('result','new icon exceeds the confirmed display region')
         if not has_geometry:fail('result','replacement icon must retain visible native geometry')

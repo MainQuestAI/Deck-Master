@@ -51,6 +51,7 @@ def _context(project,candidate_id):
     identity={'candidate_ref':ref,'page_ref':entry['page'],'blueprint_ref':entry['blueprint'],
               'canvas':base['design_context']['canvas'],'fonts':{k:_sha(v) for k,v in fonts.items()},'assets':asset_hashes,
               'tools':tools,'compiler':{p.name:_sha(p) for p in compiler.glob('*.py')},
+              'scope_implementation':_sha(icons.__file__),
               'preview_implementation':_sha(__file__),'pipeline':_sha(pipeline.__file__),
               'python_pptx':importlib.metadata.version('python-pptx')}
     key=icons.digest(identity)

@@ -241,3 +241,38 @@ def test_icon_host_cannot_return_page_or_content_update(icon_store):
     from deck_master.tasks import _check_scope,EnvelopeError
     for key in ('pages','page_order','content_update','content_plan','reviews'):
         with pytest.raises(EnvelopeError,match='Page and original image stay fixed'):_check_scope('repair',{'kind':'repair',key:[{'page_id':'p01'}]},task)
+
+
+@pytest.mark.parametrize("paint", [
+    {"opacity": "0"}, {"fill": "none", "stroke": "none"},
+    {"stroke-opacity": "0"}, {"stroke-width": "0"},
+])
+def test_redraw_rejects_invisible_paint(icon_store, paint):
+    recipe=confirm(icon_store);task=dispatch(icon_store,recipe)[0];doc=icon_store.load_document()
+    root=icons.tree(icons.svg_bytes(icon_store,doc['pages'][0]['svg']))
+    root[2][0].attrib.update(paint)
+    with pytest.raises(OperationError,match='visible native geometry'):
+        icons.check_scope(icon_store,doc,task,ET.tostring(root))
+
+
+def test_svg_nested_stroke_inheritance_and_override():
+    from deck_master.compiler.svg import parse_svg
+    data=b'''<svg viewBox="0 0 100 100" fill="none" stroke="#123456" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="8">
+    <g><g><path d="M1 1L10 10"/><path d="M2 2L20 20" stroke-linecap="square" stroke-linejoin="bevel" stroke-miterlimit="3"/></g></g>
+    <defs><g id="local"><path d="M1 1L10 10"/></g></defs><use href="#local"/>
+    </svg>'''
+    shapes=parse_svg(data,page_id='stroke')['shapes']
+    assert [(s['stroke_linecap'],s['stroke_linejoin'],s['stroke_miterlimit']) for s in shapes]==[
+        ('round','round',8),('square','bevel',3),('round','round',8)]
+
+
+def test_empty_auxiliary_subtree_keeps_visible_icon(icon_store):
+    value=input_for(icon_store);info=icons.inspect(icon_store.project_root,page_id='p01')
+    value['targets'][0]['icons'][0]['objects']=[{k:o[k] for k in ('path','sha256')} for o in info['objects'] if o['path'] in ('2/0/0','2/0/1')]
+    recipe=confirm(icon_store,value);task=dispatch(icon_store,recipe)[0];doc=icon_store.load_document()
+    root=icons.tree(icons.svg_bytes(icon_store,doc['pages'][0]['svg']))
+    root[2][0][0].clear();root[2][0][0].tag='{http://www.w3.org/2000/svg}g'
+    assert icons.check_scope(icon_store,doc,task,ET.tostring(root))['status']=='pass'
+    root[2][0][1].set('opacity','0')
+    with pytest.raises(OperationError,match='visible native geometry'):
+        icons.check_scope(icon_store,doc,task,ET.tostring(root))
