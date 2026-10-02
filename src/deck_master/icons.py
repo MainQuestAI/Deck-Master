@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 import uuid
+from fractions import Fraction
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -140,6 +141,7 @@ def visible_geometry(parsed):
 
 def _filled_area(subpaths):
     """Test nonzero winding over planar scan bands, including retraced contours."""
+    subpaths=[[(Fraction(str(x)),Fraction(str(y))) for x,y in points] for points in subpaths]
     segments=[(a,b) for points in subpaths if len(points)>2 for a,b in zip(points,points[1:]+points[:1]) if a!=b]
     levels={p[1] for segment in segments for p in segment}
     # Crossings split scan bands for self-intersecting contours.

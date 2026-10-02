@@ -328,6 +328,7 @@ def test_icon_proposal_status_preserves_stale_comparison(icon_store):
     ('<path d="M5 5L15 5L10 15L15 5L5 5Z" fill="black"/>',False),
     ('<path d="M5 5L15 5L10 15Z M5 5L10 15L15 5Z" fill="black"/>',False),
     ('<path d="M1 1L10 10L1 10L10 1Z" fill="black"/>',True),
+    ('<path d="M12.44 18.134L21.21 7.793L17.322 16.084Z M12.44 18.134L17.322 16.084L21.21 7.793Z" fill="black"/>',False),
 ])
 def test_visibility_uses_painted_segments_and_fill(geometry,expected):
     assert icons.visible_geometry(icons.parse_svg(('<svg viewBox="0 0 24 24">'+geometry+'</svg>').encode(),page_id='paint')) is expected
