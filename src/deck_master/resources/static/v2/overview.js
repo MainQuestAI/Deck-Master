@@ -202,6 +202,12 @@ function matrixPanel(app, saved) {
       {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离）。' : '');
   }
   function render() {
+    // Rebuilding rows must keep keyboard users on the same control. Only
+    // restore focus owned by this table; asynchronous reads must not steal it
+    // from the search field, navigation or a dialog.
+    const focused = document.activeElement;
+    const focusLabel = table.contains(focused) ? focused.getAttribute('aria-label') : null;
+    const focusSort = table.contains(focused) && focused.matches('th[aria-sort] button');
     const list = visiblePages();
     const operable = list.filter(batch.eligible);
     count.textContent = `${list.length} / ${pages.length} 页`;
@@ -271,6 +277,9 @@ function matrixPanel(app, saved) {
     }
     table.replaceChildren(el('thead', {}, head), body);
     batch.render();
+    const replacement = focusSort ? table.querySelector('th[aria-sort] button')
+      : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
+    if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
     preferenceStatus.textContent = memory.message; compareButton.hidden = !memory.error; downloadButton.hidden = !memory.error;
   }
   searchInput.addEventListener('input', () => { search = searchInput.value; selected.clear(); batch.invalidate(); saveReading(); render(); });
