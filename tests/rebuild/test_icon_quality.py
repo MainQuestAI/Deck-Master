@@ -146,6 +146,19 @@ def test_actual_candidate_preview_and_cross_page_reuse(icon_store):
     assert candidates.adopt(icon_store.project_root,input=plan,base_revision=restored['revision_id'],operation_id=op)['operation_result']==batch_result['operation_result']
     final=icon_store.load_document();assert all(a['page']==b['page'] and a['blueprint']==b['blueprint'] for a,b in zip(before['pages'],final['pages']))
     assert final['pages'][0]['svg']!=before['pages'][0]['svg']
+    # Engineering recovery must retain frozen adopted checks without caches;
+    # XML locators are not mistaken for content-addressed file references.
+    from deck_master import exports
+    import zipfile
+    out=icon_store.project_root.parent/'portable';export=exports.create(icon_store.project_root,purpose='engineering',output_dir=out)
+    recovered=icon_store.project_root.parent/'recovered'
+    with zipfile.ZipFile(out/export['archive']) as z:z.extractall(recovered)
+    restored_store=Store(recovered/'project');assert restored_store.load_document()==final
+    assert not (restored_store.deck_root/'cache/candidate-previews').exists()
+    for adoption in final['candidate_adoptions']:
+        if adoption.get('icon_check_ref'):
+            proof=restored_store.read_object_json(adoption['icon_check_ref']);assert proof['status']=='ready'
+            for record in proof['files'].values():restored_store.read_object_bytes(record['file'])
     import zipfile
     raw,_=candidate_preview.file_bytes(icon_store.project_root,cache_key=result['cache_key'],name='candidate.pptx')
     from io import BytesIO
