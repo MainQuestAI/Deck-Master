@@ -441,5 +441,23 @@
     "isolated_directory": true,
     "source_pointer_unchanged": true,
     "engineering_archive_sha256": "2051751f3c8561133006f7c10ef16e9831794b743bb43a679aad88d58b4a46f6"
+  },
+  "user_content_acceptance": {
+    "status": "verified",
+    "feedback_source": "direct_user_message",
+    "date": "2026-10-02",
+    "accepted_scope": [
+      "content_density",
+      "content_quality"
+    ],
+    "page_count": 30,
+    "icon_refinement": "nonblocking_followup",
+    "pages_unchanged": true,
+    "outputs_unchanged": true,
+    "candidates_unchanged": true,
+    "tasks_unchanged": true,
+    "continue_status": "ready_for_export",
+    "stored_project_annotations": 2,
+    "does_not_substitute_other_u06_gates": true
   }
 }
