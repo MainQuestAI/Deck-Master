@@ -1,0 +1,165 @@
+{
+  "browser": "151.0.7922.173",
+  "project_id": "project",
+  "revision_id": "df7cf8f1e30748d88eb5afeb8b8b7e00",
+  "synthetic": true,
+  "timings": [
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "sample": 0,
+      "seconds": 1.3103543679972063,
+      "pass": true,
+      "cards": 6,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 2,
+        "thumbnails": 5,
+        "large": 0,
+        "thumbnails_peak": 5,
+        "large_peak": 0,
+        "pinned": 5,
+        "hits": 5,
+        "evictions": 10,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "sample": 1,
+      "seconds": 1.2316366890008794,
+      "pass": true,
+      "cards": 6,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 1,
+        "thumbnails": 5,
+        "large": 0,
+        "thumbnails_peak": 5,
+        "large_peak": 0,
+        "pinned": 5,
+        "hits": 5,
+        "evictions": 10,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1280,
+        800
+      ],
+      "sample": 2,
+      "seconds": 1.2673671889933757,
+      "pass": true,
+      "cards": 6,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 2,
+        "thumbnails": 5,
+        "large": 0,
+        "thumbnails_peak": 5,
+        "large_peak": 0,
+        "pinned": 5,
+        "hits": 5,
+        "evictions": 10,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "sample": 0,
+      "seconds": 1.1776354920002632,
+      "pass": true,
+      "cards": 6,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 1,
+        "thumbnails": 5,
+        "large": 0,
+        "thumbnails_peak": 5,
+        "large_peak": 0,
+        "pinned": 5,
+        "hits": 5,
+        "evictions": 10,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "sample": 1,
+      "seconds": 1.1726510709995637,
+      "pass": true,
+      "cards": 6,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 2,
+        "thumbnails": 5,
+        "large": 0,
+        "thumbnails_peak": 5,
+        "large_peak": 0,
+        "pinned": 5,
+        "hits": 5,
+        "evictions": 10,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "sample": 2,
+      "seconds": 1.3084470640023937,
+      "pass": true,
+      "cards": 6,
+      "pool": {
+        "network": 0,
+        "network_peak": 6,
+        "decode": 0,
+        "decode_peak": 1,
+        "thumbnails": 5,
+        "large": 0,
+        "thumbnails_peak": 5,
+        "large_peak": 0,
+        "pinned": 5,
+        "hits": 5,
+        "evictions": 10,
+        "closed_bitmaps": 0,
+        "active_object_urls": 0
+      }
+    }
+  ],
+  "errors": [],
+  "fixture_manifest": "w01-pressure.v1",
+  "environment": {
+    "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "python": "3.12.14",
+    "source_commit": "26703edcbe43819865752ecf0156eebafc4b170f"
+  }
+}

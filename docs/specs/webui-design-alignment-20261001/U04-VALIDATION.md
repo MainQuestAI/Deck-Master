@@ -14,6 +14,6 @@
 
 验证：风格/内容核心与模块 36 项通过；完整必跑 Chromium 24 项通过，0 skip，其中本包新增 6 项真实 HTTP/DOM 交互。最后补充已确认版本的提示文案，最终托管检查覆盖完整候选；本地日志记录对应行为候选。Ruff 和 diff check 通过。
 
-[核心/模块](evidence/u04/core.log) · [浏览器](evidence/u04/browser.log) · [U03 恢复组合](evidence/u04/u03-recovery-unit.log) · [风格窄屏](evidence/u04/style-mobile.png) · [内容桌面](evidence/u04/content-desktop.png)。截图经实际查看，所有工程项目和材料均为明确合成输入，零模型调用；不构成真实 Host、专业质量或真人可用性验收。托管 CI 待执行。
+[核心/模块](evidence/u04/core.log) · [浏览器](evidence/u04/browser.log) · [U03 恢复组合](evidence/u04/u03-recovery-unit.log) · [风格窄屏](evidence/u04/style-mobile.png) · [内容桌面](evidence/u04/content-desktop.png)。截图经实际查看，所有工程项目和材料均为明确合成输入，零模型调用；不构成真实 Host、专业质量或真人可用性验收。最终托管结论见下文。
 
 最终工程修订 `94b6bce` 的图像池回归及模块解析 2 项通过：目标行在替换时先标记退休，排队的 IntersectionObserver 通知不能给已离开的行重新获取图片租约。[最后复验](evidence/u04/final-detail.log)。最终 head `15d615e` 托管 run `36947266229` 七组全部成功，PR88 已合并到 `22fc972`。

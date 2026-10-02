@@ -1,0 +1,16 @@
+{
+  "old_release": "22fc97279141-e819479b34a0",
+  "old_source_sha": "22fc97279141972628e3cc5ecf04473e1aeabe03",
+  "old_module": "/tmp/deck-master-u06-install/.deck-master/releases/22fc97279141-e819479b34a0/venv/lib/python3.12/site-packages/deck_master",
+  "unsupported_writer": "future-writer.v9",
+  "exit_code": 4,
+  "error": {
+    "code": "execution_failed",
+    "message": "current.json: unsupported minimum writer; use the matching core",
+    "field": null,
+    "next_action": "inspect the failure detail"
+  },
+  "pointer_unchanged": true,
+  "immutable_files_unchanged": 109,
+  "scope": "explicit synthetic future-writer rejection; not a released new format migration"
+}
