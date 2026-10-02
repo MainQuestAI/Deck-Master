@@ -397,7 +397,8 @@ def _overview_facts(ctx, *, live, now):
         for request_ref in task.get("generation_requests") or []:
             try:
                 request = ctx.overview_metadata(request_ref)
-                if request.get("task_id") != task["task_id"] or request.get("project_id") != doc["project_id"]:
+                if (request.get("schema_version") != "generation_request.v1"
+                        or request.get("task_id") != task["task_id"] or request.get("project_id") != doc["project_id"]):
                     raise ValueError("foreign request")
                 # Identity/binding only: unlike page_lineage's full record
                 # check, this index deliberately skips input_hash so a 300-page
