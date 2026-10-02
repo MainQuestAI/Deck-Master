@@ -22,11 +22,16 @@ for entry in doc['pages'][:30]:
 thumbnails.QUEUE.drain();workbench.workbench_summary(project)
 server=WorkbenchServer(project);rows=[];errors=[]
 def ready(page):
- page.wait_for_function('''() => {
+ predicate='''() => {
  const port=document.querySelector('.gallery-viewport');if(!port)return false;
  const rect=port.getBoundingClientRect();const inside=node=>{const r=node.getBoundingClientRect();return r.bottom>rect.top&&r.top<Math.min(innerHeight,rect.bottom);};
  return [...port.querySelectorAll('.gallery-card')].some(inside)&&[...port.querySelectorAll('.pooled-image')].filter(inside).every(n=>n.dataset.imageState==='ready');
- }''')
+ }'''
+ deadline=time.monotonic()+30
+ while time.monotonic()<deadline:
+  if page.evaluate(predicate):return
+  page.wait_for_timeout(50)
+ raise AssertionError('Visible gallery images did not become ready')
 try:
  url=server.start()+'v2/#'+urlencode({'project':info['project_identity'],'surface':'gallery','layer':'original_image','revision':doc['revision_id'],'zoom':1})
  with sync_playwright() as pw:

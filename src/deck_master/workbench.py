@@ -30,6 +30,10 @@ def object_error():
 def _cached_json(root, path, digest, signature):
     # Signature includes ctime/inode as well as size/mtime. Every call checks
     # path safety anew; corrupted/replaced immutable files cannot hide in cache.
+    return _read_validated(root, path, digest)
+
+
+def _read_validated(root, path, digest):
     obj = Store(root).read_object_json({"path": path, "sha256": digest})
     if isinstance(obj, dict):
         kind = {"deck_page_package.v2": "page", "deck_artifact.v1": "artifact",
@@ -41,10 +45,34 @@ def _cached_json(root, path, digest, signature):
     return obj
 
 
+@lru_cache(maxsize=4096)
+def _cached_overview_metadata(root, path, digest, signature):
+    """Keep compact identities separately from the page/task working set.
+
+    Pending candidates and frozen requests add 3,000 objects to a 300-page
+    graph. Retaining their full bodies in the shared LRU evicted every task
+    between summary scans. Validate immutable bytes once per signature, then
+    retain only the fields this projection consumes, never prompt bodies.
+    """
+    obj = _read_validated(root, path, digest)
+    if not isinstance(obj, dict):
+        return {"schema_version": None}
+    result = {key: copy.deepcopy(obj[key]) for key in (
+        "schema_version", "project_id", "task_id", "page_id", "candidate_id",
+        "result_kind", "stage", "result_ref") if key in obj}
+    if obj.get("schema_version") == "generation_request.v1":
+        result["page_id"] = obj["input"]["page"]["page_id"]
+    elif obj.get("schema_version") == "deck_blueprint_request.v1":
+        prompt = obj.get("prompt")
+        result["prompt_valid"] = isinstance(prompt, str) and sha256_bytes(prompt.encode("utf-8")) == obj.get("prompt_sha256")
+    return result
+
+
 class _ReadContext:
     def __init__(self, store, document):
         self.store, self.document = store, document
         self.objects = {}
+        self.metadata_objects = {}
         self.root = str(store.project_root)
         self.directories = (str(store.deck_root), str(store.objects_dir))
         self.pages = {p["page_id"]: p for p in document.get("pages") or []}
@@ -78,6 +106,14 @@ class _ReadContext:
             signature = (st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
             self.objects[key] = _cached_json(self.root, *key, signature)
         return self.objects[key]
+
+    def overview_metadata(self, ref):
+        key = (ref["path"], ref["sha256"])
+        if key not in self.metadata_objects:
+            st = self.object_stat(ref)
+            signature = (st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+            self.metadata_objects[key] = _cached_overview_metadata(self.root, *key, signature)
+        return self.metadata_objects[key]
 
 
 def _task_rows(ctx):
@@ -345,13 +381,12 @@ def _overview_facts(ctx, *, live, now):
                     continue
                 if input_ref.get("sha256") in page_shas:
                     continue  # the page package itself, never a prompt record
-                request = ctx.read(input_ref)
+                request = ctx.overview_metadata(input_ref)
                 if not isinstance(request, dict):
                     continue
                 if request.get("schema_version") != "deck_blueprint_request.v1":
                     continue
-                prompt = request.get("prompt")
-                if not isinstance(prompt, str) or sha256_bytes(prompt.encode("utf-8")) != request.get("prompt_sha256"):
+                if not request.get("prompt_valid"):
                     raise ValueError("request prompt does not match its recorded hash")
                 page_id = request.get("page_id")
                 if isinstance(page_id, str):
@@ -361,13 +396,13 @@ def _overview_facts(ctx, *, live, now):
                     prepared[page_id]["unreadable"] += 1
         for request_ref in task.get("generation_requests") or []:
             try:
-                request = ctx.read(request_ref)
+                request = ctx.overview_metadata(request_ref)
                 if request.get("task_id") != task["task_id"] or request.get("project_id") != doc["project_id"]:
                     raise ValueError("foreign request")
                 # Identity/binding only: unlike page_lineage's full record
                 # check, this index deliberately skips input_hash so a 300-page
                 # deck never re-hashes every frozen request body.
-                frozen[request["input"]["page"]["page_id"]]["refs"].append(request_ref)
+                frozen[request["page_id"]]["refs"].append(request_ref)
             except READ_FAILURES:
                 for page_id in scope:
                     frozen[page_id]["unreadable"] += 1
@@ -431,7 +466,7 @@ def _candidate_facts(ctx, tasks_by_id):
             adopted += 1
             continue
         try:
-            candidate = ctx.read(ref)
+            candidate = ctx.overview_metadata(ref)
             if not isinstance(candidate, dict) or candidate.get("schema_version") != "candidate.v1":
                 raise ValueError("not a candidate")
         except READ_FAILURES:

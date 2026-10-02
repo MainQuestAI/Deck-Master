@@ -12,6 +12,7 @@ from collections import Counter
 from io import BytesIO
 import json
 import math
+import os
 from pathlib import Path
 import platform
 import subprocess
@@ -165,7 +166,7 @@ def create_fixture(project, *, page_count=300):
         'gallery': gallery, 'candidates': manifest_rows, 'background_task_ids': background_ids}
 
 
-def sample(project, out, manifest):
+def sample(project, out, manifest, *, source_commit=None):
     store = Store(project); server = WorkbenchServer(project); stop = threading.Event()
     available = {t['task_id'] for ref in store.load_document()['tasks']
                  if (t := store.read_object_json(ref))['status'] == 'awaiting_host'}
@@ -236,8 +237,8 @@ def sample(project, out, manifest):
             'object_cache': workbench._cached_json.cache_info()._asdict(),
             'environment': {'os': platform.platform(), 'python': platform.python_version(), 'machine': platform.machine(),
                 'hardware': subprocess.check_output(['sysctl', '-n', 'hw.model'], text=True).strip() if platform.system() == 'Darwin' else platform.machine(),
-                'memory_bytes': int(subprocess.check_output(['sysctl', '-n', 'hw.memsize'], text=True)) if platform.system() == 'Darwin' else __import__('os').sysconf('SC_PAGE_SIZE') * __import__('os').sysconf('SC_PHYS_PAGES'),
-                'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                'memory_bytes': int(subprocess.check_output(['sysctl', '-n', 'hw.memsize'], text=True)) if platform.system() == 'Darwin' else os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES'),
+                'commit': source_commit or subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
                 'browser': None, 'viewport': None}, 'threshold_ms': 250, 'passed': times[94] <= 250}
         write_json(out / 'measurements.json', result)
         print(json.dumps({'p95_ms': result['p95_ms'], 'passed': result['passed']}), flush=True)
@@ -248,6 +249,7 @@ def sample(project, out, manifest):
         server.stop()
         write_json(out / 'background.json', {'updates': updates, 'errors': errors})
     assert not thread.is_alive(), 'background writer did not stop'
+    assert result['passed'], f"Summary p95 {result['p95_ms']:.1f} ms exceeds {result['threshold_ms']} ms"
 
 
 def main():
@@ -255,6 +257,7 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--fixture-only', action='store_true')
     parser.add_argument('--existing', type=Path, help='existing explicit pressure fixture root')
+    parser.add_argument('--source-commit', help='Installed candidate source SHA; otherwise use checkout HEAD')
     args = parser.parse_args(); args.out.mkdir(parents=True, exist_ok=False)
     if args.existing:
         manifest = json.loads((args.existing / 'manifest.json').read_text()); project = args.existing / 'project'
@@ -263,7 +266,7 @@ def main():
         project = args.out / 'project'; manifest = create_fixture(project)
     write_json(args.out / 'manifest.json', manifest)
     if not args.fixture_only:
-        sample(project, args.out, manifest)
+        sample(project, args.out, manifest, source_commit=args.source_commit)
 
 
 if __name__ == '__main__':

@@ -23,8 +23,12 @@ def wait_dom(page, selector):
     # Chromium 149 / Playwright locator.wait_for retains target DOM handles in
     # DevTools Global handles. A boolean predicate avoids measuring the driver.
     # No console clearing, explicit GC, page reload, or cache purge is used.
-    handle = page.wait_for_function('(selector) => Boolean(document.querySelector(selector))', arg=selector)
-    handle.dispose()
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        if page.evaluate('(selector) => Boolean(document.querySelector(selector))', selector):
+            return
+        page.wait_for_timeout(50)
+    raise AssertionError('DOM did not become ready: ' + selector)
 
 
 def main():
