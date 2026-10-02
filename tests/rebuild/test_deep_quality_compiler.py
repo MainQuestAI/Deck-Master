@@ -35,6 +35,22 @@ def test_readable_split_atom_with_small_decoration_passes(tmp_path):
     assert compile_and_readback(tmp_path, body, _atom_page(['REPORT','Required body text']))['status'] == 'pass'
 
 
+@pytest.mark.parametrize('prefix_size,body_opacity,expected', [(18,1,'pass'),(4,1,'pass'),(18,0,'fail')])
+def test_bound_body_with_bullet_checks_only_body_runs(tmp_path, prefix_size, body_opacity, expected):
+    bind = 'data-atom-id="atom:p1:block:b1:text"'
+    body = f'<text x="5" y="20" font-family="{FAMILY}" font-size="18">REPORT</text>'
+    body += f'<text {bind} x="5" y="50" font-family="{FAMILY}" font-size="{prefix_size}">• </text>'
+    body += f'<text {bind} x="25" y="50" font-family="{FAMILY}" font-size="18" opacity="{body_opacity}">Body</text>'
+    assert compile_and_readback(tmp_path, body, _atom_page(['REPORT','Body']))['status'] == expected
+
+
+def test_bound_body_cannot_borrow_unbound_readable_duplicate(tmp_path):
+    body = f'<text x="5" y="20" font-family="{FAMILY}" font-size="18">REPORT</text>'
+    body += f'<text data-atom-id="atom:p1:block:b1:text" x="5" y="50" font-family="{FAMILY}" font-size="18" opacity="0">Body</text>'
+    body += f'<text x="5" y="80" font-family="{FAMILY}" font-size="18">Body</text>'
+    assert compile_and_readback(tmp_path, body, _atom_page(['REPORT','Body']))['status'] == 'fail'
+
+
 def test_tspan_style_and_local_opacity_reach_ir():
     source = f'<svg viewBox="0 0 200 100"><text x="5" y="40" font-family="{FAMILY}" font-size="24"><tspan style="fill:#ff0000;font-size:40;font-weight:bold;opacity:0.5" fill-opacity="0.25">VISIBLE</tspan></text></svg>'
     shape = parse_svg(source.encode(), page_id='p1')['shapes'][0]
@@ -45,6 +61,12 @@ def test_tspan_style_and_local_opacity_reach_ir():
 def test_invalid_tspan_style_is_not_silently_ignored(property):
     with pytest.raises(SvgError):
         parse_svg(f'<svg viewBox="0 0 200 100"><text><tspan style="{property}">T</tspan></text></svg>'.encode(), page_id='p1')
+
+
+@pytest.mark.parametrize('parent,child', [('0.5','2'),('0','2'),('0','-1')])
+def test_parent_opacity_does_not_mask_invalid_tspan_opacity(parent, child):
+    with pytest.raises(SvgError, match='invalid tspan opacity'):
+        parse_svg(f'<svg viewBox="0 0 200 100"><text opacity="{parent}"><tspan opacity="{child}">T</tspan></text></svg>'.encode(), page_id='p1')
 
 
 def test_rgba_alpha_multiplies_in_native_fill_stroke_and_text(tmp_path):
@@ -64,6 +86,14 @@ def test_translucent_group_rejects_multiple_paint_operations(tmp_path, body):
     with pytest.raises(SvgError, match='unsafe-group.*opacity'):
         compile_deck([SvgInput('p1',svg)],CompileOptions(width_px=100,height_px=100),tmp_path/'out')
     assert not (tmp_path/'out/deck.pptx').exists()
+
+
+@pytest.mark.parametrize('fill,stroke', [('#00000000','#ff0000'),('#ff0000','#00000000'),('url(#clear)','#ff0000')])
+def test_translucent_group_counts_only_visible_color_paints(tmp_path, fill, stroke):
+    svg=tmp_path/'group.svg'
+    svg.write_text(f'<svg viewBox="0 0 100 100"><defs><linearGradient id="clear"><stop offset="0" stop-color="#00000000"/><stop offset="1" stop-opacity="0"/></linearGradient></defs><g opacity="0.5"><rect x="10" y="10" width="40" height="40" fill="{fill}" stroke="{stroke}"/></g></svg>')
+    result=compile_deck([SvgInput('p1',svg)],CompileOptions(width_px=100,height_px=100),tmp_path/'out')
+    assert result.pptx_path.exists()
 
 
 @pytest.mark.parametrize('width,height',[(400,200),(200,400),(400,300)])

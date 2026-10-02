@@ -1,6 +1,17 @@
 """Explicit SVG paint projection with preserved zero-valued opacity."""
 import math
 import re
+from PIL import ImageColor
+
+
+def visible_paint(color):
+    """Whether a supported solid/gradient paint has any nonzero color alpha."""
+    if isinstance(color, dict):
+        return any(stop['opacity'] > 0 and visible_paint(stop['color']) for stop in color['stops'])
+    if color == 'none':
+        return False
+    rgba = ImageColor.getrgb(color)
+    return len(rgba) == 3 or rgba[3] > 0
 
 
 def gradient(raw, definitions, identity):

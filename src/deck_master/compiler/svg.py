@@ -5,7 +5,7 @@ import re
 import math
 import copy
 from pathlib import Path
-from .paint import gradient
+from .paint import gradient, visible_paint
 from .geometry import _parse_path, commands_to_svg_path, _parse_transform, _matrix_product, _apply_matrix, _IDENTITY
 import xml.etree.ElementTree as ET
 
@@ -186,8 +186,8 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             if 0 < opacity < 1:
                 # SVG composites the group first. Flattening alpha into multiple
                 # paints changes overlap colors, even fill+stroke on one object.
-                paints = sum(int(shape['kind'] != 'line' and shape['fill'] != 'none' and shape['fill_opacity'] > 0) +
-                             int(shape['stroke'] != 'none' and shape['stroke_width'] > 0 and shape['stroke_opacity'] > 0)
+                paints = sum(int(shape['kind'] != 'line' and visible_paint(shape['fill']) and shape['fill_opacity'] > 0) +
+                             int(visible_paint(shape['stroke']) and shape['stroke_width'] > 0 and shape['stroke_opacity'] > 0)
                              for shape in shapes[before:] if shape['opacity'] > 0)
                 if paints > 1:
                     raise SvgError(f'{page_id}/{identity}: group opacity requires a single paint operation; '
@@ -247,7 +247,10 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 if runs and not any(k in child.attrib for k in ('x','y','dy')):
                     raise SvgError(f'{page_id}/{identity}: inline tspan requires explicit x position')
                 c={**attrs,**child.attrib}
-                c['opacity']=str(base['opacity']*finite(child.get('opacity',1),'opacity'))
+                local_opacity = finite(child.get('opacity',1),'opacity')
+                if not 0 <= local_opacity <= 1:
+                    raise SvgError(f'{page_id}/{identity}: invalid tspan opacity')
+                c['opacity']=str(base['opacity']*local_opacity)
                 c['x']=child.attrib.get('x',cursor.get('x','0'))
                 baseline=child.attrib.get('y',cursor.get('y','0'))
                 c['y']=str(finite(baseline,'y')+finite(child.attrib.get('dy','0'),'dy'))

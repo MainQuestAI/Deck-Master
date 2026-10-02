@@ -205,25 +205,25 @@ def readback(pptx_path,pages,expected_pages):
                 findings.append({'page_id': page['page_id'], 'code': 'unverifiable_text_mapping',
                                  'detail': 'native text objects do not match their source text and atom bindings'})
             if mapping_valid:
-                stream = ''.join(text for text, _, _ in runs)
                 for atom in atoms:
                     wanted = normalize(atom['text']); identity = atom['atom_id']
                     bound_runs = [r for r in runs if r[2] == identity]
-                    if bound_runs:
-                        covers = [bound_runs] if ''.join(r[0] for r in bound_runs) == wanted else []
-                    else:
-                        covers = []
-                        position = stream.find(wanted)
-                        while position >= 0:
-                            offset = 0; cover = []
-                            for run in runs:
-                                stop = offset + len(run[0])
-                                if stop > position and offset < position + len(wanted):
-                                    cover.append(run)
-                                offset = stop
-                            if cover and all(r[2] in (None, identity) for r in cover):
-                                covers.append(cover)
-                            position = stream.find(wanted, position + 1)
+                    # Bindings are authoritative, but may include bullets or
+                    # other decoration outside the required body text.
+                    candidate_runs = bound_runs or runs
+                    stream = ''.join(r[0] for r in candidate_runs)
+                    covers = []
+                    position = stream.find(wanted)
+                    while position >= 0:
+                        offset = 0; cover = []
+                        for run in candidate_runs:
+                            stop = offset + len(run[0])
+                            if stop > position and offset < position + len(wanted):
+                                cover.append(run)
+                            offset = stop
+                        if cover and all(r[2] in (None, identity) for r in cover):
+                            covers.append(cover)
+                        position = stream.find(wanted, position + 1)
                     if not covers:
                         findings.append({'page_id': page['page_id'], 'code': 'unverifiable_text_mapping',
                                          'atom_id': identity, 'detail': 'no complete source-bound text coverage'})
