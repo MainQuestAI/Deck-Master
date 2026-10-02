@@ -432,5 +432,14 @@
     "ui_error": "local action failed; retain input and inspect the path or runtime log",
     "directory_returned": false,
     "selected_success": false
+  },
+  "engineering_recovery": {
+    "status": "verified",
+    "page_count": 30,
+    "immutable_objects_verified": 1123,
+    "current_pages_and_outputs_match": true,
+    "isolated_directory": true,
+    "source_pointer_unchanged": true,
+    "engineering_archive_sha256": "2051751f3c8561133006f7c10ef16e9831794b743bb43a679aad88d58b4a46f6"
   }
 }

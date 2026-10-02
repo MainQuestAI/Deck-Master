@@ -95,6 +95,8 @@
 
 `continue` 当前返回 `ready_for_export`、无待执行 Host 任务。review、engineering、delivery 三用途导出成功；review/delivery 的实际导出 PPTX 均经 `handoff-check --file <PPTX>` 返回 verified，30 页、render/review pass、gaps=[]、evidence_level=engineering。工程门允许导出不等于 U06 人工项或客户交付认可。该 CLI 没有交接说明中提及的 final-readiness 命令，采用现行 continue 与 handoff-check，不以不存在的命令推断通过。
 
+实际整稿 engineering ZIP 已在新目录解压恢复，1123 个不可变对象逐个核对 SHA-256；30 页的 Page/原图/SVG/预览及整稿输出与原项目一致，原项目指针不变。
+
 两轮实际制作试作已完成：p06 调整窄栏换行，p29 调整字号/换行消除单字尾行，均保留正文和图形内容。各自真实 task/changes/candidate 返回 candidate_ready，当前 Page 和整稿槽保持不变，试作没有额外模型调用。已向用户展示两处候选并请求选择；尚未 adopt，后续采用、实际预览、逐页质量及重新装配仍待完成。不能把“候选已返回”写成“两轮采用已验收”。
 
 实际总览仍显示 27 页原图依据变化：26 页在 SVG 重建时增加可见标签，p06 另按来源修正六步正文；原图 generated_from_page 绑定保留。30 页 SVG 的显式 dependencies 为空，总览保守显示待核实；derived_from、原图、SVG 及实际 PPT 对照已检查。最终质量/导出工程门通过与这些历史依据提示分别记录，不冒称总览全部层均 current。
@@ -114,10 +116,13 @@ macOS 原生目录选择实际点击“浏览文件夹”后返回 local action 
 | 本地源码全量 | Python 3.12：1025 单元、30 必跑浏览器、31 真实渲染通过 |
 | 隔离安装验收 | 安装包 30 浏览器及 24 步 CLI/HTTP/装配/恢复/三用途导出通过 |
 | 100 次生产独立服务摘要 | p50 31.68 ms / p95 78.01 ms / p99 81.52 ms；7 次实际后台领取/取消，250 ms 门通过 |
+| 附加同进程嵌入复测 | 本机同包 100 次，p50 33.85 ms / p95 246.19 ms / p99 269.14 ms，按 p95≤250 ms 门通过；旧 330.66 ms 失败保留，环境不同不作纯代码提速比较 |
 | 六次暖首屏 | 两尺寸各三次，0.356–0.403 s，原 2 s 门通过 |
 | 正式 20 分钟压力 | 1200.003 s；中段/末段各 30 样本；heap median 增幅 0.568% ≤20%；图像池 6/2/60/4 门内、0 前端错误、60 次后台实际领取/取消 |
 | 隔离完整回退 | 已验 64f6063→d39a636→停止服务→回退读取→恢复 d39a636；109 个对象、4 个候选及业务指针不变，真实 HOME 未受该演练影响 |
 
-压力组均来自原合成工厂 checkpoint 的新副本：300 页、1500 候选、4500 Attempt，0 模型调用；保留 manifest、候选、Attempt 和对象字节，没有重新生成补齐失败。旧同进程嵌入 p95 330.66 ms 未通过仍保留，本修复没有复测或承诺该附加方式。额外调用旧 w04_gallery 驱动曾等待已退休的 gallery-card 而超时；采用冻结包内现行 w04_pressure 对同样六次暖首屏与原门槛验证。首次并行 sdist 构建出现五个 setup error，随后隔离安装组和完整 1025 单元复验通过；不隐藏初次失败。
+压力组均来自原合成工厂 checkpoint 的新副本：300 页、1500 候选、4500 Attempt，0 模型调用；保留 manifest、候选、Attempt 和对象字节，没有重新生成补齐失败。旧同进程嵌入 p95 330.66 ms 未通过仍保留；本机新包另行按原 100 次/p95 门复测通过，两次环境不同，不将变化解释为连接修复的纯代码性能收益。额外调用旧 w04_gallery 驱动曾等待已退休的 gallery-card 而超时；采用冻结包内现行 w04_pressure 对同样六次暖首屏与原门槛验证。首次并行 sdist 构建出现五个 setup error，随后隔离安装组和完整 1025 单元复验通过；不隐藏初次失败。
 
 [新包摘要](evidence/u06-local-fixed/release-proof.json) · [单元](evidence/u06-local-fixed/unit.log) · [浏览器](evidence/u06-local-fixed/browser.log) · [渲染](evidence/u06-local-fixed/render.log) · [安装](evidence/u06-local-fixed/installed-checks.json) · [入口重开](evidence/u06-local-fixed/reload-checks.json) · [TCP 负向对照](evidence/u06-local-fixed/backlog-baseline-negative.log) · [100 次采样](evidence/u06-local-fixed/summary-measurements.json) · [六次首屏](evidence/u06-local-fixed/warm-checks.json) · [正式长跑](evidence/u06-local-fixed/long-checks.json) · [原始长跑采样](evidence/u06-local-fixed/long-samples.jsonl) · [回退](evidence/u06-local-fixed/rollback-checks.json) · [保留的失败](evidence/u06-local-fixed/retained-failures.json)。
+
+[附加同进程原始复测](evidence/u06-local-fixed/inprocess-measurements.json)。文档/证据提交 `3309499` 的 [CI run 36980776615](https://github.com/MainQuestAI/Deck-Master/actions/runs/36980776615) 七组通过，覆盖 Python 3.11/3.12 × Node 22/24、必跑浏览器/安装包 UI、真实渲染及汇总；相对冻结源码 d39a636 只有文档/证据变更。后续 head 的 CI 以 PR Checks 为准。

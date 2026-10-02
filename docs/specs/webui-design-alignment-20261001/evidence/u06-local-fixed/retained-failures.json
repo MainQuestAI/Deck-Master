@@ -3,8 +3,13 @@
     "source_sha": "64f6063bab1469daea347777ad3c2b86be450d6f",
     "p95_ms": 330.66,
     "pass": false,
-    "current_same_process_retested": false,
-    "path": "../u06-optimized/inprocess-final-measurements.json"
+    "current_same_process_retested": true,
+    "path": "../u06-optimized/inprocess-final-measurements.json",
+    "current_source_sha": "d39a6361cc68ab259976b93fbca880e308deaf9d",
+    "current_p95_ms": 246.18975003249943,
+    "current_pass": true,
+    "current_measurement_path": "inprocess-measurements.json",
+    "comparison_scope": "different environments; not a code-only speed ratio"
   },
   "obsolete_gallery_driver": {
     "driver": "w04_gallery.py",
