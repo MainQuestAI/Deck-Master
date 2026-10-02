@@ -60,16 +60,18 @@ export function runDesk(app, data) {
   const attention = el('input', {type: 'checkbox', 'aria-label': '只看需我处理'});
   let page = data.runPage, selected = data.runDetail, disposed = false, serial = 0, busy = false, loaded = false;
   let state = {offset: 0, group: '', status: '', attention: false};
-  let reading={seen:[],etag:null};const readingSupported=app.health.ui_capabilities?.includes('result_reading.v1');
-  let pinned = app.route.revision, live = !app.historical, pendingRefresh = false, choiceMade = false;
-  root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), button('核实最新执行状态', () => { choiceMade = true; live = true; state.offset = 0; persist(); read(); })),
+  let reading={seen:[],etag:null},readingUnavailable=false;const readingSupported=app.health.ui_capabilities?.includes('result_reading.v1');
+  let pinned = app.route.revision, live = !app.historical, pendingRead = null, choiceMade = false, readingBlocked = false;
+  const restart = () => { choiceMade = true; read({state:{offset:0},live:true,refreshReading:true,persist:true}); };
+  const refreshButton = button('核实最新执行状态', restart);
+  root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), refreshButton),
     el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '当前执行状态与顶栏的页面阅读版本分开。正常处理中无需你操作；查看结果不代表采用或质量通过。'),
       el('div', {class: 'row wrap run-filters'}, group, status, el('label', {}, attention, '只看需我处理')), notice, detail, rows, pager),
     personalClearPanel(app));
   function persist() {
     const editor = app.editor;
     if (!editor || editor.readonly || editor.disposed || !editor.draft) return;
-    editor.draft.content.run_desk = {...editor.draft.content.run_desk,...structuredClone(state)}; editor.changed();
+    editor.draft.content.run_desk = {...editor.draft.content.run_desk,...structuredClone(state),reading_etag:reading.etag}; editor.changed();
   }
   const todo = task => (task.human_actions || []).filter(action => action !== 'review_results' || !reading.seen.includes(seenKey(task)));
   const errorBox = error => errorNote({what: error.message || error.cause || '对象无法读取',
@@ -92,12 +94,19 @@ export function runDesk(app, data) {
       task.task_id && button('查看这项任务', () => app.go({task_id: task.task_id, revision: page.revision_id})))));
     if (!tasks.length) rows.append(empty(state.attention ? '本页没有需要你处理的记录' : '没有匹配的运行记录',
       '可继续阅读内容与制作状态。查看其它记录不会触发执行。', el('div', {class: 'row wrap'}, button('阅读内容', () => app.go({surface: 'content'})), button('查看整稿', () => app.go({surface: 'gallery'})))));
-    const move = offset => { choiceMade = true; state.offset = offset; state.revision = page.revision_id; pinned = page.revision_id; live = false; persist(); read(); };
+    const move = offset => { choiceMade = true; read({state:{offset},live:false,pinned:page.revision_id,persist:true}); };
     pager.replaceChildren(disabledReason(button('上一页任务', () => move(Math.max(0, state.offset - 30)), false, {disabled: state.offset === 0}), state.offset === 0 ? '已在第一页。' : '', {visible: false}),
       el('span', {}, `第 ${Math.floor(state.offset / 30) + 1} 页 · 每页最多 30 项`),
       disabledReason(button('下一页任务', () => move(page.pagination.next_offset), false, {disabled: page.pagination.next_offset === null}), page.pagination.next_offset === null ? '已是最后一页。' : '', {visible: false}));
     rows.hidden = Boolean(selected); pager.hidden = Boolean(selected);
     if (selected) renderDetail();
+    controls();
+  }
+  function controls() {
+    for(const input of [group,status,attention,refreshButton])input.disabled=busy;
+    const buttons=pager.querySelectorAll('button');
+    if(buttons[0])buttons[0].disabled=!loaded||busy||readingBlocked||state.offset===0;
+    if(buttons[1])buttons[1].disabled=!loaded||busy||readingBlocked||page.pagination.next_offset===null;
   }
   async function showEvidence(kind, id, revision) {
     try {
@@ -130,41 +139,73 @@ export function runDesk(app, data) {
         app.readonly ? '当前视图只读，不能取消任务。' : recovery.sending.has(task.task_id) ? '取消请求已发送，等待核实结果。' : '')),
       el('div', {class: 'stack'}, resultLinks),
       task.result_refs.length > 0 && !task.candidate_refs.length && button(reading.seen.includes(seenKey(task)) ? '已标记读过这些结果' : readingSupported?'标记这些结果已读':'当前核心不支持跨工作面已读', async () => {
-        try{reading=await post('/api/result-reading',{project_identity:app.info.project_identity,revision,task_id:task.task_id,result_key:task.reading_key,expected_etag:reading.etag});await read();app.summaryPoll?.refresh();}
+        try{await post('/api/result-reading',{project_identity:app.info.project_identity,revision,task_id:task.task_id,result_key:task.reading_key,expected_etag:reading.etag});await read({state:{offset:0},refreshReading:true,persist:true});app.summaryPoll?.refresh();}
         catch(error){notice.textContent=readableError(error)+' 请重新读取结果后标记。';await read();}
-      }, false, {disabled: app.readonly || !readingSupported || !reading.etag || reading.seen.includes(seenKey(task))}),
+      }, false, {disabled: app.readonly || readingBlocked || !readingSupported || !reading.etag || reading.seen.includes(seenKey(task))}),
       el('details', {}, el('summary', {}, '请求、Attempt 与调用额度'),
         el('div', {class: 'stack'}, selected.links.generation_requests.map(link => button(link.request_id, () => showEvidence('requests', link.request_id, revision))),
           selected.links.generation_attempts.map(link => button(link.attempt_id, () => showEvidence('attempts', link.attempt_id, revision)))),
         el('pre', {class: 'run-evidence'}, JSON.stringify(selected.call_allowances, null, 2))),
       (selected.errors || []).map(errorBox), button('查看全部任务', () => app.go({task_id: null}))));
   }
-  async function read() {
+  async function read(options={}) {
     if (disposed) return;
-    if (busy) { pendingRefresh = true; return; }
+    if (busy) { if(Object.keys(options).length||pendingRead===null)pendingRead=options; return; }
     busy = true; const token = ++serial;
-    if (loaded) notice.replaceChildren(loading(live ? '正在读取当前执行状态…' : '正在读取固定执行记录…'));
-    const query = new URLSearchParams({limit: '30', offset: String(state.offset)});
-    if (!live) query.set('revision', pinned);
-    if (state.group) query.set('change_id', state.group);
-    if (state.status) query.set('status', state.status);
-    if (state.attention) query.set('attention', '1');
+    const nextState={...state,...options.state},nextLive=options.live??live,nextPinned=options.pinned??pinned;
+    const savedReading=Object.hasOwn(options,'readingEtag');
+    const fixedReading=savedReading||(!nextLive&&loaded&&!options.refreshReading);
+    controls();
+    if (loaded) notice.replaceChildren(loading(nextLive ? '正在读取当前执行状态…' : '正在读取固定执行记录…'));
+    const query = new URLSearchParams({limit: '30', offset: String(nextState.offset)});
+    if (!nextLive) query.set('revision', nextPinned);
+    if (nextState.group) query.set('change_id', nextState.group);
+    if (nextState.status) query.set('status', nextState.status);
+    if (nextState.attention) query.set('attention', '1');
+    let readingRequest=false;
     try {
-      let nextReading=reading;let readingWarning=false;
-      if(readingSupported){try{nextReading=await get('/api/result-reading');}catch{nextReading={seen:[],etag:null};readingWarning=true;}}
-      if(nextReading.etag){query.set('personal','1');query.set('reading_etag',nextReading.etag);}
+      let nextReading=reading;let readingWarning=fixedReading&&readingUnavailable;
+      if(readingSupported&&(!fixedReading||savedReading)){
+        if(savedReading&&options.readingEtag===null)nextReading={seen:[],etag:null};
+        else {
+          readingRequest=true;
+          try{nextReading=await get('/api/result-reading');}
+          catch(error){if(fixedReading||error.status===409)throw error;nextReading={seen:[],etag:null};readingWarning=true;}
+          readingRequest=false;
+        }
+      }
+      const etag=savedReading?options.readingEtag:nextReading.etag;
+      if(readingSupported&&etag){query.set('personal','1');query.set('reading_etag',etag);}
       const value = await get('/api/tasks?' + query);
-      const nextDetail = app.route.task_id ? await get('/api/tasks/' + encodeURIComponent(app.route.task_id) + revisionQuery(live ? null : pinned)) : null;
+      const nextDetail = app.route.task_id ? await get('/api/tasks/' + encodeURIComponent(app.route.task_id) + revisionQuery(nextLive ? null : nextPinned)) : null;
       if (disposed || token !== serial) return;
-      reading=nextReading;page = value; selected = nextDetail; loaded = true; render();
+      // Commit the page, its cursor and its reading snapshot together. Failed
+      // pagination must leave both the visible rows and their old offset intact.
+      state={...nextState,revision:value.revision_id};live=nextLive;pinned=nextPinned;
+      reading=nextReading;readingUnavailable=readingWarning;page = value; selected = nextDetail; loaded = true;readingBlocked=false;render();
+      if(options.persist)persist();
       if(readingWarning)notice.append(el('p',{class:'field-error'},'个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。'));
+      if(options.notice)notice.append(el('p',{class:'muted'},options.notice));
+      return true;
     } catch (error) {
-      if (!disposed) notice.replaceChildren(errorBox({...error.details, message: readableError(error)}),
-        button('重试读取', () => { notice.replaceChildren(loading(live ? '正在读取当前执行状态…' : '正在读取固定执行记录…')); read(); }));
-    } finally { busy = false; if (pendingRefresh && !disposed) { pendingRefresh = false; read(); } }
+      if (!disposed) {
+        const conflict=error.status===409&&error.field==='reading_etag';
+        const unavailable=fixedReading&&(readingRequest||error.code==='local_state_invalid');
+        if(fixedReading||conflict){live=false;pinned=page.revision_id;pendingRead=null;}
+        group.value=state.group;status.value=state.status;attention.checked=state.attention;
+        if(conflict||unavailable){
+          readingBlocked=true;
+          notice.replaceChildren(el('p',{class:'field-error'},conflict
+            ?'已读记录已变化，当前页保留；请重新读取第一页后继续翻页。'
+            :'个人已读记录暂不可用，当前页保留；请重新读取第一页后继续。'),button('重新读取第一页',restart));
+          if(selected)renderDetail();
+        }else notice.replaceChildren(errorBox({...error.details,message:readableError(error)}),button('重试读取',()=>read(options)));
+      }
+      return false;
+    } finally { busy = false;controls();if(pendingRead&&!disposed){const next=pendingRead;pendingRead=null;read(next);} }
   }
   for (const input of [group, status, attention]) input.addEventListener('change', () => {
-    choiceMade = true; state.group = group.value; state.status = status.value; state.attention = attention.checked; state.offset = 0; persist(); read();
+    choiceMade = true;read({state:{group:group.value,status:status.value,attention:attention.checked,offset:0},refreshReading:true,persist:true});
   });
   const sync = () => { if (live && !document.hidden) read(); };
   app.root.addEventListener('summary-refreshed', sync);
@@ -175,15 +216,20 @@ export function runDesk(app, data) {
       if (disposed || editor !== app.editor) return;
       recovery.hydrate(editor);
       const saved = editor.draft.content.run_desk;
+      let options={};
       if (!choiceMade && saved && typeof saved === 'object') {
-        state = {offset: Number.isSafeInteger(saved.offset) && saved.offset >= 0 ? saved.offset : 0,
+        const restored = {offset: Number.isSafeInteger(saved.offset) && saved.offset >= 0 ? saved.offset : 0,
           group: typeof saved.group === 'string' ? saved.group : '', status: Object.hasOwn(statuses, saved.status) ? saved.status : '',
           attention: saved.attention === true};
-        if (state.offset) { live = false; pinned = typeof saved.revision === 'string' ? saved.revision : app.route.revision; state.revision = pinned; }
+        options={state:restored};
+        if(restored.offset){
+          if(!readingSupported||typeof saved.reading_etag==='string'&&/^[a-f0-9]{64}$/.test(saved.reading_etag))
+            Object.assign(options,{live:false,pinned:typeof saved.revision==='string'?saved.revision:app.route.revision,readingEtag:readingSupported?saved.reading_etag:null});
+          else {restored.offset=0;options.notice='原分页的已读版本无法核实，已从第一页重新读取；筛选保留。';}
+        }
       }
-      if(readingSupported&&saved?.seen?.length){const migrate=button('核实并导入旧草稿的已读记录',async()=>{try{await editor.save();const current=await get('/api/result-reading');const result=await post('/api/result-reading/import-legacy',{draft_id:editor.draft.draft_id,project_identity:app.info.project_identity,expected_etag:current.etag});await read();notice.textContent=`已核实导入 ${result.verified_count} 项旧记录，原草稿保留。`;migrate.remove();app.summaryPoll?.refresh();}catch(error){notice.textContent=readableError(error);}});root.append(migrate);}
-      if (choiceMade) persist();
-      read();
+      if(readingSupported&&saved?.seen?.length){const migrate=button('核实并导入旧草稿的已读记录',async()=>{try{await editor.save();const current=await get('/api/result-reading');const result=await post('/api/result-reading/import-legacy',{draft_id:editor.draft.draft_id,project_identity:app.info.project_identity,expected_etag:current.etag});if(await read({state:{offset:0},refreshReading:true,persist:true}))notice.textContent=`已核实导入 ${result.verified_count} 项旧记录，原草稿保留。`;migrate.remove();app.summaryPoll?.refresh();}catch(error){notice.textContent=readableError(error);}});root.append(migrate);}
+      read(options);
     });
   }
   const onCancel = () => queueMicrotask(() => { if (!disposed && selected) renderDetail(); });
