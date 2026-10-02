@@ -63,7 +63,7 @@ def main():
     launcher = prefix / ".deck-master/bin/deck-master"
     probe = subprocess.run([str(launcher), "doctor", "--step", "compose"], capture_output=True, text=True, check=True)
     assert args.previous in str(Path(json.loads(probe.stdout)["module_path"]).resolve())
-    old = command("workbench", "--project", str(project), "--ui", "legacy", "--registry", str(registry), "--no-open", installed=True)
+    old = command("workbench", "--project", str(project), "--registry", str(registry), "--no-open", installed=True)
     try:
         with urllib.request.urlopen(old["url"], timeout=5) as response:
             assert response.status == 200 and b"<html" in response.read().lower()

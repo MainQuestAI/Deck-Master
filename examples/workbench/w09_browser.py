@@ -13,7 +13,7 @@ from deck_master.web import WorkbenchServer
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--out',type=Path,required=True);args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=False)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--out',type=Path,required=True);parser.add_argument('--chromium-executable',type=Path);args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=False)
     project=args.out/'project';create_sample(project,page_count=3,readonly=False);store=Store(project)
     base=store.load_document();entry=base['pages'][1];visible=copy.deepcopy(store.read_object_json(entry['page'])['customer_visible'])
     visible['body_blocks']=[{'id':'paragraph','type':'paragraph','text':'Original paragraph'},{'id':'list','type':'bullets','items':[{'id':'item','text':'Original bullet'}]},{'id':'table','type':'table','columns':[{'id':'col','label':'Original column'}],'rows':[{'id':'row','cells':[{'column_id':'col','display_text':'Original cell'}]}]}]
@@ -27,7 +27,7 @@ def main():
     server=WorkbenchServer(project);url=server.start()
     try:
         with sync_playwright() as pw:
-            browser=pw.chromium.launch();context=browser.new_context(viewport={'width':1440,'height':1050});page=context.new_page()
+            browser=pw.chromium.launch(executable_path=str(args.chromium_executable) if args.chromium_executable else None);context=browser.new_context(viewport={'width':1440,'height':1050});page=context.new_page()
             page.on('pageerror',lambda e:errors.append(str(e)))
             page.on('request',lambda r:posts.append({'url':r.url.split('/api/')[-1],'body':r.post_data_json}) if r.method=='POST' and '/api/content/' in r.url else None)
             try:

@@ -31,6 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fixture', type=Path, required=True); parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--source-commit', help='Installed candidate source SHA; otherwise use checkout HEAD')
+    parser.add_argument('--chromium-executable', type=Path)
     parser.add_argument('--smoke', action='store_true'); args = parser.parse_args()
     manifest = json.loads((args.fixture / 'manifest.json').read_text())
     assert manifest['factory'] == 'w01-pressure.v1' and manifest['candidate_count'] == 1500 and manifest['attempt_count'] == 4500
@@ -43,7 +44,7 @@ def main():
     try:
         url = server.start() + 'v2/#' + urlencode({'project': info['project_identity'], 'surface': 'gallery', 'layer': 'original_image', 'revision': doc['revision_id'], 'zoom': 1})
         with sync_playwright() as pw:
-            browser = pw.chromium.launch(); context = browser.new_context(viewport={'width': 1440, 'height': 900}, record_har_path=str(args.out / 'local-only.har'), record_har_content='omit')
+            browser = pw.chromium.launch(executable_path=str(args.chromium_executable) if args.chromium_executable else None); context = browser.new_context(viewport={'width': 1440, 'height': 900}, record_har_path=str(args.out / 'local-only.har'), record_har_content='omit')
             try:
                 page = context.new_page(); page.set_default_timeout(60000)
                 page.on('pageerror', lambda error: errors.append(str(error)))

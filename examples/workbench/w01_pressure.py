@@ -235,8 +235,8 @@ def sample(project, out, manifest):
             'background_errors': errors, 'summary_object_reads': dict(seen),
             'object_cache': workbench._cached_json.cache_info()._asdict(),
             'environment': {'os': platform.platform(), 'python': platform.python_version(), 'machine': platform.machine(),
-                'hardware': subprocess.check_output(['sysctl', '-n', 'hw.model'], text=True).strip(),
-                'memory_bytes': int(subprocess.check_output(['sysctl', '-n', 'hw.memsize'], text=True)),
+                'hardware': subprocess.check_output(['sysctl', '-n', 'hw.model'], text=True).strip() if platform.system() == 'Darwin' else platform.machine(),
+                'memory_bytes': int(subprocess.check_output(['sysctl', '-n', 'hw.memsize'], text=True)) if platform.system() == 'Darwin' else __import__('os').sysconf('SC_PAGE_SIZE') * __import__('os').sysconf('SC_PHYS_PAGES'),
                 'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
                 'browser': None, 'viewport': None}, 'threshold_ms': 250, 'passed': times[94] <= 250}
         write_json(out / 'measurements.json', result)

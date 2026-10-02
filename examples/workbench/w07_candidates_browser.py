@@ -18,6 +18,7 @@ from w07_synthetic import SyntheticW07
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--chromium-executable', type=Path)
     args = parser.parse_args(); args.out.mkdir(parents=True, exist_ok=False)
     flow = SyntheticW07(args.out); checks = []; errors = []; requests = []
     def check(name, condition=True):
@@ -30,7 +31,7 @@ def main():
     server = WorkbenchServer(flow.project); url = server.start()
     try:
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(); context = browser.new_context(viewport={'width': 1440, 'height': 1100})
+            browser = playwright.chromium.launch(executable_path=str(args.chromium_executable) if args.chromium_executable else None); context = browser.new_context(viewport={'width': 1440, 'height': 1100})
             context.tracing.start(screenshots=True, snapshots=True, sources=True)
             page = context.new_page(); page.on('pageerror', lambda error: errors.append(str(error)))
             page.on('request', lambda request: requests.append({'method': request.method, 'url': request.url, 'body': request.post_data}) if request.method == 'POST' and '/api/candidates/' in request.url else None)

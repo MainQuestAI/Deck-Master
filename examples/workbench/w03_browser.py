@@ -23,6 +23,7 @@ from deck_master.store import Store
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', required=True)
+    parser.add_argument('--chromium-executable', type=Path)
     args = parser.parse_args()
     root = Path(args.out).absolute()
     root.mkdir(parents=True, exist_ok=False)
@@ -57,7 +58,7 @@ def main():
         launcher_state, state, other_state = [runtime.ensure(desc) for desc in descriptors]
         url, other_url = state['url'], other_state['url']
         with sync_playwright() as pw:
-            browser = pw.chromium.launch()
+            browser = pw.chromium.launch(executable_path=str(args.chromium_executable) if args.chromium_executable else None)
             context = browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True, locale='zh-CN')
             context.tracing.start(screenshots=True, snapshots=True, sources=True)
             page = context.new_page()
@@ -111,18 +112,17 @@ def main():
 
             page.goto(url + 'v2/')
             expect(page.get_by_role('heading', name='制作总览', exact=True)).to_be_visible()
-            assert page.locator('button.primary').count() == 1
-            expect(page.get_by_role('button', name='看整稿原图', exact=True)).to_be_visible()
+            expect(page.get_by_role('button', name='查看整稿', exact=True)).to_have_class('primary')
             assert page.locator('.nav .ui-icon').count() == 5
-            first_cell = page.get_by_role('button', name='第 1 页 · 项目目标与阅读顺序', exact=True)
-            first_cell.focus(); page.keyboard.press('ArrowRight')
-            expect(page.get_by_role('button', name='第 1 页 · 项目目标与阅读顺序，逐页稿，可看', exact=True)).to_be_focused()
+            first_cell = page.get_by_role('button', name='打开第 01 页', exact=True)
+            first_cell.focus(); page.keyboard.press('Tab')
+            expect(page.get_by_role('button', name='第 1 页，逐页稿，已就绪', exact=True)).to_be_focused()
             page.keyboard.press('Enter')
             expect(page.get_by_label('个人草稿', exact=True)).to_be_editable()
             page.get_by_label('个人草稿', exact=True).fill('第一页的个人内容意见')
             assert_saved(page, '第一页的个人内容意见')
             record('no_host_draft_and_table_keyboard')
-            page.get_by_role('button', name='原图', exact=True).click()
+            page.get_by_role('navigation', name='本页生成链路').get_by_role('button', name=re.compile('^04 原图')).click()
             expect(page.get_by_label('个人草稿', exact=True)).to_have_value('')
             page.get_by_label('个人草稿', exact=True).fill('原图意见 A')
             assert_saved(page, '原图意见 A')
@@ -145,10 +145,11 @@ def main():
             held = []
             def hold_ack(route):
                 held.append((route, route.fetch()))
+                page.locator('html').evaluate("node => {node.dataset.heldDraft = 'ready'}")
             page.route('**/api/drafts/save', hold_ack, times=1)
             page.get_by_label('个人草稿', exact=True).fill('切页前已发送的原图意见')
             expect(page.get_by_text('正在保存到项目…', exact=True)).to_be_visible()
-            page.wait_for_timeout(150)
+            expect(page.locator('html')).to_have_attribute('data-held-draft', 'ready')
             page.get_by_label('转到页面', exact=True).select_option('p02')
             expect(page.get_by_role('heading', name='第 2 页 · 材料如何成为内容', exact=True)).to_be_visible()
             page.get_by_label('转到页面', exact=True).select_option('p01')
@@ -200,7 +201,7 @@ def main():
             foreign = context.new_page(); foreign.goto(other_url + 'v2/#' + hash_a)
             expect(foreign.get_by_text('这个链接属于另一个项目。请从项目列表打开原项目，当前内容未替换。', exact=True)).to_be_visible()
             foreign.goto(other_url + 'v2/')
-            foreign.get_by_role('button', name='第 1 页 · 项目目标与阅读顺序', exact=True).click()
+            foreign.get_by_role('button', name='打开第 01 页', exact=True).click()
             expect(foreign.get_by_label('个人草稿', exact=True)).to_have_value('')
             foreign.get_by_label('个人草稿', exact=True).fill('项目二的独立原图意见')
             assert_saved(foreign, '项目二的独立原图意见')
