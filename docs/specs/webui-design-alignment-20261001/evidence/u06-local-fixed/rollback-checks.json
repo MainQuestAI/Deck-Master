@@ -1,0 +1,229 @@
+{
+  "status": "verified",
+  "records": [
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "activate",
+        "--prefix",
+        "/private/tmp/deck-master-w12-install-01",
+        "--release-id",
+        "64f6063bab14-a29d0d9c016f",
+        "--no-host-registration"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "activated",
+        "release_id": "64f6063bab14-a29d0d9c016f",
+        "previous": "releases/d39a6361cc68-3fbdf9d15304",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "host_skill": "host_unregistered",
+        "skill_link": "$LOCAL_HOME/.codex/skills/deck-master"
+      }
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "activate",
+        "--prefix",
+        "/private/tmp/deck-master-w12-install-01",
+        "--release-id",
+        "d39a6361cc68-3fbdf9d15304",
+        "--no-host-registration"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "activated",
+        "release_id": "d39a6361cc68-3fbdf9d15304",
+        "previous": "releases/64f6063bab14-a29d0d9c016f",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "host_skill": "host_unregistered",
+        "skill_link": "$LOCAL_HOME/.codex/skills/deck-master"
+      }
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "workbench",
+        "--project",
+        "/private/tmp/deck-master-pr90-fixed-rollback-candidates",
+        "--registry",
+        "$PRIVATE_ROOT/tests-fixed-rollback-candidates-complete/registry.json",
+        "--no-open"
+      ],
+      "exit_code": 0,
+      "result": {
+        "build_id": "8d60689970d5450e2b7fc81ee1eb638c2e085f634b8dedd69c0c8dcd7622ff08",
+        "identity": "c38e692e845dd44dae0104ee8844c84b8b7aee1bfd95ec092b813ea234065a95",
+        "instance_id": "e1ad451628e2c555f220464a6c49018c",
+        "pid": 84958,
+        "port": 64408,
+        "protocol_version": "workbench-service.v1",
+        "role": "project",
+        "service_version": "1.0.0.dev2",
+        "url": "http://127.0.0.1:64408/v2/",
+        "reused": false,
+        "mode": "v2",
+        "project_id": "synthetic-project",
+        "status": "available",
+        "ui_available": true,
+        "browser_opened": false,
+        "host_execution": "handoff_required"
+      }
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "workbench",
+        "--project",
+        "/private/tmp/deck-master-pr90-fixed-rollback-candidates",
+        "--stop"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "stopped",
+        "role": "project"
+      }
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "rollback",
+        "--prefix",
+        "/private/tmp/deck-master-w12-install-01",
+        "--no-host-registration"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "activated",
+        "release_id": "64f6063bab14-a29d0d9c016f",
+        "previous": "releases/d39a6361cc68-3fbdf9d15304",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "host_skill": "host_unregistered",
+        "skill_link": "$LOCAL_HOME/.codex/skills/deck-master",
+        "cli_active": true
+      }
+    },
+    {
+      "command": [
+        "/private/tmp/deck-master-w12-install-01/.deck-master/bin/deck-master",
+        "workbench",
+        "--project",
+        "/private/tmp/deck-master-pr90-fixed-rollback-candidates",
+        "--registry",
+        "$PRIVATE_ROOT/tests-fixed-rollback-candidates-complete/registry.json",
+        "--no-open"
+      ],
+      "exit_code": 0,
+      "result": {
+        "build_id": "de0c70ebb9e198d198d5a3ed3b64f7c5f2faff7b92ab10bbabed250eb1a6e97f",
+        "identity": "c38e692e845dd44dae0104ee8844c84b8b7aee1bfd95ec092b813ea234065a95",
+        "instance_id": "fa022fef0ad969560a54765d1f138435",
+        "pid": 84966,
+        "port": 64421,
+        "protocol_version": "workbench-service.v1",
+        "role": "project",
+        "service_version": "1.0.0.dev2",
+        "url": "http://127.0.0.1:64421/v2/",
+        "reused": false,
+        "mode": "v2",
+        "project_id": "synthetic-project",
+        "status": "available",
+        "ui_available": true,
+        "browser_opened": false,
+        "host_execution": "handoff_required"
+      }
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "workbench",
+        "--project",
+        "/private/tmp/deck-master-pr90-fixed-rollback-candidates",
+        "--stop"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "not_running",
+        "role": "project"
+      }
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "activate",
+        "--prefix",
+        "/private/tmp/deck-master-w12-install-01",
+        "--release-id",
+        "d39a6361cc68-3fbdf9d15304",
+        "--no-host-registration"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "activated",
+        "release_id": "d39a6361cc68-3fbdf9d15304",
+        "previous": "releases/64f6063bab14-a29d0d9c016f",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "host_skill": "host_unregistered",
+        "skill_link": "$LOCAL_HOME/.codex/skills/deck-master"
+      }
+    }
+  ],
+  "project_revision": "00f187bf6edc4b9e9d5b5e45bcff4e1c",
+  "compatibility": {
+    "minimum_writer": "run-desk.v1",
+    "project_format": "workbench.v3"
+  },
+  "immutable_files_unchanged": 109,
+  "candidate_count": 4,
+  "host_registration": "disabled",
+  "default_entry_changed": false,
+  "global_cli_write_lock": false,
+  "final_active_release": "d39a6361cc68-3fbdf9d15304"
+}

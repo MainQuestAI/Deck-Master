@@ -25,7 +25,9 @@ import json
 import os
 import re
 import shutil
+import stat
 import tempfile
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
@@ -47,6 +49,7 @@ SUPPORTED_WRITERS = ("generation.v1", "content-plan.v1", "changes.v1", "candidat
                      "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1")
 DECKMASTER_DIR = ".deckmaster"
 OPERATION_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+_OBJECT_PATH = re.compile(r"\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\.[a-z0-9]+")
 
 
 class StoreError(RuntimeError):
@@ -64,6 +67,20 @@ class ConflictError(StoreError):
 
 class OperationCancelled(StoreError):
     """The cancelled_task_check reported cancellation before the swap."""
+
+
+@lru_cache(maxsize=2048)
+def _verified_small_json_bytes(path, digest, signature):
+    """At most 32 MiB of immutable JSON bytes, never shared mutable dicts.
+
+    Callers recheck path safety and file identity on every access. The signature
+    includes device/inode, size, mtime and ctime, so replacement or corruption
+    requires a fresh hash check. Large objects and non-JSON files bypass this.
+    """
+    data = path.read_bytes()
+    if sha256_bytes(data) != digest:
+        raise StoreError(str(path), "object bytes do not match declared sha256")
+    return data
 
 
 class Store:
@@ -147,6 +164,21 @@ class Store:
         return ext
 
     def _resolve_object_path(self, rel_path: str) -> Path:
+        if os.name == "posix" and _OBJECT_PATH.fullmatch(rel_path):
+            # Canonical object paths contain no traversal or absolute components.
+            # Check every component on every access, including .deckmaster itself;
+            # repeatedly resolving the already canonical project ancestry adds no
+            # object protection and dominates large task-list reads.
+            candidate = str(self.project_root) + "/" + rel_path
+            bucket = candidate.rsplit("/", 1)[0]
+            for component in (str(self.deck_root), str(self.objects_dir), bucket, candidate):
+                try:
+                    mode = os.lstat(component).st_mode
+                except FileNotFoundError:
+                    continue  # put_blob may create a new bucket/object.
+                if stat.S_ISLNK(mode):
+                    raise StoreError(rel_path, "symlink component in object path")
+            return Path(candidate)
         candidate = (self.project_root / rel_path).resolve()
         objects_root = self.objects_dir.resolve()
         if not candidate.is_relative_to(objects_root):
@@ -164,8 +196,19 @@ class Store:
         except ModelError as exc:
             raise StoreError(exc.path, exc.detail) from exc
         target = self._resolve_object_path(ref["path"])
-        if not target.is_file():
+        try:
+            current_stat = target.stat()
+        except FileNotFoundError:
+            raise StoreError(ref["path"], "object file missing") from None
+        if not stat.S_ISREG(current_stat.st_mode):
             raise StoreError(ref["path"], "object file missing")
+        if ref["path"].endswith(".json") and current_stat.st_size <= 16384:
+            signature = (current_stat.st_dev, current_stat.st_ino, current_stat.st_size,
+                         current_stat.st_mtime_ns, current_stat.st_ctime_ns)
+            try:
+                return _verified_small_json_bytes(target, ref["sha256"], signature)
+            except StoreError as exc:
+                raise StoreError(ref["path"], exc.detail) from exc
         data = target.read_bytes()
         if sha256_bytes(data) != ref["sha256"]:
             raise StoreError(ref["path"], "object bytes do not match declared sha256")

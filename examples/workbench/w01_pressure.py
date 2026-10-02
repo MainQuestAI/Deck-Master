@@ -12,6 +12,7 @@ from collections import Counter
 from io import BytesIO
 import json
 import math
+import os
 from pathlib import Path
 import platform
 import subprocess
@@ -27,7 +28,7 @@ from deck_master.models import (bump_revision, canonical_json_bytes, content_ide
 from deck_master.pipeline import artifact
 from deck_master.samples import create_gallery_sample
 from deck_master.store import Store
-from deck_master.web import WorkbenchServer
+from deck_master.web import WorkbenchServer, ensure_service, stop_service
 
 SEED = 20260930
 FACTORY = 'w01-pressure.v1'
@@ -165,8 +166,9 @@ def create_fixture(project, *, page_count=300):
         'gallery': gallery, 'candidates': manifest_rows, 'background_task_ids': background_ids}
 
 
-def sample(project, out, manifest):
-    store = Store(project); server = WorkbenchServer(project); stop = threading.Event()
+def sample(project, out, manifest, *, source_commit=None, server_mode='detached'):
+    store = Store(project); server = WorkbenchServer(project) if server_mode == 'in-process' else None
+    stop = threading.Event(); detached_state = None
     available = {t['task_id'] for ref in store.load_document()['tasks']
                  if (t := store.read_object_json(ref))['status'] == 'awaiting_host'}
     updates, errors = [], []
@@ -203,7 +205,16 @@ def sample(project, out, manifest):
 
     thread = threading.Thread(target=background, daemon=True)
     try:
-        url = server.start().rstrip('/')
+        if server is not None:
+            url = server.start().rstrip('/')
+        else:
+            # Use the same detached service as `deck-master view --open`.
+            # The in-process embedding remains available as an explicit extra
+            # stress test; it is not the shipped CLI/Host process topology.
+            detached_state = ensure_service(project)
+            assert detached_state['reused'] is False, 'use an isolated checkpoint with no existing server'
+            assert detached_state['pid'] != os.getpid()
+            url = detached_state['url'].rstrip('/')
         cold_ms, _ = request(url)
         thread.start()
         for _ in range(5):
@@ -233,11 +244,14 @@ def sample(project, out, manifest):
             'cold_ms': cold_ms, 'p50_ms': times[49], 'p95_ms': times[math.ceil(len(times) * .95) - 1],
             'p99_ms': times[98], 'max_ms': times[-1], 'background': updates,
             'background_errors': errors, 'summary_object_reads': dict(seen),
-            'object_cache': workbench._cached_json.cache_info()._asdict(),
+            'object_cache': {'scope': 'driver-side instrumented read; not HTTP service',
+                             **workbench._cached_json.cache_info()._asdict()},
+            'server_mode': server_mode,
+            'service': {k: detached_state[k] for k in ('pid', 'service_version', 'build_id')} if detached_state else {'pid': os.getpid()},
             'environment': {'os': platform.platform(), 'python': platform.python_version(), 'machine': platform.machine(),
-                'hardware': subprocess.check_output(['sysctl', '-n', 'hw.model'], text=True).strip(),
-                'memory_bytes': int(subprocess.check_output(['sysctl', '-n', 'hw.memsize'], text=True)),
-                'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                'hardware': subprocess.check_output(['sysctl', '-n', 'hw.model'], text=True).strip() if platform.system() == 'Darwin' else platform.machine(),
+                'memory_bytes': int(subprocess.check_output(['sysctl', '-n', 'hw.memsize'], text=True)) if platform.system() == 'Darwin' else os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES'),
+                'commit': source_commit or subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
                 'browser': None, 'viewport': None}, 'threshold_ms': 250, 'passed': times[94] <= 250}
         write_json(out / 'measurements.json', result)
         print(json.dumps({'p95_ms': result['p95_ms'], 'passed': result['passed']}), flush=True)
@@ -245,9 +259,14 @@ def sample(project, out, manifest):
         stop.set()
         if thread.is_alive():
             thread.join(timeout=120)
-        server.stop()
+        if server is not None:
+            server.stop()
+        elif detached_state is not None and not detached_state['reused']:
+            stopped = stop_service(project)
+            assert stopped['view_status'] in ('stopped', 'not_running'), stopped
         write_json(out / 'background.json', {'updates': updates, 'errors': errors})
     assert not thread.is_alive(), 'background writer did not stop'
+    assert result['passed'], f"Summary p95 {result['p95_ms']:.1f} ms exceeds {result['threshold_ms']} ms"
 
 
 def main():
@@ -255,6 +274,9 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--fixture-only', action='store_true')
     parser.add_argument('--existing', type=Path, help='existing explicit pressure fixture root')
+    parser.add_argument('--source-commit', help='Installed candidate source SHA; otherwise use checkout HEAD')
+    parser.add_argument('--server-mode', choices=('detached', 'in-process'), default='detached',
+                        help='production detached service (default) or additional same-process embedding stress')
     args = parser.parse_args(); args.out.mkdir(parents=True, exist_ok=False)
     if args.existing:
         manifest = json.loads((args.existing / 'manifest.json').read_text()); project = args.existing / 'project'
@@ -263,7 +285,7 @@ def main():
         project = args.out / 'project'; manifest = create_fixture(project)
     write_json(args.out / 'manifest.json', manifest)
     if not args.fixture_only:
-        sample(project, args.out, manifest)
+        sample(project, args.out, manifest, source_commit=args.source_commit, server_mode=args.server_mode)
 
 
 if __name__ == '__main__':

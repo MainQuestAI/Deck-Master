@@ -1,0 +1,31 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_pending_thumbnail_and_entry_connections_do_not_reset ___________
+
+created_store = <deck_master.store.Store object at 0x10baaa810>
+
+    def test_pending_thumbnail_and_entry_connections_do_not_reset(created_store):
+        desc = local_runtime.descriptor(project=created_store.project_root)
+        server, _ = local_runtime.bind_server(desc)
+        connections = []
+        failures = []
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        try:
+            # Six image connections can overlap the document, styles and scripts.
+            # Hold acceptance until the burst has arrived, without mocking TCP.
+            for _ in range(12):
+                connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=1)
+                connections.append(connection)
+                try:
+                    connection.connect()
+                except OSError as error:
+                    failures.append(str(error))
+            thread.start()
+>           assert not failures, failures
+E           AssertionError: ['[Errno 54] Connection reset by peer', '[Errno 22] Invalid argument', '[Errno 54] Connection reset by peer', '[Errno 54] Connection reset by peer', '[Errno 22] Invalid argument', '[Errno 54] Connection reset by peer']
+E           assert not ['[Errno 54] Connection reset by peer', '[Errno 22] Invalid argument', '[Errno 54] Connection reset by peer', '[Errno 54] Connection reset by peer', '[Errno 22] Invalid argument', '[Errno 54] Connection reset by peer']
+
+tests/rebuild/test_local_runtime_burst.py:25: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_local_runtime_burst.py::test_pending_thumbnail_and_entry_connections_do_not_reset
+1 failed in 0.87s

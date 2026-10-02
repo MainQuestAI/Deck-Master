@@ -1,0 +1,20 @@
+{"samples": 10, "last_ms": 123.36942399997497, "background_updates": 1}
+{"samples": 20, "last_ms": 72.28095400205348, "background_updates": 2}
+{"samples": 30, "last_ms": 72.81489500019234, "background_updates": 3}
+{"samples": 40, "last_ms": 115.44267999852309, "background_updates": 4}
+{"samples": 50, "last_ms": 204.83310899726348, "background_updates": 4}
+{"samples": 60, "last_ms": 227.9711489973124, "background_updates": 5}
+{"samples": 70, "last_ms": 330.65760700264946, "background_updates": 6}
+{"samples": 80, "last_ms": 111.4630029987893, "background_updates": 7}
+{"samples": 90, "last_ms": 361.0983699982171, "background_updates": 8}
+{"samples": 100, "last_ms": 117.71571000281256, "background_updates": 9}
+{"p95_ms": 330.65760700264946, "passed": false}
+Traceback (most recent call last):
+  File "/workspace/scratch/u06-optimized-candidate/drivers/w01_pressure.py", line 292, in <module>
+    main()
+  File "/workspace/scratch/u06-optimized-candidate/drivers/w01_pressure.py", line 288, in main
+    sample(project, args.out, manifest, source_commit=args.source_commit, server_mode=args.server_mode)
+  File "/workspace/scratch/u06-optimized-candidate/drivers/w01_pressure.py", line 269, in sample
+    assert result['passed'], f"Summary p95 {result['p95_ms']:.1f} ms exceeds {result['threshold_ms']} ms"
+           ~~~~~~^^^^^^^^^^
+AssertionError: Summary p95 330.7 ms exceeds 250 ms

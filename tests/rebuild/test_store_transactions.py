@@ -476,3 +476,32 @@ def test_relocated_project_refs_resolve_and_source_hash_verified(tmp_path):
     # A different byte version is detected instead of being silently accepted.
     moved_material.write_text("季度材料正文(改)。", encoding="utf-8")
     assert hashlib.sha256(moved_material.read_bytes()).hexdigest() != source["original_sha256"]
+
+
+@pytest.mark.parametrize("component", [".deckmaster", ".deckmaster/objects", "bucket"])
+def test_object_read_and_write_reject_symlinked_ancestors(store, component):
+    ref = store.put_blob(b"same immutable bytes", ext="bin")
+    original = store.project_root / (ref["path"].rsplit("/", 1)[0] if component == "bucket" else component)
+    moved = original.with_name(original.name + "-real")
+    original.rename(moved)
+    original.symlink_to(moved, target_is_directory=True)
+    with pytest.raises(StoreError, match="symlink"):
+        store.read_object_bytes(ref)
+    with pytest.raises(StoreError, match="symlink"):
+        store.put_blob(b"same immutable bytes", ext="bin")
+
+
+def test_small_json_cache_detects_corruption_and_returns_independent_objects(store):
+    ref = store.put_json_object({"nested": {"value": "original"}})
+    first = store.read_object_json(ref)
+    first["nested"]["value"] = "mutated"
+    assert Store(store.project_root).read_object_json(ref)["nested"]["value"] == "original"
+    path = store.project_root / ref["path"]
+    before = path.stat()
+    data = path.read_bytes()
+    path.write_bytes(data.replace(b"original", b"tampered"))
+    os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns))
+    with pytest.raises(StoreError, match="sha256"):
+        store.read_object_json(ref)
+    path.write_bytes(data)
+    assert store.read_object_json(ref)["nested"]["value"] == "original"

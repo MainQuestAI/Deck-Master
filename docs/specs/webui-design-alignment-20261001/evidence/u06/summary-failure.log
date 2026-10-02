@@ -1,0 +1,20 @@
+{"samples": 10, "last_ms": 657.2729119943688, "background_updates": 2}
+{"samples": 20, "last_ms": 264.472046001174, "background_updates": 4}
+{"samples": 30, "last_ms": 768.2383680003113, "background_updates": 5}
+{"samples": 40, "last_ms": 521.3221400044858, "background_updates": 7}
+{"samples": 50, "last_ms": 740.085662000638, "background_updates": 8}
+{"samples": 60, "last_ms": 537.6639070018427, "background_updates": 10}
+{"samples": 70, "last_ms": 737.642162006523, "background_updates": 11}
+{"samples": 80, "last_ms": 542.9678729997249, "background_updates": 13}
+{"samples": 90, "last_ms": 700.2195339955506, "background_updates": 14}
+{"samples": 100, "last_ms": 586.4692499962985, "background_updates": 16}
+{"p95_ms": 835.4178619993036, "passed": false}
+Traceback (most recent call last):
+  File "/workspace/scratch/u06-guarded-candidate/drivers/w01_pressure.py", line 273, in <module>
+    main()
+  File "/workspace/scratch/u06-guarded-candidate/drivers/w01_pressure.py", line 269, in main
+    sample(project, args.out, manifest, source_commit=args.source_commit)
+  File "/workspace/scratch/u06-guarded-candidate/drivers/w01_pressure.py", line 252, in sample
+    assert result['passed'], f"Summary p95 {result['p95_ms']:.1f} ms exceeds {result['threshold_ms']} ms"
+           ~~~~~~^^^^^^^^^^
+AssertionError: Summary p95 835.4 ms exceeds 250 ms

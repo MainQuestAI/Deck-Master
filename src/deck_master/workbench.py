@@ -6,17 +6,32 @@ Candidates and Attempts are projected only from committed writer records.
 """
 from __future__ import annotations
 
-import copy
 import os
+import json
+import resource
 import stat
-from collections import Counter, defaultdict
+import threading
+from collections import Counter, OrderedDict, defaultdict
 from datetime import datetime, timezone
 from functools import lru_cache
 
-from .models import input_alignment, sha256_bytes, validate_ref, validate_schema
+from .models import canonical_json_bytes, input_alignment, sha256_bytes, validate_ref, validate_schema
 from .store import Store
 
 from .snapshots import READ_FAILURES, SLOTS, ReadModelError, load_snapshot
+
+
+def _copy_json(value):
+    """Detach JSON projections without deepcopy's arbitrary-object protocol.
+
+    Stored objects originate in the JSON decoder: their containers are acyclic
+    dicts/lists and their leaves are immutable JSON scalars.
+    """
+    if isinstance(value, dict):
+        return {key: _copy_json(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_copy_json(item) for item in value]
+    return value
 
 
 def object_error():
@@ -30,6 +45,10 @@ def object_error():
 def _cached_json(root, path, digest, signature):
     # Signature includes ctime/inode as well as size/mtime. Every call checks
     # path safety anew; corrupted/replaced immutable files cannot hide in cache.
+    return _read_validated(root, path, digest)
+
+
+def _read_validated(root, path, digest):
     obj = Store(root).read_object_json({"path": path, "sha256": digest})
     if isinstance(obj, dict):
         kind = {"deck_page_package.v2": "page", "deck_artifact.v1": "artifact",
@@ -41,19 +60,85 @@ def _cached_json(root, path, digest, signature):
     return obj
 
 
+@lru_cache(maxsize=4096)
+def _cached_overview_metadata(root, path, digest, signature):
+    """Keep compact identities separately from the page/task working set.
+
+    Pending candidates and frozen requests add 3,000 objects to a 300-page
+    graph. Retaining their full bodies in the shared LRU evicted every task
+    between summary scans. Validate immutable bytes once per signature, then
+    retain only the fields this projection consumes, never prompt bodies.
+    """
+    obj = _read_validated(root, path, digest)
+    if not isinstance(obj, dict):
+        return {"schema_version": None}
+    result = {key: _copy_json(obj[key]) for key in (
+        "schema_version", "project_id", "task_id", "page_id", "candidate_id",
+        "result_kind", "stage", "result_ref") if key in obj}
+    if obj.get("schema_version") == "generation_request.v1":
+        result["page_id"] = obj["input"]["page"]["page_id"]
+    elif obj.get("schema_version") == "deck_blueprint_request.v1":
+        prompt = obj.get("prompt")
+        result["prompt_valid"] = isinstance(prompt, str) and sha256_bytes(prompt.encode("utf-8")) == obj.get("prompt_sha256")
+    return result
+
+
 class _ReadContext:
-    def __init__(self, store, document):
+    def __init__(self, store, document, *, pin_directories=False):
         self.store, self.document = store, document
         self.objects = {}
+        self.metadata_objects = {}
         self.root = str(store.project_root)
         self.directories = (str(store.deck_root), str(store.objects_dir))
         self.pages = {p["page_id"]: p for p in document.get("pages") or []}
+        self.pin_directories = (pin_directories and os.name == "posix"
+                                and resource.getrlimit(resource.RLIMIT_NOFILE)[0] >= 512)
+        self.directory_fds = {}
+        self.signatures = {}
+        self.clock_tasks = []
+        self.read_failed = False
+
+    def close(self):
+        for fd in self.directory_fds.values():
+            os.close(fd)
+        self.directory_fds.clear()
+
+    def _directory_fd(self, relative):
+        if relative not in self.directory_fds:
+            flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+            if not relative:
+                fd = os.open(self.root, flags)
+            else:
+                parent, _, name = relative.rpartition("/")
+                fd = os.open(name, flags, dir_fd=self._directory_fd(parent))
+            self.directory_fds[relative] = fd
+        return self.directory_fds[relative]
 
     def object_stat(self, ref):
+        try:
+            value = self._object_stat(ref)
+        except READ_FAILURES:
+            self.read_failed = True
+            raise
+        self.signatures[(ref["path"], ref["sha256"])] = (
+            value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+        return value
+
+    def _object_stat(self, ref):
         # validate_ref fixes the exact objects/<bucket>/<hash>.<ext> grammar.
         # Check every component on every access, including warm cache hits.
         # No repeated realpath traversal of the already-resolved project root.
         validate_ref(ref, where="object")
+        if self.pin_directories:
+            # Pin checked directory handles for this one snapshot read. Each
+            # component is opened with NOFOLLOW; each object is still statted
+            # afresh without following symlinks. Directory replacement cannot
+            # redirect a later object access through an unchecked ancestor.
+            bucket, _, name = ref["path"].rpartition("/")
+            value = os.stat(name, dir_fd=self._directory_fd(bucket), follow_symlinks=False)
+            if not stat.S_ISREG(value.st_mode):
+                raise ValueError("object is not a regular file")
+            return value
         if os.name != "posix":
             # Preserve Store's platform-specific resolution (e.g. junctions).
             value = self.store._resolve_object_path(ref["path"]).stat()
@@ -75,9 +160,25 @@ class _ReadContext:
         key = (ref["path"], ref["sha256"])
         if key not in self.objects:
             st = self.object_stat(ref)
-            signature = (st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
-            self.objects[key] = _cached_json(self.root, *key, signature)
+            signature = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+            try:
+                self.objects[key] = _cached_json(self.root, *key, signature)
+            except READ_FAILURES:
+                self.read_failed = True
+                raise
         return self.objects[key]
+
+    def overview_metadata(self, ref):
+        key = (ref["path"], ref["sha256"])
+        if key not in self.metadata_objects:
+            st = self.object_stat(ref)
+            signature = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+            try:
+                self.metadata_objects[key] = _cached_overview_metadata(self.root, *key, signature)
+            except READ_FAILURES:
+                self.read_failed = True
+                raise
+        return self.metadata_objects[key]
 
 
 def _task_rows(ctx):
@@ -99,7 +200,7 @@ def _task_rows(ctx):
             rows.append({"ref": ref, "task_id": None, "status": "unreadable",
                          "detail": object_error()["message"], "error": object_error()})
     # Callers must not mutate the shared immutable-object cache via projections.
-    return copy.deepcopy(rows)
+    return _copy_json(rows)
 
 
 def tasks_view(project_dir, *, revision=None):
@@ -189,9 +290,9 @@ def _stage(ctx, entry, slot):
         # Byte integrity is checked by /api/file. Summary never hashes large
         # images; absence/path errors can still be shown before image loading.
         ctx.object_stat(obj["file"])
-        result.update(file=copy.deepcopy(obj["file"]), media_type=obj["media_type"],
-                      relation="known", dependencies=copy.deepcopy(obj.get("dependencies") or []),
-                      derived_from=copy.deepcopy(obj.get("derived_from") or []),
+        result.update(file=_copy_json(obj["file"]), media_type=obj["media_type"],
+                      relation="known", dependencies=_copy_json(obj.get("dependencies") or []),
+                      derived_from=_copy_json(obj.get("derived_from") or []),
                       file_integrity="checked_on_file_read", applicability=_applicability(ctx, entry, obj))
         if slot == "svg_preview":
             result["preview_of"] = {"scope": "per_page", "ref": entry.get("svg"),
@@ -223,7 +324,7 @@ def _deck_output(ctx):
         deps = [d for d in artifact.get("dependencies") or [] if d.get("kind") == "svg"]
         expected = [(e["page_id"], (e.get("svg") or {}).get("sha256")) for e in ctx.document.get("pages") or []]
         recorded = [(d.get("identity"), d.get("sha256")) for d in deps]
-        result.update(file=copy.deepcopy(artifact["file"]), file_integrity="checked_on_file_read",
+        result.update(file=_copy_json(artifact["file"]), file_integrity="checked_on_file_read",
                       ordered_pages=[{"page_id": pid, "svg_sha256": digest} for pid, digest in recorded],
                       relation="known" if deps else "unknown",
                       applicability="current" if deps and recorded == expected else "basis_changed" if deps else "unknown",
@@ -324,6 +425,8 @@ def _overview_facts(ctx, *, live, now):
                      "attempt_count": len(task.get("generation_attempts") or [])})
         scope = task.get("scope_pages") or []
         reason = _verification_reason(task, live=live, now=now)
+        if live and task.get("status") == "running":
+            ctx.clock_tasks.append((task, reason))
         if reason:
             facts.append(_fact("verify_execution", reason, task["task_id"],
                                page_ids=scope, source_refs=[ref]))
@@ -345,13 +448,12 @@ def _overview_facts(ctx, *, live, now):
                     continue
                 if input_ref.get("sha256") in page_shas:
                     continue  # the page package itself, never a prompt record
-                request = ctx.read(input_ref)
+                request = ctx.overview_metadata(input_ref)
                 if not isinstance(request, dict):
                     continue
                 if request.get("schema_version") != "deck_blueprint_request.v1":
                     continue
-                prompt = request.get("prompt")
-                if not isinstance(prompt, str) or sha256_bytes(prompt.encode("utf-8")) != request.get("prompt_sha256"):
+                if not request.get("prompt_valid"):
                     raise ValueError("request prompt does not match its recorded hash")
                 page_id = request.get("page_id")
                 if isinstance(page_id, str):
@@ -361,13 +463,14 @@ def _overview_facts(ctx, *, live, now):
                     prepared[page_id]["unreadable"] += 1
         for request_ref in task.get("generation_requests") or []:
             try:
-                request = ctx.read(request_ref)
-                if request.get("task_id") != task["task_id"] or request.get("project_id") != doc["project_id"]:
+                request = ctx.overview_metadata(request_ref)
+                if (request.get("schema_version") != "generation_request.v1"
+                        or request.get("task_id") != task["task_id"] or request.get("project_id") != doc["project_id"]):
                     raise ValueError("foreign request")
                 # Identity/binding only: unlike page_lineage's full record
                 # check, this index deliberately skips input_hash so a 300-page
                 # deck never re-hashes every frozen request body.
-                frozen[request["input"]["page"]["page_id"]]["refs"].append(request_ref)
+                frozen[request["page_id"]]["refs"].append(request_ref)
             except READ_FAILURES:
                 for page_id in scope:
                     frozen[page_id]["unreadable"] += 1
@@ -431,7 +534,7 @@ def _candidate_facts(ctx, tasks_by_id):
             adopted += 1
             continue
         try:
-            candidate = ctx.read(ref)
+            candidate = ctx.overview_metadata(ref)
             if not isinstance(candidate, dict) or candidate.get("schema_version") != "candidate.v1":
                 raise ValueError("not a candidate")
         except READ_FAILURES:
@@ -511,7 +614,7 @@ def _merge_refs(ref_groups):
         for ref in refs:
             if isinstance(ref, dict) and isinstance(ref.get("sha256"), str):
                 merged[(ref.get("path"), ref["sha256"])] = ref
-    return [copy.deepcopy(merged[key]) for key in sorted(merged)]
+    return [_copy_json(merged[key]) for key in sorted(merged)]
 
 
 def _action_sort_key(action):
@@ -560,7 +663,7 @@ def _assemble_actions(ctx, facts, member_index=None):
 
 
 def _prompt_records_block(index_entry):
-    refs = [copy.deepcopy(ref) for ref in index_entry["refs"]]
+    refs = [_copy_json(ref) for ref in index_entry["refs"]]
     unreadable = index_entry["unreadable"]
     if refs:
         value = {"status": "recorded", "count": len(refs), "refs": refs}
@@ -585,7 +688,7 @@ def _prompt_summary(ctx, entry, prepared, frozen):
             if ref:
                 validate_ref(ref, where="artifact/provenance.submitted_prompt")
                 ctx.object_stat(ref)
-                submitted = {"status": "recorded", "ref": copy.deepcopy(ref),
+                submitted = {"status": "recorded", "ref": _copy_json(ref),
                              "observer": "host_reported", "basis": "artifact.provenance.submitted_prompt"}
         except READ_FAILURES:
             submitted = {"status": "unreadable", "error": object_error()}
@@ -602,11 +705,61 @@ def _next_actions_block(ctx, actions):
             "readable": {"scope": "deck_pages" if page_ids else "no_content", "page_ids": page_ids}}
 
 
+_summary_cache = OrderedDict()
+_summary_cache_lock = threading.Lock()
+
+
 def workbench_summary(project_dir, *, revision=None):
+    return _workbench_summary(project_dir, revision=revision, encoded=False)
+
+
+def workbench_summary_json(project_dir, *, revision=None):
+    """Same guarded snapshot, already encoded for the HTTP transport."""
+    return _workbench_summary(project_dir, revision=revision, encoded=True)
+
+
+def _workbench_summary(project_dir, *, revision, encoded):
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
-    ctx = _ReadContext(store, doc)
-    return _summary(ctx, revision=revision)
+    ctx = _ReadContext(store, doc, pin_directories=True)
+    try:
+        # The revision file is read and checked by load_snapshot on every call.
+        # Hash its actual content too: a changed file retaining the same revision
+        # id must not reuse an old projection. File guards below cover every
+        # referenced object, including prepared/frozen metadata and image paths.
+        key = (ctx.root, sha256_bytes(canonical_json_bytes(doc)), revision)
+        with _summary_cache_lock:
+            cached = _summary_cache.get(key)
+        if cached is not None:
+            now = datetime.now(timezone.utc)
+            unchanged = all(_verification_reason(task, live=revision is None, now=now) == reason
+                            for task, reason in cached["clock_tasks"])
+            try:
+                if unchanged:
+                    for (path, digest), signature in cached["signatures"].items():
+                        ctx.object_stat({"path": path, "sha256": digest})
+                        if ctx.signatures[(path, digest)] != signature:
+                            unchanged = False
+                            break
+            except READ_FAILURES:
+                unchanged = False
+            if unchanged:
+                return cached["json"] if encoded else json.loads(cached["json"])
+        result = _summary(ctx, revision=revision)
+        serialized = json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        # Never cache partial failures: missing/corrupt objects must be retried
+        # so an independent repair is visible without a business revision.
+        if not ctx.read_failed:
+            entry = {"json": serialized,
+                     "signatures": ctx.signatures, "clock_tasks": ctx.clock_tasks}
+            with _summary_cache_lock:
+                _summary_cache[key] = entry
+                _summary_cache.move_to_end(key)
+                while len(_summary_cache) > 4:
+                    _summary_cache.popitem(last=False)
+        return serialized if encoded else result
+    finally:
+        ctx.close()
 
 
 def _summary(ctx, *, revision, member_index=None):
@@ -633,7 +786,7 @@ def _summary(ctx, *, revision, member_index=None):
             title = (ctx.read(entry["page"]).get("customer_visible") or {}).get("title")
         facts.extend(_stage_facts(entry, stages, deck_output))
         pages.append({"page_id": entry["page_id"], "title": title, "stages": stages,
-                      "execution": copy.deepcopy(by_page[entry["page_id"]]),
+                      "execution": _copy_json(by_page[entry["page_id"]]),
                       "prompt_summary": _prompt_summary(ctx, entry, overview["prepared"], overview["frozen"]),
                       "attention": {"status": "not_recorded"}})
     actions, per_page = _assemble_actions(ctx, facts, member_index)
@@ -648,7 +801,7 @@ def _summary(ctx, *, revision, member_index=None):
             "task_counts": dict(sorted(counts.items())),
             "unreadable_tasks": sum(t["status"] == "unreadable" for t in tasks),
             "outputs": {"pptx": deck_output}, "input_alignment": input_alignment(doc),
-            "content_plan": projection(store, doc, reader=ctx.read, summary=True),
+            "content_plan": projection(store, doc, reader=ctx.read, summary=True, schema_validated=True),
             "quality": {"status": "detail_required", "review_refs": doc.get("reviews") or []},
             "candidates": candidates_block,
             "attempts": {"status": "recorded", "count": sum(t.get("attempt_count", 0) for t in tasks)}
@@ -795,7 +948,7 @@ def page_lineage(project_dir, page_id, *, revision=None):
     stages = {("content" if s == "page" else s): _stage(ctx, entry, s) for s in SLOTS}
     page, blueprint = None, None
     if stages["content"]["existence"] == "recorded":
-        page = copy.deepcopy(ctx.read(entry["page"]))
+        page = _copy_json(ctx.read(entry["page"]))
     if entry.get("blueprint"):
         try:
             obj = ctx.read(entry["blueprint"])
@@ -843,7 +996,7 @@ def _generation_records(ctx, entry, artifact):
                 from .models import canonical_json_bytes
                 if request["input_hash"] != sha256_bytes(canonical_json_bytes(request["input"])):
                     raise ValueError("invalid frozen input hash")
-                requests.append({"ref": ref, **copy.deepcopy(request), "observer": "core_frozen"})
+                requests.append({"ref": ref, **_copy_json(request), "observer": "core_frozen"})
                 request_map[ref["sha256"]] = request
             for ref in task.get("generation_attempts") or []:
                 attempt = ctx.read(ref)
@@ -853,18 +1006,18 @@ def _generation_records(ctx, entry, artifact):
                 observations = []
                 for evidence_ref in attempt["observations"]:
                     observation = ctx.read(evidence_ref)
-                    observations.append({"ref": evidence_ref, **copy.deepcopy(observation), "comparison": comparison(request, observation)})
+                    observations.append({"ref": evidence_ref, **_copy_json(observation), "comparison": comparison(request, observation)})
                     if (provenance.get("generation_request") == attempt["request_ref"]
                             and provenance.get("generation_attempt") is not None
                             and ctx.read(provenance["generation_attempt"]).get("attempt_id") == attempt["attempt_id"]
                             and observation.get("observer") == "tool_observed"
                             and observation.get("collector") == "codex-session-image.v1"
                             and (observation.get("output") or {}).get("sha256") == (artifact.get("file") or {}).get("sha256")):
-                        adopted = copy.deepcopy(observation)
+                        adopted = _copy_json(observation)
                 call = next((c for c in task["call_allowances"] if c["allowance_id"] == attempt["allowance_id"]), None)
                 if call is None:
                     raise ValueError("attempt allowance is missing")
-                attempts.append({"ref": ref, **copy.deepcopy(attempt), "call": copy.deepcopy(call), "observations": observations})
+                attempts.append({"ref": ref, **_copy_json(attempt), "call": _copy_json(call), "observations": observations})
         except READ_FAILURES:
             errors.append(object_error())
     request_ref = provenance.get("generation_request")
@@ -872,5 +1025,5 @@ def _generation_records(ctx, entry, artifact):
     bound_request = next((r for r in requests if r["ref"] == request_ref), None)
     bound_attempt = next((a for a in attempts if a["ref"] == attempt_ref and a["request_ref"] == request_ref), None)
     return {"requests": requests, "attempts": attempts, "errors": errors, "adopted_observation": adopted,
-            "adopted_request_ref": copy.deepcopy(request_ref) if bound_request else None,
-            "adopted_attempt_ref": copy.deepcopy(attempt_ref) if bound_request and bound_attempt else None}
+            "adopted_request_ref": _copy_json(request_ref) if bound_request else None,
+            "adopted_attempt_ref": _copy_json(attempt_ref) if bound_request and bound_attempt else None}

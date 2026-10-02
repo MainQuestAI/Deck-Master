@@ -131,6 +131,14 @@ def build(args):
     proof_tests.mkdir()
     for name in ("test_candidates.py", "page_visual_helpers.py", "test_generation_protocol.py"):
         shutil.copyfile(unpacked / "tests/rebuild" / name, proof_tests / name)
+    ui_tests = drivers / "installed-ui-tests"
+    shutil.copytree(unpacked / "tests/rebuild", ui_tests)
+    bootstrap = (ui_tests / "conftest.py").read_text()
+    source_bootstrap = 'SRC_DIR = Path(__file__).resolve().parents[2] / "src"\nif str(SRC_DIR) not in sys.path:\n    sys.path.insert(0, str(SRC_DIR))'
+    assert source_bootstrap in bootstrap
+    bootstrap = bootstrap.replace(source_bootstrap, 'import deck_master\nassert Path(deck_master.__file__).resolve().is_relative_to(Path(sys.prefix).resolve()), "installed package required"')
+    (ui_tests / "conftest.py").write_text(bootstrap)
+    (drivers / "installed-pytest.ini").write_text('[pytest]\nmarkers =\n    browser: required real browser\n    render: real renderer\n')
     print(json.dumps({"manifest": str(distributions / "release.json"), "source_sha": commit, "v2_assets": len(static)}))
 
 
@@ -150,6 +158,11 @@ def verify(args):
             assert sha((package / name.removeprefix("deck_master/")).read_bytes()) == digest, name
     steps = []
     drivers = Path(__file__).resolve().parent
+    browser_tests = sorted((drivers / "installed-ui-tests").glob("test_*browser.py"))
+    assert browser_tests
+    steps.append(run([sys.executable, "-m", "pytest", "-c", str(drivers / "installed-pytest.ini"),
+                      *map(str, browser_tests), "-m", "browser", "--require-browser", "-q"],
+                     out, out / "installed-current-browser.log"))
     steps.append(
         run(
             [
@@ -166,9 +179,11 @@ def verify(args):
         )
     )
     for name in ("w02_content_plan", "w02_recovery", "w03_first_run", "w06_change_handoff", "w10_recovery", "w09_content_inputs"):
-        steps.append(run([sys.executable, str(drivers / (name + ".py")), "--out", str(out / name)], out, out / (name + ".log")))
+        browser_flags = ["--chromium-executable", str(args.chromium_executable)] if name == "w06_change_handoff" and args.chromium_executable else []
+        steps.append(run([sys.executable, str(drivers / (name + ".py")), "--out", str(out / name), *browser_flags], out, out / (name + ".log")))
     for name in ("w03_browser", "w07_candidates_browser", "w09_browser", "w10_browser_recovery"):
-        steps.append(run([sys.executable, str(drivers / (name + ".py")), "--out", str(out / name)], out, out / (name + ".log")))
+        browser_flags = ["--chromium-executable", str(args.chromium_executable)] if args.chromium_executable else []
+        steps.append(run([sys.executable, str(drivers / (name + ".py")), "--out", str(out / name), *browser_flags], out, out / (name + ".log")))
     steps.append(
         run(
             [
@@ -177,6 +192,7 @@ def verify(args):
                 "--require-installed",
                 "--font",
                 args.font,
+                *(["--chromium-executable", str(args.chromium_executable)] if args.chromium_executable else []),
                 "--out",
                 str(out / "offline"),
             ],
@@ -244,6 +260,8 @@ def main():
     check.add_argument("--manifest", type=Path, required=True)
     check.add_argument("--out", type=Path, required=True)
     check.add_argument("--font", default="Arial")
+    check.add_argument("--chromium-executable", type=Path,
+                       help="Explicit installed Chromium; its actual version is recorded by browser drivers.")
     args = parser.parse_args()
     build(args) if args.mode == "build" else verify(args)
 

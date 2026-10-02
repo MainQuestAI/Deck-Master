@@ -17,6 +17,7 @@ from w07_synthetic import SyntheticW07
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__); parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--chromium-executable', type=Path)
     args = parser.parse_args(); args.out.mkdir(parents=True, exist_ok=False)
     flow = SyntheticW07(args.out); checks = []; errors = []; posts = []
     for n in range(32): flow.dispatch(stage='reconstruct', instruction=f'Synthetic recovery task {n}')
@@ -37,7 +38,7 @@ def main():
             page.wait_for_timeout(100)
         raise AssertionError('Project journal did not ACK ' + expression)
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(); server = WorkbenchServer(flow.project)
+        browser = pw.chromium.launch(executable_path=str(args.chromium_executable) if args.chromium_executable else None); server = WorkbenchServer(flow.project)
         try:
             url = server.start(); ctx = browser.new_context(); page = ctx.new_page(); page.goto(url + 'v2/#' + query)
             expect(page.locator('.run-task')).to_have_count(30)
@@ -71,7 +72,7 @@ def main():
                 check('31_minute_projection_clock_only_requests_verification', flow.task(running['task_id'])['status'] == 'running')
             check('no_automatic_cancel_or_dispatch_across_origins', not any(url.endswith('/api/cancel') or url.endswith('/api/changes/commit') for url in posts))
             check('no_browser_javascript_errors', not errors)
-            (args.out / 'checks.json').write_text(json.dumps({'checks': checks, 'synthetic': True, 'clock_fault_minutes': 31, 'model_calls': 0, 'native_host_evidence': False, 'errors': errors}, indent=2) + '\n')
+            (args.out / 'checks.json').write_text(json.dumps({'checks': checks, 'browser': browser.version, 'synthetic': True, 'clock_fault_minutes': 31, 'model_calls': 0, 'native_host_evidence': False, 'errors': errors}, indent=2) + '\n')
             ctx.close(); browser.close()
         finally: server.stop()
 

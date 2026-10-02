@@ -90,9 +90,12 @@ def main():
         assert code == 200 and created['registered'] and created['model_started'] is False
         save('03-create', created)
         initial_task = created['pending_tasks'][0]['task_id']
-        code, opened = request(launch['url'], '/api/projects/open', {'entry_id': created['project']['entry_id'], 'ui': 'legacy'})
+        code, retired = request(launch['url'], '/api/projects/open', {'entry_id': created['project']['entry_id'], 'ui': 'legacy'})
+        assert code == 422 and retired['error']['code'] == 'local_state_invalid' and retired['error']['field'] == 'ui', (code, retired)
+        save('04-retired-entry-refused', retired)
+        code, opened = request(launch['url'], '/api/projects/open', {'entry_id': created['project']['entry_id']})
         assert code == 200 and opened['ui_available']
-        save('04-open-legacy', opened)
+        save('04-open-workbench', opened)
         project_desc = runtime.descriptor(project=project)
         project_url = opened['url']
         source = root / 'facts.md'

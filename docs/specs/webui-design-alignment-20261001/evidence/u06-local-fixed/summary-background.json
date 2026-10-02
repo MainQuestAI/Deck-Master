@@ -1,0 +1,86 @@
+{
+  "updates": [
+    {
+      "task_id": "pressure-background-000",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "af713d18540049ee818316d44d5baf90"
+      },
+      "elapsed_ms": 380.6665000738576
+    },
+    {
+      "task_id": "pressure-background-000",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "cedf676b3b2c49b3acb7734eb5c66f8e"
+      },
+      "elapsed_ms": 355.2557500079274
+    },
+    {
+      "task_id": "pressure-background-001",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "5dfc4fb5db474166aa15a9b33a643f85"
+      },
+      "elapsed_ms": 352.07812499720603
+    },
+    {
+      "task_id": "pressure-background-001",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "f457a730e30d4e688b6be533f422d4a3"
+      },
+      "elapsed_ms": 362.5781249720603
+    },
+    {
+      "task_id": "pressure-background-002",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "00ad97ee3d18462593e8072050a4fa27"
+      },
+      "elapsed_ms": 363.13750001136214
+    },
+    {
+      "task_id": "pressure-background-002",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "441d68aee8df4307b2fa44f9cd27c7f6"
+      },
+      "elapsed_ms": 362.64783306978643
+    },
+    {
+      "task_id": "pressure-background-003",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "de5ffb19e67c4c92ae8b9d802d89b918"
+      },
+      "elapsed_ms": 354.86658301670104
+    },
+    {
+      "task_id": "pressure-background-003",
+      "action": "cancel",
+      "result": {
+        "status": "cancelled",
+        "revision_id": "1ce98d02d4b447ff998a86e1904bf9a5"
+      },
+      "elapsed_ms": 850.76649999246
+    },
+    {
+      "task_id": "pressure-background-004",
+      "action": "start",
+      "result": {
+        "status": "running",
+        "revision_id": "3eb365a956cb4040b8e080c814e700f1"
+      },
+      "elapsed_ms": 671.8337089987472
+    }
+  ],
+  "errors": []
+}

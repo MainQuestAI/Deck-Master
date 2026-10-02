@@ -16,6 +16,8 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+import re
+from functools import lru_cache
 from importlib import resources
 from typing import Any
 
@@ -134,12 +136,29 @@ def validate_schema(kind: str, obj: Any) -> None:
     raise ModelError(f"{kind}/{path}", worst.message)
 
 
+@lru_cache(maxsize=8192)
+def _known_valid_ref(path: str, sha: str) -> bool:
+    parts = path.split('/')
+    stem, _, ext = parts[3].rpartition('.') if len(parts) == 4 else ('', '', '')
+    return (path.startswith('.deckmaster/objects/') and len(parts) == 4
+            and parts[2] == stem[:2] and len(parts[2]) == 2
+            and re.fullmatch('[0-9a-f]{64}', stem) is not None
+            and ext.isalnum() and ext == ext.lower()
+            and sha == stem and sha != ZERO_SHA256)
+
+
 def validate_ref(ref: Any, *, where: str) -> dict[str, str]:
     """Object Ref shape: project-relative immutable object path plus its hash."""
     if not isinstance(ref, dict):
         raise ModelError(where, "ref must be an object with path and sha256")
     path = ref.get("path")
     sha = ref.get("sha256")
+    # Only cache short immutable string grammar, never file existence or
+    # integrity. Filesystem checks still execute at every object access. The
+    # original slow path preserves precise errors for malformed references.
+    if (isinstance(path, str) and isinstance(sha, str) and len(path) <= 256 and len(sha) == 64
+            and _known_valid_ref(path, sha)):
+        return ref
     if not isinstance(path, str) or not path.startswith(".deckmaster/objects/"):
         raise ModelError(where, f"ref.path must live under .deckmaster/objects/, got {path!r}")
     parts = path.split("/")

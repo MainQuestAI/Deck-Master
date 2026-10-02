@@ -71,7 +71,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         pass
 
     def _send_json(self, payload: dict, status: int = 200) -> None:
-        body = json.dumps(payload, ensure_ascii=False, indent=1).encode("utf-8")
+        body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        self._send_json_bytes(body, status)
+
+    def _send_json_bytes(self, body: bytes, status: int = 200) -> None:
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -440,7 +443,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             if parsed.path == "/api/view":
                 payload = view_mod.project_view(project, revision=revision)
             elif parsed.path in ("/api/view/summary", "/api/workbench"):
-                payload = workbench_mod.workbench_summary(project, revision=revision)
+                self._send_json_bytes(workbench_mod.workbench_summary_json(project, revision=revision))
+                return
             elif parsed.path.startswith('/api/actions/'):
                 parts = parsed.path.split('/')
                 if len(parts) != 5 or parts[-1] != 'targets':

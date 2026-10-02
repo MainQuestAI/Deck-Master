@@ -1,0 +1,11 @@
+{"samples": 10, "last_ms": 109.35169400181621, "background_updates": 1}
+{"samples": 20, "last_ms": 119.44231400411809, "background_updates": 2}
+{"samples": 30, "last_ms": 62.319896002009045, "background_updates": 3}
+{"samples": 40, "last_ms": 64.61234400194371, "background_updates": 4}
+{"samples": 50, "last_ms": 66.3230249992921, "background_updates": 5}
+{"samples": 60, "last_ms": 70.32296900433721, "background_updates": 6}
+{"samples": 70, "last_ms": 76.78221000242047, "background_updates": 7}
+{"samples": 80, "last_ms": 72.58295900101075, "background_updates": 8}
+{"samples": 90, "last_ms": 160.9298539988231, "background_updates": 9}
+{"samples": 100, "last_ms": 132.35486800112994, "background_updates": 10}
+{"p95_ms": 199.1830079932697, "passed": true}

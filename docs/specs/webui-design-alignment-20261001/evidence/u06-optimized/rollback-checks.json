@@ -1,0 +1,229 @@
+{
+  "status": "verified",
+  "records": [
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "activate",
+        "--prefix",
+        "/tmp/deck-master-u06-install",
+        "--release-id",
+        "22fc97279141-e819479b34a0",
+        "--no-host-registration"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "activated",
+        "release_id": "22fc97279141-e819479b34a0",
+        "previous": "releases/3a6d41be553b-0f7d8d484aa2",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "host_skill": "host_unregistered",
+        "skill_link": null
+      }
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "activate",
+        "--prefix",
+        "/tmp/deck-master-u06-install",
+        "--release-id",
+        "64f6063bab14-a29d0d9c016f",
+        "--no-host-registration"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "activated",
+        "release_id": "64f6063bab14-a29d0d9c016f",
+        "previous": "releases/22fc97279141-e819479b34a0",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "host_skill": "host_unregistered",
+        "skill_link": null
+      }
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "workbench",
+        "--project",
+        "/tmp/deck-master-u06-rollback-project",
+        "--registry",
+        "/workspace/scratch/u06-optimized-rollback/registry.json",
+        "--no-open"
+      ],
+      "exit_code": 0,
+      "result": {
+        "build_id": "de0c70ebb9e198d198d5a3ed3b64f7c5f2faff7b92ab10bbabed250eb1a6e97f",
+        "identity": "59736de08fd9ae201eed387017566a655b4297073717964f1fa629831627673f",
+        "instance_id": "20e3474da657c488a441220fb960e30b",
+        "pid": 219295,
+        "port": 36023,
+        "protocol_version": "workbench-service.v1",
+        "role": "project",
+        "service_version": "1.0.0.dev2",
+        "url": "http://127.0.0.1:36023/v2/",
+        "reused": false,
+        "mode": "v2",
+        "project_id": "synthetic-project",
+        "status": "available",
+        "ui_available": true,
+        "browser_opened": false,
+        "host_execution": "handoff_required"
+      }
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "workbench",
+        "--project",
+        "/tmp/deck-master-u06-rollback-project",
+        "--stop"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "stopped",
+        "role": "project"
+      }
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "rollback",
+        "--prefix",
+        "/tmp/deck-master-u06-install",
+        "--no-host-registration"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "activated",
+        "release_id": "22fc97279141-e819479b34a0",
+        "previous": "releases/64f6063bab14-a29d0d9c016f",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "host_skill": "host_unregistered",
+        "skill_link": null,
+        "cli_active": true
+      }
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/bin/deck-master",
+        "workbench",
+        "--project",
+        "/tmp/deck-master-u06-rollback-project",
+        "--registry",
+        "/workspace/scratch/u06-optimized-rollback/registry.json",
+        "--no-open"
+      ],
+      "exit_code": 0,
+      "result": {
+        "build_id": "800e3e76050342145fd9c54e9ea80a14cc55efc31294438007fd0f56054331c2",
+        "identity": "59736de08fd9ae201eed387017566a655b4297073717964f1fa629831627673f",
+        "instance_id": "262544a41d862ad859ddc878e5fc85cb",
+        "pid": 219308,
+        "port": 33003,
+        "protocol_version": "workbench-service.v1",
+        "role": "project",
+        "service_version": "1.0.0.dev2",
+        "url": "http://127.0.0.1:33003/v2/",
+        "reused": false,
+        "mode": "v2",
+        "project_id": "synthetic-project",
+        "status": "available",
+        "ui_available": true,
+        "browser_opened": false,
+        "host_execution": "handoff_required"
+      }
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "workbench",
+        "--project",
+        "/tmp/deck-master-u06-rollback-project",
+        "--stop"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "not_running",
+        "role": "project"
+      }
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "activate",
+        "--prefix",
+        "/tmp/deck-master-u06-install",
+        "--release-id",
+        "64f6063bab14-a29d0d9c016f",
+        "--no-host-registration"
+      ],
+      "exit_code": 0,
+      "result": {
+        "status": "activated",
+        "release_id": "64f6063bab14-a29d0d9c016f",
+        "previous": "releases/22fc97279141-e819479b34a0",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "host_skill": "host_unregistered",
+        "skill_link": null
+      }
+    }
+  ],
+  "project_revision": "e30637985b9641afb97391f762f402c8",
+  "compatibility": {
+    "minimum_writer": "run-desk.v1",
+    "project_format": "workbench.v3"
+  },
+  "immutable_files_unchanged": 109,
+  "candidate_count": 4,
+  "host_registration": "disabled",
+  "default_entry_changed": false,
+  "global_cli_write_lock": false,
+  "final_active_release": "64f6063bab14-a29d0d9c016f"
+}

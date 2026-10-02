@@ -1,0 +1,115 @@
+{
+  "main_sha": "b61c4c9b9ea1ddddb5a9e87499c1bc0808d49df0",
+  "records": [
+    {
+      "scope": "local",
+      "name": "codex/webui-u00-validation",
+      "sha": "24496c7b55f5a8c551f762187258e0bd406f96a2",
+      "archive_ref": "refs/archive/cleanup-20261002/local/codex/webui-u00-validation",
+      "merged_into_main": true
+    },
+    {
+      "scope": "local",
+      "name": "codex/webui-u01-action-targets",
+      "sha": "893e355df4830390c8c2d6460b4b2552e5378a35",
+      "archive_ref": "refs/archive/cleanup-20261002/local/codex/webui-u01-action-targets",
+      "merged_into_main": true
+    },
+    {
+      "scope": "local",
+      "name": "codex/webui-u02-batch-actions",
+      "sha": "112f8a80d3891627e5396f0b0d78738bfd6f2e0c",
+      "archive_ref": "refs/archive/cleanup-20261002/local/codex/webui-u02-batch-actions",
+      "merged_into_main": true
+    },
+    {
+      "scope": "local",
+      "name": "codex/webui-u03-overview-preferences",
+      "sha": "960b7457a79dd004480175fd8b66f1c1bbe71777",
+      "archive_ref": "refs/archive/cleanup-20261002/local/codex/webui-u03-overview-preferences",
+      "merged_into_main": true
+    },
+    {
+      "scope": "local",
+      "name": "codex/webui-u04-style-content",
+      "sha": "15d615ed4f21bbf08763f2f8dfd9ba52b5268450",
+      "archive_ref": "refs/archive/cleanup-20261002/local/codex/webui-u04-style-content",
+      "merged_into_main": true
+    },
+    {
+      "scope": "local",
+      "name": "codex/webui-u05-integration",
+      "sha": "8d9cea346e3003ee2e00ba4a83ae77a487ac1890",
+      "archive_ref": "refs/archive/cleanup-20261002/local/codex/webui-u05-integration",
+      "merged_into_main": true
+    },
+    {
+      "scope": "local",
+      "name": "codex/webui-v3-design-alignment",
+      "sha": "7a73b2dc9f302d707039ecc532adcd10c97952cf",
+      "archive_ref": "refs/archive/cleanup-20261002/local/codex/webui-v3-design-alignment",
+      "merged_into_main": true
+    },
+    {
+      "scope": "local",
+      "name": "work",
+      "sha": "fc3813264fa5342f6888ba68c323c28bdd0bcca6",
+      "archive_ref": "refs/archive/cleanup-20261002/local/work",
+      "merged_into_main": true
+    },
+    {
+      "scope": "remote",
+      "name": "codex/webui-u00-validation",
+      "sha": "24496c7b55f5a8c551f762187258e0bd406f96a2",
+      "archive_ref": "refs/archive/cleanup-20261002/remote/codex/webui-u00-validation",
+      "merged_into_main": true
+    },
+    {
+      "scope": "remote",
+      "name": "codex/webui-u01-action-targets",
+      "sha": "893e355df4830390c8c2d6460b4b2552e5378a35",
+      "archive_ref": "refs/archive/cleanup-20261002/remote/codex/webui-u01-action-targets",
+      "merged_into_main": true
+    },
+    {
+      "scope": "remote",
+      "name": "codex/webui-u02-batch-actions",
+      "sha": "112f8a80d3891627e5396f0b0d78738bfd6f2e0c",
+      "archive_ref": "refs/archive/cleanup-20261002/remote/codex/webui-u02-batch-actions",
+      "merged_into_main": true
+    },
+    {
+      "scope": "remote",
+      "name": "codex/webui-u03-overview-preferences",
+      "sha": "960b7457a79dd004480175fd8b66f1c1bbe71777",
+      "archive_ref": "refs/archive/cleanup-20261002/remote/codex/webui-u03-overview-preferences",
+      "merged_into_main": true
+    },
+    {
+      "scope": "remote",
+      "name": "codex/webui-u04-style-content",
+      "sha": "15d615ed4f21bbf08763f2f8dfd9ba52b5268450",
+      "archive_ref": "refs/archive/cleanup-20261002/remote/codex/webui-u04-style-content",
+      "merged_into_main": true
+    },
+    {
+      "scope": "remote",
+      "name": "codex/webui-u05-integration",
+      "sha": "8d9cea346e3003ee2e00ba4a83ae77a487ac1890",
+      "archive_ref": "refs/archive/cleanup-20261002/remote/codex/webui-u05-integration",
+      "merged_into_main": true
+    },
+    {
+      "scope": "remote",
+      "name": "codex/webui-v3-design-alignment",
+      "sha": "5a6fa461b7c9caf52b59e603494d61513294e30d",
+      "archive_ref": "refs/archive/cleanup-20261002/remote/codex/webui-v3-design-alignment",
+      "merged_into_main": true
+    }
+  ],
+  "status": "completed",
+  "removed_local": 8,
+  "removed_remote": 7,
+  "worktrees_remaining": 1,
+  "archive_refs_saved": true
+}
