@@ -12,9 +12,9 @@ import {routeHash} from './routes.js';
 // 不硬编码页数、不出现无证据的风格结论；矩阵保持普通 Tab 顺序（设计系统第 07 节）。
 const kindLabels = {verify_execution: '执行待核实', handoff: '制作任务待交接', inspect_failure: '失败待查看',
   replan: '需重新计划', compare_candidates: '候选待决定', reconcile_inputs: '输入待协调',
-  prepare_stage: '产物待补齐', refresh_stage: '产物待更新', review_results: '结果待阅读', review_quality: '质量记录待查看'};
+  prepare_stage: '产物待补齐', refresh_stage: '产物依据已变化', review_results: '结果待阅读', review_quality: '质量记录待查看'};
 const nextLabels = {verify_execution: '去核实', handoff: '去交接', inspect_failure: '查看失败', replan: '重新计划',
-  compare_candidates: '比较候选', reconcile_inputs: '去协调', prepare_stage: '去补齐', refresh_stage: '去更新',
+  compare_candidates: '比较候选', reconcile_inputs: '去协调', prepare_stage: '去补齐', refresh_stage: '查看依据',
   review_results: '去阅读', review_quality: '查看记录'};
 const reasonLabels = {unknown_calls_recorded: '任务记录了未知调用；先核实原执行，未确认前不要重复派发。',
   running_task_stale: '任务已运行超过 30 分钟，状态待核实；超时不等于失败。',
@@ -27,7 +27,7 @@ const reasonLabels = {unknown_calls_recorded: '任务记录了未知调用；先
   candidate_unreadable: '候选记录损坏，已隔离；仍计入待决定。',
   content_needs_reconciliation: '新输入与当前内容尚未对齐；先看影响再决定。',
   stage_missing: '上游内容已就绪，该层尚未生成。',
-  stage_basis_changed: '上游内容已更新，该产物为旧版。',
+  stage_basis_changed: '该层的生成依据与当前上游版本不同。已有产物仍可阅读，请查看依据后决定是否重新试作。',
   quality_reviews_recorded: '已记录质量检查；查看结论与范围。',
   task_results_ready: '结果已返回待阅读；查看不代表采用。'};
 const routeLayer = {blueprint: 'original_image', svg: 'svg', svg_preview: 'svg', ppt_preview: 'ppt', pptx: 'ppt'};
@@ -114,8 +114,8 @@ function stageState(stage) {
   return stage.applicability?.status === 'current' ? 'ready' : 'unknown';
 }
 const cellView = state => ({ready: {icon: 'check', text: '已就绪'}, missing: {icon: 'minus', text: '尚未生成'},
-  stale: {icon: 'attention', text: '旧版待更新'}, unreadable: {icon: 'attention', text: '暂不可读'},
-  unknown: {icon: 'attention', text: '待核实'}}[state]);
+  stale: {icon: 'attention', text: '依据已变化'}, unreadable: {icon: 'attention', text: '暂不可读'},
+  unknown: {icon: 'attention', text: '依据待核实'}}[state]);
 
 export function overview(app, data = {}) {
   const pages = app.summary.pages;
@@ -130,7 +130,9 @@ export function overview(app, data = {}) {
   root.append(heading('制作总览',
     `${pages.length} 页内容 · ${blueprintCount} 页已有原图 · ${version(app.summary.revision_id)}。可看状态不代表质量检查通过。`,
     button('查看整稿', () => app.go({surface: 'gallery'}), true)));
-  root.append(todoPanel(app));
+  root.append(el('p',{class:'muted'},'候选待决定、结果未读与产物依据分开记录。依据已变化表示上游版本不同；依据待核实表示缺少历史绑定，不等于必须重做。点击对应层查看已有产物与生成依据，再选择重新检查或试作。'));
+  const todo=todoPanel(app);root.append(todo);
+  const sync=event=>{const next=event.detail;if(next.revision_id===app.summary.revision_id&&next.reading_etag!==app.summary.reading_etag){app.summary=next;const updated=todoPanel(app);root.querySelector('.overview-todos')?.replaceWith(updated);}};app.root.addEventListener('summary-refreshed',sync);app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',sync));
   root.append(matrixPanel(app, data.overview));
   return root;
 }
@@ -297,7 +299,8 @@ function matrixPanel(app, saved) {
     }
     render();
   });
-  app.disposables.push(() => { disposed = true; unsubscribe(); memory.dispose(); });
+  const readingSync=event=>{const next=event.detail;if(next.revision_id!==app.route.revision)return;for(const page of pages){const fresh=next.pages.find(p=>p.page_id===page.page_id);if(fresh)page.attention=fresh.attention;}render();};app.root.addEventListener('summary-refreshed',readingSync);
+  app.disposables.push(() => { disposed = true; unsubscribe(); memory.dispose();app.root.removeEventListener('summary-refreshed',readingSync); });
   (async () => {
     try {
       const plan = await get('/api/content-plan' + revisionQuery(app.route.revision));

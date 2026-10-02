@@ -29,7 +29,7 @@ export async function openAction(app, action, fallback) {
   app.actionNavigation = serial;
   try {
     const query = new URLSearchParams({revision: action.revision_id, limit: '30', offset: '0'});
-    const result = await get('/api/actions/' + encodeURIComponent(action.action_id) + '/targets?' + query);
+    const result = await get('/api/actions/' + encodeURIComponent(action.action_id) + '/targets?' + query + (app.readingQuery?.()||''));
     if (serial !== app.actionNavigation || generation !== app.generation) return;
     if (result.project_id !== app.info.project_id || result.revision_id !== action.revision_id || result.action_id !== action.action_id)
       throw new Error('目标与当前待办版本不一致，未更换工作面。');
@@ -37,7 +37,7 @@ export async function openAction(app, action, fallback) {
     else app.go({surface: 'overview', action_id: action.action_id, revision: result.revision_id});
   } catch (error) {
     if (serial === app.actionNavigation && generation === app.generation)
-      app.setNotice(readableError(error) + ' 当前版本保留；可重新读取该版本的待办。');
+      {app.setNotice(readableError(error) + ' 当前版本保留；请重新读取待办。');app.notice?.append(button('重新读取待办',()=>app.go({surface:'overview',action_id:null})));}
   }
 }
 
@@ -67,9 +67,9 @@ export function actionTargets(app, data) {
     busy = true; draw();
     try {
       const result = await get('/api/actions/' + encodeURIComponent(data.action_id) + '/targets?' +
-        new URLSearchParams({revision: data.revision_id, limit: String(data.limit), offset: String(offset)}));
+        new URLSearchParams({revision: data.revision_id, limit: String(data.limit), offset: String(offset)})+(app.readingQuery?.()||''));
       if (!disposed) { current = result; notice.textContent = ''; }
-    } catch (error) { if (!disposed) notice.textContent = readableError(error) + ' 已读对象列表仍保留。'; }
+    } catch (error) { if (!disposed) notice.replaceChildren(readableError(error)+' 已读对象列表仍保留。',button('重新读取待办',()=>app.go({surface:'overview',action_id:null})));  }
     finally { busy = false; if (!disposed) draw(); }
   }
   app.disposables.push(() => { disposed = true; });

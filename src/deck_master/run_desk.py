@@ -9,6 +9,7 @@ from functools import wraps
 from .models import validate_schema
 from .snapshots import IDENTIFIER, READ_FAILURES, ReadModelError, load_snapshot
 from .store import Store
+from .result_reading import key as reading_key
 from .workbench import _ReadContext
 
 DOCS = 'docs/agent-recovery-playbook.md#run-desk-recovery'
@@ -93,7 +94,7 @@ def task_row(task, ref=None, *, adopted=(), now=None, live=True):
             'verification_clock': 'live' if live else 'not_evaluated_for_fixed_revision',
             'needs_verification': unknown or stale or unclaimed_running,
             'waiting_time_basis': 'execution_started_at' if started else 'last_task_update' if wait_basis else 'unknown', 'call_counts': dict(calls),
-            'human_actions': actions, 'request_count': len(task.get('generation_requests', [])),
+            'reading_key':reading_key(task), 'human_actions': actions, 'request_count': len(task.get('generation_requests', [])),
             'attempt_count': len(task.get('generation_attempts', [])),
             'result_refs': task.get('result_refs', []), 'candidate_refs': task.get('candidate_refs', []),
             'pending_candidate_refs': pending_candidates, 'change_binding': task.get('change_binding'),
@@ -130,7 +131,7 @@ def _groups(ctx, rows):
 
 
 @_public
-def listing(project, *, revision=None, limit=30, offset=0, change_id=None, status=None, attention=False):
+def listing(project, *, revision=None, limit=30, offset=0, change_id=None, status=None, attention=False, reading=None):
     if type(limit) is not int or not 1 <= limit <= 100 or type(offset) is not int or offset < 0 or type(attention) is not bool:
         raise RunReadError('invalid_run_query', 'pagination', 'limit must be 1..100, offset nonnegative, attention boolean', http_status=400)
     if status is not None and status not in ('queued', 'awaiting_host', 'running', 'completed', 'failed', 'cancelled', 'superseded', 'unreadable'):
@@ -150,6 +151,8 @@ def listing(project, *, revision=None, limit=30, offset=0, change_id=None, statu
     for ref, task in reversed(records):
         row = (task_row(task, ref, adopted=adopted, now=now, live=revision is None) if task else
                {'ref': ref, 'task_id': None, 'status': 'unreadable', 'human_actions': ['inspect_failure'], 'error': _error()})
+        if task and reading is not None and reading_key(task) in reading['seen']:
+            row['human_actions']=[a for a in row['human_actions'] if a!='review_results']
         if selected_ids is not None and row['task_id'] not in selected_ids:
             continue
         if status is not None and row['status'] != status:

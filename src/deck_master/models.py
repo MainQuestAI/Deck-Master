@@ -63,6 +63,7 @@ SCHEMA_FILES = {
     "ui_draft_recovery": "ui-draft-recovery.v1.schema.json",
     "ui_position": "ui-position.v1.schema.json",
     "ui_gallery": "ui-gallery.v1.schema.json",
+    "result_reading": "result-reading.v1.schema.json",
     "ui_overview": "ui-overview.v1.schema.json",
     "ui_clear_plan": "ui-clear-plan.v1.schema.json",
     "ui_clear_result": "ui-clear-result.v1.schema.json",
