@@ -13,7 +13,9 @@ import {changesetDesk} from './changeset-desk.js';
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
   summaryURL(revision=null){const q=new URLSearchParams();if(revision)q.set('revision',revision);if(this.health.ui_capabilities?.includes('result_reading.v1'))q.set('personal','1');return '/api/view/summary'+(q.size?'?'+q:'');}
-  readingQuery(etag=this.summary?.reading_etag){return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
+  // Bind lists to the supplied projection. A fallback summary without an etag
+  // must not inherit the previous work surface's personal-reading snapshot.
+  readingQuery(summary=this.summary){const etag=summary?.reading_etag;return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
   async start() {
     const [info, summary, state] = await Promise.all([get('/api/project'), get(this.summaryURL()), get('/api/ui-state')]);
     this.info = info; this.latest = summary; this.returnTo = state.record?.position;
@@ -74,7 +76,7 @@ export class Project {
       if (summary.project_id !== this.info.project_id) throw new Error('服务中的项目与当前窗口不一致，未替换已读内容。');
       const q = revisionQuery(summary.revision_id);
       let data = {};
-      if (route.action_id) data = await get('/api/actions/' + encodeURIComponent(route.action_id) + '/targets' + q + this.readingQuery(summary.reading_etag));
+      if (route.action_id) data = await get('/api/actions/' + encodeURIComponent(route.action_id) + '/targets' + q + this.readingQuery(summary));
       else if (route.surface === 'overview' && this.health.ui_capabilities?.includes('ui_overview.v1')) {
         try { data = {overview:await get('/api/overview' + q)}; }
         catch (error) { data = {overview:{error}}; }
@@ -97,7 +99,7 @@ export class Project {
         }
       } else if (route.surface === 'runs') {
         const modern = this.health.ui_capabilities?.includes('run_desk.v1');
-        const [tasks, history, detail] = await Promise.all([get('/api/tasks' + q + (modern ? '&limit=30'+this.readingQuery(summary.reading_etag) : '')), get('/api/history'),
+        const [tasks, history, detail] = await Promise.all([get('/api/tasks' + q + (modern ? '&limit=30'+this.readingQuery(summary) : '')), get('/api/history'),
           modern && route.task_id ? get('/api/tasks/' + encodeURIComponent(route.task_id) + q) : Promise.resolve(null)]);
         data = {tasks: tasks.tasks, runPage: modern ? tasks : null, runDetail: detail, history};
         if (route.task_id && !(detail || tasks.tasks.some(task => task.task_id === route.task_id))) throw new Error('此版本没有链接中的任务。请检查任务与版本，未跳到其它任务。');

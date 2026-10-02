@@ -91,14 +91,14 @@ def test_legacy_reading_import_is_explicit_and_verifies_saved_results(store,dama
     assert imported['verified_count']==1 and imported['reading']['seen']==[result_reading.key(task)]
     assert ui_journal.get(project,draft['draft_id'])['record']==saved['record']
 
-@pytest.mark.parametrize('damage',['invalid','foreign'])
+@pytest.mark.parametrize('damage',['invalid','foreign','empty'])
 def test_damaged_reading_keeps_business_summary_and_file(store,damage):
     import json
     from deck_master.web import WorkbenchServer
     from test_web import _get_json
     record=result_reading.get(store.project_root)
     path=store.deck_root/'workbench/result-reading.json';path.parent.mkdir(parents=True,exist_ok=True)
-    content='invalid json' if damage=='invalid' else json.dumps({**record,'project_identity':'0'*64})
+    content={'invalid':'invalid json','empty':'{}','foreign':json.dumps({**record,'project_identity':'0'*64})}[damage]
     path.write_text(content)
     before=store.load_document();server=WorkbenchServer(store.project_root);url=server.start().rstrip('/')
     try:
@@ -111,6 +111,21 @@ def test_damaged_reading_keeps_business_summary_and_file(store,damage):
         assert _get_json(url+'/api/result-reading')[0]==422
         assert path.read_text()==content and store.load_document()==before
     finally:server.stop()
+
+
+def test_empty_reading_is_preserved_by_mark_and_personal_clear(store):
+    from deck_master.models import ModelError
+    project=store.project_root;doc=store.load_document();reading=result_reading.get(project)
+    task=store.read_object_json(doc['tasks'][0]);path=store.deck_root/'workbench/result-reading.json'
+    path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}')
+    with pytest.raises(ModelError):
+        result_reading.mark(project,project_identity=reading['project_identity'],revision=doc['revision_id'],
+            task_id=task['task_id'],result_key=result_reading.key(task),expected_etag=reading['etag'])
+    plan=clear_plan(project)
+    assert any('result_reading' in item for item in plan['kept_out'])
+    assert not any(item['kind']=='result_reading' for item in plan['items'])
+    clear_commit(project,plan)
+    assert path.read_text()=='{}' and store.load_document()==doc
 
 
 def test_clear_conflicts_when_new_receipt_arrives_after_empty_plan(store):

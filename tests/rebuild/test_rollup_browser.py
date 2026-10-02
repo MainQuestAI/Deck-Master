@@ -1,6 +1,6 @@
 """PR96 browser regressions against real loopback project state."""
 import copy
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import pytest
 
@@ -162,3 +162,45 @@ def test_damaged_preview_busy_polls_without_automatic_retry(icon_browser):
     assert requests.count('POST') == 1
     assert state.read_bytes() == b'{broken preview state'
     assert not (state.parent / 'candidate.pptx').exists()
+
+
+@pytest.mark.parametrize('destination', ['runs', 'action'])
+def test_damaged_reading_after_loaded_summary_does_not_reuse_old_etag(action_browser, destination):
+    from playwright.sync_api import expect
+    page, server, _, store = action_browser
+    tasks = _reading_tasks(store)
+    saved = _mark_read(store, tasks[0])
+    before = store.load_document()
+    page.goto(server.start())
+    page.get_by_role('button', name='整稿画廊', exact=True).click()
+    page.get_by_role('heading', name='整稿画廊', exact=True).wait_for()
+    # Keep a healthy fixed summary in this mounted work surface; a later
+    # navigation must bind its own newly-read projection, including fallback.
+    healthy = page.request.get(server.start().rstrip('/') + '/api/view/summary?personal=1').json()
+    assert healthy['reading_etag'] == saved['etag']
+    damaged = store.deck_root / 'workbench/result-reading.json'
+    damaged.write_bytes(b'{broken previously healthy reading')
+    fallback = page.request.get(server.start().rstrip('/') + '/api/view/summary?personal=1').json()
+    assert fallback['reading_unavailable'] is True and 'reading_etag' not in fallback
+    requests = []
+    page.on('request', lambda request: requests.append((request.method, request.url)))
+    if destination == 'runs':
+        page.get_by_role('button', name='任务与交付', exact=True).click()
+        page.get_by_role('heading', name='运行记录', exact=True).wait_for(timeout=5000)
+        page.locator('.run-task[data-task-id="poll-0"]').get_by_role('button', name='查看这项任务', exact=True).click()
+    else:
+        action = next(action for action in fallback['next_actions']['actions'] if action['kind'] == 'review_results')
+        page.evaluate('''action => {
+          const route = new URLSearchParams(location.hash.slice(1));
+          route.set('surface', 'overview'); route.set('action', action);
+          location.hash = route.toString();
+        }''', action['action_id'])
+        page.get_by_role('heading', name='待办对象', exact=True).wait_for(timeout=5000)
+        expect(page.locator('.action-target')).to_have_count(3)
+        page.locator('.action-target').filter(has_text='poll-0').get_by_role('button', name='查看这个对象', exact=True).click()
+    expect(page.get_by_text('个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='标记这些结果已读', exact=True)).to_be_disabled()
+    projections = [url for method, url in requests if '/api/tasks?' in url or '/targets?' in url]
+    assert projections and all('reading_etag' not in parse_qs(urlparse(url).query) for url in projections)
+    assert not any(method == 'POST' and '/api/result-reading' in url for method, url in requests)
+    assert damaged.read_bytes() == b'{broken previously healthy reading' and store.load_document() == before

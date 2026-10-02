@@ -23,7 +23,8 @@ def _empty(doc,identity):
 
 
 def _read(store,doc,identity):
-    record=read_json(_file(store)) or _empty(doc,identity)
+    record=read_json(_file(store))
+    if record is None:record=_empty(doc,identity)
     validate_schema('result_reading',record)
     if record['project_id']!=doc['project_id'] or record['project_identity']!=identity:
         raise LocalStateError('project_identity','result reading record belongs to another project')
