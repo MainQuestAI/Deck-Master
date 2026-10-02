@@ -8,13 +8,14 @@ Synthetic background transitions use existing reserved fixture tasks only.
 import argparse
 import json
 import platform
+import re
 import statistics
 import subprocess
 import time
 from pathlib import Path
 from urllib.parse import urlencode
 from playwright.sync_api import sync_playwright, expect
-from deck_master import service, tasks, ui_journal
+from deck_master import service, ui_journal
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 
@@ -41,7 +42,11 @@ def main():
     assert manifest['factory'] == 'w01-pressure.v1' and manifest['candidate_count'] == 1500 and manifest['attempt_count'] == 4500
     args.out.mkdir(parents=True, exist_ok=False); project = args.fixture / 'project'; store = Store(project)
     info = ui_journal.project_info(project); doc = store.load_document()
-    available = [tid for tid in manifest['background_task_ids'] if tasks._lookup_task(doc, tid, store)['status'] == 'awaiting_host']
+    # Inspect the same snapshot once; looking up each of 150 reserved tasks
+    # separately otherwise scans and parses the 1,650-record graph 150 times.
+    task_status = {task['task_id']: task['status'] for ref in doc['tasks'] if (task := store.read_object_json(ref))}
+    assert all(tid in task_status for tid in manifest['background_task_ids'])
+    available = [tid for tid in manifest['background_task_ids'] if task_status[tid] == 'awaiting_host']
     assert available, 'No remaining background fixture tasks; preserve this manifest and explicitly replenish via factory before running.'
     pending = None; updates = []; rows = []; errors = []; posts = []; request_counts = {}; recent = []
     duration = 60 if args.smoke else 1200; server = WorkbenchServer(project)
@@ -59,7 +64,7 @@ def main():
                         key = request.url.split('/api/')[1].split('?')[0]
                         request_counts[key] = request_counts.get(key, 0) + 1
                 page.on('request', requested); page.goto(url)
-                wait_dom(page, '.gallery-card')
+                wait_dom(page, '.slide-tile')
                 cdp = context.new_cdp_session(page); cdp.send('Performance.enable')
                 start = time.monotonic(); step = 0
                 def gallery():
@@ -72,14 +77,14 @@ def main():
                         gallery()
                         page.locator('.gallery-viewport').evaluate('(node, fraction)=>node.scrollTop=(node.scrollHeight-node.clientHeight)*fraction', ((step // 6) % 10) / 10)
                     elif phase == 1:
-                        gallery(); page.get_by_role('navigation', name='画廊图层').get_by_role('button', name='SVG', exact=True).click()
-                        expect(page.get_by_role('navigation', name='画廊图层').get_by_role('button', name='SVG', exact=True)).to_have_attribute('aria-pressed', 'true')
+                        gallery(); page.get_by_role('group', name='画廊图层').get_by_role('button', name=re.compile(r'^SVG ')).click()
+                        expect(page.get_by_role('group', name='画廊图层').get_by_role('button', name=re.compile(r'^SVG '))).to_have_attribute('aria-pressed', 'true')
                     elif phase == 2:
-                        page.locator('.gallery-open').first.click(); wait_dom(page, '.page-reading')
+                        page.locator('.slide-cover').first.click(); wait_dom(page, '.page-reading')
                         if page.get_by_role('combobox', name='阅读缩放').count(): page.get_by_role('combobox', name='阅读缩放').select_option('1.25')
                     elif phase == 3:
-                        gallery(); page.get_by_role('navigation', name='画廊图层').get_by_role('button', name='原图', exact=True).click()
-                        expect(page.get_by_role('navigation', name='画廊图层').get_by_role('button', name='原图', exact=True)).to_have_attribute('aria-pressed', 'true')
+                        gallery(); page.get_by_role('group', name='画廊图层').get_by_role('button', name=re.compile(r'^原图 ')).click()
+                        expect(page.get_by_role('group', name='画廊图层').get_by_role('button', name=re.compile(r'^原图 '))).to_have_attribute('aria-pressed', 'true')
                     elif phase == 4:
                         page.get_by_role('button', name='任务与交付', exact=True).click()
                         wait_dom(page, '.candidate-batch-row'); page.locator('.candidate-batch-row').first.get_by_role('button', name='比较这个候选').click()
@@ -98,7 +103,7 @@ def main():
                     pool = page.evaluate('async () => (await import("/v2/images.js")).imagePool.snapshot()')
                     row = {'elapsed_s': time.monotonic() - start, 'phase': phase, 'heap_used': metrics['JSHeapUsedSize'], 'heap_total': metrics['JSHeapTotalSize'],
                            'nodes': metrics['Nodes'], 'documents': metrics['Documents'], 'pool': pool,
-                           'gallery_dom': page.locator('.gallery-card').count(), 'run_dom': page.locator('.run-task').count(), 'candidate_dom': page.locator('.candidate-batch-row').count()}
+                           'gallery_dom': page.locator('.slide-tile').count(), 'run_dom': page.locator('.run-task').count(), 'candidate_dom': page.locator('.candidate-batch-row').count()}
                     rows.append(row)
                     with (args.out / 'samples.jsonl').open('a') as stream: stream.write(json.dumps(row) + '\n')
                     if step % 6 == 0: print(json.dumps({'elapsed_s': round(row['elapsed_s'], 1), 'heap_mb': round(row['heap_used'] / 1048576, 2), 'updates': len(updates)}), flush=True)

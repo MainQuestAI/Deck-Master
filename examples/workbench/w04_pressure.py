@@ -25,7 +25,7 @@ def ready(page):
  predicate='''() => {
  const port=document.querySelector('.gallery-viewport');if(!port)return false;
  const rect=port.getBoundingClientRect();const inside=node=>{const r=node.getBoundingClientRect();return r.bottom>rect.top&&r.top<Math.min(innerHeight,rect.bottom);};
- return [...port.querySelectorAll('.gallery-card')].some(inside)&&[...port.querySelectorAll('.pooled-image')].filter(inside).every(n=>n.dataset.imageState==='ready');
+ return [...port.querySelectorAll('.slide-tile')].some(inside)&&[...port.querySelectorAll('.pooled-image')].filter(inside).every(n=>n.dataset.imageState==='ready');
  }'''
  deadline=time.monotonic()+30
  while time.monotonic()<deadline:
@@ -43,10 +43,10 @@ try:
      state=saved['state'];state['selected_page_ids']=[];state['anchor']={'page_id':None,'offset':0};gallery_state.save(project,state=state,expected_etag=saved['etag'])
     ctx=browser.new_context(viewport={'width':width,'height':height});page=ctx.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
     t=time.perf_counter();page.goto(url);ready(page)
-    page.locator('.gallery-card[data-page-id="p01"]').get_by_role('checkbox').check()
-    expect(page.locator('.gallery-selection')).to_contain_text('已选 1 页')
+    page.locator('.slide-tile[data-page-id="p01"]').get_by_role('checkbox').check()
+    expect(page.locator('.gallery-legend')).to_contain_text('已选 1 页')
     seconds=time.perf_counter()-t
-    row={'viewport':[width,height],'sample':sample,'seconds':seconds,'pass':seconds<=2,'cards':page.locator('.gallery-card').count(),'pool':page.evaluate('async()=>(await import("/v2/images.js")).imagePool.snapshot()')};rows.append(row);print(json.dumps(row),flush=True)
+    row={'viewport':[width,height],'sample':sample,'seconds':seconds,'pass':seconds<=2,'cards':page.locator('.slide-tile').count(),'pool':page.evaluate('async()=>(await import("/v2/images.js")).imagePool.snapshot()')};rows.append(row);print(json.dumps(row),flush=True)
     if sample==0:page.screenshot(path=str(out/f'gallery-{width}.png'),full_page=True)
     expect(page.get_by_text('画廊选择已保存',exact=True)).to_be_visible();ctx.close()
   (out/'checks.json').write_text(json.dumps({'browser':browser.version,'project_id':doc['project_id'],'revision_id':doc['revision_id'],'synthetic':True,'timings':rows,'errors':errors,'fixture_manifest':manifest['factory'],'environment':{'os':platform.platform(),'python':platform.python_version(),'source_commit':args.source_commit or subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()}},indent=2)+'\n')
