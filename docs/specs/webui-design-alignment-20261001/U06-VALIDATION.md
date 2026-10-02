@@ -23,7 +23,7 @@
 | 最终安装包浏览器及完整 CLI/HTTP/导出 | 通过；最终隔离安装包 30 浏览器、0 skip，24 步完整 CLI/HTTP/真实装配、恢复与三用途离线固定下载均通过 |
 | 300×5×3 summary | 未通过；同包 100 次正式样本，p50 581.47 ms / p95 835.42 ms / p99 993.87 ms，16 次实际后台领取/取消；250 ms 门未改，退出 1 |
 | 六次暖首屏 | 通过；最终包六次实测全部小于 2 s，计时截止可见图像读取与首张选择反馈；随后单独确认保存 ACK，不计入首屏用时；详见 warm-checks |
-| 20 分钟正式长跑 | 修复后的同包正式长跑进行中；中止的旧候选采样和 60 秒预检均不计为正式通过 |
+| 20 分钟正式长跑 | 通过；1200.002 s，中段/末段各 30 样本，末段 median heap 增幅 1.90%，上限 20%；图像并发/解码/缓存全部在 6/2/60/4 上限内，前端错误 0；仅 gallery/ui-state POST，60 次实际后台领取/取消，未调用模型或采用候选 |
 | 隔离完整版本回退 | 通过；22fc972 旧版→本候选→停止服务→回退旧版真实读取→恢复候选，109 个不可变对象、4 个候选和业务指针不变；Host 注册关闭 |
 
 压力数据是明确合成的 `w01-pressure.v1`、seed 20260930：300 页、1500 候选、4500 Attempt。原始 manifest SHA-256 `0bf7f6c8584c1790eb4516d23c57d34e8cad1606b5e75ecc2f10f03ae3b56302`，工厂 revision `df7cf8f1e30748d88eb5afeb8b8b7e00`。每次在新副本上复测，保留原始 manifest 与 20113 个内容寻址对象，不在失败样本里重新生成候选/尝试或补齐任务状态。零模型调用，不是实际 Host 或专业质量证据。
@@ -31,6 +31,10 @@
 [包与环境](evidence/u06/release-proof.json) · [单元](evidence/u06/unit.log) · [浏览器](evidence/u06/browser.log) · [真实渲染](evidence/u06/render.log) · [安装验收](evidence/u06/installed-checks.json) · [三用途下载](evidence/u06/offline-checks.json) · [100 次原始采样](evidence/u06/summary-measurements.json) · [速度失败](evidence/u06/summary-failure.log) · [六次首屏](evidence/u06/warm-checks.json) · [回退](evidence/u06/rollback-checks.json) · [旧版拒绝未来 writer](evidence/u06/old-writer-guard.json)。
 
 旧版和本候选支持相同项目格式；未来 writer 的拒绝是显式合成负向检查，不冒称已验证某个尚未发布的新格式迁移。
+
+[完整 20 分钟结论](evidence/u06/long-checks.json) · [全部长跑采样](evidence/u06/long-samples.jsonl) · [最后窗口](evidence/u06/long-final-window.png) · [原始样本保留](evidence/u06/original-fixture-preserved.json)。先前中止的采样仅保留为中间过程，不能替代本候选的完整结论。
+
+PR90 保持草稿；功能复验与压力内存门通过不等于 250 ms 速度门通过，U06 继续未关闭。真实层和用户执行项也没有转成通过。
 
 ## 仍需完成的开发和外部验收
 

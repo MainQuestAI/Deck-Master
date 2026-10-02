@@ -1,0 +1,6 @@
+{
+  "manifest_sha256": "0bf7f6c8584c1790eb4516d23c57d34e8cad1606b5e75ecc2f10f03ae3b56302",
+  "original_revision": "df7cf8f1e30748d88eb5afeb8b8b7e00",
+  "original_manifest_and_pointer_unchanged": true,
+  "pressure_writes_scoped_to_new_checkpoint_copies": true
+}
