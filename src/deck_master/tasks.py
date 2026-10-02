@@ -1588,7 +1588,16 @@ def call_settle(
 def _replace_task_ref(document: dict, old_task: dict, new_ref: dict, store: Store) -> dict:
     """Return a Document copy whose tasks list swaps the old task ref for the new one."""
     old_path = None
-    for ref in document.get("tasks") or []:
+    refs = document.get("tasks") or []
+    # Most callers just read old_task from this content-addressed store.
+    # Resolve that exact object first instead of decoding every preceding task
+    # again. Still verify its bytes; noncanonical historical JSON retains the
+    # identity-based fallback below.
+    digest = sha256_bytes(canonical_json_bytes(old_task))
+    exact = next((ref for ref in refs if ref["sha256"] == digest), None)
+    if exact is not None and store.read_object_json(exact) == old_task:
+        old_path = exact["path"]
+    for ref in ([] if old_path is not None else refs):
         resolved = store.read_object_json(ref)
         if resolved.get("task_id") == old_task.get("task_id"):
             old_path = ref["path"]

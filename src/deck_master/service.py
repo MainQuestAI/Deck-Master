@@ -331,11 +331,12 @@ def open_compose_task(store: Store, document: dict, *, operation_id: str,
 
 def _pending_host_tasks(document: dict, store: Store, *, include_trials=True) -> list[dict]:
     pending = []
+    dispatch_documents = {}
     for ref in document.get("tasks") or []:
         task = store.read_object_json(ref)
         if (task.get("status") in ("awaiting_host", "running") and
                 (include_trials or task.get("stage_request", {}).get("mode") != "trial")):
-            pending.append(task_summary(store, document, task))
+            pending.append(task_summary(store, document, task, dispatch_documents=dispatch_documents))
     return pending
 
 
@@ -407,9 +408,18 @@ def _project_context(store: Store, document: dict, task: dict, dispatched: dict)
     return context
 
 
-def task_summary(store: Store, document: dict, task: dict) -> dict:
+def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents=None) -> dict:
     """The Host work order: identity, inputs, resolved design, method entrypoints."""
-    dispatched = _dispatch_snapshot(store, document, task)
+    revision = task.get("dispatch_revision")
+    if dispatch_documents is None:
+        dispatched = _dispatch_snapshot(store, document, task)
+    else:
+        # One response may contain many tasks from the same immutable dispatch
+        # snapshot. Read that snapshot once for this response, never across
+        # operations; current task/input freshness is still checked below.
+        if revision not in dispatch_documents:
+            dispatch_documents[revision] = _dispatch_snapshot(store, document, task)
+        dispatched = dispatch_documents[revision]
     methods = method_resources(task.get("kind") or "", intent=task.get("intent"))
     summary = {
         "task_id": task["task_id"],

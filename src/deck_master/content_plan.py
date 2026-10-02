@@ -113,7 +113,7 @@ def attach(document, ref):
         require_writer(document, "content-plan.v1")
 
 
-def projection(store, document, *, reader=None, page_id=None, summary=False):
+def projection(store, document, *, reader=None, page_id=None, summary=False, schema_validated=False):
     """A fixed snapshot projection; absent plans yield a labeled, unwritten TOC."""
     read = reader or store.read_object_json
     ref = document.get("content_plan")
@@ -140,7 +140,13 @@ def projection(store, document, *, reader=None, page_id=None, summary=False):
         return result
     try:
         plan = read(ref)
-        validate_schema("content_plan", plan)
+        # Snapshot read contexts already validate this immutable object against
+        # its schema after checking the bytes/signature. Other readers retain
+        # the full validation here.
+        if not schema_validated:
+            validate_schema("content_plan", plan)
+        if plan["schema_version"] != "content_plan.v1":
+            raise ValueError("not a content plan")
         if plan["project_id"] != document["project_id"]:
             raise ValueError("foreign content plan")
         linked = {p["page_id"]: p for p in plan["page_links"]}
