@@ -144,14 +144,14 @@ export function style(app) {
       let thumb;
       if (p.stages.blueprint.existence === 'recorded' && p.stages.blueprint.file) {
         thumb = el('div', {class:'style-target-thumb'}, el('span', {class:'muted'}, '原图预览'));
-        let view;
+        let view, retired = false;
         const observer = new IntersectionObserver(entries => {
-          if (disposed) return;
+          if (disposed || retired) return;
           if (entries[0].isIntersecting && !view) {
             view = imageView(app, p.stages.blueprint, '第 ' + (pages.indexOf(p)+1) + ' 页目标原图'); thumb.replaceChildren(view.node);
           } else if (!entries[0].isIntersecting && view) { view.dispose(); view = null; thumb.replaceChildren(el('span', {class:'muted'}, '原图预览')); }
         }, {rootMargin:'100px'});
-        observer.observe(thumb); targetViews.push({dispose() { observer.disconnect(); view?.dispose(); }});
+        observer.observe(thumb); targetViews.push({dispose() { retired = true; observer.disconnect(); view?.dispose(); }});
       } else thumb = el('div', {class:'style-missing-thumb muted'}, '未记录原图');
       return el('article', {class:'style-target-card'}, thumb, el('label', {class:'inline-control'}, check, label(p.page_id) + (p.page_id === fixed?.page_id ? ' · 固定参考，不作为试作目标' : '')));
     }));
