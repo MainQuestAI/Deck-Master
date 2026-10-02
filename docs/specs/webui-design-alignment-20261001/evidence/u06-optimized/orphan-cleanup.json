@@ -1,0 +1,6 @@
+{
+  "pid": 148437,
+  "pgid": 148433,
+  "reason": "Superseded pressure run remained CPU-active after prior SIGINT; no valid completion evidence",
+  "action": "SIGTERM confirmed process group only"
+}

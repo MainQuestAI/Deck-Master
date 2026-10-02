@@ -1,0 +1,44 @@
+{
+  "source_sha": "64f6063bab1469daea347777ad3c2b86be450d6f",
+  "page_count": 30,
+  "rounds": [
+    {
+      "round": 1,
+      "page_id": "p24",
+      "operation_id": "5408cdf7-6355-46ae-9b3d-e419604818b2",
+      "base_revision": "17ee88aac2e0498583c8dd9d62db45db",
+      "revision_id": "90d1910f9eeb46ba80c385d870631801",
+      "changed_pages": [
+        "p24"
+      ],
+      "unselected_29_pages_unchanged": true,
+      "original_object_unchanged": true,
+      "sources_and_tasks_unchanged": true,
+      "response_status": 200,
+      "receipt_status": "committed",
+      "reopened_body_matches": true,
+      "scope": "manual content edit through actual browser, not native image generation or candidate adoption"
+    },
+    {
+      "round": 2,
+      "page_id": "p26",
+      "operation_id": "27b5018f-d6ba-4db9-8cb8-166f45ddc6d1",
+      "base_revision": "90d1910f9eeb46ba80c385d870631801",
+      "revision_id": "a0897ceff6c04d618e3388fa0834c14a",
+      "changed_pages": [
+        "p26"
+      ],
+      "unselected_29_pages_unchanged": true,
+      "original_object_unchanged": true,
+      "sources_and_tasks_unchanged": true,
+      "response_status": 200,
+      "receipt_status": "committed",
+      "reopened_body_matches": true,
+      "scope": "manual content edit through actual browser, not native image generation or candidate adoption"
+    }
+  ],
+  "page_errors": [],
+  "native_host_rounds_completed": 0,
+  "native_model_calls": 0,
+  "full_U06_5_passed": false
+}

@@ -1,0 +1,452 @@
+{
+  "status": "verified",
+  "source_sha": "64f6063bab1469daea347777ad3c2b86be450d6f",
+  "wheel_sha256": "a29d0d9c016f07786faa6d29e96edc68aa38de66bd79294439525ce2c773887d",
+  "module": "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "steps": [
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-m",
+        "pytest",
+        "-c",
+        "/workspace/scratch/u06-optimized-candidate/drivers/installed-pytest.ini",
+        "/workspace/scratch/u06-optimized-candidate/drivers/installed-ui-tests/test_action_targets_browser.py",
+        "/workspace/scratch/u06-optimized-candidate/drivers/installed-ui-tests/test_batch_actions_browser.py",
+        "/workspace/scratch/u06-optimized-candidate/drivers/installed-ui-tests/test_overview_preferences_browser.py",
+        "/workspace/scratch/u06-optimized-candidate/drivers/installed-ui-tests/test_style_content_browser.py",
+        "/workspace/scratch/u06-optimized-candidate/drivers/installed-ui-tests/test_ui_design_browser.py",
+        "/workspace/scratch/u06-optimized-candidate/drivers/installed-ui-tests/test_work_surface_browser.py",
+        "-m",
+        "browser",
+        "--require-browser",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 90.486,
+      "log": "installed-current-browser.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "/workspace/scratch/u06-optimized-candidate/drivers/verification-tests/test_candidates.py",
+        "-k",
+        "explicit_assembly_uses_real_pipeline"
+      ],
+      "exit_code": 0,
+      "seconds": 2.317,
+      "log": "installed-assembly.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w02_content_plan.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w02_content_plan"
+      ],
+      "exit_code": 0,
+      "seconds": 0.69,
+      "log": "w02_content_plan.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w02_recovery.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w02_recovery"
+      ],
+      "exit_code": 0,
+      "seconds": 0.271,
+      "log": "w02_recovery.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w03_first_run.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w03_first_run"
+      ],
+      "exit_code": 0,
+      "seconds": 1.054,
+      "log": "w03_first_run.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w06_change_handoff.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w06_change_handoff",
+        "--chromium-executable",
+        "/usr/bin/chromium"
+      ],
+      "exit_code": 0,
+      "seconds": 3.314,
+      "log": "w06_change_handoff.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w10_recovery.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w10_recovery"
+      ],
+      "exit_code": 0,
+      "seconds": 1.23,
+      "log": "w10_recovery.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w09_content_inputs.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w09_content_inputs"
+      ],
+      "exit_code": 0,
+      "seconds": 1.145,
+      "log": "w09_content_inputs.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w03_browser.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w03_browser",
+        "--chromium-executable",
+        "/usr/bin/chromium"
+      ],
+      "exit_code": 0,
+      "seconds": 19.025,
+      "log": "w03_browser.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w07_candidates_browser.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w07_candidates_browser",
+        "--chromium-executable",
+        "/usr/bin/chromium"
+      ],
+      "exit_code": 0,
+      "seconds": 6.501,
+      "log": "w07_candidates_browser.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w09_browser.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w09_browser",
+        "--chromium-executable",
+        "/usr/bin/chromium"
+      ],
+      "exit_code": 0,
+      "seconds": 5.244,
+      "log": "w09_browser.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w10_browser_recovery.py",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/w10_browser_recovery",
+        "--chromium-executable",
+        "/usr/bin/chromium"
+      ],
+      "exit_code": 0,
+      "seconds": 6.827,
+      "log": "w10_browser_recovery.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "/workspace/scratch/u06-optimized-candidate/drivers/w12_offline_browser.py",
+        "--require-installed",
+        "--font",
+        "DejaVu Sans",
+        "--chromium-executable",
+        "/usr/bin/chromium",
+        "--out",
+        "/workspace/scratch/u06-optimized-installed-verification/offline"
+      ],
+      "exit_code": 0,
+      "seconds": 4.113,
+      "log": "offline.log"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "requests",
+        "freeze",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.091,
+      "log": "help-requests-freeze.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "changes",
+        "plan",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.093,
+      "log": "help-changes-plan.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "changes",
+        "commit",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.098,
+      "log": "help-changes-commit.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "candidates",
+        "adopt",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.099,
+      "log": "help-candidates-adopt.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "stages",
+        "assemble",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.095,
+      "log": "help-stages-assemble.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "content",
+        "plan",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.09,
+      "log": "help-content-plan.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "inputs",
+        "update",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.092,
+      "log": "help-inputs-update.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "history",
+        "plan-restore",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.101,
+      "log": "help-history-plan-restore.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "history",
+        "commit-restore",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.093,
+      "log": "help-history-commit-restore.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "export",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.102,
+      "log": "help-export.txt"
+    },
+    {
+      "command": [
+        "/tmp/deck-master-u06-install/.deck-master/releases/64f6063bab14-a29d0d9c016f/venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "rollback",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.106,
+      "log": "help-install-rollback.txt"
+    }
+  ],
+  "projects": [
+    {
+      "project": "w03_first_run/project",
+      "revision": "7c0ed85e31cf4d88b1a06219070b087f",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w09_content_inputs/synthetic-project",
+      "revision": "c17388d4f90149b89d48a2c64de85f87",
+      "compatibility": {
+        "minimum_writer": "content-ops.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w10_recovery/synthetic-project",
+      "revision": "15b79c9badff4799834d9faee7da625e",
+      "compatibility": {
+        "minimum_writer": "run-desk.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w10_recovery/awaiting-project",
+      "revision": "416335085fe64dcf88186912bfa07980",
+      "compatibility": null
+    },
+    {
+      "project": "w10_browser_recovery/synthetic-project",
+      "revision": "abe199ecb6a4451badc00e46dfaad872",
+      "compatibility": {
+        "minimum_writer": "run-desk.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w02_content_plan/synthetic-project",
+      "revision": "e8886b7ea0d0424383ba454ebaf28897",
+      "compatibility": {
+        "minimum_writer": "run-desk.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w03_browser/created",
+      "revision": "b557bb7aea964a8da0b60db65a209b27",
+      "compatibility": {
+        "minimum_writer": "content-ops.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w03_browser/two/project",
+      "revision": "d09677b876404ef88a083512e0633752",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w03_browser/one/project",
+      "revision": "96160d158c1b4c4fa04d30dbd129cfcd",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w09_browser/project",
+      "revision": "cb987bc4ee1a49c0beb7f58efb5658bc",
+      "compatibility": {
+        "minimum_writer": "content-ops.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "offline/synthetic-project",
+      "revision": "44e0a1faab70418d9e5135cf4b18a277",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "offline/synthetic-project/.deckmaster/workbench/exports/export-eacf234b-3e5e-42e7-b255-48194db86881/project",
+      "revision": "44e0a1faab70418d9e5135cf4b18a277",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w07_candidates_browser/synthetic-project",
+      "revision": "a1b559244d95479ea714a1067b2ba358",
+      "compatibility": {
+        "minimum_writer": "run-desk.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w06_change_handoff/synthetic-project",
+      "revision": "8c214940cf2b4e05a0c9878aa51dbc1b",
+      "compatibility": {
+        "minimum_writer": "changes.v1",
+        "project_format": "workbench.v3"
+      }
+    }
+  ],
+  "synthetic": true,
+  "model_calls": 0,
+  "real_host": "pending user project",
+  "user_understanding_seconds": null,
+  "manual_ppt_pages": null,
+  "host_wait_seconds": null
+}

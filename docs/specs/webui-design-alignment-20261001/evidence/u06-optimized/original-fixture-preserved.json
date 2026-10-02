@@ -1,0 +1,12 @@
+{
+  "manifest_sha256": "0bf7f6c8584c1790eb4516d23c57d34e8cad1606b5e75ecc2f10f03ae3b56302",
+  "original_current": {
+    "format": "deckmaster-current.v2",
+    "minimum_writer": "candidates.v1",
+    "revision_id": "df7cf8f1e30748d88eb5afeb8b8b7e00"
+  },
+  "original_unchanged": true,
+  "object_count": 20113,
+  "copy_validation": "checkpoint helper verified all content-addressed object hashes before each formal group",
+  "source_sha": "64f6063bab1469daea347777ad3c2b86be450d6f"
+}

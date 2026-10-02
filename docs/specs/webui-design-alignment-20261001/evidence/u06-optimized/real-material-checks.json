@@ -1,0 +1,85 @@
+{
+  "source_format": "html",
+  "original_sha256": "b35832921788c379c0499b73bc377b8c74090d2a1e46825d42de47d1f0a76b78",
+  "original_bytes": 495427,
+  "original_preserved": true,
+  "derived_text_sha256": "0158aa57031df7e4802086e0120135f3075d67171bd6ccab985489d62047ca6b",
+  "html_ingest": "not supported natively; explicitly derived UTF-8 text ingested",
+  "missing_assets": 1,
+  "page_count": 30,
+  "compose_accepted": true,
+  "ui_checks": [
+    {
+      "surface": "overview",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": false,
+      "content_present": true
+    },
+    {
+      "surface": "content",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": false,
+      "content_present": true
+    },
+    {
+      "surface": "overview",
+      "viewport": [
+        390,
+        844
+      ],
+      "overflow": false,
+      "content_present": true
+    },
+    {
+      "surface": "content",
+      "viewport": [
+        390,
+        844
+      ],
+      "overflow": false,
+      "content_present": true
+    }
+  ],
+  "page_errors": [],
+  "read_only_ui_business_pointer_unchanged": true,
+  "review_export": "text-only incomplete review package; not delivery",
+  "native_runtime_event_root_exists": false,
+  "native_host_rounds_completed": 0,
+  "native_model_calls": 0,
+  "full_U06_5_passed": false,
+  "actual_HOME_migration": "not_evaluated",
+  "macOS_picker": "not_evaluated",
+  "human_30_second_observation": "not_evaluated",
+  "private_project_committed": false,
+  "manual_browser_content_rounds_completed": 2,
+  "manual_rounds_scope": "two actual source-based editorial updates; not native Host image-generation acceptance",
+  "user_material_selection": "User uploaded a report and explicitly selected it for real acceptance",
+  "core_facts": {
+    "current_revision": "a0897ceff6c04d618e3388fa0834c14a",
+    "page_count": 30,
+    "task_statuses": {
+      "completed": 1,
+      "awaiting_host": 1
+    },
+    "call_states": {
+      "reserved": 1
+    },
+    "generation_requests": 0,
+    "generation_attempts": 0,
+    "candidate_count": 0,
+    "review_count": 0
+  },
+  "engineering_restore_check": {
+    "page_count": 30,
+    "page_objects_readable": 30,
+    "embedded_source_originals_readable": true,
+    "pointer_unchanged": true,
+    "scope": "isolated local restore; not actual Desktop/HOME migration"
+  }
+}
