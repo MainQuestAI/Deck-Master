@@ -10,7 +10,7 @@
         800
       ],
       "sample": 0,
-      "seconds": 1.3103543679972063,
+      "seconds": 1.4203838050016202,
       "pass": true,
       "cards": 6,
       "pool": {
@@ -35,14 +35,14 @@
         800
       ],
       "sample": 1,
-      "seconds": 1.2316366890008794,
+      "seconds": 1.2783265420002863,
       "pass": true,
       "cards": 6,
       "pool": {
         "network": 0,
         "network_peak": 6,
         "decode": 0,
-        "decode_peak": 1,
+        "decode_peak": 2,
         "thumbnails": 5,
         "large": 0,
         "thumbnails_peak": 5,
@@ -60,14 +60,14 @@
         800
       ],
       "sample": 2,
-      "seconds": 1.2673671889933757,
+      "seconds": 1.2988710690042353,
       "pass": true,
       "cards": 6,
       "pool": {
         "network": 0,
         "network_peak": 6,
         "decode": 0,
-        "decode_peak": 2,
+        "decode_peak": 1,
         "thumbnails": 5,
         "large": 0,
         "thumbnails_peak": 5,
@@ -85,14 +85,14 @@
         900
       ],
       "sample": 0,
-      "seconds": 1.1776354920002632,
+      "seconds": 1.3313481610020972,
       "pass": true,
       "cards": 6,
       "pool": {
         "network": 0,
         "network_peak": 6,
         "decode": 0,
-        "decode_peak": 1,
+        "decode_peak": 2,
         "thumbnails": 5,
         "large": 0,
         "thumbnails_peak": 5,
@@ -110,7 +110,7 @@
         900
       ],
       "sample": 1,
-      "seconds": 1.1726510709995637,
+      "seconds": 1.2556458199978806,
       "pass": true,
       "cards": 6,
       "pool": {
@@ -135,14 +135,14 @@
         900
       ],
       "sample": 2,
-      "seconds": 1.3084470640023937,
+      "seconds": 1.2360271540019312,
       "pass": true,
       "cards": 6,
       "pool": {
         "network": 0,
         "network_peak": 6,
         "decode": 0,
-        "decode_peak": 1,
+        "decode_peak": 2,
         "thumbnails": 5,
         "large": 0,
         "thumbnails_peak": 5,
@@ -160,6 +160,6 @@
   "environment": {
     "os": "Linux-6.18.44-x86_64-with-glibc2.41",
     "python": "3.12.14",
-    "source_commit": "26703edcbe43819865752ecf0156eebafc4b170f"
+    "source_commit": "3a6d41be553b61cde314c7532a9618cf7c6af6bb"
   }
 }

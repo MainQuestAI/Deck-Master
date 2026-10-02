@@ -1,0 +1,7 @@
+{
+  "source_sha": "26703edcbe43819865752ecf0156eebafc4b170f",
+  "qualifying": false,
+  "samples": 78,
+  "last_elapsed_s": 773.4940131469994,
+  "reason": "Stopped explicitly after review found wrong record-kind projection; full final run restarted on 3a6d41b; raw prior samples retained in local scratch"
+}

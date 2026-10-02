@@ -11,20 +11,20 @@
   "downloads": [
     {
       "purpose": "review",
-      "revision": "cc4ee537d28e49c1a822d53111492ca4",
-      "sha256": "2ee036bed0c1006408d9c1cb4c7f4b4aeb8c45986fa128207fa8f5578e515853",
+      "revision": "10b275b1e760457e9f4a1fe0cdb95e04",
+      "sha256": "a97e9caa73bf48e4436e92443939b8c0634e72c7a980e84a17fad7842fd3549e",
       "files": 8
     },
     {
       "purpose": "delivery",
-      "revision": "cc4ee537d28e49c1a822d53111492ca4",
-      "sha256": "12ba946d3363175fe394bd2793c032bd037b35ca473d50a605ae3ac9617a6f91",
+      "revision": "10b275b1e760457e9f4a1fe0cdb95e04",
+      "sha256": "56d1f5ab42d097255e18cb9cefe62b4eb12d61e0502d05ac6d0c53db99751446",
       "files": 8
     },
     {
       "purpose": "engineering",
-      "revision": "cc4ee537d28e49c1a822d53111492ca4",
-      "sha256": "28896a2f004e8388828f984a7c674e0e3b97b95374e8f654a78e475ba04d1eb1",
+      "revision": "10b275b1e760457e9f4a1fe0cdb95e04",
+      "sha256": "974eb3d0e2729548c0492fd45c5f380b369b28b9182f48ea483dfb0bfa301003",
       "files": 29
     }
   ],
@@ -66,10 +66,6 @@
       "status": 200
     },
     {
-      "path": "/v2/api.js",
-      "status": 200
-    },
-    {
       "path": "/v2/dom.js",
       "status": 200
     },
@@ -78,11 +74,15 @@
       "status": 200
     },
     {
+      "path": "/v2/api.js",
+      "status": 200
+    },
+    {
       "path": "/v2/project.js",
       "status": 200
     },
     {
-      "path": "/v2/routes.js",
+      "path": "/v2/drafts.js",
       "status": 200
     },
     {
@@ -90,11 +90,11 @@
       "status": 200
     },
     {
-      "path": "/v2/views.js",
+      "path": "/v2/routes.js",
       "status": 200
     },
     {
-      "path": "/v2/gallery.js",
+      "path": "/v2/views.js",
       "status": 200
     },
     {
@@ -110,15 +110,15 @@
       "status": 200
     },
     {
-      "path": "/v2/drafts.js",
-      "status": 200
-    },
-    {
-      "path": "/v2/delivery-desk.js",
+      "path": "/v2/gallery.js",
       "status": 200
     },
     {
       "path": "/v2/run-desk.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/delivery-desk.js",
       "status": 200
     },
     {
@@ -142,19 +142,11 @@
       "status": 200
     },
     {
-      "path": "/v2/style-calibration.js",
-      "status": 200
-    },
-    {
-      "path": "/v2/images.js",
-      "status": 200
-    },
-    {
-      "path": "/v2/gallery-state.js",
-      "status": 200
-    },
-    {
       "path": "/v2/receipt-verdict.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/style-calibration.js",
       "status": 200
     },
     {
@@ -162,7 +154,7 @@
       "status": 200
     },
     {
-      "path": "/v2/production-view.js",
+      "path": "/v2/images.js",
       "status": 200
     },
     {
@@ -170,7 +162,19 @@
       "status": 200
     },
     {
+      "path": "/v2/gallery-state.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/production-view.js",
+      "status": 200
+    },
+    {
       "path": "/v2/text-diff.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/batch-actions.js",
       "status": 200
     },
     {
@@ -182,10 +186,6 @@
       "status": 200
     },
     {
-      "path": "/v2/batch-actions.js",
-      "status": 200
-    },
-    {
       "path": "/v2/content-edit.js",
       "status": 200
     },
@@ -194,11 +194,11 @@
       "status": 200
     },
     {
-      "path": "/v2/text-selection.js",
+      "path": "/v2/annotations.js",
       "status": 200
     },
     {
-      "path": "/v2/annotations.js",
+      "path": "/v2/text-selection.js",
       "status": 200
     },
     {
@@ -206,19 +206,19 @@
       "status": 200
     },
     {
-      "path": "/api/health",
-      "status": 200
-    },
-    {
       "path": "/v2/assets/deck-master-logo/favicon.svg",
       "status": 200
     },
     {
-      "path": "/api/ui-state",
+      "path": "/api/health",
       "status": 200
     },
     {
       "path": "/api/project",
+      "status": 200
+    },
+    {
+      "path": "/api/ui-state",
       "status": 200
     },
     {
@@ -230,11 +230,11 @@
       "status": 200
     },
     {
-      "path": "/api/project",
+      "path": "/api/view/summary",
       "status": 200
     },
     {
-      "path": "/api/view/summary",
+      "path": "/api/project",
       "status": 200
     },
     {
@@ -258,11 +258,11 @@
       "status": 200
     },
     {
-      "path": "/v2/assets/deck-master-logo/favicon.svg",
+      "path": "/api/session",
       "status": 200
     },
     {
-      "path": "/api/session",
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
       "status": 200
     },
     {
@@ -278,15 +278,15 @@
       "status": 200
     },
     {
-      "path": "/v2/assets/deck-master-logo/favicon.svg",
-      "status": 200
-    },
-    {
       "path": "/api/project",
       "status": 200
     },
     {
       "path": "/api/view/summary",
+      "status": 200
+    },
+    {
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
       "status": 200
     },
     {
@@ -306,19 +306,19 @@
       "status": 200
     },
     {
-      "path": "/api/ui-state",
-      "status": 200
-    },
-    {
       "path": "/v2/assets/deck-master-logo/favicon.svg",
       "status": 200
     },
     {
-      "path": "/api/candidates",
+      "path": "/api/ui-state",
       "status": 200
     },
     {
       "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/candidates",
       "status": 200
     },
     {
@@ -342,15 +342,11 @@
       "status": 200
     },
     {
-      "path": "/v2/workbench.css",
-      "status": 200
-    },
-    {
       "path": "/v2/style.css",
       "status": 200
     },
     {
-      "path": "/v2/app.js",
+      "path": "/v2/workbench.css",
       "status": 200
     },
     {
@@ -358,15 +354,19 @@
       "status": 200
     },
     {
+      "path": "/v2/app.js",
+      "status": 200
+    },
+    {
       "path": "/v2/api.js",
       "status": 200
     },
     {
-      "path": "/v2/launcher-ui.js",
+      "path": "/v2/dom.js",
       "status": 200
     },
     {
-      "path": "/v2/dom.js",
+      "path": "/v2/launcher-ui.js",
       "status": 200
     },
     {
@@ -382,15 +382,19 @@
       "status": 200
     },
     {
-      "path": "/v2/drafts.js",
-      "status": 200
-    },
-    {
       "path": "/v2/views.js",
       "status": 200
     },
     {
+      "path": "/v2/gallery.js",
+      "status": 200
+    },
+    {
       "path": "/v2/business-operations.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/drafts.js",
       "status": 200
     },
     {
@@ -399,10 +403,6 @@
     },
     {
       "path": "/v2/changeset-desk.js",
-      "status": 200
-    },
-    {
-      "path": "/v2/gallery.js",
       "status": 200
     },
     {
@@ -418,7 +418,7 @@
       "status": 200
     },
     {
-      "path": "/v2/change-handoff.js",
+      "path": "/v2/overview.js",
       "status": 200
     },
     {
@@ -426,15 +426,11 @@
       "status": 200
     },
     {
-      "path": "/v2/overview.js",
+      "path": "/v2/change-handoff.js",
       "status": 200
     },
     {
       "path": "/v2/page-workbench.js",
-      "status": 200
-    },
-    {
-      "path": "/v2/receipt-verdict.js",
       "status": 200
     },
     {
@@ -446,7 +442,19 @@
       "status": 200
     },
     {
+      "path": "/v2/gallery-state.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/receipt-verdict.js",
+      "status": 200
+    },
+    {
       "path": "/v2/page-text.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/production-view.js",
       "status": 200
     },
     {
@@ -458,19 +466,15 @@
       "status": 200
     },
     {
-      "path": "/v2/production-view.js",
-      "status": 200
-    },
-    {
       "path": "/v2/trial-actions.js",
       "status": 200
     },
     {
-      "path": "/v2/gallery-state.js",
+      "path": "/v2/content-edit.js",
       "status": 200
     },
     {
-      "path": "/v2/content-edit.js",
+      "path": "/v2/overview-state.js",
       "status": 200
     },
     {
@@ -482,15 +486,11 @@
       "status": 200
     },
     {
-      "path": "/v2/annotations.js",
-      "status": 200
-    },
-    {
-      "path": "/v2/overview-state.js",
-      "status": 200
-    },
-    {
       "path": "/v2/text-selection.js",
+      "status": 200
+    },
+    {
+      "path": "/v2/annotations.js",
       "status": 200
     },
     {
@@ -502,11 +502,11 @@
       "status": 200
     },
     {
-      "path": "/v2/assets/deck-master-logo/favicon.svg",
+      "path": "/api/project",
       "status": 200
     },
     {
-      "path": "/api/project",
+      "path": "/v2/assets/deck-master-logo/favicon.svg",
       "status": 200
     },
     {
@@ -542,6 +542,10 @@
       "status": 200
     },
     {
+      "path": "/api/thumbnails",
+      "status": 202
+    },
+    {
       "path": "/api/content-plan",
       "status": 200
     },
@@ -550,20 +554,24 @@
       "status": 200
     },
     {
-      "path": "/api/thumbnails",
-      "status": 202
-    },
-    {
       "path": "/v2/assets/deck-master-logo/favicon.svg",
       "status": 200
     },
     {
       "path": "/api/ui-state",
       "status": 200
+    },
+    {
+      "path": "/api/thumbnails",
+      "status": 200
+    },
+    {
+      "path": "/api/thumbnail-file",
+      "status": 200
     }
   ],
   "environment": {
-    "module": "/tmp/deck-master-u06-install/.deck-master/releases/26703edcbe43-b37975dc2816/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "module": "/tmp/deck-master-u06-install/.deck-master/releases/3a6d41be553b-0f7d8d484aa2/venv/lib/python3.12/site-packages/deck_master/__init__.py",
     "python": "3.12.14",
     "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
     "installed": true,
