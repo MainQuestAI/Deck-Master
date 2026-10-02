@@ -2,11 +2,14 @@ import {get, post, readableError, canonical, digest} from './api.js';
 import {el, button, modal, toast, downloadJSON, version} from './dom.js';
 import {layers} from './routes.js';
 
-let windowBufferId;
+// sessionStorage is copied by same-origin window.open. It is a recovery hint,
+// never ownership of a writable buffer. Every document gets a fresh identity.
+const windowBufferId = crypto.randomUUID();
+let previousWindowBufferId;
 try {
-  windowBufferId = sessionStorage.getItem('deck-master:v3:window') || crypto.randomUUID();
+  previousWindowBufferId = sessionStorage.getItem('deck-master:v3:window');
   sessionStorage.setItem('deck-master:v3:window', windowBufferId);
-} catch { windowBufferId = crypto.randomUUID(); }
+} catch { /* Local copies and downloadable recovery remain available. */ }
 
 // A personal recovery copy. No edit, task, call, or adoption endpoint is used.
 export class DraftEditor {
@@ -52,7 +55,8 @@ export class DraftEditor {
   async load() {
     let buffered;
     try {
-      const raw = localStorage.getItem(this.activeKey);
+      const raw = localStorage.getItem(this.activeKey) || (previousWindowBufferId &&
+        localStorage.getItem(`${this.bufferKey}:window:${previousWindowBufferId}`));
       buffered = raw ? JSON.parse(raw) : null;
       if (buffered && (buffered.draft?.project_identity !== this.info.project_identity ||
           canonical(buffered.draft?.target) !== canonical(this.target))) buffered = null;
@@ -62,6 +66,7 @@ export class DraftEditor {
       this.pendingSave = buffered.pendingSave || null;
       this.status = this.pendingSave ? 'unknown' : buffered.status === 'saved' ? 'saved' : 'dirty';
       this.input.value = this.draft.content.text || '';
+      this.persist(); // Claim a new writable copy; the inherited copy remains intact.
     }
     try {
       const result = await get('/api/drafts');

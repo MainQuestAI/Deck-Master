@@ -839,7 +839,8 @@ def _continue_project(project_dir: Path | str) -> dict:
         return _response(status='awaiting_host', document=document, requested_action='continue',
                          pending_tasks=[task_summary(store, document, task)],
                          findings=[page_check], next_action='codex_review_page_visual')
-    if not document['outputs'].get('pptx'):
+    from .pipeline import output_matches_current_svg
+    if not output_matches_current_svg(store, document):
         from .pipeline import produce, NeedsTool, RendererError
         from .compiler.svg import SvgError
         try:

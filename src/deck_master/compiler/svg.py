@@ -117,7 +117,7 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
         elif 'commands' in base:
             base['commands']=[{op:dict(zip(('x','y'),point(p['x'],p['y'])))} if op!='close' else command for command in base['commands'] for op,p in command.items()]
         return base
-    def visit(el, inherited, matrix=_IDENTITY):
+    def styled(el):
         tag = el.tag.split('}')[-1]
         el = copy.deepcopy(el)
         if el.get('style'):
@@ -129,6 +129,11 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 if key.strip() not in ('fill','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-miterlimit','opacity','fill-opacity','stroke-opacity','font-family','font-size','font-weight','letter-spacing','text-anchor'):
                     raise SvgError(f'{page_id}: unsupported style property {key}')
                 el.set(key.strip(),value.strip())
+        return el
+
+    def visit(el, inherited, matrix=_IDENTITY):
+        tag = el.tag.split('}')[-1]
+        el = styled(el)
         matrix=_matrix_product(matrix,_parse_transform(el.attrib.pop('transform',None),element_id=el.get('id',tag)))
         attrs = {**inherited, **el.attrib}
         identity = el.get('id', tag)
@@ -172,7 +177,22 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             # SVG group opacity multiplies ancestor opacity.
             if 'opacity' in el.attrib:
                 style['opacity']=str(float(inherited.get('opacity','1'))*float(el.attrib['opacity']))
+            opacity = float(style.get('opacity', '1'))
+            own_opacity = float(el.get('opacity', '1'))
+            if not math.isfinite(own_opacity) or not 0 <= own_opacity <= 1 or not math.isfinite(opacity) or not 0 <= opacity <= 1:
+                raise SvgError(f'{page_id}/{identity}: invalid group opacity')
+            before = len(shapes)
             for child in el: visit(child,style,matrix)
+            if 0 < opacity < 1:
+                # SVG composites the group first. Flattening alpha into multiple
+                # paints changes overlap colors, even fill+stroke on one object.
+                paints = sum(int(shape['kind'] != 'line' and shape['fill'] != 'none' and shape['fill_opacity'] > 0) +
+                             int(shape['stroke'] != 'none' and shape['stroke_width'] > 0 and shape['stroke_opacity'] > 0)
+                             for shape in shapes[before:] if shape['opacity'] > 0)
+                if paints > 1:
+                    raise SvgError(f'{page_id}/{identity}: group opacity requires a single paint operation; '
+                                   'redraw as explicit opaque geometry before compiling',
+                                   page_id=page_id, element_id=identity, feature='group_opacity')
             return
         def num(key, default=0):
             raw=attrs.get(key,str(default))
@@ -216,13 +236,18 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             if any(x.tag.split('}')[-1]!='tspan' for x in children):
                 raise SvgError(f'{page_id}/{identity}: only direct tspan in text')
             runs=[]
-            if el.text and el.text.strip(): runs.append((el.text,attrs))
+            if el.text and el.text.strip(): runs.append((el.text,{**attrs,'opacity':str(base['opacity'])}))
             cursor={**attrs}
             for child in children:
+                child = styled(child)
+                unknown = [key for key in child.attrib if key not in common | geometry['tspan'] and not key.startswith('data-')]
+                if unknown:
+                    raise SvgError(f'{page_id}/{identity}: unsupported tspan attribute {unknown[0]}')
                 if list(child): raise SvgError(f'{page_id}/{identity}: nested tspan unsupported')
                 if runs and not any(k in child.attrib for k in ('x','y','dy')):
                     raise SvgError(f'{page_id}/{identity}: inline tspan requires explicit x position')
                 c={**attrs,**child.attrib}
+                c['opacity']=str(base['opacity']*finite(child.get('opacity',1),'opacity'))
                 c['x']=child.attrib.get('x',cursor.get('x','0'))
                 baseline=child.attrib.get('y',cursor.get('y','0'))
                 c['y']=str(finite(baseline,'y')+finite(child.attrib.get('dy','0'),'dy'))
@@ -232,7 +257,13 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             if not any(text.strip() for text, _ in runs):
                 raise SvgError(f'{page_id}/{identity}: empty text has no editable content to deliver')
             for i,(text,a) in enumerate(runs):
-                shapes.append(transformed({**base,'id':f'{identity}:{i}','text':text,'x':finite(a.get('x',0),'x'), 'y':finite(a.get('y',0),'y'), 'font_size':finite(a.get('font-size',24),'font-size'), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':finite(a.get('letter-spacing',0),'letter-spacing'),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':gradient(a.get('fill',base['fill']),definitions,f'{page_id}/{identity}')},matrix))
+                run_paint = {key:finite(a.get(key.replace('_','-'),base[key]),key)
+                             for key in ('opacity','fill_opacity','stroke_opacity')}
+                if any(not 0 <= value <= 1 for value in run_paint.values()):
+                    raise SvgError(f'{page_id}/{identity}: invalid tspan opacity')
+                if a.get('stroke','none') != 'none':
+                    raise SvgError(f'{page_id}/{identity}: stroked text outside supported subset')
+                shapes.append(transformed({**base,**run_paint,'id':f'{identity}:{i}','text':text,'x':finite(a.get('x',0),'x'), 'y':finite(a.get('y',0),'y'), 'font_size':finite(a.get('font-size',24),'font-size'), 'font_family':a.get('font-family','Noto Sans SC').split(',')[0].strip(' \"\''), 'letter_spacing':finite(a.get('letter-spacing',0),'letter-spacing'),'bold':a.get('font-weight','400') in ('bold','600','700','800','900'),'anchor':a.get('text-anchor','start'),'fill':gradient(a.get('fill',base['fill']),definitions,f'{page_id}/{identity}')},matrix))
             return
         if tag=='tspan': raise SvgError(f'{page_id}/{identity}: orphan tspan')
         if tag=='rect':

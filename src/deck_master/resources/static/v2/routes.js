@@ -9,7 +9,7 @@ export function readRoute(info, position, summary) {
   }
   if (params.get('project') !== info.project_identity) throw new Error('这个链接属于另一个项目。请从项目列表打开原项目，当前内容未替换。');
   const route = {surface: params.get('surface') || (params.get('task') ? 'runs' : params.has('page') ? 'page' : 'overview'),
-    page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision'),
+    page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision') === 'null' ? null : params.get('revision'),
     candidate_id: params.get('candidate'), zoom: params.has('zoom') ? Number(params.get('zoom')) : 1, task_id: params.get('task'),
     action_id: params.get('action'), review_id: params.get('review')};
   if (['q','filter','sort'].some(key => params.has(key))) {
@@ -30,7 +30,8 @@ export function readRoute(info, position, summary) {
   return route;
 }
 export function routeHash(info, route) {
-  const params = new URLSearchParams({project: info.project_identity, surface: route.surface, layer: route.layer, revision: route.revision, zoom: route.zoom || 1});
+  const params = new URLSearchParams({project: info.project_identity, surface: route.surface, layer: route.layer, zoom: route.zoom || 1});
+  if (route.revision != null) params.set('revision', route.revision);
   if (route.page_id) params.set('page', route.page_id);
   if (route.candidate_id) params.set('candidate', route.candidate_id);
   if (route.task_id) params.set('task', route.task_id);

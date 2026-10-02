@@ -283,7 +283,7 @@ export function candidateBatch(app) {
   async function refresh() {
     if (disposed || polling || busy) return; polling = true;
     try {
-      const value = await get('/api/candidates'); if (disposed || busy) return;
+      const value = await get('/api/candidates' + (app.historical ? revisionQuery(app.route.revision) : '')); if (disposed || busy) return;
       records = value.candidates; revision = value.revision_id;
       if (currentPlan && currentPlan.base_revision !== revision) {
         currentPlan = null;

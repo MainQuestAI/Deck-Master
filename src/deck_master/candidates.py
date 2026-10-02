@@ -336,7 +336,9 @@ def _record_changeset_result(store, *, document, task, updated_task, envelope, c
     from .content import check_page
     from .content_ops import validate_host_result
     from .content_plan import ContentPlanError, validate_input as validate_plan_input
+    from .generation import check_host
     # Same validation head as a direct content_update adoption; nothing is applied.
+    check_host(task)
     _validate_content_update_request(envelope, document, task, content_update)
     validate_host_result(store, document, task, content_update, envelope.get('content_plan'))
     if content_basis(document) != content_basis(load_snapshot(store, task['dispatch_revision'])):
@@ -555,6 +557,12 @@ def _apply_page_selection(store, document, updated, selection, operation_id):
     entry['page'] = selection['result_ref']
     entry['svg'] = entry['svg_preview'] = entry['ppt_preview'] = None
     updated['outputs'] = {key: None for key in updated['outputs']}
+    superseded = set(_superseded_tasks(store, document, {selection['page_id']}))
+    for index, ref in enumerate(updated['tasks']):
+        task = store.read_object_json(ref)
+        if task['task_id'] in superseded:
+            updated['tasks'][index] = store.put_json_object(
+                {**task, 'status': 'superseded', 'updated_at': tasks._utc_now_iso()})
     refresh_plan_links(store, document, updated, operation_id)
 
 
@@ -648,14 +656,16 @@ def adopt(project, *, input, base_revision, operation_id):
                                     'revision_id': updated['revision_id']})
             else:
                 entry = next(e for e in updated['pages'] if e['page_id'] == item['page_id'])
-                entry[item['stage']] = item['result_ref']
-                entry['svg_preview'] = entry['ppt_preview'] = None
-                if item['stage'] == 'blueprint':
-                    entry['svg'] = None
+                if entry[item['stage']] != item['result_ref']:
+                    entry[item['stage']] = item['result_ref']
+                    entry['svg_preview'] = entry['ppt_preview'] = None
+                    updated['outputs'] = {key: None for key in updated['outputs']}
+                    if item['stage'] == 'blueprint':
+                        entry['svg'] = None
                 adoptions.append({key: item[key] for key in ('candidate_id', 'candidate_ref', 'page_id', 'stage', 'result_ref')}
                                  | {'revision_id': updated['revision_id']})
-        # content branches invalidate outputs themselves, only when the deck
-        # actually changed; a no-op adoption keeps exports usable
+        # Each selection invalidates outputs only when the deck actually
+        # changed; a no-op adoption keeps exports usable
         updated['candidate_adoptions'] = adoptions
         require_writer(updated, CONTENT_WRITER if content else WRITER)
         icon_checks = {}

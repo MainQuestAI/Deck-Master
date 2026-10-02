@@ -1,0 +1,38 @@
+# 深入质量审查修复 · Q01–Q14
+
+修复基线：main `88558b5bfc4fa1f7637e33e4f5a6392fa3f08377`。本轮覆盖 3 项 P1、11 项 P2；一个修复 PR，不增加项目格式、CLI 命令或 HTTP 路由。先运行失败反例，再修复和复核。原验收稿及历史检查记录不改写；合成测试不等于真实 Host 或客户验收。
+
+| ID | 修复内容 | 回归入口 |
+|---|---|---|
+| Q01 | 每个浏览器文档独立写缓冲；继承身份只作恢复提示，旧副本保留 | `test_deep_quality_browser.py::test_cloned_window_offline_drafts_both_survive` |
+| Q02 | 根据原生文字对象与 IR 验证完整内容项，拆分、透明、小字号不能被当成装饰 | `test_deep_quality_compiler.py::test_split_required_atom_is_not_decorative` |
+| Q03 | 采用实际变更时失效整稿；continue 验证输出 SVG 依赖，修复旧 writer 留下的陈旧输出 | `test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt` |
+| Q04 | 单页内容采用原子退役受影响活跃任务，无变化不退役 | `test_deep_quality_state.py::test_content_adoption_retires_only_obsolete_tasks` |
+| Q05 | 输入试作在接收候选、完成任务前验证 Host 协议与能力 | `test_deep_quality_state.py::test_input_trial_rejects_unclaimed_host_before_completion` |
+| Q06 | 图标计划绑定请求代次；取消选页、刷新后晚回包不能重新启用提交 | `test_deep_quality_browser.py::test_unselected_icon_page_cannot_be_dispatched_by_late_plan` |
+| Q07 | 当前版本路由不输出 null；兼容读旧 revision=null 链接 | `test_deep_quality_browser.py::test_handoff_navigation_opens_current_task` |
+| Q08 | 历史候选列表固定 revision | `test_deep_quality_browser.py::test_historical_candidate_list_never_acquires_future_candidate` |
+| Q09 | 计划阶段 409 不依赖业务 pending，保留草稿并展示恢复面板 | `test_deep_quality_browser.py::test_annotation_plan_conflict_keeps_draft_and_opens_recovery` |
+| Q10 | 清理计划失败恢复预览按钮，原面板可重试 | `test_deep_quality_browser.py::test_clear_plan_network_failure_allows_retry` |
+| Q11 | tspan 复用样式归一化，局部透明度及非法属性明确处理 | `test_deep_quality_compiler.py::test_tspan_style_and_local_opacity_reach_ir` |
+| Q12 | 颜色 alpha 与对象/填充/描边 alpha 相乘，包括文字和渐变 stop | `test_deep_quality_compiler.py::test_rgba_alpha_multiplies_in_native_fill_stroke_and_text` |
+| Q13 | 对不能保持语义的透明分组明确拒绝，保留 SVG，不栅格化 | `test_deep_quality_compiler.py::test_translucent_group_rejects_multiple_paint_operations` |
+| Q14 | 可选 Node 出口使用等比 contain 缩放和居中偏移 | `test_deep_quality_compiler.py::test_node_contain_transform_matches_canvas` |
+
+所有测试位于 `tests/rebuild/`。`test_deep_quality_render.py` 补充局部 SVG/真实 PPT 的像素、对象和检查结果。Node recording adapter 单元测试只证明坐标变换；实际 artifact-tool 编译与渲染另行验证，不以适配器替代真实出口。
+
+## 已确认的透明分组边界
+
+组透明度为 0/1 时保留原处理。介于 0/1 时只允许单一绘制操作安全下推；多对象或同一对象同时具有填充和描边被拒绝，包括几何上互不相交的多对象，避免依赖不完整的相交判断。错误返回页面、元素和 `group_opacity` feature，要求重绘为显式不透明几何。本轮不实现原生组合成，也不输出栅格替代图标。
+
+## 兼容与恢复
+
+- 原缓存可读取；新窗口只写新副本，不清除另一窗口内容。已经丢失的本机输入无法补回。
+- 非法 Host 结果不会先把任务标为 completed。旧版已经形成的不可采用候选保留；重新创建试作并正确执行 task start，不补造接手事实。
+- 旧版正文采用留下的 stale reconstruct，通过已有 task cancel 和 continue 重新派发；不得编辑项目对象或复活旧任务。
+- 同一采用请求重放保持幂等，批量单页冲突仍全批拒绝。新产物引用与任务退役在一次事务内发布。
+- 编译器和 pipeline 的文件摘要参与候选预览缓存身份；修复后重新生成检查。历史输出不批量重写，旧绿色报告不作为本轮验收证据。
+
+## 验收顺序
+
+F01 失败反例 → F02 三项 P1 → F03 状态/UI → F04 编译 → F05 核心、必需浏览器、真实渲染、wheel/sdist 隔离安装、300×5×3 压力与 20 分钟长跑、独立复审及当前 PR head CI。图像池网络/解码/缩略图/大图上限维持 6/2/60/4。

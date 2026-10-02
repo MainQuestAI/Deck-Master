@@ -35,7 +35,7 @@ def paint(parent, color, alpha):
     fill=OxmlElement('a:solidFill'); rgb=OxmlElement('a:srgbClr')
     rgba=ImageColor.getrgb(color)
     rgb.set('val',''.join(f'{v:02X}' for v in rgba[:3]))
-    opacity=OxmlElement('a:alpha');opacity.set('val',str(round(alpha*100000)))
+    opacity=OxmlElement('a:alpha');opacity.set('val',str(round(alpha*(rgba[3]/255 if len(rgba)==4 else 1)*100000)))
     rgb.append(opacity);fill.append(rgb);parent.append(fill)
 
 
