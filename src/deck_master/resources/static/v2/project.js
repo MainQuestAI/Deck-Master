@@ -73,6 +73,10 @@ export class Project {
       const q = revisionQuery(summary.revision_id);
       let data = {};
       if (route.action_id) data = await get('/api/actions/' + encodeURIComponent(route.action_id) + '/targets' + q);
+      else if (route.surface === 'overview' && this.health.ui_capabilities?.includes('ui_overview.v1')) {
+        try { data = {overview:await get('/api/overview' + q)}; }
+        catch (error) { data = {overview:{error}}; }
+      }
       else if (route.surface === 'page') data = await get('/api/pages/' + encodeURIComponent(route.page_id) + '/lineage' + q);
       else if (route.surface === 'content') {
         if (route.candidate_id) {
@@ -127,6 +131,7 @@ export class Project {
   }
   go(patch) {
     const route = {...this.route, ...patch};
+    if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== this.route.revision) route.overview_preferences = null;
     if (patch.surface && patch.surface !== 'runs') route.task_id = null;
     if (!('action_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.action_id = null;
     if (!('review_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.review_id = null;
@@ -135,7 +140,7 @@ export class Project {
     const hash = routeHash(this.info, route);
     if (location.hash === hash) this.loadRoute(route); else location.hash = hash;
   }
-  current() { this.loadRoute({...this.route, revision: null, task_id: null, action_id: null, review_id: null, candidate_id: null}); }
+  current() { this.loadRoute({...this.route, revision: null, overview_preferences: null, task_id: null, action_id: null, review_id: null, candidate_id: null}); }
   savePosition() {
     const saved = position(this.info, this.route);
     this.positionQueue = this.positionQueue.catch(() => {}).then(async () => {

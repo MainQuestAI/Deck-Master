@@ -34,7 +34,8 @@ def batch_browser(tmp_path):
         if not executable and not Path(runtime.chromium.executable_path).exists():
             pytest.skip('Chromium is required for batch interaction checks')
         browser = runtime.chromium.launch(executable_path=executable, args=['--no-sandbox'])
-        page = browser.new_page(viewport={'width': 1440, 'height': 900})
+        context = browser.new_context(viewport={'width': 1440, 'height': 900})
+        page = context.new_page()
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(server.start())
@@ -149,8 +150,12 @@ def test_changes_to_range_inputs_filter_version_and_late_preview_invalidate_plan
     pending = []
     def delay(route):
         pending.append((route, route.fetch()))
+        route.request.frame.evaluate("() => {document.documentElement.dataset.heldPlan = 'ready';}")
     page.route('**/api/changes/plan', delay)
     page.get_by_role('button', name='预览所选页试作', exact=True).click()
+    # Hold an actually dispatched response before changing the range. Without
+    # this barrier a slow runner can correctly invalidate before POST starts.
+    expect(page.locator('html')).to_have_attribute('data-held-plan', 'ready')
     # Completing the request after explicit range adjustment must not resurrect it.
     page.get_by_role('checkbox', name='选择第 02 页', exact=True).uncheck()
     assert pending

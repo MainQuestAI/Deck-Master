@@ -55,7 +55,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 
 # Server-side capability names (single source for /api/health and the
 # /api/project effective-action projection).
-UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
+UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
                    "restoration.v1", "workbench_actions.v1", "action_targets.v1")
@@ -143,7 +143,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             data=self._read_json_body()
             from .samples import sample_info
             sample = sample_info(self.store.project_root)
-            if sample and sample['readonly'] and self.path not in ('/api/ui-state', '/api/gallery', '/api/text-ranges/validate'):
+            if sample and sample['readonly'] and self.path not in ('/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/validate'):
                 self._send_json({'error': {'code': 'sample_readonly', 'message': 'this synthetic example is read-only; create your own project'}}, 403)
                 return
             # G54（B07 回填）：document 写族端点补与 FORMAT_GATED 投影一致的格式门。
@@ -168,6 +168,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 result = action(self.store.project_root, **data)
             elif self.path == '/api/gallery':
                 from .gallery_state import save
+                result = save(self.store.project_root, **data)
+            elif self.path == '/api/overview':
+                from .overview_state import save
                 result = save(self.store.project_root, **data)
             elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
                 from . import annotation_service, changes, candidates, stages, styles, content_ops
@@ -216,7 +219,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/content/', '/api/export', '/api/history/')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/content/', '/api/export', '/api/history/')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -325,13 +328,18 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_error(exc)
             return
-        if parsed.path in ('/api/gallery', '/api/thumbnails', '/api/thumbnail-file'):
+        if parsed.path in ('/api/gallery', '/api/overview', '/api/thumbnails', '/api/thumbnail-file'):
             try:
                 from . import gallery_state, thumbnails
                 query = parse_qs(parsed.query, keep_blank_values=True)
                 if any(len(values) != 1 for values in query.values()):
                     raise thumbnails.ThumbnailError('query', 'provide one value for each parameter')
-                if parsed.path == '/api/gallery':
+                if parsed.path == '/api/overview':
+                    from .overview_state import get
+                    if set(query) != {'revision'} or not query['revision'][0]:
+                        raise thumbnails.ThumbnailError('query', 'overview state requires one fixed revision')
+                    self._send_json(get(self.store.project_root, revision=query['revision'][0]))
+                elif parsed.path == '/api/gallery':
                     if query:
                         raise thumbnails.ThumbnailError('query', 'gallery state takes no query parameters')
                     thumbnails.activate(self.store.project_root)

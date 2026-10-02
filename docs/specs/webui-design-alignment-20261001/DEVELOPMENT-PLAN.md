@@ -2,7 +2,9 @@
 
 2026-10-01。审查对象：[更新与优化方案](README.md)。审查基线 `45d2eae4180158967a08d9f5144f9b5eef33e0c1`；制定时 PR83 为 draft、未合并。后续工程以此计划组织，旧 CONSOLIDATION 的“6/15 卡”属于历史开工快照，不作为当前进度。
 
-执行更新：U00 托管 CI 三组及四组合矩阵全部通过，PR84/83 已合入，后续主线基准为 `de9dcd6`。[U01 已实现并完成本地验证](U01-VALIDATION.md)，等待本包托管 CI。[U02 已实现并完成本地验证](U02-VALIDATION.md)，本包托管 CI 待执行。U03–U06 尚未实施。表内条目仍为完整验收要求。
+执行更新（2026-10-01 17:49 UTC）：U00、[U01](U01-VALIDATION.md)、[U02](U02-VALIDATION.md) 托管 CI 全组成功，PR83–86 已合入；当前主线基准 `b7e9040`。[U03 已实现并完成本地验证](U03-VALIDATION.md)，PR87 已推送；首次托管浏览器组发现迟到预览测试的时序竞争，`6d64fe1` 增加实际请求被拦截后的等待屏障，托管重验进行中。U04–U06 尚未实施。表内条目仍为完整验收要求。
+
+执行阻塞：U04 分支已建立、尚无实现改动。云端 exec-server 连续出现 `Noise harness handshake failed before connection became ready`，命令、文件及本地浏览器验证均不可用；环境状态 API 的 running/connected 不代表执行通道可用。已通过 GitHub 原 PR 提交 U03 测试同步修正并继续观察 CI；恢复执行环境后，先同步远端 U03 修正，再从 U04 继续，U05/U06 和真实层条件保持 open。
 
 ## 审查结论
 

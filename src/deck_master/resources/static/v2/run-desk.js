@@ -23,7 +23,7 @@ function personalClearPanel(app) {
       // replaceChildren 会把 null/数字实参字符串化（"null"/"0" 文本）：条件节点
       // 必须先组数组过滤再展开。
       const planParts = [
-        el('p', {}, `将清理 ${plan.items.length} 项：${plan.items.map(item => ({draft: '草稿', gallery_state: '画廊选择', reading_position: '阅读位置'})[item.kind]).join('、') || '无'}；恢复备份将保存在本机。`),
+        el('p', {}, `将清理 ${plan.items.length} 项：${plan.items.map(item => ({draft: '草稿', gallery_state: '画廊选择', reading_position: '阅读位置', overview_preferences: '总览阅读偏好'})[item.kind]).join('、') || '无'}；恢复备份将保存在本机。`),
         plan.blockers.length ? el('p', {class: 'field-error'}, `${plan.blockers.length} 项暂不清理（未确认的提交）：请先用 operations show 核对原 operation。`) : null,
         plan.kept_out.length ? el('p', {class: 'muted'}, `损伤保留：${plan.kept_out.join('；')}`) : null,
         el('p', {class: 'muted'}, '任务、候选、调用记录与项目文件不在清理范围。')];

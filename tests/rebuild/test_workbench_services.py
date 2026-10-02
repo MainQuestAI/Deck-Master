@@ -261,6 +261,24 @@ def test_explicit_port_conflict_and_stale_pid_are_not_signalled(tmp_path, monkey
     assert runtime.stop(desc)['status'] == 'not_running'
 
 
+def test_repeated_idle_and_active_service_shutdown_keeps_registry(tmp_path):
+    reg = tmp_path / 'registry.json'
+    desc = runtime.descriptor(registry=reg)
+    instances = set()
+    for _ in range(6):
+        state = runtime.ensure(desc)
+        instances.add(state['instance_id'])
+        # Exercise both an idle server and one serving real concurrent reads.
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            reads = [pool.submit(http, state['url'], '/api/projects') for _ in range(3)]
+            assert all(read.result()[0] == 200 for read in reads)
+        assert runtime.stop(desc)['status'] == 'stopped'
+        assert not runtime.healthy(state, desc)
+        assert not desc['state_path'].exists()
+        assert not reg.exists()
+    assert len(instances) == 6
+
+
 def test_launcher_get_host_and_post_origin_instance_and_size_guards(launcher_service, tmp_path):
     reg, desc, state = launcher_service
     url = state['url']

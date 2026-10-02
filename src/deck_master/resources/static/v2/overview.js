@@ -1,10 +1,12 @@
 import {get, revisionQuery} from './api.js';
-import {el, button, heading, empty, version, sortHeading, icon, disabledReason} from './dom.js';
+import {el, button, heading, empty, version, sortHeading, icon, disabledReason, modal, downloadJSON} from './dom.js';
 import {imageView} from './images.js';
 import {layers} from './routes.js';
 import {stageKey} from './gallery.js';
 import {openAction} from './action-targets.js';
 import {batchActions} from './batch-actions.js';
+import {OverviewMemory} from './overview-state.js';
+import {routeHash} from './routes.js';
 
 // A03 总览：待办与矩阵全部来自 B01 的实时投影（next_actions/attention/prompt_summary），
 // 不硬编码页数、不出现无证据的风格结论；矩阵保持普通 Tab 顺序（设计系统第 07 节）。
@@ -115,7 +117,7 @@ const cellView = state => ({ready: {icon: 'check', text: '已就绪'}, missing: 
   stale: {icon: 'attention', text: '旧版待更新'}, unreadable: {icon: 'attention', text: '暂不可读'},
   unknown: {icon: 'attention', text: '待核实'}}[state]);
 
-export function overview(app) {
+export function overview(app, data = {}) {
   const pages = app.summary.pages;
   const root = el('div', {});
   if (!pages.length) {
@@ -129,34 +131,56 @@ export function overview(app) {
     `${pages.length} 页内容 · ${blueprintCount} 页已有原图 · ${version(app.summary.revision_id)}。可看状态不代表质量检查通过。`,
     button('查看整稿', () => app.go({surface: 'gallery'}), true)));
   root.append(todoPanel(app));
-  root.append(matrixPanel(app));
+  root.append(matrixPanel(app, data.overview));
   return root;
 }
 
-function matrixPanel(app) {
+function matrixPanel(app, saved) {
   const pages = app.summary.pages;
   const pageIndex = new Map(pages.map((page, index) => [page.page_id, index]));
   const needsWork = page => (page.attention?.items?.length || 0) > 0 || promptState(page) === 'missing';
   const thumbs = new Map();
   let chapterTitleOf = () => null;
-  let filter = 'all', search = '', ascending = true, disposed = false;
+  const memory = new OverviewMemory(app, saved);
+  let filter = memory.state.filter, search = memory.state.search, ascending = memory.state.sort === 'ascending', disposed = false;
   const selected = new Set();
   const count = el('span', {class: 'muted', role: 'status'});
   const selectionNote = el('span', {class: 'muted', role: 'status'});
   const clearButton = button('清除选择', () => { selected.clear(); batch.invalidate(); render(); });
-  const searchInput = el('input', {type: 'search', placeholder: '搜索页码或标题', 'aria-label': '搜索页码或标题', autocomplete: 'off'});
+  const searchInput = el('input', {type: 'search', value:search, maxLength:200, placeholder: '搜索页码或标题', 'aria-label': '搜索页码或标题', autocomplete: 'off'});
   const filterAll = button('', () => setFilter('all'), false, {'aria-pressed': 'true'});
   const filterTodo = button('只看需要处理', () => setFilter('todo'), false, {'aria-pressed': 'false'});
   const allCheckbox = el('input', {type: 'checkbox', 'aria-label': '选择当前筛选内所有可操作页面'});
   const table = el('table', {class: 'matrix', 'aria-label': '逐页制作进展'});
   let batch;
   batch = batchActions(app, selected, () => { if (batch) render(); });
+  const preferenceStatus = el('p', {role:'status', class:'muted overview-preference-status'});
+  const compareButton = button('核实总览偏好', async () => {
+    compareButton.disabled = true;
+    try {
+      const result = await memory.verify(); if (disposed || result.confirmed) return;
+      const stored = result.saved;
+      const description = value => el('p', {class:'read-text'}, `搜索：${value?.search || '未设置'}\n范围：${value?.filter === 'todo' ? '只看需要处理' : '全部页面'}\n页序：${value?.sort === 'descending' ? '从后向前' : '从前向后'}`);
+      modal('总览阅读偏好：选择保留哪一份', el('div', {class:'stack'},
+        el('p', {}, '当前输入保留。读取或保存偏好不会改变稿件、选页任务或调用。'),
+        el('h3', {}, '此窗口'), description(memory.state),
+        el('h3', {}, '项目保存的偏好'), description(stored.record?.state),
+        el('details', {}, el('summary', {}, '固定版本与恢复详情'), el('pre', {class:'evidence-json'}, JSON.stringify({window:memory.state, saved:stored.record}, null, 2)))),
+        [button('读取项目保存的偏好', () => { document.querySelector('#modal').close(); memory.useSaved(stored); reflectURL(); }),
+          button('明确保存此窗口偏好', () => { document.querySelector('#modal').close(); memory.useWindow(stored); })]);
+    } catch { if (!disposed) preferenceStatus.textContent = '总览偏好核实未完成，当前输入保留；连接恢复后重试。'; }
+    finally { compareButton.disabled = false; }
+  });
+  const downloadButton = button('下载总览偏好副本', () => downloadJSON(memory.state, 'deck-master-overview-preferences.json'));
+  function reflectURL() { app.route.overview_preferences = {search,filter,sort:ascending ? 'ascending' : 'descending'}; history.replaceState(null, '', routeHash(app.info, app.route)); }
+  function saveReading() { memory.update({search,filter,sort:ascending ? 'ascending' : 'descending'}); reflectURL(); }
 
   function setFilter(value) {
     if (filter === value) return;
     filter = value;
     selected.clear();
     batch.invalidate();
+    saveReading();
     render();
   }
   function visiblePages() {
@@ -197,7 +221,7 @@ function matrixPanel(app) {
 
     const head = el('tr', {},
       el('th', {scope: 'col'}, el('label', {class: 'check-target'}, allCheckbox)),
-      sortHeading('页面', ascending ? 'ascending' : 'descending', () => { ascending = !ascending; batch.invalidate(); render(); }),
+      sortHeading('页面', ascending ? 'ascending' : 'descending', () => { ascending = !ascending; batch.invalidate(); saveReading(); render(); }),
       el('th', {scope: 'col'}, layers.content), el('th', {scope: 'col'}, '提示词'),
       el('th', {scope: 'col'}, layers.original_image), el('th', {scope: 'col'}, layers.svg),
       el('th', {scope: 'col'}, layers.ppt), el('th', {scope: 'col'}, '下一步'));
@@ -205,7 +229,7 @@ function matrixPanel(app) {
     if (!list.length) {
       body.append(el('tr', {}, el('td', {colspan: 8}, el('div', {class: 'matrix-empty stack'},
         el('h3', {}, '没有符合条件的页面'), el('p', {}, '尝试其他页码或标题，或清除筛选查看全部页面。'),
-        button('清除筛选', () => { search = ''; searchInput.value = ''; filter = 'all'; selected.clear(); batch.invalidate(); render(); })))));
+        button('清除筛选', () => { search = ''; searchInput.value = ''; filter = 'all'; selected.clear(); batch.invalidate(); saveReading(); render(); })))));
     }
     let lastChapter = Symbol();
     for (const page of list) {
@@ -247,8 +271,9 @@ function matrixPanel(app) {
     }
     table.replaceChildren(el('thead', {}, head), body);
     batch.render();
+    preferenceStatus.textContent = memory.message; compareButton.hidden = !memory.error; downloadButton.hidden = !memory.error;
   }
-  searchInput.addEventListener('input', () => { search = searchInput.value; selected.clear(); batch.invalidate(); render(); });
+  searchInput.addEventListener('input', () => { search = searchInput.value; selected.clear(); batch.invalidate(); saveReading(); render(); });
   allCheckbox.addEventListener('change', () => {
     for (const page of visiblePages().filter(batch.eligible)) {
       if (allCheckbox.checked) selected.add(page.page_id); else selected.delete(page.page_id);
@@ -257,7 +282,13 @@ function matrixPanel(app) {
   });
 
   // 章节行来自 content plan 的固定投影；读取失败或没有计划时矩阵仍完整，只是没有章节分组。
-  app.disposables.push(() => { disposed = true; });
+  const unsubscribe = memory.subscribe(() => {
+    if (filter !== memory.state.filter || search !== memory.state.search || ascending !== (memory.state.sort === 'ascending')) {
+      filter = memory.state.filter; search = memory.state.search; searchInput.value = search; ascending = memory.state.sort === 'ascending'; selected.clear(); batch.invalidate();
+    }
+    render();
+  });
+  app.disposables.push(() => { disposed = true; unsubscribe(); memory.dispose(); });
   (async () => {
     try {
       const plan = await get('/api/content-plan' + revisionQuery(app.route.revision));
@@ -277,6 +308,7 @@ function matrixPanel(app) {
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     el('div', {class: 'toolbar'}, el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo),
       el('div', {class: 'row wrap matrix-search'}, searchInput, batch.toolbar, selectionNote, clearButton)),
+    el('div', {class:'row wrap overview-preferences'}, preferenceStatus, compareButton, downloadButton),
     el('div', {class: 'matrix-wrap'}, table),
     el('div', {class: 'matrix-caption'},
       el('span', {}, icon('check'), ' 可查看　', icon('attention'), ' 需要处理　', icon('minus'), ' 尚未生成'),

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ui_overview.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ui_overview.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "project_identity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "revision_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "search": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "filter": {
+      "enum": [
+        "all",
+        "todo"
+      ]
+    },
+    "sort": {
+      "enum": [
+        "ascending",
+        "descending"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "project_identity",
+    "revision_id",
+    "search",
+    "filter",
+    "sort"
+  ]
+}

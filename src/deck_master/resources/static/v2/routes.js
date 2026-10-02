@@ -12,6 +12,11 @@ export function readRoute(info, position, summary) {
     page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision'),
     candidate_id: params.get('candidate'), zoom: params.has('zoom') ? Number(params.get('zoom')) : 1, task_id: params.get('task'),
     action_id: params.get('action'), review_id: params.get('review')};
+  if (['q','filter','sort'].some(key => params.has(key))) {
+    if (route.surface !== 'overview' || ['q','filter','sort'].some(key => params.getAll(key).length > 1) || (params.get('q') || '').length > 200 || (params.has('filter') && !['all','todo'].includes(params.get('filter'))) || (params.has('sort') && !['ascending','descending'].includes(params.get('sort'))))
+      throw new Error('总览链接中的搜索、筛选或排序无效，当前内容保留。');
+    route.overview_preferences = {search:params.get('q') || '', filter:params.get('filter') || 'all', sort:params.get('sort') || 'ascending'};
+  }
   if ((!surfaces[route.surface] && route.surface !== 'page') || !layers[route.layer] ||
       !Number.isFinite(route.zoom) || route.zoom < .25 || route.zoom > 3 ||
       (route.surface === 'page' && !route.page_id) ||
@@ -31,6 +36,9 @@ export function routeHash(info, route) {
   if (route.task_id) params.set('task', route.task_id);
   if (route.action_id) params.set('action', route.action_id);
   if (route.review_id) params.set('review', route.review_id);
+  if (route.surface === 'overview' && route.overview_preferences) {
+    params.set('q', route.overview_preferences.search); params.set('filter', route.overview_preferences.filter); params.set('sort', route.overview_preferences.sort);
+  }
   return '#' + params;
 }
 export function position(info, route) {

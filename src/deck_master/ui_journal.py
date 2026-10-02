@@ -386,8 +386,8 @@ def _operation_committed(store, operation_id):
 
 
 def _reading_items(store, doc, identity):
-    """Gallery record and saved reading position, damage-isolated."""
-    from . import gallery_state
+    """Gallery, overview preferences and reading position, damage-isolated."""
+    from . import gallery_state, overview_state
     items, kept_out = [], []
     try:
         record = gallery_state._read(store, doc, identity)
@@ -397,6 +397,13 @@ def _reading_items(store, doc, identity):
         items.append({"kind": "gallery_state", "id": "gallery.json", "etag": record["etag"]})
     elif safe_path(store.deck_root, "workbench", "gallery.json").exists():
         kept_out.append("gallery_state: saved gallery record is damaged or foreign; kept for manual recovery")
+    try:
+        overview = overview_state._read(store, doc, identity)
+    except (LocalStateError, ValueError, KeyError, TypeError):
+        overview = None
+        kept_out.append("overview_preferences: saved overview record is damaged or foreign; kept for manual recovery")
+    if overview and overview['states']:
+        items.append({'kind': 'overview_preferences', 'id': 'overview.json', 'etag': overview['etag']})
     position = read_json(_position_path(store))
     if position is not None:
         try:
@@ -509,10 +516,11 @@ def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
         raise LocalStateError("scope", "clearing scope is current_project")
     _reject_unknown_clear_keys(input)
     store, doc, identity = context(project)
-    # 与三类保存方互斥：drafts/journal.lock、gallery.lock、position.lock 全程持有
+    # 与各保存方互斥，固定获取顺序；overview 清理保留 CAS 屏障。
     # （固定获取顺序，保存方各自只取一把锁，不存在死锁环）。clear.lock 保护日志追加。
     with local_lock(safe_path(_directory(store), "journal.lock")), \
             local_lock(safe_path(store.deck_root, "workbench", "gallery.lock")), \
+            local_lock(safe_path(store.deck_root, "workbench", "overview.lock")), \
             local_lock(safe_path(_position_path(store).parent, "position.lock")), \
             local_lock(safe_path(_clear_log_path(store).parent, "clear.lock")):
         for entry in _read_clear_log(store):
@@ -541,7 +549,12 @@ def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
                   "manifest_digest": expected_digest, "records": records, "cleared_at": cleared_at}
         validate_schema("ui_clear_backup", backup)
         write_json(_clear_backup_path(store, expected_digest), backup)
+        if input['reading_preferences']:
+            from . import overview_state
+            overview_state._clear(store, doc, identity)
         for item in items:
+            if item['kind'] == 'overview_preferences':
+                continue  # Cleared atomically to an empty CAS barrier below.
             path = _draft_path(store, item["id"]) if item["kind"] == "draft" else (
                 safe_path(store.deck_root, "workbench", "gallery.json") if item["kind"] == "gallery_state"
                 else _position_path(store))
@@ -560,6 +573,9 @@ def _verify_items_unchanged(store, items):
         elif item["kind"] == "gallery_state":
             record = read_json(safe_path(store.deck_root, "workbench", "gallery.json"))
             current = record.get("etag") if record else None
+        elif item['kind'] == 'overview_preferences':
+            record = read_json(safe_path(store.deck_root, 'workbench', 'overview.json'))
+            current = record.get('etag') if record else None
         else:
             record = read_json(_position_path(store))
             current = record.get("digest") if record else None
@@ -577,6 +593,8 @@ def _clear_backup_records(store, items):
         elif item["kind"] == "gallery_state":
             records.append({"kind": "gallery_state", "id": item["id"], "etag": item["etag"],
                             "record": read_json(safe_path(store.deck_root, "workbench", "gallery.json"))})
+        elif item['kind'] == 'overview_preferences':
+            records.append({**item, 'record': read_json(safe_path(store.deck_root, 'workbench', 'overview.json'))})
         else:
             records.append({"kind": "reading_position", "id": item["id"], "etag": item["etag"],
                             "record": read_json(_position_path(store))})
