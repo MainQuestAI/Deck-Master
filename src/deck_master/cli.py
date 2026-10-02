@@ -248,6 +248,7 @@ def build_parser() -> argparse.ArgumentParser:
                     command_parser.add_argument("--extract-sha256")
             if name == "candidate-preview" and command == "request":
                 command_parser.add_argument("--retry", action="store_true")
+            if name == "icons" and command == "list": command_parser.add_argument("--include-stale", action="store_true")
             if (name == "icons" and command in ("list", "inspect")) or (name == "styles" and command in ("list", "show")):
                 command_parser.add_argument("--revision")
             if name == "ui" and command == "commit-clear":
@@ -513,7 +514,7 @@ def main(argv: list[str] | None = None) -> int:
                        ("styles", "list"): styles.listing, ("styles", "show"): styles.show,
                        ("styles", "propose"): styles.propose, ("styles", "confirm"): styles.confirm, ("styles", "plan"): styles.plan}
             fields = {key: getattr(options, key) for key in
-                      ("base_revision", "operation_id", "plan_id", "manifest_digest", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id", "source_id", "locator", "extract_sha256", "retry") if hasattr(options, key)}
+                      ("base_revision", "operation_id", "plan_id", "manifest_digest", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id", "source_id", "locator", "extract_sha256", "retry", "include_stale") if hasattr(options, key)}
             if hasattr(options, "input"):
                 fields["input"] = json.loads(Path(options.input).read_text(encoding="utf-8"))
             return _emit(actions[(options.command, options.workbench_command)](options.project, **fields))

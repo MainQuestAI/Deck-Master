@@ -31,11 +31,14 @@ def style_content_browser(tmp_path):
         page = browser.new_page(viewport={'width':1440,'height':900})
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
+        page.on('console', lambda message: errors.append(message.text) if message.type=='error' and 'Content Security Policy' in message.text else None)
+        page.add_init_script("window.cspErrors=[];document.addEventListener('securitypolicyviolation',e=>window.cspErrors.push(e.violatedDirective))")
         page.goto(server.start())
         page.get_by_role('heading', name='制作总览', exact=True).wait_for()
         try:
             yield page, server, path, store
             assert errors == []
+            assert page.evaluate("window.cspErrors")==[]
         finally:
             browser.close()
             server.stop()

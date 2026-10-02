@@ -58,7 +58,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
-                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1")
+                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1")
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
@@ -172,6 +172,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path == '/api/gallery':
                 from .gallery_state import save
                 result = save(self.store.project_root, **data)
+            elif self.path == '/api/result-reading/import-legacy':
+                from .result_reading import import_legacy
+                result = import_legacy(self.store.project_root, **data)
+            elif self.path == '/api/result-reading':
+                from .result_reading import mark
+                result = mark(self.store.project_root, **data)
             elif self.path == '/api/overview':
                 from .overview_state import save
                 result = save(self.store.project_root, **data)
@@ -349,13 +355,17 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_error(exc)
             return
-        if parsed.path in ('/api/gallery', '/api/overview', '/api/thumbnails', '/api/thumbnail-file'):
+        if parsed.path in ('/api/gallery', '/api/overview', '/api/result-reading', '/api/thumbnails', '/api/thumbnail-file'):
             try:
                 from . import gallery_state, thumbnails
                 query = parse_qs(parsed.query, keep_blank_values=True)
                 if any(len(values) != 1 for values in query.values()):
                     raise thumbnails.ThumbnailError('query', 'provide one value for each parameter')
-                if parsed.path == '/api/overview':
+                if parsed.path == '/api/result-reading':
+                    from .result_reading import get
+                    if query: raise ValueError('reading state takes no query parameters')
+                    self._send_json(get(self.store.project_root))
+                elif parsed.path == '/api/overview':
                     from .overview_state import get
                     if set(query) != {'revision'} or not query['revision'][0]:
                         raise thumbnails.ThumbnailError('query', 'overview state requires one fixed revision')
@@ -458,22 +468,36 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 raise workbench_mod.ReadModelError("invalid_revision", "revision", "provide one revision", http_status=400)
             revision = revisions[0] if revisions else None
             project = self.store.project_root
+            reading=None;reading_unavailable=False
+            if 'personal' in query:
+                if query['personal']!=['1']:raise ValueError('personal must be 1')
+                from .result_reading import get
+                if parsed.path not in ('/api/view/summary','/api/workbench') and 'reading_etag' not in query:
+                    raise ValueError('personal lists require reading_etag from summary or reading state')
+                if 'reading_etag' in query and len(query['reading_etag'])!=1:raise ValueError('provide one reading_etag')
+                try:reading=get(project,expected_etag=query.get('reading_etag',[None])[0])
+                except (TypedServiceError,ModelError,OSError,ValueError,KeyError,TypeError):
+                    if parsed.path not in ('/api/view/summary','/api/workbench') or 'reading_etag' in query:raise
+                    reading_unavailable=True
             if parsed.path == "/api/view":
                 payload = view_mod.project_view(project, revision=revision)
             elif parsed.path in ("/api/view/summary", "/api/workbench"):
-                self._send_json_bytes(workbench_mod.workbench_summary_json(project, revision=revision))
+                result=workbench_mod.workbench_summary_json(project, revision=revision, reading=reading)
+                if reading_unavailable:
+                    payload=json.loads(result);payload['reading_unavailable']=True;self._send_json(payload)
+                else:self._send_json_bytes(result)
                 return
             elif parsed.path.startswith('/api/actions/'):
                 parts = parsed.path.split('/')
                 if len(parts) != 5 or parts[-1] != 'targets':
                     raise workbench_mod.ReadModelError('action_not_found', 'action_id', 'unknown action endpoint', http_status=404)
-                if set(query) - {'revision', 'limit', 'offset'} or any(len(v) != 1 or not v[0] for v in query.values()):
+                if set(query) - {'revision', 'limit', 'offset', 'personal', 'reading_etag'} or any(len(v) != 1 or not v[0] for v in query.values()):
                     raise workbench_mod.ReadModelError('invalid_action_query', 'query', 'use one value per supported query field', http_status=400)
                 try:
                     limit, offset = int(query.get('limit', ['30'])[0]), int(query.get('offset', ['0'])[0])
                 except ValueError as exc:
                     raise workbench_mod.ReadModelError('invalid_action_query', 'pagination', 'pagination must use integers', http_status=400) from exc
-                payload = workbench_mod.action_targets(project, parts[3], revision=revision, limit=limit, offset=offset)
+                payload = workbench_mod.action_targets(project, parts[3], revision=revision, limit=limit, offset=offset, reading=reading)
             elif parsed.path == "/api/tasks":
                 from . import run_desk
                 fields = ('limit', 'offset', 'change_id', 'status', 'attention')
@@ -488,7 +512,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     if attention not in ('0', '1'):
                         raise run_desk.RunReadError('invalid_run_query', 'attention', 'attention must be 0 or 1', http_status=400)
                     payload = run_desk.listing(project, revision=revision, limit=limit, offset=offset,
-                        change_id=query.get('change_id', [None])[0], status=query.get('status', [None])[0], attention=attention == '1')
+                        change_id=query.get('change_id', [None])[0], status=query.get('status', [None])[0], attention=attention == '1', reading=reading)
                 else:
                     payload = workbench_mod.tasks_view(project, revision=revision)
             elif parsed.path.startswith('/api/tasks/'):
@@ -525,7 +549,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         except TypedServiceError as exc:
             self._send_json({'error': {'code':exc.error_code, 'message':exc.detail, 'field':exc.path,
                               'next_action':NEXT_ACTIONS_BY_CODE.get(exc.error_code, 'read task status and the recovery playbook')}},
-                            404 if exc.error_code == 'generation_object_not_found' else 422)
+                            404 if exc.error_code == 'generation_object_not_found' else 409 if exc.error_code=='local_state_conflict' else 422)
         except workbench_mod.READ_FAILURES:
             exc = workbench_mod.ReadModelError("project_unavailable", "project", "project snapshot is not readable", http_status=422)
             self._send_json(exc.payload(), exc.http_status)

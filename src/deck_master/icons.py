@@ -5,6 +5,8 @@ import hashlib
 import json
 import re
 import uuid
+from fractions import Fraction
+from itertools import groupby
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -12,7 +14,7 @@ from . import changes, operations
 from .compiler.svg import parse_svg
 from .local_state import project_path
 from .models import bump_revision, canonical_json_bytes, require_writer, validate_schema
-from .snapshots import load_snapshot
+from .snapshots import load_snapshot, READ_FAILURES
 from .store import Store, _atomic_write_bytes
 
 GEOMETRY = {'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'use'}
@@ -101,6 +103,74 @@ def isolated(root, path):
     parsed = parse_svg(ET.tostring(result), page_id='icon')
     if any(s['kind'] in ('text', 'image') for s in parsed['shapes']): fail('objects', 'referenced geometry includes text or images')
     return parsed
+
+
+def visible_geometry(parsed):
+    """Check effective painting, not visual quality or background contrast."""
+    def painted(paint):
+        if isinstance(paint,dict):
+            return any(stop['opacity']>0 and stop['color'] not in ('none','transparent') for stop in paint['stops'])
+        return paint not in ('none','transparent')
+    for shape in parsed['shapes']:
+        if shape['opacity']<=0:continue
+        stroke=painted(shape['stroke']) and shape['stroke_width']>0 and shape['stroke_opacity']>0
+        fill=shape['kind']!='line' and painted(shape['fill']) and shape['fill_opacity']>0
+        if not (stroke or fill):continue
+        subpaths=[]
+        if shape.get('commands') is not None:
+            points=[]
+            for command in shape['commands']:
+                for op,point in command.items():
+                    if op=='moveTo':
+                        if points:subpaths.append(points)
+                        points=[(point['x'],point['y'])]
+                    elif op=='lineTo':points.append((point['x'],point['y']))
+                    elif op=='close' and points:points.append(points[0])
+            if points:subpaths.append(points)
+        elif shape.get('points'):
+            subpaths=[[tuple(p) for p in shape['points']]]
+        else:
+            if shape.get('width',0)>0 and shape.get('height',0)>0:return True
+            continue
+        for points in subpaths:
+            # A moveto has no painted segment. Horizontal/vertical strokes do.
+            if stroke and any(a!=b for a,b in zip(points,points[1:])):return True
+            if stroke and len(points)>1 and shape['stroke_linecap'] in ('round','square'):return True
+        if fill and _filled_area(subpaths):return True
+    return False
+
+
+def _filled_area(subpaths):
+    """Test exact nonzero fill with O(n log n) directed-edge cancellation.
+
+    A closed contour has zero winding everywhere iff its directed boundary
+    cancels on every supporting line. A remaining edge interval separates
+    faces with different winding; crossings at isolated points cannot erase
+    it. This also handles self-intersections without enumerating intersections.
+    """
+    lines={}
+    for points in subpaths:
+        if len(points)<3:continue
+        points=[(Fraction(str(x)),Fraction(str(y))) for x,y in points]
+        for a,b in zip(points,points[1:]+points[:1]):
+            if a==b:continue
+            dx,dy=b[0]-a[0],b[1]-a[1]
+            if dx:
+                slope=dy/dx
+                key=(slope,a[1]-slope*a[0]);start,end=a[0],b[0]
+            else:
+                key=(None,a[0]);start,end=a[1],b[1]
+            direction=1 if end>start else -1
+            low,high=(start,end) if direction==1 else (end,start)
+            lines.setdefault(key,[]).extend(((low,direction),(high,-direction)))
+    # Collect every subpath before inspecting: a later reversed contour can
+    # cancel an earlier one, even with different subdivisions of the same edge.
+    for events in lines.values():
+        winding=0;previous=None
+        for coordinate,group in groupby(sorted(events),key=lambda event:event[0]):
+            if previous is not None and coordinate>previous and winding:return True
+            winding+=sum(delta for _,delta in group);previous=coordinate
+    return False
 
 
 def bounds(parsed):
@@ -239,27 +309,41 @@ def propose(project, *, input):
 
 
 @operations.public
-def listing(project, *, revision=None):
+def listing(project, *, revision=None, include_stale=False):
+    if include_stale not in (True,False,'true','false'):fail('include_stale','expected true or false')
+    include_stale=include_stale in (True,'true')
     store=Store(project_path(project));doc=load_snapshot(store,revision); proposals=[]
+    recipes=[{'ref':r,'recipe':_owned(store,doc,ref=r)[0]} for r in doc.get('icon_recipes',[])]
+    confirmed={r['recipe']['proposal_ref']['sha256']:r for r in recipes}
+    dispatched=set();dispatch_unknown=False
+    for task_ref in doc.get('tasks',[]):
+        try:dispatched.add(store.read_object_json(task_ref).get('stage_request',{}).get('icon_recipe_ref',{}).get('sha256'))
+        except READ_FAILURES:dispatch_unknown=True
     for p in sorted((store.deck_root/'cache/icon-proposals').glob('*.json')):
         ref=json.loads(p.read_text());v=store.read_object_json(ref);validate_schema('icon_recipe',v)
-        if v['project_id']==doc['project_id'] and v['base_revision']==doc['revision_id']:
-            proposals.append({'proposal_id':'icon-proposal-'+ref['sha256'],'proposal_ref':ref,'proposal':v})
+        if v['project_id']==doc['project_id'] and (include_stale or v['base_revision']==doc['revision_id']):
+            record=confirmed.get(ref['sha256'])
+            state=('handed_off' if record['ref']['sha256'] in dispatched else 'dispatch_unknown' if dispatch_unknown else 'confirmed') if record else ('pending' if v['base_revision']==doc['revision_id'] else 'stale')
+            proposals.append({'proposal_id':'icon-proposal-'+ref['sha256'],'proposal_ref':ref,'proposal':v,'status':state})
     samples=[]
     from . import candidates
-    records=candidates._records(store,doc) if doc.get('candidate_adoptions') else {}
-    for adoption in doc.get('candidate_adoptions',[]):
-        candidate,_,task=candidates._lookup(records,adoption['candidate_id'])
-        ref=task.get('stage_request',{}).get('icon_recipe_ref')
-        if not ref or _entry(doc,candidate['page_id'])['svg']!=candidate['result_ref']:continue
-        recipe,_=_owned(store,doc,ref=ref)
-        target=next(t for t in recipe['input']['targets'] if t['page_id']==candidate['page_id'])
-        for i,icon in enumerate(target['icons']):
-            sample={'sample_candidate_id':candidate['candidate_id'],'sample_icon_index':i,'semantic_key':icon['semantic_key']}
-            try:_sample(store,doc,sample)
-            except operations.OperationError:continue
-            if not any(s['sample_candidate_id']==sample['sample_candidate_id'] and s['sample_icon_index']==i for s in samples):samples.append({**sample,'page_id':candidate['page_id'],'label':icon['label'],'style':icon['style']})
-    return {'revision_id':doc['revision_id'],'proposals':proposals,'samples':samples,'recipes':[{'ref':r,'recipe':_owned(store,doc,ref=r)[0]} for r in doc.get('icon_recipes',[])]}
+    samples_unavailable=False
+    try:
+        records=candidates._records(store,doc) if doc.get('candidate_adoptions') else {}
+        for adoption in doc.get('candidate_adoptions',[]):
+            candidate,_,task=candidates._lookup(records,adoption['candidate_id'])
+            ref=task.get('stage_request',{}).get('icon_recipe_ref')
+            if not ref or _entry(doc,candidate['page_id'])['svg']!=candidate['result_ref']:continue
+            recipe,_=_owned(store,doc,ref=ref)
+            target=next(t for t in recipe['input']['targets'] if t['page_id']==candidate['page_id'])
+            for i,icon in enumerate(target['icons']):
+                sample={'sample_candidate_id':candidate['candidate_id'],'sample_icon_index':i,'semantic_key':icon['semantic_key']}
+                try:_sample(store,doc,sample)
+                except operations.OperationError:continue
+                if not any(s['sample_candidate_id']==sample['sample_candidate_id'] and s['sample_icon_index']==i for s in samples):samples.append({**sample,'page_id':candidate['page_id'],'label':icon['label'],'style':icon['style']})
+    except READ_FAILURES + (operations.OperationError,):
+        samples=[];samples_unavailable=True
+    return {'revision_id':doc['revision_id'],'proposals':proposals,'samples':samples,'samples_unavailable':samples_unavailable,'recipes':recipes}
 
 
 @operations.public
@@ -335,8 +419,8 @@ def check_scope(store,doc,task,data):
         region=icon['svg_region']
         has_geometry=False
         for loc in icon['objects']:
-            box=bounds(isolated(after,loc['path']))
-            has_geometry=has_geometry or bool(box and box['width']>0 and box['height']>0)
+            parsed=isolated(after,loc['path']);box=bounds(parsed)
+            has_geometry=has_geometry or visible_geometry(parsed)
             if box and (box['x'] < region['x']-.002 or box['y'] < region['y']-.002 or box['x']+box['width'] > region['x']+region['width']+.002 or box['y']+box['height'] > region['y']+region['height']+.002):
                 fail('result','new icon exceeds the confirmed display region')
         if not has_geometry:fail('result','replacement icon must retain visible native geometry')

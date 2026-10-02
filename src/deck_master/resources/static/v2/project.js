@@ -12,8 +12,12 @@ import {changesetDesk} from './changeset-desk.js';
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
+  summaryURL(revision=null){const q=new URLSearchParams();if(revision)q.set('revision',revision);if(this.health.ui_capabilities?.includes('result_reading.v1'))q.set('personal','1');return '/api/view/summary'+(q.size?'?'+q:'');}
+  // Bind lists to the supplied projection. A fallback summary without an etag
+  // must not inherit the previous work surface's personal-reading snapshot.
+  readingQuery(summary=this.summary){const etag=summary?.reading_etag;return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
   async start() {
-    const [info, summary, state] = await Promise.all([get('/api/project'), get('/api/view/summary'), get('/api/ui-state')]);
+    const [info, summary, state] = await Promise.all([get('/api/project'), get(this.summaryURL()), get('/api/ui-state')]);
     this.info = info; this.latest = summary; this.returnTo = state.record?.position;
     if (this.health.ui_capabilities?.includes('operations.v1')) this.business = new BusinessOperations(this);
     this.root.addEventListener('draft-state-changed', () => {
@@ -44,7 +48,7 @@ export class Project {
     addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。'));
     await this.loadRoute(this.route, false);
     if (this.health.ui_capabilities?.includes('run_desk.v1')) {
-      this.summaryPoll = new SummaryPoll(signal => get('/api/view/summary', {signal}), value => {
+      this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), value => {
         if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
         this.latest = value;
         const count = value.task_counts.awaiting_host || 0;
@@ -64,15 +68,15 @@ export class Project {
   async loadRoute(initial = null, focus = true) {
     const serial = ++this.generation;
     try {
-      const [info, latest] = await Promise.all([get('/api/project'), get('/api/view/summary')]);
+      const [info, latest] = await Promise.all([get('/api/project'), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
       const route = initial || readRoute(this.info, null, latest);
       route.revision ||= latest.revision_id;
-      const summary = route.revision === latest.revision_id ? latest : await get('/api/view/summary' + revisionQuery(route.revision));
+      const summary = route.revision === latest.revision_id ? latest : await get(this.summaryURL(route.revision));
       if (summary.project_id !== this.info.project_id) throw new Error('服务中的项目与当前窗口不一致，未替换已读内容。');
       const q = revisionQuery(summary.revision_id);
       let data = {};
-      if (route.action_id) data = await get('/api/actions/' + encodeURIComponent(route.action_id) + '/targets' + q);
+      if (route.action_id) data = await get('/api/actions/' + encodeURIComponent(route.action_id) + '/targets' + q + this.readingQuery(summary));
       else if (route.surface === 'overview' && this.health.ui_capabilities?.includes('ui_overview.v1')) {
         try { data = {overview:await get('/api/overview' + q)}; }
         catch (error) { data = {overview:{error}}; }
@@ -95,7 +99,7 @@ export class Project {
         }
       } else if (route.surface === 'runs') {
         const modern = this.health.ui_capabilities?.includes('run_desk.v1');
-        const [tasks, history, detail] = await Promise.all([get('/api/tasks' + q + (modern ? '&limit=30' : '')), get('/api/history'),
+        const [tasks, history, detail] = await Promise.all([get('/api/tasks' + q + (modern ? '&limit=30'+this.readingQuery(summary) : '')), get('/api/history'),
           modern && route.task_id ? get('/api/tasks/' + encodeURIComponent(route.task_id) + q) : Promise.resolve(null)]);
         data = {tasks: tasks.tasks, runPage: modern ? tasks : null, runDetail: detail, history};
         if (route.task_id && !(detail || tasks.tasks.some(task => task.task_id === route.task_id))) throw new Error('此版本没有链接中的任务。请检查任务与版本，未跳到其它任务。');
@@ -113,6 +117,7 @@ export class Project {
       this.readonly = this.historical || Boolean(info.sample?.readonly);
       history.replaceState(null, '', routeHash(this.info, route));
       this.render(data);
+      if(summary.reading_unavailable)this.setNotice('个人已读记录暂不可用，已显示未过滤的业务记录；损伤文件保留，请先核实恢复资料。',true);
       this.savePosition();
       if (focus) {
         const title = route.surface === 'runs' && route.layer === 'ppt' && !route.task_id && !route.review_id
@@ -122,7 +127,7 @@ export class Project {
       announce(`${route.surface === 'page' ? '单页 · ' + layers[route.layer] : surfaces[route.surface]}，${version(route.revision)}`);
     } catch (error) {
       if (serial !== this.generation) return;
-      if (this.main) this.setNotice(readableError(error) + ' 已显示的工作面仍属于顶栏标明的版本。', true);
+      if (this.main) {this.setNotice(readableError(error) + ' 已显示的工作面仍属于顶栏标明的版本。', true);if(this.health.ui_capabilities?.includes('result_reading.v1'))this.notice?.append(button('重新读取待办',()=>this.go({surface:'overview',action_id:null})));}
       else {
         this.root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('无法读取这个位置', readableError(error),
           button('打开项目当前版本', () => { history.replaceState(null, '', location.pathname + location.search); this.loadRoute({...this.route, surface: 'overview', page_id: null, task_id: null, revision: null}); }))));
@@ -223,7 +228,7 @@ export class Project {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
       if (event.key === 'Escape' && !typing) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
       // ←/→ 切换页（输入与可滚动阅读区除外），与单页制作链的上一页/下一页一致。
-      if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing && !event.target.closest('.page-image-viewport,.selectable-text,.evidence-json,.diff-lines')) {
+      if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing && !event.target.closest('.page-image-viewport,.icon-crop-scroll,.selectable-text,.evidence-json,.diff-lines')) {
         const index = this.summary.pages.findIndex(p => p.page_id === this.route.page_id);
         const next = this.summary.pages[index + (event.key === 'ArrowRight' ? 1 : -1)];
         if (next) { event.preventDefault(); this.go({page_id: next.page_id}); }

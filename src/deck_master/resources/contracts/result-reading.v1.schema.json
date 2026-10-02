@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "result_reading.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "project_identity",
+    "sequence",
+    "seen",
+    "etag"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "result_reading.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "seen": {
+      "type": "array",
+      "maxItems": 5000,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "etag": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

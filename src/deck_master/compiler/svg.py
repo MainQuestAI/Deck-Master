@@ -166,7 +166,7 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             return
         if tag not in ('svg','g','rect','circle','ellipse','line','polygon','polyline','path','text','tspan','image'):
             raise SvgError(f'{page_id}/{identity}: unsupported {tag}; provide native geometry')
-        inherited_keys=('fill','stroke','stroke-width','font-family','font-size','font-weight','text-anchor','letter-spacing','opacity','fill-opacity','stroke-opacity')
+        inherited_keys=('fill','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-miterlimit','font-family','font-size','font-weight','text-anchor','letter-spacing','opacity','fill-opacity','stroke-opacity')
         if tag in ('svg','g'):
             style={key:attrs[key] for key in inherited_keys if key in attrs}
             # SVG group opacity multiplies ancestor opacity.

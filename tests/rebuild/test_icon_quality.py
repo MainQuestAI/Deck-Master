@@ -226,6 +226,34 @@ def test_preview_failure_retry_and_corrupt_files(icon_store,monkeypatch):
         (folder/name).write_bytes(b'failed diagnostic')
         files[name]={'sha256':hashlib.sha256(b'failed diagnostic').hexdigest(),'bytes':17}
     (folder/'report.json').write_text(json.dumps({'identity':identity,'cache_key':key,'candidate_ref':identity['candidate_ref'],'candidate_id':cid,'status':'failed','files':files}))
+    import threading
+    entered=threading.Event();release=threading.Event()
+    original=candidate_preview.compile_deck
+    def paused_compile(*args,**kwargs):
+        entered.set();assert release.wait(15);return original(*args,**kwargs)
+    monkeypatch.setattr(candidate_preview,'compile_deck',paused_compile)
+    queued=candidate_preview.request(icon_store.project_root,candidate_id=cid,retry=True,wait=False)
+    assert queued['status']=='queued' and queued['check_id']
+    assert entered.wait(10)
+    active=candidate_preview.status(icon_store.project_root,candidate_id=cid)
+    assert active['status']=='running' and active['check_id']==queued['check_id']
+    assert candidate_preview.request(icon_store.project_root,candidate_id=cid,retry=True,wait=False)==active
+    release.set()
+    import time
+    for _ in range(100):
+        current=candidate_preview.status(icon_store.project_root,candidate_id=cid)
+        if current['status'] not in ('queued','running'):break
+        time.sleep(.1)
+    assert current['status']=='ready' and current['check_id']==queued['check_id']
+    report=folder/'report.json';saved_report=report.read_bytes();report.unlink()
+    assert candidate_preview.status(icon_store.project_root,candidate_id=cid)['status']=='interrupted'
+    assert candidate_preview.request(icon_store.project_root,candidate_id=cid)['status']=='interrupted'
+    report.write_bytes(saved_report)
+    # A dead worker's persisted state outranks a previous report.
+    state_path=folder/'state.json'
+    state_path.write_text(json.dumps({'cache_key':key,'check_id':'dead-worker','status':'running'}))
+    assert candidate_preview.status(icon_store.project_root,candidate_id=cid)['status']=='interrupted'
+    assert candidate_preview.request(icon_store.project_root,candidate_id=cid)['status']=='interrupted'
     calls=[]
     def broken_compile(*args,**kwargs):calls.append(True);raise ValueError('retry probe')
     monkeypatch.setattr(candidate_preview,'compile_deck',broken_compile)
@@ -241,3 +269,78 @@ def test_icon_host_cannot_return_page_or_content_update(icon_store):
     from deck_master.tasks import _check_scope,EnvelopeError
     for key in ('pages','page_order','content_update','content_plan','reviews'):
         with pytest.raises(EnvelopeError,match='Page and original image stay fixed'):_check_scope('repair',{'kind':'repair',key:[{'page_id':'p01'}]},task)
+
+
+@pytest.mark.parametrize("paint", [
+    {"opacity": "0"}, {"fill": "none", "stroke": "none"},
+    {"stroke-opacity": "0"}, {"stroke-width": "0"},
+])
+def test_redraw_rejects_invisible_paint(icon_store, paint):
+    recipe=confirm(icon_store);task=dispatch(icon_store,recipe)[0];doc=icon_store.load_document()
+    root=icons.tree(icons.svg_bytes(icon_store,doc['pages'][0]['svg']))
+    root[2][0].attrib.update(paint)
+    with pytest.raises(OperationError,match='visible native geometry'):
+        icons.check_scope(icon_store,doc,task,ET.tostring(root))
+
+
+def test_svg_nested_stroke_inheritance_and_override():
+    from deck_master.compiler.svg import parse_svg
+    data=b'''<svg viewBox="0 0 100 100" fill="none" stroke="#123456" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="8">
+    <g><g><path d="M1 1L10 10"/><path d="M2 2L20 20" stroke-linecap="square" stroke-linejoin="bevel" stroke-miterlimit="3"/></g></g>
+    <defs><g id="local"><path d="M1 1L10 10"/></g></defs><use href="#local"/>
+    </svg>'''
+    shapes=parse_svg(data,page_id='stroke')['shapes']
+    assert [(s['stroke_linecap'],s['stroke_linejoin'],s['stroke_miterlimit']) for s in shapes]==[
+        ('round','round',8),('square','bevel',3),('round','round',8)]
+
+
+def test_empty_auxiliary_subtree_keeps_visible_icon(icon_store):
+    value=input_for(icon_store);info=icons.inspect(icon_store.project_root,page_id='p01')
+    value['targets'][0]['icons'][0]['objects']=[{k:o[k] for k in ('path','sha256')} for o in info['objects'] if o['path'] in ('2/0/0','2/0/1')]
+    recipe=confirm(icon_store,value);task=dispatch(icon_store,recipe)[0];doc=icon_store.load_document()
+    root=icons.tree(icons.svg_bytes(icon_store,doc['pages'][0]['svg']))
+    root[2][0][0].clear();root[2][0][0].tag='{http://www.w3.org/2000/svg}g'
+    assert icons.check_scope(icon_store,doc,task,ET.tostring(root))['status']=='pass'
+    root[2][0][1].set('opacity','0')
+    with pytest.raises(OperationError,match='visible native geometry'):
+        icons.check_scope(icon_store,doc,task,ET.tostring(root))
+
+
+def test_icon_proposal_status_preserves_stale_comparison(icon_store):
+    proposal=icons.propose(icon_store.project_root,input=input_for(icon_store))
+    assert icons.listing(icon_store.project_root,include_stale=True)['proposals'][0]['status']=='pending'
+    value=input_for(icon_store);value['instruction']='Different opinion';other=icons.propose(icon_store.project_root,input=value)
+    recipe=confirm(icon_store)
+    listing=icons.listing(icon_store.project_root,include_stale=True)
+    states={p['proposal_id']:p['status'] for p in listing['proposals']}
+    assert states=={proposal['proposal_id']:'confirmed',other['proposal_id']:'stale'}
+    dispatch(icon_store,recipe)
+    assert next(p for p in icons.listing(icon_store.project_root,include_stale=True)['proposals'] if p['proposal_id']==proposal['proposal_id'])['status']=='handed_off'
+
+@pytest.mark.parametrize('geometry,expected',[
+    ('<path d="M10 10" fill="none" stroke="black"/>',False),
+    ('<polygon points="1,1 5,5 10,10" fill="black"/>',False),
+    ('<path d="M1 5H20" fill="none" stroke="black"/>',True),
+    ('<path d="M5 1V20" fill="none" stroke="black"/>',True),
+    ('<path d="M10 10L10 10" fill="none" stroke="black" stroke-linecap="round"/>',True),
+    ('<path d="M10 10L10 10" fill="none" stroke="black"/>',False),
+    ('<path d="M1 1L10 1L5 10Z" fill="black"/>',True),
+    ('<path d="M5 5L15 5L10 15L15 5L5 5Z" fill="black"/>',False),
+    ('<path d="M5 5L15 5L10 15Z M5 5L10 15L15 5Z" fill="black"/>',False),
+    ('<path d="M1 1L10 10L1 10L10 1Z" fill="black"/>',True),
+    ('<path d="M12.44 18.134L21.21 7.793L17.322 16.084Z M12.44 18.134L17.322 16.084L21.21 7.793Z" fill="black"/>',False),
+])
+def test_visibility_uses_painted_segments_and_fill(geometry,expected):
+    assert icons.visible_geometry(icons.parse_svg(('<svg viewBox="0 0 24 24">'+geometry+'</svg>').encode(),page_id='paint')) is expected
+
+
+def test_icon_listing_isolates_unreadable_dispatch(icon_store,monkeypatch):
+    recipe=confirm(icon_store);dispatch(icon_store,recipe)
+    original=icons.Store.read_object_json
+    def damaged(self,ref):
+        value=original(self,ref)
+        if value.get('schema_version')=='deck_task.v1':raise ValueError('damaged task')
+        return value
+    monkeypatch.setattr(icons.Store,'read_object_json',damaged)
+    listing=icons.listing(icon_store.project_root,include_stale=True)
+    assert listing['proposals'][0]['status']=='dispatch_unknown'

@@ -5,6 +5,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import sys
+import threading
 from urllib.parse import urlparse
 import webbrowser
 
@@ -38,16 +39,40 @@ def open_workbench(*, project=None, registry_file=None, ui="v2", port=0, open_br
             "host_execution": "handoff_required"}
 
 
+_PICKER_LOCK=threading.Lock()
+
+
 def pick_directory():
     if sys.platform != "darwin":
         return {"status": "manual_path_required", "path": None}
-    # Fixed native script, no interpolated user strings and no shell.
-    script = 'try\nPOSIX path of (choose folder with prompt "选择 Deck Master 项目目录")\non error number -128\nreturn ""\nend try'
-    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=120)
-    if result.returncode:
-        return {"status": "manual_path_required", "path": None}
-    selected = result.stdout.strip()
-    return {"status": "selected" if selected else "cancelled", "path": str(Path(selected).resolve()) if selected else None}
+    if not _PICKER_LOCK.acquire(blocking=False):
+        return {'status':'busy','path':None,'diagnostic':{'code':'picker_busy','message':'目录选择窗口已打开，请完成或取消原窗口。'}}
+    # AppKit hosts the chooser in this process; no Finder automation permission.
+    # The script is fixed and never contains user paths or shell input.
+    script = """ObjC.import('AppKit');
+const app = $.NSApplication.sharedApplication;
+app.setActivationPolicy($.NSApplicationActivationPolicyAccessory);
+app.activateIgnoringOtherApps(true);
+const panel = $.NSOpenPanel.openPanel;
+panel.canChooseDirectories = true;
+panel.canChooseFiles = false;
+panel.allowsMultipleSelection = false;
+panel.message = '选择 Deck Master 项目目录';
+const response = panel.runModal;
+response === $.NSModalResponseOK ? ObjC.unwrap(panel.URL.path) : '';
+"""
+    try:
+        result = subprocess.run(["osascript", "-l", "JavaScript", "-e", script], capture_output=True, text=True, timeout=120)
+        if result.returncode:
+            return {'status':'failed','path':None,'diagnostic':{'code':'picker_native_failed','message':result.stderr.strip()[:400] or '原生目录选择失败。','exit_code':result.returncode}}
+        selected = result.stdout.strip()
+        return {"status": "selected" if selected else "cancelled", "path": str(Path(selected).resolve()) if selected else None}
+    except subprocess.TimeoutExpired:
+        return {'status':'timed_out','path':None,'diagnostic':{'code':'picker_timeout','message':'目录选择已超时，原有输入保留；可以手动填写路径。'}}
+    except OSError as exc:
+        return {'status':'failed','path':None,'diagnostic':{'code':'picker_unavailable','message':str(exc)[:400]}}
+    finally:
+        _PICKER_LOCK.release()
 
 
 def compose_handoff(project):

@@ -709,16 +709,16 @@ _summary_cache = OrderedDict()
 _summary_cache_lock = threading.Lock()
 
 
-def workbench_summary(project_dir, *, revision=None):
-    return _workbench_summary(project_dir, revision=revision, encoded=False)
+def workbench_summary(project_dir, *, revision=None, reading=None):
+    return _workbench_summary(project_dir, revision=revision, encoded=False, reading=reading)
 
 
-def workbench_summary_json(project_dir, *, revision=None):
+def workbench_summary_json(project_dir, *, revision=None, reading=None):
     """Same guarded snapshot, already encoded for the HTTP transport."""
-    return _workbench_summary(project_dir, revision=revision, encoded=True)
+    return _workbench_summary(project_dir, revision=revision, encoded=True, reading=reading)
 
 
-def _workbench_summary(project_dir, *, revision, encoded):
+def _workbench_summary(project_dir, *, revision, encoded, reading=None):
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
     ctx = _ReadContext(store, doc, pin_directories=True)
@@ -727,7 +727,7 @@ def _workbench_summary(project_dir, *, revision, encoded):
         # Hash its actual content too: a changed file retaining the same revision
         # id must not reuse an old projection. File guards below cover every
         # referenced object, including prepared/frozen metadata and image paths.
-        key = (ctx.root, sha256_bytes(canonical_json_bytes(doc)), revision)
+        key = (ctx.root, sha256_bytes(canonical_json_bytes(doc)), revision, reading["etag"] if reading else None)
         with _summary_cache_lock:
             cached = _summary_cache.get(key)
         if cached is not None:
@@ -745,7 +745,8 @@ def _workbench_summary(project_dir, *, revision, encoded):
                 unchanged = False
             if unchanged:
                 return cached["json"] if encoded else json.loads(cached["json"])
-        result = _summary(ctx, revision=revision)
+        result = _summary(ctx, revision=revision, reading=reading)
+        if reading is not None:result["reading_etag"]=reading["etag"]
         serialized = json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         # Never cache partial failures: missing/corrupt objects must be retried
         # so an independent repair is visible without a business revision.
@@ -762,11 +763,16 @@ def _workbench_summary(project_dir, *, revision, encoded):
         ctx.close()
 
 
-def _summary(ctx, *, revision, member_index=None):
+def _summary(ctx, *, revision, member_index=None, reading=None):
     from .content_plan import projection
     store, doc = ctx.store, ctx.document
     now = datetime.now(timezone.utc)
     overview = _overview_facts(ctx, live=revision is None, now=now)
+    if reading is not None:
+        from .result_reading import key as reading_key
+        seen=set(reading['seen'])
+        read_ids={tid for tid,t in overview['tasks_by_id'].items() if reading_key(t) in seen}
+        overview['facts']=[f for f in overview['facts'] if not (f['kind']=='review_results' and f['identity'] in read_ids)]
     candidates_block, candidate_facts = _candidate_facts(ctx, overview["tasks_by_id"])
     tasks = overview["rows"]
     by_page = defaultdict(list)
@@ -850,7 +856,7 @@ def _fact_targets(ctx, fact):
                        "member_identity": ref["sha256"]}
 
 
-def action_targets(project_dir, action_id, *, revision, limit=30, offset=0):
+def action_targets(project_dir, action_id, *, revision, limit=30, offset=0, reading=None):
     """A fixed-snapshot, bounded page of an action's members. No history scan."""
     import re
     if not isinstance(revision, str) or not revision:
@@ -862,11 +868,11 @@ def action_targets(project_dir, action_id, *, revision, limit=30, offset=0):
     store = Store(project_dir)
     doc = load_snapshot(store, revision)
     ctx, members = _ReadContext(store, doc), {}
-    _summary(ctx, revision=revision, member_index=members)
+    _summary(ctx, revision=revision, member_index=members, reading=reading)
     # A live clock warning has no historical truth. It may resolve while the
     # requested snapshot is still current, but never invent it for old history.
     if action_id not in members and doc["revision_id"] == store.current_revision_id():
-        _summary(ctx, revision=None, member_index=members)
+        _summary(ctx, revision=None, member_index=members, reading=reading)
     if action_id not in members:
         raise ReadModelError("action_not_found", "action_id", "action is not present in this snapshot", http_status=404)
     targets, seen = [], set()

@@ -6,6 +6,8 @@
   "required": ["format", "project_id", "revision_id", "requested_revision", "snapshot_mode", "page_count", "pages", "task_counts", "unreadable_tasks", "outputs", "input_alignment", "quality", "candidates", "attempts", "next_actions", "evidence_level"],
   "additionalProperties": false,
   "properties": {
+    "reading_unavailable": {"type": "boolean"},
+    "reading_etag": {"type":"string", "pattern":"^[a-f0-9]{64}$"},
     "format": {"const": "workbench_summary.v1"},
     "project_id": {"type": "string"},
     "revision_id": {"type": "string"},

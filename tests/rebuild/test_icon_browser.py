@@ -112,6 +112,14 @@ def test_actual_icon_candidate_ppt_comparison_retry_and_adoption(icon_browser,tm
     for width,height in ((1280,800),(1440,900),(390,844)):
         page.set_viewport_size({'width':width,'height':height});page.get_by_label('显示正常页面尺寸').check();page.get_by_label('显示正常页面尺寸').uncheck();page.get_by_label('图标局部放大倍数').select_option('8')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    fixed_url=page.url
+    canvas=page.locator('.candidate-icon-review canvas').last
+    canvas.focus();canvas.press('ArrowRight');canvas.press('ArrowLeft')
+    page.evaluate("()=>{const control=document.querySelector('[aria-label=\"图标比较产物\"]');control.value='svg';control.dispatchEvent(new Event('change'));}")
+    assert page.evaluate("document.activeElement.getAttribute('aria-label')")=='候选 SVG'
+    page.evaluate("()=>{const control=document.querySelector('[aria-label=\"图标比较产物\"]');control.value='ppt';control.dispatchEvent(new Event('change'));}")
+    assert page.evaluate("document.activeElement.getAttribute('aria-label')")=='候选实际 PPT'
+    assert page.url==fixed_url
     page.screenshot(path=str(tmp_path/'actual-icon-ppt-comparison.png'),full_page=True)
     page.get_by_role('button',name='预览采用这个候选',exact=True).click();page.get_by_role('button',name='采用这个候选',exact=True).wait_for()
     page.get_by_role('button',name='采用这个候选',exact=True).click();expect(page.get_by_text(re.compile('这个候选已采用到'))).to_be_visible()
@@ -119,3 +127,34 @@ def test_actual_icon_candidate_ppt_comparison_retry_and_adoption(icon_browser,tm
     assert icons.listing(store.project_root)['samples']
     pool=page.evaluate("async()=> (await import('/v2/images.js')).imagePool.snapshot()")
     assert pool['large_peak']<=4 and pool['decode_peak']<=2 and pool['network_peak']<=6 and errors==[]
+
+
+def test_saved_sample_identity_survives_reorder_and_missing(icon_browser):
+    page,store,_=icon_browser
+    outcome=page.evaluate('''async()=>{
+      const {iconWorkbench,sampleKey}=await import('/v2/icon-workbench.js');
+      const a={sample_candidate_id:'candidate-a',sample_icon_index:0,page_id:'p01',label:'A',semantic_key:'file'};
+      const b={sample_candidate_id:'candidate-b',sample_icon_index:0,page_id:'p02',label:'B',semantic_key:'file'};
+      const original=window.fetch;let samples=[b,a];
+      window.fetch=async(url,...args)=>String(url).startsWith('/api/icons/list')?new Response(JSON.stringify({samples,proposals:[],recipes:[]})):original(url,...args);
+      const app={business:{entries:new Map()},health:{ui_capabilities:['icon_quality.v1']},route:{layer:'svg'},root:document.createElement('div'),disposables:[],editor:{draft:{content:{icon_ui:{method:'reuse',sample_identity:a}}},ready:Promise.resolve(),changed(){}}};
+      async function build(){const root=iconWorkbench(app,{page_id:'p01'});document.body.append(root);for(let i=0;i<100&&!root.querySelector('[aria-label="已采用图标样例"]').options.length;i++)await new Promise(r=>setTimeout(r,10));return root;}
+      let root=await build();const restored=root.querySelector('[aria-label="已采用图标样例"]').value;root.remove();samples=[b];root=await build();
+      const missing=root.querySelector('[aria-label="已采用图标样例"]').value;const warning=root.textContent.includes('请重新选择');root.remove();samples=[];root=await build();const emptyMethod=root.querySelector('[aria-label="图标处理方式"]').value;root.querySelectorAll('button')[1].click();await new Promise(r=>setTimeout(r,10));const blocked=root.textContent.includes('请重新选择');root.remove();app.disposables.forEach(fn=>fn());window.fetch=original;
+      return {restored,expected:sampleKey(a),missing,warning,emptyMethod,blocked};
+    }''')
+    assert outcome['restored']==outcome['expected'] and outcome['missing']=='' and outcome['warning'] and outcome['emptyMethod']=='reuse' and outcome['blocked']
+
+
+def test_missing_compare_column_keeps_stable_focus_identity(icon_browser):
+    page,store,_=icon_browser
+    file=store.read_object_json(store.load_document()['pages'][0]['svg'])['file']
+    identity=page.request.get(page.url.split('#')[0].rstrip('/')+'/api/project').json()['project_identity']
+    page.evaluate("""async({identity,file})=>{
+      const {iconComparison}=await import('/v2/icon-workbench.js');
+      const region={x:0,y:0,width:1,height:1};window.focusProbe=iconComparison({info:{project_identity:identity}},[{title:'原图',file,region},{title:'缺少基准实际 PPT',file:null,region},{title:'候选实际 PPT',file,region}]);document.body.append(window.focusProbe.node);
+    }""",{'identity':identity,'file':file})
+    page.locator('[data-icon-column="2"]').focus()
+    assert page.locator('[data-icon-column="2"]').get_attribute('aria-label')=='候选实际 PPT'
+    page.locator('[data-icon-column="1"]').focus();fixed=page.url;page.keyboard.press('ArrowRight');assert page.url==fixed
+    page.evaluate('()=>{focusProbe.dispose();focusProbe.node.remove();delete window.focusProbe;}')

@@ -27,7 +27,7 @@
     "required": ["kind", "id", "etag"],
     "properties": {
      "kind": {
-      "enum": ["draft", "gallery_state", "reading_position", "overview_preferences"]
+      "enum": ["draft", "gallery_state", "reading_position", "overview_preferences", "result_reading"]
      },
      "id": {
       "type": "string",

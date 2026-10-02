@@ -1,6 +1,6 @@
 """W10/W04 sustained browser pressure using the exact W01 manifest.
 
-Default 1,200 seconds. --smoke runs 60 seconds and NEVER qualifies the gate.
+Default 1,200 seconds. --smoke runs 100 seconds and NEVER qualifies the gate.
 No forced GC. Windows are elapsed [300,600) and [900,1200] seconds: the
 sixth through tenth and sixteenth through twentieth one-minute intervals.
 Synthetic background transitions use existing reserved fixture tasks only.
@@ -55,7 +55,7 @@ def main():
         proposed=icons.preview(project,proposal_id=proposal['proposal_id'],page_id=pid)
         icon_columns=[{'title':'合成原图','file':store.read_object_json(entry['blueprint'])['file'],'region':region},{'title':'合成当前 SVG','file':store.read_object_json(entry['svg'])['file'],'region':region},{'title':'合成标准替换建议','file':proposed['file'],'region':region}]
     pending = None; updates = []; rows = []; errors = []; posts = []; request_counts = {}; recent = []
-    duration = 60 if args.smoke else 1200; server = WorkbenchServer(project)
+    duration = 100 if args.smoke else 1200; server = WorkbenchServer(project)
     try:
         url = server.start() + 'v2/#' + urlencode({'project': info['project_identity'], 'surface': 'gallery', 'layer': 'original_image', 'revision': doc['revision_id'], 'zoom': 1})
         with sync_playwright() as pw:
@@ -63,6 +63,7 @@ def main():
             try:
                 page = context.new_page(); page.set_default_timeout(60000)
                 page.on('pageerror', lambda error: errors.append(str(error)))
+                page.on('console',lambda message:errors.append(message.text) if message.type=='error' else None)
                 def requested(request):
                     recent.append({'elapsed': time.monotonic(), 'method': request.method, 'url': request.url}); del recent[:-100]
                     if request.method == 'POST': posts.append(request.url.split('/api/')[-1])
@@ -78,7 +79,7 @@ def main():
                         page.get_by_role('button', name='整稿画廊', exact=True).click()
                         wait_dom(page, '.gallery-viewport')
                 while time.monotonic() - start < duration:
-                    phase = step % (8 if icon_columns else 6)
+                    phase = step % (10 if icon_columns else 8)
                     if phase == 0:
                         gallery()
                         page.locator('.gallery-viewport').evaluate('(node, fraction)=>node.scrollTop=(node.scrollHeight-node.clientHeight)*fraction', ((step // 6) % 10) / 10)
@@ -99,13 +100,18 @@ def main():
                         chooser = page.get_by_role('combobox', name='选择本页候选'); values = chooser.locator('option').evaluate_all('(nodes)=>nodes.map(node=>node.value)')
                         chooser.select_option(values[(step // 6) % len(values)])
                         wait_dom(page, '.candidate-column [data-image-state=ready]'); gallery()
-                    elif phase == 6:
+                    elif phase == 6 and icon_columns:
                         gallery()
                         page.evaluate('''async ({identity,columns})=>{const {iconComparison}=await import('/v2/icon-workbench.js');const {modal}=await import('/v2/dom.js');window.pressureIconView=iconComparison({info:{project_identity:identity}},columns);window.pressureIconDialog=modal('合成图标局部对照压力',window.pressureIconView.node);}''',{'identity':info['project_identity'],'columns':icon_columns})
                         wait_dom(page,'.icon-comparison canvas');page.get_by_label('显示正常页面尺寸').check();page.get_by_label('显示正常页面尺寸').uncheck();page.get_by_label('图标局部放大倍数').select_option('4')
-                    else:
+                    elif phase == 7 and icon_columns:
                         page.evaluate('''()=>{window.pressureIconView.dispose();window.pressureIconDialog.close();delete window.pressureIconView;delete window.pressureIconDialog;}''')
                         gallery()
+                    elif phase == (8 if icon_columns else 6):
+                        page.get_by_role('button',name='制作总览',exact=True).click();wait_dom(page,'.matrix')
+                        page.locator('.overview-todos').get_by_role('button',name='比较候选',exact=True).first.click();wait_dom(page,'.action-targets')
+                    else:
+                        page.get_by_role('button',name='下一页对象',exact=True).click();wait_dom(page,'.action-target');gallery()
                     if step % 2 == 0:
                         if pending:
                             value = service.task_cancel(project, task_id=pending, reason='W10 synthetic pressure cancellation'); updates.append({'step': step, 'task_id': pending, 'kind': 'cancel'}); pending = None
@@ -129,7 +135,7 @@ def main():
                 image_bounds = all(r['pool']['network_peak'] <= 6 and r['pool']['decode_peak'] <= 2 and r['pool']['thumbnails_peak'] <= 60 and r['pool']['large_peak'] <= 4 for r in rows)
                 payload = {'image_bounds_pass': image_bounds, 'qualifying': not args.smoke, 'elapsed_s': time.monotonic() - start, 'synthetic': True, 'model_calls': 0,
                     'fixture': {'factory': manifest['factory'], 'project_id': doc['project_id'], 'page_count': 300, 'candidate_count': 1500, 'attempt_count': 4500},
-                    'icon_comparison_included': bool(icon_columns), 'sampling': 'Chromium Performance.getMetrics JSHeapUsedSize after each ten-second interaction slot; no forced GC',
+                    'icon_comparison_included': bool(icon_columns), 'grouped_candidate_browsing_included':True, 'sampling': 'Chromium Performance.getMetrics JSHeapUsedSize after each ten-second interaction slot; no forced GC',
                     'middle_window_s': [300, 600], 'last_window_s': [900, 1200], 'middle_samples': len(middle), 'last_samples': len(end),
                     'middle_median': statistics.median(middle) if middle else None, 'last_median': statistics.median(end) if end else None, 'growth': ratio,
                     'memory_pass': ratio is not None and ratio <= .20, 'errors': errors, 'post_paths': sorted(set(posts)), 'get_counts': request_counts, 'updates': updates,

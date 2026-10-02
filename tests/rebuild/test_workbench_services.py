@@ -342,3 +342,27 @@ def test_cli_no_open_workbench_port_and_help(tmp_path, monkeypatch, capsys):
     with pytest.raises(SystemExit) as code:
         cli.main(['workbench', '--help'])
     assert code.value.code == 0 and '--registry' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('failure,expected', [
+    (subprocess.TimeoutExpired('osascript',120),'timed_out'),
+    (OSError('osascript unavailable'),'failed'),
+])
+def test_folder_picker_reports_failure_and_releases_lease(monkeypatch,failure,expected):
+    monkeypatch.setattr(launcher.sys,'platform','darwin')
+    def broken(*args,**kwargs):raise failure
+    monkeypatch.setattr(launcher.subprocess,'run',broken)
+    result=launcher.pick_directory()
+    assert result['status']==expected and result['path'] is None and result['diagnostic']['code']
+    monkeypatch.setattr(launcher.subprocess,'run',lambda *a,**k:subprocess.CompletedProcess(a[0],0,'/tmp\n',''))
+    assert launcher.pick_directory()=={'status':'selected','path':str(Path('/tmp').resolve())}
+
+
+def test_folder_picker_busy_and_native_failure_keep_manual_route(monkeypatch):
+    monkeypatch.setattr(launcher.sys,'platform','darwin')
+    launcher._PICKER_LOCK.acquire()
+    try:assert launcher.pick_directory()['status']=='busy'
+    finally:launcher._PICKER_LOCK.release()
+    monkeypatch.setattr(launcher.subprocess,'run',lambda *a,**k:subprocess.CompletedProcess(a[0],1,'','Native failure'))
+    result=launcher.pick_directory()
+    assert result['status']=='failed' and result['diagnostic']['message']=='Native failure'

@@ -112,3 +112,28 @@ def test_foreign_project_link_keeps_the_loaded_work_surface(action_browser):
     expect(page.locator('.notice')).to_contain_text('这个链接属于另一个项目')
     assert page.get_by_role('heading', name='制作总览', exact=True).is_visible()
     assert store.read_current() == before
+
+
+def test_read_result_removes_same_overview_target_and_survives_reload(action_browser):
+    from test_workbench_actions import synthetic_task
+    page,server,path,store=action_browser
+    doc=copy.deepcopy(store.load_document());doc['tasks']=[]
+    for i in range(2):
+        task=synthetic_task(doc,f'reading-{i}','completed',result_refs=[doc['pages'][0]['page']]);task['scope_pages']=['p01'];doc['tasks'].append(store.put_json_object(task))
+    commit(store,doc,'reading-browser');before=store.load_document()
+    errors=[];page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
+    page.add_init_script("window.cspErrors=[];document.addEventListener('securitypolicyviolation',e=>window.cspErrors.push(e.violatedDirective))")
+    page.goto(server.start());page.get_by_role('button',name='去阅读',exact=True).click()
+    page.get_by_role('heading',name='待办对象',exact=True).wait_for();assert page.locator('.action-target').count()==2
+    page.locator('.action-target').first.get_by_role('button',name='查看这个对象').click()
+    page.get_by_role('button',name='标记这些结果已读',exact=True).click()
+    from playwright.sync_api import expect
+    expect(page.get_by_role('button',name='已标记读过这些结果',exact=True)).to_be_disabled()
+    page.reload();expect(page.get_by_role('button',name='已标记读过这些结果',exact=True)).to_be_disabled()
+    reading=page.request.get(server.start().rstrip('/')+'/api/result-reading').json()
+    assert len(reading['seen'])==1 and store.load_document()==before
+    summary=page.request.get(server.start().rstrip('/')+'/api/view/summary?personal=1').json()
+    action=next(a for a in summary['next_actions']['actions'] if a['kind']=='review_results')
+    target=page.request.get(server.start().rstrip('/')+'/api/actions/'+action['action_id']+'/targets?revision='+summary['revision_id']+'&personal=1&reading_etag='+reading['etag']).json()
+    assert target['total']==1
+    assert errors==[] and page.evaluate('window.cspErrors')==[]

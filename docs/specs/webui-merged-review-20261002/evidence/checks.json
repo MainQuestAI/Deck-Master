@@ -1,0 +1,206 @@
+{
+  "schema": "merged_goal_review.evidence.v1",
+  "date": "2026-10-02",
+  "merged_head": "bed476090e2a49b4c679906da2ce762753789d96",
+  "tree_identical_to_pr91_head": "c46a3be936694a23fe286f72e817d3abef3bc0f6",
+  "ci": {
+    "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37001853588",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Real rendering chain (Python 3.12)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Required browser and installed UI (Python 3.12, Node 22)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Unit (Python 3.11, Node 22)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Unit (Python 3.11, Node 24)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Unit (Python 3.12, Node 22)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Unit (Python 3.12, Node 24)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "Group report",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "browser": {
+    "data": "private real 30-page engineering project copy",
+    "geometry": [
+      {
+        "surface": "overview",
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1431,
+        "overflow": false
+      },
+      {
+        "surface": "overview",
+        "width": 1280,
+        "height": 800,
+        "scrollWidth": 1271,
+        "overflow": false
+      },
+      {
+        "surface": "overview",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 381,
+        "overflow": false
+      },
+      {
+        "surface": "content",
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1431,
+        "overflow": false
+      },
+      {
+        "surface": "content",
+        "width": 1280,
+        "height": 800,
+        "scrollWidth": 1271,
+        "overflow": false
+      },
+      {
+        "surface": "content",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 381,
+        "overflow": false
+      },
+      {
+        "surface": "gallery",
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "overflow": false
+      },
+      {
+        "surface": "gallery",
+        "width": 1280,
+        "height": 800,
+        "scrollWidth": 1271,
+        "overflow": false
+      },
+      {
+        "surface": "gallery",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 381,
+        "overflow": false
+      },
+      {
+        "surface": "style",
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1431,
+        "overflow": false
+      },
+      {
+        "surface": "style",
+        "width": 1280,
+        "height": 800,
+        "scrollWidth": 1271,
+        "overflow": false
+      },
+      {
+        "surface": "style",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 381,
+        "overflow": false
+      },
+      {
+        "surface": "runs",
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1431,
+        "overflow": false
+      },
+      {
+        "surface": "runs",
+        "width": 1280,
+        "height": 800,
+        "scrollWidth": 1271,
+        "overflow": false
+      },
+      {
+        "surface": "runs",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 381,
+        "overflow": false
+      }
+    ],
+    "candidate_navigation": "overview -> list of two real candidates -> page 6 SVG comparison verified",
+    "keyboard": {
+      "before_page": "p04",
+      "after_page": "p05",
+      "candidate_parameter_removed": true,
+      "evidence": "real Chromium arrow key on focused comparison canvas"
+    },
+    "read_marker": {
+      "markedRead": true,
+      "overviewStillIncludesTask": true,
+      "overviewResultTargets": 120,
+      "overviewText": "30 页结果待阅读"
+    },
+    "csp": {
+      "unique_reason": "inline content-outline margin blocked by production CSP",
+      "first_content_visit_errors": 6,
+      "not_zero_console_errors": true
+    }
+  },
+  "business_revisions": {
+    "pr90_original": "966609eb7430412e8427db7d821965fd",
+    "pr91_real_copy": "c787083791f1419785c4deae07824a28",
+    "review_copy": "c787083791f1419785c4deae07824a28"
+  },
+  "human_icon_visual_acceptance": false,
+  "u06_closed": false,
+  "findings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": [
+      "R01",
+      "R02",
+      "R03",
+      "R04",
+      "R05",
+      "R06"
+    ],
+    "P3": [
+      "R07"
+    ]
+  },
+  "verification_boundaries": [
+    "No new full local suite or endurance run; exact merged-head CI executed",
+    "Retry status probe isolated with controlled cache and pending worker; not end-to-end browser retry",
+    "Visibility probe in memory only; no invisible candidate accepted",
+    "Sample selection probe minimal real Chromium DOM with controlled listing change",
+    "No new macOS native picker or human 30-second observation",
+    "Private materials and screenshots not included"
+  ]
+}

@@ -99,6 +99,7 @@ def main():
             page.get_by_role('button', name='确认输入并交接判断', exact=True).click()
             expect(page.get_by_role('heading', name='当前任务', exact=True)).to_be_visible()
             page.get_by_role('button', name='内容与来源', exact=True).click()
+            expect(page.get_by_role('heading', name='内容与来源', exact=True)).to_be_visible()
             latest_doc = created_store.load_document()
             tasks = [created_store.read_object_json(ref) for ref in latest_doc['tasks']]
             eligible = [task for task in tasks if task['status'] == 'awaiting_host']

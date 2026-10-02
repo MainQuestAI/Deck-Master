@@ -81,10 +81,10 @@ export async function launcher(root, health) {
     trigger.disabled = true;
     try {
       const data = await post('/api/directories/pick', {});
-      if (data.status === 'selected') { input.value = data.path; input.dispatchEvent(new Event('input')); }
-      else if (data.status === 'manual_path_required') { error.textContent = '当前环境无法打开目录选择器，请在位置字段填写完整路径。'; input.focus(); }
+      if (data.status === 'selected') { error.textContent='';input.value = data.path; input.dispatchEvent(new Event('input')); }
+      else if (['manual_path_required','timed_out','failed','busy'].includes(data.status)) { error.textContent = (data.diagnostic?.message||'当前环境无法打开目录选择器。')+' 当前输入保留，可直接填写完整路径。'; input.focus(); }
       else toast('已取消选择，当前项目保持。');
-    } catch (failure) { error.textContent = readableError(failure); }
+    } catch (failure) { error.textContent = readableError(failure)+' 当前输入保留，请手动填写路径或重试。'; input.focus(); }
     finally { trigger.disabled = false; }
   }
   function registerForm() {
