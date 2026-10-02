@@ -11,6 +11,7 @@ import {diffView} from './text-diff.js';
 import {productionView} from './production-view.js';
 import {trialActions} from './trial-actions.js';
 import {candidateDesk} from './candidate-desk.js';
+import {iconWorkbench} from './icon-workbench.js';
 import {Annotations} from './annotations.js';
 
 const pageTitle = (page, index) => `第 ${index + 1} 页 · ${page.title || '未命名页面'}`;
@@ -253,5 +254,5 @@ export function pageDetail(app, data) {
       app.route.zoom = value; history.replaceState(null, '', routeHash(app.info, app.route)); app.savePosition();
     }); toolbar.append(el('label', {}, '阅读缩放 ', zoom));
   }
-  node.append(chain, toolbar, update, compareControls, layout, trialActions(app, data)); return node;
+  node.append(chain, toolbar, update, compareControls, layout, trialActions(app, data), iconWorkbench(app, data)); return node;
 }

@@ -277,6 +277,10 @@ def _write_engineering(store, doc, target):
     def collect(value, *, leaf=False):
         if isinstance(value, dict):
             if set(value) == {"path", "sha256"}:
+                # Frozen SVG locators share these keys with object refs, but
+                # identify XML elements rather than portable files.
+                if re.fullmatch(r"[0-9]+(?:/[0-9]+)*", str(value["path"])) and re.fullmatch(r"[a-f0-9]{64}", str(value["sha256"])):
+                    return
                 validate_ref(value, where="engineering/ref")
                 key = value["path"]
                 if key in seen:

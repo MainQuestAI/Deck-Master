@@ -230,6 +230,8 @@ def build_parser() -> argparse.ArgumentParser:
         "candidates": {"list": (), "show": ("candidate-id",), "plan": ("input",), "adopt": ("input", "base-revision", "operation-id"), "decision": ("input", "base-revision", "operation-id")},
         "stages": {"assemble": ("base-revision", "operation-id")},
         "content": {"plan": ("input",), "commit": ("plan-id", "base-revision", "operation-id"), "inputs": ("input", "base-revision", "operation-id"), "source": ("source-id",), "lineage": ("page-id",)},
+        "icons": {"inspect": ("page-id",), "catalog": (), "list": (), "propose": ("input",), "confirm": ("proposal-id", "base-revision", "operation-id"), "plan": ("input",), "draft": ("recipe-id", "page-id")},
+        "candidate-preview": {"request": ("candidate-id",), "status": ("candidate-id",)},
         "styles": {"list": (), "show": ("recipe-id",), "propose": ("input",), "confirm": ("proposal-id", "base-revision", "operation-id"), "plan": ("input",)},
     }.items():
         group = sub.add_parser(name)
@@ -244,7 +246,9 @@ def build_parser() -> argparse.ArgumentParser:
                 if command == "source":
                     command_parser.add_argument("--locator")
                     command_parser.add_argument("--extract-sha256")
-            if name == "styles" and command in ("list", "show"):
+            if name == "candidate-preview" and command == "request":
+                command_parser.add_argument("--retry", action="store_true")
+            if (name == "icons" and command in ("list", "inspect")) or (name == "styles" and command in ("list", "show")):
                 command_parser.add_argument("--revision")
             if name == "ui" and command == "commit-clear":
                 command_parser.add_argument("--plan-id", required=True)
@@ -491,9 +495,12 @@ def main(argv: list[str] | None = None) -> int:
                     external_use=options.external_use,
                 )
             )
-        if options.command in ("annotations", "changes", "operations", "candidates", "stages", "styles", "content", "ui"):
+        if options.command in ("annotations", "changes", "operations", "candidates", "stages", "styles", "content", "ui", "icons", "candidate-preview"):
             from . import annotation_service, changes, operations, candidates, stages, styles, content_ops, ui_journal
-            actions = {("content", "plan"): content_ops.plan, ("content", "commit"): content_ops.commit, ("content", "inputs"): content_ops.inputs, ("content", "source"): content_ops.source, ("content", "lineage"): content_ops.lineage,
+            from . import icons, candidate_preview
+            actions = {**{("icons", k): v for k,v in {"inspect":icons.inspect,"catalog":icons.catalog,"list":icons.listing,"propose":icons.propose,"confirm":icons.confirm,"plan":icons.plan,"draft":icons.draft}.items()},
+                       ("candidate-preview", "request"):candidate_preview.request, ("candidate-preview", "status"):candidate_preview.status,
+                       ("content", "plan"): content_ops.plan, ("content", "commit"): content_ops.commit, ("content", "inputs"): content_ops.inputs, ("content", "source"): content_ops.source, ("content", "lineage"): content_ops.lineage,
                        ("annotations", "save"): annotation_service.save,
                        ("annotations", "list"): annotation_service.list_annotations,
                        ("changes", "list"): changes.list_changes, ("changes", "plan"): changes.plan, ("changes", "commit"): changes.commit,
@@ -506,7 +513,7 @@ def main(argv: list[str] | None = None) -> int:
                        ("styles", "list"): styles.listing, ("styles", "show"): styles.show,
                        ("styles", "propose"): styles.propose, ("styles", "confirm"): styles.confirm, ("styles", "plan"): styles.plan}
             fields = {key: getattr(options, key) for key in
-                      ("base_revision", "operation_id", "plan_id", "manifest_digest", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id", "source_id", "locator", "extract_sha256") if hasattr(options, key)}
+                      ("base_revision", "operation_id", "plan_id", "manifest_digest", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id", "source_id", "locator", "extract_sha256", "retry") if hasattr(options, key)}
             if hasattr(options, "input"):
                 fields["input"] = json.loads(Path(options.input).read_text(encoding="utf-8"))
             return _emit(actions[(options.command, options.workbench_command)](options.project, **fields))

@@ -1,0 +1,18 @@
+{
+  "source_commit": "cc1f16b5bd1f05c385324fbdb72c7f8ebd27371a",
+  "unit_passed": 1039,
+  "browser_passed": 34,
+  "render_passed": 33,
+  "installed_browser_checks": 7,
+  "ruff": "pass",
+  "diff_check": "pass",
+  "logs_sha256": {
+    "unit": "27bcf3d5a1cf8adcd622310760ee35da9aa4e964c8f763cc07c81ee2c575bac0",
+    "browser": "f19089baeb558416c9c0de42afc464dca465dc7d5b32ccc5a80014d1ad298036",
+    "render": "9c14eb5676e5da5d36175e9241a49fdf7cddf8d135389efe1dc7aba2ed71c0c9",
+    "installed_browser": "8b448f642781390f8bf5c840f7503ebd4e4721b46a07ffb713b02ea1561486d2"
+  },
+  "os": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.12.12",
+  "old_installed_core_rejected_new_boundary": true
+}

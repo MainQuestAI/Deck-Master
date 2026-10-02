@@ -558,6 +558,8 @@ _KIND_ARTIFACT_ROLES = {
 
 
 def _check_scope(kind: str, envelope: dict, task: dict) -> None:
+    if task.get('stage_request', {}).get('icon_recipe_ref') and any(envelope.get(key) for key in ('pages', 'page_order', 'content_update', 'content_plan', 'reviews')):
+        raise EnvelopeError('(result)', 'icon repair returns only its complete scoped SVG; Page and original image stay fixed')
     scope = task.get("scope_pages") or []
     pages = envelope.get("pages") or []
     page_order = envelope.get("page_order") or []
@@ -1135,6 +1137,8 @@ def _accept_result_locked(
             entry = candidates.get(spec.get('page_id'))
             if entry:
                 data = staged[spec['file_id']]['bytes']
+                from .icons import check_scope
+                check_scope(store, document, task, data)
                 if entry['page_id'] in staged_blueprints:
                     _validate_svg_reference(data, sha256_bytes(staged_blueprints[entry['page_id']]))
                 elif entry.get('blueprint'):

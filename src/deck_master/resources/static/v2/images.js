@@ -1,6 +1,12 @@
 import {fileURL} from './api.js';
 import {el, button} from './dom.js';
 
+export function pooledURL(ref) {
+  const match = ref?.path?.match(/^\.deckmaster\/cache\/candidate-previews\/([a-f0-9]{64})\/(candidate\.png)$/);
+  if (match && /^[a-f0-9]{64}$/.test(ref.sha256)) return '/api/candidate-preview/file?' + new URLSearchParams({cache_key:match[1],name:match[2]});
+  return fileURL(ref);
+}
+
 class Gate {
   constructor(limit) { this.limit = limit; this.active = 0; this.peak = 0; this.pending = []; }
   run(work, priority = 0) {
@@ -31,7 +37,7 @@ export class ImagePool {
     this.evictions++;
   }
   acquire(project, ref, kind = 'thumb', priority = 0, retry = false) {
-    if (!fileURL(ref)) throw new Error('图片引用无效，未读取其它图片。');
+    if (!pooledURL(ref)) throw new Error('图片引用无效，未读取其它图片。');
     const vector = ref.path.endsWith('.svg');
     const variant = kind === 'large' ? 'original-image-v1' : vector ? 'svg-browser-preview-v1' : 'thumb-480-png-v1';
     const key = `${project}:${ref.sha256}:${variant}`;
@@ -70,8 +76,8 @@ export class ImagePool {
     }, priority);
   }
   async load(entry, ref, vector, priority, retry) {
-    let url = fileURL(ref);
-    if (entry.kind === 'thumb' && !vector) {
+    let url = pooledURL(ref);
+    if (entry.kind === 'thumb' && !vector && !ref.path.includes('/cache/candidate-previews/')) {
       const query = new URLSearchParams({...ref, retry: retry ? '1' : '0'});
       let status;
       for (let attempt = 0; attempt < 80; attempt++) {

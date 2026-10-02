@@ -1,0 +1,146 @@
+{
+  "synthetic": true,
+  "model_calls": 0,
+  "backend": "node",
+  "icons": 24,
+  "pages": 27,
+  "actual_renders": 27,
+  "checks": [
+    {
+      "icon": "file-text",
+      "native_shapes": 5,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "folder",
+      "native_shapes": 1,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "database",
+      "native_shapes": 3,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "server",
+      "native_shapes": 4,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "cloud",
+      "native_shapes": 1,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "cpu",
+      "native_shapes": 14,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "network",
+      "native_shapes": 5,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "workflow",
+      "native_shapes": 3,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "git-branch",
+      "native_shapes": 3,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "bot",
+      "native_shapes": 6,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "users",
+      "native_shapes": 4,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "user",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "shield-check",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "lock",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "search",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "chart-no-axes-combined",
+      "native_shapes": 6,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "chart-pie",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "settings",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "circle-check",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "circle-alert",
+      "native_shapes": 3,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "refresh-cw",
+      "native_shapes": 4,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "upload",
+      "native_shapes": 3,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "download",
+      "native_shapes": 3,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "layers",
+      "native_shapes": 3,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "butt-miter",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "round-round",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    },
+    {
+      "icon": "square-bevel",
+      "native_shapes": 2,
+      "stroke_properties": "pass"
+    }
+  ],
+  "status": "pass"
+}

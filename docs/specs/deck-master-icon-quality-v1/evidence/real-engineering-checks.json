@@ -1,0 +1,139 @@
+{
+  "status": "pass",
+  "pages": 30,
+  "changed_svg_pages": [
+    "p04",
+    "p16",
+    "p28"
+  ],
+  "original_revision": "966609eb7430412e8427db7d821965fd",
+  "original_unchanged": true,
+  "page_and_original_refs_unchanged": true,
+  "model_image_calls": 0,
+  "human_visual_acceptance": false,
+  "records": [
+    {
+      "page_id": "p04",
+      "candidate_id": "candidate-c9da8a741a314626ae1c6a29af41d0a0",
+      "recipe_sha256": "0117862416d319df9b4a062af8d9383fce353124088d6802642ef804b3b501dc",
+      "scope_status": "pass",
+      "selected_objects": 6,
+      "outside_scope_unchanged": true,
+      "actual_ppt_status": "ready",
+      "native_check": "pass",
+      "native_shapes": 97,
+      "pictures": 0,
+      "visual_review": "not_evaluated",
+      "files": {
+        "candidate.png": {
+          "sha256": "5bdc5c17c07d2373cc8130ca766a3539dfc5127ade9a087efefbe884ecb49744",
+          "bytes": 190978
+        },
+        "candidate.pptx": {
+          "sha256": "9193542cf7944eea61a806e43500e23e8a3292cb546242d53b65b63b88b2f891",
+          "bytes": 38637
+        },
+        "candidate.svg": {
+          "sha256": "072cb4ed6fbb484c561852dd00aa58169ba014a6da5384239588d58eb71b9303",
+          "bytes": 16229
+        },
+        "readback.json": {
+          "sha256": "726533f0b44d14a6f64107d8903cad11e40a1d326e925e52437a4441e41341f4",
+          "bytes": 159
+        }
+      }
+    },
+    {
+      "page_id": "p16",
+      "candidate_id": "candidate-162485bff7ad4443b18de94d939426d3",
+      "recipe_sha256": "1e619a39b04645408fa42dd25bd90622b00c18014adb82a7fe11ae0699d714fc",
+      "scope_status": "pass",
+      "selected_objects": 1,
+      "outside_scope_unchanged": true,
+      "actual_ppt_status": "ready",
+      "native_check": "pass",
+      "native_shapes": 88,
+      "pictures": 0,
+      "visual_review": "not_evaluated",
+      "files": {
+        "candidate.png": {
+          "sha256": "bcd7a90bfa64bd19d7d26cb31e53a5b94b1feb02d35e41cba473ae60808fa65e",
+          "bytes": 171040
+        },
+        "candidate.pptx": {
+          "sha256": "b8305bb3a7867ab46ec09c5bf65dc3f3a585a5f49c542f6b3ceaa3246c6af576",
+          "bytes": 37166
+        },
+        "candidate.svg": {
+          "sha256": "fe2a405db4eb82218118acafdb2f157203ac383bb53e12449cae9c9533ee6c9a",
+          "bytes": 15296
+        },
+        "readback.json": {
+          "sha256": "83d075668c95069228c6f4fd6e4e63de8914e8896f0ca18d5242bf9b6439e99b",
+          "bytes": 159
+        }
+      }
+    },
+    {
+      "page_id": "p28",
+      "candidate_id": "candidate-1e03ca70f4f94a0692db8c9d009dc613",
+      "recipe_sha256": "1e619a39b04645408fa42dd25bd90622b00c18014adb82a7fe11ae0699d714fc",
+      "scope_status": "pass",
+      "selected_objects": 1,
+      "outside_scope_unchanged": true,
+      "actual_ppt_status": "ready",
+      "native_check": "pass",
+      "native_shapes": 70,
+      "pictures": 0,
+      "visual_review": "not_evaluated",
+      "files": {
+        "candidate.png": {
+          "sha256": "cda9bd108a70a25793aaee7b13a23732f451e9f54ae7b5f3d666999bba097e04",
+          "bytes": 179896
+        },
+        "candidate.pptx": {
+          "sha256": "4f186e9b51fc5fd4f12dc769699399929015aec0218daa433522e372ae452ae8",
+          "bytes": 35634
+        },
+        "candidate.svg": {
+          "sha256": "6e3e45c9646461880d6af106590deb9dfec50bb01a019388c3957bd4e738b16f",
+          "bytes": 12873
+        },
+        "readback.json": {
+          "sha256": "6d163d7405408331eda68962839090f62d57ad9f5a0cabcd674581f1d0d550a3",
+          "bytes": 159
+        }
+      }
+    }
+  ],
+  "engineering_recovery": {
+    "status": "pass",
+    "portable_icon_checks": 3,
+    "current_final_reviews": 6,
+    "cache_not_required": true,
+    "restored_document_equal": true,
+    "archive_sha256": "20a8227c830befe4b6bba9f2450a8f7ebd04a3f2d8a30bdeb0d3ec13f1e9951a",
+    "revision_id": "c787083791f1419785c4deae07824a28"
+  },
+  "local_comparisons": 6,
+  "whole_deck_assembly": "pass",
+  "current_final_review": {
+    "status": "recorded",
+    "pages": 30,
+    "reviewer": "host_self",
+    "independence_confirmed": false,
+    "human_visual_acceptance": false,
+    "review_dimensions": {
+      "content": "pass",
+      "blueprint_content": "pass",
+      "blueprint_fidelity": "needs_review",
+      "conversion": "pass",
+      "readability": "pass",
+      "privacy": "pass"
+    },
+    "check_status": "needs_review",
+    "private_metadata_findings": 0,
+    "original_unchanged": true,
+    "revision_id": "c787083791f1419785c4deae07824a28"
+  }
+}

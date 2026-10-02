@@ -51,6 +51,9 @@ def _plan(store, document, value):
         fail('base_revision', 'project changed; create a new plan', conflict=True)
     if not value['instruction'].strip() or not value['intent'].strip():
         fail('instruction', 'provide a concrete change instruction')
+    if value.get('icon_recipe_ref'):
+        from .icons import validate_change as validate_icon_change
+        validate_icon_change(store, document, value)
     entries = {entry['page_id']: entry for entry in document['pages']}
     extended = any(key in value for key in ('mode', 'references')) or any('stage' in t for t in value['targets'])
     mode = value.get('mode', 'auto')
@@ -223,6 +226,10 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
             task['stage_request']['style_recipe_ref'] = plan['input']['style_recipe_ref']
             task['inputs'].append(plan['input']['style_recipe_ref'])
             task['required_capabilities'].append('style_recipe')
+        if plan['input'].get('icon_recipe_ref'):
+            task['stage_request']['icon_recipe_ref'] = plan['input']['icon_recipe_ref']
+            task['inputs'].append(plan['input']['icon_recipe_ref'])
+            task['required_capabilities'].append('icon_repair')
         if action['mode'] == 'trial':
             task['required_capabilities'].append('candidate_result')
             if stage == 'content':

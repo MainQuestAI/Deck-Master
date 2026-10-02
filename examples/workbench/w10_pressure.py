@@ -15,7 +15,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlencode
 from playwright.sync_api import sync_playwright, expect
-from deck_master import service, ui_journal
+from deck_master import service, ui_journal, icons
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 
@@ -37,6 +37,7 @@ def main():
     parser.add_argument('--fixture', type=Path, required=True); parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--source-commit', help='Installed candidate source SHA; otherwise use checkout HEAD')
     parser.add_argument('--chromium-executable', type=Path)
+    parser.add_argument('--icon-proposal', type=Path, help='Explicit synthetic proposal JSON; add local icon comparison to the same sustained gate')
     parser.add_argument('--smoke', action='store_true'); args = parser.parse_args()
     manifest = json.loads((args.fixture / 'manifest.json').read_text())
     assert manifest['factory'] == 'w01-pressure.v1' and manifest['candidate_count'] == 1500 and manifest['attempt_count'] == 4500
@@ -48,6 +49,11 @@ def main():
     assert all(tid in task_status for tid in manifest['background_task_ids'])
     available = [tid for tid in manifest['background_task_ids'] if task_status[tid] == 'awaiting_host']
     assert available, 'No remaining background fixture tasks; preserve this manifest and explicitly replenish via factory before running.'
+    icon_columns = None
+    if args.icon_proposal:
+        supplied=json.loads(args.icon_proposal.read_text());pid=supplied['page_id'];proposal=supplied['result'];target=proposal['proposal']['input']['targets'][0];entry=next(e for e in doc['pages'] if e['page_id']==pid);region=target['icons'][0]['svg_region']
+        proposed=icons.preview(project,proposal_id=proposal['proposal_id'],page_id=pid)
+        icon_columns=[{'title':'合成原图','file':store.read_object_json(entry['blueprint'])['file'],'region':region},{'title':'合成当前 SVG','file':store.read_object_json(entry['svg'])['file'],'region':region},{'title':'合成标准替换建议','file':proposed['file'],'region':region}]
     pending = None; updates = []; rows = []; errors = []; posts = []; request_counts = {}; recent = []
     duration = 60 if args.smoke else 1200; server = WorkbenchServer(project)
     try:
@@ -72,7 +78,7 @@ def main():
                         page.get_by_role('button', name='整稿画廊', exact=True).click()
                         wait_dom(page, '.gallery-viewport')
                 while time.monotonic() - start < duration:
-                    phase = step % 6
+                    phase = step % (8 if icon_columns else 6)
                     if phase == 0:
                         gallery()
                         page.locator('.gallery-viewport').evaluate('(node, fraction)=>node.scrollTop=(node.scrollHeight-node.clientHeight)*fraction', ((step // 6) % 10) / 10)
@@ -89,10 +95,17 @@ def main():
                         page.get_by_role('button', name='任务与交付', exact=True).click()
                         wait_dom(page, '.candidate-batch-row'); page.locator('.candidate-batch-row').first.get_by_role('button', name='比较这个候选').click()
                         wait_dom(page, '.candidate-desk'); wait_dom(page, '.candidate-column [data-image-state=ready]')
-                    else:
+                    elif phase == 5:
                         chooser = page.get_by_role('combobox', name='选择本页候选'); values = chooser.locator('option').evaluate_all('(nodes)=>nodes.map(node=>node.value)')
                         chooser.select_option(values[(step // 6) % len(values)])
                         wait_dom(page, '.candidate-column [data-image-state=ready]'); gallery()
+                    elif phase == 6:
+                        gallery()
+                        page.evaluate('''async ({identity,columns})=>{const {iconComparison}=await import('/v2/icon-workbench.js');const {modal}=await import('/v2/dom.js');window.pressureIconView=iconComparison({info:{project_identity:identity}},columns);window.pressureIconDialog=modal('合成图标局部对照压力',window.pressureIconView.node);}''',{'identity':info['project_identity'],'columns':icon_columns})
+                        wait_dom(page,'.icon-comparison canvas');page.get_by_label('显示正常页面尺寸').check();page.get_by_label('显示正常页面尺寸').uncheck();page.get_by_label('图标局部放大倍数').select_option('4')
+                    else:
+                        page.evaluate('''()=>{window.pressureIconView.dispose();window.pressureIconDialog.close();delete window.pressureIconView;delete window.pressureIconDialog;}''')
+                        gallery()
                     if step % 2 == 0:
                         if pending:
                             value = service.task_cancel(project, task_id=pending, reason='W10 synthetic pressure cancellation'); updates.append({'step': step, 'task_id': pending, 'kind': 'cancel'}); pending = None
@@ -116,7 +129,7 @@ def main():
                 image_bounds = all(r['pool']['network_peak'] <= 6 and r['pool']['decode_peak'] <= 2 and r['pool']['thumbnails_peak'] <= 60 and r['pool']['large_peak'] <= 4 for r in rows)
                 payload = {'image_bounds_pass': image_bounds, 'qualifying': not args.smoke, 'elapsed_s': time.monotonic() - start, 'synthetic': True, 'model_calls': 0,
                     'fixture': {'factory': manifest['factory'], 'project_id': doc['project_id'], 'page_count': 300, 'candidate_count': 1500, 'attempt_count': 4500},
-                    'sampling': 'Chromium Performance.getMetrics JSHeapUsedSize after each ten-second interaction slot; no forced GC',
+                    'icon_comparison_included': bool(icon_columns), 'sampling': 'Chromium Performance.getMetrics JSHeapUsedSize after each ten-second interaction slot; no forced GC',
                     'middle_window_s': [300, 600], 'last_window_s': [900, 1200], 'middle_samples': len(middle), 'last_samples': len(end),
                     'middle_median': statistics.median(middle) if middle else None, 'last_median': statistics.median(end) if end else None, 'growth': ratio,
                     'memory_pass': ratio is not None and ratio <= .20, 'errors': errors, 'post_paths': sorted(set(posts)), 'get_counts': request_counts, 'updates': updates,

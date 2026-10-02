@@ -44,3 +44,7 @@ The user-supplied horizontal wordmark contains IBM Plex Mono glyph outlines.
 The accompanying SIL Open Font License 1.1 is distributed at
 `src/deck_master/resources/static/v2/assets/deck-master-logo/IBMPlexMono-OFL.txt`.
 No font binary or external font service is used.
+
+## Lucide 1.49.0 icon subset
+
+24 offline SVG assets under `src/deck_master/resources/icons/lucide/`. Upstream: https://github.com/lucide-icons/lucide/tree/1.49.0. Full ISC and applicable Feather MIT copyright/permission notices are retained in `LICENSE.txt`; `manifest.json` records source URLs and SHA-256.

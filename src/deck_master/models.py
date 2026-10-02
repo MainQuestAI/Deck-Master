@@ -25,6 +25,8 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
 
 SCHEMA_FILES = {
+    "icon_input": "icon-input.v1.schema.json",
+    "icon_recipe": "icon-recipe.v1.schema.json",
     "action_targets": "action-targets.v1.schema.json",
     "restore_plan": "restore-plan.v1.schema.json",
     "export_manifest": "export-manifest.v1.schema.json",
@@ -250,7 +252,7 @@ def validate_review_semantics(review: dict[str, Any]) -> None:
 
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
-               "content-candidates.v1": 8}
+               "content-candidates.v1": 8, "icon-quality.v1": 9}
 
 
 def require_writer(document, minimum):
@@ -267,26 +269,30 @@ def validate_document_structure(document: dict[str, Any]) -> None:
     validate_schema("document", document)
     if document.get("content_plan"):
         validate_ref(document["content_plan"], where="document/content_plan")
-        if document.get("compatibility", {}).get("minimum_writer") not in ("content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1"):
+        if document.get("compatibility", {}).get("minimum_writer") not in ("content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1"):
             raise ModelError("document/compatibility", "content plans require the content-plan.v1 writer boundary")
     receipt = (document.get("change") or {}).get("operation_receipt")
     if receipt is not None and receipt["response"]["revision_id"] != document["revision_id"]:
         raise ModelError("document/change/operation_receipt/response/revision_id",
                          "operation receipt must name its own Document revision")
     if (document.get("annotations") or document.get("changes") or document.get("change", {}).get("operation_commit")):
-        if document.get("compatibility", {}).get("minimum_writer") not in ("changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1"):
+        if document.get("compatibility", {}).get("minimum_writer") not in ("changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1"):
             raise ModelError("document/compatibility", "change records require the changes.v1 writer boundary")
     if document.get('candidates') or document.get('candidate_adoptions'):
-        if document.get('compatibility', {}).get('minimum_writer') not in ('candidates.v1', 'run-desk.v1', 'style-recipes.v1', 'content-ops.v1', 'content-candidates.v1'):
+        if document.get('compatibility', {}).get('minimum_writer') not in ('candidates.v1', 'run-desk.v1', 'style-recipes.v1', 'content-ops.v1', 'content-candidates.v1', 'icon-quality.v1'):
             raise ModelError('document/compatibility', 'candidate records require the candidates.v1 writer boundary')
 
-    if document.get("style_recipes") and document.get("compatibility", {}).get("minimum_writer") not in ("style-recipes.v1", "content-ops.v1", "content-candidates.v1"):
+    if document.get("style_recipes") and document.get("compatibility", {}).get("minimum_writer") not in ("style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1"):
         raise ModelError("document/compatibility", "style recipes require the style-recipes.v1 writer boundary")
     if document.get("page_derivations"):
-        if document.get("compatibility", {}).get("minimum_writer") not in ("content-ops.v1", "content-candidates.v1"):
+        if document.get("compatibility", {}).get("minimum_writer") not in ("content-ops.v1", "content-candidates.v1", "icon-quality.v1"):
             raise ModelError("document/compatibility", "page derivations require content-ops.v1")
         for ref in document["page_derivations"]:
             validate_ref(ref, where="document/page_derivations")
+    if document.get("icon_recipes"):
+        if document.get("compatibility", {}).get("minimum_writer") != "icon-quality.v1":
+            raise ModelError("document/compatibility", "icon recipes require icon-quality.v1")
+        for ref in document["icon_recipes"]: validate_ref(ref, where="document/icon_recipes")
     pages = document.get("pages") or []
     page_ids = [entry.get("page_id") for entry in pages]
     if len(page_ids) != len(set(page_ids)):

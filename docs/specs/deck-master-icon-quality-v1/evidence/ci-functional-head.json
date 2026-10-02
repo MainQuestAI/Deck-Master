@@ -1,0 +1,44 @@
+{
+  "databaseId": 36994757558,
+  "headSha": "cc1f16b5bd1f05c385324fbdb72c7f8ebd27371a",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/36994757558",
+  "jobs": [
+    {
+      "name": "Required browser and installed UI (Python 3.12, Node 22)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Unit (Python 3.12, Node 24)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Real rendering chain (Python 3.12)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Unit (Python 3.11, Node 22)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Unit (Python 3.12, Node 22)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Unit (Python 3.11, Node 24)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Group report",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

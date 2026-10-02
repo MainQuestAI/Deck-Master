@@ -872,7 +872,8 @@
             "run-desk.v1",
             "style-recipes.v1",
             "content-ops.v1",
-            "content-candidates.v1"
+            "content-candidates.v1",
+            "icon-quality.v1"
           ]
         }
       },
@@ -1032,6 +1033,24 @@
               "page",
               "content_update"
             ]
+          },
+          "icon_check_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
           }
         },
         "required": [
@@ -1151,6 +1170,27 @@
       }
     },
     "page_derivations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "icon_recipes": {
       "type": "array",
       "items": {
         "type": "object",
