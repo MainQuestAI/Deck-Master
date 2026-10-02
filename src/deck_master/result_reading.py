@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .local_state import LocalStateConflict, LocalStateError, local_lock, read_json, safe_path, write_json
 from .models import canonical_json_bytes, sha256_bytes, validate_schema
-from .snapshots import load_snapshot
+from .snapshots import load_snapshot, READ_FAILURES
 from .ui_journal import context
 
 
@@ -38,11 +38,23 @@ def get(project, *, expected_etag=None):
     return record
 
 
+def _readable_tasks(store,document):
+    for ref in document['tasks']:
+        try:
+            task=store.read_object_json(ref)
+            validate_schema('task',task)
+        except READ_FAILURES:
+            # A receipt requires a verified target, not every unrelated task.
+            # Preserve damaged objects and let their own result remain unread.
+            continue
+        yield task
+
+
 def mark(project, *, project_identity, revision, task_id, result_key, expected_etag):
     store,doc,identity=context(project)
     if project_identity!=identity:raise LocalStateError('project_identity','reading request belongs to another project')
     fixed=load_snapshot(store,revision)
-    task=next((v for ref in fixed['tasks'] if (v:=store.read_object_json(ref)).get('task_id')==task_id),None)
+    task=next((v for v in _readable_tasks(store,fixed) if v['task_id']==task_id),None)
     if not task or not task.get('result_refs') or key(task)!=result_key:
         raise LocalStateConflict('result_key','task result identity changed; read the exact result before marking')
     with local_lock(safe_path(_file(store).parent,'result-reading.lock')):
@@ -71,7 +83,7 @@ def import_legacy(project, *, draft_id, project_identity, expected_etag):
     record=ui_journal.get(project,draft_id)['record']
     if not record:raise LocalStateError('draft_id','saved draft is required')
     draft=record['draft'];fixed=load_snapshot(store,draft['base_revision'])
-    tasks={t['task_id']:t for ref in fixed['tasks'] if (t:=store.read_object_json(ref)).get('result_refs')}
+    tasks={t['task_id']:t for t in _readable_tasks(store,fixed) if t.get('result_refs')}
     verified=[]
     for raw in draft['content'].get('run_desk',{}).get('seen',[]):
         try:tid,hashes=json.loads(raw)

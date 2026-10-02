@@ -1,4 +1,4 @@
-import {get, revisionQuery} from './api.js';
+import {get, revisionQuery, canonical} from './api.js';
 import {el, button, heading, empty, version, sortHeading, icon, disabledReason, modal, downloadJSON} from './dom.js';
 import {imageView} from './images.js';
 import {layers} from './routes.js';
@@ -144,7 +144,7 @@ function matrixPanel(app, saved) {
   const thumbs = new Map();
   let chapterTitleOf = () => null;
   const memory = new OverviewMemory(app, saved);
-  let filter = memory.state.filter, search = memory.state.search, ascending = memory.state.sort === 'ascending', disposed = false;
+  let filter = memory.state.filter, search = memory.state.search, ascending = memory.state.sort === 'ascending', disposed = false, tableState = null;
   const selected = new Set();
   const count = el('span', {class: 'muted', role: 'status'});
   const selectionNote = el('span', {class: 'muted', role: 'status'});
@@ -198,10 +198,12 @@ function matrixPanel(app, saved) {
   }
   function nextButton(page) {
     const item = page.attention?.items?.[0];
-    if (!item) return button('查看页面', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'}), false, {class: 'quiet'});
+    const identity = canonical([page.page_id, item ? item.action_id || item : 'view_page']);
+    if (!item) return button('查看页面', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'}), false,
+      {class: 'quiet', 'data-matrix-next': identity});
     const blocked = item.enabled === false;
     return disabledReason(button((nextLabels[item.kind] || '查看') + (app.health.ui_capabilities?.includes('action_targets.v1') ? '' : ' · 通用入口'), () => openAction(app, item, actionRoute(item)), false,
-      {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离）。' : '');
+      {disabled: blocked, 'data-matrix-next': identity}), blocked ? '该项记录暂不可读（已隔离）。' : '');
   }
   function render() {
     // Rebuilding rows must keep keyboard users on the same control. Only
@@ -210,6 +212,7 @@ function matrixPanel(app, saved) {
     const focused = document.activeElement;
     const focusLabel = table.contains(focused) ? focused.getAttribute('aria-label') : null;
     const focusSort = table.contains(focused) && focused.matches('th[aria-sort] button');
+    const focusNext = table.contains(focused) ? focused.getAttribute('data-matrix-next') : null;
     const list = visiblePages();
     const operable = list.filter(batch.eligible);
     count.textContent = `${list.length} / ${pages.length} 页`;
@@ -226,6 +229,15 @@ function matrixPanel(app, saved) {
     allCheckbox.checked = operable.length > 0 && operable.every(page => selected.has(page.page_id));
     allCheckbox.indeterminate = operable.some(page => selected.has(page.page_id)) && !allCheckbox.checked;
     allCheckbox.disabled = !operable.length;
+
+    // Batch eligibility and preference messages still synchronize on every
+    // refresh. Equal matrix facts must not replace keyboard-owned controls.
+    batch.render();
+    preferenceStatus.textContent = memory.message; compareButton.hidden = !memory.error; downloadButton.hidden = !memory.error;
+    const nextTableState = canonical([filter, search, ascending, list.map(page => [page.page_id,
+      page.attention?.items?.[0] || null, selected.has(page.page_id), batch.eligible(page), chapterTitleOf(page.page_id)])]);
+    if (nextTableState === tableState) return;
+    tableState = nextTableState;
 
     const head = el('tr', {},
       el('th', {scope: 'col'}, el('label', {class: 'check-target'}, allCheckbox)),
@@ -278,11 +290,10 @@ function matrixPanel(app, saved) {
       body.append(row);
     }
     table.replaceChildren(el('thead', {}, head), body);
-    batch.render();
     const replacement = focusSort ? table.querySelector('th[aria-sort] button')
+      : focusNext ? table.querySelector(`[data-matrix-next="${CSS.escape(focusNext)}"]`)
       : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
     if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
-    preferenceStatus.textContent = memory.message; compareButton.hidden = !memory.error; downloadButton.hidden = !memory.error;
   }
   searchInput.addEventListener('input', () => { search = searchInput.value; selected.clear(); batch.invalidate(); saveReading(); render(); });
   allCheckbox.addEventListener('change', () => {
@@ -299,7 +310,7 @@ function matrixPanel(app, saved) {
     }
     render();
   });
-  const readingSync=event=>{const next=event.detail;if(next.revision_id!==app.route.revision)return;for(const page of pages){const fresh=next.pages.find(p=>p.page_id===page.page_id);if(fresh)page.attention=fresh.attention;}render();};app.root.addEventListener('summary-refreshed',readingSync);
+  const readingSync=event=>{const next=event.detail;if(next.revision_id!==app.route.revision)return;let changed=false;for(const page of pages){const fresh=next.pages.find(p=>p.page_id===page.page_id);if(fresh&&canonical(page.attention)!==canonical(fresh.attention)){page.attention=fresh.attention;changed=true;}}if(changed)render();};app.root.addEventListener('summary-refreshed',readingSync);
   app.disposables.push(() => { disposed = true; unsubscribe(); memory.dispose();app.root.removeEventListener('summary-refreshed',readingSync); });
   (async () => {
     try {

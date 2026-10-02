@@ -20,7 +20,7 @@ import xml.etree.ElementTree as ET
 from . import candidates, icons, operations, pipeline
 from .compiler import CompileOptions, SvgInput, compile_deck
 from .compiler.svg import parse_svg
-from .local_state import project_path, local_lock, read_json, write_json
+from .local_state import LocalStateError, project_path, local_lock, read_json, safe_path, write_json
 from .models import canonical_json_bytes
 from .snapshots import load_snapshot
 from .store import Store, _atomic_write_bytes
@@ -28,6 +28,7 @@ from .store import Store, _atomic_write_bytes
 _LOCK=threading.Lock()
 _JOBS={}
 _EXECUTOR=ThreadPoolExecutor(max_workers=2,thread_name_prefix='candidate-preview')
+_FILES=('candidate.png','candidate.svg','candidate.pptx','readback.json')
 
 
 def _sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -68,9 +69,35 @@ def _state_path(store,key):
     return folder/'state.json'
 
 
+def _read_state(store,key):
+    """Missing and damaged state are different; neither proves an old result."""
+    try:
+        state=read_json(_state_path(store,key))
+        if state is None:return 'missing',None
+        if (state.get('status') not in ('queued','running','ready','failed','needs_tool','interrupted')
+                or state.get('cache_key')!=key or not isinstance(state.get('check_id'),str)
+                or not state['check_id'] or ('error' in state and not isinstance(state['error'],dict))
+                or ('candidate_id' in state and (not isinstance(state['candidate_id'],str) or not state['candidate_id']))):return 'damaged',None
+        return 'valid',state
+    except (LocalStateError,OSError):return 'damaged',None
+
+
+def _damaged(store,key):
+    # Only a projection: retain the original bytes until an explicit retry.
+    status='interrupted'
+    with (_state_path(store,key).parent/'worker.lock').open('a+b') as lease:
+        try:fcntl.flock(lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:status='busy'
+    return {'status':status,'cache_key':key,'retry_after_ms':2000,
+            'error':{'code':'candidate_preview_state_damaged',
+                     'message':'检查记录损坏，原记录已保留；执行者退出后请明确重试。'}}
+
+
 def _state(store,key):
-    path=_state_path(store,key);state=read_json(path)
+    kind,state=_read_state(store,key)
+    if kind=='damaged':return _damaged(store,key)
     if state and state['status'] in ('queued','running'):
+        path=_state_path(store,key)
         # A lease is held from enqueue to completion, including the queue wait.
         with (path.parent/'worker.lock').open('a+b') as lease:
             try:fcntl.flock(lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -82,20 +109,42 @@ def _state(store,key):
 
 def _publish(store,key,check_id,value):
     with local_lock(_folder(store)/'state.lock'):
-        path=_state_path(store,key);state=read_json(path)
-        if state and state['check_id']==check_id:
-            write_json(path,{**state,**value})
+        kind,state=_read_state(store,key)
+        if kind!='valid' or state['check_id']!=check_id:return False
+        write_json(_state_path(store,key),{**state,**value})
+        return True
+
+
+def _publish_report(store,key,check_id,report,files):
+    # Validate before any bytes are replaced, and keep readers outside the
+    # whole publication. A superseded worker may not publish even one file.
+    with local_lock(_folder(store)/'state.lock'):
+        kind,state=_read_state(store,key)
+        if kind!='valid' or state['check_id']!=check_id:return False
+        destination=_state_path(store,key).parent
+        for name,raw in files.items():
+            _atomic_write_bytes(destination/name,raw)
+            report['files'][name]={'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
+        _atomic_write_bytes(destination/'report.json',canonical_json_bytes(report))
+        write_json(destination/'state.json',{**state,'status':report['status']})
+        return True
 
 
 def _result(store,key,identity):
-    state=_state(store,key);cached=_cached(store,key,identity)
-    if state and (not cached or state['check_id']!=cached.get('check_id')):
+    state=_state(store,key)
+    if not state:
+        if (_folder(store)/key/'report.json').exists():
+            return {'status':'interrupted','cache_key':key,'error':{'code':'candidate_preview_state_missing',
+                    'message':'检查记录缺失，旧结果无法核实；请明确重试。'}}
+        return {'status':'not_requested','cache_key':key}
+    if state.get('error',{}).get('code')=='candidate_preview_state_damaged':return state
+    cached=_cached(store,key,identity)
+    if not cached or state['check_id']!=cached.get('check_id') or state['status']!=cached['status']:
         if state['status']=='ready':
             state={**state,'status':'interrupted','error':{'code':'candidate_preview_cache_incomplete','message':'实际检查文件缺失或失效；请明确重试。'}}
             write_json(_state_path(store,key),state)
         return state
-    if cached:return _public(cached)
-    return state or {'status':'not_requested','cache_key':key}
+    return _public(cached)
 
 
 def _cached(store,key,identity):
@@ -103,21 +152,24 @@ def _cached(store,key,identity):
     if not path.exists():return None
     try:
         report=json.loads(path.read_text())
+        if not isinstance(report,dict) or not isinstance(report.get('files'),dict):return None
+        if not isinstance(report.get('check_id'),str) or not report['check_id']:return None
+        if not isinstance(report.get('candidate_id'),str) or not report['candidate_id']:return None
         if report['identity']!=identity or report['cache_key']!=key:return None
-        if report['status'] not in ('ready','failed') or set(report['files']) != {'candidate.png','candidate.svg','candidate.pptx','readback.json'}:return None
+        if report['status'] not in ('ready','failed') or set(report['files']) != set(_FILES):return None
         if report['candidate_ref']!=identity['candidate_ref']:return None
         if report['status']=='ready' and (report['native_check']!='pass' or report['readback']['status']!='pass'):return None
         for name,record in report['files'].items():
-            if name not in ('candidate.png','candidate.svg','candidate.pptx','readback.json'):return None
+            if name not in _FILES:return None
             if _sha(folder/name)!=record['sha256']:return None
         return report
-    except (OSError,ValueError,KeyError):return None
+    except (OSError,ValueError,KeyError,TypeError):return None
 
 
 def _public(report):
     # Tool/font paths are internal cache identity, not browser/customer content.
     result={k:v for k,v in report.items() if k!='identity'}
-    result['files']={n:{**v,'file':{'path':f".deckmaster/cache/candidate-previews/{report['cache_key']}/{n}",'sha256':v['sha256']},'url':f"/api/candidate-preview/file?cache_key={report['cache_key']}&name={n}"} for n,v in report['files'].items()}
+    result['files']={n:{**v,'file':{'path':f".deckmaster/cache/candidate-previews/{report['cache_key']}/{n}",'sha256':v['sha256']},'url':f"/api/candidate-preview/file?cache_key={report['cache_key']}&check_id={report['check_id']}&name={n}"} for n,v in report['files'].items()}
     return result
 
 
@@ -128,7 +180,7 @@ def _generate(project,candidate_id,context,check_id,lease):
         # Cross-process serialization also isolates LibreOffice invocations.
         with (folder/'compile.lock').open('a+b') as lock:
             fcntl.flock(lock,fcntl.LOCK_EX)
-            _publish(store,key,check_id,{'status':'running'})
+            if not _publish(store,key,check_id,{'status':'running'}):return
             with tempfile.TemporaryDirectory(prefix='candidate-check-',dir=store.staging_dir) as tmp:
                 work=Path(tmp);assets=pipeline.page_asset_paths(store,base,entry,work)
                 path=work/'page.svg';path.write_bytes(data)
@@ -149,21 +201,28 @@ def _generate(project,candidate_id,context,check_id,lease):
                 if final_context[-1]!=key:raise ValueError('candidate or toolchain changed during compilation; no result published')
                 files={'candidate.png':Path(renders[0]).read_bytes(),'candidate.svg':data,'candidate.pptx':result.pptx_path.read_bytes(),
                        'readback.json':canonical_json_bytes(readback)}
-                destination=folder/key;destination.mkdir(exist_ok=True)
                 report={'schema_version':'candidate_preview.v1','status':'ready' if readback['status']=='pass' and native_ok else 'failed',
                         'cache_key':key,'check_id':check_id,'candidate_id':candidate_id,'candidate_ref':identity['candidate_ref'],
                         'identity':identity,'scope_check':scope,'readback':readback,'native_shapes':native,'pictures':pictures,
                         'native_check':'pass' if native_ok else 'fail','visual_review':'not_evaluated','files':{}}
-                for name,raw in files.items():
-                    _atomic_write_bytes(destination/name,raw);report['files'][name]={'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}
-                _atomic_write_bytes(destination/'report.json',canonical_json_bytes(report))
-                _publish(store,key,check_id,{'status':report['status']})
+                _publish_report(store,key,check_id,report,files)
     except Exception as exc:
         _publish(store,key,check_id,{'status':'needs_tool' if isinstance(exc,pipeline.NeedsTool) else 'failed',
                  'error':{'code':'candidate_preview_failed','message':str(exc)}})
     finally:
         lease.close()
-        with _LOCK:_JOBS.pop(job,None)
+        with _LOCK:
+            if _JOBS.get(job,{}).get('check_id')==check_id:_JOBS.pop(job,None)
+
+
+def _preserve(folder,check_id):
+    """Snapshot prior bytes before changing state; any failure aborts retry."""
+    names=[name for name in ('state.json','report.json',*_FILES) if (folder/name).exists()]
+    if not names:return
+    backup=folder/('recovery-'+check_id);backup.mkdir()
+    for name in names:
+        path=safe_path(folder,name)
+        _atomic_write_bytes(backup/name,path.read_bytes())
 
 
 @operations.public
@@ -173,19 +232,18 @@ def request(project, *, candidate_id, retry=False, wait=True):
     store=context[0];identity,key=context[-2:];job=(str(store.project_root),key)
     with _LOCK,local_lock(_folder(store)/'state.lock'):
         current=_result(store,key,identity)
-        if current['status'] in ('queued','running','ready') or (current['status']!='not_requested' and not retry):return current
+        if current['status'] in ('queued','running','ready','busy') or (current['status']!='not_requested' and not retry):return current
         if len(_JOBS)>=64:return {'status':'busy','cache_key':key,'retry_after_ms':2000}
         check_id=uuid.uuid4().hex
         lease=(_state_path(store,key).parent/'worker.lock').open('a+b')
         try:fcntl.flock(lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
         except BlockingIOError:
-            lease.close();return _result(store,key,identity)
+            lease.close();return {'status':'busy','cache_key':key,'retry_after_ms':2000}
         state={'status':'queued','cache_key':key,'check_id':check_id,'candidate_id':candidate_id}
         if current.get('check_id'):state['previous']={k:current[k] for k in ('check_id','status','error') if k in current}
-        report=_folder(store)/key/'report.json'
-        if report.exists():
-            _atomic_write_bytes(report.with_name('report-'+current.get('check_id','legacy')+'.json'),report.read_bytes())
-        try:write_json(_state_path(store,key),state)
+        try:
+            _preserve(_state_path(store,key).parent,check_id)
+            write_json(_state_path(store,key),state)
         except Exception:
             lease.close();raise
         _JOBS[job]=state
@@ -193,8 +251,11 @@ def request(project, *, candidate_id, retry=False, wait=True):
         _generate(project,candidate_id,context,check_id,lease);return status(project,candidate_id=candidate_id)
     try:_EXECUTOR.submit(_generate,project,candidate_id,context,check_id,lease)
     except Exception:
-        _publish(store,key,check_id,{'status':'interrupted'});lease.close()
-        with _LOCK:_JOBS.pop(job,None)
+        try:_publish(store,key,check_id,{'status':'interrupted'})
+        finally:
+            lease.close()
+            with _LOCK:
+                if _JOBS.get(job,{}).get('check_id')==check_id:_JOBS.pop(job,None)
         raise
     return state
 
@@ -219,21 +280,27 @@ def freeze_check(store,candidate_id):
     report=require_ready(store.project_root,candidate_id)
     files={}
     for name,record in report['files'].items():
-        raw,_=file_bytes(store.project_root,cache_key=report['cache_key'],name=name)
+        raw,_=file_bytes(store.project_root,cache_key=report['cache_key'],check_id=report['check_id'],name=name)
         files[name]={'file':store.put_blob(raw,ext=name.rsplit('.',1)[-1]),'bytes':record['bytes']}
     return store.put_json_object({**report,'files':files})
 
 
 @operations.public
-def file_bytes(project, *, cache_key, name):
-    if not re_key(cache_key) or name not in ('candidate.png','candidate.svg','candidate.pptx','readback.json'):icons.fail('file','unknown preview file')
+def file_bytes(project, *, cache_key, name, check_id=None):
+    if not re_key(cache_key) or name not in _FILES:icons.fail('file','unknown preview file')
     store=Store(project_path(project));folder=_folder(store)/cache_key
-    try:report=json.loads((folder/'report.json').read_text())
-    except (OSError,ValueError):icons.fail('file','preview is not available')
-    context=_context(project,report['candidate_id'])
-    if context[-1]!=cache_key or not _cached(store,cache_key,context[-2]):icons.fail('file','preview basis or bytes changed')
-    media={'candidate.png':'image/png','candidate.svg':'image/svg+xml','candidate.pptx':'application/vnd.openxmlformats-officedocument.presentationml.presentation','readback.json':'application/json'}
-    return (folder/name).read_bytes(),media[name]
+    with local_lock(_folder(store)/'state.lock'):
+        kind,state=_read_state(store,cache_key)
+        if kind!='valid' or state['status'] not in ('ready','failed'):icons.fail('file','preview check is not available')
+        if check_id is not None and check_id!=state['check_id']:icons.fail('file','preview check changed')
+        try:report=json.loads((folder/'report.json').read_text())
+        except (OSError,ValueError):icons.fail('file','preview is not available')
+        if not isinstance(report,dict) or report.get('check_id')!=state['check_id']:icons.fail('file','preview check changed')
+        if not isinstance(report.get('candidate_id'),str) or not report['candidate_id']:icons.fail('file','preview candidate is not available')
+        context=_context(project,report['candidate_id'])
+        if context[-1]!=cache_key or not _cached(store,cache_key,context[-2]) or report['status']!=state['status']:icons.fail('file','preview basis or bytes changed')
+        media={'candidate.png':'image/png','candidate.svg':'image/svg+xml','candidate.pptx':'application/vnd.openxmlformats-officedocument.presentationml.presentation','readback.json':'application/json'}
+        return (folder/name).read_bytes(),media[name]
 
 
 def re_key(value):return isinstance(value,str) and len(value)==64 and all(c in '0123456789abcdef' for c in value)

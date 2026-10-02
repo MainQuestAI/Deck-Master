@@ -6,6 +6,7 @@ import json
 import re
 import uuid
 from fractions import Fraction
+from itertools import groupby
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -140,30 +141,35 @@ def visible_geometry(parsed):
 
 
 def _filled_area(subpaths):
-    """Test nonzero winding over planar scan bands, including retraced contours."""
-    subpaths=[[(Fraction(str(x)),Fraction(str(y))) for x,y in points] for points in subpaths]
-    segments=[(a,b) for points in subpaths if len(points)>2 for a,b in zip(points,points[1:]+points[:1]) if a!=b]
-    levels={p[1] for segment in segments for p in segment}
-    # Crossings split scan bands for self-intersecting contours.
-    for i,(a,b) in enumerate(segments):
-        dx,dy=b[0]-a[0],b[1]-a[1]
-        for c,d in segments[i+1:]:
-            ex,ey=d[0]-c[0],d[1]-c[1];den=dx*ey-dy*ex
-            if not den:continue
-            t=((c[0]-a[0])*ey-(c[1]-a[1])*ex)/den
-            u=((c[0]-a[0])*dy-(c[1]-a[1])*dx)/den
-            if 0<t<1 and 0<u<1:levels.add(a[1]+t*dy)
-    levels=sorted(levels)
-    for low,high in zip(levels,levels[1:]):
-        y=(low+high)/2;crossings={}
-        for a,b in segments:
-            if min(a[1],b[1])<y<max(a[1],b[1]):
-                x=a[0]+(y-a[1])*(b[0]-a[0])/(b[1]-a[1])
-                crossings[x]=crossings.get(x,0)+(1 if b[1]>a[1] else -1)
+    """Test exact nonzero fill with O(n log n) directed-edge cancellation.
+
+    A closed contour has zero winding everywhere iff its directed boundary
+    cancels on every supporting line. A remaining edge interval separates
+    faces with different winding; crossings at isolated points cannot erase
+    it. This also handles self-intersections without enumerating intersections.
+    """
+    lines={}
+    for points in subpaths:
+        if len(points)<3:continue
+        points=[(Fraction(str(x)),Fraction(str(y))) for x,y in points]
+        for a,b in zip(points,points[1:]+points[:1]):
+            if a==b:continue
+            dx,dy=b[0]-a[0],b[1]-a[1]
+            if dx:
+                slope=dy/dx
+                key=(slope,a[1]-slope*a[0]);start,end=a[0],b[0]
+            else:
+                key=(None,a[0]);start,end=a[1],b[1]
+            direction=1 if end>start else -1
+            low,high=(start,end) if direction==1 else (end,start)
+            lines.setdefault(key,[]).extend(((low,direction),(high,-direction)))
+    # Collect every subpath before inspecting: a later reversed contour can
+    # cancel an earlier one, even with different subdivisions of the same edge.
+    for events in lines.values():
         winding=0;previous=None
-        for x,delta in sorted(crossings.items()):
-            if previous is not None and x>previous and winding:return True
-            winding+=delta;previous=x
+        for coordinate,group in groupby(sorted(events),key=lambda event:event[0]):
+            if previous is not None and coordinate>previous and winding:return True
+            winding+=sum(delta for _,delta in group);previous=coordinate
     return False
 
 

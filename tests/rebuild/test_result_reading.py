@@ -71,7 +71,8 @@ def test_http_projection_snapshot_and_origin(store):
 
 
 
-def test_legacy_reading_import_is_explicit_and_verifies_saved_results(store):
+@pytest.mark.parametrize('damage_unrelated',[False,True])
+def test_legacy_reading_import_is_explicit_and_verifies_saved_results(store,damage_unrelated):
     import json
     from deck_master import ui_journal
     project=store.project_root;doc=store.load_document();reading=result_reading.get(project)
@@ -84,6 +85,7 @@ def test_legacy_reading_import_is_explicit_and_verifies_saved_results(store):
     # Existing project draft requires its fixed document reference.
     refs=ui_journal._base_refs(store,doc,draft['target']);draft['base_ref']=refs[0] if refs else None
     saved=ui_journal.save(project,draft=draft)
+    if damage_unrelated:(project/doc['tasks'][1]['path']).unlink()
     assert result_reading.get(project)['seen']==[]
     imported=result_reading.import_legacy(project,draft_id=draft['draft_id'],project_identity=reading['project_identity'],expected_etag=reading['etag'])
     assert imported['verified_count']==1 and imported['reading']['seen']==[result_reading.key(task)]
@@ -117,3 +119,30 @@ def test_clear_conflicts_when_new_receipt_arrives_after_empty_plan(store):
     marked=result_reading.mark(project,project_identity=reading['project_identity'],revision=store.load_document()['revision_id'],task_id=task['task_id'],result_key=result_reading.key(task),expected_etag=reading['etag'])
     with pytest.raises(LocalStateConflict):clear_commit(project,plan)
     assert result_reading.get(project)==marked
+
+
+@pytest.mark.parametrize('damage',['missing','bytes'])
+def test_mark_isolates_unrelated_damaged_task(store,damage):
+    project=store.project_root;doc=store.load_document();reading=result_reading.get(project)
+    task=store.read_object_json(doc['tasks'][1]);bad=project/doc['tasks'][0]['path']
+    if damage=='missing':bad.unlink()
+    else:bad.write_text('{broken')
+    rows=run_desk.listing(project,limit=100)['tasks']
+    assert any(row['task_id']==task['task_id'] for row in rows)
+    marked=result_reading.mark(project,project_identity=reading['project_identity'],revision=doc['revision_id'],
+        task_id=task['task_id'],result_key=result_reading.key(task),expected_etag=reading['etag'])
+    assert marked['seen']==[result_reading.key(task)]
+    assert store.load_document()==doc
+    assert not bad.exists() if damage=='missing' else bad.read_text()=='{broken'
+
+
+@pytest.mark.parametrize('damage',['missing','bytes'])
+def test_mark_damaged_target_remains_unverifiable(store,damage):
+    project=store.project_root;doc=store.load_document();reading=result_reading.get(project)
+    task=store.read_object_json(doc['tasks'][0]);bad=project/doc['tasks'][0]['path']
+    if damage=='missing':bad.unlink()
+    else:bad.write_text('{broken')
+    with pytest.raises(LocalStateConflict,match='task result identity changed'):
+        result_reading.mark(project,project_identity=reading['project_identity'],revision=doc['revision_id'],
+            task_id=task['task_id'],result_key=result_reading.key(task),expected_etag=reading['etag'])
+    assert result_reading.get(project)==reading and store.load_document()==doc
