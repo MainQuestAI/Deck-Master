@@ -23,7 +23,7 @@ from deck_master.web import WorkbenchServer
 
 
 def main():
-    parser = argparse.ArgumentParser(); parser.add_argument('--out', required=True); args = parser.parse_args()
+    parser = argparse.ArgumentParser(); parser.add_argument('--out', required=True); parser.add_argument('--chromium-executable', type=Path); args = parser.parse_args()
     root = Path(args.out).expanduser().resolve(); root.mkdir(parents=True, exist_ok=False)
     project = root / 'synthetic-project'; create_sample(project, page_count=2, readonly=False)
     raw = root / 'local-only-requests'; raw.mkdir(); checks = []
@@ -87,7 +87,7 @@ def main():
     server = WorkbenchServer(project); url = server.start().rstrip('/')
     try:
         with sync_playwright() as browser_api:
-            browser = browser_api.chromium.launch(); tab = browser.new_page(); tab.goto(url + '/v2/')
+            browser = browser_api.chromium.launch(executable_path=str(args.chromium_executable) if args.chromium_executable else None); tab = browser.new_page(); tab.goto(url + '/v2/')
             # This is an explicit same-origin HTTP example in a real browser,
             # not a script token endpoint and not product annotation UI proof.
             browser_result = tab.evaluate('''async () => {

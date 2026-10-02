@@ -179,7 +179,8 @@ def verify(args):
         )
     )
     for name in ("w02_content_plan", "w02_recovery", "w03_first_run", "w06_change_handoff", "w10_recovery", "w09_content_inputs"):
-        steps.append(run([sys.executable, str(drivers / (name + ".py")), "--out", str(out / name)], out, out / (name + ".log")))
+        browser_flags = ["--chromium-executable", str(args.chromium_executable)] if name == "w06_change_handoff" and args.chromium_executable else []
+        steps.append(run([sys.executable, str(drivers / (name + ".py")), "--out", str(out / name), *browser_flags], out, out / (name + ".log")))
     for name in ("w03_browser", "w07_candidates_browser", "w09_browser", "w10_browser_recovery"):
         browser_flags = ["--chromium-executable", str(args.chromium_executable)] if args.chromium_executable else []
         steps.append(run([sys.executable, str(drivers / (name + ".py")), "--out", str(out / name), *browser_flags], out, out / (name + ".log")))

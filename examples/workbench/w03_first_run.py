@@ -91,7 +91,7 @@ def main():
         save('03-create', created)
         initial_task = created['pending_tasks'][0]['task_id']
         code, retired = request(launch['url'], '/api/projects/open', {'entry_id': created['project']['entry_id'], 'ui': 'legacy'})
-        assert code == 400
+        assert code == 422 and retired['error']['code'] == 'local_state_invalid' and retired['error']['field'] == 'ui', (code, retired)
         save('04-retired-entry-refused', retired)
         code, opened = request(launch['url'], '/api/projects/open', {'entry_id': created['project']['entry_id']})
         assert code == 200 and opened['ui_available']
