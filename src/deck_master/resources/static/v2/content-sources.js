@@ -7,6 +7,10 @@ export function content(app, data) {
   if (!app.health.ui_capabilities?.includes('content_ops.v1')) return empty('核心需要升级', '内容与来源编辑需要支持内容操作的核心；已存稿件和原有命令仍可读取。');
   const plan = data.plan, inputs = data.inputs, pages = app.summary.pages, pageMap = new Map(pages.map(p => [p.page_id,p]));
   const ref = plan?.ref || null;
+  const readingRevision = app.route.revision, controller = new AbortController();
+  let disposed = false, impactAdopted = false;
+  const sourceFacts = new Map(), materialStatuses = new Map();
+  app.disposables.push(() => { disposed = true; controller.abort(); });
   app.editor = new DraftEditor(app.info, {scope:'project',page_id:null,layer:'outline'}, app.route.revision, ref, {readonly:app.readonly,exactRevision:true});
   const draftNode = app.editor.mount();
   const brief = inputField('汇报用途', inputs?.task.brief || ''), audience = inputField('汇报受众', inputs?.task.audience || '', 2);
@@ -30,7 +34,10 @@ export function content(app, data) {
     drawSources(); drawPages(); drawGoals();
   }
   operation=contentOperation(app,'content_sources',read,hydrate,ref,result=>{
-    if (result.task_ids?.length || result.pending_tasks?.length) app.go({surface:'runs',revision:result.revision_id,task_id:result.task_ids?.[0] || result.pending_tasks?.[0]?.task_id});
+    if (result.task_ids?.length || result.pending_tasks?.length) {
+      const ids = result.task_ids || result.pending_tasks.map(task => task.task_id);
+      app.go({surface:'runs',revision:result.revision_id,task_id:ids.length === 1 ? ids[0] : null});
+    }
     else if (completedAction==='remove') {
       const first=order.findIndex(id=>selected.has(id)); const remaining=order.filter(id=>!selected.has(id));
       app.go({surface:'page',page_id:remaining[Math.min(first,remaining.length-1)],layer:'content',revision:result.revision_id});
@@ -38,7 +45,31 @@ export function content(app, data) {
   });
   const changed=()=>operation.changed();
   for (const field of [brief,audience,decisions,reason,additions,instruction,summary]) field.input.addEventListener('input',changed);
+  function sourceState(source, node) {
+    const fact = sourceFacts.get(source.source_id);
+    const extraction = fact?.data?.extraction_status;
+    const text = fact?.error ? '提取：暂不可读' : extraction === 'read' ? '提取：原文可读' : extraction === 'pending_visual' ? '提取：待制作工具看图' : extraction === 'needs_tool' ? '提取：缺少读取工具' : source.extract ? '提取：记录待核实' : '提取：未记录';
+    node.replaceChildren(el('p', {class:'material-state'}, '登记：已在这版输入中登记'),
+      el('p', {class:'material-state'}, text),
+      el('p', {class:'material-state'}, impactAdopted ? '影响判断：已有制作工具判断被采用' : '影响判断：尚未核实可读的判断记录'),
+      el('p', {class:'material-state'}, extraction === 'read' && impactAdopted && app.summary.input_alignment === 'current' ? '对齐：内容结果采用了这版输入' : '对齐：此材料版本仍需核实'),
+      el('p', {class:'muted'}, '提取原文不等于制作工具已阅读或独立事实核验。'));
+    if (fact?.error) node.append(el('p', {class:'field-error'}, readableError(fact.error)), el('p', {class:'muted'}, '已保存稿件与当前输入保留。可重试核实或恢复对应材料版本。'));
+  }
+  async function verifySource(source, node, control) {
+    control.disabled = true;
+    try {
+      const query = new URLSearchParams({revision:readingRevision});
+      if (source.extract?.sha256) query.set('extract_sha256', source.extract.sha256);
+      const data = await get('/api/content/sources/' + encodeURIComponent(source.source_id) + '?' + query, {signal:controller.signal});
+      if (disposed) return;
+      // Keep status metadata only; the source reader owns full text display.
+      sourceFacts.set(source.source_id, {data:{extraction_status:data.extraction_status}});
+    } catch (error) { if (disposed) return; sourceFacts.set(source.source_id, {error}); }
+    if (!disposed) { sourceState(source, node); control.disabled = false; }
+  }
   function drawSources() {
+    materialStatuses.clear();
     sourceList.replaceChildren(...sourceRows.map(source=>{
       const action=el('select',{'aria-label':'材料操作 '+source.name},el('option',{value:'keep'},'保留材料'),el('option',{value:'replace'},'替换为新版本'),el('option',{value:'remove'},'从当前输入移除'));
       action.value=source.action;
@@ -46,11 +77,11 @@ export function content(app, data) {
       path.node.hidden=source.action!=='replace';
       action.addEventListener('change',()=>{source.action=action.value;path.node.hidden=source.action!=='replace';changed();});
       note.input.addEventListener('input',()=>{source.usage_note=note.input.value;changed();});path.input.addEventListener('input',()=>{source.path=path.input.value;changed();});
-      return el('article',{class:'source-card stack'},el('strong',{},source.name),
-        el('p',{class:'muted'},source.extract?'已读取 · 提取不等于制作工具已阅读并判断影响。':'已登记 · 尚未读取。'),
-        el('span',{class:'status '+(source.extract?'ok':'')},source.extract?'制作工具已读取':'等待读取'),
-        button('读取材料原文 '+source.name,()=>sourceReader(app,{source_id:source.source_id,source_version:{extract:source.extract}}),false,{class:'text-link'}),
-        app.readonly?el('p',{},source.usage_note):[action,note.node,path.node]);
+      const status = el('div', {class:'stack', role:'status'}); materialStatuses.set(source.source_id, {source,node:status}); sourceState(source, status);
+      const verify = button('核实提取状态 '+source.name, () => verifySource(source,status,verify));
+      return el('article',{class:'source-card stack'},el('strong',{},source.name), status,
+        el('div', {class:'row wrap'}, verify, button('读取材料原文 '+source.name,()=>sourceReader(app,{source_id:source.source_id,source_version:{extract:source.extract}},readingRevision),false,{class:'text-link'})),
+        app.readonly?el('p',{},source.usage_note):el('details',{},el('summary',{},'调整此材料'),el('div',{class:'stack'},action,note.node,path.node)));
     }));
   }
   function move(id, next) {
@@ -76,7 +107,7 @@ export function content(app, data) {
   function outlineBlocks() {
     // 设计大纲块：章节编号、页范围与来源关联导航；编辑仍在下方内容计划面板。
     return chapters.map((chapter, index) => {
-      const ids = [...chapterPages(chapter)].sort();
+      const ids = order.filter(id => chapterPages(chapter).has(id));
       const chapterPagesList = ids.map(id => pageMap.get(id)).filter(Boolean);
       if (!chapterPagesList.length) return null;
       const first = chapterPagesList[0], last = chapterPagesList[chapterPagesList.length - 1];
@@ -137,19 +168,24 @@ export function content(app, data) {
   drawSources();drawPages();drawGoals();
   const hostImpact=el('div',{class:'stack'});
   const resolved=inputs?.content_basis?.resolved_by_task_id;
-  if(resolved) get('/api/tasks/'+encodeURIComponent(resolved)+revisionQuery(app.route.revision)).then(async result=>{
-    if(result.task.status!=='completed')return;
-    const receipt=await get('/api/operations/'+encodeURIComponent(result.task.operation_id));
+  if(resolved) get('/api/tasks/'+encodeURIComponent(resolved)+revisionQuery(readingRevision), {signal:controller.signal}).then(async result=>{
+    if(disposed || result.task.status!=='completed')return;
+    const receipt=await get('/api/operations/'+encodeURIComponent(result.task.operation_id), {signal:controller.signal});
+    if(disposed)return;
     const adopted=receipt.operation_result;
-    hostImpact.replaceChildren(el('strong',{},app.summary.input_alignment==='current'?'已采用的 Host 影响判断':'此前采用的 Host 判断（最新输入仍待协调）'),
+    if (!adopted || receipt.status !== 'committed' || receipt.operation_id !== result.task.operation_id) throw new Error('尚未找到已采用的影响判断记录。');
+    impactAdopted = [adopted.impact_summary, adopted.unchanged_reason].some(value => typeof value === 'string' && value.trim());
+    for (const {source,node} of materialStatuses.values()) sourceState(source,node);
+    hostImpact.replaceChildren(el('strong',{},impactAdopted ? (app.summary.input_alignment==='current'?'已采用的制作工具影响判断':'此前采用的制作工具判断（最新输入仍待协调）') : '已有内容结果，未记录可读的影响判断'),
       el('p',{},adopted.impact_summary || adopted.unchanged_reason || '该回合未记录可读的影响说明，不能补造理由。'),
       ...[adopted.impact_summary && adopted.unchanged_reason && el('p',{},'无正文变化依据：'+adopted.unchanged_reason)].filter(Boolean),
-      el('p',{class:'muted'},'这是制作工具提交并采用的判断，仍需核对业务事实。'),
-      button('查看这次内容整理',()=>app.go({surface:'runs',task_id:resolved})));
-  }).catch(error=>hostImpact.replaceChildren(el('p',{class:'muted'},'影响说明暂不可读：'+readableError(error))));
+      el('p',{class:'muted'},impactAdopted ? '这是提交并采用的影响判断，仍需核对业务事实。' : '采用内容结果不表示已有影响判断，未补造读取或判断记录。'),
+      button('查看这次内容整理',()=>app.go({surface:'runs',task_id:resolved,revision:readingRevision})));
+  }).catch(error=>{if(!disposed)hostImpact.replaceChildren(el('p',{class:'muted'},'影响说明暂不可读：'+readableError(error)),el('p',{class:'muted'},'稿件与当前输入保留。可打开内容整理任务核实，或重新读取这个工作面。'));});
   const aligned=app.summary.input_alignment==='current';
   const editable = node => app.readonly ? node : operation.guard(node);
-  // 材料四态分呈（G15）：已登记（无提取）、制作工具已读取（有提取）、影响判断（Host 已采用/待协调）、采用对齐（input_alignment）。
+  // Registration, verified extraction, adopted impact and alignment have
+  // independent evidence. A stored extract ref alone makes no reading claim.
   // 历史修订不加载当前输入的材料清单：不显示虚假的 0 份断言（评审 reading-P2）。
   const materialAside=el('aside',{class:'panel materials-aside','aria-label':'使用中的材料'},
     el('div',{class:'panel-head'},el('h2',{},'使用中的材料'),el('span',{class:'status'},inputs?(inputs.sources.length+' 份'):'历史版本')),
@@ -163,10 +199,12 @@ export function content(app, data) {
     hostImpact,
     el('div',{class:'content-layout'},
       el('section',{class:'stack'},
+        panel('内容整合', el('p', {}, plan?.input_summary || '尚未记录整合结论，已保存的逐页稿仍可阅读。'),
+          el('p', {class:'muted'}, `${pages.length} 页 · ${chapters.length} 个章节 · ${goals.filter(goal => goal.unresolved_facts.length).length} 页有待确认事实`)),
         ref?el('div',{class:'stack'},el('div',{class:'section-head'},el('h2',{},'方案大纲'),el('span',{class:'status'},'内容基准 '+version(ref?.sha256 || ref))),...outlineBlocks()):panel('方案大纲',el('p',{},'尚未记录完整内容计划，当前仅能按逐页稿阅读。请交接内容整理。')),
-        panel('逐页稿与顺序',editable(el('div',{class:'stack'},el('p',{class:'muted'},'打开页面可改标题和正文。用移动按钮、拖动标题，或聚焦标题后按 Alt + ↑/↓ 调整顺序，再预览保存。'),pageList,
-          !app.readonly&&el('div',{class:'stack'},button('预览页序变更',()=>preview('reorder')),instruction.node,el('div',{class:'row wrap'},button('预览移除选页',()=>preview('remove')),button('预览选页改写',()=>preview('rewrite')),button('预览合并选页',()=>preview('merge')),button('预览拆分选页',()=>preview('split'))),el('p',{class:'muted'},'改写保留页身份；合并/拆分由制作工具返回新页，旧标注仍保留在原基准。'))))),
-        ref?panel('内容计划',el('p',{},plan.input_summary || ''),el('ol',{},goals.map(g=>el('li',{},g.purpose))),el('details',{},el('summary',{},'编辑内容计划'),editable(el('div',{class:'stack'},el('p',{class:'muted'},'这里编辑章节、目标与待确认事实；正文请进入对应页面修改。'),summary.node,goalList,!app.readonly&&button('预览内容计划变更',()=>preview('outline')))))):panel('内容计划',el('p',{},'尚未记录完整内容计划。')),
+        el('details',{class:'panel content-order-panel'},el('summary',{class:'panel-head'},'逐页稿与顺序 · '+pages.length+' 页'),el('div',{class:'panel-body'},editable(el('div',{class:'stack'},el('p',{class:'muted'},'打开页面可改标题和正文。用移动按钮、拖动标题，或聚焦标题后按 Alt + ↑/↓ 调整顺序，再预览保存。'),el('div',{class:'content-order-scroll'},pageList),
+          !app.readonly&&el('div',{class:'stack'},button('预览页序变更',()=>preview('reorder')),instruction.node,el('div',{class:'row wrap'},button('预览移除选页',()=>preview('remove')),button('预览选页改写',()=>preview('rewrite')),button('预览合并选页',()=>preview('merge')),button('预览拆分选页',()=>preview('split'))),el('p',{class:'muted'},'改写保留页身份；合并/拆分由制作工具返回新页，旧标注仍保留在原基准。')))))),
+        ref?panel('内容计划与依据',el('details',{},el('summary',{},'查看完整页面目标与原始依据'),el('ol',{},goals.map(g=>el('li',{},g.purpose))),el('pre',{class:'evidence-json'},JSON.stringify({chapters:plan.chapters,unresolved_facts:plan.unresolved_facts},null,2))),el('details',{},el('summary',{},'编辑内容计划'),editable(el('div',{class:'stack'},el('p',{class:'muted'},'这里编辑章节、目标与待确认事实；正文请进入对应页面修改。'),summary.node,goalList,!app.readonly&&button('预览内容计划变更',()=>preview('outline')))))):panel('内容计划',el('p',{},'尚未记录完整内容计划。')),
         inputs?null:panel('历史材料',el('p',{},'此处只读固定版本的内容目标与来源，不混入当前任务要求。'))),
       materialAside),
     !app.readonly&&operation.node,draftNode);
