@@ -1,0 +1,16 @@
+{
+  "release_id": "d39a6361cc68-3fbdf9d15304",
+  "source_sha": "d39a6361cc68ab259976b93fbca880e308deaf9d",
+  "source_dirty": false,
+  "wheel": "deck_master-1.0.0.dev2-py3-none-any.whl",
+  "wheel_sha256": "3fbdf9d15304508660cc62ee768a79d7c438c72766898f63aee93d2cf9ae9a5a",
+  "sdist": "deck_master-1.0.0.dev2.tar.gz",
+  "sdist_sha256": "09371f5f03f66770d4aec37c4a1dc5b66cd89d5894872f5a94a8e29b6028a64d",
+  "v2_assets": 45,
+  "sdist_runtime_equal": true,
+  "font_policy": "system font stacks; no webfont files or CDN; system font licenses not redistributed",
+  "professional_evidence": "not_evaluated",
+  "v2_asset_count": 45,
+  "runtime_package_only": true,
+  "production_deck_runtime": "64f6063bab14-a29d0d9c016f"
+}

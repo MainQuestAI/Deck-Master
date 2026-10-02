@@ -1,0 +1,10 @@
+{
+  "manifest_sha256": "89d9b0f1a5ced0b02863bde4e075f3a4cb461be11b0e990b61a3f602de93fd08",
+  "selected_factory_revision": "ccb1c3c963b14031875054b932c24e76",
+  "source_pointer_unchanged": true,
+  "copied_objects_verified": 20173,
+  "candidate_refs": 1500,
+  "same_manifest_bytes": true,
+  "regenerated_images_candidates_attempts": false,
+  "scope": "new synthetic checkpoint copy only"
+}

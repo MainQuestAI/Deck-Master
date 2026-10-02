@@ -1,0 +1,440 @@
+{
+  "status": "verified",
+  "source_sha": "d39a6361cc68ab259976b93fbca880e308deaf9d",
+  "wheel_sha256": "3fbdf9d15304508660cc62ee768a79d7c438c72766898f63aee93d2cf9ae9a5a",
+  "module": "$PRIVATE_ROOT/tests-installed-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "python": "3.12.12",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "steps": [
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-m",
+        "pytest",
+        "-c",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/installed-pytest.ini",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/installed-ui-tests/test_action_targets_browser.py",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/installed-ui-tests/test_batch_actions_browser.py",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/installed-ui-tests/test_overview_preferences_browser.py",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/installed-ui-tests/test_style_content_browser.py",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/installed-ui-tests/test_ui_design_browser.py",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/installed-ui-tests/test_work_surface_browser.py",
+        "-m",
+        "browser",
+        "--require-browser",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 45.933,
+      "log": "installed-current-browser.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/verification-tests/test_candidates.py",
+        "-k",
+        "explicit_assembly_uses_real_pipeline"
+      ],
+      "exit_code": 0,
+      "seconds": 4.58,
+      "log": "installed-assembly.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w02_content_plan.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w02_content_plan"
+      ],
+      "exit_code": 0,
+      "seconds": 0.455,
+      "log": "w02_content_plan.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w02_recovery.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w02_recovery"
+      ],
+      "exit_code": 0,
+      "seconds": 0.211,
+      "log": "w02_recovery.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w03_first_run.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w03_first_run"
+      ],
+      "exit_code": 0,
+      "seconds": 0.918,
+      "log": "w03_first_run.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w06_change_handoff.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w06_change_handoff"
+      ],
+      "exit_code": 0,
+      "seconds": 1.956,
+      "log": "w06_change_handoff.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w10_recovery.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w10_recovery"
+      ],
+      "exit_code": 0,
+      "seconds": 0.907,
+      "log": "w10_recovery.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w09_content_inputs.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w09_content_inputs"
+      ],
+      "exit_code": 0,
+      "seconds": 0.718,
+      "log": "w09_content_inputs.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w03_browser.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w03_browser"
+      ],
+      "exit_code": 0,
+      "seconds": 12.828,
+      "log": "w03_browser.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w07_candidates_browser.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w07_candidates_browser"
+      ],
+      "exit_code": 0,
+      "seconds": 3.047,
+      "log": "w07_candidates_browser.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w09_browser.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w09_browser"
+      ],
+      "exit_code": 0,
+      "seconds": 2.37,
+      "log": "w09_browser.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w10_browser_recovery.py",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/w10_browser_recovery"
+      ],
+      "exit_code": 0,
+      "seconds": 4.324,
+      "log": "w10_browser_recovery.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "$PRIVATE_ROOT/tests-fixed-build/drivers/w12_offline_browser.py",
+        "--require-installed",
+        "--font",
+        "Arial",
+        "--out",
+        "$PRIVATE_ROOT/tests-fixed-verify-complete/offline"
+      ],
+      "exit_code": 0,
+      "seconds": 3.248,
+      "log": "offline.log"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "requests",
+        "freeze",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.073,
+      "log": "help-requests-freeze.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "changes",
+        "plan",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "help-changes-plan.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "changes",
+        "commit",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.065,
+      "log": "help-changes-commit.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "candidates",
+        "adopt",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.063,
+      "log": "help-candidates-adopt.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "stages",
+        "assemble",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.062,
+      "log": "help-stages-assemble.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "content",
+        "plan",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.061,
+      "log": "help-content-plan.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "inputs",
+        "update",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.061,
+      "log": "help-inputs-update.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "history",
+        "plan-restore",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.061,
+      "log": "help-history-plan-restore.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "history",
+        "commit-restore",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.062,
+      "log": "help-history-commit-restore.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "export",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.062,
+      "log": "help-export.txt"
+    },
+    {
+      "command": [
+        "$PRIVATE_ROOT/tests-installed-venv/bin/python",
+        "-I",
+        "-m",
+        "deck_master",
+        "install",
+        "rollback",
+        "--help"
+      ],
+      "exit_code": 0,
+      "seconds": 0.062,
+      "log": "help-install-rollback.txt"
+    }
+  ],
+  "projects": [
+    {
+      "project": "w07_candidates_browser/synthetic-project",
+      "revision": "00f187bf6edc4b9e9d5b5e45bcff4e1c",
+      "compatibility": {
+        "minimum_writer": "run-desk.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w03_first_run/project",
+      "revision": "dc91b283c38349358b0cf9fe0a3de8ca",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w09_content_inputs/synthetic-project",
+      "revision": "ff6b335db97746f1b0be318acf0d2e65",
+      "compatibility": {
+        "minimum_writer": "content-ops.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w02_content_plan/synthetic-project",
+      "revision": "363f579353b94fa5a4c0aa083239ee53",
+      "compatibility": {
+        "minimum_writer": "run-desk.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w06_change_handoff/synthetic-project",
+      "revision": "13d5494a314f4ce98bcd19526d7c7cce",
+      "compatibility": {
+        "minimum_writer": "changes.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w03_browser/created",
+      "revision": "e4c03c1772eb4d9dbb6645f9edb2f677",
+      "compatibility": {
+        "minimum_writer": "content-ops.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w03_browser/one/project",
+      "revision": "68c14c2eed84445b9bb2a397451eeaec",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w03_browser/two/project",
+      "revision": "394fab1aa10e47cdba8345246fb1f8e8",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w10_recovery/synthetic-project",
+      "revision": "23a0ffa461ea43a59d6f9eee13abe59d",
+      "compatibility": {
+        "minimum_writer": "run-desk.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w10_recovery/awaiting-project",
+      "revision": "94ada13a357f493180bf9eaff751558e",
+      "compatibility": null
+    },
+    {
+      "project": "w09_browser/project",
+      "revision": "5efabfeb9f004ab98a01298e6940bd98",
+      "compatibility": {
+        "minimum_writer": "content-ops.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "w10_browser_recovery/synthetic-project",
+      "revision": "80437a5aa453476caee23a12dc14d7c3",
+      "compatibility": {
+        "minimum_writer": "run-desk.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "offline/synthetic-project",
+      "revision": "90eeaadb189a46b2a6c3a5d79019d9dd",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    },
+    {
+      "project": "offline/synthetic-project/.deckmaster/workbench/exports/export-6322a64e-4380-44e7-b23d-2c985c2a02d7/project",
+      "revision": "90eeaadb189a46b2a6c3a5d79019d9dd",
+      "compatibility": {
+        "minimum_writer": "content-plan.v1",
+        "project_format": "workbench.v3"
+      }
+    }
+  ],
+  "synthetic": true,
+  "model_calls": 0,
+  "real_host": "pending user project",
+  "user_understanding_seconds": null,
+  "manual_ppt_pages": null,
+  "host_wait_seconds": null
+}

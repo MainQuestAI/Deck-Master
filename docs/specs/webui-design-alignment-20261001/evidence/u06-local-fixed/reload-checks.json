@@ -1,0 +1,11 @@
+{
+  "source_sha": "d39a6361cc68ab259976b93fbca880e308deaf9d",
+  "release_id": "d39a6361cc68-3fbdf9d15304",
+  "fresh_browser_context_update_and_reload_rounds": 20,
+  "passed": 20,
+  "entry_script_resets": 0,
+  "intentional_cancelled_thumbnail_requests_preserved": true,
+  "test": "installed package, no backlog monkeypatch",
+  "negative_control": "new regression with standard ThreadingHTTPServer failed with six TCP connection errors; baseline retained",
+  "production_runtime_not_replaced": true
+}

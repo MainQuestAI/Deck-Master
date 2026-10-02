@@ -54,16 +54,232 @@
       "consumed_calls": 1,
       "svg_present": true,
       "svg_preview_present": true
+    },
+    {
+      "page_id": "p07",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "f54deaefd314edde69454ae2593ee2495f1d5ce6cc6a186cf27b81821f9c954f",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p08",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "3052aa794d92da310e16cdbbeebc52f3a1061ef5b171cc4c74d2007d5292f3cb",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p09",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "a3ca93a84d90f4a0a129868d3989fb101ad49231eb5055028b4c5987cc40123c",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p10",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "38145dfa856c8c2fa4a9c7636c56df2b5ab40fd00e0f1e2a8916523ea0df04e7",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p11",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "7cab0b680126018b6eea5a183f060b3b6fd9e03ce40b2b105481944e0cce836e",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p12",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "b1c6c04c4c3643a94e8cb6c49002b54777ed7c55d4aa10f503cc39545ce57717",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p13",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "d14d3b7068a9f5970765cc61323dc891d71013d8e7a0db903165c5d93a7c1734",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p14",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "228d48c320d6b40f1805c9b20350eb643c44c0668fde195e5b242e0ecc957028",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p15",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "739073051978df5cf54d6b06957fb05cca4c0c744563c056d9c33bf98c307548",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p16",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "68a6468e9a66de540ade58a9eddebf5b3db48db4c96de2a1acd188619f97a5b7",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p17",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "a43c1e9aa95e2c12a39879aacf9699aa40407f58276a2911824f83924fbc4932",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p18",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "1c6bf0cb6c69b77647dbe473d11634ca09c4ee0566e84a9c6754f232c1bc13d9",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p19",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "98de0b96e46d82dcdaf309d45cf623230ccd6811f033e67d44f607ee539ba59a",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p20",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "8ffcf58db58e2df02480d500e046a1af5dedea41b98dd786e0cc6d2b7280d5a3",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p21",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "adf7694401785595eb64bbde287b9dba82c9d766599f1435257f511df3bf0890",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p22",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "e22213f08f56982862ceb1a44858b7a337aaafc651ce33ff88e62151dd5135e8",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p23",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "72e737aba3d7d164bad5aad9630876b7c09605d5b642cf83ed9ffcaf4fb4c7f6",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p24",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "476f37b85adbbde1dd829b653752961ad358765a9ee52d0c3785d95c87a5a750",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p25",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "dbe733df7100393f313b1678b47e6d4c8a3b8746d3cae26edd33c720b65bd267",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p26",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "b8018969c5c4ed42ac803c8bf34b9cd62836febd7547b47f5ce35d45614950b2",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p27",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "d6222ce615a433f109af64cf73d0d0e498bb0021c5b8594746c963d347e230b9",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p28",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "ec188339cebe8d9e4927a7638aff1a9318613d7c01b57e80996133582870eeae",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p29",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "e08c72608f41b6b72d6709bab59a50b3e59263a207a84bf23b5632203915ea8a",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p30",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "dce1db9f5c178e0b6e839cd0919ca4a663bef5633a2d0523d12502dad8aaf4cf",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
     }
   ],
-  "real_calls_consumed": 6,
+  "real_calls_consumed": 30,
   "provider_cost_and_tokens": "not_reported",
   "professional_acceptance": false,
   "schema_version": "u06-local-progress.v1",
-  "status": "incomplete",
+  "status": "production_complete_u06_open",
   "restored_pages": 30,
-  "pages_with_blueprint_svg_and_page_visual": 6,
-  "pending_pages": 24,
+  "pages_with_blueprint_svg_and_page_visual": 30,
+  "pending_pages": 0,
   "host_cli_version": "0.159.2",
   "runtime_changed": false,
   "doctor": {
@@ -82,20 +298,32 @@
   },
   "closed_must_fix": [
     "p04-common-icons",
-    "p06-body-overflow"
+    "p06-body-overflow",
+    "p08-compound-icons",
+    "p10-input-icons",
+    "p11-return-line",
+    "p13-arrow-heads",
+    "p16-fallback-icons",
+    "p23-number-wrap",
+    "p24-punctuation-wrap",
+    "p25-percent-wrap",
+    "p28-agent-id-wrap"
   ],
   "declared_variances": [
     "p01 decorative mountain photograph reconstructed as editable contours",
     "p04 two empty generated cards removed; four source channels and six agents retained",
-    "p06 generated step grouping corrected against original report L39"
+    "p06 generated step grouping corrected against original report L39",
+    "p11 manual revision returns to brand review",
+    "p21 diagram follows four source domain owners",
+    "p25 absent quantitative data remains illustrative",
+    "p27 unsupported week one removed from generated header",
+    "p28 six source expansion conditions preserved",
+    "p29 five source decisions grouped into three cards"
   ],
   "remaining": [
-    "p07-p30 real sequential production",
-    "two actual production modification/candidate/adoption rounds",
-    "full-deck compilation and final six-dimension review",
-    "macOS native directory picker",
-    "human 30-second understanding observation",
-    "delivery export and handoff-check"
+    "two actual production candidate adoption and subsequent quality rounds awaiting user selection",
+    "macOS native directory picker success evidence",
+    "human 30-second understanding observation"
   ],
   "first_page_ppt_smoke": {
     "status": "passed",
@@ -106,5 +334,103 @@
     "raster_picture_count": 0,
     "pptx_sha256": "c08d1f6d67ce2d319f17972944358ef55414c9700924ea77c8cb31fff83d645f",
     "actual_render_visually_inspected": true
+  },
+  "full_deck": {
+    "status": "ready_for_export",
+    "page_count": 30,
+    "native_shapes": 1687,
+    "raster_pictures": 0,
+    "missing_ppt_text": 0,
+    "missing_svg_text": 0,
+    "private_markers": 0,
+    "all_actual_ppt_renders_visually_inspected": true,
+    "final_review_dimensions": 6,
+    "reviewer_type": "host_self",
+    "independence_confirmed": false,
+    "professional_acceptance": false
+  },
+  "exports": {
+    "review": {
+      "status": "exported",
+      "file_count": 155
+    },
+    "engineering": {
+      "status": "exported",
+      "file_count": 1613
+    },
+    "delivery": {
+      "status": "exported",
+      "file_count": 155
+    }
+  },
+  "handoff_checks": {
+    "review": {
+      "status": "verified",
+      "purpose": "review",
+      "file_sha256": "7aa34c5e7872d20d91c78483d2f1fa7b39ee7503cac8eba04e87969414032590",
+      "current_pptx_sha256": "07eb4b6a4a89c75e756e2d4dd7ff1515db9cdb750af917f599b4615007eff8ae",
+      "sanitized_pptx_sha256": "7aa34c5e7872d20d91c78483d2f1fa7b39ee7503cac8eba04e87969414032590",
+      "candidate_relation": "sanitized_copy",
+      "input_alignment": "current",
+      "page_count": 30,
+      "render_report_status": "pass",
+      "review_status": "pass",
+      "pending_tasks": [],
+      "gaps": [],
+      "evidence_level": "engineering",
+      "next_action": null
+    },
+    "delivery": {
+      "status": "verified",
+      "purpose": "delivery",
+      "file_sha256": "7aa34c5e7872d20d91c78483d2f1fa7b39ee7503cac8eba04e87969414032590",
+      "current_pptx_sha256": "07eb4b6a4a89c75e756e2d4dd7ff1515db9cdb750af917f599b4615007eff8ae",
+      "sanitized_pptx_sha256": "7aa34c5e7872d20d91c78483d2f1fa7b39ee7503cac8eba04e87969414032590",
+      "candidate_relation": "sanitized_copy",
+      "input_alignment": "current",
+      "page_count": 30,
+      "render_report_status": "pass",
+      "review_status": "pass",
+      "pending_tasks": [],
+      "gaps": [],
+      "evidence_level": "engineering",
+      "next_action": null
+    }
+  },
+  "production_trials": [
+    {
+      "page_id": "p06",
+      "status": "candidate_ready",
+      "current_pages_unchanged": true,
+      "current_outputs_unchanged": true,
+      "model_calls": 0,
+      "adoption": "awaiting_user_selection"
+    },
+    {
+      "page_id": "p29",
+      "status": "candidate_ready",
+      "current_pages_unchanged": true,
+      "current_outputs_unchanged": true,
+      "model_calls": 0,
+      "adoption": "awaiting_user_selection"
+    }
+  ],
+  "ui_binding_limits": {
+    "blueprint_page_basis_changed_count": 27,
+    "changes_are_labels_only": false,
+    "svg_explicit_dependencies_absent_count": 30,
+    "generated_from_page_not_rewritten": true,
+    "not_claiming_all_layers_current_in_summary": true,
+    "labels_only_page_count": 26,
+    "source_corrected_body_page_ids": [
+      "p06"
+    ]
+  },
+  "macos_picker": {
+    "status": "not_passed",
+    "real_browse_button_clicked": true,
+    "ui_error": "local action failed; retain input and inspect the path or runtime log",
+    "directory_returned": false,
+    "selected_success": false
   }
 }

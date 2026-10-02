@@ -1,0 +1,25 @@
+{
+  "legacy_same_process_pressure": {
+    "source_sha": "64f6063bab1469daea347777ad3c2b86be450d6f",
+    "p95_ms": 330.66,
+    "pass": false,
+    "current_same_process_retested": false,
+    "path": "../u06-optimized/inprocess-final-measurements.json"
+  },
+  "obsolete_gallery_driver": {
+    "driver": "w04_gallery.py",
+    "result": "timed out waiting for retired .gallery-card selector",
+    "replaced_by": "frozen w04_pressure.py on same 300x5x3 checkpoint and unchanged six warm first-action gates"
+  },
+  "transient_sdist_build_collision": {
+    "result": "first concurrent run had five setup errors",
+    "resolution": "isolated install tests passed then full 1025 unit pass"
+  },
+  "macos_directory_picker": {
+    "status": "not_passed",
+    "real_browse_button_clicked": true,
+    "ui_error": "local action failed; retain input and inspect the path or runtime log",
+    "directory_returned": false,
+    "selected_success": false
+  }
+}
