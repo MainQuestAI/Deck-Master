@@ -8,7 +8,11 @@ import {openCandidate} from './trial-actions.js';
 
 const names = {palette: '配色', typography: '文字层级', density: '密度', lines: '线条', composition: '构图'};
 const defaults = {palette: '借用参考页配色', typography: '借用参考页文字层级'};
-const section = (title, ...body) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, body));
+const phase = (title, ...body) => {
+  const summary = el('span', {class: 'muted style-phase-state'});
+  const node = el('details', {class: 'panel style-phase'}, el('summary', {class: 'panel-head'}, el('span', {class:'style-phase-title'}, title), summary), el('div', {class: 'panel-body stack'}, body));
+  return {node, summary};
+};
 const detail = (title, ...body) => el('details', {}, el('summary', {}, title), el('div', {class: 'stack'}, body));
 const json = value => el('pre', {class: 'evidence-json'}, JSON.stringify(value, null, 2));
 
@@ -18,6 +22,18 @@ export function style(app) {
   const draftNode = app.editor.mount();
   let disposed = false, loaded = false, busy = false, serial = 0, sourceSerial = 0, proposal = null, plan = null, recipe = null;
   let fixed = null, selected = new Set(), resolutions = {}, promptSelection = null, parent = null, release;
+  let currentPhase = 0, onlySelected = false, targetViews = [];
+  const requests = new Set();
+  async function read(path) {
+    const controller = new AbortController(); requests.add(controller);
+    try { return await get(path, {signal:controller.signal}); }
+    finally { requests.delete(controller); }
+  }
+  async function prepare(path, value) {
+    const controller = new AbortController(); requests.add(controller);
+    try { return await post(path, value, {signal:controller.signal}); }
+    finally { requests.delete(controller); }
+  }
   const options = new Map(), pages = app.summary.pages;
   const label = id => {
     const index = pages.findIndex(p => p.page_id === id);
@@ -29,6 +45,11 @@ export function style(app) {
     reference.append(el('option', {value: page.page_id}, label(page.page_id)));
   }
   const referenceView = el('div', {class: 'style-reference'}), sourceView = el('div', {class: 'stack'});
+  const referenceSearch = el('input', {type:'search', 'aria-label':'搜索参考页', placeholder:'按页码或标题搜索参考页'});
+  const referenceCount = el('p', {class:'muted', role:'status'});
+  const targetSearch = el('input', {type:'search', 'aria-label':'搜索风格目标', placeholder:'按页码或标题搜索目标页'});
+  const targetCount = el('p', {class:'muted', role:'status'});
+  const selectedFilter = button('只看已选目标', () => { onlySelected = !onlySelected; renderTargets(); controls(); }, false, {'aria-pressed':'false'});
   const targets = el('div', {class: 'style-targets'});
   const instruction = el('textarea', {rows: 3, maxLength: 4000, 'aria-label': '风格短要求', value: '借用参考页配色和文字层级，保留目标页标题、事实、数字与构图。'});
   const targetSource = el('select', {'aria-label':'核对目标页提示词'}, el('option', {value:''}, '选择目标页，读取同一阅读版本的原文'), ...pages.map(p => el('option', {value:p.page_id}, label(p.page_id))));
@@ -36,7 +57,7 @@ export function style(app) {
   targetSource.addEventListener('change', async () => {
     const token = ++targetSourceSerial; targetSourceView.replaceChildren(); if (!targetSource.value) return;
     try {
-      const data = await get('/api/pages/'+encodeURIComponent(targetSource.value)+'/lineage?'+new URLSearchParams({revision:app.route.revision}));
+      const data = await read('/api/pages/'+encodeURIComponent(targetSource.value)+'/lineage?'+new URLSearchParams({revision:app.route.revision}));
       if (disposed || token !== targetSourceSerial) return;
       targetSourceView.append(el('p', {}, '目标页原文 · '+version(data.revision_id)), el('p', {class:'muted'}, observerLabels[data.prompts.submitted.observer] || observerLabels.unknown));
       for (const [layer,title] of [['submitted_prompt','目标实际提交原文'],['prepared_prompt','目标预备与冻结原文']]) {
@@ -52,7 +73,7 @@ export function style(app) {
     dimensions.set(key, {check, text}); check.addEventListener('change', changed); text.addEventListener('input', changed);
     return el('div', {class: 'row wrap'}, el('label', {class: 'inline-control'}, check, title), text);
   });
-  const suggestion = el('textarea', {rows: 3, maxLength: 12000, 'aria-label': '未确认的 Host 风格建议', placeholder: '可粘贴制作工具给出的风格建议；建议不会冒充历史实际提示词。'});
+  const suggestion = el('textarea', {rows: 3, maxLength: 12000, 'aria-label': '未确认的制作工具风格建议', placeholder: '可粘贴制作工具给出的风格建议；建议不会冒充历史实际提示词。'});
   const excerpt = el('div', {class: 'stack'}), preview = el('div', {class: 'stack'}), notice = el('p', {role: 'status'});
   const proposeButton = button('检查风格要求', propose, true);
   const confirmButton = button('确认这版风格要求', confirm, true, {disabled: true});
@@ -65,52 +86,91 @@ export function style(app) {
   const expandButton = button('预览明确选页的扩展', () => planTrial(true));
   const dispatchButton = button('保存并交接风格试作', dispatch, true, {disabled: true});
   const impact = el('div', {class: 'stack'}), candidateRows = el('div', {class: 'stack'});
-  const node = el('div', {class: 'style-calibration stack'}, heading('风格校准', '固定一张参考原图，保留目标内容。先试一页，比较采用后再扩展。'),
-    section('1 · 选择参考与目标', el('label', {}, '固定参考原图', reference), referenceView,
-      el('p', {class: 'muted'}, '参考版本持续固定；目标勾选只限定可试作范围，不会同时开始生成。'), targets,
+  const phases = [
+    phase('1 · 参考与目标', el('label', {class:'stack'}, '查找参考页', referenceSearch), referenceCount, el('label', {class:'stack'}, '固定参考原图', reference), referenceView,
+      el('p', {class: 'muted'}, '参考版本持续固定；目标勾选只限定可试作范围，不会同时开始生成。'),
+      el('div', {class:'row wrap'}, targetSearch, selectedFilter), targetCount, targets,
       el('label', {}, '一句话要求', instruction), detail('高级：借用维度、原文选段与建议',
         dimensionFields, el('p', {class: 'muted'}, '构图须单独选择。生成仍可能偏离，返回后逐项核对。'),
         sourceView, excerpt, detail('对照目标页原文', targetSource, targetSourceView), el('label', {}, '制作工具建议（待你确认）', suggestion)),
       el('div', {class: 'row wrap'}, proposeButton, confirmButton), notice, preview),
-    section('2 · 确认版本与单页试作', el('div', {class: 'row wrap'}, recipes, button('刷新风格版本', loadRecipes)), recipeView,
-      el('label', {}, '先试一页', trialPage), firstButton,
-      detail('采用满意候选后，扩到明确选择的其它页',
+    phase('2 · 确认与单页试作', el('div', {class: 'row wrap'}, recipes, button('刷新风格版本', loadRecipes)), recipeView,
+      el('label', {class:'stack'}, '先试一页', trialPage), firstButton,
+      el('p', {class: 'muted'}, '候选返回不替换当前稿；到固定比较中逐页核对文字、配色及未选择的维度。'),
+      button('刷新风格目标候选', loadCandidates), candidateRows),
+    phase('3 · 采用后扩展', el('p', {class:'muted'}, '先比较并采用单页候选。扩展计划会核实它是否仍在采用、属于这版风格及目标依据是否有效。'),
         el('label', {}, '已采用候选', adoptedCandidate), expansionTargets,
-        el('label', {}, '本次调用上限', calls), expandButton),
-      impact, dispatchButton),
-    section('3 · 比较候选，再决定采用', el('p', {class: 'muted'}, '候选返回不替换当前稿；到固定比较中逐页核对文字、配色及未选择的维度。'),
-      button('刷新风格目标候选', loadCandidates), candidateRows), draftNode);
+        el('label', {class:'stack'}, '本次调用上限', calls), expandButton)
+  ];
+  const node = el('div', {class: 'style-calibration stack'}, heading('风格校准', '固定一张参考原图，保留目标内容。先试一页，比较采用后再扩展。'),
+    phases.map(p => p.node), el('div', {class:'style-plan stack'}, impact, dispatchButton), draftNode);
+  function showPhase(next) {
+    if (currentPhase !== next) { phases.forEach((p,i) => { p.node.open = i + 1 === next; }); currentPhase = next; }
+  }
   function editor() { return app.editor; }
   function state() { return {reference: fixed, targets: [...selected], instruction: instruction.value, dimensions: Object.fromEntries([...dimensions].filter(([,v]) => v.check.checked).map(([k,v]) => [k,v.text.value])), host_suggestion: suggestion.value, prompt_selection: promptSelection, resolutions, parent_recipe_id: parent}; }
   function controls() {
-    const blocked = !loaded || busy || app.readonly || editor()?.readonly || app.business.entries.size || app.business.loadWarning;
+    const stale = app.latest?.revision_id !== app.route.revision;
+    const blocked = !loaded || busy || app.readonly || stale || editor()?.readonly || app.business.entries.size || app.business.loadWarning;
     const referenceConflict = fixed && selected.has(fixed.page_id);
     proposeButton.disabled = blocked || referenceConflict; confirmButton.disabled = blocked || referenceConflict || !proposal || proposal.proposal.conflicts.some(c => !c.resolution);
     firstButton.disabled = blocked || !recipe; expandButton.disabled = blocked || !recipe; dispatchButton.disabled = blocked || !plan;
     for (const input of [reference, instruction, suggestion, ...targets.querySelectorAll('input'), ...dimensions.values()].flatMap(v => v.check ? [v.check, v.text] : [v])) input.disabled = !loaded || app.readonly || busy || (input.dataset.reference === 'true' && !input.checked);
+    for (const input of [trialPage, adoptedCandidate, calls, ...expansionTargets.querySelectorAll('input')]) input.disabled = !loaded || app.readonly || editor()?.readonly || busy;
     if (referenceConflict) notice.textContent = '参考页同时在目标中。目标未被自动移除，请明确取消这页目标后再检查要求。';
+    else if (stale && !busy) notice.textContent = '项目已有新版本，旧预览已失效。输入与固定参考保留，请查看当前版本后重新预览。';
+    phases[0].summary.textContent = `${fixed ? label(fixed.page_id) + ' 已固定' : '尚未固定参考'} · 已选 ${selected.size} 页`;
+    phases[1].summary.textContent = recipe ? `V${recipe.version} · ${recipe.input.target_page_ids.length} 页范围` : '尚未确认风格版本';
+    phases[2].summary.textContent = adoptedCandidate.value ? '已选择候选，待计划核实' : '需先比较采用单页候选';
   }
   function persist() { if (loaded && !editor().readonly && !editor().disposed) { editor().draft.content.style_calibration = state(); editor().changed(); } }
-  function changed() { serial++; proposal = null; preview.replaceChildren(); confirmButton.disabled = true; persist(); controls(); }
+  function changed() { serial++; proposal = null; plan = null; preview.replaceChildren(); impact.replaceChildren(); confirmButton.disabled = true; showPhase(1); persist(); controls(); }
   function persistTrial() {
     if (!loaded || app.readonly || editor().disposed) return;
     editor().draft.content.style_trial = {recipe_id:recipe?.recipe_id || null, trial_page:trialPage.value, expansion:[...expansion], adopted_candidate_id:adoptedCandidate.value, max_calls:calls.value}; editor().changed();
   }
   function invalidatePlan(save = true) { serial++; plan = null; impact.replaceChildren(); if (save) persistTrial(); controls(); }
   function renderTargets() {
-    targets.replaceChildren(...pages.map(p => {
+    targetViews.forEach(view => view.dispose()); targetViews = [];
+    const query = targetSearch.value.trim().toLocaleLowerCase();
+    const visible = pages.filter(p => (!onlySelected || selected.has(p.page_id)) && `${label(p.page_id)} ${p.page_id}`.toLocaleLowerCase().includes(query));
+    selectedFilter.setAttribute('aria-pressed', String(onlySelected));
+    const count = () => { targetCount.textContent = `已选 ${selected.size} 页 · 当前显示 ${visible.length} / 共 ${pages.length} 页`; };
+    count();
+    targets.replaceChildren(...visible.map(p => {
       const check = el('input', {type: 'checkbox', checked: selected.has(p.page_id), 'aria-label': '风格目标 ' + label(p.page_id)});
       check.dataset.reference = String(p.page_id === fixed?.page_id);
-      check.addEventListener('change', () => { check.checked ? selected.add(p.page_id) : selected.delete(p.page_id); resolutions = {}; notice.textContent = ''; changed(); });
-      return el('label', {class: 'inline-control'}, check, label(p.page_id) + (p.page_id === fixed?.page_id ? ' · 固定参考，不作为试作目标' : ''));
+      check.addEventListener('change', () => { check.checked ? selected.add(p.page_id) : selected.delete(p.page_id); resolutions = {}; notice.textContent = ''; count(); changed(); });
+      let thumb;
+      if (p.stages.blueprint.existence === 'recorded' && p.stages.blueprint.file) {
+        thumb = el('div', {class:'style-target-thumb'}, el('span', {class:'muted'}, '原图预览'));
+        let view;
+        const observer = new IntersectionObserver(entries => {
+          if (disposed) return;
+          if (entries[0].isIntersecting && !view) {
+            view = imageView(app, p.stages.blueprint, '第 ' + (pages.indexOf(p)+1) + ' 页目标原图'); thumb.replaceChildren(view.node);
+          } else if (!entries[0].isIntersecting && view) { view.dispose(); view = null; thumb.replaceChildren(el('span', {class:'muted'}, '原图预览')); }
+        }, {rootMargin:'100px'});
+        observer.observe(thumb); targetViews.push({dispose() { observer.disconnect(); view?.dispose(); }});
+      } else thumb = el('div', {class:'style-missing-thumb muted'}, '未记录原图');
+      return el('article', {class:'style-target-card'}, thumb, el('label', {class:'inline-control'}, check, label(p.page_id) + (p.page_id === fixed?.page_id ? ' · 固定参考，不作为试作目标' : '')));
     }));
+    if (!visible.length) targets.append(el('p', {class:'muted'}, '没有符合搜索的页面，已选目标仍保留。请清空搜索或切换选页范围。'));
   }
+  targetSearch.addEventListener('input', () => { renderTargets(); controls(); });
+  referenceSearch.addEventListener('input', () => {
+    const query = referenceSearch.value.trim().toLocaleLowerCase(), keep = reference.value;
+    const visible = [...options].filter(([id]) => id !== 'saved' && `${label(id)} ${id}`.toLocaleLowerCase().includes(query));
+    reference.replaceChildren(el('option', {value:''}, '选择一页已有原图'), ...visible.map(([id]) => el('option', {value:id}, label(id))));
+    if (keep && !visible.some(([id]) => id === keep)) reference.append(el('option', {value:keep}, fixed ? label(fixed.page_id)+' · 已固定' : label(keep)));
+    reference.value = keep; referenceCount.textContent = `搜索结果 ${visible.length} 页；当前固定参考保留。`;
+  });
   async function showReference() {
     const token = ++sourceSerial; release?.(); release = null; referenceView.replaceChildren(); sourceView.replaceChildren();
     if (!fixed) return;
     referenceView.append(el('p', {}, `${label(fixed.page_id)} · ${version(fixed.revision_id)} · 已固定`));
     try {
-      const data = await get('/api/pages/' + encodeURIComponent(fixed.page_id) + '/lineage?' + new URLSearchParams({revision: fixed.revision_id}));
+      const data = await read('/api/pages/' + encodeURIComponent(fixed.page_id) + '/lineage?' + new URLSearchParams({revision: fixed.revision_id}));
       if (disposed || token !== sourceSerial) return;
       if (canonical(data.stages.blueprint.ref) !== canonical(fixed.artifact_ref)) throw new Error('参考原图与固定版本不一致，未替换参考。');
       const view = imageView(app, data.stages.blueprint, '固定风格参考原图', {kind: 'large'}); release = () => view.dispose(); referenceView.prepend(view.node);
@@ -133,7 +193,8 @@ export function style(app) {
     if (busy) return; busy = true; const token = ++serial; proposal = null; controls();
     try {
       await app.business.available(); if (!fixed || !selected.size) throw new Error('请选择一张参考原图和至少一页目标。');
-      const latest = await get('/api/view/summary'); if (disposed || token !== serial) return;
+      const latest = await read('/api/view/summary'); if (disposed || token !== serial) return;
+      if (latest.revision_id !== app.route.revision) throw new Error('项目已有新版本，输入与固定参考保留。请查看当前版本后重新检查要求。');
       for (const id of selected) {
         const old = pages.find(p => p.page_id === id), current = latest.pages.find(p => p.page_id === id);
         if (!current || canonical(old.stages.content.ref) !== canonical(current.stages.content.ref) || canonical(old.stages.blueprint.ref) !== canonical(current.stages.blueprint.ref)) throw new Error(label(id) + ' 的内容或原图已改变，请查看当前版本后重新选择。输入与固定参考仍保留。');
@@ -145,11 +206,11 @@ export function style(app) {
       if (promptSelection) input.prompt_selection = promptSelection;
       if (suggestion.value.trim()) input.host_suggestion = suggestion.value;
       if (parent) input.parent_recipe_id = parent;
-      const result = await post('/api/styles/propose', {input}); if (disposed || token !== serial) return;
+      const result = await prepare('/api/styles/propose', {input}); if (disposed || token !== serial) return;
       proposal = result; notice.textContent = '要求已检查；确认版本不会调用模型。';
       preview.replaceChildren(el('p', {}, `保留 ${result.proposal.targets.length} 页内容；默认先试其中 1 页。`), ...result.proposal.conflicts.map(c => {
         const choice = el('select', {'aria-label': label(c.page_id) + ' 密度取舍'}, el('option', {value:''}, '明确选择取舍'), el('option', {value:'keep_target'}, '保留目标页密度'), el('option', {value:'use_reference'}, '允许参考密度替代目标'));
-        choice.value = c.resolution || ''; choice.addEventListener('change', () => { if (choice.value) resolutions[c.conflict_id] = choice.value; else delete resolutions[c.conflict_id]; proposal = null; serial++; persist(); controls(); notice.textContent = '取舍已保留，请重新检查要求。'; });
+        choice.value = c.resolution || ''; choice.addEventListener('change', () => { if (choice.value) resolutions[c.conflict_id] = choice.value; else delete resolutions[c.conflict_id]; changed(); notice.textContent = '取舍已保留，请重新检查要求。'; });
         return el('div', {class:'notice stack'}, el('strong', {}, label(c.page_id) + '：极简与高密度要求冲突'), choice, detail('查看冲突原文', json(c)));
       }), detail('相对上一版的差异', json(result.proposal.diff)), suggestion.value && el('p', {}, '确认后才使用上述制作工具建议；它不是历史实际提交记录。'));
     } catch (error) { if (!disposed && token === serial) notice.textContent = readableError(error); }
@@ -158,7 +219,9 @@ export function style(app) {
   async function confirm() {
     if (!proposal || busy) return; busy = true; const value = proposal; controls();
     try { await app.business.submit(editor(), 'styles.confirm', {proposal_id:value.proposal_id, base_revision:value.proposal.base_revision}, {proposal_ref:value.proposal_ref}, async result => {
-      proposal = null; notice.textContent = '这版风格要求已确认，尚未开始生成。'; await loadRecipes(result.recipe_id);
+      if (disposed) return;
+      app.styleResume = {project_identity:app.info.project_identity, revision:result.revision_id, state:state(), recipe_id:result.recipe_id};
+      app.go({surface:'style', revision:result.revision_id});
     }); } catch (error) { notice.textContent = readableError(error); }
     finally { busy = false; if (!disposed) controls(); }
   }
@@ -166,7 +229,7 @@ export function style(app) {
   async function loadRecipes(chosen) {
     const token = ++recipeSerial;
     try {
-      const result = await get('/api/styles' + (app.readonly ? '?' + new URLSearchParams({revision:app.route.revision}) : '')); if (disposed || token !== recipeSerial) return;
+      const result = await read('/api/styles?' + new URLSearchParams({revision:app.route.revision})); if (disposed || token !== recipeSerial) return;
       await editor().ready; if (disposed || token !== recipeSerial) return;
       const keep = typeof chosen === 'string' ? chosen : recipes.value || editor().draft.content.style_trial?.recipe_id;
       recipeRecords = new Map(result.recipes.map(v => [v.recipe.recipe_id,v.recipe]));
@@ -177,8 +240,10 @@ export function style(app) {
   function selectRecipe(restore = false) {
     recipe = recipeRecords.get(recipes.value) || null; expansion.clear(); adoptedCandidate.value = ''; invalidatePlan(false); recipeView.replaceChildren(); trialPage.replaceChildren(); expansionTargets.replaceChildren();
     if (!recipe) return;
+    showPhase(2);
     recipeView.append(el('p', {}, `V${recipe.version} · 参考 ${label(recipe.input.reference.page_id)} · ${version(recipe.input.reference.revision_id)}`), el('p', {}, recipe.input.instruction),
       el('p', {class:'muted'}, '借用：' + Object.keys(recipe.dimensions).map(k => names[k]).join('、')),
+      el('p', {class:'muted'}, '试作只使用这里已确认的版本。上方未确认的修改不会进入试作；需要使用新要求时，请先检查并确认。'),
       button('以此版本修改要求', () => {
         if (app.readonly) return; hydrateState({...recipe.input, reference: recipe.input.reference, targets:recipe.input.target_page_ids, parent_recipe_id:recipe.recipe_id}); changed();
       }), detail('固定版本差异与约束', json(recipe.diff), json(recipe.conflicts)));
@@ -202,7 +267,8 @@ export function style(app) {
       if (!ids.length) throw new Error('请明确勾选本次扩展页。');
       const input = {recipe_id:recipe.recipe_id, page_ids:ids, max_calls:expanding ? Number(calls.value) : 1};
       if (expanding) { if (!adoptedCandidate.value.trim()) throw new Error('先在比较中采用满意候选，再选择该候选扩展。'); input.adopted_candidate_id = adoptedCandidate.value.trim(); }
-      const result = await post('/api/styles/plan', {input}); if (disposed || token !== serial) return;
+      const result = await prepare('/api/styles/plan', {input}); if (disposed || token !== serial) return;
+      if (result.plan.base_revision !== app.route.revision || app.latest?.revision_id !== app.route.revision) throw new Error('项目版本已变化，未保留旧计划。输入仍保留，请查看当前版本后重新预览。');
       plan = result; impact.replaceChildren(el('p', {}, `仅试作 ${ids.length} 页：${ids.map(label).join('、')}。最多 ${result.plan.max_calls} 次图像调用。`),
         el('p', {class:'muted'}, `返回候选不替换当前稿；采用后目标页下游产物需更新。计划基准 ${version(result.plan.base_revision)}。`));
     } catch (error) { if (!disposed && token === serial) impact.replaceChildren(el('p', {class:'field-error'}, readableError(error)), ...(error.details?.items || []).map(item => el('p', {}, `${label(item.page_id)}：目标基准已变，未替换新内容。可取消勾选后另建计划。`))); }
@@ -210,7 +276,7 @@ export function style(app) {
   }
   async function dispatch() {
     if (!plan || busy) return; busy = true; const value = plan; controls();
-    try { await app.business.submit(editor(), 'changes.commit', {plan_id:value.plan_id, base_revision:value.plan.base_revision}, {plan_id:value.plan_id, plan:value.plan}, result => app.go({surface:'runs', revision:result.revision_id, task_id:result.task_ids[0], candidate_id:null})); }
+    try { await app.business.submit(editor(), 'changes.commit', {plan_id:value.plan_id, base_revision:value.plan.base_revision}, {plan_id:value.plan_id, plan:value.plan}, result => app.go({surface:'runs', revision:result.revision_id, task_id:result.task_ids.length === 1 ? result.task_ids[0] : null, candidate_id:null})); }
     catch (error) { impact.replaceChildren(el('p', {class:'field-error'}, readableError(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }
@@ -219,11 +285,11 @@ export function style(app) {
     const token = ++candidateSerial, chosen = recipe;
     candidateRows.replaceChildren(); if (!chosen) return;
     try {
-      const result = await get('/api/candidates' + (app.readonly ? '?' + new URLSearchParams({revision:app.route.revision}) : '')); if (disposed || token !== candidateSerial) return;
+      const result = await read('/api/candidates?' + new URLSearchParams({revision:app.route.revision})); if (disposed || token !== candidateSerial) return;
       const entries = result.candidates.filter(v => chosen.input.target_page_ids.includes(v.candidate.page_id) && v.candidate.stage === 'blueprint').slice(-30);
       candidateRows.append(...entries.map(v => el('div', {class:'row wrap'}, el('span', {}, label(v.candidate.page_id) + (v.status === 'adopted' ? ' · 曾采用' : ' · 待比较')),
         button('比较候选 '+v.candidate.candidate_id.slice(-6), () => openCandidate(app, v.candidate, result.revision_id)),
-        v.status === 'adopted' && button('从此候选扩展', () => { adoptedCandidate.value = v.candidate.candidate_id; invalidatePlan(); }))));
+        v.status === 'adopted' && !app.readonly && button('从此候选扩展', () => { adoptedCandidate.value = v.candidate.candidate_id; invalidatePlan(); showPhase(3); }))));
       candidateRows.append(el('p', {class:'muted'}, '显示最近一批目标页候选。是否属于这版风格、仍被采用及依据有效，由扩展计划再次核对。'), button('到任务页查看全部候选', () => app.go({surface:'runs', revision:result.revision_id, task_id:null})));
     } catch (error) { if (!disposed && token === candidateSerial) candidateRows.append(el('p', {class:'field-error'}, readableError(error))); }
   }
@@ -231,7 +297,7 @@ export function style(app) {
     fixed = value.reference || null; selected = new Set(value.targets || []); instruction.value = value.instruction || ''; promptSelection = value.prompt_selection || null; parent = value.parent_recipe_id || null; resolutions = value.resolutions || {}; suggestion.value = value.host_suggestion || '';
     reference.querySelector('option[value="saved"]')?.remove();
     if (fixed) { options.set('saved', fixed); reference.append(el('option', {value:'saved'}, label(fixed.page_id)+' · '+version(fixed.revision_id))); reference.value = 'saved'; } else reference.value = '';
-    for (const [key,v] of dimensions) { v.check.checked = key in (value.dimensions || defaults); v.text.value = value.dimensions?.[key] || defaults[key] || '借用参考页'+names[key]; }
+    for (const [key,v] of dimensions) { v.check.checked = key in (value.dimensions || defaults); v.text.value = value.dimensions?.[key] ?? defaults[key] ?? '借用参考页'+names[key]; }
     renderTargets(); renderExcerpt(); showReference();
   }
   function hydrate() {
@@ -247,11 +313,16 @@ export function style(app) {
           hydrateState({...state(), reference:seed.reference ?? null, targets:seed.target_ids || [], instruction:seed.instruction ?? state().instruction}); persist();
         } else notice.textContent = '带入的选页属于其它项目或版本，未替换当前输入。请返回原总览明确重选。';
       }
-      loadRecipes(); controls();
+      const resume = app.styleResume;
+      if (resume) { delete app.styleResume; if (resume.project_identity === app.info.project_identity && resume.revision === app.route.revision) { hydrateState(resume.state); persist(); loadRecipes(resume.recipe_id); } else loadRecipes(); }
+      else loadRecipes(); controls();
     });
   }
   const sync = () => controls();
+  const versionChanged = () => { if (app.latest?.revision_id !== app.route.revision && !busy) { invalidatePlan(false); proposal = null; preview.replaceChildren(); controls(); } };
   app.root.addEventListener('business-state-changed', sync); app.root.addEventListener('draft-editor-replaced', hydrate);
-  app.disposables.push(() => { disposed = true; serial++; sourceSerial++; candidateSerial++; recipeSerial++; release?.(); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); });
-  hydrate(); controls(); return node;
+  app.root.addEventListener('summary-refreshed', versionChanged);
+  app.disposables.push(() => { disposed = true; serial++; sourceSerial++; targetSourceSerial++; candidateSerial++; recipeSerial++; requests.forEach(controller => controller.abort()); targetViews.forEach(view => view.dispose()); release?.(); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('summary-refreshed', versionChanged); });
+  referenceCount.textContent = `${options.size} 页有已记录原图，可按页码或标题搜索。`;
+  showPhase(1); hydrate(); controls(); return node;
 }

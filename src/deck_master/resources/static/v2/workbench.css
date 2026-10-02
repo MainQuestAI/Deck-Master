@@ -232,6 +232,16 @@ textarea{font-size:14px;line-height:1.7}
 .style-targets{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 16px;padding:8px 0}
 .style-targets .inline-control{min-height:44px;align-items:flex-start;padding:8px;line-height:1.5}
 .style-targets input{margin-top:3px}
+.style-phase>summary{cursor:pointer;list-style:revert;min-height:60px;gap:16px}
+.style-phase-title{font-weight:600;font-size:16px}.style-phase-state{font-size:12px;margin-left:auto;text-align:right;overflow-wrap:anywhere}
+.style-phase>.panel-body{padding-top:20px!important}.style-phase:not([open])>summary{border-bottom:0}
+.style-calibration .style-targets{max-height:420px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));padding:4px}
+.style-target-card{min-width:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg)}
+.style-target-card .inline-control{padding:12px;line-height:1.5}.style-target-thumb,.style-missing-thumb{aspect-ratio:16/9;display:grid;place-items:center;background:var(--surface);overflow:auto;font-size:12px}
+.style-target-thumb>.pooled-image{height:100%;min-height:0}.style-target-thumb canvas{height:100%;object-fit:contain}.style-target-thumb .pooled-image[data-image-state=failed]{min-height:0;padding:8px;font-size:12px}
+.style-target-thumb button{min-height:44px}.style-plan:has(.stack:empty){display:none}
+.content-order-scroll{max-height:520px;overflow:auto;padding:4px}.material-state{font-size:12px}.source-card .status{align-self:flex-start}
+@media(max-width:767px){.style-phase>summary{align-items:flex-start}.style-phase-state{text-align:left;margin-left:0}.style-calibration .style-targets{grid-template-columns:1fr;max-height:460px}.style-phase input[type=search]{width:100%}.content-order-scroll{max-height:520px}}
 @media(max-width:767px){.matrix-search,.matrix-search input{width:100%}.style-targets{grid-template-columns:1fr}}
 /* Fixed changeset comparison shares candidate geometry, keeping prose readable. */
 .changeset-copy { white-space: pre-wrap; overflow-wrap: anywhere; }

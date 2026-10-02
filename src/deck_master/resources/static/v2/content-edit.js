@@ -55,7 +55,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
       const info = result.plan.impact;
       impact.replaceChildren(el('strong', {}, '本次影响预览'),
         el('p', {}, `修改 ${info.changed_pages.length} 页，移除或替换 ${info.removed_pages.length} 个旧页身份；${info.superseded_tasks.length} 项未完任务将失效。`),
-        el('p', {}, info.host_required ? '仅交接选定页，Host 返回后才更新正文。不会在此生成图片。' : '确认后保存内容，未改页及历史对象保留。'),
+        el('p', {}, info.host_required ? '仅交接选定页，制作工具返回后才更新正文。不会在此生成图片。' : '确认后保存内容，未改页及历史对象保留。'),
         el('p', {class:'muted'}, '旧意见保留旧基准，不自动迁移。' + (info.deck_outputs_invalidated ? '实际稿件变更后整稿文件需要更新。' : '') + (info.preserved_originals_need_review ? '旧原图保留，但需要核对新内容适用性。' : '')));
       impact.append(el('p', {}, [...new Set([...info.changed_pages,...info.removed_pages])].map(id => app.summary.pages.find(p=>p.page_id===id)?.title || id).join('、')));
       impact.scrollIntoView({block:'center'});
@@ -66,7 +66,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   function previewInputs(input, differences = []) {
     if (!canWrite()) return;
     pending = {action:'content.inputs', request:{input, base_revision:app.route.revision}, basis:{input}};
-    impact.replaceChildren(el('strong', {}, '材料与任务要求变更'), el('p', {}, '确认后旧材料版本保留，输入进入待协调；原有未完任务会由新内容整理接续。只有 Host 判断并采用后才说明内容已对齐，不默认整套重制。'));
+    impact.replaceChildren(el('strong', {}, '材料与任务要求变更'), el('p', {}, '确认后旧材料版本保留，输入进入待协调；原有未完任务会由新内容整理接续。只有制作工具判断并采用后才说明内容已对齐，不默认整套重制。'));
     impact.append(el('ul', {}, differences.map(text=>el('li',{},text)))); impact.scrollIntoView({block:'center'});
     submit.textContent = '确认输入并交接判断'; notice.textContent = ''; controls();
   }
@@ -79,17 +79,21 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
 
 export function sourceReader(app, link, revision = app.route.revision) {
   const node = el('div', {class:'stack'}, el('p', {}, '正在读取固定材料版本…'));
-  modal('材料原文与定位', node);
+  const dialog = modal('材料原文与定位', node), controller = new AbortController();
+  const close = () => controller.abort();
+  dialog.addEventListener('close', close, {once:true});
+  app.disposables.push(() => { controller.abort(); dialog.removeEventListener('close',close); if (dialog.contains(node) && dialog.open) dialog.close(); });
   const query = new URLSearchParams({revision});
   if (link.locator) query.set('locator', link.locator);
   if (link.source_version?.extract?.sha256) query.set('extract_sha256', link.source_version.extract.sha256);
-  get('/api/content/sources/' + encodeURIComponent(link.source_id) + '?' + query).then(data => {
+  get('/api/content/sources/' + encodeURIComponent(link.source_id) + '?' + query, {signal:controller.signal}).then(data => {
+    if (controller.signal.aborted || !node.isConnected) return;
     node.replaceChildren(el('h3', {}, data.name), el('p', {class:'muted'}, version(data.revision_id) + ' · 提取状态：' + data.extraction_status),
       el('p', {}, data.location === 'exact' ? `已定位：${data.requested_locator}` : '仅定位到材料版本，未找到可核验的精确位置。'),
       el('p', {class:'muted'}, '这是提取原文；打开材料不表示制作工具已经阅读或判断影响。'),
       ...data.matches.map(match => el('pre', {class:'read-text'}, match.text || JSON.stringify(match))),
       el('details', {open:!data.matches.length}, el('summary', {}, '材料全文'), el('pre', {class:'read-text'}, data.text || '没有可读文本，请保留原文件并查看提取状态。')));
-  }).catch(error => node.replaceChildren(el('p', {class:'field-error'}, readableError(error))));
+  }).catch(error => { if (!controller.signal.aborted && node.isConnected) node.replaceChildren(el('p', {class:'field-error'}, readableError(error)),el('p', {class:'muted'}, '稿件与已保存材料引用保留。请关闭后重试，或恢复对应材料版本。')); });
 }
 
 // Edit text leaves without replacing table, bullet, citation or block identities.
