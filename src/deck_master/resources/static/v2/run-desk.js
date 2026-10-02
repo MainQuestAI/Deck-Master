@@ -61,8 +61,8 @@ export function runDesk(app, data) {
   let page = data.runPage, selected = data.runDetail, disposed = false, serial = 0, busy = false, loaded = false;
   let state = {offset: 0, group: '', status: '', attention: false};
   let reading={seen:[],etag:null},readingUnavailable=false;const readingSupported=app.health.ui_capabilities?.includes('result_reading.v1');
-  let pinned = app.route.revision, live = !app.historical, pendingRead = null, choiceMade = false, readingBlocked = false;
-  const restart = () => { choiceMade = true; read({state:{offset:0},live:true,refreshReading:true,persist:true}); };
+  let pinned = app.route.revision, live = !app.historical, pendingRead = null, choiceMade = false, readingBlocked = false, recoveryState = null;
+  const restart = () => { choiceMade = true; read({state:{...(recoveryState||state),offset:0},live:true,refreshReading:true,persist:true}); };
   const refreshButton = button('核实最新执行状态', restart);
   root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), refreshButton),
     el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '当前执行状态与顶栏的页面阅读版本分开。正常处理中无需你操作；查看结果不代表采用或质量通过。'),
@@ -182,7 +182,7 @@ export function runDesk(app, data) {
       // Commit the page, its cursor and its reading snapshot together. Failed
       // pagination must leave both the visible rows and their old offset intact.
       state={...nextState,revision:value.revision_id};live=nextLive;pinned=nextPinned;
-      reading=nextReading;readingUnavailable=readingWarning;page = value; selected = nextDetail; loaded = true;readingBlocked=false;render();
+      reading=nextReading;readingUnavailable=readingWarning;page = value; selected = nextDetail; loaded = true;readingBlocked=false;recoveryState=null;render();
       if(options.persist)persist();
       if(readingWarning)notice.append(el('p',{class:'field-error'},'个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。'));
       if(options.notice)notice.append(el('p',{class:'muted'},options.notice));
@@ -194,7 +194,7 @@ export function runDesk(app, data) {
         if(fixedReading||conflict){live=false;pinned=page.revision_id;pendingRead=null;}
         group.value=state.group;status.value=state.status;attention.checked=state.attention;
         if(conflict||unavailable){
-          readingBlocked=true;
+          readingBlocked=true;recoveryState={...nextState};
           notice.replaceChildren(el('p',{class:'field-error'},conflict
             ?'已读记录已变化，当前页保留；请重新读取第一页后继续翻页。'
             :'个人已读记录暂不可用，当前页保留；请重新读取第一页后继续。'),button('重新读取第一页',restart));

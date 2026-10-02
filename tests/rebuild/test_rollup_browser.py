@@ -343,6 +343,8 @@ def test_pagination_draft_restores_only_a_verified_reading_snapshot(action_brows
         expect(page.locator('.run-pagination')).to_contain_text('第 1 页')
         expect(page.get_by_role('button', name='核实最新执行状态', exact=True)).to_be_enabled()
         page.get_by_role('button', name='重新读取第一页', exact=True).click()
+        expect(page.get_by_role('checkbox', name='只看需我处理', exact=True)).to_be_checked()
+        expect(page.locator('.run-task').first).to_have_attribute('data-task-id', 'result-34')
         expect(page.get_by_role('button', name='下一页任务', exact=True)).to_be_enabled()
 
 
