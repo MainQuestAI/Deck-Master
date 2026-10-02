@@ -1,0 +1,110 @@
+{
+  "release_id": "64f6063bab14-a29d0d9c016f",
+  "pages": [
+    {
+      "page_id": "p01",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "079cb5768fac5d17eb7105ba7f898a1b288b5c178973ec6b474440bf866db59f",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p02",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "1caf2a2b4f6dda4a60bd484d3349eefc78f64f3fa48d595c66bee3c1e675e5d5",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p03",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "c2d13c76b8691fbc2e4782dcd409c238d6b9f4808c284b8ebe7e663610cf81cc",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p04",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "630ae5f91895806f3d5086dd3edbb23bf747f8f7d1da31a0fe5f2375948f26cc",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p05",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "2f5f78bfb2539b5d4a871e2819a32665901b550a26751f1728e97775cfbb79f2",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    },
+    {
+      "page_id": "p06",
+      "observer": "tool_observed",
+      "input_match": "match",
+      "native_image_sha256": "db9d99e7f81d389c663b5dc999bc54dbf0d2fc74cebe58006799ab22fdcba36c",
+      "consumed_calls": 1,
+      "svg_present": true,
+      "svg_preview_present": true
+    }
+  ],
+  "real_calls_consumed": 6,
+  "provider_cost_and_tokens": "not_reported",
+  "professional_acceptance": false,
+  "schema_version": "u06-local-progress.v1",
+  "status": "incomplete",
+  "restored_pages": 30,
+  "pages_with_blueprint_svg_and_page_visual": 6,
+  "pending_pages": 24,
+  "host_cli_version": "0.159.2",
+  "runtime_changed": false,
+  "doctor": {
+    "compose": "ready",
+    "compile": "ready",
+    "render": "ready",
+    "view": "ready"
+  },
+  "home_migration": {
+    "status": "activated_and_registered",
+    "legacy_companion_backed_up": true,
+    "removed_exact_legacy_links": 19,
+    "third_party_entries_preserved": true,
+    "previous_managed_release": null,
+    "full_binary_rollback_verified": false
+  },
+  "closed_must_fix": [
+    "p04-common-icons",
+    "p06-body-overflow"
+  ],
+  "declared_variances": [
+    "p01 decorative mountain photograph reconstructed as editable contours",
+    "p04 two empty generated cards removed; four source channels and six agents retained",
+    "p06 generated step grouping corrected against original report L39"
+  ],
+  "remaining": [
+    "p07-p30 real sequential production",
+    "two actual production modification/candidate/adoption rounds",
+    "full-deck compilation and final six-dimension review",
+    "macOS native directory picker",
+    "human 30-second understanding observation",
+    "delivery export and handoff-check"
+  ],
+  "first_page_ppt_smoke": {
+    "status": "passed",
+    "scope": "installed compiler and LibreOffice single-page diagnostic; not project full-deck output",
+    "svg_source_matches_current": true,
+    "native_shapes": 32,
+    "native_text_atoms_checked": 5,
+    "raster_picture_count": 0,
+    "pptx_sha256": "c08d1f6d67ce2d319f17972944358ef55414c9700924ea77c8cb31fff83d645f",
+    "actual_render_visually_inspected": true
+  }
+}

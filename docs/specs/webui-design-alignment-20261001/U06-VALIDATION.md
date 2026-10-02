@@ -59,7 +59,7 @@
 
 [材料与 UI 脱敏结论](evidence/u06-optimized/real-material-checks.json) · [两轮手工正文编辑](evidence/u06-optimized/real-manual-edit-checks.json)。这些是真实材料上的正文与 UI 证据，**不是两轮原生 Host 生图/候选采用/质量验收**。
 
-当前 `continue` 正确返回 `awaiting_host`，等待第一页 `generation.v1` 蓝图。云端没有当前用户的 Codex Desktop `sessions` 原生事件库；现有 `codex-session-image.v1` 采集器必须从该库核对真实调用及输出，不能用自写记录替代。尚未发生原生模型调用，不能登记 consumed、生成候选或补造质量通过。
+云端交接时 `continue` 正确返回 `awaiting_host`，等待第一页 `generation.v1` 蓝图。云端没有当前用户的 Codex Desktop `sessions` 原生事件库；现有 `codex-session-image.v1` 采集器必须从该库核对真实调用及输出，不能用自写记录替代。该云端阶段尚未发生原生模型调用，未登记 consumed 或补造质量通过；后续本机进展见下节。
 
 ## 剩余项与处理顺序
 
@@ -71,3 +71,18 @@
 ## 分支与 worktree
 
 已清理 8 个已合并本地分支、7 个已合并远程分支；删除前核对 main 祖先并保留 `refs/archive/cleanup-20261002/` 恢复引用，远程删除绑定原 SHA。只有活动 U06 本地分支和一个 worktree；PR34/40/66 与其他未合并独立分支保留。[原清理证据](evidence/u06/branch-cleanup.json)。未删除用户材料、项目或历史产物。
+
+## 本机接续进展（2026-10-02，6/30，未完成）
+
+交接包六个文件及内部工程 ZIP 校验通过；恢复到仓库外新目录，保留隐藏工程对象和30页历史。PR90 head `e83cf790` 与交接一致；运行时仍为冻结候选 `64f6063bab14-a29d0d9c016f`，本次没有改核心代码。
+
+实际使用 Homebrew Python 3.12 创建安装候选，候选真实编译/渲染探针通过，再对真实 HOME 激活。compose/compile/render/view 均 ready，CLI 模块与公开 Skill 指向同一发布版。原 legacy companion 已备份，19个准确匹配旧链接被迁移，第三方条目保留。此前没有可回退的 managed release（previous=null），因此这里只确认实际迁移与激活，不把旧目录备份称为完整二进制回退验收。PATH 的 uv Python 3.12 虚拟环境创建曾因 `/install` 标准库定位失败；未改该全局 Python。
+
+- p01–p06 各完成一次真实 ImageGen、冻结请求、Attempt、原生采集、consumed 结算及采用；六条记录均为 `tool_observed`，输入比较 `match`，原生图片字节与采用蓝图一致。费用/token 为 not_reported，model/seed 未擅自推断。
+- 六页均完成原生 SVG、正式解析/字体检查、实际 SVG 渲染与 page_visual 三维 Host 自审。p04图标缺失、p06窄栏溢出真实记录为 must_fix，使用新SVG、新预览及 replaces 关闭；不能把两次返修当成 U06 所需的两轮候选制作/采用验收。
+- 明确视觉/内容修正：p01装饰照片改为可编辑山形轮廓；p04删除两个没有业务内容的生成空框，保留四渠道六个编号；p06按报告L39纠正六步分组。原始生图不改写。这些为 Host 自审，不是独立或客户认可。
+- p01额外通过同一安装核心的单页真实 PPT 编译、LibreOffice 渲染和文字回读，实际打开渲染检查；原生文字/形状可编辑，无整页图片。这是独立单页诊断，不写入项目整套 PPT 输出，也不冒称已完成30页交付。
+
+[本机脱敏核对结果](evidence/u06-local/progress.json)。原材料、提示词、原始图片、SVG、项目、调用原生日志及单页诊断文件均留本机私密目录，未提交仓库。
+
+下一工作单是 p07 blueprint，额度仍 reserved，尚未 begin；不存在未结算的本轮生图。p07–p30、两轮实际制作候选/采用、整套PPT最终六维审查、macOS目录选择、真人30秒观察及delivery/handoff-check仍未完成。真人观察已向用户提出，尚未收到结果；这不构成其余页面制作的技术阻碍。U06继续open。
