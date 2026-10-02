@@ -115,6 +115,10 @@ def test_actual_icon_candidate_ppt_comparison_retry_and_adoption(icon_browser,tm
     fixed_url=page.url
     canvas=page.locator('.candidate-icon-review canvas').last
     canvas.focus();canvas.press('ArrowRight');canvas.press('ArrowLeft')
+    page.evaluate("()=>{const control=document.querySelector('[aria-label=\"图标比较产物\"]');control.value='svg';control.dispatchEvent(new Event('change'));}")
+    assert page.evaluate("document.activeElement.getAttribute('aria-label')")=='候选 SVG'
+    page.evaluate("()=>{const control=document.querySelector('[aria-label=\"图标比较产物\"]');control.value='ppt';control.dispatchEvent(new Event('change'));}")
+    assert page.evaluate("document.activeElement.getAttribute('aria-label')")=='候选实际 PPT'
     assert page.url==fixed_url
     page.screenshot(path=str(tmp_path/'actual-icon-ppt-comparison.png'),full_page=True)
     page.get_by_role('button',name='预览采用这个候选',exact=True).click();page.get_by_role('button',name='采用这个候选',exact=True).wait_for()

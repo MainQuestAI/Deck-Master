@@ -1,0 +1,254 @@
+{
+  "record_type": "webui_quality_implementation_evidence.v1",
+  "baseline_sha": "bed476090e2a49b4c679906da2ce762753789d96",
+  "functional_source_sha": "6685553c13b643d609b35b34aa1dfa19558db7e2",
+  "pull_requests": [
+    92,
+    93,
+    94,
+    95
+  ],
+  "release": {
+    "wheel": "deck_master-1.0.0.dev2-py3-none-any.whl",
+    "wheel_sha256": "69175030399cd9ba683b307de0c56c71ee4d19b6026c7c45c074bdf4c62f2690",
+    "sdist": "deck_master-1.0.0.dev2.tar.gz",
+    "sdist_sha256": "f396c9424f9b1b5a20e9a7f9b2dab6a660f64f2b7c41c1b942ed30d0dac18d05",
+    "runtime_files": 191,
+    "v2_assets": 46,
+    "sdist_runtime_equal": true
+  },
+  "sdist_rebuild": {
+    "source_sha": "6685553c13b643d609b35b34aa1dfa19558db7e2",
+    "runtime_files": 191,
+    "rebuilt_runtime_files": 191,
+    "sdist_rebuilt_wheel_runtime_equal": true
+  },
+  "test_provenance": {
+    "source_sha": "6685553c13b643d609b35b34aa1dfa19558db7e2",
+    "core_test_source_sha": "4fb5002370ca36328a268122bdb128626e72dd7c",
+    "changed_installed_files": [
+      "deck_master-1.0.0.dev2.dist-info/RECORD",
+      "deck_master/resources/static/v2/icon-workbench.js"
+    ],
+    "core_and_compiler_identical": true,
+    "browser_reexecuted": true
+  },
+  "tests": {
+    "core_passed": 1068,
+    "render_passed": 33,
+    "installed_browser_passed": 39,
+    "installed_browser_skipped": 0,
+    "additional_focus_regression_passed": 1,
+    "installed_acceptance_steps_passed": 24
+  },
+  "catalog": [
+    {
+      "backend": "python",
+      "icons": 24,
+      "pages": 27,
+      "actual_renders": 27,
+      "status": "pass",
+      "evidence_phase": "F01"
+    },
+    {
+      "backend": "node",
+      "icons": 24,
+      "pages": 27,
+      "actual_renders": 27,
+      "status": "pass",
+      "evidence_phase": "F01"
+    }
+  ],
+  "real_copy": {
+    "pages": 30,
+    "assembly_report": "pass",
+    "icon_candidates_ready_native_scope_pass": 3,
+    "page_original_svg_unchanged": true,
+    "original_projects_preserved": 2,
+    "browser": {
+      "source_sha": "6685553",
+      "page_count": 30,
+      "errors": [],
+      "document_unchanged": true,
+      "keyboard_keeps_object": true,
+      "visual_confirmation": "pending_user"
+    }
+  },
+  "summary_latency": {
+    "server_mode": "detached",
+    "p95_ms": 121.62945803720504,
+    "threshold_ms": 250,
+    "passed": true,
+    "warmup": 5,
+    "background_errors": [],
+    "samples": 100,
+    "source_sha": "6685553c13b643d609b35b34aa1dfa19558db7e2"
+  },
+  "warm_first_screen": {
+    "source_sha": "6685553c13b643d609b35b34aa1dfa19558db7e2",
+    "samples": 6,
+    "all_pass": true,
+    "max_seconds": 0.6302792499773204,
+    "errors": []
+  },
+  "pressure": {
+    "qualifying": true,
+    "elapsed_s": 1200.0020608339692,
+    "icon_comparison_included": true,
+    "grouped_candidate_browsing_included": true,
+    "middle_window_s": [
+      300,
+      600
+    ],
+    "last_window_s": [
+      900,
+      1200
+    ],
+    "middle_samples": 30,
+    "last_samples": 30,
+    "middle_median": 22968900.0,
+    "last_median": 23342444.0,
+    "growth": 0.016263033928485937,
+    "memory_pass": true,
+    "image_bounds_pass": true,
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED"
+    ],
+    "sampling": "Chromium Performance.getMetrics JSHeapUsedSize after each ten-second interaction slot; no forced GC"
+  },
+  "pressure_gate_status": "open_after_clamshell_sleep_interruption",
+  "prior_failed_attempts_preserved": {
+    "final_package_sleep_interruption": [
+      "Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED"
+    ],
+    "additional_in_process_p95_ms": [
+      344.63,
+      271.83
+    ]
+  },
+  "functional_source_ci": {
+    "sha": "6685553c13b643d609b35b34aa1dfa19558db7e2",
+    "checks": [
+      {
+        "name": "Group report",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025663811/job/110901086969"
+      },
+      {
+        "name": "Group report",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025652350/job/110900943281"
+      },
+      {
+        "name": "Unit (Python 3.11, Node 22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025663811/job/110899518739"
+      },
+      {
+        "name": "Unit (Python 3.12, Node 22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025663811/job/110899518693"
+      },
+      {
+        "name": "Unit (Python 3.12, Node 24)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025663811/job/110899518462"
+      },
+      {
+        "name": "Unit (Python 3.11, Node 24)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025663811/job/110899518301"
+      },
+      {
+        "name": "Required browser and installed UI (Python 3.12, Node 22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025663811/job/110899518219"
+      },
+      {
+        "name": "Real rendering chain (Python 3.12)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025663811/job/110899518085"
+      },
+      {
+        "name": "Unit (Python 3.12, Node 22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025652350/job/110899480748"
+      },
+      {
+        "name": "Unit (Python 3.12, Node 24)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025652350/job/110899480600"
+      },
+      {
+        "name": "Real rendering chain (Python 3.12)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025652350/job/110899480491"
+      },
+      {
+        "name": "Unit (Python 3.11, Node 24)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025652350/job/110899480411"
+      },
+      {
+        "name": "Required browser and installed UI (Python 3.12, Node 22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025652350/job/110899480400"
+      },
+      {
+        "name": "Unit (Python 3.11, Node 22)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/37025652350/job/110899480386"
+      }
+    ],
+    "distinct_checks": 7,
+    "all_pass": true
+  },
+  "open": [
+    "uninterrupted_final_pressure_gate",
+    "native_folder_picker_actual_success_and_cancel",
+    "pages_6_and_29_user_decisions",
+    "30_second_user_observation",
+    "icon_visual_approval",
+    "professional_delivery_review"
+  ],
+  "independent_review_converged": false,
+  "private_evidence_sha256": {
+    "unit-source-exact.log": "ea807220298d2f023b9157839b4afe3d7bbb7111aa34e8476ceba9024c6a6a21",
+    "render-source-exact.log": "c99dad63a1b1d1efcda4a2fafbef98bdcb612702407c229206145621013639af",
+    "switch-focus-browser.log": "9f4f39db21834317440dca4096214ad0c40c1eca6fdcacc9d4db86dd2864a813",
+    "f01-python/checks.json": "bec73b91d28cc4cf2d3373534399be1383cc385928f75f5a4e2679e931223c09",
+    "f01-node/checks.json": "d3a578a49132b79e91706050b023bc29e92d1f4df0b96d44e516c7d367053c82",
+    "final-build-focus/dist/release.json": "aac29679fad13b1d9b89dd95767d19da607386c24ece01e58bf704012875de30",
+    "final-build-focus/sdist-rebuild-verification.json": "3003520542548e4f419bbd9343ab9eda277fff0f60c12b769b9a32c2accba6ce",
+    "runtime-inheritance-final.json": "75121921abb76d7524a372740e010302dbaba8da3d187427717cf9c8bca50085",
+    "installed-verification-resumed/checks.json": "7ecba2120e056801b851b7fc30ff2bd0cee3e54f1c5c4437823586cb951584be",
+    "installed-verification-resumed/installed-current-browser.log": "9133ab8e33a133f7611bbfd5a42c8fa9d6ac8efca175e1549a6e39998b6d9875",
+    "real-assembly-installed-final.json": "fe20d7722c7fab40944f855cdf0697e7c4aaf59e2252c7c766db9545cfd7c5f4",
+    "real-checks-installed.json": "35ee1555013c22e67b81cccea4e5bacecc94d37012a2cabdcf006e6cb034549d",
+    "real-browser-installed-ready/checks.json": "e7a8655911b3be250207a0aff9e0004c6b5becb52982f1990b959288bf3bac50",
+    "preservation-proof.json": "2afa3d59ad08040142691359655128878c0fe9495b70d21e33673a5836d827cd",
+    "real-review-export.json": "d99f122840a0b10a7766b020b400fc9de6a9f7a3d47c6f0ba6b2e4e121011bee",
+    "real-engineering-export.json": "8e978b0bbf0a00c1935fbe4af4f5c7c0973c29093eea32b36b619376e957d913",
+    "real-delivery-export.json": "bb3cbc9472040d296af86c597d234b2a7a768d53abec173a2e719bc852956910",
+    "latency-focus/measurements.json": "a121543c9da53f4fabb871c3602f0900660d3588f2b76db7c0b8c802baccf6c4",
+    "warm-focus/checks.json": "e8e2435915e59743140b41649dd1efba856731c88d2a1e85a9bfe2905978184c",
+    "pressure-final-20min/checks.json": "d2fe1aef8dd2fecf6518e0d37d1c5bea2bf3c54956e3aeaea59c1104d982600c",
+    "pressure-awake-20min/checks.json": "d4f2c70c33d19c3824173933e09187a101ee8758a0ca222f04d756f6f0597b29",
+    "pressure-awake-system-sleep.log": "9f997e3dbd77da6312d389f8f97644ed945223010c9601883b5b73abb568cdba",
+    "ci-focus.json": "2cf49c5410c4d5530bae664279ec6b53827bd4b2db1e0ada62ea5e8d88ab1410"
+  }
+}
