@@ -1,0 +1,132 @@
+{
+  "checks": [
+    {
+      "surface": "launcher",
+      "height": 800,
+      "width": 1280,
+      "scroll": 1280
+    },
+    {
+      "surface": "launcher",
+      "height": 900,
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "surface": "launcher",
+      "height": 844,
+      "width": 390,
+      "scroll": 390
+    },
+    {
+      "surface": "overview",
+      "height": 800,
+      "width": 1280,
+      "scroll": 1280
+    },
+    {
+      "surface": "overview",
+      "height": 900,
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "surface": "overview",
+      "height": 844,
+      "width": 390,
+      "scroll": 390
+    },
+    {
+      "surface": "content",
+      "height": 800,
+      "width": 1280,
+      "scroll": 1280
+    },
+    {
+      "surface": "content",
+      "height": 900,
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "surface": "content",
+      "height": 844,
+      "width": 390,
+      "scroll": 390
+    },
+    {
+      "surface": "gallery",
+      "height": 800,
+      "width": 1280,
+      "scroll": 1280
+    },
+    {
+      "surface": "gallery",
+      "height": 900,
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "surface": "gallery",
+      "height": 844,
+      "width": 390,
+      "scroll": 390
+    },
+    {
+      "surface": "page",
+      "height": 800,
+      "width": 1280,
+      "scroll": 1280
+    },
+    {
+      "surface": "page",
+      "height": 900,
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "surface": "page",
+      "height": 844,
+      "width": 390,
+      "scroll": 390
+    },
+    {
+      "surface": "style",
+      "height": 800,
+      "width": 1280,
+      "scroll": 1280
+    },
+    {
+      "surface": "style",
+      "height": 900,
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "surface": "style",
+      "height": 844,
+      "width": 390,
+      "scroll": 390
+    },
+    {
+      "surface": "runs",
+      "height": 800,
+      "width": 1280,
+      "scroll": 1280
+    },
+    {
+      "surface": "runs",
+      "height": 900,
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "surface": "runs",
+      "height": 844,
+      "width": 390,
+      "scroll": 390
+    }
+  ],
+  "errors": [],
+  "business_revision_unchanged": true
+}
