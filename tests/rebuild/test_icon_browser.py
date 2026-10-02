@@ -136,7 +136,7 @@ def test_saved_sample_identity_survives_reorder_and_missing(icon_browser):
       const app={business:{entries:new Map()},health:{ui_capabilities:['icon_quality.v1']},route:{layer:'svg'},root:document.createElement('div'),disposables:[],editor:{draft:{content:{icon_ui:{method:'reuse',sample_identity:a}}},ready:Promise.resolve(),changed(){}}};
       async function build(){const root=iconWorkbench(app,{page_id:'p01'});document.body.append(root);for(let i=0;i<100&&!root.querySelector('[aria-label="已采用图标样例"]').options.length;i++)await new Promise(r=>setTimeout(r,10));return root;}
       let root=await build();const restored=root.querySelector('[aria-label="已采用图标样例"]').value;root.remove();samples=[b];root=await build();
-      const missing=root.querySelector('[aria-label="已采用图标样例"]').value;const warning=root.textContent.includes('请重新选择');root.remove();app.disposables.forEach(fn=>fn());window.fetch=original;
-      return {restored,expected:sampleKey(a),missing,warning};
+      const missing=root.querySelector('[aria-label="已采用图标样例"]').value;const warning=root.textContent.includes('请重新选择');root.remove();samples=[];root=await build();const emptyMethod=root.querySelector('[aria-label="图标处理方式"]').value;root.querySelectorAll('button')[1].click();await new Promise(r=>setTimeout(r,10));const blocked=root.textContent.includes('请重新选择');root.remove();app.disposables.forEach(fn=>fn());window.fetch=original;
+      return {restored,expected:sampleKey(a),missing,warning,emptyMethod,blocked};
     }''')
-    assert outcome['restored']==outcome['expected'] and outcome['missing']=='' and outcome['warning']
+    assert outcome['restored']==outcome['expected'] and outcome['missing']=='' and outcome['warning'] and outcome['emptyMethod']=='reuse' and outcome['blocked']

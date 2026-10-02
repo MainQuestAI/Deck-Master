@@ -89,7 +89,11 @@ def _publish(store,key,check_id,value):
 
 def _result(store,key,identity):
     state=_state(store,key);cached=_cached(store,key,identity)
-    if state and (not cached or state['check_id']!=cached.get('check_id')):return state
+    if state and (not cached or state['check_id']!=cached.get('check_id')):
+        if state['status']=='ready':
+            state={**state,'status':'interrupted','error':{'code':'candidate_preview_cache_incomplete','message':'实际检查文件缺失或失效；请明确重试。'}}
+            write_json(_state_path(store,key),state)
+        return state
     if cached:return _public(cached)
     return state or {'status':'not_requested','cache_key':key}
 
@@ -177,6 +181,10 @@ def request(project, *, candidate_id, retry=False, wait=True):
         except BlockingIOError:
             lease.close();return _result(store,key,identity)
         state={'status':'queued','cache_key':key,'check_id':check_id,'candidate_id':candidate_id}
+        if current.get('check_id'):state['previous']={k:current[k] for k in ('check_id','status','error') if k in current}
+        report=_folder(store)/key/'report.json'
+        if report.exists():
+            _atomic_write_bytes(report.with_name('report-'+current.get('check_id','legacy')+'.json'),report.read_bytes())
         try:write_json(_state_path(store,key),state)
         except Exception:
             lease.close();raise

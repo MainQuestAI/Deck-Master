@@ -98,3 +98,39 @@ def test_page_shortcuts_respect_controls_and_dialogs(workbench_page):
     assert page.locator('dialog[open]').count() == 0 and page.url == url
     from playwright.sync_api import expect
     expect(page.get_by_role('button', name='连接状态', exact=True)).to_be_focused()
+
+
+def test_picker_cancel_and_failure_preserve_path_and_manual_focus(workbench_page):
+    from playwright.sync_api import expect
+    page=workbench_page
+    page.evaluate('''async()=>{
+      const {launcher}=await import('/v2/launcher-ui.js');const original=window.fetch;
+      window.pickerOutcome={status:'cancelled',path:null};
+      window.fetch=async(url,...args)=>String(url)==='/api/projects'?new Response(JSON.stringify({projects:[]})):String(url)==='/api/directories/pick'?new Response(JSON.stringify(window.pickerOutcome)):original(url,...args);
+      const root=document.createElement('div');root.id='picker-test';document.body.append(root);await launcher(root,{service_version:'test'});
+    }''')
+    page.locator('#picker-test').get_by_role('button',name='选择项目文件夹',exact=True).click()
+    path=page.get_by_role('textbox',name='项目文件夹',exact=True)
+    path.fill('/existing/project')
+    page.get_by_role('button',name='浏览文件夹',exact=True).click()
+    expect(path).to_have_value('/existing/project')
+    for status in ('timed_out','failed','busy','manual_path_required'):
+        page.evaluate("status=>window.pickerOutcome={status,path:null,diagnostic:{message:status+' diagnostic'}}",status)
+        page.get_by_role('button',name='浏览文件夹',exact=True).click()
+        expect(path).to_be_focused();expect(path).to_have_value('/existing/project')
+        expect(page.get_by_text(status+' diagnostic 当前输入保留，可直接填写完整路径。',exact=True)).to_be_visible()
+    page.evaluate("()=>window.pickerOutcome={status:'selected',path:'/selected/project'}")
+    page.get_by_role('button',name='浏览文件夹',exact=True).click();expect(path).to_have_value('/selected/project')
+    page.keyboard.press('Escape')
+
+
+def test_damaged_personal_reading_does_not_block_workbench(workbench_page,tmp_path):
+    from playwright.sync_api import expect
+    page=workbench_page;path=tmp_path/'sample/.deckmaster/workbench/result-reading.json'
+    path.parent.mkdir(parents=True,exist_ok=True);path.write_text('damaged reading record')
+    page.reload();page.get_by_role('heading',name='制作总览',exact=True).wait_for()
+    expect(page.get_by_text('个人已读记录暂不可用，已显示未过滤的业务记录；损伤文件保留，请先核实恢复资料。',exact=True)).to_be_visible()
+    page.evaluate("()=>{const q=new URLSearchParams(location.hash.slice(1));q.set('surface','runs');location.hash=q.toString();}")
+    page.get_by_role('heading',name='运行记录',exact=True).wait_for()
+    expect(page.get_by_text('个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。',exact=True)).to_be_visible()
+    assert path.read_text()=='damaged reading record'

@@ -12,7 +12,7 @@ from . import changes, operations
 from .compiler.svg import parse_svg
 from .local_state import project_path
 from .models import bump_revision, canonical_json_bytes, require_writer, validate_schema
-from .snapshots import load_snapshot
+from .snapshots import load_snapshot, READ_FAILURES
 from .store import Store, _atomic_write_bytes
 
 GEOMETRY = {'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'use'}
@@ -114,8 +114,54 @@ def visible_geometry(parsed):
         stroke=painted(shape['stroke']) and shape['stroke_width']>0 and shape['stroke_opacity']>0
         fill=shape['kind']!='line' and painted(shape['fill']) and shape['fill_opacity']>0
         if not (stroke or fill):continue
-        box=bounds({**parsed,'shapes':[shape]})
-        if box and box['width']>0 and box['height']>0:return True
+        subpaths=[]
+        if shape.get('commands') is not None:
+            points=[]
+            for command in shape['commands']:
+                for op,point in command.items():
+                    if op=='moveTo':
+                        if points:subpaths.append(points)
+                        points=[(point['x'],point['y'])]
+                    elif op=='lineTo':points.append((point['x'],point['y']))
+                    elif op=='close' and points:points.append(points[0])
+            if points:subpaths.append(points)
+        elif shape.get('points'):
+            subpaths=[[tuple(p) for p in shape['points']]]
+        else:
+            if shape.get('width',0)>0 and shape.get('height',0)>0:return True
+            continue
+        for points in subpaths:
+            # A moveto has no painted segment. Horizontal/vertical strokes do.
+            if stroke and any(a!=b for a,b in zip(points,points[1:])):return True
+            if stroke and len(points)>1 and shape['stroke_linecap'] in ('round','square'):return True
+        if fill and _filled_area(subpaths):return True
+    return False
+
+
+def _filled_area(subpaths):
+    """Test nonzero winding over planar scan bands, including retraced contours."""
+    segments=[(a,b) for points in subpaths if len(points)>2 for a,b in zip(points,points[1:]+points[:1]) if a!=b]
+    levels={p[1] for segment in segments for p in segment}
+    # Crossings split scan bands for self-intersecting contours.
+    for i,(a,b) in enumerate(segments):
+        dx,dy=b[0]-a[0],b[1]-a[1]
+        for c,d in segments[i+1:]:
+            ex,ey=d[0]-c[0],d[1]-c[1];den=dx*ey-dy*ex
+            if not den:continue
+            t=((c[0]-a[0])*ey-(c[1]-a[1])*ex)/den
+            u=((c[0]-a[0])*dy-(c[1]-a[1])*dx)/den
+            if 0<t<1 and 0<u<1:levels.add(a[1]+t*dy)
+    levels=sorted(levels)
+    for low,high in zip(levels,levels[1:]):
+        y=(low+high)/2;crossings={}
+        for a,b in segments:
+            if min(a[1],b[1])<y<max(a[1],b[1]):
+                x=a[0]+(y-a[1])*(b[0]-a[0])/(b[1]-a[1])
+                crossings[x]=crossings.get(x,0)+(1 if b[1]>a[1] else -1)
+        winding=0;previous=None
+        for x,delta in sorted(crossings.items()):
+            if previous is not None and x>previous and winding:return True
+            winding+=delta;previous=x
     return False
 
 
@@ -261,28 +307,35 @@ def listing(project, *, revision=None, include_stale=False):
     store=Store(project_path(project));doc=load_snapshot(store,revision); proposals=[]
     recipes=[{'ref':r,'recipe':_owned(store,doc,ref=r)[0]} for r in doc.get('icon_recipes',[])]
     confirmed={r['recipe']['proposal_ref']['sha256']:r for r in recipes}
-    dispatched={store.read_object_json(t).get('stage_request',{}).get('icon_recipe_ref',{}).get('sha256') for t in doc.get('tasks',[])}
+    dispatched=set();dispatch_unknown=False
+    for task_ref in doc.get('tasks',[]):
+        try:dispatched.add(store.read_object_json(task_ref).get('stage_request',{}).get('icon_recipe_ref',{}).get('sha256'))
+        except READ_FAILURES:dispatch_unknown=True
     for p in sorted((store.deck_root/'cache/icon-proposals').glob('*.json')):
         ref=json.loads(p.read_text());v=store.read_object_json(ref);validate_schema('icon_recipe',v)
         if v['project_id']==doc['project_id'] and (include_stale or v['base_revision']==doc['revision_id']):
             record=confirmed.get(ref['sha256'])
-            state=('handed_off' if record['ref']['sha256'] in dispatched else 'confirmed') if record else ('pending' if v['base_revision']==doc['revision_id'] else 'stale')
+            state=('handed_off' if record['ref']['sha256'] in dispatched else 'dispatch_unknown' if dispatch_unknown else 'confirmed') if record else ('pending' if v['base_revision']==doc['revision_id'] else 'stale')
             proposals.append({'proposal_id':'icon-proposal-'+ref['sha256'],'proposal_ref':ref,'proposal':v,'status':state})
     samples=[]
     from . import candidates
-    records=candidates._records(store,doc) if doc.get('candidate_adoptions') else {}
-    for adoption in doc.get('candidate_adoptions',[]):
-        candidate,_,task=candidates._lookup(records,adoption['candidate_id'])
-        ref=task.get('stage_request',{}).get('icon_recipe_ref')
-        if not ref or _entry(doc,candidate['page_id'])['svg']!=candidate['result_ref']:continue
-        recipe,_=_owned(store,doc,ref=ref)
-        target=next(t for t in recipe['input']['targets'] if t['page_id']==candidate['page_id'])
-        for i,icon in enumerate(target['icons']):
-            sample={'sample_candidate_id':candidate['candidate_id'],'sample_icon_index':i,'semantic_key':icon['semantic_key']}
-            try:_sample(store,doc,sample)
-            except operations.OperationError:continue
-            if not any(s['sample_candidate_id']==sample['sample_candidate_id'] and s['sample_icon_index']==i for s in samples):samples.append({**sample,'page_id':candidate['page_id'],'label':icon['label'],'style':icon['style']})
-    return {'revision_id':doc['revision_id'],'proposals':proposals,'samples':samples,'recipes':recipes}
+    samples_unavailable=False
+    try:
+        records=candidates._records(store,doc) if doc.get('candidate_adoptions') else {}
+        for adoption in doc.get('candidate_adoptions',[]):
+            candidate,_,task=candidates._lookup(records,adoption['candidate_id'])
+            ref=task.get('stage_request',{}).get('icon_recipe_ref')
+            if not ref or _entry(doc,candidate['page_id'])['svg']!=candidate['result_ref']:continue
+            recipe,_=_owned(store,doc,ref=ref)
+            target=next(t for t in recipe['input']['targets'] if t['page_id']==candidate['page_id'])
+            for i,icon in enumerate(target['icons']):
+                sample={'sample_candidate_id':candidate['candidate_id'],'sample_icon_index':i,'semantic_key':icon['semantic_key']}
+                try:_sample(store,doc,sample)
+                except operations.OperationError:continue
+                if not any(s['sample_candidate_id']==sample['sample_candidate_id'] and s['sample_icon_index']==i for s in samples):samples.append({**sample,'page_id':candidate['page_id'],'label':icon['label'],'style':icon['style']})
+    except READ_FAILURES + (operations.OperationError,):
+        samples=[];samples_unavailable=True
+    return {'revision_id':doc['revision_id'],'proposals':proposals,'samples':samples,'samples_unavailable':samples_unavailable,'recipes':recipes}
 
 
 @operations.public

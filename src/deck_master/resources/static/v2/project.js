@@ -115,6 +115,7 @@ export class Project {
       this.readonly = this.historical || Boolean(info.sample?.readonly);
       history.replaceState(null, '', routeHash(this.info, route));
       this.render(data);
+      if(summary.reading_unavailable)this.setNotice('个人已读记录暂不可用，已显示未过滤的业务记录；损伤文件保留，请先核实恢复资料。',true);
       this.savePosition();
       if (focus) {
         const title = route.surface === 'runs' && route.layer === 'ppt' && !route.task_id && !route.review_id

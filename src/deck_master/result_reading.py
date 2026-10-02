@@ -82,6 +82,8 @@ def import_legacy(project, *, draft_id, project_identity, expected_etag):
     with local_lock(safe_path(_file(store).parent,'result-reading.lock')):
         current=_read(store,doc,identity)
         if expected_etag!=current['etag']:raise LocalStateConflict('reading_etag','reading state changed; reload before importing')
-        updated={**current,'seen':list(dict.fromkeys([*current['seen'],*verified]))[-5000:],'sequence':current['sequence']+1}
+        seen=list(dict.fromkeys([*current['seen'],*verified]))[-5000:]
+        if seen==current['seen']:return {'reading':current,'verified_count':len(verified)}
+        updated={**current,'seen':seen,'sequence':current['sequence']+1}
         updated['etag']=_etag(updated);write_json(_file(store),updated)
     return {'reading':updated,'verified_count':len(verified)}

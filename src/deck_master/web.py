@@ -468,18 +468,24 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 raise workbench_mod.ReadModelError("invalid_revision", "revision", "provide one revision", http_status=400)
             revision = revisions[0] if revisions else None
             project = self.store.project_root
-            reading=None
+            reading=None;reading_unavailable=False
             if 'personal' in query:
                 if query['personal']!=['1']:raise ValueError('personal must be 1')
                 from .result_reading import get
                 if parsed.path not in ('/api/view/summary','/api/workbench') and 'reading_etag' not in query:
                     raise ValueError('personal lists require reading_etag from summary or reading state')
                 if 'reading_etag' in query and len(query['reading_etag'])!=1:raise ValueError('provide one reading_etag')
-                reading=get(project,expected_etag=query.get('reading_etag',[None])[0])
+                try:reading=get(project,expected_etag=query.get('reading_etag',[None])[0])
+                except (TypedServiceError,ModelError,OSError,ValueError,KeyError,TypeError):
+                    if parsed.path not in ('/api/view/summary','/api/workbench') or 'reading_etag' in query:raise
+                    reading_unavailable=True
             if parsed.path == "/api/view":
                 payload = view_mod.project_view(project, revision=revision)
             elif parsed.path in ("/api/view/summary", "/api/workbench"):
-                self._send_json_bytes(workbench_mod.workbench_summary_json(project, revision=revision, reading=reading))
+                result=workbench_mod.workbench_summary_json(project, revision=revision, reading=reading)
+                if reading_unavailable:
+                    payload=json.loads(result);payload['reading_unavailable']=True;self._send_json(payload)
+                else:self._send_json_bytes(result)
                 return
             elif parsed.path.startswith('/api/actions/'):
                 parts = parsed.path.split('/')

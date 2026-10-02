@@ -245,6 +245,10 @@ def test_preview_failure_retry_and_corrupt_files(icon_store,monkeypatch):
         if current['status'] not in ('queued','running'):break
         time.sleep(.1)
     assert current['status']=='ready' and current['check_id']==queued['check_id']
+    report=folder/'report.json';saved_report=report.read_bytes();report.unlink()
+    assert candidate_preview.status(icon_store.project_root,candidate_id=cid)['status']=='interrupted'
+    assert candidate_preview.request(icon_store.project_root,candidate_id=cid)['status']=='interrupted'
+    report.write_bytes(saved_report)
     # A dead worker's persisted state outranks a previous report.
     state_path=folder/'state.json'
     state_path.write_text(json.dumps({'cache_key':key,'check_id':'dead-worker','status':'running'}))
@@ -312,3 +316,30 @@ def test_icon_proposal_status_preserves_stale_comparison(icon_store):
     assert states=={proposal['proposal_id']:'confirmed',other['proposal_id']:'stale'}
     dispatch(icon_store,recipe)
     assert next(p for p in icons.listing(icon_store.project_root,include_stale=True)['proposals'] if p['proposal_id']==proposal['proposal_id'])['status']=='handed_off'
+
+@pytest.mark.parametrize('geometry,expected',[
+    ('<path d="M10 10" fill="none" stroke="black"/>',False),
+    ('<polygon points="1,1 5,5 10,10" fill="black"/>',False),
+    ('<path d="M1 5H20" fill="none" stroke="black"/>',True),
+    ('<path d="M5 1V20" fill="none" stroke="black"/>',True),
+    ('<path d="M10 10L10 10" fill="none" stroke="black" stroke-linecap="round"/>',True),
+    ('<path d="M10 10L10 10" fill="none" stroke="black"/>',False),
+    ('<path d="M1 1L10 1L5 10Z" fill="black"/>',True),
+    ('<path d="M5 5L15 5L10 15L15 5L5 5Z" fill="black"/>',False),
+    ('<path d="M5 5L15 5L10 15Z M5 5L10 15L15 5Z" fill="black"/>',False),
+    ('<path d="M1 1L10 10L1 10L10 1Z" fill="black"/>',True),
+])
+def test_visibility_uses_painted_segments_and_fill(geometry,expected):
+    assert icons.visible_geometry(icons.parse_svg(('<svg viewBox="0 0 24 24">'+geometry+'</svg>').encode(),page_id='paint')) is expected
+
+
+def test_icon_listing_isolates_unreadable_dispatch(icon_store,monkeypatch):
+    recipe=confirm(icon_store);dispatch(icon_store,recipe)
+    original=icons.Store.read_object_json
+    def damaged(self,ref):
+        value=original(self,ref)
+        if value.get('schema_version')=='deck_task.v1':raise ValueError('damaged task')
+        return value
+    monkeypatch.setattr(icons.Store,'read_object_json',damaged)
+    listing=icons.listing(icon_store.project_root,include_stale=True)
+    assert listing['proposals'][0]['status']=='dispatch_unknown'

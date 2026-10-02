@@ -88,3 +88,32 @@ def test_legacy_reading_import_is_explicit_and_verifies_saved_results(store):
     imported=result_reading.import_legacy(project,draft_id=draft['draft_id'],project_identity=reading['project_identity'],expected_etag=reading['etag'])
     assert imported['verified_count']==1 and imported['reading']['seen']==[result_reading.key(task)]
     assert ui_journal.get(project,draft['draft_id'])['record']==saved['record']
+
+@pytest.mark.parametrize('damage',['invalid','foreign'])
+def test_damaged_reading_keeps_business_summary_and_file(store,damage):
+    import json
+    from deck_master.web import WorkbenchServer
+    from test_web import _get_json
+    record=result_reading.get(store.project_root)
+    path=store.deck_root/'workbench/result-reading.json';path.parent.mkdir(parents=True,exist_ok=True)
+    content='invalid json' if damage=='invalid' else json.dumps({**record,'project_identity':'0'*64})
+    path.write_text(content)
+    before=store.load_document();server=WorkbenchServer(store.project_root);url=server.start().rstrip('/')
+    try:
+        status,_,summary=_get_json(url+'/api/view/summary?personal=1')
+        from jsonschema import Draft202012Validator
+        from importlib.resources import files
+        Draft202012Validator(json.loads(files('deck_master').joinpath('resources/contracts/workbench-summary.v1.schema.json').read_text())).validate(summary)
+        assert status==200 and summary['reading_unavailable'] and not summary.get('reading_etag')
+        assert _get_json(url+'/api/tasks?limit=30')[0]==200
+        assert _get_json(url+'/api/result-reading')[0]==422
+        assert path.read_text()==content and store.load_document()==before
+    finally:server.stop()
+
+
+def test_clear_conflicts_when_new_receipt_arrives_after_empty_plan(store):
+    project=store.project_root;plan=clear_plan(project);reading=result_reading.get(project)
+    task=store.read_object_json(store.load_document()['tasks'][0])
+    marked=result_reading.mark(project,project_identity=reading['project_identity'],revision=store.load_document()['revision_id'],task_id=task['task_id'],result_key=result_reading.key(task),expected_etag=reading['etag'])
+    with pytest.raises(LocalStateConflict):clear_commit(project,plan)
+    assert result_reading.get(project)==marked

@@ -150,12 +150,14 @@ export function runDesk(app, data) {
     if (state.status) query.set('status', state.status);
     if (state.attention) query.set('attention', '1');
     try {
-      const nextReading=readingSupported?await get('/api/result-reading'):reading;
-      if(readingSupported){query.set('personal','1');query.set('reading_etag',nextReading.etag);}
+      let nextReading=reading;let readingWarning=false;
+      if(readingSupported){try{nextReading=await get('/api/result-reading');}catch{nextReading={seen:[],etag:null};readingWarning=true;}}
+      if(nextReading.etag){query.set('personal','1');query.set('reading_etag',nextReading.etag);}
       const value = await get('/api/tasks?' + query);
       const nextDetail = app.route.task_id ? await get('/api/tasks/' + encodeURIComponent(app.route.task_id) + revisionQuery(live ? null : pinned)) : null;
       if (disposed || token !== serial) return;
       reading=nextReading;page = value; selected = nextDetail; loaded = true; render();
+      if(readingWarning)notice.append(el('p',{class:'field-error'},'个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。'));
     } catch (error) {
       if (!disposed) notice.replaceChildren(errorBox({...error.details, message: readableError(error)}),
         button('重试读取', () => { notice.replaceChildren(loading(live ? '正在读取当前执行状态…' : '正在读取固定执行记录…')); read(); }));
