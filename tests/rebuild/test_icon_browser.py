@@ -140,3 +140,17 @@ def test_saved_sample_identity_survives_reorder_and_missing(icon_browser):
       return {restored,expected:sampleKey(a),missing,warning,emptyMethod,blocked};
     }''')
     assert outcome['restored']==outcome['expected'] and outcome['missing']=='' and outcome['warning'] and outcome['emptyMethod']=='reuse' and outcome['blocked']
+
+
+def test_missing_compare_column_keeps_stable_focus_identity(icon_browser):
+    page,store,_=icon_browser
+    file=store.read_object_json(store.load_document()['pages'][0]['svg'])['file']
+    identity=page.request.get(page.url.split('#')[0].rstrip('/')+'/api/project').json()['project_identity']
+    page.evaluate("""async({identity,file})=>{
+      const {iconComparison}=await import('/v2/icon-workbench.js');
+      const region={x:0,y:0,width:1,height:1};window.focusProbe=iconComparison({info:{project_identity:identity}},[{title:'原图',file,region},{title:'缺少基准实际 PPT',file:null,region},{title:'候选实际 PPT',file,region}]);document.body.append(window.focusProbe.node);
+    }""",{'identity':identity,'file':file})
+    page.locator('[data-icon-column="2"]').focus()
+    assert page.locator('[data-icon-column="2"]').get_attribute('aria-label')=='候选实际 PPT'
+    page.locator('[data-icon-column="1"]').focus();fixed=page.url;page.keyboard.press('ArrowRight');assert page.url==fixed
+    page.evaluate('()=>{focusProbe.dispose();focusProbe.node.remove();delete window.focusProbe;}')

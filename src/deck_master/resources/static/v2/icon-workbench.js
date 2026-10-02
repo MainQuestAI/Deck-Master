@@ -19,10 +19,10 @@ export function iconComparison(app, columns, {highlight = true} = {}) {
   }}
   root.append(el('div',{class:'row wrap'},el('label',{},whole,' 正常页面尺寸'),el('label',{},'局部放大 ',zoom)),grid);
   whole.addEventListener('change',paint);zoom.addEventListener('change',paint);
-  for(const col of columns){
+  for(const [columnIndex,col] of columns.entries()){
     const slot=el('section',{class:'icon-compare-column'},el('h3',{},col.title));grid.append(slot);
-    if(!col.file){slot.append(el('p',{class:'muted'},col.missing||'尚未生成这一版本的预览'));continue;}
-    const canvas=el('canvas',{role:'img','aria-label':col.title,tabindex:0}),scroll=el('div',{class:'icon-crop-scroll'},canvas);slot.append(scroll);
+    if(!col.file){const missing=el('p',{class:'muted',tabindex:0,'data-icon-column':columnIndex},col.missing||'尚未生成这一版本的预览');missing.addEventListener('keydown',event=>{if(event.key.startsWith('Arrow')){event.preventDefault();event.stopPropagation();}});slot.append(missing);continue;}
+    const canvas=el('canvas',{role:'img','aria-label':col.title,tabindex:0,'data-icon-column':columnIndex}),scroll=el('div',{class:'icon-crop-scroll'},canvas);slot.append(scroll);
     canvas.addEventListener('keydown',event=>{const delta={ArrowLeft:[-80,0],ArrowRight:[80,0],ArrowUp:[0,-80],ArrowDown:[0,80]}[event.key];if(delta&&!event.altKey&&!event.ctrlKey&&!event.metaKey){event.preventDefault();event.stopPropagation();scroll.scrollBy(...delta);}});
     try {const lease=imagePool.acquire(app.info.project_identity,col.file,'large');leases.push(lease);
       lease.ready.then(bitmap=>{if(disposed)return;views.push({canvas,bitmap,region:col.region,objects:col.objects});paint();}).catch(error=>{if(!disposed)slot.append(el('p',{class:'field-error'},readableError(error)));});
@@ -121,10 +121,10 @@ export function candidateIconReview(app,record,base,{releaseComparison,restoreCo
     clearTimeout(timer);if(['queued','running'].includes(value.status))timer=setTimeout(refresh,2000);
   }catch(error){if(!disposed)status.textContent=readableError(error);}}
   async function check(){try{status.textContent='准备实际检查…';const value=await post('/api/candidate-preview/request',{candidate_id:record.candidate_id,retry:true,wait:false});if(value.status==='busy'){status.textContent='实际检查队列已满，请稍后明确重试。';return;}if(!disposed)refresh();}catch(error){status.textContent=readableError(error);}}
-  function draw(){const focused=[...slot.querySelectorAll('canvas')].indexOf(document.activeElement);view?.dispose();const n=target.icons[Number(choose.value)],ppt=layer.value==='ppt';
+  function draw(){const focused=slot.contains(document.activeElement)?document.activeElement.dataset.iconColumn:null;view?.dispose();const n=target.icons[Number(choose.value)],ppt=layer.value==='ppt';
     view=iconComparison(app,[{title:'固定原图',file:base.stages.blueprint.file,region:n.original_region},
       {title:ppt?'基准实际 PPT':'基准 SVG',file:(ppt?(base.stages.ppt_preview?.applicability?.status==='current'?base.stages.ppt_preview:null):base.stages.svg)?.file,region:n.svg_region,missing:'此固定基准没有有效的实际 PPT 预览'},
-      {title:ppt?'候选实际 PPT':'候选 SVG',file:ppt?(preview?.status==='ready'?preview.files?.['candidate.png'].file:null):record.artifact.file,region:n.svg_region,missing:labels[preview?.status||'not_requested']}]);slot.replaceChildren(view.node);if(focused>=0)slot.querySelectorAll('canvas')[focused]?.focus();}
+      {title:ppt?'候选实际 PPT':'候选 SVG',file:ppt?(preview?.status==='ready'?preview.files?.['candidate.png']?.file:null):record.artifact.file,region:n.svg_region,missing:labels[preview?.status||'not_requested']}]);slot.replaceChildren(view.node);if(focused!==null)slot.querySelector(`[data-icon-column="${focused}"]`)?.focus();}
   choose.addEventListener('change',()=>{if(opened)draw();});layer.addEventListener('change',()=>{if(opened)draw();});
   root.append(el('h3',{},'候选图标实际检查'),status,el('div',{class:'row wrap'},button('生成或重试实际 PPT 检查',check),
     button('打开局部对照',()=>{opened=true;releaseComparison?.();draw();}),button('关闭局部对照',()=>{opened=false;view?.dispose();slot.replaceChildren();restoreComparison?.();root.querySelectorAll('button')[1]?.focus();})),choose,layer,slot,
