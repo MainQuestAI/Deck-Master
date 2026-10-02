@@ -127,7 +127,7 @@ def main():
             context.tracing.stop(path=str(args.out / 'local-only' / 'trace.zip')); browser.close()
     finally:
         server.stop()
-        (args.out / 'checks.json').write_text(json.dumps({'evidence': 'real browser and service; synthetic Host/tool events only', 'checks': checks, 'errors': errors}, ensure_ascii=False, indent=2) + '\n')
+        (args.out / 'checks.json').write_text(json.dumps({'evidence': 'real browser and service; synthetic Host/tool events only', 'browser': browser.version, 'checks': checks, 'errors': errors}, ensure_ascii=False, indent=2) + '\n')
         (args.out / 'local-only' / 'candidate-requests.json').write_text(json.dumps(requests, ensure_ascii=False, indent=2) + '\n')
 
 

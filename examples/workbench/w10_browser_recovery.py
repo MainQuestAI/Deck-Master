@@ -72,7 +72,7 @@ def main():
                 check('31_minute_projection_clock_only_requests_verification', flow.task(running['task_id'])['status'] == 'running')
             check('no_automatic_cancel_or_dispatch_across_origins', not any(url.endswith('/api/cancel') or url.endswith('/api/changes/commit') for url in posts))
             check('no_browser_javascript_errors', not errors)
-            (args.out / 'checks.json').write_text(json.dumps({'checks': checks, 'synthetic': True, 'clock_fault_minutes': 31, 'model_calls': 0, 'native_host_evidence': False, 'errors': errors}, indent=2) + '\n')
+            (args.out / 'checks.json').write_text(json.dumps({'checks': checks, 'browser': browser.version, 'synthetic': True, 'clock_fault_minutes': 31, 'model_calls': 0, 'native_host_evidence': False, 'errors': errors}, indent=2) + '\n')
             ctx.close(); browser.close()
         finally: server.stop()
 

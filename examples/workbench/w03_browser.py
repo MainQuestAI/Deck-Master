@@ -103,7 +103,9 @@ def main():
             tasks = [created_store.read_object_json(ref) for ref in latest_doc['tasks']]
             eligible = [task for task in tasks if task['status'] == 'awaiting_host']
             assert len(eligible) == 1 and eligible[0]['task_id'] != initial_compose['task_id']
-            page.get_by_role('button', name='交接待整理内容', exact=True).click()
+            page.get_by_role('button', name='任务与交付', exact=True).click()
+            page.locator(f'.run-task[data-task-id="{eligible[0]["task_id"]}"]').get_by_role('button', name='查看这项任务').click()
+            page.get_by_role('button', name='交接这项内容整理', exact=True).click()
             expect(page.get_by_label('交接说明', exact=True)).to_have_value(re.compile(eligible[0]['task_id']))
             expect(page.get_by_text('待交接 · 尚未开始。将下面的说明复制到 Codex 后发送。', exact=True)).to_be_visible()
             page.keyboard.press('Escape')
@@ -262,7 +264,7 @@ def main():
             record('no_unhandled_javascript_errors')
             context.tracing.stop(path=str(root / 'local-only-trace.zip'))
             browser.close()
-        report = {'evidence_level': 'real Chromium / real local service / deterministic synthetic projects',
+        report = {'evidence_level': 'real Chromium / real local service / deterministic synthetic projects', 'browser': browser.version,
                   'checks': checks, 'elapsed_seconds': round(time.monotonic() - started, 2),
                   'model_calls': 0, 'real_home_changed': False, 'user_acceptance': 'not measured',
                   'installation_download_and_host_time': 'not measured', 'user_help_requests': 'not measured'}

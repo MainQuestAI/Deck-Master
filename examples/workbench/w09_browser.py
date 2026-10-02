@@ -25,6 +25,10 @@ def main():
         assert value,name
         checks.append(name);print(name,flush=True)
     server=WorkbenchServer(project);url=server.start()
+    def open_order(page):
+        panel = page.locator('.content-order-panel')
+        if not panel.evaluate('(node) => node.open'):
+            panel.locator('summary').first.click()
     try:
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=str(args.chromium_executable) if args.chromium_executable else None);context=browser.new_context(viewport={'width':1440,'height':1050});page=context.new_page()
@@ -32,6 +36,7 @@ def main():
             page.on('request',lambda r:posts.append({'url':r.url.split('/api/')[-1],'body':r.post_data_json}) if r.method=='POST' and '/api/content/' in r.url else None)
             try:
                 page.goto(url+'v2/');page.get_by_role('button',name='内容与来源',exact=True).click()
+                open_order(page)
                 page.get_by_role('button',name='打开内容页 '+titles['p02'],exact=True).click();page.get_by_text('编辑本页标题与正文',exact=True).click()
                 title=page.get_by_label('页面标题',exact=True);expect(title).to_be_enabled();title.fill('改后的事实 42');page.get_by_label('正文文字 2',exact=True).fill('Changed paragraph');page.get_by_label('正文文字 3',exact=True).fill('Changed bullet');page.get_by_label('正文文字 5',exact=True).fill('Changed cell')
                 page.reload();page.get_by_text('编辑本页标题与正文',exact=True).click();expect(page.get_by_label('页面标题',exact=True)).to_have_value('改后的事实 42');check('body_draft_survives_refresh')
@@ -41,11 +46,12 @@ def main():
                 changed_page=store.read_object_json(after['pages'][1]['page']);blocks=changed_page['customer_visible']['body_blocks'];check('paragraph_list_table_text_and_identities',blocks[0]['text']=='Changed paragraph' and blocks[1]['items'][0]=={'id':'item','text':'Changed bullet'} and blocks[2]['rows'][0]=={'id':'row','cells':[{'column_id':'col','display_text':'Changed cell'}]})
                 page.screenshot(path=str(args.out/'03-structured-body.png'),full_page=True)
                 check('original_immutable_and_basis_changed',after['pages'][1]['blueprint']==initial['pages'][1]['blueprint'])
-                page.get_by_role('button',name='内容与来源',exact=True).click();handle=page.get_by_role('button',name='打开内容页 改后的事实 42',exact=True);expect(handle).to_be_enabled();handle.focus();handle.press('Alt+ArrowUp')
+                page.get_by_role('button',name='内容与来源',exact=True).click();open_order(page);handle=page.get_by_role('button',name='打开内容页 改后的事实 42',exact=True);expect(handle).to_be_enabled();handle.focus();handle.press('Alt+ArrowUp')
                 expect(page.locator('.content-order-row').first).to_have_attribute('data-page-id','p02');check('keyboard_reorder_keeps_focus',handle.evaluate('(e)=>e===document.activeElement'))
                 page.get_by_role('button',name='预览页序变更',exact=True).click();expect(page.get_by_role('button',name='确认内容变更',exact=True)).to_be_enabled();page.get_by_role('button',name='确认内容变更',exact=True).click()
                 expect(page.locator('.content-order-row').first).to_have_attribute('data-page-id','p02');page.wait_for_function("() => !document.querySelector('.business-pending:not([hidden])')");expect(page.locator('.topbar .version')).to_contain_text(store.current_revision_id()[:8])
                 check('reorder_preserves_all_page_entries',store.load_document()['pages']==[after['pages'][1],after['pages'][0],after['pages'][2]])
+                open_order(page)
                 page.get_by_role('button',name='向后移动 改后的事实 42',exact=True).click();expect(page.locator('.content-order-row').nth(1)).to_have_attribute('data-page-id','p02');check('mouse_reorder_draft')
                 page.get_by_text('编辑内容计划',exact=True).click();page.get_by_label('页面目标 改后的事实 42',exact=True).fill('解释一个明确事实与边界')
                 page.get_by_role('button',name='预览内容计划变更',exact=True).click();expect(page.get_by_role('button',name='确认内容变更',exact=True)).to_be_enabled();page.get_by_role('button',name='确认内容变更',exact=True).click()
@@ -55,7 +61,7 @@ def main():
                 page.get_by_text('调整任务要求与材料',exact=True).click();page.get_by_label('新增材料完整路径（每行一个）').fill(str(source.resolve()));page.get_by_label('汇报受众',exact=True).fill('部门管理者');page.get_by_label('既定决定（每行一条）').fill('不声称未经实测的效果');page.get_by_label('本次输入变化说明').fill('补充验证材料并明确管理者受众')
                 page.get_by_role('button',name='预览材料与任务变化',exact=True).click();expect(page.get_by_role('button',name='确认输入并交接判断',exact=True)).to_be_enabled();page.get_by_role('button',name='确认输入并交接判断',exact=True).click()
                 expect(page.get_by_role('heading',name='当前任务',exact=True)).to_be_visible();check('inputs_dispatch_without_rewriting_pages',store.load_document()['pages']==[after['pages'][1],after['pages'][0],after['pages'][2]])
-                page.get_by_role('button',name='内容与来源',exact=True).click();expect(page.get_by_text('输入待协调',exact=True)).to_be_visible();page.get_by_text('调整任务要求与材料',exact=True).click();page.get_by_role('button',name='读取材料原文 material.txt',exact=True).click()
+                page.get_by_role('button',name='内容与来源',exact=True).click();expect(page.get_by_text('输入待协调',exact=True)).to_be_visible();open_order(page);page.get_by_text('调整任务要求与材料',exact=True).click();page.get_by_role('button',name='读取材料原文 material.txt',exact=True).click()
                 expect(page.get_by_text('仅定位到材料版本，未找到可核验的精确位置。',exact=True)).to_be_visible();expect(page.locator('#modal')).to_contain_text('Synthetic source only.');page.locator('#modal').get_by_role('button',name='关闭',exact=True).click();check('source_reading_honest_material_only')
                 page.screenshot(path=str(args.out/'01-content.png'),full_page=True)
                 page.get_by_label('选定内容页 '+titles['p03'],exact=True).check();page.get_by_label('选页调整要求').fill('仅移除当前选定的验证页');page.get_by_role('button',name='预览移除选页',exact=True).click();expect(page.locator('.content-operation')).to_contain_text('1 个旧页身份');page.get_by_role('button',name='确认内容变更',exact=True).click()
@@ -74,6 +80,6 @@ def main():
                 page.screenshot(path=str(args.out/'failure.png'),full_page=True);(args.out/'failure.txt').write_text(page.locator('body').inner_text());raise
             finally:context.close();browser.close()
     finally:server.stop()
-    (args.out/'checks.json').write_text(json.dumps({'synthetic':True,'actual_model_calls':0,'checks':checks,'errors':errors},ensure_ascii=False,indent=2)+'\n')
+    (args.out/'checks.json').write_text(json.dumps({'synthetic':True,'actual_model_calls':0,'browser':browser.version,'checks':checks,'errors':errors},ensure_ascii=False,indent=2)+'\n')
 
 if __name__=='__main__':main()

@@ -158,8 +158,10 @@ def verify(args):
             assert sha((package / name.removeprefix("deck_master/")).read_bytes()) == digest, name
     steps = []
     drivers = Path(__file__).resolve().parent
+    browser_tests = sorted((drivers / "installed-ui-tests").glob("test_*browser.py"))
+    assert browser_tests
     steps.append(run([sys.executable, "-m", "pytest", "-c", str(drivers / "installed-pytest.ini"),
-                      str(drivers / "installed-ui-tests"), "-m", "browser", "--require-browser", "-q"],
+                      *map(str, browser_tests), "-m", "browser", "--require-browser", "-q"],
                      out, out / "installed-current-browser.log"))
     steps.append(
         run(
