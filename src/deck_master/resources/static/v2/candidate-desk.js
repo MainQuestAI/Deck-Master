@@ -5,6 +5,7 @@ import {imageView} from './images.js';
 import {routeHash} from './routes.js';
 import {diffView} from './text-diff.js';
 import {pageText} from './page-text.js';
+import {candidateIconReview} from './icon-workbench.js';
 import {openCandidate} from './trial-actions.js';
 
 const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content' ? '逐页稿' : 'SVG';
@@ -78,6 +79,7 @@ export function candidateDesk(app, data) {
     controls();
   }
   function drawColumns(leftStage, leftRevision, label = '当前采用（原固定基准）', leftPage = null) {
+    if(iconReview?.isOpen())return;
     releases.splice(0).forEach(fn => fn());
     if (selected.candidate.result_kind === 'page') {
       // G18：正文候选单次真实左右差异（完整正文文本化）；不伪造图片预览。
@@ -94,7 +96,9 @@ export function candidateDesk(app, data) {
         el('h2', {}, '所选候选'), el('p', {class: 'muted'}, `${stageName(selected.candidate.stage)} · ${clock(selected.candidate.created_at)}`),
         picture(app, selected.artifact, '所选候选图像', releases)));
   }
+  let iconReview = null;
   function drawEvidence(attempt, base) {
+    iconReview?.dispose(); iconReview = null;
     auxReleases.splice(0).forEach(fn => fn()); sources.replaceChildren();
     const referenceSources = [...(selected.reference_sources || [])];
     if (stage === 'svg' && base.stages.blueprint?.file) referenceSources.unshift({page_id: data.page_id, revision_id: base.revision_id, file: base.stages.blueprint.file});
@@ -122,6 +126,8 @@ export function candidateDesk(app, data) {
         el('details', {}, el('summary', {}, '请求、Attempt 与结果身份'), el('pre', {class: 'evidence-json'}, JSON.stringify({candidate_id: selected.candidate_id,
           request_id: selected.request?.request_id || null, attempt_id: selected.attempt?.attempt_id || null, result_ref: selected.candidate.result_ref,
           generation_basis: selected.candidate.generation_basis, references: selected.reference_sources, observed_coverage: actual?.coverage || null}, null, 2))))));
+    iconReview = candidateIconReview(app, selected, base, {releaseComparison:()=>{releases.splice(0).forEach(fn=>fn());columns.replaceChildren();}, restoreComparison:()=>drawColumns(base.stages[stage],base.revision_id)});
+    if (iconReview) evidence.append(iconReview);
   }
   async function choose(id) {
     const token = ++serial, routeAtStart = location.hash; busy = true; currentPlan = null; planInvalid = false; controls();
@@ -138,6 +144,7 @@ export function candidateDesk(app, data) {
       selected = value; live = value; lastSync = new Date(); select.value = id;
       root.dataset.candidateId = id; app.route.candidate_id = id; history.replaceState(null, '', routeHash(app.info, app.route));
       const currentDoc = value.candidate.result_kind === 'page' ? await get('/api/pages/' + encodeURIComponent(data.page_id) + '/lineage' + revisionQuery(app.route.revision)) : null;
+      iconReview?.dispose();iconReview=null;
       drawColumns(base.stages[stage], base.revision_id, undefined, currentDoc?.page); drawEvidence(attempt, base); impact.replaceChildren(); renderState();
     } catch (error) { if (!disposed && token === serial) { impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || ''; } }
     finally { if (token === serial) { busy = false; if (!disposed) controls(); } }

@@ -51,6 +51,7 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         page = parse_svg(data, page_id=item.page_id, assets=options.assets.get(item.page_id, {}))
         page['sha256'] = hashlib.sha256(data).hexdigest()
         pages.append(page)
+    icon_license = any(b'data-icon-license="lucide-1.49.0"' in Path(item.path).read_bytes() for item in inputs)
     diagnostics = []
     for page in pages:
         scale = min(options.width_px / page['width'], options.height_px / page['height'])
@@ -74,10 +75,43 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         with zipfile.ZipFile(candidate) as source, zipfile.ZipFile(patched, 'w', zipfile.ZIP_DEFLATED) as dest:
             for info in source.infolist():
                 data = source.read(info.filename)
+                if icon_license and info.filename == 'docProps/core.xml':
+                    core = ET.fromstring(data)
+                    key = '{http://purl.org/dc/elements/1.1/}description'
+                    description = core.find(key)
+                    if description is None: description = ET.SubElement(core, key)
+                    license_path = Path(__file__).parents[1] / 'resources/icons/lucide/LICENSE.txt'
+                    description.text = (description.text or '') + '\nLucide 1.49.0 icon license:\n' + license_path.read_text()
+                    data = ET.tostring(core, encoding='utf-8', xml_declaration=True)
                 for index, page in enumerate(pages, 1):
                     if info.filename != f'ppt/slides/slide{index}.xml':
                         continue
                     root = ET.fromstring(data)
+                    # Both compiler exits preserve SVG stroke endings/joins in DrawingML.
+                    # Match emitted order, not SVG IDs (IDs may be absent or duplicated).
+                    native_shapes = root.findall('p:cSld/p:spTree/p:sp', ns)
+                    source_shapes = [shape for shape in page['shapes'] if shape['kind'] != 'image']
+                    if len(native_shapes) != len(source_shapes):
+                        raise ValueError('native shape count differs from SVG; cannot bind stroke properties')
+                    for emitted, source_shape in zip(native_shapes, source_shapes, strict=True):
+                        if source_shape['stroke'] == 'none':
+                            continue
+                        line = emitted.find('p:spPr/a:ln', ns)
+                        if line is None:
+                            raise ValueError('native output omitted an SVG stroke')
+                        caps = {'butt': 'flat', 'round': 'rnd', 'square': 'sq'}
+                        joins = {'round': 'round', 'bevel': 'bevel', 'miter': 'miter'}
+                        cap = source_shape.get('stroke_linecap', 'butt')
+                        join = source_shape.get('stroke_linejoin', 'miter')
+                        if cap not in caps or join not in joins:
+                            raise ValueError('unsupported SVG stroke ending or join')
+                        line.set('cap', caps[cap])
+                        for kind in joins.values():
+                            for child in line.findall('a:' + kind, ns):
+                                line.remove(child)
+                        child = ET.SubElement(line, '{' + ns['a'] + '}' + joins[join])
+                        if join == 'miter':
+                            child.set('lim', str(round(source_shape.get('stroke_miterlimit', 4) * 100000)))
                     spacing = {s['atom_id'] or s['id']: s.get('letter_spacing', 0) for s in page['shapes'] if s['kind'] == 'text'}
                     for shape in root.findall('.//p:sp', ns):
                         name = shape.find('p:nvSpPr/p:cNvPr', ns).get('name')

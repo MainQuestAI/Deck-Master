@@ -64,7 +64,7 @@ def test_effective_actions_modern_project(modern):
     assert info["core_writers"] == list(SUPPORTED_WRITERS)
     actions = actions_by_name(info)
     assert set(actions) == {"drafts", "annotations", "changes", "candidates", "content", "inputs",
-                            "styles", "run_desk", "exports", "restoration"}
+                            "styles", "run_desk", "exports", "restoration", "icons"}
     assert all(item["supported"] and item["writable"] and item["reason_code"] is None
                for item in actions.values())
 
@@ -81,7 +81,7 @@ def test_v1_format_disables_only_real_gates_and_stays_truthful(v1_project):
         assert actions[name]["writable"] is True and actions[name]["reason_code"] is None
     # these mirror a real workbench.v3 gate at the service layer (B07/G54
     # moved candidates into the gated set together with its endpoint gate)
-    for name in ("annotations", "changes", "content", "styles", "candidates"):
+    for name in ("annotations", "changes", "content", "styles", "candidates", "icons"):
         assert actions[name]["writable"] is False
         assert actions[name]["reason_code"] == "unsupported_project_format"
     # reading the projection must not upgrade or migrate the project in place

@@ -425,6 +425,9 @@ def show(project, *, candidate_id, revision=None):
                 raise operations.OperationError('candidate_invalid', 'references', 'fixed reference sources differ from the committed task')
             reference_sources = [{**source, 'file': file['file']} for source, file in zip(sources, files, strict=True)]
         result['reference_sources'] = reference_sources
+        if task.get('stage_request', {}).get('icon_recipe_ref'):
+            from .icons import _owned
+            result['icon_recipe'] = _owned(store, document, ref=task['stage_request']['icon_recipe_ref'])[0]
     elif kind == 'page':
         result['page'] = store.read_object_json(candidate['result_ref'])
     else:
@@ -493,6 +496,18 @@ def _plan(store, document, candidate_ids):
             failures.append({'candidate_id': candidate['candidate_id'], 'page_id': candidate['page_id'],
                              'cause': 'one_candidate_per_page'})
             continue
+        if task.get('stage_request', {}).get('icon_recipe_ref'):
+            from .candidate_preview import require_ready
+            require_ready(store.project_root, candidate['candidate_id'])
+            recipe_ref = task['stage_request']['icon_recipe_ref']
+            from .icons import _owned, _sample
+            recipe, _ = _owned(store, document, ref=recipe_ref)
+            anchor = next(t for t in recipe['input']['targets'] if t['page_id'] == candidate['page_id'])
+            for icon in anchor['icons']:
+                if icon['method'] == 'reuse': _sample(store, document, icon)
+            if state['adoption_target']['current_ref'] != anchor['svg_ref']:
+                failures.append({'candidate_id': candidate['candidate_id'], 'cause': 'icon_target_changed'})
+                continue
         pages.add(candidate['page_id'])
         downstream = ['svg_preview', 'ppt_preview', 'deck_outputs', 'quality_applicability']
         if candidate['stage'] == 'blueprint':
@@ -643,7 +658,13 @@ def adopt(project, *, input, base_revision, operation_id):
         # actually changed; a no-op adoption keeps exports usable
         updated['candidate_adoptions'] = adoptions
         require_writer(updated, CONTENT_WRITER if content else WRITER)
-        result = {'status': 'adopted', 'revision_id': updated['revision_id'], 'candidate_ids': ids,
+        icon_checks = {}
+        for item in input['selections']:
+            if records[item['candidate_id']][2].get('stage_request', {}).get('icon_recipe_ref'):
+                from .candidate_preview import freeze_check
+                icon_checks[item['candidate_id']] = freeze_check(store, item['candidate_id'])
+                next(a for a in reversed(adoptions) if a['candidate_id']==item['candidate_id'])['icon_check_ref']=icon_checks[item['candidate_id']]
+        result = {'icon_checks': icon_checks, 'status': 'adopted', 'revision_id': updated['revision_id'], 'candidate_ids': ids,
                   'result_refs': [item['result_ref'] for item in input['selections']], 'impact': input['selections'], 'max_calls': 0}
         return operations.commit_locked(store, document=updated, base_revision=base_revision,
                                          operation_id=operation_id, kind='candidates.adopt', digest=digest, result=result)

@@ -58,7 +58,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
-                   "restoration.v1", "workbench_actions.v1", "action_targets.v1")
+                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1")
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
@@ -184,6 +184,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                           '/api/stages/assemble': stages.assemble,
                           '/api/styles/propose': styles.propose, '/api/styles/confirm': styles.confirm, '/api/styles/plan': styles.plan}[self.path]
                 result = action(self.store.project_root, **data)
+            elif self.path in ('/api/icons/propose', '/api/icons/confirm', '/api/icons/plan', '/api/icons/preview', '/api/candidate-preview/request'):
+                from . import icons, candidate_preview
+                action = {'/api/icons/propose':icons.propose, '/api/icons/confirm':icons.confirm, '/api/icons/plan':icons.plan, '/api/icons/preview':icons.preview, '/api/candidate-preview/request':candidate_preview.request}[self.path]
+                result = action(self.store.project_root, **data)
             elif self.path == '/api/text-ranges/validate':
                 from .text_ranges import validate
                 result = validate(self.store.project_root, **data)
@@ -222,7 +226,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/content/', '/api/export', '/api/history/')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/icons/', '/api/candidate-preview/', '/api/content/', '/api/export', '/api/history/')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -294,6 +298,20 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 self._send_json(result)
             except Exception as exc:
                 self._send_error(exc)
+            return
+        if parsed.path in ('/api/icons/inspect', '/api/icons/catalog', '/api/icons/list', '/api/candidate-preview/status', '/api/candidate-preview/file'):
+            try:
+                from . import icons, candidate_preview
+                query = parse_qs(parsed.query)
+                if any(len(v) != 1 for v in query.values()): raise ValueError('duplicate query parameter')
+                fields = {k:v[0] for k,v in query.items()}
+                if parsed.path == '/api/candidate-preview/file':
+                    data, media = candidate_preview.file_bytes(self.store.project_root, **fields)
+                    self._send_bytes(data, media)
+                else:
+                    action = {'/api/icons/inspect':icons.inspect, '/api/icons/catalog':icons.catalog, '/api/icons/list':icons.listing, '/api/candidate-preview/status':candidate_preview.status}[parsed.path]
+                    self._send_json(action(self.store.project_root, **fields))
+            except Exception as exc: self._send_error(exc)
             return
         if parsed.path == '/api/candidates' or parsed.path.startswith('/api/candidates/'):
             try:

@@ -58,11 +58,12 @@ PROJECT_ACTIONS = (
     ("content", "content_ops.v1"),
     ("inputs", "content_ops.v1"),
     ("styles", "style_recipes.v1"),
+    ("icons", "icon_quality.v1"),
     ("run_desk", "run_desk.v1"),
     ("exports", "exports.v1"),
     ("restoration", "restoration.v1"),
 )
-FORMAT_GATED = frozenset({"annotations", "changes", "content", "styles", "candidates"})
+FORMAT_GATED = frozenset({"annotations", "changes", "content", "styles", "candidates", "icons"})
 
 
 def _capabilities(server_capabilities):

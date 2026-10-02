@@ -233,6 +233,7 @@ def svg(data, where, depth=0):
     if depth > 4:
         reject(where, "nested embedded image limit exceeded")
     root = xml(data, where)
+    icon_license = any(n.get('data-icon-license') == 'lucide-1.49.0' for n in root.iter())
     for parent in list(root.iter()):
         for child in list(parent):
             if child.tag.rsplit("}", 1)[-1] in ("metadata", "desc"):
@@ -277,6 +278,10 @@ def svg(data, where, depth=0):
         text_safe(parent.tail, where + "/text")
     if root.tag.rsplit("}", 1)[-1] != "svg":
         reject(where, "expected SVG root")
+    if icon_license:
+        from .icons import CATALOG, catalog
+        catalog()
+        root.append(ET.Comment('\nLucide 1.49.0\n' + (CATALOG/'LICENSE.txt').read_text().replace('---','—').replace('--','—')))
     cleaned = ET.tostring(root, encoding="utf-8", xml_declaration=True)
     text_safe(cleaned.decode("utf-8"), where + "/xml")
     return cleaned
@@ -290,6 +295,7 @@ def pptx(data, where):
     except zipfile.BadZipFile:
         reject(where, "invalid PPTX archive")
     names = source.namelist()
+    icon_license = 'docProps/core.xml' in names and b'Lucide 1.49.0 icon license:' in source.read('docProps/core.xml')
     if len(set(names)) != len(names) or any(n.startswith("/") or ".." in n.split("/") for n in names):
         reject(where, "unsafe PPTX part names")
     if "[Content_Types].xml" not in names or "ppt/presentation.xml" not in names:
@@ -312,12 +318,19 @@ def pptx(data, where):
             )
         )
     }
+    if icon_license: removed.discard('docProps/core.xml')
     output = io.BytesIO()
     with source, zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as target:
         for name in names:
             if name in removed or name.endswith("/"):
                 continue
             raw = source.read(name)
+            if icon_license and name == 'docProps/core.xml':
+                from .icons import CATALOG, catalog
+                catalog()
+                root = ET.Element('{http://schemas.openxmlformats.org/package/2006/metadata/core-properties}coreProperties')
+                ET.SubElement(root, '{http://purl.org/dc/elements/1.1/}description').text = 'Lucide 1.49.0 icon license:\n' + (CATALOG/'LICENSE.txt').read_text()
+                raw = ET.tostring(root, encoding='utf-8', xml_declaration=True)
             if name.endswith((".xml", ".rels")):
                 root = xml(raw, where + "/" + name)
                 for parent in root.iter():

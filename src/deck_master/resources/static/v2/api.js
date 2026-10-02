@@ -29,6 +29,9 @@ async function request(path, options) {
 }
 export function readableError(error) {
   const labels = {
+    icon_basis_changed:'图标对象或页面版本已变化。范围和意见保留，请重新定位并确认。',
+    icon_invalid:'图标要求超出可验证范围，请核对对象、区域和处理方式。',
+    icon_preview_required:'此图标候选需先通过实际 PPT 检查，再预览采用。',
     restore_basis_changed: '当前版本已变化，未恢复或覆盖任何页。来源与当前版本均保留，请比较后重新预览。',
     delivery_blocked: '所选版本尚不满足正式交付条件，请处理下面的页与检查项。',
     input_reconciliation_pending: '所选版本的内容与任务要求尚未协调，请先完成内容更新。',

@@ -246,3 +246,14 @@ textarea{font-size:14px;line-height:1.7}
 /* Fixed changeset comparison shares candidate geometry, keeping prose readable. */
 .changeset-copy { white-space: pre-wrap; overflow-wrap: anywhere; }
 .action-target h2 { font-size: 18px; }
+
+/* Icon refinement uses the existing neutral product surface and bounded image pool. */
+.icon-workbench { margin-top: 16px; }
+.icon-compare-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.icon-compare-column { min-width:0; }
+.icon-crop-scroll { max-height:480px; overflow:auto; border:1px solid var(--border,#dedede); background:white; padding:8px; }
+.icon-crop-scroll canvas { display:block; max-width:none; }
+.icon-proposal,.icon-recipe { border:1px solid var(--border,#dedede); padding:16px; }
+.candidate-icon-review { padding:16px; }
+.icon-opinions label { display:flex; align-items:flex-start; gap:8px; }
+@media(max-width:800px) { .icon-compare-grid { grid-template-columns:1fr; } .icon-crop-scroll { max-height:320px; } }

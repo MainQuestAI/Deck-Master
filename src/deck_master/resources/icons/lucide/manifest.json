@@ -1,0 +1,153 @@
+{
+  "schema_version": "icon_catalog.v1",
+  "family": "Lucide",
+  "version": "1.49.0",
+  "license_file": "LICENSE.txt",
+  "license_sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+  "icons": [
+    {
+      "id": "file-text",
+      "label": "文件",
+      "sha256": "52ca55846c202335fb870c8aa23e9345630ec10489303756d62e750f7109605c",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/file-text.svg"
+    },
+    {
+      "id": "folder",
+      "label": "文件夹",
+      "sha256": "f0d92b94b797a8ab7d4c4ae33c3236c47f64068351b4e14bdb5014ee42898a39",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/folder.svg"
+    },
+    {
+      "id": "database",
+      "label": "数据库",
+      "sha256": "471eb14bc8d144896a82dfc4aa9daf350f769f0896f4bef33e50aabdbb51130d",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/database.svg"
+    },
+    {
+      "id": "server",
+      "label": "服务器",
+      "sha256": "f7bea54b609dc488f3b848995014041846b2443fd2a880653e9e583d7a034f61",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/server.svg"
+    },
+    {
+      "id": "cloud",
+      "label": "云",
+      "sha256": "28a34022ed00177eb1f218eea5d2b7af30d09b529187fe32219e4dd8ea2b9740",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/cloud.svg"
+    },
+    {
+      "id": "cpu",
+      "label": "芯片",
+      "sha256": "ec83bb69ec029d367d749afc445b39c8e95891ebf99b0400652677c2b149b99c",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/cpu.svg"
+    },
+    {
+      "id": "network",
+      "label": "网络",
+      "sha256": "626be730feea1e5ea7539fbf78b4a3fcb927ce5d7dc43364f2216908672ac792",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/network.svg"
+    },
+    {
+      "id": "workflow",
+      "label": "流程",
+      "sha256": "ae99ea8f56a2835a2cca35b2fbb57643ab73443610970dba23e24bd9df75cfec",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/workflow.svg"
+    },
+    {
+      "id": "git-branch",
+      "label": "分支",
+      "sha256": "041f04acc8f92657b849540f0440e2e85d0df0b8da2365611e81b9bebfafc4eb",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/git-branch.svg"
+    },
+    {
+      "id": "bot",
+      "label": "机器人",
+      "sha256": "e46fe72fc5b33d7a17b0112df85da9ded851860312e8353f4fe23d87a4ce77f5",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/bot.svg"
+    },
+    {
+      "id": "users",
+      "label": "用户组",
+      "sha256": "eeed488a1ec95ba730dd69996536fb65061d6ea273afb2429ae47e65eebf401c",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/users.svg"
+    },
+    {
+      "id": "user",
+      "label": "用户",
+      "sha256": "eae3b3b2400031ddd5ec869327d127a96014e5f63aa6e06658dd5d4e90661aa8",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/user.svg"
+    },
+    {
+      "id": "shield-check",
+      "label": "安全",
+      "sha256": "8d4fcdbde5bba4abb1a2f6fe53e37ceb6343a1d5449a9d88f6f97c1971d26c4e",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/shield-check.svg"
+    },
+    {
+      "id": "lock",
+      "label": "锁",
+      "sha256": "d2cfe60cac8deaef36442b5c8218c1e61abe18222784b2a370ea090d13fca840",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/lock.svg"
+    },
+    {
+      "id": "search",
+      "label": "搜索",
+      "sha256": "283d371c2e433817bb9c0c8310caa6c77fa4177c0f4f1168d9c83b97af7389dc",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/search.svg"
+    },
+    {
+      "id": "chart-no-axes-combined",
+      "label": "趋势图",
+      "sha256": "2f8a708c357488cfde7428d9b055b9bb4a99c08dc71e9296da03ecc19291c4ab",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/chart-no-axes-combined.svg"
+    },
+    {
+      "id": "chart-pie",
+      "label": "饼图",
+      "sha256": "1ae765b638fe588b392f7da6e2c274fb438b257d936f9f4c7d548c73d5f9d8a1",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/chart-pie.svg"
+    },
+    {
+      "id": "settings",
+      "label": "设置",
+      "sha256": "0ae27fd0f81999229e3127ac96c5b32edfea448e291d509e76212b917551d66b",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/settings.svg"
+    },
+    {
+      "id": "circle-check",
+      "label": "成功",
+      "sha256": "9711e045a5999f8a3b0782eb88e09b04e0559bc7b379dcc0a4ae645223e10345",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/circle-check.svg"
+    },
+    {
+      "id": "circle-alert",
+      "label": "警告",
+      "sha256": "ce3e98b7a03b78c0071131df42466e4e1ff5187fccad30e739ec9ce951cf685a",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/circle-alert.svg"
+    },
+    {
+      "id": "refresh-cw",
+      "label": "刷新",
+      "sha256": "2e10dd403c85a24f163d59fc6151aa21147fe9402e1305dfc8979208caee8944",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/refresh-cw.svg"
+    },
+    {
+      "id": "upload",
+      "label": "上传",
+      "sha256": "42816ee1fa0e9d3b82272a97615c1e562b0e9de64780ebf21963bc1db0ceffd1",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/upload.svg"
+    },
+    {
+      "id": "download",
+      "label": "下载",
+      "sha256": "3daeee13ded5a3afa2198b1bb4e2262d163922f97d96ac6ff9953e8ed4fe039d",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/download.svg"
+    },
+    {
+      "id": "layers",
+      "label": "图层",
+      "sha256": "ce16d0a955e3581cda17f6b2fd5c5bc2034b405f9cecc31c8ebb8495b4afc1bb",
+      "source": "https://github.com/lucide-icons/lucide/blob/1.49.0/icons/layers.svg"
+    }
+  ]
+}
