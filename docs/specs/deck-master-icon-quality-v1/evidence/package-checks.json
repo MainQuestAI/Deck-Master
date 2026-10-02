@@ -1,0 +1,27 @@
+{
+  "status": "pass",
+  "source_commit": "cc1f16b5bd1f05c385324fbdb72c7f8ebd27371a",
+  "source_checkout_runtime_borrowing": false,
+  "icons": 24,
+  "catalog_digest": "dd9fe6f6f74838b0b1009d7ef66a4a374675c42d6f45f229db010e72442fcf0d",
+  "wheel_sha256": "612c55ee904be1683c09cc7290ec499d0a1ca5c92c14c231063edcdb021da800",
+  "sdist_sha256": "dc63b515e5ea894774bdb818b7508a4a7eaf5daf9be1456dee5526bde1562c71",
+  "real_candidate_rechecks": [
+    {
+      "page_id": "p04",
+      "candidate_id": "candidate-c9da8a741a314626ae1c6a29af41d0a0",
+      "status": "ready"
+    },
+    {
+      "page_id": "p16",
+      "candidate_id": "candidate-162485bff7ad4443b18de94d939426d3",
+      "status": "ready"
+    },
+    {
+      "page_id": "p28",
+      "candidate_id": "candidate-1e03ca70f4f94a0692db8c9d009dc613",
+      "status": "ready"
+    }
+  ],
+  "project_unchanged": true
+}
