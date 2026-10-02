@@ -61,6 +61,22 @@ def test_icon_proposal_compare_confirm_keyboard_and_dispatch(icon_browser,tmp_pa
     assert snapshot['network_peak']<=6 and snapshot['decode_peak']<=2 and snapshot['large_peak']<=4
 
 
+def test_local_zoom_preserves_aspect_ratio_at_canvas_limit(icon_browser):
+    page,store,_=icon_browser
+    entry=store.load_document()['pages'][0];file=store.read_object_json(entry['svg'])['file']
+    info=page.request.get(page.url.split('#')[0].rstrip('/')+'/api/project').json()
+    page.evaluate('''async ({identity,file})=>{
+      const {iconComparison}=await import('/v2/icon-workbench.js');
+      window.aspectProbe=iconComparison({info:{project_identity:identity}},[{title:'比例检查',file,region:{x:0,y:0,width:1,height:1}}]);
+      document.body.append(window.aspectProbe.node);
+    }''',{'identity':info['project_identity'],'file':file})
+    page.locator('select[aria-label="图标局部放大倍数"]').select_option('8')
+    page.wait_for_function('document.querySelector(".icon-comparison canvas").width===2048')
+    dimensions=page.locator('.icon-comparison canvas').evaluate('(n)=>[n.width,n.height]')
+    assert dimensions[0]==2048 and abs(dimensions[1]-1152)<=2
+    page.evaluate('()=>{window.aspectProbe.dispose();window.aspectProbe.node.remove();delete window.aspectProbe;}')
+
+
 def test_icon_http_cli_parity_and_origin(icon_store,tmp_path,capsys):
     from deck_master import cli
     from test_web import _get_json,_post_json,_session_token

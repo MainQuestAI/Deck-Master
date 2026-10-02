@@ -82,6 +82,13 @@ def test_scope_rejects_text_defs_order_and_unselected_changes(icon_store):
     with pytest.raises(OperationError,match='geometry'):icons.check_scope(icon_store,doc,task,ET.tostring(root))
 
 
+def test_redraw_cannot_erase_the_whole_icon(icon_store):
+    recipe=confirm(icon_store);task=dispatch(icon_store,recipe)[0];doc=icon_store.load_document()
+    root=icons.tree(icons.svg_bytes(icon_store,doc['pages'][0]['svg']));root[2][0].clear()
+    with pytest.raises(OperationError,match='visible native geometry'):
+        icons.check_scope(icon_store,doc,task,ET.tostring(root))
+
+
 def test_invalid_locator_nested_selection_and_old_proposal(icon_store):
     value=input_for(icon_store);info=icons.inspect(icon_store.project_root,page_id='p01');child=next(o for o in info['objects'] if o['path']=='2/0/0')
     value['targets'][0]['icons'][0]['objects'].append({k:child[k] for k in ('path','sha256')})

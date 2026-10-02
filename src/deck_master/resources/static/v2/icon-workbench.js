@@ -10,8 +10,9 @@ export function iconComparison(app, columns, {highlight = true} = {}) {
   const leases=[],views=[];let disposed=false;
   function paint(){for(const v of views){
     const {canvas,bitmap,region,objects}=v,ctx=canvas.getContext('2d');const box=whole.checked?{x:0,y:0,width:1,height:1}:region;
-    const w=bitmap.width*box.width,h=bitmap.height*box.height; const k=whole.checked?Math.min(1,420/w):Number(zoom.value);
-    canvas.width=Math.max(1,Math.min(2048,Math.ceil(w*k)));canvas.height=Math.max(1,Math.min(2048,Math.ceil(h*k)));
+    const w=bitmap.width*box.width,h=bitmap.height*box.height; const requested=whole.checked?Math.min(1,420/w):Number(zoom.value);
+    const k=Math.min(requested,2048/w,2048/h);
+    canvas.width=Math.max(1,Math.ceil(w*k));canvas.height=Math.max(1,Math.ceil(h*k));
     ctx.drawImage(bitmap,box.x*bitmap.width,box.y*bitmap.height,w,h,0,0,canvas.width,canvas.height);
     if(whole.checked && highlight){ctx.strokeStyle='#b66a21';ctx.lineWidth=2;ctx.strokeRect(region.x*canvas.width,region.y*canvas.height,region.width*canvas.width,region.height*canvas.height);}
     if(highlight && objects){ctx.strokeStyle='#1478ff';ctx.lineWidth=1.5;for(const r of objects){ctx.strokeRect((r.x-box.x)/box.width*canvas.width,(r.y-box.y)/box.height*canvas.height,r.width/box.width*canvas.width,r.height/box.height*canvas.height);}}

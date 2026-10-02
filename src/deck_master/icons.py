@@ -333,10 +333,13 @@ def check_scope(store,doc,task,data):
             for loc in icon['objects']:
                 if canon(found[loc['path']])!=canon(expected[loc['path']]):fail('result','standard or reused geometry differs from the confirmed asset and style')
         region=icon['svg_region']
+        has_geometry=False
         for loc in icon['objects']:
             box=bounds(isolated(after,loc['path']))
+            has_geometry=has_geometry or bool(box and box['width']>0 and box['height']>0)
             if box and (box['x'] < region['x']-.002 or box['y'] < region['y']-.002 or box['x']+box['width'] > region['x']+region['width']+.002 or box['y']+box['height'] > region['y']+region['height']+.002):
                 fail('result','new icon exceeds the confirmed display region')
+        if not has_geometry:fail('result','replacement icon must retain visible native geometry')
     return {'status':'pass','outside_scope_unchanged':True,'recipe_ref':ref,'source_svg_ref':target['svg_ref'],
             'result_sha256':hashlib.sha256(data).hexdigest(),'selected_objects':len(locators)}
 
