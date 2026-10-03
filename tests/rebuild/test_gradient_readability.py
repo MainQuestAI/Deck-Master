@@ -71,12 +71,12 @@ def test_real_gradient_svg_ppt_and_persisted_check(tmp_path,name,stops,expected)
         with Image.open(tmp_path/(image_name+'.png')) as im:
             rgb=im.convert('RGB');crop=rgb.crop((0,round(rgb.height*.35),rgb.width,round(rgb.height*.85)));crop.save(tmp_path/(image_name+'-body.png'))
             counts[image_name]=sum(max(pixel)<250 for pixel in crop.getdata())
-    if name=='end-zero':
+    if name in ('start-zero','end-zero'):
         # A rasterizer may sample the single boundary point: it must not
         # produce a readable glyph area. Preserve the actual pixel evidence.
         with Image.open(tmp_path/'source-body.png') as im:
             columns=[x for x in range(im.width) if any(max(im.getpixel((x,y)))<250 for y in range(im.height))]
-        assert not columns or max(columns)-min(columns)<=1
+        assert not columns or max(columns)-min(columns)<=1, (name,counts,columns)
     else:
         assert (counts['source']==0 if expected=='fail' else counts['source']>10)
     # LibreOffice can use the first stop's color for text instead of its
