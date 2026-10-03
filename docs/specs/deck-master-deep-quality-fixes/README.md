@@ -44,7 +44,7 @@ F01 失败反例 → F02 三项 P1 → F03 状态/UI → F04 编译 → F05 核�
 | 编号 | 行为与完成条件 | 回归入口 |
 |---|---|---|
 | R1 / Q02 | 显式绑定优先；无绑定按规范化字符区间分配，同文案承载必须足够且全部可读；不同正文不能共用区间。存在唯一必要承载时先保留该承载，再排除其它正文的交叠候选；其余无法确定的交叠保守阻断并提示补绑定。 | `test_external_review_readback.py` |
-| R2 / Q02 | `noFill`、solid alpha=0、全透明渐变不可读；部分透明渐变不误判，未知填充/继承不默认通过。整稿和候选共用检查，检查模块摘要参与候选缓存身份。 | `test_external_review_readback.py`、`test_external_review_render.py` |
+| R2 / Q02 | `noFill`、solid alpha=0、全透明渐变不可读；部分透明渐变不误判，未知填充/继承不默认通过。Node 出口的文字 `none` 被第三方输出为黑色时，由现有公共 DrawingML 后处理恢复源填充及透明度。整稿和候选共用检查，检查模块摘要参与候选缓存身份。 | `test_external_review_readback.py`、`test_external_review_render.py` |
 | R3 / Q03 | final review/repair 先核对整稿输出；page_visual 只核对相应页面的 Page、原图、SVG 和 SVG 预览。整批采用后在同一事务退役失效非 trial review/repair；continue 恢复旧 stale pending。 | `test_external_review_lifecycle.py` |
 
 无变化引用采用、重复请求、有效 trial、无关页级审阅和调用事实保留；旧任务迟到结果拒绝，单页冲突阻止整个批次。新增文件是内部检查实现，不改变 CLI/HTTP、schema 或最低写入版本。

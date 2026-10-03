@@ -1,4 +1,5 @@
 """PR97 external R1/R2: distinct required text and actual native paint."""
+from pathlib import Path
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -88,3 +89,24 @@ def test_unbound_split_with_hidden_required_run_is_unreadable(tmp_path):
     report=compile_and_readback(tmp_path,body,_atom_page(['REPORT','Body']))
     assert report['status']=='fail'
     assert any(f['code']=='unreadable_text' for f in report['findings'])
+
+
+@pytest.mark.parametrize('fill,expected',[('none','fail'),('#00000000','fail'),('#00000080','pass'),('#000000','pass')])
+def test_node_postprocessing_preserves_required_text_paint(tmp_path,monkeypatch,fill,expected):
+    # Reproduce the observed exporter defaulting text 'none' to black. The
+    # shipped postprocessor must restore source paint before publication.
+    import json
+    from deck_master.compiler import api, native
+    svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+text('REPORT')+text('Body',60,f'fill="{fill}" data-atom-id="atom:p1:block:b1:text"')+'</svg>')
+    fonts=resolve_font()
+    def wrong_export(command,**kwargs):
+        manifest=json.loads(Path(command[-2]).read_text())
+        for page in manifest['pages']:
+            for shape in page['shapes']:
+                if shape['kind']=='text':shape['fill']='#000000';shape['opacity']=shape['fill_opacity']=1
+        native.emit(manifest['pages'],200,100,fonts,Path(command[-1]))
+    monkeypatch.setattr(api.subprocess,'run',wrong_export)
+    result=compile_deck([SvgInput('p1',svg)],CompileOptions(width_px=200,height_px=100,fonts=fonts,node_executable='fixture-node',artifact_module='fixture-module'),tmp_path/'node')
+    report=readback(result.pptx_path,[parse_svg(svg.read_bytes(),page_id='p1')],[_atom_page(['REPORT','Body'])])
+    assert report['status']==expected
+    if expected=='fail':assert any(f['code']=='unreadable_text' for f in report['findings'])

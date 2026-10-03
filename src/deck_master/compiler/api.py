@@ -94,6 +94,22 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
                     if len(native_shapes) != len(source_shapes):
                         raise ValueError('native shape count differs from SVG; cannot bind stroke properties')
                     for emitted, source_shape in zip(native_shapes, source_shapes, strict=True):
+                        if options.node_executable and source_shape['kind'] == 'text':
+                            # Artifact-tool's text color 'none' currently becomes
+                            # black. Preserve source paint in editable DrawingML,
+                            # including explicit alpha and gradient stops.
+                            from .native import paint
+                            from pptx.oxml.xmlchemy import OxmlElement
+                            holder = OxmlElement('a:rPr')
+                            paint(holder, source_shape['fill'],
+                                  source_shape['opacity'] * source_shape['fill_opacity'])
+                            for props in emitted.findall('.//a:rPr', ns) + emitted.findall('.//a:defRPr', ns):
+                                for child in list(props):
+                                    if child.tag.rsplit('}', 1)[-1] in ('noFill', 'solidFill', 'gradFill'):
+                                        props.remove(child)
+                                # Fill follows line and precedes effects/fonts in rPr.
+                                position = 1 if len(props) and props[0].tag == '{' + ns['a'] + '}ln' else 0
+                                props.insert(position, ET.fromstring(ET.tostring(holder[0])))
                         if source_shape['stroke'] == 'none':
                             continue
                         line = emitted.find('p:spPr/a:ln', ns)
