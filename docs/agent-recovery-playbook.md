@@ -102,6 +102,24 @@ without creating a second allowance or erasing the earlier observation.
 - A failing professional review blocks delivery even when all engineering
   checks pass; stopping a no-progress repair loop is not a pass.
 
+## Required Text And Stale Review Recovery
+
+`unverifiable_text_mapping` identifies a required atom whose native text cannot
+be safely assigned or whose effective fill cannot be verified. Preserve the
+SVG and report; bind the named SVG text objects with `data-atom-id` to the
+reported content atom, or replace unsupported/inherited paint with explicit
+native paint, then regenerate the checks. Do not choose a visible duplicate
+as evidence for a hidden body. `unreadable_text` means a determined carrier is
+under 6pt or has no effective visible fill.
+
+Artifact adoption atomically supersedes obsolete non-trial review/repair tasks
+after all selected pages change. For older pending tasks left behind by a
+previous writer, run `continue`: it retires stale reviews before returning
+pending work, then follows page review, compilation and new final review.
+Current trial tasks, unaffected page reviews, historical results and call facts
+remain recorded. A late result from a superseded task cannot be adopted; never
+revive it or edit object storage. Repeated recovery does not duplicate work.
+
 ## Schema Or Envelope Mismatch
 
 - Detect by: exit 2 with a field path in `error.message`.

@@ -29,8 +29,8 @@ function personalClearPanel(app) {
         el('p', {class: 'muted'}, '任务、候选、调用记录与项目文件不在清理范围。')];
       scopeView.replaceChildren(...planParts.filter(part => part));
       notice.textContent = '';
-    } catch (error) { notice.textContent = readableError(error); }
-    finally { keepBusy = false; commit.disabled = !plan || !plan.items.length; }
+    } catch (error) { plan = null; notice.textContent = readableError(error); }
+    finally { keepBusy = false; planButton.disabled = false; commit.disabled = !plan || !plan.items.length; }
   });
   const commit = button('确认清理并保留备份', async () => {
     if (keepBusy || !plan) return; keepBusy = true; commit.disabled = true;

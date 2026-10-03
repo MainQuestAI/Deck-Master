@@ -64,11 +64,14 @@ def test_zero_fill_and_stroke_opacity_written_to_slide_xml(tmp_path):
 
 
 def test_group_opacity_multiplies_into_slide_xml(tmp_path):
-    # AC-K05: group opacity multiplies into both fill and stroke alpha; a fully
+    # Each translucent group has one paint operation (multi-paint is rejected).
+    # AC-K05: group opacity multiplies into fill/stroke alpha; a fully
     # transparent group still writes alpha val=0 instead of dropping the paint.
     root = _slide_root(tmp_path, '''
       <g opacity="0.5">
         <rect id="half" width="20" height="20" fill="#ff0000"/>
+      </g>
+      <g opacity="0.5">
         <rect id="quarter" x="30" width="20" height="20" fill="#ff0000" fill-opacity="0.5"/>
       </g>
       <g opacity="0">

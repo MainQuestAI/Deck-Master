@@ -1,6 +1,7 @@
 """Local production and tool discovery; all adopted bytes go through Store."""
 from __future__ import annotations
 import json
+import math
 import posixpath
 import os
 from pathlib import Path
@@ -169,38 +170,8 @@ def readback(pptx_path,pages,expected_pages):
             for atom in visible_atoms(page):
                 if atom.get('text') and normalize(atom['text']) not in joined:
                     findings.append({'page_id':page['page_id'],'code':'missing_visible_atom','atom_id':atom['atom_id'],'text':atom['text']})
-            # AC-K10 (P1-05): per-atom readability — every customer-visible
-            # atom must be carried by a readable run (>= 6pt and not fully
-            # transparent, spec 06.3). Runs whose text no atom covers are
-            # decorative and never judged. The page-level all-hidden check
-            # below stays as a backstop for layers that dodge atom mapping.
-            MIN_READABLE_SZ = 600  # 6pt in DrawingML hundredths-of-a-point units
-            run_nodes = root.findall('.//a:rPr', ns)
-            normalize = lambda s: ''.join(str(s).split())
-            atoms = visible_atoms(page)
-            atom_texts = {normalize(atom['text']) for atom in atoms
-                          if atom.get('text') and normalize(atom['text'])}
-            if run_nodes:
-                def run_unreadable(props):
-                    try: small = float(props.get('sz', '0')) < MIN_READABLE_SZ
-                    except ValueError: small = False
-                    transparent = any(int(a.get('val', '100000')) == 0
-                                        for a in props.findall('.//a:alpha', ns))
-                    return small or transparent
-                run_pairs = list(zip(root.findall('.//a:rPr', ns), root.findall('.//a:t', ns)))
-                for props, text_node in run_pairs:
-                    run_text = normalize(text_node.text or '')
-                    if not run_text or run_text not in atom_texts:
-                        continue  # decorative run: no atom requires it
-                    if run_unreadable(props):
-                        atom = next(a for a in atoms if normalize(a.get('text')) == run_text)
-                        findings.append({'page_id': page['page_id'], 'code': 'unreadable_text',
-                                         'atom_id': atom['atom_id'],
-                                         'detail': f"run renders at sz={props.get('sz')!r} "
-                                                   f"(or transparent) for a required atom"})
-                if texts and all(run_unreadable(props) for props in run_nodes):
-                    findings.append({'page_id': page['page_id'], 'code': 'hidden_or_tiny_text',
-                                     'detail': 'all text runs are transparent or under 6pt'})
+            from .readback_text import _check_required_text
+            findings.extend(_check_required_text(root, source, page))
             # AC-K10: real text overflow — a shape box leaving the slide bounds.
             for sp in root.findall('.//p:sp',ns):
                 name_node=sp.find('p:nvSpPr/p:cNvPr',ns)
@@ -288,6 +259,22 @@ def readback(pptx_path,pages,expected_pages):
                                                f'(tolerance {ENDPOINT_TOLERANCE_PX}px)'})
             stats.append({'page_id':page['page_id'],'text_runs':len(texts),'native_shapes':len(root.findall('.//p:sp',ns))})
     return {'status':'fail' if findings else 'pass','findings':findings,'pages':stats,'visual_review':'not_evaluated','desktop_editing':'not_evaluated'}
+
+def output_matches_current_svg(store, document):
+    """A retained PPT is usable only when its ordered SVG dependencies match.
+
+    Old writers could keep outputs after candidate adoption. Do not treat
+    existence alone as a completed assembly, or overwrite historical objects.
+    """
+    ref = document.get('outputs', {}).get('pptx')
+    if not ref:
+        return False
+    artifact = store.read_object_json(ref)
+    dependencies = [(d.get('identity'), d.get('sha256'))
+                    for d in artifact.get('dependencies', []) if d.get('kind') == 'svg']
+    expected = [(e['page_id'], (e.get('svg') or {}).get('sha256')) for e in document['pages']]
+    return bool(dependencies) and dependencies == expected
+
 
 def produce(project_dir, *, base_revision=None, operation_id=None):
     from . import operations

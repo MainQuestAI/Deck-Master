@@ -39,14 +39,14 @@ export function iconWorkbench(app,data){
   const status=el('p',{role:'status'}), proposals=el('div',{class:'stack'}), recipes=el('div',{class:'stack'});
   const method=el('select',{'aria-label':'图标处理方式'},el('option',{value:'redraw'},'忠实原图精细重绘'),el('option',{value:'standard'},'提出标准图标替换'),el('option',{value:'reuse'},'应用已采用样例到其它页'));
   const asset=el('select',{'aria-label':'建议的标准图标'}), sample=el('select',{'aria-label':'已采用图标样例'}), opinions=el('div',{class:'icon-opinions stack'});
-  const selected=new Map();let disposed=false,busy=false,plan=null,samples=[];const dialogs=[];
+  const selected=new Map();let disposed=false,busy=false,plan=null,samples=[],serial=0;const dialogs=[];
   root.append(el('div',{class:'panel-head'},el('h2',{},'优化图标'),button('刷新图标方案',refresh)),body);
   body.append(el('p',{class:'muted'},'先在画面框选并保存意见，再交给 Agent 定位对象。查看高亮和处理方式后确认范围，返回候选后再决定采用。'),
     el('label',{},'处理方式',method),el('label',{},'标准图标建议',asset),el('label',{},'跨页复用样例',sample),opinions,
     button('复制给 Agent 的图标要求',handoff),status,proposals,recipes);
   function persist(){const e=app.editor;if(!e||e.readonly||disposed)return;e.draft.content.icon_ui={method:method.value,asset:asset.value,sample_identity:samples.find(v=>sampleKey(v)===sample.value)||null,annotation_refs:[...selected.values()].map(n=>n.ref)};e.changed();}
   method.addEventListener('change',persist);asset.addEventListener('change',persist);sample.addEventListener('change',persist);
-  function blocked(){return busy||app.readonly||app.historical||app.editor?.readonly||!app.editor||app.business.entries.size||app.business.loadWarning;}
+  function blocked(){return disposed||busy||app.readonly||app.historical||app.editor?.readonly||!app.editor||app.business.entries.size||app.business.loadWarning;}
   async function handoff(){try{
     if(method.value==='reuse'&&!samples.some(v=>sampleKey(v)===sample.value))throw new Error('原样例已失效或旧草稿仅有序号，请重新选择已采用样例。');
     const chosen=[...selected.values()];if(!chosen.length)throw new Error('请先框选、保存意见并在这里选入。');persist();await app.editor.save();
@@ -69,16 +69,16 @@ export function iconWorkbench(app,data){
   async function confirm(record){if(blocked())return;busy=true;try{
     await app.business.submit(app.editor,'icons.confirm',{proposal_id:record.proposal_id,base_revision:record.proposal.base_revision},{proposal_ref:record.proposal_ref},()=>refresh());
   }catch(error){status.textContent=readableError(error);}finally{busy=false;}}
-  async function prepare(recipe,ids,impact){if(blocked())return;busy=true;try{
+  async function prepare(recipe,ids,impact){if(blocked())return;busy=true;const token=++serial;plan=null;try{
     if(!ids.length)throw new Error('请明确选择本次页面。');
-    const response=await post('/api/icons/plan',{input:{recipe_id:recipe.recipe_id,page_ids:ids}});if(disposed)return;
+    const response=await post('/api/icons/plan',{input:{recipe_id:recipe.recipe_id,page_ids:ids}});if(disposed||token!==serial)return;
     plan=response;impact.replaceChildren(el('p',{},`${ids.length} 页 SVG 候选 · 0 次图像调用；采用前当前稿不变。`),
-      button('确认计划并交接图标修复',()=>commit(response),true));
-  }catch(error){impact.replaceChildren(el('p',{class:'field-error'},readableError(error)));}finally{busy=false;}}
-  async function commit(value){if(blocked()||plan!==value)return;busy=true;try{
+      button('确认计划并交接图标修复',()=>commit(response,token),true));
+  }catch(error){if(!disposed&&token===serial)impact.replaceChildren(el('p',{class:'field-error'},readableError(error)));}finally{busy=false;}}
+  async function commit(value,token){if(blocked()||plan!==value||token!==serial)return;busy=true;try{
     await app.business.submit(app.editor,'changes.commit',{plan_id:value.plan_id,base_revision:value.plan.base_revision},{plan_id:value.plan_id,plan:value.plan},r=>app.go({surface:'runs',revision:r.revision_id,task_id:r.task_ids[0]}));
   }catch(error){status.textContent=readableError(error);}finally{busy=false;}}
-  async function refresh(){try{
+  async function refresh(){++serial;plan=null;try{
     const [listing,notes,cat]=await Promise.all([get('/api/icons/list?'+new URLSearchParams({include_stale:'true',...(app.historical?{revision:data.revision_id}:{})})),get('/api/annotations'),get('/api/icons/catalog')]);if(disposed)return;
     asset.replaceChildren(...cat.icons.map(v=>el('option',{value:v.id},v.label)));
     if(listing.samples_unavailable)status.textContent='已采用样例的依据暂不可读取，请核实原记录；原选择与意见保留。';
@@ -98,7 +98,7 @@ export function iconWorkbench(app,data){
     recipes.replaceChildren(el('h3',{},'已确认范围 · 明确选页后交接'));
     for(const record of listing.recipes.filter(v=>v.recipe.input.targets.some(t=>t.page_id===data.page_id))){
       const r=record.recipe,ids=new Set(),impact=el('div',{class:'stack'}),row=el('article',{class:'stack icon-recipe'},el('p',{},r.input.instruction));
-      for(const target of r.input.targets){const check=el('input',{type:'checkbox','aria-label':'选入图标页 '+target.page_id});check.addEventListener('change',()=>{if(check.checked)ids.add(target.page_id);else ids.delete(target.page_id);plan=null;impact.replaceChildren();});row.append(el('label',{},check,target.page_id,' · ',target.icons.map(n=>n.label).join('、')),button('查看 '+target.page_id+' 范围',()=>compare(target,r)));}
+      for(const target of r.input.targets){const check=el('input',{type:'checkbox','aria-label':'选入图标页 '+target.page_id});check.addEventListener('change',()=>{if(check.checked)ids.add(target.page_id);else ids.delete(target.page_id);++serial;plan=null;impact.replaceChildren();});row.append(el('label',{},check,target.page_id,' · ',target.icons.map(n=>n.label).join('、')),button('查看 '+target.page_id+' 范围',()=>compare(target,r)));}
       row.append(button('预览选中页图标试作',()=>prepare(r,[...ids],impact),false,{disabled:Boolean(app.readonly||app.historical||app.editor?.readonly)}),impact);recipes.append(row);
     }
     if(!relevant.length)proposals.append(el('p',{class:'muted'},'此版本尚无待确认的图标方案。已保存的意见仍在上方，后台制作状态不会被推测为已启动。'));

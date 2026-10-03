@@ -243,7 +243,10 @@ export class Annotations {
         button('确认计划并创建交接', () => this.commit(), true)); this.error.textContent = '';
     } catch (error) {
       this.error.textContent = readableError(error) + ' 原输入与意见保留，请阅读当前版本后重新计划。';
-      if (error.status === 409) this.app.business.conflict({editor: this.editor, note: this.error.textContent}, error);
+      if (error.status === 409) {
+        try { await this.app.business.conflict({editor: this.editor, note: this.error.textContent}, error); }
+        catch (recoveryError) { this.error.textContent += ' ' + readableError(recoveryError); }
+      }
     }
   }
   async commit() {

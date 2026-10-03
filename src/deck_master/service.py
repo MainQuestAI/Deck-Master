@@ -342,7 +342,7 @@ def _pending_host_tasks(document: dict, store: Store, *, include_trials=True) ->
 
 @tasks_mod._project_transaction
 def _retire_missing_page_inputs(store: Store, document: dict | None = None) -> dict:
-    """Recover older runs whose open visual task outlived its SVG/preview."""
+    """Recover older runs whose pending review outlived its actual inputs."""
     document = store.load_document()
     affected = {e['page_id'] for e in document.get('pages') or []
                 if not e.get('svg') or not e.get('svg_preview')}
@@ -359,11 +359,12 @@ def _retire_missing_page_inputs(store: Store, document: dict | None = None) -> d
             updated['tasks'][index] = store.put_json_object(
                 {**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
             changed = True
+    changed = bool(tasks_mod._supersede_stale_reviews(store, updated)) or changed
     if not changed:
         return document
     bumped = bump_revision(updated, {'operation_id': _new_operation_id('retire'),
                                     'kind': 'task_update',
-                                    'description': 'retire page task with missing SVG or preview',
+                                    'description': 'retire review task with missing or changed inputs',
                                     'read_set': []})
     store._commit_locked(base_revision=document['revision_id'], document=bumped,
                          operation_id=bumped['change']['operation_id'], blobs=[])
@@ -839,7 +840,8 @@ def _continue_project(project_dir: Path | str) -> dict:
         return _response(status='awaiting_host', document=document, requested_action='continue',
                          pending_tasks=[task_summary(store, document, task)],
                          findings=[page_check], next_action='codex_review_page_visual')
-    if not document['outputs'].get('pptx'):
+    from .pipeline import output_matches_current_svg
+    if not output_matches_current_svg(store, document):
         from .pipeline import produce, NeedsTool, RendererError
         from .compiler.svg import SvgError
         try:
