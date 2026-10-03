@@ -39,6 +39,42 @@ def _color_alpha(color):
     return alpha
 
 
+def _gradient_state(paint):
+    """A same-position group has an incoming first and outgoing last alpha.
+
+    Intermediate stops and clipped endpoint sides have zero paint area. Do
+    not collapse to just the last stop: the incoming side can still be visible.
+    """
+    groups = []
+    for stop in paint.findall('a:gsLst/a:gs', NS):
+        try:
+            position = int(stop.get('pos'))
+        except (ValueError, TypeError):
+            return 'unverifiable'
+        alpha = _color_alpha(stop[0]) if len(stop) == 1 else None
+        if (alpha is None or not 0 <= position <= 100000 or
+                groups and position < groups[-1][0]):
+            return 'unverifiable'
+        if groups and position == groups[-1][0]:
+            groups[-1][2] = alpha
+        else:
+            groups.append([position, alpha, alpha])
+    if not groups:
+        return 'unverifiable'
+    # Explicit pad extends the first/last color to the gradient bounds.
+    if groups[0][0] > 0 and groups[0][1] > 0:
+        return 'visible'
+    if groups[-1][0] < 100000 and groups[-1][2] > 0:
+        return 'visible'
+    if any(left[2] > 0 or right[1] > 0 for left, right in zip(groups, groups[1:])):
+        return 'visible'
+    # A radial/path gradient may pad beyond its outer circle inside the
+    # rectangular text box. A last-stop-only endpoint needs geometry proof.
+    if paint.find('a:path', NS) is not None and groups[-1][2] > 0:
+        return 'unverifiable'
+    return 'unreadable'
+
+
 def _run_state(props):
     """visible / unreadable / unverifiable; never guess inherited fill."""
     if props is None:
@@ -61,8 +97,7 @@ def _run_state(props):
     if kind == 'solidFill':
         alphas = [_color_alpha(paint[0])] if len(paint) == 1 else [None]
     elif kind == 'gradFill':
-        stops = paint.findall('a:gsLst/a:gs', NS)
-        alphas = [_color_alpha(stop[0]) if len(stop) == 1 else None for stop in stops]
+        return _gradient_state(paint)
     else:
         return 'unverifiable'
     if not alphas or any(alpha is None for alpha in alphas):

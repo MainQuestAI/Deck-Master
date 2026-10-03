@@ -52,3 +52,11 @@ F01 失败反例 → F02 三项 P1 → F03 状态/UI → F04 编译 → F05 核�
 验证顺序：新增失败反例 → 定向回归与真实 `produce` → 独立只读复审 → 固定源码 → 完整核心、必需浏览器、真实渲染 → wheel/sdist 隔离安装与安装后离线 UI → 300 页压力及 20 分钟长跑 → 当前 head CI。证据保存在项目外独立目录，失败记录和原验收稿不覆盖。
 
 实际渲染限制单独记录：本机 LibreOffice 对首 stop 全透明的渐变文字未显示正文，尽管原生 DrawingML 含另一不透明 stop；末 stop 透明的同类文字显示正常。数学 paint 检查不能替代实际局部渲染或视觉认可；该反例及实际 PPT/PNG 保留，不用改变颜色或栅格化掩盖差异。
+
+## 合并前追加复核：渐变 stop 有效区间
+
+复核 `9675230` 发现零宽度不透明 stop 仍可令完全透明的必需正文通过。修复按位置分组同 offset 的 stops，保留首 stop 的左侧 alpha 和末 stop 的右侧 alpha，忽略组内零宽度片段及画布边界外的片段；仅有非零宽度区间或端点延伸可见时通过。不能把同位置 stop 全部折叠为最后一项，否则会误拒绝左侧正常渐变。未知、越界、逆序或缺失的原生位置仍返回 `unverifiable_text_mapping`。
+
+回归入口 `test_gradient_readability.py` 覆盖起点/终点零宽度、内部孤立 stop、重复 offset 左右侧、端点延伸、正常部分透明及无法验证的位置，并执行真实 SVG → PPT → XML → LibreOffice → produce 持久化。数学填充检查与工具渲染差异分别记录；本轮修复不改 schema、接口或项目 writer。
+
+规则依据：[SVG2 渐变 stop 规范](https://www.w3.org/TR/SVG2/pservers.html#StopElement)。源码修复后重跑完整核心和必需浏览器/真实渲染门禁；通过当前 head CI 后按用户授权合并 PR97。
