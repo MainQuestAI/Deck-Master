@@ -17,7 +17,7 @@ import zipfile
 import uuid
 import xml.etree.ElementTree as ET
 
-from . import candidates, icons, operations, pipeline
+from . import candidates, icons, operations, pipeline, readback_text
 from .compiler import CompileOptions, SvgInput, compile_deck
 from .compiler.svg import parse_svg
 from .local_state import LocalStateError, project_path, local_lock, read_json, safe_path, write_json
@@ -55,6 +55,7 @@ def _context(project,candidate_id):
               'tools':tools,'compiler':{p.name:_sha(p) for p in compiler.glob('*.py')},
               'scope_implementation':_sha(icons.__file__),
               'preview_implementation':_sha(__file__),'pipeline':_sha(pipeline.__file__),
+              'readback_text':_sha(readback_text.__file__),
               'python_pptx':importlib.metadata.version('python-pptx')}
     key=icons.digest(identity)
     return store,doc,base,entry,candidate,task,data,scope,fonts,identity,key

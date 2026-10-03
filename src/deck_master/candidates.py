@@ -664,6 +664,10 @@ def adopt(project, *, input, base_revision, operation_id):
                         entry['svg'] = None
                 adoptions.append({key: item[key] for key in ('candidate_id', 'candidate_ref', 'page_id', 'stage', 'result_ref')}
                                  | {'revision_id': updated['revision_id']})
+        if updated['pages'] != document['pages'] or updated['outputs'] != document['outputs']:
+            # Compute against the final batch state, not a partially applied
+            # page. New refs and retired review tasks publish atomically.
+            tasks._supersede_stale_reviews(store, updated)
         # Each selection invalidates outputs only when the deck actually
         # changed; a no-op adoption keeps exports usable
         updated['candidate_adoptions'] = adoptions

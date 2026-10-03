@@ -170,72 +170,8 @@ def readback(pptx_path,pages,expected_pages):
             for atom in visible_atoms(page):
                 if atom.get('text') and normalize(atom['text']) not in joined:
                     findings.append({'page_id':page['page_id'],'code':'missing_visible_atom','atom_id':atom['atom_id'],'text':atom['text']})
-            # Map native text shapes to the compiler IR before judging runs.
-            # A required atom may span many shapes/runs (wrapping, local style).
-            # Matching only a whole atom to one run would label every fragment
-            # decorative and let a visible heading hide an invisible body.
-            def run_unreadable(props):
-                if props is None:
-                    return True
-                try:
-                    size = float(props.get('sz', '0'))
-                    small = not math.isfinite(size) or size < 600
-                    transparent = any(int(a.get('val', '100000')) == 0
-                                      for a in props.findall('.//a:alpha', ns))
-                except (ValueError, TypeError):
-                    return True
-                return small or transparent
-
-            native_text = [sp for sp in root.findall('.//p:sp', ns) if sp.findall('.//a:t', ns)]
-            source_text = [s for s in source['shapes'] if s['kind'] == 'text']
-            mapping_valid = len(native_text) == len(source_text)
-            runs = []
-            for idx, sp in enumerate(native_text):
-                ir = source_text[idx] if idx < len(source_text) else {}
-                shape_text = ''.join(n.text or '' for n in sp.findall('.//a:t', ns))
-                name = sp.find('p:nvSpPr/p:cNvPr', ns)
-                bound = ir.get('atom_id')
-                if shape_text != ir.get('text') or (bound and (name is None or name.get('name') != bound)):
-                    mapping_valid = False
-                for run in sp.findall('.//a:r', ns):
-                    text = normalize(''.join(n.text or '' for n in run.findall('a:t', ns)))
-                    runs.append((text, run.find('a:rPr', ns), bound))
-            atoms = [a for a in visible_atoms(page) if normalize(a.get('text', ''))]
-            if atoms and not mapping_valid:
-                findings.append({'page_id': page['page_id'], 'code': 'unverifiable_text_mapping',
-                                 'detail': 'native text objects do not match their source text and atom bindings'})
-            if mapping_valid:
-                for atom in atoms:
-                    wanted = normalize(atom['text']); identity = atom['atom_id']
-                    bound_runs = [r for r in runs if r[2] == identity]
-                    # Bindings are authoritative, but may include bullets or
-                    # other decoration outside the required body text.
-                    candidate_runs = bound_runs or runs
-                    stream = ''.join(r[0] for r in candidate_runs)
-                    covers = []
-                    position = stream.find(wanted)
-                    while position >= 0:
-                        offset = 0; cover = []
-                        for run in candidate_runs:
-                            stop = offset + len(run[0])
-                            if stop > position and offset < position + len(wanted):
-                                cover.append(run)
-                            offset = stop
-                        if cover and all(r[2] in (None, identity) for r in cover):
-                            covers.append(cover)
-                        position = stream.find(wanted, position + 1)
-                    if not covers:
-                        findings.append({'page_id': page['page_id'], 'code': 'unverifiable_text_mapping',
-                                         'atom_id': identity, 'detail': 'no complete source-bound text coverage'})
-                    elif not any(all(not run_unreadable(r[1]) for r in cover) for cover in covers):
-                        props = next(r[1] for r in covers[0] if run_unreadable(r[1]))
-                        findings.append({'page_id': page['page_id'], 'code': 'unreadable_text',
-                                         'atom_id': identity,
-                                         'detail': f"run renders at sz={props.get('sz') if props is not None else None!r} "
-                                                   '(or transparent) for a required atom'})
-            if runs and all(run_unreadable(props) for _, props, _ in runs):
-                findings.append({'page_id': page['page_id'], 'code': 'hidden_or_tiny_text',
-                                 'detail': 'all text runs are transparent or under 6pt'})
+            from .readback_text import _check_required_text
+            findings.extend(_check_required_text(root, source, page))
             # AC-K10: real text overflow — a shape box leaving the slide bounds.
             for sp in root.findall('.//p:sp',ns):
                 name_node=sp.find('p:nvSpPr/p:cNvPr',ns)

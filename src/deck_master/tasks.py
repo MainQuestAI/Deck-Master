@@ -347,9 +347,25 @@ def task_inputs_current(store, document, task):
         # content trials (B03). The generic slot comparison below would
         # wrongly stale an SVG trial whose slot a sibling auto result moved.
         return inputs_current(store, document, task)
+    dispatched = None
+    if task.get('kind') in ('review', 'repair'):
+        dispatched = store.load_document(task['dispatch_revision'])
+        if task.get('review_stage', 'final') == 'final':
+            # Output references are real review inputs even when Page/SVG
+            # content identity stayed the same after reassembly.
+            if dispatched['outputs'] != document['outputs']:
+                return False
+        else:
+            before = {entry['page_id']: entry for entry in dispatched['pages']}
+            after = {entry['page_id']: entry for entry in document['pages']}
+            if any(pid not in before or pid not in after or
+                   any(before[pid].get(slot) != after[pid].get(slot)
+                       for slot in ('page', 'blueprint', 'svg', 'svg_preview'))
+                   for pid in task.get('scope_pages') or []):
+                return False
     if content_identity(document) == task.get('produced_against'):
         return True
-    dispatched = store.load_document(task['dispatch_revision'])
+    dispatched = dispatched or store.load_document(task['dispatch_revision'])
     # Task facts are part of the dispatched input: a task-field change
     # (audience, decisions, ...) invalidates scoped results too, even when
     # pages/design/sources are untouched (spec v1.1 §5.4, c93 defect).
@@ -374,9 +390,22 @@ def task_inputs_current(store, document, task):
     for pid in task['scope_pages']:
         if pid not in before or pid not in after or any(before[pid].get(k) != after[pid].get(k) for k in slots):
             return False
-    if task['kind'] == 'review' and dispatched['outputs'] != document['outputs']:
-        return False
     return True
+
+
+def _supersede_stale_reviews(store, document):
+    """Caller owns the transaction; update only stale non-trial review work."""
+    from .candidates import is_trial
+    retired = []
+    for index, ref in enumerate(document.get('tasks') or []):
+        task = store.read_object_json(ref)
+        if (task.get('status') in ('queued', 'awaiting_host', 'running') and
+                task.get('kind') in ('review', 'repair') and not is_trial(task) and
+                not task_inputs_current(store, document, task)):
+            document['tasks'][index] = store.put_json_object(
+                {**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
+            retired.append(task['task_id'])
+    return retired
 
 
 def _validate_svg_reference(data, expected_sha, *, require=False):

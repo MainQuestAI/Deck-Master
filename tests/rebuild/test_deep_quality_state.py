@@ -25,7 +25,8 @@ def project(tmp_path):
 def svg_payload(store, task, width):
     payload = artifacts.envelope(store, task, width)
     path = store.staging_dir / task['operation_id'] / 'page.svg'
-    title = store.read_object_json(store.load_document()['pages'][0]['page'])['customer_visible']['title']
+    entry = next(e for e in store.load_document()['pages'] if e['page_id'] == task['scope_pages'][0])
+    title = store.read_object_json(entry['page'])['customer_visible']['title']
     text = f'<text x="50" y="80" font-family="{resolve_host_font()}" font-size="32">{escape(title)}</text>'
     path.write_text(path.read_text().replace('</svg>', text + '</svg>'))
     return payload
