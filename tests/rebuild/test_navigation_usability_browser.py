@@ -143,7 +143,7 @@ def test_page_opinion_editor_stays_with_artwork_before_trial_form(workbench_page
     page.goto(page.url.split('#')[0] + '#' + urlencode({'project': info['project_identity'], 'surface': 'page', 'page': 'p02', 'layer': 'svg', 'revision': revision}))
     image = page.locator('.page-reading canvas:visible').first
     image.wait_for()
-    editor = page.get_by_role('textbox', name='个人草稿', exact=True)
+    editor = page.get_by_role('textbox', name='意见正文', exact=True)
     expect(editor).to_be_editable()
     expect(page.locator('.page-trial-entry')).not_to_have_attribute('open', '')
     assert page.get_by_role('textbox', name='本页试作短要求', exact=True).is_hidden()

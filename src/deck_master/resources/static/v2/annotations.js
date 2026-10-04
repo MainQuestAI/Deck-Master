@@ -36,11 +36,26 @@ export class Annotations {
     this.geometry = el('details', {class: 'geometry-fields', hidden: true}, el('summary', {}, '用百分比定位区域'),
       el('div', {class: 'range-fields'}, Object.values(this.fields).map(f => f.node)), button('添加百分比区域', () => this.keyboardRegion()));
     this.saveButton = button('保存意见', () => this.save(), true);
+    this.newButton = button('写新意见', () => this.newOpinion());
+    this.copyNoteButton = button('从私人笔记复制', () => this.copyNote());
     this.planButton = button('加入修改计划', () => this.plan());
+    this.scopeLabel = el('label', {}, '意见作用范围 ', this.scope);
+    this.bodyField = field('意见正文', el('textarea', {id: 'opinion-body', rows: 3, 'aria-label': '意见正文',
+      placeholder: '写下这条意见要改什么。输入会自动保留；保存后进入正式记录。'}));
+    this.bodyField.input.addEventListener('input', () => this.changed());
+    this.notice = el('p', {class: 'muted annotation-notice', hidden: true});
+    this.actions = el('div', {class: 'row wrap opinion-actions'}, this.saveButton, this.newButton, this.copyNoteButton);
+    this.noteEntry = el('details', {class: 'note-entry'},
+      el('summary', {}, '私人笔记（不进入意见与制作）'), draftSlot);
     this.node.append(el('div', {class: 'panel-head'}, el('h2', {}, '标注与意见')),
-      el('div', {class: 'panel-body stack'}, this.basis, this.tools, this.modeHint, el('label', {}, '意见作用范围 ', this.scope), this.chapter, this.intent.node,
-        el('p', {class: 'muted'}, '正文使用个人草稿。保存意见不会启动制作；选入已保存意见后再预览修改计划。'),
-        this.geometry, this.regionList, draftSlot, this.error, this.saveButton, el('h3', {}, '已保存意见'), this.savedList, this.planButton, this.preview));
+      el('div', {class: 'panel-body stack'}, this.basis, this.notice,
+        el('div', {class: 'row wrap opinion-meta'}, this.scopeLabel, this.intent.node, this.chapter),
+        this.bodyField.node,
+        this.tools, this.modeHint,
+        this.geometry, this.regionList, this.noteEntry,
+        el('p', {class: 'muted field-help'}, '保存意见不启动制作；选入已保存意见后再预览修改计划。'),
+        this.error, this.actions,
+        el('h3', {}, '已保存意见'), this.savedList, this.planButton, this.preview));
     this.scope.addEventListener('change', () => { if (this.scope.value !== 'artifact') this.setMode('whole'); this.changed(); });
     this.chapter.addEventListener('change', () => this.changed()); this.intent.input.addEventListener('input', () => this.changed());
     this.textListener = event => {
@@ -67,8 +82,12 @@ export class Annotations {
   }
   bind(editor, ref) {
     this.editor?.input.removeEventListener('draft-state-changed', this.editorListener);
-    this.editor = editor; this.ref = ref; this.planRecord = null;
+    this.editor = editor; this.ref = ref; this.planRecord = null; this.savedSubmission = null; this.newRefs = new Set();
     if (!editor) { this.regions = []; this.setMode('read'); this.renderRegions(); return; }
+    // The draft owns "write a new opinion on the current basis". It belongs next
+    // to the opinion actions, not inside the collapsed personal note.
+    this.actions.querySelector('.rebase-action')?.remove();
+    if (editor.rebaseButton) this.actions.append(editor.rebaseButton);
     this.editorListener = () => { this.syncFromDraft(); this.update(); }; editor.input.addEventListener('draft-state-changed', this.editorListener);
     this.setMode('read');
     editor.ready.then(() => {
@@ -80,6 +99,7 @@ export class Annotations {
     const state = this.editor?.draft.content.annotation, key = JSON.stringify(state);
     if (!force && key === this.savedMetadata) return;
     this.savedMetadata = key; this.regions = structuredClone(state?.regions || []);
+    if (this.bodyField.input.value !== (state?.body || '')) this.bodyField.input.value = state?.body || '';
     this.scope.value = state?.scope || (this.ref ? 'artifact' : 'page'); this.intent.input.value = state?.intent || '修改建议';
     if (state?.chapter_id) this.chapter.value = state.chapter_id;
     this.renderRegions();
@@ -87,15 +107,30 @@ export class Annotations {
   basisMatches() { return this.editor && this.editor.draft.base_revision === this.data.revision_id && canonical(this.editor.draft.base_ref) === canonical(this.ref); }
   changed() {
     if (!this.editor || this.editor.readonly || !this.basisMatches()) return;
-    this.editor.draft.content.annotation = {regions: structuredClone(this.regions), scope: this.scope.value, chapter_id: this.chapter.value, intent: this.intent.input.value};
+    this.editor.draft.content.annotation = {body: this.bodyField.input.value, regions: structuredClone(this.regions), scope: this.scope.value, chapter_id: this.chapter.value, intent: this.intent.input.value};
     this.editor.changed(); this.renderRegions(); this.update();
   }
-  signature() { return canonical({text: this.editor?.input.value, regions: this.regions, scope: this.scope.value, chapter: this.chapter.value, intent: this.intent.input.value, selected: [...this.selected.keys()], ref: this.ref}); }
+  // What this panel would send right now. Identical content, scope and basis never
+  // create a second record; a different scope or region set is a new opinion.
+  submissionKey() { return canonical({body: this.bodyField.input.value, regions: this.regions, scope: this.scope.value, chapter: this.chapter.value, intent: this.intent.input.value, ref: this.ref}); }
+  signature() { return canonical({body: this.bodyField.input.value, regions: this.regions, scope: this.scope.value, chapter: this.chapter.value, intent: this.intent.input.value, selected: [...this.selected.keys()], ref: this.ref}); }
   update() {
     const blocked = !this.editor || this.editor.readonly || !this.basisMatches() || ['loading', 'unknown', 'conflict'].includes(this.editor.status) || this.app.business.entries.size || this.app.business.loadWarning;
-    this.saveButton.disabled = Boolean(blocked || this.mode === 'read'); this.planButton.disabled = Boolean(blocked || !this.selected.size);
+    // An unchanged submission is not a new opinion: keep the save disabled and say
+    // so, instead of appending a duplicate record for text the user already saved.
+    const unchanged = this.savedSubmission !== null && this.savedSubmission === this.submissionKey();
+    this.saveButton.disabled = Boolean(blocked || this.mode === 'read' || unchanged || !this.bodyField.input.value.trim());
+    this.planButton.disabled = Boolean(blocked || !this.selected.size);
+    this.newButton.disabled = Boolean(!this.editor || this.editor.readonly);
+    this.copyNoteButton.disabled = Boolean(!this.editor || this.editor.readonly || !this.editor.input.value.trim());
     this.chapter.hidden = this.scope.value !== 'chapter';
+    if (unchanged) {
+      this.error.dataset.success = 'true';
+      this.error.textContent = '这条意见已保存；未发生变化时不会重复新增。改动正文、范围或区域后可保存为新意见，或点「写新意见」。';
+    } else if (this.error.dataset.success) { delete this.error.dataset.success; this.error.textContent = ''; }
     this.basis.textContent = `${version(this.data.revision_id)} · ${layers[this.layer]} · 草稿区域 ${this.regions.length} 个` + (this.editor && !this.basisMatches() ? '。恢复稿属于其它基准：先回原版本，或用「对当前版本写新意见」复制文字后保存；原有范围不迁移。' : this.app.historical && this.editor && !this.editor.readonly ? '。原内容只读；新意见仍绑定这里的原版本。' : '');
+    const editorNotice = this.editor?.noticeText?.() || '';
+    this.notice.textContent = editorNotice; this.notice.hidden = !editorNotice;
     for (const control of this.tools.querySelectorAll('button')) {
       const active = control.dataset.mode === this.mode;
       control.setAttribute('aria-pressed', String(active));
@@ -108,11 +143,11 @@ export class Annotations {
   }
   setMode(mode) {
     this.mode = mode; this.drag = null;
-    this.modeHint.textContent = mode === 'read' ? '阅读不会产生标注；无需框选，也可以针对整页写意见。'
-      : mode === 'rect' ? '拖动框选画面；按 Esc 取消拖拽或移除最近一个区域，并返回阅读。'
-      : mode === 'point' ? '在画面上点击放置标注点；按 Esc 移除最近一个区域，返回阅读。'
-      : mode === 'text' ? '在逐页稿原文中选择文本，再校验保存；按 Esc 移除最近一个区域，返回阅读。'
-      : '针对整页写意见，不绑定具体区域。';
+    this.modeHint.textContent = mode === 'read' ? '阅读模式不产生标注。'
+      : mode === 'rect' ? '拖动框选；Esc 取消并返回阅读。'
+      : mode === 'point' ? '点击放置标注点；Esc 移除并返回阅读。'
+      : mode === 'text' ? '在原文中选择文本；Esc 移除并返回阅读。'
+      : '针对整页写意见，不绑定区域。';
     if (['point', 'rect', 'text'].includes(mode)) this.scope.value = 'artifact';
     this.geometry.hidden = !['point', 'rect'].includes(mode);
     for (const key of ['width', 'height']) this.fields[key].node.hidden = mode === 'point';
@@ -194,8 +229,12 @@ export class Annotations {
         const note = record.annotation;
         const check = el('input', {type: 'checkbox', checked: this.selected.has(record.ref.sha256), 'aria-label': `选入意见 ${index + 1}`});
         check.addEventListener('change', () => { if (check.checked) this.selected.set(record.ref.sha256, record); else this.selected.delete(record.ref.sha256); this.update(); });
-        return el('article', {class: 'saved-opinion'}, el('label', {}, check, `意见 ${index + 1} · ${note.intent}`), el('p', {}, note.body),
+        const isNew = this.newRefs.has(record.ref.sha256);
+        const article = el('article', {class: `saved-opinion${isNew ? ' is-new' : ''}`}, el('label', {}, check, `意见 ${index + 1} · ${note.intent}`),
+          isNew && el('span', {class: 'status'}, '本次新增'), el('p', {}, note.body),
           button(`回到意见 ${index + 1} 的原版本`, () => this.app.go({surface: note.page_id ? 'page' : 'content', revision: note.base_revision, page_id: note.page_id || null, layer: note.layer || 'content'})));
+        if (isNew) article.scrollIntoView({block: 'nearest'});
+        return article;
       }));
       if (!this.records.length) this.savedList.append(el('p', {class: 'muted'}, '尚无已保存意见。'));
       this.update();
@@ -205,8 +244,11 @@ export class Annotations {
     delete this.error.dataset.success;
     try {
       await this.app.business.available(); if (!this.basisMatches()) throw new Error('草稿绑定的是其它基准：请回到原版本，或用「对当前版本写新意见」复制文字后再保存。');
-      const body = this.editor.input.value, intent = this.intent.input.value;
-      if (!body.trim() || !intent.trim()) throw new Error('请填写意见目的与下方个人草稿正文。');
+      const body = this.bodyField.input.value, intent = this.intent.input.value;
+      if (!body.trim()) throw new Error('请填写意见正文。');
+      if (!intent.trim()) throw new Error('请填写意见目的。');
+      const key = this.submissionKey();
+      if (this.savedSubmission === key) throw new Error('这条意见已保存；未发生变化时不会重复新增。');
       const scope = this.scope.value, fixed = this.data.revision_id;
       const locations = scope === 'artifact' && this.regions.length ? this.regions : [{kind: 'whole'}];
       if (this.mode !== 'whole' && !this.regions.length) throw new Error('请先添加区域，或选择整页意见。');
@@ -216,11 +258,29 @@ export class Annotations {
         ...(scope === 'artifact' ? {layer: this.layer, artifact_ref: this.ref} : {})}));
       const input = {schema_version: 'annotation_batch.v1', project_id: this.app.info.project_id, annotations};
       const current = await get('/api/view/summary');
-      await this.app.business.submit(this.editor, 'annotations.save', {input, base_revision: current.revision_id}, input, async () => {
+      await this.app.business.submit(this.editor, 'annotations.save', {input, base_revision: current.revision_id}, input, async result => {
+        this.savedSubmission = key;
+        this.newRefs = new Set((result?.annotations || []).map(item => item.ref?.sha256).filter(Boolean));
         this.error.dataset.success = 'true';
-        this.error.textContent = '意见已保存，尚未提交修改计划。原草稿与范围继续保留。'; await this.loadSaved();
+        await this.loadSaved();
       });
     } catch (error) { this.error.textContent = readableError(error); }
+  }
+  // Writing the next opinion starts from an empty body and region set; scope and
+  // intent stay, because they usually carry over to the next note.
+  newOpinion() {
+    if (!this.editor || this.editor.readonly) return;
+    this.regions = []; this.newRefs = new Set(); this.savedSubmission = null;
+    this.bodyField.input.value = ''; this.error.textContent = ''; delete this.error.dataset.success;
+    this.changed(); this.bodyField.input.focus();
+  }
+  copyNote() {
+    if (!this.editor || this.editor.readonly) return;
+    const note = this.editor.input.value;
+    if (!note.trim()) { this.error.textContent = '私人笔记为空，没有可复制的内容。'; return; }
+    this.bodyField.input.value = note;
+    this.error.textContent = '已从私人笔记复制到意见正文；保存前仍可修改，私人笔记本身不变。';
+    this.changed(); this.bodyField.input.focus();
   }
   async plan() {
     delete this.error.dataset.success;
@@ -228,10 +288,11 @@ export class Annotations {
       await this.app.business.available();
       if (!this.selected.size) throw new Error('先选入至少一条已保存意见。');
       if (!this.basisMatches()) throw new Error('先回到草稿绑定的原版本，再预览影响。');
+      if (!this.bodyField.input.value.trim()) throw new Error('请先写明这条修改要求，再预览影响。');
       const signature = this.signature(), current = await get('/api/view/summary');
       const input = {schema_version: 'change_intent.v1', project_id: this.app.info.project_id, base_revision: current.revision_id,
         targets: [{page_id: this.data.page_id, page_ref: this.data.stages.content.ref, layer: this.layer, artifact_ref: this.ref}],
-        intent: this.intent.input.value, instruction: this.editor.input.value, annotation_refs: [...this.selected.values()].map(r => r.ref),
+        intent: this.intent.input.value, instruction: this.bodyField.input.value, annotation_refs: [...this.selected.values()].map(r => r.ref),
         max_calls: ['original_image', 'prepared_prompt', 'submitted_prompt'].includes(this.layer) ? 1 : 0};
       const response = await post('/api/changes/plan', {input}); if (this.disposed || signature !== this.signature()) return;
       this.planRecord = response; this.planSignature = signature;

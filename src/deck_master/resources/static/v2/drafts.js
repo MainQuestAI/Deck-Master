@@ -35,7 +35,7 @@ export class DraftEditor {
     this.saveButton = button('保存个人草稿', () => this.save(), false, {disabled: this.readonly});
     this.verifyButton = button('核实草稿保存', () => this.verify());
     this.conflictButton = button('比较两份草稿', () => this.conflict());
-    this.rebaseButton = button('对当前版本写新意见', () => this.writeNewOnCurrent(), false);
+    this.rebaseButton = button('对当前版本写新意见', () => this.writeNewOnCurrent(), false, {class: 'rebase-action'});
     const file = el('input', {type: 'file', accept: 'application/json,.json', 'aria-label': '导入草稿恢复文件',
       disabled: this.readonly, onchange: () => this.importFile(file)});
     this.importInput = file;
@@ -94,6 +94,11 @@ export class DraftEditor {
     if (this.disposed) return;
     this.showLocalCopies(); this.updateStatus();
   }
+  // A draft is labelled by whichever text it actually carries: the personal note,
+  // or the opinion body when the note is empty.
+  static summary(draft) {
+    return String(draft?.content?.text || draft?.content?.annotation?.body || '空白草稿').slice(0, 45);
+  }
   showLocalCopies() {
     this.localRestoreNode.replaceChildren();
     try {
@@ -106,7 +111,7 @@ export class DraftEditor {
       }
       if (!copies.length) return;
       const select = el('select', {'aria-label': '恢复本机保留的草稿副本'}, el('option', {value: ''}, '选择本机保留的草稿副本'));
-      copies.forEach((copy, index) => select.append(el('option', {value: String(index)}, String(copy.draft.content.text || '空白稿').slice(0, 45))));
+      copies.forEach((copy, index) => select.append(el('option', {value: String(index)}, DraftEditor.summary(copy.draft))));
       select.addEventListener('change', () => {
         if (!select.value) return;
         const copy = copies[Number(select.value)];
@@ -124,7 +129,7 @@ export class DraftEditor {
     if (!records.length) return;
     const select = el('select', {'aria-label': '恢复项目中的个人草稿'}, el('option', {value: ''}, '选择已保存在项目中的草稿'));
     for (const record of records) select.append(el('option', {value: record.draft.draft_id},
-      `${version(record.draft.base_revision)} · ${String(record.draft.content.text || '空白草稿').slice(0, 35)}`));
+      `${version(record.draft.base_revision)} · ${DraftEditor.summary(record.draft)}`));
     select.addEventListener('change', () => {
       const record = records.find(item => item.draft.draft_id === select.value);
       if (!record) return;
@@ -152,18 +157,35 @@ export class DraftEditor {
       this.draft.base_ref?.sha256 !== this.baseRef?.sha256);
   }
   // Start a new draft on this editor's basis, keeping the older record and its
-  // local copy. Only the text moves forward: regions, scope and intent describe
-  // the old artifact and are never migrated silently.
+  // local copy. Both texts move forward: the personal note and the opinion body.
+  // Regions, scope and intent describe the old artifact's selection state, so the
+  // regions are dropped and never migrated silently.
   writeNewOnCurrent() {
     if (this.readonly || this.disposed || !this.staleBasis()) return;
     if (!this.archiveLocal()) { this.updateStatus(); return; }
     const text = this.input.value;
+    const annotation = this.draft.content?.annotation;
     const draft = this.fresh();
-    draft.content = {text};
+    draft.content = {text, ...(annotation ? {annotation: {...annotation, regions: []}} : {})};
     this.draft = draft; this.etag = null; this.pendingSave = null; this.sequence = undefined;
-    this.status = text ? 'dirty' : 'empty'; this.note = ''; this.restoreNotice = '';
+    this.status = text || annotation?.body ? 'dirty' : 'empty'; this.note = ''; this.restoreNotice = '';
     this.persist(); this.updateStatus();
     this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles: true}));
+  }
+  // The text a pending operation was about. An editor that carries an opinion
+  // body must show that body in recovery panes, not the personal note that now
+  // has its own box.
+  pendingText() {
+    const opinion = this.draft?.content?.annotation?.body;
+    return opinion && opinion.trim() ? opinion : (this.input?.value || '');
+  }
+  // Visible reason plus next action: either recoverable drafts exist for this
+  // target, or the text on screen belongs to an older basis. Shared by the note
+  // panel and the opinion panel so both surfaces explain the same state.
+  noticeText() {
+    if (this.restoreNotice) return this.restoreNotice;
+    if (this.staleBasis()) return `当前草稿绑定的是原基准 ${version(this.draft.base_revision)}，不能直接用于当前版本。可用「对当前版本写新意见」复制文字，原有范围不迁移。`;
+    return '';
   }
   changed() {
     this.draft.content = {...this.draft.content, text: this.input.value};
@@ -196,7 +218,7 @@ export class DraftEditor {
     this.stateNode.textContent = this.readonly ? '历史或示例只读，可下载已有个人草稿。' : text[this.status];
     // A visible reason and a next action whenever the text on screen belongs to
     // an older basis: the collapsed details already carry the full explanation.
-    const notice = this.restoreNotice || (this.staleBasis() ? `当前草稿绑定的是原基准 ${version(this.draft.base_revision)}，不能直接用于当前版本。可用「对当前版本写新意见」复制文字，原有范围不迁移。` : '');
+    const notice = this.noticeText();
     this.noticeNode.textContent = notice;
     this.noticeNode.hidden = !notice;
     this.basisNode.textContent = `基准 ${version(this.draft.base_revision)} · ${this.info.page_label || '整个项目'} · ${layers[this.target.layer] || '项目笔记'}` +

@@ -124,10 +124,13 @@ export function pageDetail(app, data) {
     el('span', {class: 'chain-state'}, chainStates[i])], () => app.go({layer: item.layer}), false,
     {class: i === activeStage ? 'active' : '', 'aria-current': i === activeStage ? 'step' : null,
       'aria-label': `0${i + 1} ${item.label}，${chainStates[i]}`})));
-  if (app.health.ui_capabilities?.includes('style_recipes.v1') && data.stages.blueprint.existence === 'recorded') node.append(button('以本页为风格参考', () => {
-    app.styleSelection = {reference: {page_id:data.page_id, revision_id:data.revision_id, artifact_ref:data.stages.blueprint.ref, file:data.stages.blueprint.file, role:'reference'}, target_ids:[]};
-    app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.latest.revision_id});
-  }));
+  // Grouped with the other view actions instead of taking a full row of its own
+  // above the chain: the page header budget decides how much artwork fits.
+  const styleReference = app.health.ui_capabilities?.includes('style_recipes.v1') && data.stages.blueprint.existence === 'recorded'
+    ? button('以本页为风格参考', () => {
+      app.styleSelection = {reference: {page_id:data.page_id, revision_id:data.revision_id, artifact_ref:data.stages.blueprint.ref, file:data.stages.blueprint.file, role:'reference'}, target_ids:[]};
+      app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.latest.revision_id});
+    }) : null;
   let disposed = false, compareSerial = 0, compareData = null;
   const primaryReleases = [], compareReleases = [];
   app.disposables.push(() => { disposed = true; compareSerial++; primaryReleases.forEach(fn => fn()); compareReleases.forEach(fn => fn()); });
@@ -160,7 +163,7 @@ export function pageDetail(app, data) {
   const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(poll, 5000);
   app.disposables.push(() => { clearInterval(timer); app.root.removeEventListener('summary-refreshed', fromSummary); });
   const aside = el('aside', {class: 'page-context stack'}), draftSlot = el('div');
-  let annotations, draftRef;
+  let annotations, draftRef, noteRecovery = null;
   function bindDraft(ref, text) {
     draftRef = ref;
     app.editor?.dispose(); app.editor = null;
@@ -178,11 +181,13 @@ export function pageDetail(app, data) {
       {readonly: app.business && samePageBasis ? Boolean(app.info.sample?.readonly) : app.readonly, exactRevision: true});
     const draftView = app.editor.mount();
     app.editor.input.rows = 2;
+    // Recovery and portability stay a separate secondary entry next to the note,
+    // not nested one level deeper behind it.
     const recovery = detail('恢复、下载与版本详情', app.editor.basisNode);
     const download = draftView.querySelector('.panel-body > .row button:last-child');
     if (download) recovery.append(download);
     draftView.querySelectorAll('.recovery-import, .field-help, .draft-restore').forEach(control => recovery.append(control));
-    draftView.querySelector('.panel-body').append(recovery);
+    noteRecovery = recovery;
     draftSlot.replaceChildren(draftView);
     annotations?.bind(app.editor, ref);
     if (text !== null) draftSlot.append(button('比较原文与草稿', () => {
@@ -203,12 +208,9 @@ export function pageDetail(app, data) {
   if (app.business && app.health.ui_capabilities?.includes('annotations.v1') && layer !== 'source') {
     annotations = new Annotations(app, data, layer, original, draftSlot);
     if (app.editor) annotations.bind(app.editor, draftRef);
-    const settings = detail('意见范围与版本详情', annotations.scope.closest('label'), annotations.chapter, annotations.intent.node, annotations.basis);
-    annotations.tools.after(draftSlot);
-    draftSlot.after(annotations.saveButton);
-    annotations.modeHint.after(settings);
     aside.append(annotations.node); app.disposables.push(() => annotations.dispose());
   } else aside.append(draftSlot);
+  if (noteRecovery) aside.append(noteRecovery);
   if (production) aside.append(production);
   const layout = el('div', {class: 'page-columns'}, reading, aside);
   const compareControls = el('div', {class: 'fixed-compare-controls stack', hidden: true});
@@ -279,7 +281,7 @@ export function pageDetail(app, data) {
     compareSerial++; compareData = null; compareReleases.splice(0).forEach(fn => fn()); comparison.replaceChildren(); comparison.hidden = true; original.hidden = false;
     compareControls.hidden = true; fixedLabel.hidden = true; reading.classList.remove('is-comparing'); layout.classList.remove('with-fixed-compare'); compareButton.disabled = false;
   }); compareControls.querySelector('.row').append(closeCompare);
-  const toolbar = el('div', {class: 'toolbar'}, selector, button('回到整稿画廊', () => app.go({surface: 'gallery'})), openCompare);
+  const toolbar = el('div', {class: 'toolbar'}, selector, button('回到整稿画廊', () => app.go({surface: 'gallery'})), openCompare, ...(styleReference ? [styleReference] : []));
   if (['original_image', 'svg', 'ppt'].includes(layer)) {
     const zoom = el('select', {'aria-label': '阅读缩放'}, [.5, .75, 1, 1.25, 1.5, 2, 3].map(value => el('option', {value}, `${value * 100}%`)));
     zoom.value = String(app.route.zoom || 1); zoom.addEventListener('change', () => {

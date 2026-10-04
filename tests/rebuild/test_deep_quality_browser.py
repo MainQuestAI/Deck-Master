@@ -36,18 +36,22 @@ def workbench(icon_store):
 @pytest.mark.parametrize('width,height',[(1280,800),(1440,900),(390,844)])
 def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
     a,ctx,store,url,goto,_=workbench;a.set_viewport_size({'width':width,'height':height});link=goto()
+    a.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
     field=a.get_by_role('textbox',name='个人草稿',exact=True);expect(field).to_be_editable()
     field.fill('共同初稿');a.get_by_role('button',name='保存个人草稿',exact=True).click()
     expect(a.locator('.draft-state')).to_contain_text('已保存到项目')
     with a.expect_popup() as popup:a.evaluate('(url)=>window.open(url,"_blank")',link)
-    b=popup.value;expect(b.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('共同初稿')
+    b=popup.value;b.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    expect(b.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('共同初稿')
     ctx.route('**/api/drafts/save',lambda r:r.abort('failed'))
     field.fill('窗口 A 独有的修改');b.get_by_role('textbox',name='个人草稿',exact=True).fill('窗口 B 独有的修改')
     expect(a.locator('.draft-state')).to_contain_text('保存结果待核实');expect(b.locator('.draft-state')).to_contain_text('保存结果待核实')
     # Refresh must recover this window's own buffer without claiming an ACK.
-    a.reload();expect(a.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('窗口 A 独有的修改')
+    a.reload();a.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    expect(a.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('窗口 A 独有的修改')
     a.close(run_before_unload=True);b.close(run_before_unload=True)
-    c=ctx.new_page();c.goto(link);expect(c.get_by_role('textbox',name='个人草稿',exact=True)).to_be_editable()
+    c=ctx.new_page();c.goto(link);c.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    expect(c.get_by_role('textbox',name='个人草稿',exact=True)).to_be_editable()
     texts=c.evaluate('''()=>Object.entries(localStorage).filter(([k])=>k.includes(':draft:')).map(([k,v])=>JSON.parse(v).draft?.content?.text)''')
     assert '窗口 A 独有的修改' in texts and '窗口 B 独有的修改' in texts
     c.get_by_text('恢复、下载与版本详情',exact=True).click()
@@ -59,22 +63,23 @@ def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
 
 def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     page,ctx,store,url,goto,_=workbench
-    link=goto()
-    draft=page.get_by_role('textbox',name='个人草稿',exact=True);expect(draft).to_be_editable()
-    draft.fill('第一条意见的文字')
+    goto()
+    body=page.get_by_role('textbox',name='意见正文',exact=True)
+    body.fill('第一条意见的文字')
     page.get_by_role('button',name='整页意见',exact=True).click()
     page.get_by_role('button',name='保存意见',exact=True).click()
     expect(page.locator('.field-error[data-success]')).to_be_visible()
     # Saving the opinion advanced the revision. Returning to the current one must
     # not adopt the older draft (which would bind this editor to a stale basis and
-    # refuse the next save); the older text stays in the restore list.
+    # refuse the next save); the older text stays recoverable and is named on screen.
     page.goto(goto())
-    fresh=page.get_by_role('textbox',name='个人草稿',exact=True);expect(fresh).to_be_editable()
+    fresh=page.get_by_role('textbox',name='意见正文',exact=True)
     expect(fresh).to_have_value('')
-    expect(page.locator('.draft-notice')).to_contain_text('旧版本草稿可从下方恢复')
+    expect(page.locator('.annotation-notice')).to_contain_text('旧版本草稿可从下方恢复')
     page.get_by_role('button',name='整页意见',exact=True).click()
-    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
     fresh.fill('第二条意见的文字')
+    # A stale basis would keep this disabled no matter what the user types.
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
     page.get_by_role('button',name='保存意见',exact=True).click()
     expect(page.locator('.field-error[data-success]')).to_be_visible()
     # Both opinions are independent records of this project, and both drafts kept.
@@ -87,14 +92,48 @@ def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     expect(choices).to_be_visible()
     assert '第一条意见的文字' in choices.inner_text()
     choices.select_option(label=[o for o in choices.locator('option').all_inner_texts() if '第一条意见的文字' in o][0])
-    restored=page.get_by_role('textbox',name='个人草稿',exact=True)
+    restored=page.get_by_role('textbox',name='意见正文',exact=True)
     expect(restored).to_have_value('第一条意见的文字')
-    expect(page.locator('.draft-notice')).to_contain_text('对当前版本写新意见')
+    expect(page.locator('.annotation-notice')).to_contain_text('对当前版本写新意见')
     page.get_by_role('button',name='对当前版本写新意见',exact=True).click()
-    expect(page.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('第一条意见的文字')
-    expect(page.locator('.draft-notice')).to_be_hidden()
+    expect(page.get_by_role('textbox',name='意见正文',exact=True)).to_have_value('第一条意见的文字')
+    expect(page.locator('.annotation-notice')).to_be_hidden()
     records=page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']
     assert len(records)==2, 'copying text forward must not create or rewrite a record'
+
+
+def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
+    page,ctx,store,url,goto,_=workbench;goto()
+    page.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    note=page.get_by_role('textbox',name='个人草稿',exact=True)
+    note.fill('这是我自己的备忘，不是给制作的意见。')
+    page.get_by_role('button',name='保存个人草稿',exact=True).click()
+    expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
+    body=page.get_by_role('textbox',name='意见正文',exact=True)
+    # The note never becomes the opinion body: the opinion form starts empty and
+    # refuses to save until the user writes or explicitly copies something.
+    expect(body).to_have_value('')
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_disabled()
+    assert page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']==[]
+    page.get_by_role('button',name='从私人笔记复制',exact=True).click()
+    expect(body).to_have_value('这是我自己的备忘，不是给制作的意见。')
+    expect(note).to_have_value('这是我自己的备忘，不是给制作的意见。')
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    expect(page.locator('.saved-opinion.is-new')).to_contain_text('本次新增')
+    bodies=[item['annotation']['body'] for item in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']]
+    assert bodies==['这是我自己的备忘，不是给制作的意见。']
+    # Unchanged content cannot be saved twice, but the same text on a different
+    # legal scope is a new opinion.
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_disabled()
+    expect(page.locator('.field-error[data-success]')).to_contain_text('不会重复新增')
+    page.get_by_label('意见作用范围').select_option('page')
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    saved=page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']
+    assert [item['annotation']['scope'] for item in saved]==['artifact','page']
 
 
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
@@ -146,7 +185,7 @@ def test_historical_candidate_list_never_acquires_future_candidate(workbench):
 def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
     page.get_by_role('button',name='整页意见',exact=True).click()
-    text='修正图标间距，保持其它对象。';page.get_by_role('textbox',name='个人草稿',exact=True).fill(text)
+    text='修正图标间距，保持其它对象。';page.get_by_role('textbox',name='意见正文',exact=True).fill(text)
     page.get_by_role('button',name='保存意见',exact=True).click();page.get_by_label('选入意见 1').check()
     doc=store.load_document();new=copy.deepcopy(doc);art=store.read_object_json(new['pages'][0]['svg']);art['limitations']=['concurrent edit']
     new['pages'][0]['svg']=store.put_json_object(art)

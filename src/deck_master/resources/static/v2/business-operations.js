@@ -167,7 +167,7 @@ export class BusinessOperations {
     modal(payload?.action === 'candidates.adopt' ? '本次未采用任何页，选择已保留' : '本次未提交，输入已保留', el('div', {class: 'stack'}, el('p', {class: 'field-error'}, entry.note),
       error.details?.items?.length && el('ul', {}, error.details.items.map(item => el('li', {}, `${item.page_id || '候选'}：${item.cause === 'generation_basis_changed' ? '生成依据已变化' : item.cause === 'one_candidate_per_page' ? '同一页只能选择一个候选' : '请重新核对采用目标'}`))),
       el('div', {class: 'conflict-panes'},
-        el('section', {}, el('h3', {}, '你的本机草稿'), el('textarea', {readOnly: true, value: editor?.input.value || JSON.stringify(payload?.request || {}), 'aria-label': '未提交的本机草稿'})),
+        el('section', {}, el('h3', {}, '你的本机草稿'), el('textarea', {readOnly: true, value: editor?.pendingText?.() || JSON.stringify(payload?.request || {}), 'aria-label': '未提交的本机草稿'})),
         el('section', {}, el('h3', {}, '服务端新基准'), el('p', {}, latest ? version(latest.revision_id) : '暂时无法读取'),
           el('p', {}, '没有采用或覆盖任何页。重新阅读差异后，再建立新计划。')))),
       [editor && button('下载保留的草稿', () => editor.download()), latest && button('查看新的当前版本', () => {
