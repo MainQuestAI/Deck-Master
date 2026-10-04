@@ -57,9 +57,57 @@ def test_history_modes_keep_reading_and_page_comparison_fixed(workbench_page):
     page.get_by_role('button', name='比较此页版本', exact=True).click()
     page.get_by_role('combobox', name='选择同页比较版本').wait_for()
     fixed = page.locator('[aria-label="页面内容"]').get_attribute('data-revision')
-    page.get_by_role('checkbox', name='显示这页全部历史记录', exact=True).check()
-    expect(page.get_by_role('checkbox', name='显示这页全部历史记录', exact=True)).to_be_enabled()
+    all_history = page.get_by_role('checkbox', name='显示这页全部历史记录', exact=True)
+    all_history.check()
+    expect(all_history).to_be_enabled()
     assert page.locator('[aria-label="页面内容"]').get_attribute('data-revision') == fixed
+
+
+@pytest.mark.parametrize('layer', ['svg', 'ppt'])
+@pytest.mark.parametrize('width,height', [(1280, 800), (1440, 900)])
+def test_fixed_history_images_share_a_row_with_candidate_entry(workbench_page, tmp_path, layer, width, height):
+    """Real historical refs and images; synthetic SVG/PPT previews, no Host claim."""
+    import uuid
+    from urllib.parse import urlencode
+    from deck_master.models import bump_revision
+    from deck_master.store import Store
+    from playwright.sync_api import expect
+    page = workbench_page
+    store = Store(tmp_path / 'sample')
+    before = store.load_document()
+    operation = str(uuid.uuid4())
+    after = bump_revision(before, {'operation_id':operation, 'kind':'task_update',
+        'description':'Synthetic history comparison snapshot; same registered images', 'read_set':[]})
+    store.commit_change(base_revision=before['revision_id'], document=after, operation_id=operation)
+    base = page.url.split('#')[0]
+    info = page.request.get(base + 'api/project').json()
+    page.set_viewport_size({'width':width, 'height':height})
+    page.goto(base + '#' + urlencode({'project':info['project_identity'], 'surface':'page',
+        'page':'p06', 'layer':layer, 'revision':after['revision_id']}))
+    page.get_by_role('button', name='比较此页版本', exact=True).click()
+    all_history = page.get_by_role('checkbox', name='显示这页全部历史记录', exact=True)
+    all_history.check()
+    expect(all_history).to_be_enabled()
+    selected = page.get_by_role('combobox', name='选择同页比较版本', exact=True)
+    expect(selected.locator('option[value="' + before['revision_id'] + '"]')).to_have_count(1)
+    selected.select_option(before['revision_id'])
+    expect(selected).to_have_value(before['revision_id'])
+    page.get_by_role('button', name='固定比较这个版本', exact=True).click()
+    left = page.locator('[aria-label="页面内容"]')
+    right = page.locator('[aria-label="比较版本内容"]')
+    expect(left).to_have_attribute('data-revision', after['revision_id'])
+    expect(right).to_have_attribute('data-revision', before['revision_id'])
+    left.locator('canvas.page-image').wait_for()
+    right.locator('canvas.page-image').wait_for()
+    expect(page.locator('.page-trial-entry')).not_to_have_attribute('open', '')
+    rect = page.locator('.fixed-page-pair').evaluate('''node => {
+      const boxes = [...node.children].map(n => ({tag:n.tagName, ...n.getBoundingClientRect().toJSON()}));
+      return {entry:boxes[0], left:boxes[1], right:boxes[2]};
+    }''')
+    assert abs(rect['left']['y'] - rect['right']['y']) < 1, rect
+    assert rect['left']['x'] < rect['right']['x'], rect
+    assert rect['entry']['y'] + rect['entry']['height'] <= rect['left']['y'], rect
+    assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth')
 
 
 def test_host_handoff_clipboard_failure_remains_pending(workbench_page):
