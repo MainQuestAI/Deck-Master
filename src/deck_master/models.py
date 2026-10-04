@@ -51,6 +51,7 @@ SCHEMA_FILES = {
     "change_set": "change-set.v1.schema.json",
     "annotation": "annotation.v1.schema.json",
     "annotation_batch": "annotation-batch.v1.schema.json",
+    "annotation_list": "annotation-list.v1.schema.json",
     "operation_commit": "operation-commit.v1.schema.json",
     "document": "document.v1.schema.json",
     "page": "page.v2.schema.json",

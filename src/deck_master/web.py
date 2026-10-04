@@ -361,12 +361,18 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if parsed.path in ('/api/annotations', '/api/changes') or parsed.path.startswith(('/api/operations/', '/api/changes/')):
             try:
                 from . import annotation_service, changes, operations
+                if parsed.path == '/api/annotations':
+                    query = parse_qs(parsed.query, keep_blank_values=True)
+                    allowed = {'revision', 'page_id', 'layer', 'scope'}
+                    if set(query) - allowed or any(len(value) != 1 or not value[0] for value in query.values()):
+                        raise operations.OperationError('invalid_input', 'query', 'use one nonempty value for each supported query field')
+                    self._send_json(annotation_service.list_annotations(self.store.project_root,
+                                                                        **{key: value[0] for key, value in query.items()}))
+                    return
                 if parsed.query:
                     raise operations.OperationError('invalid_input', 'query', 'this read takes no query parameters')
                 if parsed.path == '/api/changes':
                     result = changes.list_changes(self.store.project_root)
-                elif parsed.path == '/api/annotations':
-                    result = annotation_service.list_annotations(self.store.project_root)
                 elif parsed.path.startswith('/api/operations/'):
                     result = operations.show(self.store.project_root, operation_id=parsed.path.removeprefix('/api/operations/'))
                 elif parsed.path.endswith('/handoff'):
