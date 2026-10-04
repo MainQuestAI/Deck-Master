@@ -57,6 +57,46 @@ def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
     assert '窗口 B 独有的修改' in choices.inner_text()
 
 
+def test_old_revision_draft_never_locks_a_new_opinion(workbench):
+    page,ctx,store,url,goto,_=workbench
+    link=goto()
+    draft=page.get_by_role('textbox',name='个人草稿',exact=True);expect(draft).to_be_editable()
+    draft.fill('第一条意见的文字')
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    # Saving the opinion advanced the revision. Returning to the current one must
+    # not adopt the older draft (which would bind this editor to a stale basis and
+    # refuse the next save); the older text stays in the restore list.
+    page.goto(goto())
+    fresh=page.get_by_role('textbox',name='个人草稿',exact=True);expect(fresh).to_be_editable()
+    expect(fresh).to_have_value('')
+    expect(page.locator('.draft-notice')).to_contain_text('旧版本草稿可从下方恢复')
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
+    fresh.fill('第二条意见的文字')
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    # Both opinions are independent records of this project, and both drafts kept.
+    bodies=[note['annotation']['body'] for note in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']]
+    assert bodies.count('第一条意见的文字')==1 and bodies.count('第二条意见的文字')==1
+    # The older text is recoverable, and copying it forward keeps the text only.
+    page.goto(goto())
+    page.get_by_text('恢复、下载与版本详情',exact=True).click()
+    choices=page.get_by_label('恢复项目中的个人草稿')
+    expect(choices).to_be_visible()
+    assert '第一条意见的文字' in choices.inner_text()
+    choices.select_option(label=[o for o in choices.locator('option').all_inner_texts() if '第一条意见的文字' in o][0])
+    restored=page.get_by_role('textbox',name='个人草稿',exact=True)
+    expect(restored).to_have_value('第一条意见的文字')
+    expect(page.locator('.draft-notice')).to_contain_text('对当前版本写新意见')
+    page.get_by_role('button',name='对当前版本写新意见',exact=True).click()
+    expect(page.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('第一条意见的文字')
+    expect(page.locator('.draft-notice')).to_be_hidden()
+    records=page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']
+    assert len(records)==2, 'copying text forward must not create or rewrite a record'
+
+
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
     page,ctx,store,url,goto,_=workbench
     confirm(store,input_for(store));before=store.load_document()['tasks'];goto()

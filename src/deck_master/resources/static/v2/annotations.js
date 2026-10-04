@@ -95,7 +95,7 @@ export class Annotations {
     const blocked = !this.editor || this.editor.readonly || !this.basisMatches() || ['loading', 'unknown', 'conflict'].includes(this.editor.status) || this.app.business.entries.size || this.app.business.loadWarning;
     this.saveButton.disabled = Boolean(blocked || this.mode === 'read'); this.planButton.disabled = Boolean(blocked || !this.selected.size);
     this.chapter.hidden = this.scope.value !== 'chapter';
-    this.basis.textContent = `${version(this.data.revision_id)} · ${layers[this.layer]} · 草稿区域 ${this.regions.length} 个` + (this.editor && !this.basisMatches() ? '。恢复稿属于其它基准，请先回原版本；未迁移范围。' : this.app.historical && this.editor && !this.editor.readonly ? '。原内容只读；新意见仍绑定这里的原版本。' : '');
+    this.basis.textContent = `${version(this.data.revision_id)} · ${layers[this.layer]} · 草稿区域 ${this.regions.length} 个` + (this.editor && !this.basisMatches() ? '。恢复稿属于其它基准：先回原版本，或用「对当前版本写新意见」复制文字后保存；原有范围不迁移。' : this.app.historical && this.editor && !this.editor.readonly ? '。原内容只读；新意见仍绑定这里的原版本。' : '');
     for (const control of this.tools.querySelectorAll('button')) {
       const active = control.dataset.mode === this.mode;
       control.setAttribute('aria-pressed', String(active));
@@ -204,7 +204,7 @@ export class Annotations {
   async save() {
     delete this.error.dataset.success;
     try {
-      await this.app.business.available(); if (!this.basisMatches()) throw new Error('请回到草稿绑定的原版本。');
+      await this.app.business.available(); if (!this.basisMatches()) throw new Error('草稿绑定的是其它基准：请回到原版本，或用「对当前版本写新意见」复制文字后再保存。');
       const body = this.editor.input.value, intent = this.intent.input.value;
       if (!body.trim() || !intent.trim()) throw new Error('请填写意见目的与下方个人草稿正文。');
       const scope = this.scope.value, fixed = this.data.revision_id;

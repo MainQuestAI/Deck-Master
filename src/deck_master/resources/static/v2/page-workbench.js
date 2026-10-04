@@ -175,7 +175,7 @@ export function pageDetail(app, data) {
     const info = {...app.info, page_label: `第 ${index + 1} 页`};
     const samePageBasis = app.latest.pages.find(p => p.page_id === data.page_id)?.stages.content.ref?.sha256 === data.stages.content.ref?.sha256;
     app.editor = new DraftEditor(info, {scope: 'page', page_id: data.page_id, layer}, fixed, ref,
-      {readonly: app.business && samePageBasis ? Boolean(app.info.sample?.readonly) : app.readonly});
+      {readonly: app.business && samePageBasis ? Boolean(app.info.sample?.readonly) : app.readonly, exactRevision: true});
     const draftView = app.editor.mount();
     app.editor.input.rows = 2;
     const recovery = detail('恢复、下载与版本详情', app.editor.basisNode);

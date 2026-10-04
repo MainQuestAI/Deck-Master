@@ -18,7 +18,7 @@ export class DraftEditor {
     this.readonly = readonly; this.exactRevision = exactRevision; this.etag = null; this.status = 'loading'; this.pendingSave = null;
     this.bufferKey = `deck-master:v3:draft:${info.project_identity}:${canonical(target)}:${baseRef?.sha256 || 'none'}:${baseRevision}`;
     this.activeKey = `${this.bufferKey}:window:${windowBufferId}`;
-    this.draft = this.fresh(); this.storageError = ''; this.disposed = false;
+    this.draft = this.fresh(); this.storageError = ''; this.restoreNotice = ''; this.disposed = false;
   }
   fresh() {
     return {schema_version: 'ui_draft.v1', project_id: this.info.project_id, project_identity: this.info.project_identity,
@@ -35,16 +35,18 @@ export class DraftEditor {
     this.saveButton = button('保存个人草稿', () => this.save(), false, {disabled: this.readonly});
     this.verifyButton = button('核实草稿保存', () => this.verify());
     this.conflictButton = button('比较两份草稿', () => this.conflict());
+    this.rebaseButton = button('对当前版本写新意见', () => this.writeNewOnCurrent(), false);
     const file = el('input', {type: 'file', accept: 'application/json,.json', 'aria-label': '导入草稿恢复文件',
       disabled: this.readonly, onchange: () => this.importFile(file)});
     this.importInput = file;
     this.restoreNode = el('div', {class: 'draft-restore'});
     this.localRestoreNode = el('div', {class: 'draft-restore'});
+    this.noticeNode = el('p', {class: 'muted draft-notice', hidden: true});
     const node = el('section', {class: 'panel personal-draft'},
       el('div', {class: 'panel-head'}, el('h2', {}, '个人草稿'), el('span', {class: 'status'}, '不提交制作任务')),
       el('div', {class: 'panel-body stack'}, el('label', {for: this.input.id}, '留给自己的内容与意见'), this.input,
-        this.basisNode, this.stateNode, this.storageNode,
-        el('div', {class: 'row wrap'}, this.saveButton, this.verifyButton, this.conflictButton,
+        this.basisNode, this.noticeNode, this.stateNode, this.storageNode,
+        el('div', {class: 'row wrap'}, this.saveButton, this.rebaseButton, this.verifyButton, this.conflictButton,
           button('下载草稿恢复文件', () => this.download())),
         el('label', {class: 'recovery-import'}, '导入草稿恢复文件', file),
         el('p', {class: 'muted field-help'}, '恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。'),
@@ -75,6 +77,11 @@ export class DraftEditor {
       const exact = records.filter(record => record.draft.base_ref?.sha256 === this.baseRef?.sha256 && (!this.exactRevision || record.draft.base_revision === this.baseRevision));
       if (!buffered && exact.length === 1) this.adoptRecord(exact[0]);
       else if (!buffered) this.status = 'empty';
+      // Restoring an older revision's text as if it were current would bind this
+      // editor to a stale basis and block saving against the current one. Older
+      // text stays in the restore list; it is copied forward explicitly.
+      if (!buffered && exact.length > 1) this.restoreNotice = `当前版本有 ${exact.length} 份个人草稿，未自动打开；请从下方选择要恢复的一份。`;
+      else if (!buffered && !exact.length && records.length) this.restoreNotice = `当前版本没有个人草稿；${records.length} 份旧版本草稿可从下方恢复，再用「对当前版本写新意见」复制文字。`;
       if (buffered && this.status === 'saved') {
         const record = records.find(record => record.draft.draft_id === this.draft.draft_id);
         if (!record || canonical(record.draft) !== canonical(this.draft)) this.status = 'dirty';
@@ -136,7 +143,27 @@ export class DraftEditor {
   adoptRecord(record) {
     this.draft = structuredClone(record.draft); this.etag = record.etag;
     this.status = 'saved'; this.pendingSave = null; this.sequence = record.updated_sequence;
+    this.restoreNotice = '';
     this.input.value = this.draft.content.text || '';
+  }
+  // True when the draft's basis is not the basis this editor was mounted for.
+  staleBasis() {
+    return Boolean(this.draft) && (this.draft.base_revision !== this.baseRevision ||
+      this.draft.base_ref?.sha256 !== this.baseRef?.sha256);
+  }
+  // Start a new draft on this editor's basis, keeping the older record and its
+  // local copy. Only the text moves forward: regions, scope and intent describe
+  // the old artifact and are never migrated silently.
+  writeNewOnCurrent() {
+    if (this.readonly || this.disposed || !this.staleBasis()) return;
+    if (!this.archiveLocal()) { this.updateStatus(); return; }
+    const text = this.input.value;
+    const draft = this.fresh();
+    draft.content = {text};
+    this.draft = draft; this.etag = null; this.pendingSave = null; this.sequence = undefined;
+    this.status = text ? 'dirty' : 'empty'; this.note = ''; this.restoreNotice = '';
+    this.persist(); this.updateStatus();
+    this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles: true}));
   }
   changed() {
     this.draft.content = {...this.draft.content, text: this.input.value};
@@ -167,9 +194,15 @@ export class DraftEditor {
       saving: '正在保存到项目…', saved: '已保存到项目，可跨端口恢复', unknown: '保存结果待核实，后写内容仅在本机保留',
       conflict: '保存冲突，你的本机稿与项目中的稿件都已保留', error: '未保存到项目，输入仍保留'};
     this.stateNode.textContent = this.readonly ? '历史或示例只读，可下载已有个人草稿。' : text[this.status];
+    // A visible reason and a next action whenever the text on screen belongs to
+    // an older basis: the collapsed details already carry the full explanation.
+    const notice = this.restoreNotice || (this.staleBasis() ? `当前草稿绑定的是原基准 ${version(this.draft.base_revision)}，不能直接用于当前版本。可用「对当前版本写新意见」复制文字，原有范围不迁移。` : '');
+    this.noticeNode.textContent = notice;
+    this.noticeNode.hidden = !notice;
     this.basisNode.textContent = `基准 ${version(this.draft.base_revision)} · ${this.info.page_label || '整个项目'} · ${layers[this.target.layer] || '项目笔记'}` +
-      (this.draft.base_revision !== this.baseRevision ? '。草稿仍绑定原基准，未自动改到新版。' : '');
+      (this.staleBasis() ? '。草稿仍绑定原基准，未自动改到新版；可用「对当前版本写新意见」复制文字，原有范围不迁移。' : '');
     this.storageNode.textContent = this.storageError || this.note || '';
+    this.rebaseButton.hidden = this.readonly || !this.staleBasis();
     this.saveButton.disabled = this.readonly || ['loading', 'empty', 'saved', 'saving', 'unknown', 'conflict'].includes(this.status);
     this.input.readOnly = this.readonly || this.status === 'loading';
     this.importInput.disabled = this.readonly || this.status === 'loading';
