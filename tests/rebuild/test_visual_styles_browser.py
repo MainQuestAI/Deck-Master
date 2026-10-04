@@ -71,3 +71,47 @@ def test_large_reference_catalog_releases_images_and_preserves_selection(flow):
             assert page.locator('.visual-reference-choice').count()<=17
             assert '阅读位已满' not in page.locator('.visual-reference-list').inner_text()
         finally:browser.close();server.stop()
+
+
+def test_late_reference_catalog_after_leaving_style_does_not_acquire_images(flow):
+    """A real delayed catalog must not recreate a target lease after disposal."""
+    from playwright.sync_api import sync_playwright, expect
+    from urllib.parse import urlencode
+    server = WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(args=['--no-sandbox'])
+        page = browser.new_page(viewport={'width': 1280, 'height': 800})
+        held = []
+        errors = []
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        try:
+            url = server.start()
+            info = page.request.get(url + 'api/project').json()
+            page.goto(url + '#' + urlencode({'project': info['project_identity'], 'surface': 'runs',
+                'revision': flow.store.current_revision_id(), 'layer': 'original_image'}))
+            page.get_by_role('heading', name='运行记录', exact=True).wait_for()
+            page.evaluate('''identity => {
+                localStorage.setItem('deck-master:style-source:' + identity, 'screenshot');
+                localStorage.setItem('deck-master:visual-style:' + identity,
+                    JSON.stringify({ids:[], targets:['p02'], instruction:'Synthetic lease disposal probe'}));
+            }''', info['project_identity'])
+            def delay(route):
+                held.append((route, route.fetch()))
+                page.evaluate('() => window.referenceRequestHeld = true')
+            page.route('**/api/styles/references?*', delay)
+            page.get_by_role('button', name='风格校准', exact=True).click()
+            page.wait_for_function('() => window.referenceRequestHeld === true')
+            page.get_by_role('button', name='任务与交付', exact=True).click()
+            page.get_by_role('heading', name='运行记录', exact=True).wait_for()
+            snapshot = "async () => (await import('/v2/images.js')).imagePool.snapshot()"
+            assert page.evaluate(snapshot)['pinned'] == 0
+            held[0][0].fulfill(response=held[0][1])
+            # Allow the real fetch response and its microtask continuation to run.
+            page.wait_for_timeout(250)
+            pool = page.evaluate(snapshot)
+            assert pool['pinned'] == 0 and pool['network'] == 0 and pool['decode'] == 0
+            expect(page.locator('.visual-style')).to_have_count(0)
+            assert errors == []
+        finally:
+            browser.close()
+            server.stop()

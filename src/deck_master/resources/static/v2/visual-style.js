@@ -131,6 +131,6 @@ export function visualStyle(app){
   }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
   async function commitTrial(){if(!plan)return;busy=true;controls();try{const request={plan_id:plan.plan_id,base_revision:plan.plan.base_revision};await app.business.submit(editor,'changes.commit',request,{plan_id:plan.plan_id,plan:plan.plan},result=>{state.change_id=result.change_id;persist();app.go({surface:'runs',revision:result.revision_id,task_id:result.task_ids.length===1?result.task_ids[0]:null,candidate_id:null});});}catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
   if(pending){status.append(el('span',{},'存在待核实的截图上传。'),button('核实原上传',verifyUpload));}
-  loadReferences().then(()=>{showTarget();renderFutureTargets();if(state.task_id)readAnalysis();loadRecipe();}).catch(error=>{if(!disposed)status.textContent=readableError(error);});
+  loadReferences().then(()=>{if(disposed)return;showTarget();renderFutureTargets();if(state.task_id)readAnalysis();loadRecipe();}).catch(error=>{if(!disposed)status.textContent=readableError(error);});
   app.disposables.push(()=>{disposed=true;analysisSerial++;release();specLeases.splice(0).forEach(v=>v.dispose());targetLease?.dispose();});controls();return root;
 }
