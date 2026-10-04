@@ -113,9 +113,11 @@ export function style(app) {
   const node = el('div', {class: 'style-calibration stack'}, heading('风格校准', '固定一张参考原图，保留目标内容。先试一页，比较采用后再扩展。'),
     phases.map(p => p.node), el('div', {class:'style-plan stack'}, impact, dispatchButton), detail('个人草稿与恢复',draftNode));
   const external=visualStyle(app), internal=phases.map(p=>p.node).concat([impact.parentElement]);
-  const source=el('select',{'aria-label':'风格参考来源'},el('option',{value:'page'},'借用项目内页面'),el('option',{value:'screenshot'},'从外部截图提取规范'));
+  const source=el('select',{'aria-label':'风格参考来源',disabled:true},el('option',{value:'page'},'借用项目内页面'),el('option',{value:'screenshot'},'从外部截图提取规范'));
   const switchSource=()=>{internal.forEach(n=>n.hidden=source.value==='screenshot');external.hidden=source.value!=='screenshot';};
-  source.addEventListener('change',()=>{try{localStorage.setItem('deck-master:style-source:'+app.info.project_identity,source.value);}catch{}switchSource();});
+  source.addEventListener('change',async()=>{const chosen=source.value,current=app.editor;await current.ready;if(disposed||current!==app.editor)return;try{localStorage.setItem('deck-master:style-source:'+app.info.project_identity,source.value);}catch{}switchSource();if(!current.readonly&&!current.disposed){current.draft.content.style_source=chosen;current.changed();}});
+  const restoreSource=()=>{const current=app.editor;current.ready.then(()=>{if(disposed||current!==app.editor)return;const saved=current.draft.content.style_source;if(['page','screenshot'].includes(saved))source.value=saved;source.disabled=false;switchSource();});};
+  app.root.addEventListener('draft-editor-replaced',restoreSource);restoreSource();
   try{source.value=localStorage.getItem('deck-master:style-source:'+app.info.project_identity)||'page';}catch{}
   node.insertBefore(el('label',{class:'stack'},'参考来源',source),phases[0].node);node.insertBefore(external,phases[0].node);switchSource();
   function showPhase(next) {
@@ -337,7 +339,7 @@ export function style(app) {
   const versionChanged = () => { if (app.latest?.revision_id !== app.route.revision && !busy) { invalidatePlan(false); proposal = null; preview.replaceChildren(); controls(); } };
   app.root.addEventListener('business-state-changed', sync); app.root.addEventListener('draft-editor-replaced', hydrate);
   app.root.addEventListener('summary-refreshed', versionChanged);
-  app.disposables.push(() => { disposed = true; serial++; sourceSerial++; targetSourceSerial++; candidateSerial++; recipeSerial++; requests.forEach(controller => controller.abort()); targetViews.forEach(view => view.dispose()); primaryView?.dispose(); release?.(); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('summary-refreshed', versionChanged); });
+  app.disposables.push(() => { disposed = true; serial++; sourceSerial++; targetSourceSerial++; candidateSerial++; recipeSerial++; requests.forEach(controller => controller.abort()); targetViews.forEach(view => view.dispose()); primaryView?.dispose(); release?.(); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('draft-editor-replaced',restoreSource); app.root.removeEventListener('summary-refreshed', versionChanged); });
   referenceCount.textContent = `${options.size} 页有已记录原图，可按页码或标题搜索。`;
   showPhase(1); hydrate(); controls(); return node;
 }

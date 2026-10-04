@@ -115,3 +115,160 @@ def test_late_reference_catalog_after_leaving_style_does_not_acquire_images(flow
         finally:
             browser.close()
             server.stop()
+
+
+def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_editor(flow):
+    """Close both browser/service; restore a real project draft with no storage seed."""
+    from playwright.sync_api import sync_playwright, expect
+    servers = []
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(args=['--no-sandbox'])
+        page = browser.new_page(viewport={'width': 1280, 'height': 800})
+        try:
+            first = WorkbenchServer(flow.project); servers.append(first)
+            first_url = first.start()
+            page.goto(first_url); page.get_by_role('button', name='风格校准', exact=True).click()
+            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+            page.get_by_role('textbox', name='截图风格要求').fill('Cross-origin recovery: preserve complete body')
+            page.get_by_role('combobox', name='截图风格试作目标').select_option('p02')
+            page.get_by_label('导入参考截图', exact=True).set_input_files(
+                {'name':'synthetic-recovery.png','mimeType':'image/png','buffer':image_bytes()})
+            expect(page.get_by_role('checkbox', name='选用参考截图 1', exact=True)).to_be_checked()
+            page.get_by_role('button', name='分析截图', exact=True).click()
+            expect(page.get_by_role('button', name='查看分析结果', exact=True)).to_be_enabled()
+            doc = flow.store.load_document()
+            task = next(flow.store.read_object_json(ref) for ref in reversed(doc['tasks'])
+                        if flow.store.read_object_json(ref)['kind'] == 'style_analyze')
+            row = flow.store.read_object_json(doc['style_references'][0])
+            # Explicit synthetic Host result; real UI/core writes, zero model calls.
+            flow.start(task)
+            tasks.accept_result(flow.store, task_id=task['task_id'], operation_id=task['operation_id'],
+                produced_against=task['produced_against'], envelope_raw=result(row['reference_id']))
+            page.get_by_role('button', name='查看分析结果', exact=True).click()
+            page.get_by_role('textbox', name='配色规范', exact=True).fill('Keep edited blue #225588 rules')
+            page.get_by_role('button', name='检查并确认视觉规范', exact=True).click()
+            expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled()
+            # Returned analysis/recipe pointers must already be on disk before navigation settles.
+            saved = page.request.get(first_url + 'api/drafts').json()['records']
+            state = next(r['draft']['content']['visual_style'] for r in saved
+                         if r['draft']['content'].get('visual_style', {}).get('recipe'))
+            assert state['task_id'] == task['task_id'] and state['targets'] == ['p02']
+            assert state['spec_edits']['dimensions']['palette'] == 'Keep edited blue #225588 rules'
+            recipe_id = state['recipe']
+            page.locator('summary').filter(has_text='个人草稿与恢复').click()
+            page.get_by_role('textbox', name='个人草稿', exact=True).fill('Saved recovery note')
+            expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
+            browser.close(); first.stop()
+
+            second = WorkbenchServer(flow.project); servers.append(second)
+            second_url = second.start(); assert second_url != first_url
+            browser = runtime.chromium.launch(args=['--no-sandbox'])
+            page = browser.new_page(viewport={'width': 1280, 'height': 800})
+            page.goto(second_url); page.get_by_role('button', name='风格校准', exact=True).click()
+            expect(page.get_by_role('combobox', name='风格参考来源')).to_have_value('screenshot')
+            expect(page.get_by_role('checkbox', name='选用参考截图 1', exact=True)).to_be_checked()
+            expect(page.get_by_role('combobox', name='截图风格试作目标')).to_have_value('p02')
+            expect(page.get_by_role('textbox', name='截图风格要求')).to_have_value('Cross-origin recovery: preserve complete body')
+            expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_value('Keep edited blue #225588 rules')
+            expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled()
+            # A frozen plan is deliberately not restored as an executable pending action.
+            expect(page.get_by_role('button', name='保存并交接试作', exact=True)).to_be_disabled()
+            page.locator('summary').filter(has_text='个人草稿与恢复').click()
+            restore = page.get_by_role('combobox', name='恢复项目中的个人草稿', exact=True)
+            option = restore.locator('option').filter(has_text='Saved recovery note')
+            restore.select_option(option.get_attribute('value'))
+            expect(page.get_by_role('textbox', name='个人草稿', exact=True)).to_have_value('Saved recovery note')
+            expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled()
+            # Explicit persisted task/recipe selections work without an automatic latest choice.
+            page.locator('summary').filter(has_text='恢复项目中的截图分析与规范').click()
+            page.get_by_role('combobox', name='恢复已保存的截图分析').select_option(task['task_id'])
+            expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_be_visible()
+            expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_disabled()
+            page.get_by_role('combobox', name='恢复已确认的截图规范').select_option(recipe_id)
+            expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_value('Keep edited blue #225588 rules')
+            expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled()
+            page.get_by_role('button', name='预览单页试作', exact=True).click()
+            expect(page.get_by_role('button', name='保存并交接试作', exact=True)).to_be_enabled()
+            # This business write must use the replacement DraftEditor, not its disposed predecessor.
+            page.get_by_role('button', name='保存并交接试作', exact=True).click()
+            page.get_by_role('heading', name='当前任务', exact=True).wait_for()
+            assert any(flow.store.read_object_json(ref).get('change_binding')
+                       for ref in flow.store.load_document()['tasks'])
+        finally:
+            browser.close()
+            for server in servers: server.stop()
+
+
+def test_saved_analysis_selection_binds_its_reference_and_cancelled_task_stays_stopped(flow):
+    from deck_master import service
+    from test_visual_styles import imported, analysis
+    from playwright.sync_api import sync_playwright, expect
+    rows = []
+    for label in ('RULE-A', 'RULE-B'):
+        row, _, _ = imported(flow); task = analysis(flow, [row['reference_id']]); flow.start(task)
+        envelope = result(row['reference_id']); envelope['style_analysis']['dimensions']['palette']['summary'] = label
+        tasks.accept_result(flow.store, task_id=task['task_id'], operation_id=task['operation_id'],
+            produced_against=task['produced_against'], envelope_raw=envelope)
+        rows.append((row, task))
+    cancelled = analysis(flow, [rows[0][0]['reference_id']])
+    service.task_cancel(flow.project, task_id=cancelled['task_id'], reason='Synthetic cancelled recovery probe')
+    server = WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(); page = browser.new_page(viewport={'width':1280,'height':800})
+        try:
+            page.goto(server.start()); page.get_by_role('button', name='风格校准', exact=True).click()
+            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+            page.locator('summary').filter(has_text='恢复项目中的截图分析与规范').click()
+            selector = page.get_by_role('combobox', name='恢复已保存的截图分析')
+            expect(selector).to_be_enabled()
+            # Open B first; then A must switch both rules and the immutable reference selection.
+            for index in (1, 0):
+                selector.select_option(rows[index][1]['task_id'])
+                expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_value(('RULE-A','RULE-B')[index])
+                expect(page.get_by_role('checkbox', name=f'选用参考截图 {index+1}', exact=True)).to_be_checked()
+                expect(page.get_by_role('checkbox', name=f'选用参考截图 {2-index}', exact=True)).not_to_be_checked()
+            selector.select_option(cancelled['task_id'])
+            expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_count(0)
+            expect(page.locator('.visual-style [role=status]')).to_contain_text('cancelled')
+            expect(page.get_by_role('button', name='检查并确认视觉规范', exact=True)).to_be_disabled()
+            expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_disabled()
+            assert flow.task(cancelled['task_id'])['status'] == 'cancelled'
+        finally: browser.close(); server.stop()
+
+
+def test_late_saved_recipe_read_after_leaving_recovery_does_not_acquire_images(flow):
+    from deck_master import styles
+    from test_visual_styles import completed
+    from playwright.sync_api import sync_playwright, expect
+    spec_ref, _, _ = completed(flow)
+    proposal = styles.propose(flow.project, input={'schema_version':'style_input.v2',
+        'project_id':flow.store.load_document()['project_id'], 'base_revision':flow.store.current_revision_id(),
+        'visual_style_ref':spec_ref, 'target_page_ids':['p02'], 'instruction':'Saved recovery lease probe'})
+    confirmed = styles.confirm(flow.project, proposal_id=proposal['proposal_id'],
+        base_revision=flow.store.current_revision_id(), operation_id=str(uuid.uuid4()))['operation_result']
+    server = WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(); page = browser.new_page(viewport={'width':1280,'height':800})
+        held = []; errors = []; page.on('pageerror', lambda error: errors.append(str(error)))
+        try:
+            page.goto(server.start()); page.get_by_role('button', name='风格校准', exact=True).click()
+            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+            page.locator('summary').filter(has_text='恢复项目中的截图分析与规范').click()
+            selector = page.get_by_role('combobox', name='恢复已确认的截图规范')
+            expect(selector).to_be_enabled()
+            assert selector.input_value() == ''  # Existing recipes are never silently selected.
+            def delay(route):
+                held.append((route, route.fetch()))
+                page.evaluate('() => window.recipeReadHeld = true')
+            page.route('**/api/styles/' + confirmed['recipe_id'] + '?*', delay)
+            selector.select_option(confirmed['recipe_id'])
+            page.wait_for_function('() => window.recipeReadHeld === true')
+            page.get_by_role('button', name='任务与交付', exact=True).click()
+            page.get_by_role('heading', name='运行记录', exact=True).wait_for()
+            pool = "async () => (await import('/v2/images.js')).imagePool.snapshot()"
+            assert page.evaluate(pool)['pinned'] == 0
+            held[0][0].fulfill(response=held[0][1]); page.wait_for_timeout(250)
+            assert page.evaluate(pool)['pinned'] == 0
+            expect(page.locator('.visual-style')).to_have_count(0)
+            assert errors == []
+        finally: browser.close(); server.stop()
