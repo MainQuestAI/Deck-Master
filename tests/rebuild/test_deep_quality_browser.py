@@ -125,15 +125,60 @@ def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
     bodies=[item['annotation']['body'] for item in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']]
     assert bodies==['这是我自己的备忘，不是给制作的意见。']
     # Unchanged content cannot be saved twice, but the same text on a different
-    # legal scope is a new opinion.
+    # legal scope is a new opinion. 「整页意见」saves the page scope, so the
+    # second save uses the artwork scope.
     expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_disabled()
     expect(page.locator('.field-error[data-success]')).to_contain_text('不会重复新增')
-    page.get_by_label('意见作用范围').select_option('page')
+    page.get_by_label('意见作用范围').select_option('artifact')
     expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
     page.get_by_role('button',name='保存意见',exact=True).click()
     expect(page.locator('.field-error[data-success]')).to_be_visible()
     saved=page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']
-    assert [item['annotation']['scope'] for item in saved]==['artifact','page']
+    assert [item['annotation']['scope'] for item in saved]==['page','artifact']
+
+
+def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
+    page,ctx,store,url,goto,_=workbench;goto()
+    body=page.get_by_role('textbox',name='意见正文',exact=True)
+    def write_opinion(text):
+        page.get_by_role('button',name='保存意见',exact=True).click()
+        expect(page.locator('.field-error[data-success]')).to_be_visible()
+        assert text in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations'][-1]['annotation']['body']
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    body.fill('这一页要改标题')
+    write_opinion('这一页要改标题')
+    expect(page.get_by_role('heading',name='本页整页意见（1）',exact=True)).to_be_visible()
+    page.get_by_role('button',name='写新意见',exact=True).click()
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    page.get_by_label('意见作用范围').select_option('artifact')
+    body.fill('这张图稿的线宽要收一点')
+    write_opinion('这张图稿的线宽要收一点')
+    expect(page.get_by_role('heading',name='当前图稿意见 · SVG（1）',exact=True)).to_be_visible()
+    page.get_by_role('button',name='写新意见',exact=True).click()
+    page.get_by_label('意见作用范围').select_option('project')
+    body.fill('整稿方向已认可')
+    write_opinion('整稿方向已认可')
+    # 整稿认可 is a review record, not a page requirement: it stays in its own
+    # collapsed group and cannot be selected into this page's change plan.
+    deck=page.locator('details.saved-group').filter(has_text='整稿认可与章节意见')
+    expect(deck.locator('summary')).to_contain_text('（1）')
+    deck.locator('summary').click()
+    expect(deck).to_contain_text('整稿方向已认可')
+    expect(deck).to_contain_text('整稿认可不是本页的修改要求')
+    expect(deck.get_by_label('选入意见 3')).to_be_disabled()
+    # Another page at the current version must not inherit these opinions: they are
+    # counted, collapsed and not selectable, with the reason shown. (Saving bumped
+    # the revision, so the pinned page is historical until the user returns.)
+    link=url+'#'+urlencode({'project':page.request.get(url.rstrip('/')+'/api/project').json()['project_identity'],
+                            'surface':'page','page':'p02','layer':'svg','revision':store.current_revision_id()})
+    page.goto(link)
+    expect(page.get_by_role('heading',name='本页整页意见（0）',exact=True)).to_be_visible()
+    other=page.locator('details.saved-group').filter(has_text='其它页面的局部意见')
+    expect(other.locator('summary')).to_contain_text('（2）')
+    other.locator('summary').click()
+    expect(other).to_contain_text('这一页要改标题')
+    expect(other).to_contain_text('不能选入本页的修改计划')
+    expect(other.get_by_label('选入意见 1')).to_be_disabled()
 
 
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):

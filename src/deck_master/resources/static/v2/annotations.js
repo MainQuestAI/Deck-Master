@@ -31,7 +31,7 @@ export class Annotations {
     this.tools = el('div', {class: 'segmented annotation-tools', role: 'group', 'aria-label': '画面操作模式'});
     this.modeHint = el('p', {class: 'form-hint'});
     this.modes = [['read', '阅读模式'], ['whole', '整页意见'], ...(image ? [['point', '点标注'], ['rect', '框选模式']] : [['text', '文本意见']])];
-    for (const [mode, label] of this.modes) this.tools.append(button(label, () => this.setMode(mode), false, {'data-mode': mode}));
+    for (const [mode, label] of this.modes) this.tools.append(button(label, () => this.chooseMode(mode), false, {'data-mode': mode}));
     this.fields = Object.fromEntries(['x', 'y', 'width', 'height'].map((key, i) => [key, field(['横向起点 %', '纵向起点 %', '区域宽度 %', '区域高度 %'][i], el('input', {type: 'number', min: 0, max: 100, step: .1, value: i < 2 ? 10 : 20}))]));
     this.geometry = el('details', {class: 'geometry-fields', hidden: true}, el('summary', {}, '用百分比定位区域'),
       el('div', {class: 'range-fields'}, Object.values(this.fields).map(f => f.node)), button('添加百分比区域', () => this.keyboardRegion()));
@@ -128,7 +128,10 @@ export class Annotations {
       this.error.dataset.success = 'true';
       this.error.textContent = '这条意见已保存；未发生变化时不会重复新增。改动正文、范围或区域后可保存为新意见，或点「写新意见」。';
     } else if (this.error.dataset.success) { delete this.error.dataset.success; this.error.textContent = ''; }
-    this.basis.textContent = `${version(this.data.revision_id)} · ${layers[this.layer]} · 草稿区域 ${this.regions.length} 个` + (this.editor && !this.basisMatches() ? '。恢复稿属于其它基准：先回原版本，或用「对当前版本写新意见」复制文字后保存；原有范围不迁移。' : this.app.historical && this.editor && !this.editor.readonly ? '。原内容只读；新意见仍绑定这里的原版本。' : '');
+    // The effective target stays above the input: object, scope and the basis
+    // version the note will be written against.
+    const target = {project: '整稿认可（项目范围）', chapter: '章节意见', page: '本页整页意见', artifact: `当前图稿（${layers[this.layer]}）`}[this.scope.value] || this.scope.value;
+    this.basis.textContent = `${target} · 底稿 ${version(this.data.revision_id)} · 草稿区域 ${this.regions.length} 个` + (this.editor && !this.basisMatches() ? '。恢复稿属于其它基准：先回原版本，或用「对当前版本写新意见」复制文字后保存；原有范围不迁移。' : this.app.historical && this.editor && !this.editor.readonly ? '。原内容只读；新意见仍绑定这里的原版本。' : '');
     const editorNotice = this.editor?.noticeText?.() || '';
     this.notice.textContent = editorNotice; this.notice.hidden = !editorNotice;
     for (const control of this.tools.querySelectorAll('button')) {
@@ -141,6 +144,14 @@ export class Annotations {
     if (this.planRecord && this.planSignature !== this.signature()) { this.planRecord = null; this.preview.replaceChildren(el('p', {}, '要求已改变，请重新预览影响后提交。')); }
     this.draw();
   }
+  // The user pressing a mode button also states the target: 「整页意见」means the
+  // page, point/rect/text bind to the current artwork. Programmatic mode changes
+  // (selecting 章节/项目, restoring a draft) never move the scope.
+  chooseMode(mode) {
+    if (mode === 'whole') this.scope.value = 'page';
+    else if (['point', 'rect', 'text'].includes(mode)) this.scope.value = 'artifact';
+    this.setMode(mode);
+  }
   setMode(mode) {
     this.mode = mode; this.drag = null;
     this.modeHint.textContent = mode === 'read' ? '阅读模式不产生标注。'
@@ -148,6 +159,8 @@ export class Annotations {
       : mode === 'point' ? '点击放置标注点；Esc 移除并返回阅读。'
       : mode === 'text' ? '在原文中选择文本；Esc 移除并返回阅读。'
       : '针对整页写意见，不绑定区域。';
+    // Region tools stay bound to the artwork; the 「整页意见」impulse lives in
+    // chooseMode so an explicit 章节/项目 scope is never overridden here.
     if (['point', 'rect', 'text'].includes(mode)) this.scope.value = 'artifact';
     this.geometry.hidden = !['point', 'rect'].includes(mode);
     for (const key of ['width', 'height']) this.fields[key].node.hidden = mode === 'point';
@@ -221,22 +234,69 @@ export class Annotations {
       el('p', {}, `${index + 1} · ${location.kind === 'text' ? location.range.excerpt : location.kind === 'rect' ? '框选区域' : '点标注'}`),
       button(`删除区域 ${index + 1}`, () => { this.regions.splice(index, 1); this.changed(); }, false, {disabled: !this.basisMatches() || this.editor?.readonly})))); this.draw();
   }
+  scopeName(note) {
+    if (note.scope === 'project') return '整稿认可';
+    if (note.scope === 'chapter') return '章节意见';
+    if (note.scope === 'page') return '本页整页意见';
+    return `当前图稿（${layers[note.layer] || note.layer}）`;
+  }
+  // Opinions are grouped by what they actually talk about, so a note about
+  // another page or the whole deck is never read as this artwork's requirement.
+  savedGroups() {
+    const page = this.data.page_id, layer = this.layer;
+    const notes = this.records.map(record => ({record, note: record.annotation}));
+    const groups = [
+      {key: 'page', title: '本页整页意见', open: true, selectable: true,
+       rows: notes.filter(row => row.note.scope === 'page' && row.note.page_id === page)},
+      {key: 'artifact', title: `当前图稿意见 · ${layers[layer]}`, open: true, selectable: true,
+       rows: notes.filter(row => row.note.scope === 'artifact' && row.note.page_id === page && row.note.layer === layer)},
+      {key: 'other_layers', title: '本页其它图层', open: false, selectable: true,
+       rows: notes.filter(row => row.note.scope === 'artifact' && row.note.page_id === page && row.note.layer !== layer)},
+      {key: 'other_pages', title: '其它页面的局部意见', open: false, selectable: false,
+       reason: '此意见属于其它页面，不能选入本页的修改计划。',
+       rows: notes.filter(row => ['page', 'artifact'].includes(row.note.scope) && row.note.page_id && row.note.page_id !== page)},
+      {key: 'whole_deck', title: '整稿认可与章节意见', open: false, selectable: false,
+       reason: '整稿认可不是本页的修改要求；如要修改本页，请另写本页意见。',
+       rows: notes.filter(row => ['project', 'chapter'].includes(row.note.scope))},
+    ];
+    for (const group of groups) if (!group.selectable) for (const row of group.rows) this.selected.delete(row.record.ref.sha256);
+    return groups;
+  }
+  savedCard(record, group, index) {
+    const note = record.annotation, isNew = this.newRefs.has(record.ref.sha256);
+    const check = el('input', {type: 'checkbox', checked: this.selected.has(record.ref.sha256), 'aria-label': `选入意见 ${index}`, disabled: !group.selectable});
+    check.addEventListener('change', () => { if (check.checked) this.selected.set(record.ref.sha256, record); else this.selected.delete(record.ref.sha256); this.update(); });
+    const article = el('article', {class: `saved-opinion${isNew ? ' is-new' : ''}`},
+      el('label', {}, check, `意见 ${index} · ${note.intent}`),
+      isNew && el('span', {class: 'status'}, '本次新增'),
+      el('p', {class: 'saved-meta muted'}, `${this.scopeName(note)} · 底稿 ${version(note.base_revision)} · ${note.status === 'resolved' ? '已解决' : '待处理'}`),
+      el('p', {}, note.body),
+      group.reason && el('p', {class: 'muted field-help'}, group.reason),
+      button(`回到意见 ${index} 的原版本`, () => this.app.go({surface: note.page_id ? 'page' : 'content', revision: note.base_revision, page_id: note.page_id || null, layer: note.layer || 'content'})));
+    if (isNew) article.scrollIntoView({block: 'nearest'});
+    return article;
+  }
+  // Which snapshot the saved list is read from. Historical reads stay fixed to
+  // their own version; current reads follow the project, including the revision a
+  // save just returned (the page it was written on may already be older).
+  listRevisionId() {
+    if (this.app.historical) return this.data.revision_id;
+    return this.listRevision || this.app.latest?.revision_id || this.data.revision_id;
+  }
   async loadSaved() {
     try {
-      const response = await get('/api/annotations'); if (this.disposed) return;
+      const response = await get('/api/annotations?' + new URLSearchParams({revision: this.listRevisionId()})); if (this.disposed) return;
       this.records = response.annotations;
-      this.savedList.replaceChildren(...this.records.map((record, index) => {
-        const note = record.annotation;
-        const check = el('input', {type: 'checkbox', checked: this.selected.has(record.ref.sha256), 'aria-label': `选入意见 ${index + 1}`});
-        check.addEventListener('change', () => { if (check.checked) this.selected.set(record.ref.sha256, record); else this.selected.delete(record.ref.sha256); this.update(); });
-        const isNew = this.newRefs.has(record.ref.sha256);
-        const article = el('article', {class: `saved-opinion${isNew ? ' is-new' : ''}`}, el('label', {}, check, `意见 ${index + 1} · ${note.intent}`),
-          isNew && el('span', {class: 'status'}, '本次新增'), el('p', {}, note.body),
-          button(`回到意见 ${index + 1} 的原版本`, () => this.app.go({surface: note.page_id ? 'page' : 'content', revision: note.base_revision, page_id: note.page_id || null, layer: note.layer || 'content'})));
-        if (isNew) article.scrollIntoView({block: 'nearest'});
-        return article;
-      }));
-      if (!this.records.length) this.savedList.append(el('p', {class: 'muted'}, '尚无已保存意见。'));
+      const nodes = []; let index = 0;
+      for (const group of this.savedGroups()) {
+        if (!group.rows.length && !group.open) continue;
+        const cards = group.rows.map(row => this.savedCard(row.record, group, ++index));
+        if (group.open) nodes.push(el('section', {class: 'saved-group'}, el('h4', {}, `${group.title}（${group.rows.length}）`),
+          ...(cards.length ? cards : [el('p', {class: 'muted'}, '此范围暂无意见。')])));
+        else nodes.push(el('details', {class: 'saved-group'}, el('summary', {}, `${group.title}（${group.rows.length}）`), ...cards));
+      }
+      if (!this.records.length) nodes.push(el('p', {class: 'muted'}, '尚无已保存意见。'));
+      this.savedList.replaceChildren(...nodes);
       this.update();
     } catch (error) { if (!this.disposed) this.error.textContent = readableError(error); }
   }
@@ -260,6 +320,7 @@ export class Annotations {
       const current = await get('/api/view/summary');
       await this.app.business.submit(this.editor, 'annotations.save', {input, base_revision: current.revision_id}, input, async result => {
         this.savedSubmission = key;
+        this.listRevision = result?.revision_id || this.listRevision;
         this.newRefs = new Set((result?.annotations || []).map(item => item.ref?.sha256).filter(Boolean));
         this.error.dataset.success = 'true';
         await this.loadSaved();
