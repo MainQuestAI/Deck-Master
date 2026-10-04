@@ -292,6 +292,27 @@ def test_near_field_entry_names_returned_candidates(workbench):
     expect(page.get_by_text('本页候选与试作',exact=True)).to_be_visible()
 
 
+def test_many_opinions_do_not_push_the_artwork_out_of_view(workbench):
+    from deck_master import annotation_service as annotations
+    page,ctx,store,url,goto,_=workbench
+    entry=store.load_document()['pages'][0]
+    for index in range(30):
+        current=store.load_document()
+        note={'schema_version':'annotation.v1','project_id':current['project_id'],'base_revision':current['revision_id'],
+              'scope':'page','page_id':entry['page_id'],'page_ref':entry['page'],'intent':'note','body':f'第 {index+1} 条意见',
+              'status':'open','location':{'kind':'whole'}}
+        annotations.save(store.project_root, input={'schema_version':'annotation_batch.v1','project_id':current['project_id'],'annotations':[note]},
+                         base_revision=current['revision_id'], operation_id=str(uuid.uuid4()))
+    goto()
+    image=page.locator('.page-reading canvas:visible').first
+    image.wait_for()
+    assert page.locator('.saved-opinion').count()==30
+    artwork=image.bounding_box()
+    # A long opinion list may scroll, but it must not resize or push the artwork.
+    assert artwork['y']>=0 and artwork['y']+artwork['height']<=900, artwork
+    assert artwork['width']>600, artwork
+
+
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
     page,ctx,store,url,goto,_=workbench
     confirm(store,input_for(store));before=store.load_document()['tasks'];goto()

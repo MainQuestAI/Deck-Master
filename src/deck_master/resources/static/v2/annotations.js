@@ -60,10 +60,12 @@ export class Annotations {
       el('div', {class: 'panel-body stack'}, this.basis, this.notice,
         el('div', {class: 'row wrap opinion-meta'}, this.scopeLabel, this.intent.node, this.chapter),
         this.bodyField.node,
+        // The save row sits with the input it saves, before the optional region
+        // tools, so writing and saving stay in one screen.
+        this.actions, this.error,
         this.tools, this.modeHint,
         this.geometry, this.regionList, this.noteEntry,
         el('p', {class: 'muted field-help'}, '保存意见不启动制作；选入已保存意见后再预览修改计划。'),
-        this.error, this.actions,
         el('h3', {}, '已保存意见'), this.savedList,
         this.requirementSection, this.preview));
     this.scope.addEventListener('change', () => { if (this.scope.value !== 'artifact') this.setMode('whole'); this.changed(); });

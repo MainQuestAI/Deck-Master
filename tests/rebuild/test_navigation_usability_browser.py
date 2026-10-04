@@ -132,6 +132,27 @@ def test_host_handoff_clipboard_failure_remains_pending(workbench_page):
 
 
 @pytest.mark.parametrize('width,height', [(1280, 800), (1440, 900)])
+def test_artwork_and_save_row_share_the_first_screen(workbench_page, width, height):
+    from urllib.parse import urlencode
+    page = workbench_page
+    base = page.url.split('#')[0]
+    info = page.request.get(base + 'api/project').json()
+    revision = page.request.get(base + 'api/view/summary').json()['revision_id']
+    page.set_viewport_size({'width': width, 'height': height})
+    page.goto(base + '#' + urlencode({'project': info['project_identity'], 'surface': 'page', 'page': 'p02', 'layer': 'svg', 'revision': revision}))
+    image = page.locator('.page-reading canvas:visible').first
+    image.wait_for()
+    page.get_by_role('button', name='整页意见', exact=True).click()
+    artwork = image.bounding_box()
+    assert artwork['y'] >= 0 and artwork['y'] + artwork['height'] <= height, artwork
+    body = page.get_by_role('textbox', name='意见正文', exact=True).bounding_box()
+    save = page.get_by_role('button', name='保存意见', exact=True).bounding_box()
+    assert body['y'] + body['height'] < height and save['y'] + save['height'] < height, (body, save)
+    # The default fit keeps exactly one scroll container over the artwork.
+    assert page.evaluate('() => { const vp = document.querySelector(".page-image-viewport"); return vp.scrollHeight <= vp.clientHeight + 1; }')
+
+
+@pytest.mark.parametrize('width,height', [(1280, 800), (1440, 900)])
 def test_plain_task_entry_opens_tasks_without_a_delivery_detour(workbench_page, width, height):
     import urllib.parse
     from urllib.parse import urlencode
