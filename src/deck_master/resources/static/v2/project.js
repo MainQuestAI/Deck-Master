@@ -119,11 +119,7 @@ export class Project {
       this.render(data);
       if(summary.reading_unavailable)this.setNotice('个人已读记录暂不可用，已显示未过滤的业务记录；损伤文件保留，请先核实恢复资料。',true);
       this.savePosition();
-      if (focus) {
-        const title = route.surface === 'runs' && route.layer === 'ppt' && !route.task_id && !route.review_id
-          ? document.querySelector('#delivery-desk h2') || document.querySelector('#view-title') : document.querySelector('#view-title');
-        title?.focus();
-      }
+      if (focus) document.querySelector('#view-title')?.focus();
       announce(`${route.surface === 'page' ? '单页 · ' + layers[route.layer] : surfaces[route.surface]}，${version(route.revision)}`);
     } catch (error) {
       if (serial !== this.generation) return;
@@ -137,7 +133,11 @@ export class Project {
   go(patch) {
     const route = {...this.route, ...patch};
     if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== this.route.revision) route.overview_preferences = null;
-    if (patch.surface && patch.surface !== 'runs') route.task_id = null;
+    // A plain surface switch starts that surface on its own first screen: no task
+    // detail from an earlier visit, and no page layer that another surface could
+    // mistake for "the user asked for delivery".
+    if (patch.surface && (!('task_id' in patch) || patch.surface !== 'runs')) route.task_id = null;
+    if (patch.surface && patch.surface !== 'page' && !('layer' in patch)) route.layer = 'original_image';
     if (!('action_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.action_id = null;
     if (!('review_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.review_id = null;
     if (!('candidate_id' in patch) && (patch.surface || patch.page_id || patch.layer)) route.candidate_id = null;

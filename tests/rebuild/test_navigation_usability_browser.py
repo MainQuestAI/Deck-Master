@@ -131,6 +131,27 @@ def test_host_handoff_clipboard_failure_remains_pending(workbench_page):
     assert page.evaluate('() => window.copiedHandoff') == handoff['handoff']
 
 
+@pytest.mark.parametrize('width,height', [(1280, 800), (1440, 900)])
+def test_plain_task_entry_opens_tasks_without_a_delivery_detour(workbench_page, width, height):
+    import urllib.parse
+    from urllib.parse import urlencode
+    from playwright.sync_api import expect
+    page = workbench_page
+    base = page.url.split('#')[0]
+    info = page.request.get(base + 'api/project').json()
+    revision = page.request.get(base + 'api/view/summary').json()['revision_id']
+    page.set_viewport_size({'width': width, 'height': height})
+    page.goto(base + '#' + urlencode({'project': info['project_identity'], 'surface': 'page', 'page': 'p02', 'layer': 'ppt', 'revision': revision}))
+    page.locator('.page-head').wait_for()
+    # Switching to the task surface must not carry the page's layer (the delivery
+    # area used to treat a leftover "ppt" as "open the export desk") nor a stale task.
+    page.locator('.nav button[title="任务与交付"]').click()
+    page.locator('#view-title').wait_for()
+    params = dict(urllib.parse.parse_qsl(page.url.split('#')[1]))
+    assert params['surface'] == 'runs' and params['layer'] == 'original_image' and 'task' not in params, params
+    expect(page.locator('#view-title')).to_be_focused()
+
+
 @pytest.mark.parametrize('width,height', [(1280, 800), (1440, 900), (390, 844)])
 def test_page_opinion_editor_stays_with_artwork_before_trial_form(workbench_page, width, height):
     from playwright.sync_api import expect
