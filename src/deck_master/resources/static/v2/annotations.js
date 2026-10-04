@@ -153,7 +153,9 @@ export class Annotations {
     // An unchanged submission is not a new opinion: keep the save disabled and say
     // so, instead of appending a duplicate record for text the user already saved.
     const unchanged = this.savedSubmission !== null && this.savedSubmission === this.submissionKey();
-    this.saveButton.disabled = Boolean(blocked || this.mode === 'read' || unchanged || !this.bodyField.input.value.trim());
+    // An empty body keeps the button pressable: the click explains what is
+    // missing instead of leaving a dead control with no visible reason.
+    this.saveButton.disabled = Boolean(blocked || this.mode === 'read' || unchanged);
     this.planButton.disabled = Boolean(blocked || !this.selected.size);
     this.newButton.disabled = Boolean(!this.editor || this.editor.readonly);
     this.copyNoteButton.disabled = Boolean(!this.editor || this.editor.readonly || !this.editor.input.value.trim());
@@ -188,7 +190,7 @@ export class Annotations {
   }
   setMode(mode) {
     this.mode = mode; this.drag = null;
-    this.modeHint.textContent = mode === 'read' ? '阅读模式不产生标注。'
+    this.modeHint.textContent = mode === 'read' ? '阅读模式不产生标注，保存意见也保持停用；选「整页意见」或区域模式后即可保存。'
       : mode === 'rect' ? '拖动框选；Esc 取消并返回阅读。'
       : mode === 'point' ? '点击放置标注点；Esc 移除并返回阅读。'
       : mode === 'text' ? '在原文中选择文本；Esc 移除并返回阅读。'

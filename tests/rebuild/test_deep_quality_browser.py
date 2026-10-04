@@ -114,7 +114,11 @@ def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
     # refuses to save until the user writes or explicitly copies something.
     expect(body).to_have_value('')
     page.get_by_role('button',name='整页意见',exact=True).click()
-    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_disabled()
+    # An empty body is refused with a Chinese reason on click, not with a dead
+    # button that explains nothing.
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.annotations-panel .field-error[role=status]')).to_contain_text('请填写意见正文')
     assert page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']==[]
     page.get_by_role('button',name='从私人笔记复制',exact=True).click()
     expect(body).to_have_value('这是我自己的备忘，不是给制作的意见。')
@@ -307,7 +311,7 @@ def test_many_opinions_do_not_push_the_artwork_out_of_view(workbench):
     goto()
     image=page.locator('.page-reading canvas:visible').first
     image.wait_for()
-    assert page.locator('.saved-opinion').count()==30
+    expect(page.locator('.saved-opinion')).to_have_count(30)
     artwork=image.bounding_box()
     # A long opinion list may scroll, but it must not resize or push the artwork.
     assert artwork['y']>=0 and artwork['y']+artwork['height']<=900, artwork
@@ -338,6 +342,17 @@ def test_delivery_gaps_name_rules_and_keep_unknown_reasons_blocked(workbench):
     expect(gaps.get_by_role('button',name='定位此页',exact=True)).to_have_count(1)
     assert gaps.get_by_role('button',name='查看任务与交付',exact=True).count()==2
     assert page.locator('.export-result .download-link').count()==0
+
+
+def test_candidate_batch_names_the_page_and_layer(workbench):
+    from test_candidates import dispatch as dispatch_candidate, start as start_candidate, accept as accept_candidate
+    page,ctx,store,url,goto,_=workbench
+    task=dispatch_candidate(store,'p01',layer='svg'); start_candidate(store,task); accept_candidate(store,task)
+    goto('runs')
+    row=page.locator('.candidate-batch-row').first
+    expect(row).to_contain_text('第 1 页')
+    expect(row).to_contain_text('SVG')
+    assert 'p01' not in row.inner_text(), 'candidate rows must not lead with an internal page id'
 
 
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):

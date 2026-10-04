@@ -283,6 +283,11 @@ export function candidateDesk(app, data) {
 
 export function candidateBatch(app) {
   if (!app.business || !app.health.ui_capabilities?.includes('candidates.v1')) return el('div');
+  // Candidates are named by the page and layer they belong to, not by an
+  // internal page id or a stage code.
+  const pageLabels = new Map(app.summary.pages.map((page, n) => [page.page_id, `第 ${n + 1} 页 · ${page.title || '未命名页面'}`]));
+  const batchLabel = record => record.page_id
+    ? `${pageLabels.get(record.page_id) || '对应页面'} · ${stageName(record.stage)}` : '整稿正文变更集 · ';
   const root = el('section', {class: 'panel candidate-batch', 'aria-label': '候选集合采用'});
   const rows = el('div', {class: 'candidate-batch-rows stack'}), notice = el('p', {role: 'status'}), impact = el('div', {class: 'stack'});
   const pager = el('div', {class: 'row wrap candidate-pagination'});
@@ -312,7 +317,7 @@ export function candidateBatch(app) {
     rows.replaceChildren(...records.slice(offset, offset + 30).map((row, localIndex) => {
       const index = offset + localIndex;
       const record = row.candidate, id = record.candidate_id;
-      const input = el('input', {type: 'checkbox', checked: selected.has(id), 'aria-label': `选择 ${record.page_id} 候选 ${index + 1}`});
+      const input = el('input', {type: 'checkbox', checked: selected.has(id), 'aria-label': `选择 ${batchLabel(record)}候选 ${index + 1}`});
       input.addEventListener('change', () => {
         serial++; currentPlan = null; impact.replaceChildren();
         if (input.checked) {
@@ -322,7 +327,7 @@ export function candidateBatch(app) {
         persist(); renderRows();
       });
       return el('article', {class: 'candidate-batch-row', 'data-candidate-id': id}, el('label', {}, input,
-        el('span', {}, `${record.page_id || '整稿变更集'} · ${stageName(record.stage)}候选 ${index + 1}`)),
+        el('span', {}, `${batchLabel(record)}候选 ${index + 1}`)),
         el('p', {class: 'muted'}, `${clock(record.created_at)} · ${row.generation_basis.status === 'changed' ? '依据已变化' : canonical(row.adoption_target.current_ref) === canonical(record.result_ref) ? '当前采用' : row.status === 'adopted' ? '曾采用' : row.decision?.state === 'keep_current' ? '已保留当前' : '待决定'}`),
         button('比较这个候选', () => openCandidate(app, record, revision)));
     }));
