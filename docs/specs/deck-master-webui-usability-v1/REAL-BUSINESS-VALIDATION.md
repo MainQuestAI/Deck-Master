@@ -33,6 +33,14 @@
 
 ## 最终 UI 恢复门禁
 
-独立跨端口、全新浏览器恢复测试发现 CR-02：服务器已保留截图分析与配方，但 UI 仅在旧 origin 的 localStorage 保存流程入口。个人笔记能恢复，截图目标、要求与规范入口未恢复。已重新打开恢复验收，修复与最终安装版本的真实业务 UI 复验完成前，不记 REAL-01 全部通过，也不发布 RC。
+独立跨端口、全新浏览器恢复测试发现 CR-02：服务器已保留截图分析与配方，但 UI 仅在旧 origin 的 localStorage 保存流程入口。个人笔记能恢复，截图目标、要求与规范入口未恢复。该反例经修复、主 Agent 独立探针及最终发行包黑盒复验关闭。详情见 [核心复审](CORE-REVIEW.md) 与 [包验收](PACKAGE-VALIDATION.md)。
 
-本报告的实际生产事实不因后续 UI 修复被改写；最终版本的 UI 恢复、目录选择和包验收记录将补入最终验证报告。
+最终产品冻结为 `05b0d875d2cc890966ab10d730bf62d072ae871b`。从其干净源码构建 wheel，在独立安装环境打开上述真实工程的新副本；关闭浏览器和服务，换端口并使用全新浏览器明确恢复项目草稿、选择已有真实 v2 配方。目标、要求、固定参考与已返回规范恢复，试作预览入口可用，未偷偷重派 Host 或采用候选。业务引用未变化，页面异常为 0。历史 SVG / PPT 对照也实际打开，两侧同行；发现的 DR-03 布局问题已修复。30 页画廊首屏本机单样本为 909.55 ms。
+
+恢复后由该 wheel 的 `site-packages` 核心执行正常 `assemble`，重新生成 30 页实际 PPT、LibreOffice 预览和正文回读报告；回读 `pass`。所有 Page、原图和 SVG 输入保持原先两轮真实修改的结果，30 页重新渲染的 PNG 文件摘要与此前已查看的工程版本全部一致。当前 PPT 原件 SHA-256 为 `5b81e817171621301ad4153ea1fad4e539e8b630ada012adc4c802b5641367d7`；第 2 / 3 页仍分别为 33 / 43 个原生 shape、0 个 picture，圆端点和圆连接分别为 5 / 8 组。主 Agent 再次实际打开两页高清渲染图核对正文和图标。
+
+随后通过正常最终审阅任务提交六维 `host_self` 工程自审，`independence_confirmed=false`；最终工程版本 `fea4db5ab2a4428cbdb9225bd9078e7b` 的检查为 `pass`、续跑为 `ready_for_export`、`final-readiness` 为 `ready`，证据层级仍为 engineering。从这一最终版本重新导出 review、working、delivery，各 153 个目录文件与 ZIP 内文件的字节数、SHA-256 均匹配清单。三用途导出 PPT 摘要为 `86b076821a7908ba3414ab4ac646c779d376c375985bdb9bc06ceb65f8eb440d`；导出经过正常隐私处理，因此不把其摘要冒充编译原件摘要。
+
+最终安装版的 macOS 项目选择成功 / 取消由用户实际操作窗口、浏览器记录正常返回响应。取消后原输入保留，两个操作后按钮均恢复可用，项目登记后真正打开工作台。最终历史布局修复仅改变 CSS；最终 wheel 的 `launcher.py`、`local_runtime.py`、`launcher-ui.js` 与刚完成该原生实测的 wheel 逐字节一致，并完成最终入口浏览器回归，没有让用户重复同一原生操作。
+
+对应证据分别保留在仓库外的 `post-history-layout-fix/business-browser/`、`installed-after-final-recovery/` 与 `final-native-entry/`，包含实际请求、编译报告、任务回执、原生对象检查、导出完整性和目录选择响应。原验收稿未改写；用户对新版 UI 和新风格样例的视觉认可仍单独待确认。本报告不以 Host 自审或工程 `ready` 宣布 RC 可以发布。

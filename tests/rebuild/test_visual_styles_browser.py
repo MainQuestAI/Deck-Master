@@ -272,3 +272,41 @@ def test_late_saved_recipe_read_after_leaving_recovery_does_not_acquire_images(f
             expect(page.locator('.visual-style')).to_have_count(0)
             assert errors == []
         finally: browser.close(); server.stop()
+
+
+def test_lost_binary_upload_response_verifies_original_operation_without_duplicate_reference(flow):
+    from playwright.sync_api import sync_playwright, expect
+    from urllib.parse import parse_qs, urlparse
+    server = WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(); page = browser.new_page(viewport={'width':1280,'height':800})
+        uploads = []; verifies = []
+        try:
+            url = server.start(); page.goto(url)
+            page.get_by_role('button', name='风格校准', exact=True).click()
+            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+            def lose_response(route):
+                response = route.fetch()  # The real write completes, only the browser response is lost.
+                uploads.append({'operation_id':parse_qs(urlparse(route.request.url).query)['operation_id'][0],
+                    'response':response.json()})
+                route.abort('failed')
+            page.route('**/api/styles/references/import?*', lose_response)
+            page.on('request', lambda req: verifies.append(req.url) if '/api/operations/' in req.url else None)
+            page.get_by_label('导入参考截图', exact=True).set_input_files(
+                {'name':'lost-response.png','mimeType':'image/png','buffer':image_bytes()})
+            verify = page.get_by_role('button', name='核实原上传', exact=True)
+            expect(verify).to_be_visible()
+            assert len(uploads) == 1
+            doc = flow.store.load_document(); assert len(doc['style_references']) == 1
+            original_ref = doc['style_references'][0]
+            operation_id = uploads[0]['operation_id']
+            verify.click()
+            expect(page.get_by_role('checkbox', name='选用参考截图 1', exact=True)).to_be_checked()
+            expect(page.get_by_label('导入参考截图', exact=True)).to_be_enabled()
+            expect(page.get_by_role('button', name='核实原上传', exact=True)).to_have_count(0)
+            assert len(uploads) == 1  # Verification never issues another upload request.
+            assert any(value.endswith('/api/operations/' + operation_id) for value in verifies)
+            assert flow.store.load_document()['style_references'] == [original_ref]
+            assert uploads[0]['response']['operation_id'] == operation_id
+            assert page.request.get(url + 'api/styles/references').json()['references'][0]['ref'] == original_ref
+        finally: browser.close(); server.stop()
