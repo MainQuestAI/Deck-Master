@@ -1,39 +1,109 @@
 # 验收与证据记录
 
 四层证据分别关闭：合同与工程、浏览器可用性、真实制作与安装、用户认可。
-本轮只交付前两层；后两层保持未完成，不以工程通过替代。
+本轮交付前两层与安装包 checklist；真实制作与用户认可保持未完成。
+
+最终 head：`18442a001c413be96abd2c16040c8fca400b38d8`（分支 `codex/webui-usability-v1`，基线 `7662a11`）。
+证据目录：`/Users/dingcheng/.codex/worktrees/webui-usability-v1/evidence/`。
 
 ## 批次 0 · 基线与环境（2026-10-04）
-
-工作区：worktree `/Users/dingcheng/.codex/worktrees/webui-usability-v1/Deck-Master`，
-分支 `codex/webui-usability-v1`，基线提交 `7662a11`（PR #98 tip）。
-证据目录：`/Users/dingcheng/.codex/worktrees/webui-usability-v1/evidence/batch0/`。
 
 | 层次 | 命令 | 结果 |
 |---|---|---|
 | 静态 | `ruff check src/deck_master tests/rebuild` | All checks passed |
-| 工程（非浏览器非渲染） | `pytest -q tests/rebuild -m "not render and not browser"` | **1222 passed, 143 deselected, 0 failed**（97.99s，`unit-tier-clean.txt`） |
-| 浏览器可用性 | `pytest -q tests/rebuild -m browser --require-browser` | **91 passed, 1274 deselected, 0 failed**（173.73s，`browser-tier.txt`） |
-| 渲染 | `pytest -q tests/rebuild -m render` | **52 passed, 1313 deselected, 0 failed**（137.09s，`render-tier.txt`） |
+| 工程 | `pytest -q tests/rebuild -m "not render and not browser"` | 1222 passed, 0 failed（`batch0/unit-tier-clean.txt`） |
+| 浏览器 | `pytest -q tests/rebuild -m browser --require-browser` | 91 passed, 0 failed（`batch0/browser-tier.txt`） |
+| 渲染 | `pytest -q tests/rebuild -m render` | 52 passed, 0 failed（`batch0/render-tier.txt`） |
 
-环境性修正与说明（详见 COMPAT-NOTES）：
+环境性修正：本机代理使伪造 Host 的负例被拦截（403 变 502），统一以 `no_proxy='*'` 运行；
+Python 3.12 venv 需补装 setuptools 才能构建 wheel/sdist。见 COMPAT-NOTES。
 
-1. 本机 HTTP 代理导致伪造 Host 头的负例被代理拦截（403 变 502），统一以
-   `no_proxy='*'` 前置运行；未改任何代码。修正前 `unit-tier.txt` 的两项失败属此原因。
-2. Python 3.12 venv 默认无 setuptools，`tests/rebuild/test_install.py` 的 wheel/sdist 构建
-   会 `BackendUnavailable`；补装 `setuptools wheel` 后 17 项全部通过
-   （`install-after-setuptools.txt`）。
-3. 基线提交为 `7662a11`，工具版本 Python 3.12.12 / Node v22.22.3 / Playwright 1.63.0。
+## 批次 1 · 连续工作与范围
 
-此后批次以本表为「无未处理新失败」的对照基准。
+| 卡 | 提交 | 关键结果 |
+|---|---|---|
+| C01 连续写意见与恢复 | `1026613` | 自动恢复只接受精确 revision；旧稿进恢复列表并有可见原因；「对当前版本写新意见」复制文字不迁移范围。回归用例在未修复版本上会失败（已验证）。 |
+| C02 正文用途分离与重复保存 | `a20a833` | 意见正文独立于私人笔记；签名未变化时不重复新增；私人文本不进入计划。 |
+| C03 意见范围、列表与历史读取 | `11076ac`、`e90f476` | 「整页意见」保存 page 范围；列表按对象分组；历史 API 接出固定 revision 与过滤参数；刚保存的意见可见。 |
+| C07 路由子项 | `bafb9c2` | 普通工作面切换不再把 page 的 layer 带进交付区；聚焦回到工作面标题。 |
 
-## 批次 1 · （待填）
+门禁：`ruff` 通过、工程层 1224 passed、浏览器层 96 passed（`batch1/`）。
 
-## 批次 2 · （待填）
+## 批次 2 · 读写与比较
 
-## 批次 3 · （待填）
+| 卡 | 提交 | 关键结果 |
+|---|---|---|
+| C04 修改要求与默认 trial | `a202dfc` | 独立「修改要求」区，预填所选意见；空要求与缺原图在发送前中文拦截；计划默认 `mode=trial`，正文层映射协议 `intent=content`。 |
+| C05 首屏与保存行 | `3b1d83a` | 顶部链路压紧，保存行贴近输入；1440×900 与 1280×800 首屏同时可见作品、正文与保存；30 条意见不推走作品。 |
+| C06 候选与比较 | `f9e5453` | 页面候选比较两侧都固定在其自身基准；Esc 按最上层处理（对话框→全屏→比较→离开工作面）；近场入口显示候选与待比较数量。 |
 
-## 批次 4 · （待填）
+门禁：`ruff` 通过、工程层 1225 passed、浏览器层 101 passed（`batch2/`）。
+
+## 批次 3 · 任务与交付
+
+| 卡 | 提交 | 关键结果 |
+|---|---|---|
+| C08 交付原因与恢复 | `ce38256` | 缺项按规则命名并给出真实下一步；未分类原因明示「暂无法自动处理」并保留原始原因与载荷；工具链步骤拒绝冒充网页修复。采用已有 SVG 的前后快照端到端通过（导出成功→采用→正式包拒绝→审阅包仍可用）。 |
+| C07 待办整合 | `18442a0` | 候选集合按「第 N 页 · 标题 · 图层」命名，不再用内部 ID 或阶段代码。 |
+| C05 汇总 U13 | `18442a0` | 禁用动作清单落在 [U13-DISABLED-ACTIONS.md](U13-DISABLED-ACTIONS.md)；修正两处「停用但无原因」。 |
+
+门禁：`ruff` 通过、工程层 1226 passed、浏览器层 106 passed（`batch3/`）。
+
+## 批次 4 · 整体验收
+
+| 层次 | 命令 | 结果 |
+|---|---|---|
+| 静态 | `ruff check` | All checks passed（`batch4/`） |
+| 工程 | `pytest -q tests/rebuild -m "not render and not browser"` | **1226 passed, 0 failed**（95s） |
+| 浏览器 | `pytest -q tests/rebuild -m browser --require-browser` | **106 passed, 0 failed**（187s） |
+| 渲染 | `pytest -q tests/rebuild -m render` | **52 passed, 0 failed**（130s） |
+| 安装包 | 构建 wheel → 全新 venv 安装 → `w12_offline_browser.py --require-installed` | `{"checks": 7, "status": "verified"}` |
+
+三视口证据（`batch4/screenshots/`，含 `manifest.json` 记录 head 与几何）：
+
+| 状态 | 1440×900 | 1280×800 | 390×844 |
+|---|---|---|---|
+| 编辑中 | 作品 447–858 全可见；正文 575–672；保存行 684–729；无横向溢出；画布无内层滚动 | 作品 412–733 全可见；正文与保存行同屏；同上 | 内容自顶部溢出可见（作品在上、正文 242–340、保存行 352–397）；无横向溢出 |
+| 保存后（页面固定原版本） | 页面提示一行 + 全局同步行共占约 105px，作品下移、需小幅滚动 | 同上 | 同移动端布局 |
+
+保存后出现的两处提示都是既有语义：页面说明「当前稿已更新；这里的页、图层与比较双方仍固定。」并提供「查看新的当前版本」，全局行提示「项目有新状态」；计划中的首屏验收针对**编辑中**状态，该状态已满足。
+
+## 九条主流程结果
+
+| 流程 | 结果 | 证据 |
+|---|---|---|
+| 找项目→找页→实际 PPT | 通过（工程+浏览器） | 单页视图、真实 PPT 状态与缺失原因由 C05 呈现；`test_navigation_usability_browser`（三视口）、三视口截图 |
+| 看图→整页/局部意见→保存→找回 | 通过 | 第二条意见可写（C01 用例）；整页保存为 page 范围（C03 用例）；分组列表可找回 |
+| 未提交输入→切页/层→刷新/重开 | 通过（工程+浏览器） | 草稿 CAS/恢复与晚 ACK 用例；恢复不改变默认布局 |
+| 本页/整稿/历史→原版→当前 | 通过 | 分组、跨页不混入、旧快照不显示未来讨论（C03 用例） |
+| 候选→比较→实际 PPT→采用 | 通过（fixture 层） | 两侧固定基准（U11 用例）；采用影响预览与显式采用沿用既有；真实 Host 未执行 |
+| 两次历史→固定比较→返回 | 通过 | 比较双方固定、Esc 结束并回焦点（C06 用例） |
+| 风格参考→试作目标→要求→等待 | 未完整覆盖 | 已有选中态与试作面板沿用既有；真实分析与单页试作属真实 Host 层 |
+| 交给制作工具→接手→返回→采用→检查 | 未执行（真实层） | 本轮只读既有状态；无真实 Host 调用 |
+| 交付→阻塞→处理→重新检查→导出 | 通过（工程+夹具） | 采用前后快照端到端；`page_limit_violation` 与未知 reason 夹具；审阅包仍可用 |
+
+## 缺陷关闭映射
+
+| 编号 | 问题 | 关闭提交 |
+|---|---|---|
+| F01 / U02 | 保存后旧草稿锁住新版本 | `1026613` |
+| F04 / U01 | 私人、意见与制作要求共享正文 | `a20a833` |
+| U06 | 已保存内容可误点重复追加 | `a20a833` |
+| F02 / U07 | 「整页」实际保存当前图层范围 | `e90f476` |
+| F03 / U03 | 跨页、整稿、历史意见混列 | `e90f476` |
+| F05 | 选已有意见却发送空 instruction | `a202dfc` |
+| U12 | 普通意见默认 auto 的生效差异 | `a202dfc`（默认 trial，正文层协议映射） |
+| F07 / U04 | 作品/保存被挤出首屏，长文抢滚动 | `3b1d83a`（编辑中状态已满足） |
+| F06 / U08 | 提示词原文主导普通工作动线 | 部分：技术证据保持在折叠的技术路径；未做提示词层的结构化重排 |
+| F08 | 候选入口隐蔽，与新试作混合 | `f9e5453`（近场计数） |
+| U10 | 历史比较空间不足、退出失焦 | `f9e5453`（Esc 结束比较并回焦点） |
+| F09 | 全屏 Esc 跳过比较返回画廊 | `f9e5453`（守卫已加，无头验证不跳转；可见退出需 headed 复核） |
+| U11 | 历史近场候选未传固定 revision | `f9e5453`（两侧固定，含回归用例） |
+| U05 | 普通任务入口误跳交付区域 | `bafb9c2` |
+| F10 / U09 | 全任务流水、整稿长标题、内部 ID 难扫描 | `18442a0`（候选行按页与图层命名）；任务行沿用第 N 页+标题 |
+| U13 | 禁用原因无出口；恢复 mount 可能退化 | `1026613`、`18442a0` + U13 清单；恢复 mount 未复现退化 |
+| U15 | 采用后交付拒绝却缺处理路径 | `ce38256` |
+| U14 | 分组标题、来源重复说明 | 部分：`.page-workbench .notice` 压成一行；其余留后续 |
 
 ## 本层明确未执行
 
@@ -41,5 +111,7 @@
 |---|---|---|
 | 真实 Host 制作（意见→trial→候选→采用→下游重建→检查→导出） | **未执行** | 需独立工程、实际工具与执行授权 |
 | 独立 30 页副本两轮有边界修改 | **未执行** | 同上 |
-| 安装包真实运行与真实 HOME 安装 | **未执行**（仅做 checklist 级 wheel 复验） | 不安装到 HOME |
+| 安装包真实运行与真实 HOME 安装 | 部分：wheel 隔离安装 + 离线浏览器门禁通过；**未装 HOME** | 不替换现有服务 |
 | 用户视觉认可与连续操作认可 | **未执行** | 工程与浏览器证据不能替代 |
+| F09 全屏 Esc 的 headed 复核 | **未执行** | 无头环境无法观测浏览器原生退出 |
+| F06/U08 提示词层结构化重排 | **未执行** | 本轮只保留技术路径折叠，未改提示词层的阅读结构 |

@@ -108,6 +108,9 @@ textarea{font-size:14px;line-height:1.7}
 .page-workbench .chain .chain-number{display:inline;margin:0 6px 0 0}
 .page-workbench .chain .chain-state{display:inline;margin:0 0 0 6px}
 .page-workbench .toolbar{margin:12px 0}
+/* A version-change notice stays on one line so it costs as little artwork as
+   the statement needs. */
+.page-workbench .notice{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px}
 .page-workbench .change-requirement{margin-top:8px}
 .trial-counts{margin-left:8px;font-weight:400}
 
