@@ -181,6 +181,37 @@ def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
     expect(other.get_by_label('选入意见 1')).to_be_disabled()
 
 
+def test_requirement_is_explicit_and_plans_default_to_trial(workbench):
+    import json
+    page,ctx,store,url,goto,_=workbench;goto()
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    page.get_by_role('textbox',name='意见正文',exact=True).fill('标题要更短')
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    # Selecting an opinion opens its own requirement area, filled from the opinion
+    # text instead of reusing a hidden drafting box.
+    page.get_by_label('选入意见 1').check()
+    requirement=page.get_by_label('修改要求')
+    expect(requirement).to_be_visible(); expect(requirement).to_have_value('标题要更短')
+    expect(page.locator('.change-requirement')).to_contain_text('本页整页')
+    expect(page.locator('.change-requirement')).to_contain_text('候选')
+    # An empty requirement is refused in Chinese before anything is sent.
+    requirement.fill('')
+    page.get_by_role('button',name='预览修改影响',exact=True).click()
+    expect(page.locator('.annotations-panel .field-error[role=status]')).to_contain_text('请先写明修改要求')
+    assert page.request.get(url.rstrip('/')+'/api/changes').json()['changes']==[]
+    # A written requirement previews as a trial: candidates first, adoption later.
+    requirement.fill('把标题缩短到 12 个字，保留正文与图标。')
+    with page.expect_request('**/api/changes/plan') as captured:
+        page.get_by_role('button',name='预览修改影响',exact=True).click()
+    sent=json.loads(captured.value.post_data)['input']
+    assert sent['mode']=='trial' and sent['instruction']=='把标题缩短到 12 个字，保留正文与图标。'
+    expect(page.locator('.change-plan-preview')).to_contain_text('结果先作为候选返回')
+    expect(page.locator('.change-plan-preview')).to_contain_text('未列出的图层与已有记录保持不变')
+    expect(page.locator('.change-plan-preview')).to_contain_text('将修改')
+    assert page.request.get(url.rstrip('/')+'/api/changes').json()['changes']==[]
+
+
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
     page,ctx,store,url,goto,_=workbench
     confirm(store,input_for(store));before=store.load_document()['tasks'];goto()
@@ -232,11 +263,12 @@ def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):
     page.get_by_role('button',name='整页意见',exact=True).click()
     text='修正图标间距，保持其它对象。';page.get_by_role('textbox',name='意见正文',exact=True).fill(text)
     page.get_by_role('button',name='保存意见',exact=True).click();page.get_by_label('选入意见 1').check()
+    page.get_by_label('修改要求').fill(text)
     doc=store.load_document();new=copy.deepcopy(doc);art=store.read_object_json(new['pages'][0]['svg']);art['limitations']=['concurrent edit']
     new['pages'][0]['svg']=store.put_json_object(art)
     new=bump_revision(new,{'operation_id':str(uuid.uuid4()),'kind':'artifact_adoption','description':'synthetic concurrent writer','read_set':[]})
     store.commit_change(base_revision=doc['revision_id'],document=new,operation_id=new['change']['operation_id'])
-    with page.expect_response('**/api/changes/plan') as response:page.get_by_role('button',name='加入修改计划',exact=True).click()
+    with page.expect_response('**/api/changes/plan') as response:page.get_by_role('button',name='预览修改影响',exact=True).click()
     assert response.value.status==409
     expect(page.get_by_role('dialog')).to_be_visible()
     expect(page.get_by_label('未提交的本机草稿')).to_have_value(text)

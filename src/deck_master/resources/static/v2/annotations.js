@@ -38,7 +38,16 @@ export class Annotations {
     this.saveButton = button('保存意见', () => this.save(), true);
     this.newButton = button('写新意见', () => this.newOpinion());
     this.copyNoteButton = button('从私人笔记复制', () => this.copyNote());
-    this.planButton = button('加入修改计划', () => this.plan());
+    this.planButton = button('预览修改影响', () => this.plan());
+    this.requirementField = field('修改要求', el('textarea', {id: 'change-requirement', rows: 3, 'aria-label': '修改要求',
+      placeholder: '这段要求会成为制作依据。默认填入所选意见原文，可继续编辑或补充说明。'}));
+    this.requirementField.input.addEventListener('input', () => { this.requirementTouched = true; this.update(); });
+    this.requirementRefs = el('div', {class: 'requirement-refs stack'});
+    this.requirementTarget = el('p', {class: 'muted'});
+    this.requirementNote = el('p', {class: 'muted field-help'});
+    this.requirementSection = el('section', {class: 'change-requirement stack', hidden: true},
+      el('h3', {}, '修改要求'), this.requirementTarget, this.requirementRefs, this.requirementField.node,
+      this.planButton, this.requirementNote);
     this.scopeLabel = el('label', {}, '意见作用范围 ', this.scope);
     this.bodyField = field('意见正文', el('textarea', {id: 'opinion-body', rows: 3, 'aria-label': '意见正文',
       placeholder: '写下这条意见要改什么。输入会自动保留；保存后进入正式记录。'}));
@@ -55,7 +64,8 @@ export class Annotations {
         this.geometry, this.regionList, this.noteEntry,
         el('p', {class: 'muted field-help'}, '保存意见不启动制作；选入已保存意见后再预览修改计划。'),
         this.error, this.actions,
-        el('h3', {}, '已保存意见'), this.savedList, this.planButton, this.preview));
+        el('h3', {}, '已保存意见'), this.savedList,
+        this.requirementSection, this.preview));
     this.scope.addEventListener('change', () => { if (this.scope.value !== 'artifact') this.setMode('whole'); this.changed(); });
     this.chapter.addEventListener('change', () => this.changed()); this.intent.input.addEventListener('input', () => this.changed());
     this.textListener = event => {
@@ -113,7 +123,29 @@ export class Annotations {
   // What this panel would send right now. Identical content, scope and basis never
   // create a second record; a different scope or region set is a new opinion.
   submissionKey() { return canonical({body: this.bodyField.input.value, regions: this.regions, scope: this.scope.value, chapter: this.chapter.value, intent: this.intent.input.value, ref: this.ref}); }
-  signature() { return canonical({body: this.bodyField.input.value, regions: this.regions, scope: this.scope.value, chapter: this.chapter.value, intent: this.intent.input.value, selected: [...this.selected.keys()], ref: this.ref}); }
+  // The requirement is its own editable text, filled from the selected opinions.
+  // It replaces the old flow where the plan silently reused whatever happened to
+  // sit in the drafting box.
+  syncRequirement() {
+    const rows = [...this.selected.values()];
+    this.requirementSection.hidden = !rows.length;
+    if (!rows.length) { this.planRecord = null; this.requirementTouched = false; this.preview.replaceChildren(); return; }
+    this.requirementRefs.replaceChildren(...rows.map(row => el('p', {class: 'requirement-ref'},
+      `${this.scopeName(row.annotation)}｜${row.annotation.body}`)));
+    this.requirementTarget.textContent = `目标：${this.targetName()} · 底稿 ${version(this.data.revision_id)}`;
+    if (!this.requirementTouched) this.requirementField.input.value = rows.map(row => row.annotation.body).join('\n\n');
+    this.requirementNote.textContent = this.layer === 'content'
+      ? '正文修改按协议的 content 类型记录；你的意见目的仍保留在意见记录里。'
+      : '结果会先作为候选返回；比较并明确采用后才会替换当前作品。';
+  }
+  targetName() {
+    const target = {project: '整稿（项目范围）', chapter: '所选章节', page: '本页整页', artifact: `本页 ${layers[this.layer]}`}[this.scope.value] || this.scope.value;
+    return target + (this.regions.length ? ` · ${this.regions.length} 个区域` : '');
+  }
+  // The protocol marks a page-slot change as `content`; the user's own purpose
+  // stays on the opinion records instead of being overwritten here.
+  protocolIntent() { return this.layer === 'content' ? 'content' : (this.intent.input.value.trim() || '修改建议'); }
+  signature() { return canonical({body: this.bodyField.input.value, requirement: this.requirementField.input.value, regions: this.regions, scope: this.scope.value, chapter: this.chapter.value, intent: this.intent.input.value, selected: [...this.selected.keys()], ref: this.ref}); }
   update() {
     const blocked = !this.editor || this.editor.readonly || !this.basisMatches() || ['loading', 'unknown', 'conflict'].includes(this.editor.status) || this.app.business.entries.size || this.app.business.loadWarning;
     // An unchanged submission is not a new opinion: keep the save disabled and say
@@ -265,7 +297,7 @@ export class Annotations {
   savedCard(record, group, index) {
     const note = record.annotation, isNew = this.newRefs.has(record.ref.sha256);
     const check = el('input', {type: 'checkbox', checked: this.selected.has(record.ref.sha256), 'aria-label': `选入意见 ${index}`, disabled: !group.selectable});
-    check.addEventListener('change', () => { if (check.checked) this.selected.set(record.ref.sha256, record); else this.selected.delete(record.ref.sha256); this.update(); });
+    check.addEventListener('change', () => { if (check.checked) this.selected.set(record.ref.sha256, record); else this.selected.delete(record.ref.sha256); this.syncRequirement(); this.update(); });
     const article = el('article', {class: `saved-opinion${isNew ? ' is-new' : ''}`},
       el('label', {}, check, `意见 ${index} · ${note.intent}`),
       isNew && el('span', {class: 'status'}, '本次新增'),
@@ -297,6 +329,7 @@ export class Annotations {
       }
       if (!this.records.length) nodes.push(el('p', {class: 'muted'}, '尚无已保存意见。'));
       this.savedList.replaceChildren(...nodes);
+      this.syncRequirement();
       this.update();
     } catch (error) { if (!this.disposed) this.error.textContent = readableError(error); }
   }
@@ -347,20 +380,27 @@ export class Annotations {
     delete this.error.dataset.success;
     try {
       await this.app.business.available();
-      if (!this.selected.size) throw new Error('先选入至少一条已保存意见。');
+      if (!this.selected.size) throw new Error('先在上方选入至少一条已保存意见。');
       if (!this.basisMatches()) throw new Error('先回到草稿绑定的原版本，再预览影响。');
-      if (!this.bodyField.input.value.trim()) throw new Error('请先写明这条修改要求，再预览影响。');
+      const instruction = this.requirementField.input.value.trim();
+      if (!instruction) throw new Error('请先写明修改要求，再预览影响。');
+      if (['svg', 'ppt'].includes(this.layer) && this.data.stages.blueprint.existence !== 'recorded')
+        throw new Error('这一页还没有可用的原图；SVG 修复与重建需要先有当前原图。请先生成或更新原图，再计划修改。');
       const signature = this.signature(), current = await get('/api/view/summary');
       const input = {schema_version: 'change_intent.v1', project_id: this.app.info.project_id, base_revision: current.revision_id,
         targets: [{page_id: this.data.page_id, page_ref: this.data.stages.content.ref, layer: this.layer, artifact_ref: this.ref}],
-        intent: this.intent.input.value, instruction: this.bodyField.input.value, annotation_refs: [...this.selected.values()].map(r => r.ref),
+        intent: this.protocolIntent(), instruction, annotation_refs: [...this.selected.values()].map(r => r.ref),
+        mode: 'trial',
         max_calls: ['original_image', 'prepared_prompt', 'submitted_prompt'].includes(this.layer) ? 1 : 0};
       const response = await post('/api/changes/plan', {input}); if (this.disposed || signature !== this.signature()) return;
       this.planRecord = response; this.planSignature = signature;
       const names = {page: '逐页稿', blueprint: '原图', svg: '可编辑 SVG', svg_preview: 'SVG 预览', ppt_preview: 'PPT 逐页预览', deck_outputs: '整稿交付文件', quality_applicability: '质量检查依据'};
-      this.preview.replaceChildren(el('h3', {}, '修改影响预览'), el('p', {}, `最多 ${response.plan.max_calls} 次图像调用 · ${version(response.plan.base_revision)} · 尚未执行`),
+      this.preview.replaceChildren(el('h3', {}, '修改影响预览'),
+        el('p', {}, `最多 ${response.plan.max_calls} 次图像调用 · ${version(response.plan.base_revision)} · 尚未执行`),
+        el('p', {}, '结果先作为候选返回；比较并明确采用后才会替换当前作品，未采用的候选不改动作品。'),
         ...response.plan.actions.map(a => el('section', {}, el('p', {}, `${this.data.page.customer_visible.title} · ${layers[a.layer]}`),
           el('p', {}, `将修改：${a.write_slots.map(s => names[s] || s).join(' / ')}；后续需更新：${a.downstream.map(s => names[s] || s).join(' / ')}`),
+          el('p', {class: 'muted'}, '未列出的图层与已有记录保持不变。'),
           el('details', {}, el('summary', {}, '核对固定基准'), el('code', {}, a.page_ref.sha256)))),
         button('确认计划并创建交接', () => this.commit(), true)); this.error.textContent = '';
     } catch (error) {
