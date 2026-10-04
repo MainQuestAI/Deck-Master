@@ -1,3 +1,4 @@
+import {historyLabel} from './history-labels.js';
 import {get, post, revisionQuery, readableError} from './api.js';
 import {el, button, modal, version} from './dom.js';
 import {DraftEditor} from './drafts.js';
@@ -119,15 +120,49 @@ export function deliveryDesk(app) {
 
 export function historyDesk(app, history) {
   const revision = app.route.revision;
-  const selected = el('select', {'aria-label': '阅读历史版本'}, history.revisions.map(item => el('option', {value: item.revision_id},
-    `${version(item.revision_id)} · ${item.page_count} 页${item.revision_id === history.current ? ' · 当前' : ''}`)));
-  selected.value = revision;
+  const pageLabels = new Map(app.summary.pages.map((page, index) => [page.page_id, `第 ${index + 1} 页`]));
+  const selected = el('select', {'aria-label': '阅读历史版本'});
+  const allRecords = el('input', {type: 'checkbox', 'aria-label': '显示全部历史记录'});
+  const notice = el('p', {role: 'status'});
+  let cursor = history.pagination?.next_cursor || null, disposed = false, serial = 0, busy = false, showingAll = false;
+  const rows = new Map();
   const restore = button('预览恢复此版本', preview, false, {disabled: !app.historical || Boolean(app.info.sample?.readonly)});
+  const more = button('更早的修改', () => load(false), false, {disabled: !cursor});
+  function append(records, reset = false) {
+    const chosen = reset ? revision : selected.value;
+    if (reset) rows.clear();
+    records.forEach(item => rows.set(item.revision_id, item));
+    const options = [...rows.values()].map(item => el('option', {value: item.revision_id}, historyLabel(item, pageLabels) + (item.revision_id === history.current ? ' · 当前阅读版本' : '')));
+    if (!rows.has(revision)) options.unshift(el('option', {value: revision}, app.historical ? '正在阅读的历史版本' : '当前项目版本'));
+    selected.replaceChildren(...options); selected.value = chosen;
+    if (!selected.value) selected.value = revision;
+    restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly);
+  }
   selected.addEventListener('change', () => { restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly); });
-  const node = panel('版本记录', el('div', {class: 'row wrap'}, selected,
-    button('读取所选版本', () => app.go({revision: selected.value, task_id: null})),
+  allRecords.addEventListener('change', () => load(true));
+  async function load(reset) {
+    if (busy || disposed) { allRecords.checked = showingAll; return; }
+    const requestedAll = allRecords.checked, token = ++serial;
+    const query = new URLSearchParams({revision, limit: 20, related_only: requestedAll ? '0' : '1'});
+    if (!reset && cursor) query.set('cursor', cursor);
+    busy = true; more.disabled = true; allRecords.disabled = true;
+    notice.textContent = '正在读取版本记录；已有选择与比较保持固定。';
+    try {
+      const value = await get('/api/history?' + query);
+      if (disposed || token !== serial) return;
+      append(value.revisions, reset); cursor = value.pagination?.next_cursor || null; showingAll = requestedAll;
+      notice.textContent = showingAll ? '已显示全部类型的记录；任务和个人状态记录也会列出。' : '优先显示正文、产物和页面顺序的修改。';
+    } catch (error) {
+      if (!disposed && token === serial) { allRecords.checked = showingAll; notice.textContent = readableError(error) + ' 已加载的版本仍保留。'; }
+    } finally { if (!disposed && token === serial) { busy = false; more.disabled = !cursor; allRecords.disabled = false; } }
+  }
+  append(history.revisions, true);
+  const node = panel('版本记录', el('div', {class: 'row wrap history-reading-controls'}, selected,
+    button('读取所选版本', () => app.go({revision: selected.value, task_id: null})), more,
     app.summary.pages.length > 0 && button('逐页查看与固定比较', () => app.go({surface: 'page', page_id: app.summary.pages[0].page_id, layer: 'content', revision})), restore),
+    el('label', {class: 'inline-control'}, allRecords, '全部记录（包括执行与个人状态）'), notice,
     el('p', {class: 'muted'}, '先读取历史版本并查看差异，再预览恢复影响。恢复会创建新版本，当前执行与调用记录不会回滚。'));
+  app.disposables.push(() => { disposed = true; serial++; });
   async function preview() {
     restore.disabled = true;
     try {

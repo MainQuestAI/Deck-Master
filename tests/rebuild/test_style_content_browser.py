@@ -44,9 +44,12 @@ def style_content_browser(tmp_path):
             server.stop()
 
 
-def open_style(page):
+def open_style(page, with_targets=False):
     page.get_by_role('button', name='风格校准', exact=True).click()
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
+    if with_targets:
+        page.get_by_text('其它目标页', exact=True).click()
+        page.get_by_text('查找其它参考页', exact=True).click()
 
 
 def toggle_phase(page, number):
@@ -70,7 +73,7 @@ def test_thirty_page_mobile_search_counts_missing_images_and_release(style_conte
     from playwright.sync_api import expect
     page, server, path, store = style_content_browser
     before = store.read_current()
-    open_style(page)
+    open_style(page, with_targets=True)
     page.set_viewport_size({'width':390,'height':844})
     target = page.get_by_role('searchbox', name='搜索风格目标')
     expect(page.locator('.style-phase').first).to_have_attribute('open', '')
@@ -102,13 +105,14 @@ def test_empty_requirements_dimensions_refresh_and_fixed_reference(style_content
     from playwright.sync_api import expect
     page, server, path, store = style_content_browser
     before = store.read_current()
-    open_style(page)
+    open_style(page, with_targets=True)
     page.get_by_role('combobox', name='风格参考原图').select_option('p01')
     page.get_by_role('checkbox', name='风格目标 第 2 页 · 材料如何成为内容', exact=True).check()
     page.get_by_role('textbox', name='风格短要求', exact=True).fill('')
     page.get_by_text('高级：借用维度、原文选段与建议', exact=True).click()
     page.get_by_role('checkbox', name='借用文字层级', exact=True).uncheck()
     assert not page.get_by_role('checkbox', name='借用构图', exact=True).is_checked()
+    page.get_by_text('个人草稿与恢复', exact=True).click()
     page.get_by_role('button', name='保存个人草稿', exact=True).click()
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
     page.reload()
@@ -123,7 +127,7 @@ def test_empty_requirements_dimensions_refresh_and_fixed_reference(style_content
 def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_content_browser):
     from playwright.sync_api import expect
     page, server, path, store = style_content_browser
-    open_style(page)
+    open_style(page, with_targets=True)
     page.get_by_role('combobox', name='风格参考原图').select_option('p01')
     page.get_by_role('checkbox', name='风格目标 第 2 页 · 材料如何成为内容', exact=True).check()
     page.get_by_role('button', name='检查风格要求', exact=True).click()
@@ -148,7 +152,7 @@ def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_co
     expect(page.get_by_role('button', name='保存并交接风格试作', exact=True, include_hidden=True)).to_be_disabled()
     toggle_phase(page, 1)
     expect(page.get_by_role('textbox', name='风格短要求')).to_have_value('保留事实，新的明确要求。')
-    expect(page.locator('.style-phase').first).to_contain_text('项目已有新版本')
+    expect(page.locator('.style-phase').first).to_contain_text('当前项目已有更新')
     assert store.load_document()['tasks'] == before_tasks
 
 

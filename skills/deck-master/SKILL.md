@@ -116,3 +116,5 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 ## 图标精细还原
 
 用户提出图标局部修复、标准替换或跨页复用时，读取 [图标质量流程](references/icon-quality.md)。使用固定对象范围、零生图调用 SVG 候选及真实 PPT 检查；采用仍须对应用户选择。
+
+用户导入外部参考截图或 task kind=style_analyze 时，读取 [视觉规范分析](references/visual-reference.md)。不把项目内风格借用冒充截图蒸馏。

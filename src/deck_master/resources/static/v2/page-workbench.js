@@ -1,3 +1,4 @@
+import {historyLabel} from './history-labels.js';
 import {sourceReader, pageContentEditor} from './content-edit.js';
 import {get, revisionQuery, readableError} from './api.js';
 import {el, button, heading, empty, version, modal} from './dom.js';
@@ -28,7 +29,7 @@ const chainStages = [
 function chainState(stage) {
   if (!stage || stage.existence === 'not_generated') return '尚未生成';
   if (stage.existence !== 'recorded') return '暂不可读';
-  if (stage.applicability?.status === 'basis_changed') return '旧版 · 待更新';
+  if (stage.applicability?.status === 'basis_changed') return '制作依据已变化';
   return stage.applicability?.status === 'current' ? '可查看' : '适用性待核实';
 }
 function bulletItems(items) {
@@ -108,7 +109,7 @@ export function pageDetail(app, data) {
       {class: 'quiet', disabled: index <= 0, 'aria-label': `上一页，${stepPage(-1) ? pageTitle(stepPage(-1), index - 1) : '没有上一页'}`}),
     button('下一页 →', () => stepPage(1) && app.go({page_id: stepPage(1).page_id}), false,
       {class: 'quiet', disabled: index >= app.summary.pages.length - 1, 'aria-label': `下一页，${stepPage(1) ? pageTitle(stepPage(1), index + 1) : '没有下一页'}`}));
-  const node = el('div', {class: 'page-workbench'}, heading(pageTitle(page, index), `${layers[layer]} · ${version(fixed)} · 固定阅读基准`, pager));
+  const node = el('div', {class: 'page-workbench'}, heading(pageTitle(page, index), `${layers[layer]} · ${app.historical ? '历史稿' : '当前稿'}`, pager));
   if (!app.health.ui_capabilities?.includes('page_detail.v1')) return el('div', {}, node, empty('核心需要升级', '单页证据与文本选段需要新版核心。此页面没有写入草稿。'));
   const chain = el('nav', {class: 'chain', 'aria-label': '本页生成链路'});
   const chainStates = [
@@ -175,7 +176,14 @@ export function pageDetail(app, data) {
     const samePageBasis = app.latest.pages.find(p => p.page_id === data.page_id)?.stages.content.ref?.sha256 === data.stages.content.ref?.sha256;
     app.editor = new DraftEditor(info, {scope: 'page', page_id: data.page_id, layer}, fixed, ref,
       {readonly: app.business && samePageBasis ? Boolean(app.info.sample?.readonly) : app.readonly});
-    draftSlot.replaceChildren(app.editor.mount());
+    const draftView = app.editor.mount();
+    app.editor.input.rows = 2;
+    const recovery = detail('恢复、下载与版本详情', app.editor.basisNode);
+    const download = draftView.querySelector('.panel-body > .row button:last-child');
+    if (download) recovery.append(download);
+    draftView.querySelectorAll('.recovery-import, .field-help, .draft-restore').forEach(control => recovery.append(control));
+    draftView.querySelector('.panel-body').append(recovery);
+    draftSlot.replaceChildren(draftView);
     annotations?.bind(app.editor, ref);
     if (text !== null) draftSlot.append(button('比较原文与草稿', () => {
       if (app.editor?.draft.base_ref?.sha256 !== ref?.sha256) { modal('草稿依据不同', el('p', {}, '恢复的草稿属于另一份原文，请先选择对应基准。')); return; }
@@ -189,14 +197,19 @@ export function pageDetail(app, data) {
   const comparison = el('section', {class: 'page-reading stack compare-side', 'aria-label': '比较版本内容', hidden: true});
   const reading = el('div', {class: 'fixed-page-pair'}, original, comparison);
   if (layer === 'original_image' || layer === 'prepared_prompt' || layer === 'submitted_prompt') {
-    const basis = generationBasis(app, data); basis.open = layer === 'original_image'; aside.append(basis);
+    const basis = generationBasis(app, data); basis.open = false; aside.append(basis);
   }
-  if (layer === 'svg' || layer === 'ppt') aside.append(productionView(data));
+  const production = layer === 'svg' || layer === 'ppt' ? detail('可编辑性与制作检查', productionView(data)) : null;
   if (app.business && app.health.ui_capabilities?.includes('annotations.v1') && layer !== 'source') {
     annotations = new Annotations(app, data, layer, original, draftSlot);
     if (app.editor) annotations.bind(app.editor, draftRef);
+    const settings = detail('意见范围与版本详情', annotations.scope.closest('label'), annotations.chapter, annotations.intent.node, annotations.basis);
+    annotations.tools.after(draftSlot);
+    draftSlot.after(annotations.saveButton);
+    annotations.modeHint.after(settings);
     aside.append(annotations.node); app.disposables.push(() => annotations.dispose());
   } else aside.append(draftSlot);
+  if (production) aside.append(production);
   const layout = el('div', {class: 'page-columns'}, reading, aside);
   const compareControls = el('div', {class: 'fixed-compare-controls stack', hidden: true});
   const error = el('p', {class: 'field-error', role: 'status'});
@@ -234,13 +247,33 @@ export function pageDetail(app, data) {
   });
   compareControls.append(el('p', {class: 'muted'}, `同一页、同一层；左侧固定 ${version(fixed)}。窄窗口使用切换阅读。`),
     el('div', {class: 'row'}, revisionSelect, compareButton, mode, toggle), error);
+  let historyCursor = null, historySerial = 0, historyBusy = false, historyLoaded = false, historyShowingAll = false;
+  const allHistory = el('input', {type: 'checkbox', 'aria-label': '显示这页全部历史记录'});
+  const moreHistory = button('更早的修改', () => loadHistory(false), false, {class: 'history-more', disabled: true});
+  const pageLabels = new Map(app.summary.pages.map((item, n) => [item.page_id, `第 ${n + 1} 页`]));
+  async function loadHistory(reset = true) {
+    if (historyBusy || disposed) return;
+    const serial = ++historySerial, all = allHistory.checked;
+    const query = new URLSearchParams({revision: fixed, page_id: data.page_id, limit: 20, related_only: all ? '0' : '1'});
+    if (!reset && historyCursor) query.set('cursor', historyCursor);
+    historyBusy = true; moreHistory.disabled = true; allHistory.disabled = true;
+    try {
+      const value = await get('/api/history?' + query);
+      if (disposed || serial !== historySerial) return;
+      if (reset) revisionSelect.replaceChildren(el('option', {value: ''}, '选择这页的修改'));
+      const existing = new Set([...revisionSelect.options].map(option => option.value));
+      value.revisions.filter(row => row.revision_id !== fixed && !existing.has(row.revision_id)).forEach(row => revisionSelect.append(el('option', {value: row.revision_id}, historyLabel(row, pageLabels))));
+      historyCursor = value.pagination?.next_cursor || null; historyLoaded = true; historyShowingAll = all;
+      error.textContent = revisionSelect.options.length === 1 ? (historyCursor ? '当前范围尚无这页的其它修改，可继续加载更早记录。' : '此范围没有这页的其它修改。') : '';
+    } catch (failure) { if (!disposed && serial === historySerial) { allHistory.checked = historyShowingAll; error.textContent = readableError(failure) + ' 已固定的比较仍保留。'; } }
+    finally { if (!disposed && serial === historySerial) { historyBusy = false; moreHistory.disabled = !historyCursor; allHistory.disabled = false; } }
+  }
+  allHistory.addEventListener('change', () => loadHistory(true));
+  compareControls.append(el('div', {class: 'row wrap'}, moreHistory, el('label', {class: 'inline-control'}, allHistory, '全部记录')));
   const openCompare = button('比较此页版本', async () => {
     compareControls.hidden = false;
-    try {
-      const history = await get('/api/history'); if (disposed) return;
-      revisionSelect.replaceChildren(el('option', {value: ''}, '选择已提交版本'), ...history.revisions.filter(r => r.revision_id !== fixed).map(r => el('option', {value: r.revision_id}, version(r.revision_id))));
-      if (revisionSelect.options.length === 1) error.textContent = '还没有其它已提交版本。';
-    } catch (failure) { error.textContent = readableError(failure); }
+    if (!historyLoaded) await loadHistory(true);
+    revisionSelect.focus();
   });
   const closeCompare = button('结束固定比较', () => {
     compareSerial++; compareData = null; compareReleases.splice(0).forEach(fn => fn()); comparison.replaceChildren(); comparison.hidden = true; original.hidden = false;
@@ -254,5 +287,8 @@ export function pageDetail(app, data) {
       app.route.zoom = value; history.replaceState(null, '', routeHash(app.info, app.route)); app.savePosition();
     }); toolbar.append(el('label', {}, '阅读缩放 ', zoom));
   }
-  node.append(chain, toolbar, update, compareControls, layout, trialActions(app, data), iconWorkbench(app, data)); return node;
+  const trials = trialActions(app, data);
+  if (trials.classList.contains('trial-actions')) reading.prepend(el('details', {class:'page-trial-entry'},
+    el('summary', {}, '本页候选与试作'), trials));
+  node.append(chain, toolbar, update, compareControls, layout, iconWorkbench(app, data)); return node;
 }

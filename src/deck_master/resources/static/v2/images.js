@@ -3,7 +3,7 @@ import {el, button} from './dom.js';
 
 export function pooledURL(ref) {
   const match = ref?.path?.match(/^\.deckmaster\/cache\/candidate-previews\/([a-f0-9]{64})\/(candidate\.png)$/);
-  if (match && /^[a-f0-9]{64}$/.test(ref.sha256)) return '/api/candidate-preview/file?' + new URLSearchParams({cache_key:match[1],name:match[2]});
+  if (match && /^[a-f0-9]{64}$/.test(ref.sha256)) return '/api/candidate-preview/file?' + new URLSearchParams({cache_key:match[1],name:match[2],...(ref.check_id?{check_id:ref.check_id}:{})});
   return fileURL(ref);
 }
 
@@ -93,6 +93,11 @@ export class ImagePool {
       url = status.url;
     }
     const blob = await this.fetch(entry, url, false, priority);
+    if(ref.path.includes('/cache/candidate-previews/')) {
+      const digest=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer());
+      const actual=[...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,'0')).join('');
+      if(actual!==ref.sha256)throw new Error('实际 PPT 预览已经更新，请重新读取检查结果。');
+    }
     const bitmap = await this.decode.run(async () => {
       entry.controller.signal.throwIfAborted();
       if (!vector) return createImageBitmap(blob);
@@ -122,21 +127,21 @@ export class ImagePool {
 }
 export const imagePool = new ImagePool();
 
-export function imageView(app, stage, title, {kind = 'thumb', priority = 0, onFailure = null} = {}) {
+export function imageView(app, stage, title, {kind = 'thumb', priority = 0, onFailure = null, onReady = null} = {}) {
   const node = el('div', {class: 'pooled-image', 'data-image-state': 'loading'});
-  let lease, canvas, disposed = false;
+  let lease, canvas, disposed = false, serial = 0;
   const release = () => { lease?.release(); lease = null; if (canvas) { canvas.width = canvas.height = 0; canvas.remove(); canvas = null; } };
   function load(retry = false) {
-    release(); node.dataset.imageState = 'loading'; node.replaceChildren(el('span', {class: 'muted image-loading'}, '正在读取图片…'));
+    const token = ++serial; release(); node.dataset.imageState = 'loading'; node.replaceChildren(el('span', {class: 'muted image-loading'}, '正在读取图片…'));
     try {
       lease = imagePool.acquire(app.info.project_identity, stage.file, kind, priority, retry);
       lease.ready.then(bitmap => {
-        if (disposed) return;
+        if (disposed || token !== serial) return;
         canvas = el('canvas', {role: 'img', 'aria-label': title, class: kind === 'large' ? 'page-image' : 'thumbnail-image'});
         canvas.width = bitmap.width; canvas.height = bitmap.height;
         canvas.getContext('2d').drawImage(bitmap, 0, 0);
-        canvas.dataset.imageReady = 'true'; node.dataset.imageState = 'ready'; node.replaceChildren(canvas);
-      }).catch(failed);
+        canvas.dataset.imageReady = 'true'; node.dataset.imageState = 'ready'; node.replaceChildren(canvas); onReady?.(canvas);
+      }).catch(error => { if (token === serial) failed(error); });
     } catch (error) { failed(error); }
   }
   function failed(error) {
@@ -147,5 +152,5 @@ export function imageView(app, stage, title, {kind = 'thumb', priority = 0, onFa
     else node.append(button('重试图片', () => load(true)));
   }
   load();
-  return {node, dispose() { disposed = true; release(); node.replaceChildren(); }};
+  return {node, dispose() { disposed = true; serial++; release(); node.replaceChildren(); }};
 }

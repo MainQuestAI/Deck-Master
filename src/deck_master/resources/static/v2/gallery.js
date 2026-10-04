@@ -16,7 +16,7 @@ let continuousPitch = null;
 const invalidatePitch = () => { continuousPitch = null; };
 // 已记录层的瓷片状态标签：事实来自 stage 投影，不用当前稿补造。
 const tileTag = stage => !stage || stage.existence !== 'recorded' ? (stage?.existence === 'not_generated' ? ['尚无产物', ''] : ['暂不可读', 'warn']) :
-  stage.applicability?.status === 'basis_changed' ? ['旧版 · 待更新', 'warn'] :
+  stage.applicability?.status === 'basis_changed' ? ['制作依据已变化', 'warn'] :
   stage.applicability?.status === 'current' ? ['当前采用', 'ok'] : ['适用性待核实', 'warn'];
 
 export function gallery(app, data) {
@@ -42,6 +42,15 @@ export function gallery(app, data) {
   let query = '';
   const zooms = new Map();
   const state = () => memory.state;
+  // Responsive reading is a projection: retain the user's desktop mode.
+  const narrow = () => innerWidth < 768;
+  const effectiveMode = () => narrow() ? 'continuous' : state().mode;
+  const readingOffset = () => narrow() ? Math.max(0, -viewPort.getBoundingClientRect().top) : viewPort.scrollTop;
+  const setReadingOffset = value => {
+    if (narrow()) { const top = viewPort.getBoundingClientRect().top + scrollY; window.scrollTo({top: top + value}); }
+    else viewPort.scrollTop = value;
+  };
+  const readingHeight = () => narrow() ? innerHeight : viewPort.clientHeight;
   const stage = page => page.stages[stageKey[state().layer]];
   const orderOf = new Map(pages.map((page, index) => [page.page_id, index]));
   const recordCount = key => pages.reduce((total, page) => total + (page.stages[stageKey[key]].existence === 'recorded' ? 1 : 0), 0);
@@ -59,7 +68,7 @@ export function gallery(app, data) {
       filter.status === 'stale' && current.applicability.status === 'basis_changed' || filter.status === 'attention' && noted.has(page.page_id) ||
       filter.status === 'references' && state().references.some(ref => ref.page_id === page.page_id);
   });
-  const node = el('div', {class: 'gallery-view'}, heading('整稿画廊', `${pages.length} 页 · ${version(app.route.revision)} · 同层、固定版本阅读`));
+  const node = el('div', {class: 'gallery-view'}, heading('整稿画廊', `${pages.length} 页 · 浏览作品与比较修改`));
   const status = el('div', {class: 'gallery-save', role: 'status'});
   const legend = el('div', {class: 'legend gallery-legend', role: 'status'});
   const hint = el('p', {class: 'form-hint', hidden: true});
@@ -70,10 +79,11 @@ export function gallery(app, data) {
   node.append(controls, legend, status, hint, viewPort, el('p', {class: 'matrix-caption'}, '方向键移动页面焦点，Enter 打开，Escape 从单页返回。个人参考不会自动写入风格方案。'));
 
   function rememberAnchor() {
-    if (disposed || restoring || state().mode === 'compare') return;
+    if (disposed || restoring || effectiveMode() === 'compare') return;
     const visible = filtered(), columns = columnsNow(), height = rowHeight();
-    const index = Math.min(visible.length - 1, Math.floor(viewPort.scrollTop / height) * columns);
-    const anchor = {page_id: visible[index]?.page_id || null, offset: (viewPort.scrollTop % height) / height};
+    const offset = readingOffset();
+    const index = Math.min(visible.length - 1, Math.floor(offset / height) * columns);
+    const anchor = {page_id: visible[index]?.page_id || null, offset: (offset % height) / height};
     if (canonical(anchor) !== canonical(state().anchor)) memory.update({anchor});
   }
   function resetReading(patch, preserveAnchor = false) {
@@ -82,20 +92,20 @@ export function gallery(app, data) {
     // 先渲染新模式瓷片再测量：连续节距首测若发生在旧模式 DOM 上，会把网格
     // 瓷片高写入模块级缓存并污染整个会话的虚拟化（评审 reading-P1b）。
     restoring = true; renderRows(true);
-    viewPort.scrollTop = state().mode !== 'compare' && preserveAnchor ? anchorTop() : 0;
+    if (!narrow() || preserveAnchor) setReadingOffset(effectiveMode() !== 'compare' && preserveAnchor ? anchorTop() : 0);
     renderRows(true); restoring = false;
     if (!preserveAnchor) rememberAnchor();
   }
-  // 设计尾部的列宽规则由这里等效执行：可用宽度放不下 280px 时降为 2 列。
+  // 列数按可用宽度计算，与当前控件选择保持一致。
   function columnsNow() {
-    if (state().mode === 'continuous') return 1;
-    if (state().mode === 'compare') return Math.max(1, state().selected_page_ids.length);
-    // 设计规则唯一生效：可用宽度放不下 280px 时降为 2 列（无额外窄宽钳制）。
+    if (effectiveMode() === 'continuous') return 1;
+    if (effectiveMode() === 'compare') return Math.max(1, state().selected_page_ids.length);
+    // 每张作品至少保留 280px，空间不足时降低实际列数。
     const width = viewPort.clientWidth - 20;
-    return state().columns > 2 && (width - (state().columns - 1) * 20) / state().columns < 280 ? 2 : state().columns;
+    return Math.max(1, Math.min(state().columns, Math.floor((width + 20) / 300)));
   }
   function rowHeight() {
-    if (state().mode === 'continuous') {
+    if (effectiveMode() === 'continuous') {
       // 连续节距的唯一事实源是 renderRows 尾部的 DOM 实测校准；这里只读缓存，
       // 未校准时用几何估算回落（与实测差 ~1px）。绝不在渲染前测量写入——
       // 那会测到上一模式的旧瓷片并污染整个会话（终审 reading-P1b）。
@@ -116,7 +126,7 @@ export function gallery(app, data) {
     if (!selection.includes(page.page_id) && selection.length === 4) { toast('最多同时选择 4 页。先取消一页后再选择。'); renderRows(true); return; }
     const next = selection.includes(page.page_id) ? selection.filter(id => id !== page.page_id) : [...selection, page.page_id];
     const patch = {selected_page_ids: next};
-    if (state().mode === 'compare' && next.length < 2) patch.mode = 'grid';
+    if (effectiveMode() === 'compare' && next.length < 2) patch.mode = 'grid';
     memory.update(patch); renderControls(); renderRows(true);
   }
   function reference(page) {
@@ -129,23 +139,24 @@ export function gallery(app, data) {
   }
   function renderControls() {
     const s = state();
+    const isNarrow = narrow(), mode = effectiveMode();
     const tabs = el('div', {class: 'segmented', role: 'group', 'aria-label': '画廊图层'});
     for (const [key, label] of Object.entries(layerNames)) tabs.append(button(`${label} ${recordCount(key)}/${pages.length}`,
       () => { rememberAnchor(); app.go({layer: key}); }, false,
       {'aria-pressed': String(s.layer === key), class: s.layer === key ? 'active' : ''}));
     const modes = el('div', {class: 'segmented', role: 'group', 'aria-label': '阅读方式'});
     for (const [key, label] of Object.entries({grid: '联系表', continuous: '连续阅读', compare: '并排比较'})) modes.append(button(label,
-      () => resetReading({mode: key}, true), false, {'aria-pressed': String(s.mode === key), class: s.mode === key ? 'active' : '',
-        disabled: key === 'compare' && s.selected_page_ids.length < 2}));
-    const columns = el('div', {class: 'segmented', role: 'group', 'aria-label': '联系表列数', hidden: s.mode !== 'grid'});
+      () => resetReading({mode: key}, true), false, {'aria-pressed': String(mode === key), class: mode === key ? 'active' : '',
+        disabled: isNarrow && key !== 'continuous' || key === 'compare' && s.selected_page_ids.length < 2}));
+    const columns = el('div', {class: 'segmented', role: 'group', 'aria-label': '联系表列数', hidden: mode !== 'grid' || isNarrow});
     for (const number of [2, 3, 4]) columns.append(button(`${number} 列`, () => resetReading({columns: number}, true), false,
-      {'aria-pressed': String(s.columns === number), class: s.columns === number ? 'active' : ''}));
+      {'data-columns': number, 'aria-pressed': String(columnsNow() === number), class: columnsNow() === number ? 'active' : ''}));
     const chapter = el('select', {'aria-label': '筛选章节'}, el('option', {value: ''}, '全部章节'), chapters.map(item => el('option', {value: item.chapter_id}, item.title)));
     chapter.value = s.filter.chapter_id || ''; chapter.addEventListener('change', () => resetReading({filter: {...s.filter, chapter_id: chapter.value || null}}));
     const filter = el('select', {'aria-label': '筛选页面状态'}, Object.entries(statuses).map(([value, text]) => el('option', {value}, text)));
     filter.value = s.filter.status; filter.addEventListener('change', () => resetReading({filter: {...s.filter, status: filter.value}}));
     const extras = el('div', {class: 'row wrap'});
-    if (s.mode === 'compare') {
+    if (mode === 'compare') {
       const sync = el('input', {type: 'checkbox', checked: s.zoom.synchronized, 'aria-label': '同步缩放'});
       sync.addEventListener('change', () => { memory.update({zoom: {...state().zoom, synchronized: sync.checked}}); if (sync.checked) zooms.clear(); renderRows(true); });
       extras.append(el('label', {class: 'inline-control'}, sync, '同步缩放'), button('回到联系表', () => resetReading({mode: 'grid'}, true)));
@@ -159,10 +170,11 @@ export function gallery(app, data) {
         target_ids:s.selected_page_ids.slice(1), target_refs:s.selected_page_ids.slice(1).map(id => ({page_id:id, page_ref:pages.find(page => page.page_id === id).stages.content.ref}))};
       app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.route.revision});
     }, false, {disabled:app.readonly}));
-    controls.replaceChildren(
-      el('div', {class: 'row wrap'}, tabs, chapter, filter),
-      el('div', {class: 'row wrap'}, searchSlot, modes, columns),
-      extras);
+    const filters = el('div', {class: 'row wrap gallery-filter-fields'}, chapter, filter, searchSlot, modes, columns, extras);
+    if (isNarrow) {
+      const expanded = Boolean(query || s.filter.chapter_id || s.filter.status !== 'all');
+      controls.replaceChildren(tabs, el('details', {class: 'gallery-filter-disclosure', open: expanded}, el('summary', {}, expanded ? '筛选作品（已筛选）' : '筛选作品与管理选页'), filters));
+    } else controls.replaceChildren(el('div', {class: 'row wrap'}, tabs, chapter, filter), el('div', {class: 'row wrap'}, searchSlot, modes, columns), extras);
     renderLegend();
   }
   function renderLegend() {
@@ -170,11 +182,11 @@ export function gallery(app, data) {
     const shown = new Set(filtered().map(page => page.page_id));
     const outside = s.selected_page_ids.filter(id => !shown.has(id)).length;
     const stale = [...shown].reduce((total, id) => total + (pages.find(page => page.page_id === id)?.stages[stageKey[s.layer]]?.applicability?.status === 'basis_changed' ? 1 : 0), 0);
-    const counts = s.mode === 'compare' ? `并排 ${s.selected_page_ids.length} 页 · 筛选命中 ${shown.size} / ${pages.length} 页`
+    const counts = effectiveMode() === 'compare' ? `并排 ${s.selected_page_ids.length} 页 · 筛选命中 ${shown.size} / ${pages.length} 页`
       : `显示 ${shown.size} / ${pages.length} 页 · 已选 ${s.selected_page_ids.length} 页`;
     // replaceChildren 不做子节点过滤：布尔条件必须先组数组，避免渲染出 "false" 文本。
     const parts = [el('span', {}, '当前显示：', el('strong', {}, layers[s.layer])),
-      el('span', {class: 'muted'}, `${version(s.revision_id)} · ${counts}${outside ? ` · 筛选外选中 ${outside} 页，比较仍保留` : ''}`)];
+      el('span', {class: 'muted'}, `${counts}${outside ? ` · 筛选外选中 ${outside} 页，比较仍保留` : ''}`)];
     if (stale > 0) parts.push(el('span', {class: 'accent'}, `${stale} 页依据已变化`));
     const text = parts.map(part => part.textContent).join('\u0000');
     if (text !== legend.dataset.text) { legend.dataset.text = text; legend.replaceChildren(...parts); }
@@ -193,7 +205,7 @@ export function gallery(app, data) {
       if (!query && preSearchAnchor) { memory.update({anchor: preSearchAnchor}); preSearchAnchor = null; }
       rowsKey = '';
       restoring = true; renderRows(true);
-      viewPort.scrollTop = state().mode !== 'compare' ? anchorTop() : 0;
+      setReadingOffset(effectiveMode() !== 'compare' ? anchorTop() : 0);
       restoring = false;
     }, 120);
   });
@@ -216,7 +228,7 @@ export function gallery(app, data) {
     const image = el('div', {class: compare ? 'compare-image' : 'gallery-image'});
     const retrySlot = el('div', {class: 'image-retry-slot'});
     if (current.existence === 'recorded' && current.media_type?.startsWith('image/')) {
-      const view = imageView(app, current, label + ' · ' + layers[state().layer], {kind: state().mode === 'grid' ? 'thumb' : 'large',
+      const view = imageView(app, current, label + ' · ' + layers[state().layer], {kind: effectiveMode() === 'grid' ? 'thumb' : 'large',
         onFailure: retry => retrySlot.replaceChildren(button('重试图片', () => { retrySlot.replaceChildren(); retry(); }))});
       views.push(view); image.append(view.node);
       if (compare) {
@@ -257,35 +269,41 @@ export function gallery(app, data) {
   }
   function renderRows(force = false) {
     if (disposed) return;
-    const compare = state().mode === 'compare';
+    const compare = effectiveMode() === 'compare';
     const visible = compare ? state().selected_page_ids.map(id => pages.find(page => page.page_id === id)).filter(Boolean) : filtered();
     const columns = columnsNow(), height = rowHeight(), count = Math.ceil(visible.length / columns);
-    const first = compare ? 0 : Math.max(0, Math.floor(viewPort.scrollTop / height) - (state().mode === 'grid' ? 1 : 0));
-    const last = compare ? 1 : Math.min(count, Math.ceil((viewPort.scrollTop + viewPort.clientHeight) / height) + 1);
-    const key = [state().mode, state().layer, columns, first, last, query, ...visible.map(page => page.page_id)].join(':');
+    const first = compare ? 0 : Math.max(0, Math.floor(readingOffset() / height) - (effectiveMode() === 'grid' ? 1 : 0));
+    const last = compare ? 1 : Math.min(count, first + (narrow() ? 4 : Infinity), Math.ceil((readingOffset() + readingHeight()) / height) + 1);
+    const key = [effectiveMode(), state().layer, columns, first, last, query, ...visible.map(page => page.page_id)].join(':');
     if (!force && key === rowsKey) return;
-    const focused = document.activeElement.closest?.('[data-page-id]')?.dataset.pageId;
+    const activeElement = document.activeElement;
+    const focused = activeElement.closest?.('[data-page-id]')?.dataset.pageId;
+    const focusSelector = activeElement.matches?.('.tile-select input') ? '.tile-select input' : activeElement.matches?.('.reference-button') ? '.reference-button' : '.slide-cover';
     rowsKey = key; views.forEach(view => view.dispose()); views = []; cards.clear();
-    grid.classList.toggle('continuous', state().mode === 'continuous');
+    grid.classList.toggle('continuous', effectiveMode() === 'continuous');
     grid.classList.toggle('is-comparison', compare);
     grid.style.setProperty('--gallery-columns', compare ? String(Math.max(1, columns)) : String(columns));
+    controls.querySelectorAll('[data-columns]').forEach(control => {
+      const active = Number(control.dataset.columns) === columns;
+      control.setAttribute('aria-pressed', String(active)); control.classList.toggle('active', active);
+    });
     grid.style.removeProperty('grid-template-columns');
     if (compare) grid.style.setProperty('grid-template-columns', `repeat(${columns || 1}, minmax(0, 1fr))`);
     // 设计降级提示：实际列数低于所选列数时说明原因（读屏与视觉同源）。
-    const downgraded = !compare && state().mode === 'grid' && columns !== state().columns;
+    const downgraded = !compare && effectiveMode() === 'grid' && columns !== state().columns;
     hint.hidden = !downgraded;
-    if (downgraded) hint.textContent = `当前宽度不足以让每张图达到 280px，已按 ${columns} 列显示。`;
+    if (downgraded) hint.textContent = `适应当前窗口，显示为 ${columns} 列。`;
     grid.style.setProperty('--compare-height', `${Math.max(120, viewPort.clientHeight - 200)}px`);
     topSpace.style.height = `${compare ? 0 : first * height}px`; bottomSpace.style.height = `${compare ? 0 : Math.max(0, count - last) * height}px`;
     grid.style.gridAutoRows = compare ? 'auto' : `${height - 24}px`;
     grid.replaceChildren(...visible.slice(first * columns, last * columns).map(page => card(page, compare)));
     if (!visible.length) grid.append(empty(query ? '没有匹配的页面' : '没有符合筛选的页面', query ? '可更换搜索词，或清除搜索查看全部。' : '已选页面仍保留，可更换章节或状态。'));
     renderLegend();
-    viewPort.dataset.mode = state().mode; viewPort.dataset.visiblePages = String(cards.size);
+    viewPort.dataset.mode = effectiveMode(); viewPort.dataset.visiblePages = String(cards.size);
     // 连续模式渲染后校准节距：窗口内相邻瓷片的实测 top 差是唯一事实源。
     // 校准发生在 replaceChildren 之后，测到的必是当前模式瓷片；后续滚动/
     // 锚点计算随下一次渲染自然收敛到同一节距。
-    if (state().mode === 'continuous') {
+    if (effectiveMode() === 'continuous') {
       const rendered = [...grid.querySelectorAll('.slide-tile')];
       if (rendered.length >= 2) {
         const pitch = rendered[1].getBoundingClientRect().top - rendered[0].getBoundingClientRect().top;
@@ -293,13 +311,13 @@ export function gallery(app, data) {
       }
     }
     if (!cards.has(focusId) && cards.size) cards.values().next().value.tabIndex = 0;
-    if (focused && cards.has(focused)) cards.get(focused).focus({preventScroll: true});
+    if (focused && cards.has(focused)) cards.get(focused).closest('.slide-tile').querySelector(focusSelector)?.focus({preventScroll: true});
   }
   function alignAnchorTile() {
     // 仅连续模式需要解析式校正：网格模式 anchorTop() 的行基公式本身正确，
     // 而这里的平铺索引×节距推导在多列布局下不成立（评审 reading-P1a）。
     const anchor = state().anchor;
-    if (disposed || state().mode !== 'continuous' || !anchor.page_id) return;
+    if (disposed || effectiveMode() !== 'continuous' || !anchor.page_id) return;
     const anchorIndex = filtered().findIndex(page => page.page_id === anchor.page_id);
     if (anchorIndex < 0) return;
     const tiles = [...grid.querySelectorAll('.slide-tile')];
@@ -311,7 +329,7 @@ export function gallery(app, data) {
     // 同基准，瓷片高度不均时落点误差不再随锚点序号放大（评审 reading-P2）。
     const pitch = Math.max(200, measured);
     continuousPitch = pitch;
-    viewPort.scrollTop = anchorIndex * pitch + Math.min(anchor.offset * pitch, pitch - 1);
+    setReadingOffset(anchorIndex * pitch + Math.min(anchor.offset * pitch, pitch - 1));
     renderRows(true);
   }
   function onScroll() {
@@ -324,14 +342,14 @@ export function gallery(app, data) {
   viewPort.addEventListener('keydown', event => {
     userScrolled = true;
     if (!event.target.classList.contains('slide-cover') && event.target !== viewPort) return;
-    const list = state().mode === 'compare' ? state().selected_page_ids.map(id => pages.find(page => page.page_id === id)) : filtered();
+    const list = effectiveMode() === 'compare' ? state().selected_page_ids.map(id => pages.find(page => page.page_id === id)) : filtered();
     let index = Math.max(0, list.findIndex(page => page.page_id === focusId));
     const offsets = {ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columnsNow(), ArrowDown: columnsNow()};
     if (!(event.key in offsets)) return;
     event.preventDefault(); index = Math.max(0, Math.min(list.length - 1, index + offsets[event.key]));
     if (!list[index]) return;
     const nextId = list[index].page_id; focusId = nextId;
-    if (!cards.has(nextId)) viewPort.scrollTop = Math.floor(index / columnsNow()) * rowHeight();
+    if (!cards.has(nextId)) setReadingOffset(Math.floor(index / columnsNow()) * rowHeight());
     renderRows(true); cards.get(nextId)?.focus({preventScroll: false});
   });
   const unsubscribe = memory.subscribe(() => {
@@ -349,17 +367,27 @@ export function gallery(app, data) {
     else if (memory.error) status.append(button('核实画廊保存', () => memory.retry()));
     if (memory.error) status.append(button('下载画廊选择', () => downloadJSON(state(), 'gallery-selection.json')));
   });
-  const fitHeight = () => { viewPort.style.height = `${Math.max(280, innerHeight - viewPort.getBoundingClientRect().top - 64)}px`; };
+  const fitHeight = () => { viewPort.style.height = narrow() ? 'auto' : `${Math.max(280, innerHeight - viewPort.getBoundingClientRect().top - 64)}px`; };
+  const pageScroll = () => { if (narrow()) { userScrolled = true; onScroll(); } };
+  addEventListener('scroll', pageScroll, {passive: true});
   const observer = new ResizeObserver(() => { if (!disposed) { rowsKey = ''; renderRows(true); } });
   observer.observe(viewPort);
-  const resize = () => { invalidatePitch(); fitHeight(); renderRows(true); };
+  let previousNarrow = narrow();
+  const resize = () => {
+    const changedLayout = previousNarrow !== narrow(); previousNarrow = narrow();
+    invalidatePitch(); fitHeight(); renderControls(); restoring = true; renderRows(true);
+    if (changedLayout && (state().anchor.offset || state().anchor.page_id && state().anchor.page_id !== filtered()[0]?.page_id)) { setReadingOffset(anchorTop()); renderRows(true); }
+    restoring = false;
+  };
   addEventListener('resize', resize);
-  app.disposables.push(() => { rememberAnchor(); memory.flush(); disposed = true; cancelAnimationFrame(frame); observer.disconnect(); removeEventListener('resize', resize); unsubscribe(); views.forEach(view => view.dispose()); });
+  app.disposables.push(() => { rememberAnchor(); memory.flush(); disposed = true; cancelAnimationFrame(frame); observer.disconnect(); removeEventListener('resize', resize); removeEventListener('scroll', pageScroll); unsubscribe(); views.forEach(view => view.dispose()); });
   renderControls();
   requestAnimationFrame(() => {
     if (disposed) return;
-    fitHeight(); restoring = true; renderRows(true); viewPort.scrollTop = state().mode === 'compare' ? 0 : anchorTop(); renderRows(true); restoring = false;
-    alignAnchorTile();
+    fitHeight(); restoring = true; renderRows(true);
+    if (!narrow() || state().anchor.offset || state().anchor.page_id && state().anchor.page_id !== filtered()[0]?.page_id) setReadingOffset(effectiveMode() === 'compare' ? 0 : anchorTop());
+    renderRows(true); restoring = false;
+    if (!narrow() || readingOffset() > 0) alignAnchorTile();
     if (app.galleryFocus) { cards.get(app.galleryFocus)?.focus({preventScroll: true}); app.galleryFocus = null; }
   });
   return node;

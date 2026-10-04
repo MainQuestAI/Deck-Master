@@ -69,7 +69,7 @@ def test_confirm_idempotency_writer_boundary_and_no_output_changes(icon_store):
     args={'proposal_id':p['proposal_id'],'base_revision':value['base_revision'],'operation_id':op}
     first=icons.confirm(icon_store.project_root,**args);second=icons.confirm(icon_store.project_root,**args)
     after=icon_store.load_document();assert first['operation_result']==second['operation_result']
-    assert after['compatibility']['minimum_writer']=='icon-quality.v1'
+    assert after['compatibility']['minimum_writer']=='workbench-quality.v1'
     assert after['pages']==before['pages'] and after['outputs']==before['outputs'] and after['tasks']==before['tasks']
 
 

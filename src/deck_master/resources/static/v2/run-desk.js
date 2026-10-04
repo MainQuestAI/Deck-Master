@@ -2,9 +2,9 @@ import {cancelRecovery} from './run-recovery.js';
 import {get, post, readableError, revisionQuery, fileURL} from './api.js';
 import {el, button, empty, version, modal, loading, errorNote, disabledReason} from './dom.js';
 
-const names = {compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
-const statuses = {queued: '等待执行', awaiting_host: '待交接', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '由新任务接续', unreadable: '记录无法读取'};
-const actions = {handoff: '需要交接', verify_unknown_call: '核实未知调用', verify_execution: '核实原执行', inspect_failure: '查看失败原因', replan: '按当前依据重新计划', compare_candidates: '候选待决定', review_results: '结果待阅读'};
+const names = {style_analyze:'分析截图规范', reconstruct:'制作可编辑稿', compile:'编译整稿', check:'工程检查', compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
+const statuses = {queued: '等待执行', awaiting_host: '待接手', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '由新任务接续', unreadable: '记录无法读取'};
+const actions = {handoff: '交给 Deck Master Agent', verify_unknown_call: '核实未知调用', verify_execution: '核实原执行', inspect_failure: '查看失败原因', replan: '按当前依据重新计划', compare_candidates: '候选待决定', review_results: '结果待阅读'};
 const seenKey = task => task.reading_key;
 const clock = value => value ? new Date(value).toLocaleString('zh-CN', {hour12: false}) : '未记录';
 
@@ -24,7 +24,7 @@ function personalClearPanel(app) {
       // 必须先组数组过滤再展开。
       const planParts = [
         el('p', {}, `将清理 ${plan.items.length} 项：${plan.items.map(item => ({draft: '草稿', gallery_state: '画廊选择', reading_position: '阅读位置', overview_preferences: '总览阅读偏好',result_reading:'结果已读记录'})[item.kind]).join('、') || '无'}；恢复备份将保存在本机。`),
-        plan.blockers.length ? el('p', {class: 'field-error'}, `${plan.blockers.length} 项暂不清理（未确认的提交）：请先用 operations show 核对原 operation。`) : null,
+        plan.blockers.length ? el('p', {class: 'field-error'}, `${plan.blockers.length} 项暂不清理（未确认的提交）：请先在顶部核实未确认的保存请求。`) : null,
         plan.kept_out.length ? el('p', {class: 'muted'}, `损伤保留：${plan.kept_out.join('；')}`) : null,
         el('p', {class: 'muted'}, '任务、候选、调用记录与项目文件不在清理范围。')];
       scopeView.replaceChildren(...planParts.filter(part => part));
@@ -38,7 +38,7 @@ function personalClearPanel(app) {
       const result = await post('/api/ui-state/commit-clear', {operation_id: crypto.randomUUID(),
         input: {project_id: plan.project_id, scope: 'current_project', draft_ids: 'all', reading_preferences: true},
         plan_id: plan.plan_id, manifest_digest: plan.manifest_digest});
-      notice.textContent = `已清理 ${result.cleared.length} 项；恢复备份在本机 ${result.backup_ref}。任务与候选未受影响。`;
+      notice.replaceChildren(el('p', {}, `已清理 ${result.cleared.length} 项，恢复备份已保留；任务与候选未受影响。`), el('details', {}, el('summary', {}, '恢复备份位置'), el('code', {}, result.backup_ref)));
       scopeView.replaceChildren();
       plan = null;
     } catch (error) { notice.textContent = readableError(error) + ' 未清理任何对象。'; }
@@ -73,21 +73,23 @@ export function runDesk(app, data) {
     if (!editor || editor.readonly || editor.disposed || !editor.draft) return;
     editor.draft.content.run_desk = {...editor.draft.content.run_desk,...structuredClone(state),reading_etag:reading.etag}; editor.changed();
   }
+  const pageLabels = new Map(app.summary.pages.map((page, n) => [page.page_id, `第 ${n + 1} 页 · ${page.title || '未命名页面'}`]));
+  const scopeLabel = task => task.scope_pages?.length ? task.scope_pages.map(id => pageLabels.get(id) || '页面').join('、') : '整个项目';
   const todo = task => (task.human_actions || []).filter(action => action !== 'review_results' || !reading.seen.includes(seenKey(task)));
   const errorBox = error => errorNote({what: error.message || error.cause || '对象无法读取',
     kept: '已显示的运行记录仍保留。', next: `对象：${error.object || error.field || '运行记录'} · ${error.next_action || '核实原任务后重试读取'}`,
     ref: error.docs_ref || 'docs/agent-recovery-playbook.md#run-desk-recovery'});
   function render() {
     group.replaceChildren(el('option', {value: ''}, '所有修改组'), ...page.groups.filter(item => item.change_id).map(item =>
-      el('option', {value: item.change_id}, `${item.change_id} · ${item.completed_count}/${item.total_count} 项`)));
+      el('option', {value: item.change_id}, `修改组 ${page.groups.indexOf(item) + 1} · ${item.completed_count}/${item.total_count} 项已返回`)));
     if (state.group && !page.groups.some(item => item.change_id === state.group)) state.group = '';
     group.value = state.group; status.value = state.status; attention.checked = state.attention;
-    notice.textContent = `${live ? '当前执行状态' : '固定执行记录'} · ${version(page.revision_id)} · 共 ${page.pagination.total} 项`;
+    notice.textContent = `${live ? '当前执行状态' : '固定执行记录'} · 共 ${page.pagination.total} 项`;
     const tasks = page.tasks.filter(task => !state.attention || todo(task).length);
     rows.replaceChildren(...tasks.map(task => el('article', {class: 'run-task stack', 'data-task-id': task.task_id},
       el('div', {class: 'row wrap'}, el('strong', {}, names[task.kind] || '制作任务'), el('span', {class: 'status'}, statuses[task.status] || task.status)),
-      el('p', {}, task.scope_pages?.length ? `作用页：${task.scope_pages.join('、')}` : '作用于项目'),
-      el('p', {class: 'muted'}, `任务 ${task.task_id || '无法读取'} · 接手时间：${clock(task.execution_started_at)}`),
+      el('p', {}, scopeLabel(task)),
+      el('p', {class: 'muted'}, `接手时间：${clock(task.execution_started_at)}`),
       task.human_actions?.includes('verify_execution') && el('p', {class: 'field-error'}, '需要核实原执行。不会自动重试或取消；未确认取消前请勿重复派发。'),
       todo(task).length > 0 && el('p', {class: 'run-actions'}, todo(task).map(key => actions[key] || key).join(' · ')),
       task.error && errorBox(typeof task.error === 'object' ? task.error : {message: task.error}),
@@ -119,13 +121,14 @@ export function runDesk(app, data) {
     recovery.observe(task);
     const resultLinks = (task.result_refs || []).map((ref, index) => {
       const url = fileURL(ref);
-      return url ? el('a', {href: url, target: '_blank', rel: 'noopener'}, `读取结果 ${index + 1} · ${ref.sha256.slice(0, 12)}`) : el('span', {}, '结果引用无法读取');
+      return url ? el('a', {href: url, target: '_blank', rel: 'noopener'}, `查看结果 ${index + 1}`) : el('span', {}, '结果引用无法读取');
     });
     detail.replaceChildren(el('div', {class: 'stack'}, el('h3', {}, `${names[task.kind] || '制作任务'} · ${statuses[task.status] || task.status}`),
-      el('p', {}, task.instruction), el('p', {class: 'muted'}, `任务 ${task.task_id} · ${version(revision)}`),
+      el('p', {}, scopeLabel(task)),
+      el('details', {}, el('summary',{},'制作要求与执行身份'), el('p',{},task.instruction),el('p',{class:'muted'},`任务 ${task.task_id} · ${version(revision)}`)),
       el('p', {}, `真实接手时间：${clock(task.execution_started_at)}${task.execution_started_at ? '' : '，不会用最后更新时间代替'}`),
-      el('p', {class: 'execution-reference'}, task.execution_ref ? `执行标识：${task.execution_ref}` : '尚无执行标识'),
-      el('div', {class: 'row wrap'}, (task.scope_pages || []).map(id => button(`阅读 ${id}`, () => app.go({surface: 'page', page_id: id, layer: 'original_image', revision})))),
+      el('details',{},el('summary',{},'执行记录'),el('p',{class:'execution-reference'},task.execution_ref ? `执行标识：${task.execution_ref}` : '尚无接手记录')),
+      el('div', {class: 'row wrap'}, (task.scope_pages || []).map(id => button(`阅读 ${pageLabels.get(id) || '对应页面'}`, () => app.go({surface: 'page', page_id: id, layer: 'original_image', revision})))),
       el('p', {}, `已记录结果 ${task.result_refs.length} 项 · 候选 ${task.candidate_refs.length} 项 · 未知调用 ${task.call_counts.unknown || 0} 次`),
       (task.call_counts.unknown || 0) > 0 && el('p', {class: 'field-error'}, '未知调用不等于未执行。请核实原调用；本工作台不会重新分配额度或自动重试。'),
       recovery.pending.has(task.task_id) && el('p', {class: 'field-error'}, '取消结果待核实，未安排替代任务。'),
@@ -142,7 +145,7 @@ export function runDesk(app, data) {
         try{await post('/api/result-reading',{project_identity:app.info.project_identity,revision,task_id:task.task_id,result_key:task.reading_key,expected_etag:reading.etag});await read({state:{offset:0},refreshReading:true,persist:true});app.summaryPoll?.refresh();}
         catch(error){notice.textContent=readableError(error)+' 请重新读取结果后标记。';await read();}
       }, false, {disabled: app.readonly || readingBlocked || !readingSupported || !reading.etag || reading.seen.includes(seenKey(task))}),
-      el('details', {}, el('summary', {}, '请求、Attempt 与调用额度'),
+      el('details', {}, el('summary', {}, '请求与实际调用记录'),
         el('div', {class: 'stack'}, selected.links.generation_requests.map(link => button(link.request_id, () => showEvidence('requests', link.request_id, revision))),
           selected.links.generation_attempts.map(link => button(link.attempt_id, () => showEvidence('attempts', link.attempt_id, revision)))),
         el('pre', {class: 'run-evidence'}, JSON.stringify(selected.call_allowances, null, 2))),

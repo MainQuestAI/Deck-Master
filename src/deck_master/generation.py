@@ -74,6 +74,11 @@ def prepared_input(store, document, task):
     if recipe_ref:
         result["style_recipe_ref"] = copy.deepcopy(recipe_ref)
         result["constraints"] = {"preserve_target_content": True, "style_recipe_ref": copy.deepcopy(recipe_ref)}
+        recipe = store.read_object_json(recipe_ref)
+        if recipe['schema_version'] == 'style_recipe.v2':
+            result['constraints']['visual_style_ref'] = recipe['input']['visual_style_ref']
+            from .styles import effective_spec
+            result['constraints']['visual_style_spec'] = effective_spec(recipe)
     return result
 
 

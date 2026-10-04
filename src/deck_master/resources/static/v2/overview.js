@@ -128,9 +128,9 @@ export function overview(app, data = {}) {
   }
   const blueprintCount = pages.filter(page => page.stages.blueprint?.existence === 'recorded').length;
   root.append(heading('制作总览',
-    `${pages.length} 页内容 · ${blueprintCount} 页已有原图 · ${version(app.summary.revision_id)}。可看状态不代表质量检查通过。`,
+    `${pages.length} 页内容 · ${blueprintCount} 页已有原图`,
     button('查看整稿', () => app.go({surface: 'gallery'}), true)));
-  root.append(el('p',{class:'muted'},'候选待决定、结果未读与产物依据分开记录。依据已变化表示上游版本不同；依据待核实表示缺少历史绑定，不等于必须重做。点击对应层查看已有产物与生成依据，再选择重新检查或试作。'));
+  root.append(el('details', {class: 'overview-state-help'}, el('summary', {}, '如何理解制作状态'), el('p', {}, '依据已变化表示上游内容更新；可先查看已有作品，再决定检查或修改。候选返回后需要比较采用；工程检查和人工认可分别记录。')));
   const todo=todoPanel(app);root.append(todo);
   const sync=event=>{const next=event.detail;if(next.revision_id===app.summary.revision_id&&next.reading_etag!==app.summary.reading_etag){app.summary=next;const updated=todoPanel(app);root.querySelector('.overview-todos')?.replaceWith(updated);}};app.root.addEventListener('summary-refreshed',sync);app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',sync));
   root.append(matrixPanel(app, data.overview));

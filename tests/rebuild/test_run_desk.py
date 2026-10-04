@@ -35,7 +35,7 @@ def test_real_claim_time_survives_same_executor_and_unknown_call(store, monkeypa
     start(store, task)
     claimed = run_desk.detail(store.project_root, task_id=task['task_id'])
     assert claimed['task']['execution_started_at'] == '2026-09-30T00:00:00Z'
-    assert store.read_current()['minimum_writer'] == 'run-desk.v1'
+    assert store.read_current()['minimum_writer'] == 'workbench-quality.v1'
     pointer = store.read_current()
     monkeypatch.setattr(service, '_utc_now_iso', lambda: '2026-09-30T00:20:00Z')
     start(store, task)
@@ -110,13 +110,16 @@ def test_group_links_and_handoff_claim_time_share_core_facts(store):
 def test_writer_boundary_survives_candidate_adoption_content_and_operation(store):
     task = dispatch(store); start(store, task); result = accept(store, task)
     adopt(store, plan(store, result['candidate_ids']))
-    assert store.read_current()['minimum_writer'] == 'run-desk.v1'
+    assert store.read_current()['minimum_writer'] == 'workbench-quality.v1'
     from deck_master.content_plan import attach
-    doc = store.load_document(); attach(doc, doc['content_plan']); assert doc['compatibility']['minimum_writer'] == 'run-desk.v1'
+    doc = store.load_document(); attach(doc, doc['content_plan']); assert doc['compatibility']['minimum_writer'] == 'workbench-quality.v1'
     for minimum in ('generation.v1', 'content-plan.v1', 'changes.v1', 'candidates.v1'):
-        require_writer(doc, minimum); assert doc['compatibility']['minimum_writer'] == 'run-desk.v1'
+        require_writer(doc, minimum); assert doc['compatibility']['minimum_writer'] == 'workbench-quality.v1'
     lower = bump_revision(copy.deepcopy(doc), {'operation_id': 'bad-downgrade', 'kind': 'task_update', 'description': 'fault injection', 'read_set': []})
-    lower['compatibility']['minimum_writer'] = 'candidates.v1'
+    # Remove the new fact so this is structurally valid for an older writer;
+    # the store must still prevent lowering the current boundary.
+    lower.pop('committed_at', None)
+    lower['compatibility']['minimum_writer'] = 'icon-quality.v1'
     with pytest.raises(StoreError, match='downgraded'):
         store.commit_change(base_revision=doc['revision_id'], document=lower, operation_id='bad-downgrade')
 

@@ -2,7 +2,7 @@ import {get, post, digest, readableError} from './api.js';
 import {el, button, modal, version} from './dom.js';
 import {canonicalAction, expectedRequestDigest, receiptTerminal} from './receipt-verdict.js';
 
-const paths = {'icons.confirm':'/api/icons/confirm', 'history.restore':'/api/history/commit-restore', 'content.commit':'/api/content/commit', 'content.inputs':'/api/content/inputs', 'styles.confirm': '/api/styles/confirm', 'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit', 'candidates.adopt': '/api/candidates/adopt', 'candidates.decide': '/api/candidates/decision', 'stages.assemble': '/api/stages/assemble'};
+const paths = {'styles.analyze':'/api/styles/analyze', 'icons.confirm':'/api/icons/confirm', 'history.restore':'/api/history/commit-restore', 'content.commit':'/api/content/commit', 'content.inputs':'/api/content/inputs', 'styles.confirm': '/api/styles/confirm', 'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit', 'candidates.adopt': '/api/candidates/adopt', 'candidates.decide': '/api/candidates/decision', 'stages.assemble': '/api/stages/assemble'};
 // 升级前的待核实记录以旧 action 名冻结（digest 也用旧 kind）。规范化映射让它们
 // 进入恢复/核实/重放路径：端点与显示走规范名，身份核对按兼容规则重算（见
 // expectedRequestDigest），绝不可静默跳过或覆盖（终审补丁 P2）。

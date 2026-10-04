@@ -34,7 +34,7 @@ from .models import (
 )
 from .store import Store, StoreError, _atomic_write_bytes
 
-ENVELOPE_KINDS = ("compose", "blueprint", "reconstruct", "review", "repair")
+ENVELOPE_KINDS = ("compose", "blueprint", "reconstruct", "review", "repair", "style_analyze")
 ENVELOPE_SLOTS = (
     "kind",
     "files",
@@ -47,6 +47,7 @@ ENVELOPE_SLOTS = (
     "content_update",
     "generation_result",
     "content_plan",
+    "style_analysis",
 )
 
 TASK_KINDS = ENVELOPE_KINDS + ("compile", "render", "check")
@@ -340,6 +341,9 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 
 def task_inputs_current(store, document, task):
+    if task.get("kind") == "style_analyze":
+        from .visual_styles import inputs_current as analysis_current
+        return analysis_current(store, document, task)
     from .candidates import is_trial, inputs_current
     if is_trial(task):
         # All trials read freshness through the candidate basis service: the
@@ -1065,6 +1069,11 @@ def _accept_result_locked(
         store._commit_locked(blobs=[], base_revision=document["revision_id"], document=settled_doc,
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
+    if task["kind"] == "style_analyze":
+        from .visual_styles import accept_analysis
+        return accept_analysis(store, document, task, envelope, produced_against, result_digest)
+    if envelope.get("style_analysis") is not None:
+        raise EnvelopeError("style_analysis", "only style_analyze tasks may return visual specifications")
     _validate_content_envelope(envelope)
     from .changes import validate_result
     validate_result(store, document, task, envelope)
@@ -1321,6 +1330,8 @@ def _project_transaction(function):
 
 def reserve_allowances(store, document, task, count):
     """Build an updated task using the locked current project ledger."""
+    if task.get("kind") == "style_analyze":
+        raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
     if not isinstance(count, int) or isinstance(count, bool) or count < 1:
         raise EnvelopeError("(allocate)/count", "count must be a positive integer")
     if task.get("status") not in ("awaiting_host", "running", "queued"):
@@ -1426,6 +1437,8 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     """Atomically take one pre-allocated call allowance (spec 08.6, T13.min)."""
     document = store.load_document()
     task = _lookup_task(document, task_id, store)
+    if task.get("kind") == "style_analyze":
+        raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
     from .generation import is_new, check_host, begin_attempt
     check_host(task)
     if task.get("status") in ("cancelled", "superseded", "completed"):

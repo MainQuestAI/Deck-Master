@@ -1,0 +1,35 @@
+.comparison-canvas {min-width:0;width:100%}
+.candidate-columns:has(.comparison-canvas) {display:block}
+.comparison-pair {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.comparison-viewport {height:clamp(240px,calc(100vh - 340px),560px);overflow:auto;background:#f4f4f4;cursor:grab;outline-offset:3px;overscroll-behavior:contain}
+.comparison-viewport[data-mode=native] {touch-action:none}
+.comparison-viewport .pooled-image {width:max-content;min-width:100%;min-height:100%;height:auto;aspect-ratio:auto;display:flex;justify-content:center;align-items:center}
+.comparison-viewport canvas {flex:none;object-fit:contain;max-width:none;max-height:none}
+.canvas-tools {flex-wrap:wrap}
+.canvas-tools output {min-width:6ch;font-variant-numeric:tabular-nums}
+.comparison-preview-tools {display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.comparison-preview-tools p {margin:0}
+.candidate-desk:fullscreen {box-sizing:border-box;background:#fff;padding:16px;display:flex;flex-direction:column;height:100vh;overflow:hidden;gap:8px}
+.candidate-desk:fullscreen>.page-head p,.candidate-desk:fullscreen>.candidate-reference-row,.candidate-desk:fullscreen>.candidate-recovery,.candidate-desk:fullscreen>.candidate-columns~div:not(.candidate-decisions):not(.candidate-impact) {display:none}
+.candidate-desk:fullscreen .page-head h1 {font-size:22px;margin:0}
+.candidate-desk:fullscreen>.candidate-state {max-height:64px;overflow:auto;font-size:13px}
+.candidate-desk:fullscreen .candidate-state .stack {gap:2px}
+.candidate-desk:fullscreen .candidate-state p {margin:0}
+.candidate-desk:fullscreen>.toolbar {margin:0}
+.candidate-desk:fullscreen>.candidate-columns {flex:1;min-height:0}
+.candidate-desk:fullscreen .comparison-canvas {display:flex;flex-direction:column;height:100%;min-height:0;gap:8px}
+.candidate-desk:fullscreen .comparison-pair {flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
+.candidate-desk:fullscreen .candidate-column {display:flex;flex-direction:column;min-height:0}
+.candidate-desk:fullscreen .candidate-column h2 {font-size:16px;margin:0}
+.candidate-desk:fullscreen .candidate-column>p {font-size:12px;margin:4px 0}
+.candidate-desk:fullscreen .comparison-viewport {height:auto;flex:1;min-height:0}
+.candidate-desk:fullscreen .candidate-decisions {position:static;flex:none;padding:0}
+.candidate-desk:fullscreen .candidate-impact {flex:none;max-height:100px;overflow:auto}
+.candidate-desk:fullscreen .comparison-preview-tools {font-size:13px;gap:8px}
+.candidate-desk:fullscreen .comparison-preview-details[open] {max-height:80px;overflow:auto}
+.comparison-canvas:fullscreen {box-sizing:border-box;background:#fff;padding:16px;display:flex;flex-direction:column;height:100vh;gap:8px}
+.comparison-canvas:fullscreen .comparison-pair {flex:1;min-height:0}
+.comparison-canvas:fullscreen .candidate-column {display:flex;flex-direction:column;min-height:0}
+.comparison-canvas:fullscreen .comparison-viewport {flex:1;min-height:0;height:auto}
+@media(max-width:767px){.comparison-pair{grid-template-columns:1fr}.comparison-viewport{height:300px}.canvas-tools{gap:8px}}
+@media(max-width:767px){.candidate-desk:fullscreen .comparison-pair{grid-template-rows:repeat(2,minmax(0,1fr))}.candidate-desk:fullscreen .candidate-column{padding:8px}.candidate-desk:fullscreen .candidate-decisions{gap:4px}.candidate-desk:fullscreen .candidate-decisions button{padding:8px;font-size:12px}.candidate-desk:fullscreen .canvas-tools{margin:0;gap:4px}.candidate-desk:fullscreen .canvas-tools button{padding:8px;font-size:12px}}
