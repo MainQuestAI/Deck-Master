@@ -225,7 +225,9 @@ export class Project {
     if (this.route.surface === 'page') this.main.addEventListener('keydown', event => {
       const typing = event.target.closest('textarea,input,select,button,a,summary,[contenteditable]');
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
-      if (event.key === 'Escape' && !typing) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
+      // An element in fullscreen consumes Escape to leave fullscreen: the same
+      // keypress must not also navigate the work surface away.
+      if (event.key === 'Escape' && !typing && !document.fullscreenElement) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
       // ←/→ 切换页（输入与可滚动阅读区除外），与单页制作链的上一页/下一页一致。
       if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing && !event.target.closest('.page-image-viewport,.icon-crop-scroll,.selectable-text,.evidence-json,.diff-lines')) {
         const index = this.summary.pages.findIndex(p => p.page_id === this.route.page_id);

@@ -14,6 +14,10 @@ export function trialActions(app, data) {
   if (!app.business || !app.health.ui_capabilities?.includes('candidates.v1') || !['original_image', 'svg', 'ppt'].includes(app.route.layer)) return el('div');
   const image = app.route.layer === 'original_image', slot = image ? 'blueprint' : 'svg';
   const node = el('section', {class: 'panel trial-actions', 'aria-label': '本页试作与候选'});
+  // The near-field entry names how much already waits here, so a returned
+  // candidate is not hidden until the user happens to open the panel.
+  const counts = el('span', {class: 'trial-counts muted'}, '');
+  const entry = el('details', {class: 'page-trial-entry'}, el('summary', {}, el('span', {}, '本页候选与试作'), counts), node);
   const candidateList = el('div', {class: 'row wrap'}), notice = el('p', {role: 'status'});
   const instruction = el('textarea', {rows: 3, 'aria-label': '本页试作短要求', placeholder: image ? '例如：沿用参考图的分区和线条，保留本页事实与数字。' : '例如：修复右侧模块重叠，保留 Page、原图和实际提示词。'});
   const stage = el('select', {'aria-label': '本页试作阶段'}, image ? el('option', {value: 'blueprint'}, '原图试作') :
@@ -66,6 +70,8 @@ export function trialActions(app, data) {
       const value = await get('/api/candidates?' + new URLSearchParams({page_id: data.page_id})); if (disposed) return;
       const records = value.candidates.filter(item => item.candidate.stage === slot);
       candidateList.replaceChildren(...records.map((item, index) => button(`候选 ${index + 1}${item.status === 'adopted' ? ' · 曾采用' : ''}`, () => openCandidate(app, item.candidate, value.revision_id))));
+      const pending = records.filter(item => item.pending).length;
+      counts.textContent = records.length ? `候选 ${records.length} · 待比较 ${pending}` : '尚无候选';
       notice.textContent = records.length ? `${records.length} 个已返回候选；选择一个查看固定比较。` : '尚无本层候选。可以先保存一次明确范围的试作要求。';
     } catch (error) { if (!disposed) notice.textContent = readableError(error); }
   }
@@ -128,5 +134,5 @@ export function trialActions(app, data) {
   hydrate();
   loadCandidates(); controls();
   app.disposables.push(() => { disposed = true; serial++; refRelease?.(); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-state-changed', sync); });
-  return node;
+  return entry;
 }

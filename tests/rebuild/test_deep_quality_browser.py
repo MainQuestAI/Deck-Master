@@ -212,6 +212,86 @@ def test_requirement_is_explicit_and_plans_default_to_trial(workbench):
     assert page.request.get(url.rstrip('/')+'/api/changes').json()['changes']==[]
 
 
+def test_page_candidate_compares_its_own_basis_not_the_current_revision(workbench):
+    import uuid as _uuid
+    from deck_master import changes as changes_mod, service as service_mod
+    from test_content_candidates import content_intent, start_task, page_envelope, accept
+    page,ctx,store,url,goto,_=workbench
+    path=store.project_root
+    basis_revision=store.current_revision_id()
+    plan=changes_mod.plan(path, input=content_intent(store, 'p01'))
+    task_ids=changes_mod.commit(path, plan_id=plan['plan_id'], base_revision=store.current_revision_id(),
+                                operation_id=str(_uuid.uuid4()))['operation_result']['task_ids']
+    task=next(t for t in (store.read_object_json(r) for r in store.load_document()['tasks']) if t['task_id']==task_ids[0])
+    start_task(path, task); accept(path, task, page_envelope(store, task))
+    candidate_id=store.load_document()['candidates'][0]
+    candidate=store.read_object_json(candidate_id)
+    assert candidate['result_kind']=='page' and candidate['base_revision']==basis_revision
+    # Move the page on: the comparison must keep showing the candidate's own basis.
+    doc=store.load_document(); moved=copy.deepcopy(doc); entry=moved['pages'][0]
+    body=store.read_object_json(entry['page']); body['customer_visible']['title']='后来的标题'
+    moved['pages'][0]['page']=store.put_json_object(body)
+    moved=bump_revision(moved,{'operation_id':str(_uuid.uuid4()),'kind':'content_update','description':'later page move','read_set':[]})
+    store.commit_change(base_revision=doc['revision_id'],document=moved,operation_id=moved['change']['operation_id'])
+    link=url+'#'+urlencode({'project':page.request.get(url.rstrip('/')+'/api/project').json()['project_identity'],
+                            'surface':'page','page':'p01','layer':'content','revision':store.current_revision_id(),
+                            'candidate':candidate['candidate_id']})
+    page.goto(link)
+    desk=page.locator('.candidate-desk')
+    desk.wait_for()
+    # Both sides come from the candidate's own record: the basis it was written
+    # against and its result. The later page never leaks into the comparison.
+    expect(desk).to_contain_text('当前正文 → 候选正文')
+    expect(desk).to_contain_text('(rewritten)')
+    assert '后来的标题' not in desk.inner_text(), desk.inner_text()[:400]
+
+
+def test_escape_ends_the_open_comparison_before_leaving_the_page(workbench):
+    page,ctx,store,url,goto,_=workbench;goto()
+    page.get_by_role('button',name='比较此页版本',exact=True).click()
+    select=page.get_by_label('选择同页比较版本')
+    expect(select).to_be_visible()
+    assert len(select.locator('option').all_inner_texts())>1, 'this fixture needs a second revision for the page'
+    select.select_option(index=1)
+    page.get_by_role('button',name='固定比较这个版本',exact=True).click()
+    expect(page.locator('.page-columns.with-fixed-compare')).to_be_visible()
+    page.keyboard.press('Escape')
+    # One keypress closes the topmost layer only: the comparison ends and the work
+    # surface stays where it was, with focus back on the entry that opened it.
+    expect(page.locator('.page-columns.with-fixed-compare')).to_have_count(0)
+    assert 'surface=page' in page.url, page.url
+    expect(page.get_by_role('button',name='比较此页版本',exact=True)).to_be_focused()
+    assert page.locator('.fixed-compare-controls').is_hidden()
+
+
+def test_escape_inside_fullscreen_does_not_navigate_the_surface(workbench):
+    page,ctx,store,url,goto,_=workbench;goto()
+    page.get_by_role('button',name='比较此页版本',exact=True).click()   # user activation for fullscreen
+    assert page.evaluate('''async () => { try { await document.querySelector('.page-columns').requestFullscreen(); return true; } catch { return false; } }''')
+    expect(page.locator('.page-columns')).to_be_visible()
+    assert page.evaluate('() => document.fullscreenElement !== null')
+    page.keyboard.press('Escape'); page.wait_for_timeout(200)
+    # Leaving fullscreen is the browser's own job. The work surface must not also
+    # navigate away on the same keypress. Headless Chromium keeps the element
+    # fullscreen (no native UI), so this checks the app-level regression only; the
+    # visible exit still needs a headed run.
+    assert 'surface=page' in page.url, page.url
+    page.evaluate('() => document.exitFullscreen()')
+
+
+def test_near_field_entry_names_returned_candidates(workbench):
+    from test_candidates import dispatch as dispatch_candidate, start as start_candidate, accept as accept_candidate
+    page,ctx,store,url,goto,_=workbench
+    task=dispatch_candidate(store,'p01',layer='svg'); start_candidate(store,task); accept_candidate(store,task)
+    goto()
+    # The closed entry still says that something waits here, instead of hiding a
+    # returned candidate behind a neutral label.
+    summary=page.locator('.page-trial-entry > summary')
+    expect(summary).to_contain_text('候选 1')
+    expect(summary).to_contain_text('待比较 1')
+    expect(page.get_by_text('本页候选与试作',exact=True)).to_be_visible()
+
+
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
     page,ctx,store,url,goto,_=workbench
     confirm(store,input_for(store));before=store.load_document()['tasks'];goto()

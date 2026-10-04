@@ -280,7 +280,19 @@ export function pageDetail(app, data) {
   const closeCompare = button('结束固定比较', () => {
     compareSerial++; compareData = null; compareReleases.splice(0).forEach(fn => fn()); comparison.replaceChildren(); comparison.hidden = true; original.hidden = false;
     compareControls.hidden = true; fixedLabel.hidden = true; reading.classList.remove('is-comparing'); layout.classList.remove('with-fixed-compare'); compareButton.disabled = false;
+    openCompare.focus();
   }); compareControls.querySelector('.row').append(closeCompare);
+  // Escape handles the topmost layer: an open dialog or a fullscreen element wins,
+  // then an open fixed comparison ends without the same keypress also leaving the
+  // page. Capture phase, because the work-surface handler sits on an ancestor and
+  // the focused element may not live inside this view at all.
+  const escapeCompare = event => {
+    if (event.key !== 'Escape' || !compareData || disposed) return;
+    if (document.querySelector('dialog[open]') || document.fullscreenElement) return;
+    event.preventDefault(); event.stopPropagation(); closeCompare.click();
+  };
+  document.addEventListener('keydown', escapeCompare, true);
+  app.disposables.push(() => document.removeEventListener('keydown', escapeCompare, true));
   const toolbar = el('div', {class: 'toolbar'}, selector, button('回到整稿画廊', () => app.go({surface: 'gallery'})), openCompare, ...(styleReference ? [styleReference] : []));
   if (['original_image', 'svg', 'ppt'].includes(layer)) {
     const zoom = el('select', {'aria-label': '阅读缩放'}, [.5, .75, 1, 1.25, 1.5, 2, 3].map(value => el('option', {value}, `${value * 100}%`)));
@@ -290,7 +302,6 @@ export function pageDetail(app, data) {
     }); toolbar.append(el('label', {}, '阅读缩放 ', zoom));
   }
   const trials = trialActions(app, data);
-  if (trials.classList.contains('trial-actions')) reading.prepend(el('details', {class:'page-trial-entry'},
-    el('summary', {}, '本页候选与试作'), trials));
+  if (trials.classList.contains('page-trial-entry')) reading.prepend(trials);
   node.append(chain, toolbar, update, compareControls, layout, iconWorkbench(app, data)); return node;
 }
