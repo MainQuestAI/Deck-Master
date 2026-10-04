@@ -50,16 +50,15 @@ export function changeHandoffs(app) {
     detail.replaceChildren(el('div', {class: 'stack'}, el('h3', {'data-change-id': active}, title),
       el('p', {class: 'handoff-progress', role: 'status'}, `${latest.completed_count} / ${latest.total_count} 项已返回 · ${version(latest.handoff.base_revision)} 的计划`),
       latest.needs_verification && el('p', {class: 'field-error'}, '已超过等待阈值或调用状态不明。请核实原执行，或确认取消后重新计划；不会自动重试。'),
-      el('p', {}, latest.handoff.plan.input.instruction),
-      el('div', {class: 'row wrap'}, button('复制交接说明', copy, latest.status === 'awaiting_host'), button('核实执行状态', refresh)),
+      el('p', {}, latest.handoff.plan.input.instruction.slice(0,200)+(latest.handoff.plan.input.instruction.length>200?'…':'')),
+      el('div', {class: 'row wrap'}, button('交给 Deck Master Agent', copy, latest.status === 'awaiting_host'), button('核实执行状态', refresh)),
       el('div', {class: 'handoff-tasks stack'}, tasks.map(task => {
         recovery.observe(task);
         return el('article', {class: 'handoff-task'},
-          el('strong', {}, taskLabels[task.status] || '待核实'), el('p', {class: 'muted'}, `任务 ${task.task_id}`),
+          el('strong', {}, taskLabels[task.status] || '待核实'), el('details', {},el('summary', {},'任务身份'),el('p', {class:'muted'}, `任务 ${task.task_id}`),task.execution_ref && el('p',{},`接手记录 ${task.execution_ref}`)),
           modern ? (task.candidate_refs || []).map((ref, index) => button(`比较返回候选${task.candidate_refs.length > 1 ? ' ' + (index + 1) : ''}`, () => compare(task, ref))) : candidateRows.filter(row => row.candidate.task_id === task.task_id).map(row => button('比较返回候选', () => openCandidate(app, row.candidate, candidateRevision))),
           modern && el('p', {class: 'muted'}, task.execution_started_at ? '接手时间：' + new Date(task.execution_started_at).toLocaleString('zh-CN') : '接手时间未记录'),
           modern && button('查看任务与调用记录', () => app.go({surface: 'runs', task_id: task.task_id, revision: null})),
-          task.execution_ref && el('p', {class: 'execution-reference'}, `已记录接手：${task.execution_ref}`),
           cancelUnknown.has(task.task_id) && el('p', {class: 'field-error'}, '取消结果待核实，未安排替代任务。'),
           ['queued', 'awaiting_host', 'running'].includes(task.status) && button('取消这项任务', () => cancel(task), false,
             {disabled: cancelUnknown.has(task.task_id) || Boolean(app.info.sample?.readonly)}));

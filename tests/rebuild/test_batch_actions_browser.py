@@ -192,10 +192,11 @@ def test_style_transfer_preserves_exact_context_and_reference_target_conflict(ba
     page.get_by_role('button', name='带所选页进入风格校准', exact=True).click()
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
     expect(page.get_by_role('textbox', name='风格短要求', exact=True)).to_have_value('仅借用配色，保留构图。')
-    expect(page.get_by_role('checkbox', name='风格目标 第 3 页 · 每页保留原图与来源', exact=True)).to_be_checked()
+    expect(page.get_by_role('combobox', name='当前风格试作目标', exact=True)).to_have_value('p03')
+    page.get_by_text('其它目标页', exact=True).click()
     assert not page.get_by_role('checkbox', name='风格目标 第 1 页 · 项目目标与阅读顺序', exact=True).is_checked()
     page.get_by_role('combobox', name='风格参考原图', exact=True).select_option('p03')
     expect(page.locator('.style-calibration')).to_contain_text('目标未被自动移除')
-    assert page.get_by_role('checkbox', name='风格目标 第 3 页 · 每页保留原图与来源', exact=True).is_checked()
+    expect(page.get_by_role('combobox', name='当前风格试作目标', exact=True)).to_have_value('p03')
     assert page.get_by_role('button', name='检查风格要求', exact=True).is_disabled()
     assert store.read_current() == before

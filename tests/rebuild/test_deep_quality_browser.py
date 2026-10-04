@@ -50,6 +50,7 @@ def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
     c=ctx.new_page();c.goto(link);expect(c.get_by_role('textbox',name='个人草稿',exact=True)).to_be_editable()
     texts=c.evaluate('''()=>Object.entries(localStorage).filter(([k])=>k.includes(':draft:')).map(([k,v])=>JSON.parse(v).draft?.content?.text)''')
     assert '窗口 A 独有的修改' in texts and '窗口 B 独有的修改' in texts
+    c.get_by_text('恢复、下载与版本详情',exact=True).click()
     choices=c.get_by_label('恢复本机保留的草稿副本')
     expect(choices).to_be_visible()
     assert '窗口 A 独有的修改' in choices.inner_text()

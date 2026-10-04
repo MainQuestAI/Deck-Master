@@ -1,3 +1,4 @@
+import {comparisonCanvas} from './comparison-canvas.js';
 import {get, post, canonical, readableError, revisionQuery} from './api.js';
 import {el, button, heading, empty, modal, version} from './dom.js';
 import {DraftEditor} from './drafts.js';
@@ -36,16 +37,22 @@ export function candidateDesk(app, data) {
   const pageNumber = app.summary.pages.findIndex(page => page.page_id === data.page_id) + 1;
   const root = el('div', {class: 'candidate-desk stack'}), title = heading(`第 ${pageNumber} 页 · ${stageName(stage)}候选`, '当前采用与候选固定比较；参考原图作为辅助。');
   const select = el('select', {'aria-label': '选择本页候选'}), status = el('div', {role: 'status', class: 'candidate-state'});
-  const columns = el('div', {class: 'candidate-columns'}), sources = el('div', {class: 'candidate-reference-row'}), evidence = el('div'), impact = el('div', {class: 'candidate-impact stack'});
+  const columns = el('div', {class: 'candidate-columns'}), sources = el('details', {class: 'candidate-reference-row'}, el('summary',{},'查看固定参考')), evidence = el('div'), impact = el('div', {class: 'candidate-impact stack'});
   const draft = operationDraft(app);
+  const compareLayer = el('select', {'aria-label':'比较图层'}, el('option',{value:'svg'},'SVG'), el('option',{value:'ppt'},'实际 PPT'));
+  const previewStatus = el('p',{role:'status'});
+  const previewDetails = el('details', {class:'comparison-preview-details', hidden:true}, el('summary',{},'查看检查详情'));
+  const previewAction = button('生成候选实际 PPT', requestPreview);
+  const previewTools = el('div',{class:'comparison-preview-tools',hidden:true}, el('label',{},'查看 ',compareLayer), previewStatus, previewAction, previewDetails);
+  let preview=null, previewTimer=null, previewBusy=false, comparison=null;
   let selected, live, list = [], disposed = false, busy = false, polling = false, serial = 0, currentPlan = null, planInvalid = false, lastSync = null, keepBusy = false;
   const releases = [], auxReleases = [], modalReleases = [];
   const choosePlan = button('预览采用这个候选', planAdoption, false), adopt = button('采用这个候选', adoptSelected, true, {disabled: true});
   const keep = button('保留当前', keepCurrent);
   const reopen = button('重新打开候选', reopenCandidate, false, {hidden: true});
   const retry = button('回本页调整并再试', () => app.go({candidate_id: null, revision: live?.revision_id || app.route.revision}));
-  root.append(title, el('div', {class: 'toolbar'}, el('label', {}, '候选 ', select), button('刷新候选与当前状态', refresh)), status, columns, sources, evidence,
-    el('div', {class: 'row wrap'}, choosePlan, adopt, keep, reopen, retry), impact, draft);
+  root.append(title, el('div', {class: 'toolbar'}, el('label', {}, '候选 ', select), button('刷新候选与当前状态', refresh)), status, previewTools, columns, sources, evidence,
+    el('div', {class: 'row wrap candidate-decisions'}, choosePlan, adopt, keep, reopen, retry), impact, draft);
   function controls() {
     select.disabled = busy;
     const unavailable = !selected || selected.candidate.page_id !== data.page_id;
@@ -78,7 +85,42 @@ export function candidateDesk(app, data) {
       lastSync && el('p', {class: 'muted'}, '最后同步：' + lastSync.toLocaleTimeString('zh-CN', {hour12: false}))));
     controls();
   }
-  function drawColumns(leftStage, leftRevision, label = '当前采用（原固定基准）', leftPage = null) {
+  function previewDescription(value) {
+    const labels={not_requested:'候选实际 PPT 尚未生成',queued:'候选实际 PPT 等待编译',running:'正在编译并渲染候选实际 PPT',ready:'候选实际 PPT 已就绪 · 工程检查通过，待视觉确认',failed:'候选实际 PPT 检查失败',needs_tool:'缺少实际 PPT 编译或渲染工具',interrupted:'候选实际 PPT 检查中断，请重试',busy:'候选实际 PPT 检查等待空闲'};
+    const font=value?.error?.message?.match(/^font (.+?) unavailable(?:;|$)/i);
+    if(font)return `候选字体“${font[1]}”尚未安装。请在设计与 SVG 中明确选用已安装字体，再重新检查。`;
+    return labels[value?.status]||'候选实际 PPT 状态未能确认';
+  }
+  function previewControls() {
+    previewStatus.textContent=previewDescription(preview||{status:'not_requested'});
+    previewDetails.hidden=!preview?.error;
+    previewDetails.replaceChildren(el('summary',{},'查看检查详情'),preview?.error&&el('pre',{class:'evidence-json'},JSON.stringify(preview.error,null,2)));
+    previewAction.disabled=previewBusy||app.readonly||app.historical||['queued','running','busy'].includes(preview?.status);
+    previewAction.textContent=preview?.status==='ready'?'重新检查候选实际 PPT':preview&&!['not_requested','queued','running','busy'].includes(preview.status)?'重试候选实际 PPT':'生成候选实际 PPT';
+  }
+  function receivePreview(value,id) {
+    if(disposed||selected?.candidate_id!==id)return;
+    if((value.candidate_id&&value.candidate_id!==id)||(value.candidate_ref&&canonical(value.candidate_ref)!==canonical(selected.candidate_ref))){previewStatus.textContent='实际 PPT 与所选候选不一致，未展示。';return;}
+    const changed=canonical([preview?.status,preview?.files,preview?.error])!==canonical([value.status,value.files,value.error]);preview=value;previewControls();
+    if(changed&&compareLayer.value==='ppt'&&comparison)drawColumns(...comparison);
+    clearTimeout(previewTimer);if(['queued','running','busy'].includes(value.status))previewTimer=setTimeout(()=>refreshPreview(id),2000);
+  }
+  async function refreshPreview(id) {
+    try{receivePreview(await get('/api/candidate-preview/status?'+new URLSearchParams({candidate_id:id})),id);}
+    catch(error){if(!disposed&&selected?.candidate_id===id)previewStatus.textContent=readableError(error)+' · SVG 比较仍可使用。';}
+  }
+  async function requestPreview() {
+    if(previewBusy||!selected||selected.candidate.stage!=='svg')return;
+    const id=selected.candidate_id;previewBusy=true;previewControls();
+    try{receivePreview(await post('/api/candidate-preview/request',{candidate_id:id,retry:Boolean(preview&&preview.status!=='not_requested'),wait:false}),id);}
+    catch(error){if(!disposed&&selected?.candidate_id===id)previewStatus.textContent=readableError(error)+' · 未展示替代图片。';}
+    finally{previewBusy=false;if(!disposed)previewAction.disabled=app.readonly||app.historical||['queued','running','busy'].includes(preview?.status);}
+  }
+  compareLayer.addEventListener('change',()=>{if(comparison)drawColumns(...comparison);});
+  function drawColumns(leftStage, leftRevision, label = '当前采用（原固定基准）', leftPage = null, leftPpt = null) {
+    comparison=[leftStage,leftRevision,label,leftPage,leftPpt];
+    previewTools.hidden=selected.candidate.stage!=='svg';
+    previewControls();
     if(iconReview?.isOpen())return;
     releases.splice(0).forEach(fn => fn());
     if (selected.candidate.result_kind === 'page') {
@@ -90,23 +132,30 @@ export function candidateDesk(app, data) {
           el('p', {class: 'muted'}, `候选返回 ${clock(selected.candidate.created_at)}`)));
       return;
     }
-    columns.replaceChildren(el('section', {class: 'candidate-column', 'data-side': 'current', 'data-revision': leftRevision},
-      el('h2', {}, label), el('p', {class: 'muted'}, version(leftRevision)), picture(app, leftStage, '固定当前采用', releases)),
-      el('section', {class: 'candidate-column', 'data-side': 'candidate', 'data-candidate-id': selected.candidate_id},
-        el('h2', {}, '所选候选'), el('p', {class: 'muted'}, `${stageName(selected.candidate.stage)} · ${clock(selected.candidate.created_at)}`),
-        picture(app, selected.artifact, '所选候选图像', releases)));
+    const ppt=selected.candidate.stage==='svg'&&compareLayer.value==='ppt';
+    const currentPpt=leftPpt?.applicability?.status==='current'?leftPpt:null;
+    const previewFile=preview?.status==='ready'?preview.files?.['candidate.png']?.file:null;
+    const candidatePpt=previewFile?{file:{...previewFile,...(preview.check_id?{check_id:preview.check_id}:{})}}:null;
+    const canvas = comparisonCanvas(app,[
+      {stage:ppt?currentPpt:leftStage,label,caption:ppt?'固定版本 · 实际 PPT':'固定版本 · '+stageName(selected.candidate.stage),missing:'此固定版本没有有效的实际 PPT 预览；可更新当前整稿并重新预览采用目标。',attributes:{'data-side':'current','data-revision':leftRevision}},
+      {stage:ppt?candidatePpt:selected.artifact,label:'所选候选',caption:ppt?'实际 PPT 渲染':stageName(selected.candidate.stage),missing:previewDescription(preview||{status:'not_requested'}),attributes:{'data-side':'candidate','data-candidate-id':selected.candidate_id}}
+    ],{fullscreenTarget:root});
+    releases.push(()=>canvas.dispose());columns.replaceChildren(canvas.node);
+
   }
   let iconReview = null;
   function drawEvidence(attempt, base) {
     iconReview?.dispose(); iconReview = null;
-    auxReleases.splice(0).forEach(fn => fn()); sources.replaceChildren();
+    auxReleases.splice(0).forEach(fn => fn()); sources.replaceChildren(el('summary',{},'查看固定参考'));
     const referenceSources = [...(selected.reference_sources || [])];
     if (stage === 'svg' && base.stages.blueprint?.file) referenceSources.unshift({page_id: data.page_id, revision_id: base.revision_id, file: base.stages.blueprint.file});
     for (const source of referenceSources) {
-      sources.append(el('section', {class: 'candidate-reference'}, el('h3', {}, `固定参考 ${source.page_id}`),
-        picture(app, {file: source.file}, '固定参考原图', auxReleases, 'thumb'), el('p', {class: 'muted'}, version(source.revision_id)),
+      const sourceIndex=app.summary.pages.findIndex(page=>page.page_id===source.page_id);
+      const sourceLabel=source.page_id ? (sourceIndex>=0 ? `第 ${sourceIndex+1} 页` : '项目内参考页') : '外部截图';
+      sources.append(el('section', {class: 'candidate-reference'}, el('h3', {}, `固定参考 · ${sourceLabel}`),
+        picture(app, {file: source.file}, '固定参考原图', auxReleases, 'thumb'), source.revision_id && el('p', {class: 'muted'}, version(source.revision_id)),
         button('放大固定参考图', () => {
-          const views = []; const dialog = modal('固定参考原图 · ' + source.page_id,
+          const views = []; const dialog = modal('固定参考原图 · ' + sourceLabel,
             picture(app, {file: source.file}, '固定参考原图放大', views));
           const release = () => views.splice(0).forEach(fn => fn());
           modalReleases.push(() => { release(); if (dialog.contains(dialogImage)) dialog.close(); });
@@ -126,7 +175,7 @@ export function candidateDesk(app, data) {
         el('details', {}, el('summary', {}, '请求、Attempt 与结果身份'), el('pre', {class: 'evidence-json'}, JSON.stringify({candidate_id: selected.candidate_id,
           request_id: selected.request?.request_id || null, attempt_id: selected.attempt?.attempt_id || null, result_ref: selected.candidate.result_ref,
           generation_basis: selected.candidate.generation_basis, references: selected.reference_sources, observed_coverage: actual?.coverage || null}, null, 2))))));
-    iconReview = candidateIconReview(app, selected, base, {releaseComparison:()=>{releases.splice(0).forEach(fn=>fn());columns.replaceChildren();}, restoreComparison:()=>drawColumns(base.stages[stage],base.revision_id)});
+    iconReview = candidateIconReview(app, selected, base, {releaseComparison:()=>{releases.splice(0).forEach(fn=>fn());columns.replaceChildren();}, restoreComparison:()=>drawColumns(...comparison)});
     if (iconReview) evidence.append(iconReview);
   }
   async function choose(id) {
@@ -141,11 +190,12 @@ export function candidateDesk(app, data) {
         value.attempt ? get('/api/attempts/' + encodeURIComponent(value.attempt.attempt_id) + revisionQuery(value.revision_id)) : Promise.resolve(null)]);
       if (disposed || token !== serial || location.hash !== routeAtStart) return;
       if (value.candidate.result_kind !== 'page' && canonical(base.stages[stage].ref) !== canonical(value.candidate.target_ref)) throw new Error('固定采用目标与候选记录不一致，保留旧比较。');
+      clearTimeout(previewTimer);preview=null;comparison=null;
       selected = value; live = value; lastSync = new Date(); select.value = id;
       root.dataset.candidateId = id; app.route.candidate_id = id; history.replaceState(null, '', routeHash(app.info, app.route));
       const currentDoc = value.candidate.result_kind === 'page' ? await get('/api/pages/' + encodeURIComponent(data.page_id) + '/lineage' + revisionQuery(app.route.revision)) : null;
       iconReview?.dispose();iconReview=null;
-      drawColumns(base.stages[stage], base.revision_id, undefined, currentDoc?.page); drawEvidence(attempt, base); impact.replaceChildren(); renderState();
+      drawColumns(base.stages[stage], base.revision_id, undefined, currentDoc?.page, base.stages.ppt_preview); if(stage==='svg')refreshPreview(id); drawEvidence(attempt, base); impact.replaceChildren(); renderState();
     } catch (error) { if (!disposed && token === serial) { impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || ''; } }
     finally { if (token === serial) { busy = false; if (!disposed) controls(); } }
   }
@@ -200,7 +250,7 @@ export function candidateDesk(app, data) {
       const page = await get('/api/pages/' + encodeURIComponent(data.page_id) + '/lineage' + revisionQuery(result.plan.base_revision));
       if (disposed || selected.candidate_id !== id) return;
       currentPlan = result.plan; planInvalid = false; live = latest;
-      drawColumns(page.stages[stage], page.revision_id, '本次采用目标（新固定基准）', page.page);
+      drawColumns(page.stages[stage], page.revision_id, '本次采用目标（新固定基准）', page.page, page.stages.ppt_preview);
       impact.replaceChildren(impactBox(currentPlan)); renderState();
     } catch (error) { currentPlan = null; if (!disposed) impact.replaceChildren(el('div', {class: 'stack'}, el('p', {class: 'field-error'}, readableError(error)), errorItems(error))); }
     finally { busy = false; if (!disposed) controls(); }
@@ -225,7 +275,7 @@ export function candidateDesk(app, data) {
   const fromSummary = event => { if (event.detail.revision_id !== live?.revision_id && !document.hidden) refresh(); };
   app.root.addEventListener('summary-refreshed', fromSummary);
   const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(() => { if (!document.hidden) refresh(); }, 5000);
-  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); app.root.removeEventListener('summary-refreshed', fromSummary); releases.forEach(fn => fn()); auxReleases.forEach(fn => fn()); modalReleases.forEach(fn => fn()); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
+  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); clearTimeout(previewTimer); iconReview?.dispose(); app.root.removeEventListener('summary-refreshed', fromSummary); releases.forEach(fn => fn()); auxReleases.forEach(fn => fn()); modalReleases.forEach(fn => fn()); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
   refresh(); controls(); return root;
 }
 

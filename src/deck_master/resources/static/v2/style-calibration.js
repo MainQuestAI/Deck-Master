@@ -1,3 +1,4 @@
+import {visualStyle} from './visual-style.js';
 import {get, post, canonical, readableError} from './api.js';
 import {el, button, heading, empty, version} from './dom.js';
 import {DraftEditor} from './drafts.js';
@@ -51,7 +52,7 @@ export function style(app) {
   const targetCount = el('p', {class:'muted', role:'status'});
   const selectedFilter = button('只看已选目标', () => { onlySelected = !onlySelected; renderTargets(); controls(); }, false, {'aria-pressed':'false'});
   const targets = el('div', {class: 'style-targets'});
-  const instruction = el('textarea', {rows: 3, maxLength: 4000, 'aria-label': '风格短要求', value: '借用参考页配色和文字层级，保留目标页标题、事实、数字与构图。'});
+  const instruction = el('textarea', {rows: 2, maxLength: 4000, 'aria-label': '风格短要求', value: '借用参考页配色和文字层级，保留目标页标题、事实、数字与构图。'});
   const targetSource = el('select', {'aria-label':'核对目标页提示词'}, el('option', {value:''}, '选择目标页，读取同一阅读版本的原文'), ...pages.map(p => el('option', {value:p.page_id}, label(p.page_id))));
   const targetSourceView = el('div', {class:'stack'}); let targetSourceSerial = 0;
   targetSource.addEventListener('change', async () => {
@@ -86,14 +87,20 @@ export function style(app) {
   const expandButton = button('预览明确选页的扩展', () => planTrial(true));
   const dispatchButton = button('保存并交接风格试作', dispatch, true, {disabled: true});
   const impact = el('div', {class: 'stack'}), candidateRows = el('div', {class: 'stack'});
+  const primaryTarget=el('select',{'aria-label':'当前风格试作目标'},el('option',{value:''},'选择先试的一页'),pages.map(p=>el('option',{value:p.page_id},label(p.page_id))));
+  const primaryPreview=el('div',{class:'style-primary-target'});let primaryView;
+  function showPrimary(){primaryView?.dispose();primaryPreview.replaceChildren();const p=pages.find(p=>p.page_id===primaryTarget.value);if(p?.stages.blueprint.file){primaryView=imageView(app,p.stages.blueprint,'当前风格试作目标');primaryPreview.append(primaryView.node);}}
+  primaryTarget.addEventListener('change',()=>{if(primaryTarget.value)selected.add(primaryTarget.value);renderTargets();showPrimary();changed();});
   const phases = [
-    phase('1 · 参考与目标', el('label', {class:'stack'}, '查找参考页', referenceSearch), referenceCount, el('label', {class:'stack'}, '固定参考原图', reference), referenceView,
-      el('p', {class: 'muted'}, '参考版本持续固定；目标勾选只限定可试作范围，不会同时开始生成。'),
-      el('div', {class:'row wrap'}, targetSearch, selectedFilter), targetCount, targets,
-      el('label', {}, '一句话要求', instruction), detail('高级：借用维度、原文选段与建议',
+    phase('1 · 参考与目标',el('div',{class:'style-working-pair'},
+      el('div',{class:'stack'},el('label',{class:'stack'},'固定参考原图',reference),referenceView,detail('查找其它参考页',referenceSearch,referenceCount)),
+      el('div',{class:'stack'},el('label',{class:'stack'},'先试哪一页',primaryTarget),primaryPreview)),
+      el('label', {}, '一句话要求', instruction),
+      el('div', {class: 'row wrap style-primary-actions'}, proposeButton, confirmButton), notice, preview,
+      detail('其它目标页',el('div',{class:'row wrap'},targetSearch,selectedFilter),targetCount,targets),
+      detail('高级：借用维度、原文选段与建议',
         dimensionFields, el('p', {class: 'muted'}, '构图须单独选择。生成仍可能偏离，返回后逐项核对。'),
-        sourceView, excerpt, detail('对照目标页原文', targetSource, targetSourceView), el('label', {}, '制作工具建议（待你确认）', suggestion)),
-      el('div', {class: 'row wrap'}, proposeButton, confirmButton), notice, preview),
+        sourceView, excerpt, detail('对照目标页原文', targetSource, targetSourceView), el('label', {}, '制作工具建议（待你确认）', suggestion))),
     phase('2 · 确认与单页试作', el('div', {class: 'row wrap'}, recipes, button('刷新风格版本', loadRecipes)), recipeView,
       el('label', {class:'stack'}, '先试一页', trialPage), firstButton,
       el('p', {class: 'muted'}, '候选返回不替换当前稿；到固定比较中逐页核对文字、配色及未选择的维度。'),
@@ -102,8 +109,17 @@ export function style(app) {
         el('label', {}, '已采用候选', adoptedCandidate), expansionTargets,
         el('label', {class:'stack'}, '本次调用上限', calls), expandButton)
   ];
+  phases[0].node.classList.add('style-primary-phase');
   const node = el('div', {class: 'style-calibration stack'}, heading('风格校准', '固定一张参考原图，保留目标内容。先试一页，比较采用后再扩展。'),
-    phases.map(p => p.node), el('div', {class:'style-plan stack'}, impact, dispatchButton), draftNode);
+    phases.map(p => p.node), el('div', {class:'style-plan stack'}, impact, dispatchButton), detail('个人草稿与恢复',draftNode));
+  const external=visualStyle(app), internal=phases.map(p=>p.node).concat([impact.parentElement]);
+  const source=el('select',{'aria-label':'风格参考来源',disabled:true},el('option',{value:'page'},'借用项目内页面'),el('option',{value:'screenshot'},'从外部截图提取规范'));
+  const switchSource=()=>{internal.forEach(n=>n.hidden=source.value==='screenshot');external.hidden=source.value!=='screenshot';};
+  source.addEventListener('change',async()=>{const chosen=source.value,current=app.editor;await current.ready;if(disposed||current!==app.editor)return;try{localStorage.setItem('deck-master:style-source:'+app.info.project_identity,source.value);}catch{}switchSource();if(!current.readonly&&!current.disposed){current.draft.content.style_source=chosen;current.changed();}});
+  const restoreSource=()=>{const current=app.editor;current.ready.then(()=>{if(disposed||current!==app.editor)return;const saved=current.draft.content.style_source;if(['page','screenshot'].includes(saved))source.value=saved;source.disabled=false;switchSource();});};
+  app.root.addEventListener('draft-editor-replaced',restoreSource);restoreSource();
+  try{source.value=localStorage.getItem('deck-master:style-source:'+app.info.project_identity)||'page';}catch{}
+  node.insertBefore(el('label',{class:'stack'},'参考来源',source),phases[0].node);node.insertBefore(external,phases[0].node);switchSource();
   function showPhase(next) {
     if (currentPhase !== next) { phases.forEach((p,i) => { p.node.open = i + 1 === next; }); currentPhase = next; }
   }
@@ -115,10 +131,10 @@ export function style(app) {
     const referenceConflict = fixed && selected.has(fixed.page_id);
     proposeButton.disabled = blocked || referenceConflict; confirmButton.disabled = blocked || referenceConflict || !proposal || proposal.proposal.conflicts.some(c => !c.resolution);
     firstButton.disabled = blocked || !recipe; expandButton.disabled = blocked || !recipe; dispatchButton.disabled = blocked || !plan;
-    for (const input of [reference, instruction, suggestion, ...targets.querySelectorAll('input'), ...dimensions.values()].flatMap(v => v.check ? [v.check, v.text] : [v])) input.disabled = !loaded || app.readonly || busy || (input.dataset.reference === 'true' && !input.checked);
+    for (const input of [primaryTarget, reference, instruction, suggestion, ...targets.querySelectorAll('input'), ...dimensions.values()].flatMap(v => v.check ? [v.check, v.text] : [v])) input.disabled = !loaded || app.readonly || busy || (input.dataset.reference === 'true' && !input.checked);
     for (const input of [trialPage, adoptedCandidate, calls, ...expansionTargets.querySelectorAll('input')]) input.disabled = !loaded || app.readonly || editor()?.readonly || busy;
     if (referenceConflict) notice.textContent = '参考页同时在目标中。目标未被自动移除，请明确取消这页目标后再检查要求。';
-    else if (stale && !busy) notice.textContent = '项目已有新版本，旧预览已失效。输入与固定参考保留，请查看当前版本后重新预览。';
+    else if (stale && !busy) notice.replaceChildren(el('span',{},'当前项目已有更新。参考和输入保留。'),button('查看当前版本并继续',()=>{app.styleResume={project_identity:app.info.project_identity,revision:app.latest.revision_id,state:state(),recipe_id:recipe?.recipe_id};app.go({revision:app.latest.revision_id});}));
     phases[0].summary.textContent = `${fixed ? label(fixed.page_id) + ' 已固定' : '尚未固定参考'} · 已选 ${selected.size} 页`;
     phases[1].summary.textContent = recipe ? `V${recipe.version} · ${recipe.input.target_page_ids.length} 页范围` : '尚未确认风格版本';
     phases[2].summary.textContent = adoptedCandidate.value ? '已选择候选，待计划核实' : '需先比较采用单页候选';
@@ -168,7 +184,7 @@ export function style(app) {
   async function showReference() {
     const token = ++sourceSerial; release?.(); release = null; referenceView.replaceChildren(); sourceView.replaceChildren();
     if (!fixed) return;
-    referenceView.append(el('p', {}, `${label(fixed.page_id)} · ${version(fixed.revision_id)} · 已固定`));
+    sourceView.append(el('p', {}, `${label(fixed.page_id)} · ${version(fixed.revision_id)} · 已固定`));
     try {
       const data = await read('/api/pages/' + encodeURIComponent(fixed.page_id) + '/lineage?' + new URLSearchParams({revision: fixed.revision_id}));
       if (disposed || token !== sourceSerial) return;
@@ -232,6 +248,7 @@ export function style(app) {
       const result = await read('/api/styles?' + new URLSearchParams({revision:app.route.revision})); if (disposed || token !== recipeSerial) return;
       await editor().ready; if (disposed || token !== recipeSerial) return;
       const keep = typeof chosen === 'string' ? chosen : recipes.value || editor().draft.content.style_trial?.recipe_id;
+      result.recipes=result.recipes.filter(v=>v.recipe.schema_version==='style_recipe.v1');
       recipeRecords = new Map(result.recipes.map(v => [v.recipe.recipe_id,v.recipe]));
       recipes.replaceChildren(el('option', {value:''}, '选择已确认版本'), ...result.recipes.map(({recipe:r},i) => el('option', {value:r.recipe_id}, `${i+1} · V${r.version} · ${r.input.instruction.slice(0,45)}`)));
       recipes.value = recipeRecords.has(keep) ? keep : ''; selectRecipe(true);
@@ -298,7 +315,7 @@ export function style(app) {
     reference.querySelector('option[value="saved"]')?.remove();
     if (fixed) { options.set('saved', fixed); reference.append(el('option', {value:'saved'}, label(fixed.page_id)+' · '+version(fixed.revision_id))); reference.value = 'saved'; } else reference.value = '';
     for (const [key,v] of dimensions) { v.check.checked = key in (value.dimensions || defaults); v.text.value = value.dimensions?.[key] ?? defaults[key] ?? '借用参考页'+names[key]; }
-    renderTargets(); renderExcerpt(); showReference();
+    primaryTarget.value=value.targets?.[0]||'';showPrimary();renderTargets(); renderExcerpt(); showReference();
   }
   function hydrate() {
     const current = editor(); loaded = false; serial++; proposal = null; plan = null; preview.replaceChildren(); impact.replaceChildren(); controls(); current.ready.then(() => {
@@ -322,7 +339,7 @@ export function style(app) {
   const versionChanged = () => { if (app.latest?.revision_id !== app.route.revision && !busy) { invalidatePlan(false); proposal = null; preview.replaceChildren(); controls(); } };
   app.root.addEventListener('business-state-changed', sync); app.root.addEventListener('draft-editor-replaced', hydrate);
   app.root.addEventListener('summary-refreshed', versionChanged);
-  app.disposables.push(() => { disposed = true; serial++; sourceSerial++; targetSourceSerial++; candidateSerial++; recipeSerial++; requests.forEach(controller => controller.abort()); targetViews.forEach(view => view.dispose()); release?.(); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('summary-refreshed', versionChanged); });
+  app.disposables.push(() => { disposed = true; serial++; sourceSerial++; targetSourceSerial++; candidateSerial++; recipeSerial++; requests.forEach(controller => controller.abort()); targetViews.forEach(view => view.dispose()); primaryView?.dispose(); release?.(); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('draft-editor-replaced',restoreSource); app.root.removeEventListener('summary-refreshed', versionChanged); });
   referenceCount.textContent = `${options.size} 页有已记录原图，可按页码或标题搜索。`;
   showPhase(1); hydrate(); controls(); return node;
 }

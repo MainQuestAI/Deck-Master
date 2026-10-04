@@ -63,20 +63,31 @@ def _proposal(store, document, value):
         raise StyleConflict('base_revision', 'read current state and propose again', [])
     if not value['instruction'].strip():
         fail('instruction', 'provide a short concrete style requirement')
-    reference = value['reference']
+    external = value['schema_version'] == 'style_input.v2'
+    if external:
+        from .visual_styles import owned_spec, recipe_references
+        spec = owned_spec(store, document, value['visual_style_ref'])
+        references = recipe_references(store, document, value)
+        reference = references[0]
+        if value.get('font_id') and value['font_id'] not in {font['font_id'] for font in document['design_context'].get('fonts', [])}:
+            fail('font_id', 'select an installed font registered in this project')
+    else:
+        references = [value['reference']]
+        reference = value['reference']
     if reference['role'] != 'reference':
         fail('reference/role', 'style reference must be an independent reference image')
-    changes._reference_files(store, document, [reference])
-    if reference['page_id'] in value['target_page_ids']:
+    changes._reference_files(store, document, references)
+    if reference.get('page_id') in value['target_page_ids']:
         fail('target_page_ids', 'the reference page cannot be a target')
-    dimensions = copy.deepcopy(value.get('dimensions', DEFAULT_DIMENSIONS))
+    dimensions = copy.deepcopy(value.get('dimensions', {key: spec['dimensions'][key]['summary'] for key in DEFAULT_DIMENSIONS} if external else DEFAULT_DIMENSIONS))
     if not dimensions or any(not v.strip() for v in dimensions.values()):
         fail('dimensions', 'select at least one concrete visual dimension')
-    unknown = sorted(set(dimensions) - set(DIMENSIONS))
+    unknown = sorted(set(dimensions) - set({**DIMENSIONS, **({'spacing':'间距','icons':'图标'} if external else {})}))
     if unknown:
         fail('dimensions', 'unknown style dimensions: ' + ', '.join(unknown))
     # B06-AC01：未选维度成为显式保持项（沿用目标页），随 proposal/recipe 可追溯。
-    preserve_dimensions = {key: DIMENSIONS[key] for key in DIMENSIONS if key not in dimensions}
+    allowed_dimensions = {**DIMENSIONS, **({'spacing':'间距', 'icons':'图标'} if external else {})}
+    preserve_dimensions = {key: allowed_dimensions[key] for key in allowed_dimensions if key not in dimensions}
     targets, conflicts = [], []
     entries = {e['page_id']: e for e in document['pages']}
     resolutions = value.get('resolutions', {})
@@ -107,17 +118,18 @@ def _proposal(store, document, value):
     previous = _owned(store, document, recipe_id=value['parent_recipe_id'])[0] if value.get('parent_recipe_id') else None
     before = previous['input'] if previous else {}
     diff = [{'field': key, 'before': before.get(key), 'after': value.get(key)} for key in
-            ('reference', 'target_page_ids', 'instruction', 'dimensions', 'prompt_selection', 'host_suggestion', 'resolutions')
+            ('reference', 'visual_style_ref', 'primary_reference_id', 'font_id', 'target_page_ids', 'instruction', 'dimensions', 'prompt_selection', 'host_suggestion', 'resolutions')
             if before.get(key) != value.get(key)]
     # preserve_dimensions 是投影值（input 上不存在）：与父版本的投影比较，
     # 未选维度集合变化才产生条目——否则 diff 对它永远沉默。
-    prev_preserve = {key: DIMENSIONS[key] for key in DIMENSIONS
+    previous_dimensions = {**DIMENSIONS, **({'spacing':'间距', 'icons':'图标'} if previous and previous['schema_version'] == 'style_recipe.v2' else {})}
+    prev_preserve = {key: previous_dimensions[key] for key in previous_dimensions
                      if key not in (previous.get('dimensions') if previous else {})}
     if prev_preserve != preserve_dimensions:
         diff.append({'field': 'preserve_dimensions', 'before': prev_preserve, 'after': preserve_dimensions})
-    return {'schema_version': 'style_proposal.v1', 'project_id': document['project_id'],
+    return {'schema_version': 'style_proposal.v2' if external else 'style_proposal.v1', 'project_id': document['project_id'],
             'base_revision': document['revision_id'], 'input': copy.deepcopy(value), 'targets': targets,
-            'reference_sources': _sources(store, reference), 'dimensions': dimensions,
+            'reference_sources': {'visual_style_ref': value['visual_style_ref'], 'spec': spec, 'references': references, 'breakdown': spec['breakdown']} if external else _sources(store, reference), 'dimensions': dimensions,
             'preserve_dimensions': preserve_dimensions, 'conflicts': conflicts,
             'diff': diff, 'preserve_target_content': True,
             'suggestion_state': 'unconfirmed' if value.get('host_suggestion') else 'none'}
@@ -169,7 +181,7 @@ def confirm(project, *, proposal_id, base_revision, operation_id):
         if unresolved:
             raise StyleConflict('conflicts', 'explicitly resolve each displayed constraint conflict', unresolved)
         parent, parent_ref = _owned(store, document, recipe_id=proposal['input']['parent_recipe_id']) if proposal['input'].get('parent_recipe_id') else (None, None)
-        recipe = {**copy.deepcopy(proposal), 'schema_version': 'style_recipe.v1',
+        recipe = {**copy.deepcopy(proposal), 'schema_version': 'style_recipe.v2' if proposal['schema_version'] == 'style_proposal.v2' else 'style_recipe.v1',
                   'recipe_id': 'recipe-' + uuid.uuid4().hex, 'version': parent['version'] + 1 if parent else 1,
                   'parent_ref': parent_ref, 'proposal_ref': proposal_ref,
                   'suggestion_state': 'confirmed' if proposal['input'].get('host_suggestion') else 'none'}
@@ -196,6 +208,20 @@ def show(project, *, recipe_id, revision=None):
     return {'project_id': doc['project_id'], 'revision_id': doc['revision_id'], 'recipe': recipe, 'ref': ref}
 
 
+def effective_spec(recipe):
+    """Confirmed rules are executable; original analysis stays source evidence."""
+    source = recipe['reference_sources']['spec']
+    rules = {'dimensions':copy.deepcopy(recipe['dimensions']),
+             'preserve_dimensions':copy.deepcopy(recipe['preserve_dimensions']),
+             'source_evidence':{key:copy.deepcopy(source['dimensions'][key]['evidence']) for key in recipe['dimensions']},
+             'limitations':copy.deepcopy(source['limitations'])}
+    if recipe['dimensions'].get('palette') == source['dimensions']['palette']['summary']:
+        rules['palette'] = copy.deepcopy(source['palette'])
+    if recipe['input'].get('font_id'):
+        rules['font_id'] = recipe['input']['font_id']
+    return rules
+
+
 def instruction(recipe, page_id):
     value = recipe['input']; dimensions = recipe['dimensions']
     lines = ['跨页风格试作。只借用明确选定的视觉维度，不复制参考页的标题、事实、数字、论点或其它正文。',
@@ -203,6 +229,15 @@ def instruction(recipe, page_id):
              '用户简短要求：' + value['instruction'], '明确借用维度：' + json.dumps(dimensions, ensure_ascii=False)]
     if recipe.get('preserve_dimensions'):
         lines.append('明确保持维度（沿用目标页，不向参考看齐）：' + json.dumps(recipe['preserve_dimensions'], ensure_ascii=False))
+    if recipe['schema_version'] == 'style_recipe.v2':
+        spec = recipe['reference_sources']['spec']
+        lines.append('确认后有效的截图视觉规则：' + json.dumps(effective_spec(recipe), ensure_ascii=False))
+        lines.append('用户修改后的规则优先于截图中冲突的特征。图片顺序：第1张是目标页当前原图，保持未选维度与业务图标；其余图片才是风格参考，仅借用所选规则。')
+        if dimensions.get('palette') == spec['dimensions']['palette']['summary']:
+            lines.append('参考配色：' + json.dumps(spec['palette'], ensure_ascii=False))
+        if value.get('font_id'):
+            lines.append('用户选择的已注册字体：' + value['font_id'])
+        lines.append('拆解图属于分析示意，不是待还原原图；保留目标页完整业务事实与正文。')
     if value.get('prompt_selection'):
         lines.append('用户明确选择的原文片段（仅作风格参考，不作为目标正文）：' + value['prompt_selection']['selection']['excerpt'])
     if value.get('host_suggestion'):
@@ -220,7 +255,7 @@ def validate_change(store, document, value):
     anchors = {t['page_id']: t for t in recipe['targets']}
     if value.get('mode') != 'trial' or any(t['layer'] != 'original_image' for t in value['targets']):
         fail('mode', 'style plans only produce original-image trial candidates')
-    if value.get('references') != [recipe['input']['reference']] or value['instruction'] != instruction(recipe, '*'):
+    if value.get('references') != recipe_references(store, document, recipe) or value['instruction'] != instruction(recipe, '*'):
         fail('style_recipe_ref', 'plan must preserve the exact recipe requirement and reference')
     adopted = value.get('style_adopted_candidate_id')
     if not adopted and len(ids) != 1:
@@ -261,7 +296,7 @@ def plan(project, *, input):
         raise StyleConflict('page_ids', 'selected pages are no longer in the project', [{'page_id': p, 'cause': 'page_absent'} for p in ids if p not in entries])
     value = {'schema_version': 'change_intent.v1', 'project_id': doc['project_id'], 'base_revision': doc['revision_id'],
              'intent': 'style_calibration', 'instruction': instruction(recipe, '*'), 'annotation_refs': [],
-             'max_calls': input.get('max_calls'), 'mode': 'trial', 'references': [recipe['input']['reference']],
+             'max_calls': input.get('max_calls'), 'mode': 'trial', 'references': recipe_references(store, doc, recipe),
              'style_recipe_ref': ref, 'targets': [{'page_id': pid, 'page_ref': entries[pid]['page'],
                     'layer': 'original_image', 'stage': 'blueprint', 'artifact_ref': entries[pid].get('blueprint')} for pid in ids]}
     if input.get('adopted_candidate_id'):
@@ -273,3 +308,10 @@ def apply_request(store, document, value, request, page_id):
     recipe = validate_change(store, document, value)
     request['prompt'] = instruction(recipe, page_id) + '\n\n' + request['prompt']
     request['prompt_sha256'] = sha256_bytes(request['prompt'].encode('utf-8'))
+
+
+def recipe_references(store, document, recipe):
+    if recipe['schema_version'] == 'style_recipe.v2':
+        from .visual_styles import recipe_references as external_references
+        return external_references(store, document, recipe['input'])
+    return [recipe['input']['reference']]

@@ -285,13 +285,73 @@ def export_project(project_dir, *, output_dir, purpose='working', revision=None,
     return create(project_dir, output_dir=output_dir, purpose=purpose, revision=revision, export_id=export_id)
 
 
-def history(project_dir):
-    store=Store(project_dir);document=store.load_document();current=document['revision_id'];records=[]
+def _history_row(document, parent):
+    slots = {'page': 'content', 'blueprint': 'original_image', 'svg': 'svg',
+             'svg_preview': 'svg_preview', 'ppt_preview': 'ppt'}
+    before = {entry['page_id']: entry for entry in (parent or {}).get('pages', [])}
+    after = {entry['page_id']: entry for entry in document['pages']}
+    changed = []
+    basis = bool(parent and any(document.get(key) != parent.get(key)
+                               for key in ('task', 'sources', 'design_context')))
+    for pid in dict.fromkeys([*after, *before]):
+        old, new = before.get(pid, {}), after.get(pid, {})
+        layers = [label for key, label in slots.items() if old.get(key) != new.get(key)]
+        if pid not in before or pid not in after:
+            layers.append('membership')
+        if basis:
+            layers.append('basis')
+        if layers:
+            changed.append({'page_id': pid, 'layers': layers})
+    order_changed = list(before) != list(after)
+    kind = document.get('change', {}).get('kind')
+    actions = {'artifact_adoption':'采用候选', 'content_adoption':'采用正文候选', 'content_update':'修改正文', 'artifact_adopt':'采用制作结果',
+               'candidate_adopt':'采用候选', 'restore':'恢复历史', 'design_update':'调整设计',
+               'input_update':'更新任务与材料', 'task_update':'执行记录', 'initial':'创建项目'}
+    action = actions.get(kind, '项目更新')
+    if kind == 'task_update' and changed:
+        action = '页面更新'
+    return {'revision_id': document['revision_id'], 'parent_revision_id': document['parent_revision_id'],
+            'created_at': document['created_at'], 'committed_at': document.get('committed_at'),
+            'change': document['change'], 'page_count': len(document['pages']), 'action': action,
+            'changed_pages': changed, 'order_changed': order_changed,
+            'outputs_changed': bool(parent and parent.get('outputs') != document['outputs'])}
+
+
+def history(project_dir, *, revision=None, page_id=None, layer=None, limit=None, cursor=None, related_only=True):
+    """An anchored read projection; legacy calls still return the full ancestry."""
+    from .snapshots import load_snapshot
+    store = Store(project_dir)
+    head = revision or store.current_revision_id()
+    start = None
+    if cursor:
+        pieces = cursor.split(':')
+        if len(pieces) != 2 or (revision and revision != pieces[0]):
+            raise StoreError('cursor', 'cursor must preserve its original history head')
+        head, start = pieces
+    document = load_snapshot(store, head)
+    if limit is not None and (type(limit) is not int or not 1 <= limit <= 100):
+        raise StoreError('limit', 'history page size must be 1–100')
+    if start:
+        while document['revision_id'] != start and document.get('parent_revision_id'):
+            document = store.load_document(document['parent_revision_id'])
+        if document['revision_id'] != start:
+            raise StoreError('cursor', 'cursor is not in the fixed committed ancestry')
+    records = []
+    next_cursor = None
     while document:
-        records.append({'revision_id':document['revision_id'],'parent_revision_id':document['parent_revision_id'],'created_at':document['created_at'],'change':document['change'],'page_count':len(document['pages'])})
-        parent=document['parent_revision_id']
-        document=store.load_document(parent) if parent else None
-    return {'current':current,'revisions':records}
+        parent_id = document['parent_revision_id']
+        parent = store.load_document(parent_id) if parent_id else None
+        row = _history_row(document, parent)
+        relevant = [item for item in row['changed_pages'] if (not page_id or item['page_id'] == page_id)
+                    and (not layer or layer in item['layers'] or 'basis' in item['layers'])]
+        if limit is None or not related_only or relevant or (not page_id and (row['outputs_changed'] or row['order_changed'])):
+            records.append(row)
+        if limit is not None and len(records) >= limit:
+            next_cursor = head + ':' + parent_id if parent_id else None
+            break
+        document = parent
+    return {'current': head, 'revisions': records, 'pagination': {'limit': limit, 'next_cursor': next_cursor},
+            'time_policy': 'committed_at only; historical absence remains unknown'}
 
 
 def restore(project_dir, *, revision_id, base_revision, operation_id):
