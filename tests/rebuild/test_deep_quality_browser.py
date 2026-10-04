@@ -251,7 +251,8 @@ def test_escape_ends_the_open_comparison_before_leaving_the_page(workbench):
     page.get_by_role('button',name='比较此页版本',exact=True).click()
     select=page.get_by_label('选择同页比较版本')
     expect(select).to_be_visible()
-    assert len(select.locator('option').all_inner_texts())>1, 'this fixture needs a second revision for the page'
+    # The page's other revisions load asynchronously; wait for one to exist.
+    expect(select.locator('option').nth(1)).to_be_attached()
     select.select_option(index=1)
     page.get_by_role('button',name='固定比较这个版本',exact=True).click()
     expect(page.locator('.page-columns.with-fixed-compare')).to_be_visible()
@@ -311,6 +312,32 @@ def test_many_opinions_do_not_push_the_artwork_out_of_view(workbench):
     # A long opinion list may scroll, but it must not resize or push the artwork.
     assert artwork['y']>=0 and artwork['y']+artwork['height']<=900, artwork
     assert artwork['width']>600, artwork
+
+
+def test_delivery_gaps_name_rules_and_keep_unknown_reasons_blocked(workbench):
+    """Labelled contract/UI fixture: proves the branches, not that real business hit them."""
+    import json as json_mod
+    page,ctx,store,url,goto,_=workbench;goto('runs')
+    page.route('**/api/exports',lambda route:route.fulfill(status=409,content_type='application/json',body=json_mod.dumps(
+      {'error':{'code':'delivery_blocked','message':'交付被拒绝：存在未解决项。','revision_id':store.current_revision_id(),'gaps':[
+        {'layer':'ppt','reason':'page_limit_violation','page_id':None,'scope':'deck'},
+        {'layer':'ppt','reason':'needs_a_later_rule','dimension':'privacy','page_id':'p01'}]}})))
+    page.get_by_role('button',name='生成正式交付包',exact=True).click()
+    gaps=page.locator('.export-gaps')
+    gaps.wait_for()
+    # A known rule states the rule and the matching action, and stays blocked.
+    expect(gaps).to_contain_text('不符合页数规则')
+    expect(gaps).to_contain_text('按该规则调整页数或提供对应证据')
+    expect(gaps).to_contain_text('这一步由制作工具链完成')
+    # An unclassified reason says so, keeps the raw reason readable and never
+    # invents a repair action.
+    expect(gaps).to_contain_text('暂无法自动处理')
+    expect(gaps).to_contain_text('原始原因：needs_a_later_rule · privacy')
+    expect(gaps.locator('summary',has_text='原始缺项记录')).to_be_visible()
+    # Real targets only: a locator and the run surface, never a fake repair.
+    expect(gaps.get_by_role('button',name='定位此页',exact=True)).to_have_count(1)
+    assert gaps.get_by_role('button',name='查看任务与交付',exact=True).count()==2
+    assert page.locator('.export-result .download-link').count()==0
 
 
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):

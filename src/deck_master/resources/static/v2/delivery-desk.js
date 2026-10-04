@@ -15,14 +15,40 @@ const layerNames = {content: '逐页稿', page: '逐页稿', blueprint: '原图'
 const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
 const exportURL = (record, name) => '/api/exports/' + encodeURIComponent(record.export_id) + '/files/' + name.split('/').map(encodeURIComponent).join('/');
 
+// Each gap names the rule it actually broke and the honest next step. A locate
+// action is never renamed into a repair, toolchain steps say they happen outside
+// the page, and a reason this app cannot classify keeps its raw detail instead of
+// being flattened into "待检查".
+const gapRules = {
+  not_recorded: {label: '对应产物未记录', next: '先更新对应预览或编译整稿，再重新检查'},
+  input_reconciliation_pending: {label: '输入待协调', next: '进入输入协调流程；导出用途与固定版本保持不变'},
+  needs_reconciliation: {label: '输入待协调', next: '进入输入协调流程；导出用途与固定版本保持不变'},
+  basis_changed: {label: '制作或检查依据已变化', next: '定位受影响对象，重新计划对应更新或检查'},
+  not_evaluated: {label: '此维度尚未评估', next: '完成对应质量检查；未评估不能当作通过'},
+  unresolved: {label: '仍有未解决问题', next: '查看具体问题，处理后重新检查'},
+  page_limit_violation: {label: '不符合页数规则', next: '按该规则调整页数或提供对应证据'},
+};
+const toolchainLayers = new Set(['ppt', 'ppt_preview', 'deck_outputs', 'render_report', 'conversion']);
+const locateLayer = layer => layer === 'blueprint' || String(layer).startsWith('blueprint_') ? 'original_image'
+  : String(layer).startsWith('svg') ? 'svg' : String(layer).startsWith('ppt') || layer === 'conversion' ? 'ppt' : 'content';
+
 function gapsView(app, gaps, revision) {
   if (!gaps?.length) return el('p', {class: 'muted'}, '未列出缺项；正式交付仍由服务核对所选快照。');
   const pageMap = new Map(app.summary.pages.map((p, i) => [p.page_id, `${i + 1}. ${p.title || p.page_id}`]));
   const node = el('div', {class: 'stack export-gaps'}); let count = 20;
   function render() {
-    node.replaceChildren(el('ul', {class: 'gap-list'}, gaps.slice(0, count).map(gap => el('li', {},
-      el('span', {}, `${pageMap.get(gap.page_id) || gap.page_id || '整稿'} · ${layerNames[gap.layer] || gap.layer} · ${gap.reason === 'basis_changed' ? '制作依据已变化' : gap.reason === 'needs_reconciliation' ? '输入待协调' : gap.reason === 'unresolved' ? '仍有未解决项' : '待检查或补齐'}`),
-      gap.page_id && button('定位此页', () => app.go({surface: 'page', page_id: gap.page_id, revision, layer: gap.layer === 'blueprint' || gap.layer.startsWith('blueprint_') ? 'original_image' : gap.layer.startsWith('svg') ? 'svg' : gap.layer.startsWith('ppt') || gap.layer === 'conversion' ? 'ppt' : 'content'}))))));
+    node.replaceChildren(el('ul', {class: 'gap-list'}, gaps.slice(0, count).map(gap => {
+      const rule = gapRules[gap.reason];
+      const actions = el('div', {class: 'row wrap'});
+      if (gap.page_id) actions.append(button('定位此页', () => app.go({surface: 'page', page_id: gap.page_id, revision, layer: locateLayer(gap.layer)})));
+      actions.append(button('查看任务与交付', () => app.go({surface: 'runs', revision})));
+      return el('li', {},
+        el('p', {}, `${pageMap.get(gap.page_id) || gap.page_id || '整稿'} · ${layerNames[gap.layer] || gap.layer || '整稿'} · ${rule ? rule.label : '暂无法自动处理'}`),
+        el('p', {class: 'muted'}, rule ? rule.next : '保留原始原因与范围，查看证据或交给制作工具核查后处理；这里不猜测修复动作。'),
+        !rule && el('p', {class: 'muted'}, `原始原因：${gap.reason || '未记录'}${gap.dimension ? ` · ${gap.dimension}` : ''}`),
+        toolchainLayers.has(gap.layer) ? el('p', {class: 'muted'}, '这一步由制作工具链完成（编译与渲染），网页不会代替执行；缺工具时按任务与交付里的工具说明恢复环境后重新编译。') : null,
+        actions, !rule && el('details', {}, el('summary', {}, '原始缺项记录'), el('code', {}, JSON.stringify(gap))));
+    })));
     if (gaps.length > count) node.append(button(`继续查看缺项（还有 ${gaps.length - count} 项）`, () => { count += 30; render(); }));
   }
   render(); return node;
