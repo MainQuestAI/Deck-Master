@@ -195,9 +195,9 @@ export function candidateDesk(app, data) {
       root.dataset.candidateId = id; app.route.candidate_id = id; history.replaceState(null, '', routeHash(app.info, app.route));
       // A page-kind candidate compares its own immutable basis against its result;
       // following the route revision would silently move one side of the pair.
-      const currentDoc = value.candidate.result_kind === 'page' ? await get('/api/pages/' + encodeURIComponent(data.page_id) + '/lineage' + revisionQuery(value.candidate.base_revision)) : null;
+      const currentPage = value.candidate.result_kind === 'page' ? base.page : undefined;
       iconReview?.dispose();iconReview=null;
-      drawColumns(base.stages[stage], base.revision_id, undefined, currentDoc?.page, base.stages.ppt_preview); if(stage==='svg')refreshPreview(id); drawEvidence(attempt, base); impact.replaceChildren(); renderState();
+      drawColumns(base.stages[stage], base.revision_id, undefined, currentPage, base.stages.ppt_preview); if(stage==='svg')refreshPreview(id); drawEvidence(attempt, base); impact.replaceChildren(); renderState();
     } catch (error) { if (!disposed && token === serial) { impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || ''; } }
     finally { if (token === serial) { busy = false; if (!disposed) controls(); } }
   }
