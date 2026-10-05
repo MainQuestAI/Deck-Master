@@ -1,6 +1,6 @@
 # PR100 · V1.0.0 RC 收口修复
 
-工作代号 PR100；实际 GitHub PR 号码自动分配（#100 已被 Dependabot 使用）。
+工作代号 PR100；实际修复为 [PR #102](https://github.com/MainQuestAI/Deck-Master/pull/102)（#100 已被 Dependabot 使用）。
 基于 PR99 `c01151a95065fcfcb3577b6a8fdc05b548118b3b`，其父增量 PR98 为
 `7662a11d19b61ff9a4341cc67e8b01258b9e576d`。独立分支 `codex/v1-rc-closure`，
 PR base 为 `codex/webui-usability-v1`。实施前两份 HEAD 已实时核对一致。

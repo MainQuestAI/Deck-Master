@@ -184,7 +184,7 @@ def test_commit_conflict_shows_frozen_requirement_and_later_draft(workbench):
 
 
 def test_page_candidate_uses_one_fixed_lineage_read(workbench):
-    from urllib.parse import urlencode
+    from urllib.parse import urlencode, parse_qs, urlsplit
     import uuid
     from deck_master import changes
     from test_content_candidates import content_intent, start_task, page_envelope, accept
@@ -207,7 +207,7 @@ def test_page_candidate_uses_one_fixed_lineage_read(workbench):
 
 def test_prepared_prompt_selection_mounts_one_recovery_panel(workbench):
     import uuid
-    from urllib.parse import urlencode
+    from urllib.parse import urlencode, parse_qs, urlsplit
     from deck_master import changes
     page, _, store, url, _, _ = workbench
     for instruction in ['仅调整标题层级', '仅调整配色']:
@@ -231,6 +231,11 @@ def test_prepared_prompt_selection_mounts_one_recovery_panel(workbench):
         recovery.click()
         expect(page.get_by_role('button', name='下载草稿恢复文件', exact=True)).to_be_visible()
         expect(page.get_by_label('意见正文', exact=True)).to_be_editable()
+        with page.expect_download() as download:
+            page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+        from pathlib import Path
+        recovered = json.loads(Path(download.value.path()).read_text())
+        assert recovered['draft']['base_ref']['sha256'] == ref
 
 
 def test_loading_draft_is_readonly_and_old_pending_shows_exact_request(workbench):
@@ -277,3 +282,54 @@ def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench)
     page.unroute('**/api/drafts')
     expect(body).to_be_editable()
     expect(body).to_have_value('已有浏览器缓冲')
+
+
+@pytest.mark.parametrize('destination', ['candidate', 'page'])
+@pytest.mark.parametrize('late_error', [False, True])
+def test_late_candidate_reads_leave_the_new_surface_alone(workbench, destination, late_error):
+    from urllib.parse import urlencode, parse_qs, urlsplit
+    from test_content_candidates import dispatch_content_trial, start_task, page_envelope, accept
+    page, _, store, url, _, _ = workbench
+    ids = []
+    for suffix in [' candidate A', ' candidate B']:
+        task = dispatch_content_trial(store.project_root, store)
+        start_task(store.project_root, task)
+        ids.append(accept(store.project_root, task, page_envelope(store, task, suffix))['candidate_ids'][0])
+    identity = page.request.get(url + 'api/project').json()['project_identity']
+    route = {'project': identity, 'surface': 'page', 'page': 'p01', 'layer': 'content',
+             'revision': store.current_revision_id(), 'candidate': ids[0]}
+    page.goto(url + '#' + urlencode(route))
+    expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', ids[0])
+    held = []
+    page.route('**/api/candidates/' + ids[1], lambda r: held.append((r, r.fetch())))
+    page.get_by_label('选择本页候选', exact=True).select_option(ids[1])
+    for _ in range(100):
+        if held:
+            break
+        page.wait_for_timeout(20)
+    assert held
+    if destination == 'page':
+        route.pop('candidate')
+        route['page'] = 'p02'
+    new_hash = '#' + urlencode(route)
+    page.evaluate('(hash) => location.hash = hash', new_hash)
+    if destination == 'candidate':
+        expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', ids[0])
+    else:
+        expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-page-id', 'p02')
+    if late_error:
+        held[0][0].abort('failed')
+    else:
+        held[0][0].fulfill(response=held[0][1])
+    page.wait_for_timeout(100)
+    final_route = parse_qs(urlsplit(page.url).fragment)
+    assert final_route['page'] == [route['page']]
+    assert final_route['revision'] == [route['revision']]
+    assert final_route.get('candidate') == ([route['candidate']] if 'candidate' in route else None)
+    if destination == 'candidate':
+        expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', ids[0])
+        expect(page.locator('.candidate-columns')).to_contain_text('candidate A')
+        expect(page.locator('.candidate-columns')).not_to_contain_text('candidate B')
+        expect(page.locator('.candidate-impact .field-error')).to_have_count(0)
+    else:
+        expect(page.locator('.candidate-desk')).to_have_count(0)
