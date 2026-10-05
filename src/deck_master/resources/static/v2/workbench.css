@@ -145,6 +145,8 @@ textarea{font-size:14px;line-height:1.7}
 
 /* The runtime lane can advance without replacing a fixed page comparison. */
 .runtime-sync-row:not([hidden]) { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 0; }
+.draft-conflict-pane { min-width: 0; }
+.draft-conflict-panes textarea { min-height: 96px; }
 .run-task { border-bottom: 1px solid var(--line, var(--border)); padding: 16px 0; }
 .run-task p, .runtime-sync { margin: 0; }
 .run-filters select { max-width: 320px; min-height: 44px; }

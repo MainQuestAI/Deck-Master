@@ -285,21 +285,35 @@ export class DraftEditor {
   }
   async conflict() {
     try {
-      const result = await get('/api/drafts/' + encodeURIComponent(this.draft.draft_id));
-      const local = el('textarea', {readOnly: true, 'aria-label': '你的本机草稿', value: this.draft.content.text || ''});
-      const saved = el('textarea', {readOnly: true, 'aria-label': '项目中已保存的草稿', value: result.record?.draft.content.text || ''});
-      modal('保留两份个人草稿', el('div', {class: 'conflict-panes'},
-        el('section', {}, el('h3', {}, '你的本机草稿'), local), el('section', {}, el('h3', {}, '项目中已保存的草稿'), saved)),
-        [button('下载本机稿', () => this.download()), button('另存为个人草稿', () => {
-          this.persist(); this.draft.draft_id = 'draft-' + crypto.randomUUID(); this.etag = null;
-          this.pendingSave = null; this.status = 'dirty'; this.persist(); this.updateStatus();
+      const local = structuredClone(this.draft);
+      const result = await get('/api/drafts/' + encodeURIComponent(local.draft_id));
+      if (this.disposed || this.draft.draft_id !== local.draft_id) return;
+      const saved = result.record ? structuredClone(result.record.draft) : null;
+      const pane = (prefix, title, draft) => {
+        const content = draft?.content || {}, texts = [content.text, content.annotation?.body, content.requirement?.text];
+        return el('section', {class: 'draft-conflict-pane stack'}, el('h3', {}, title),
+          el('p', {class: 'muted'}, draft ? `${draft.target.page_id || '整个项目'} · ${layers[draft.target.layer] || '个人草稿'} · 基准 ${version(draft.base_revision)}` : '项目目前没有已保存的草稿'),
+          ...['私人笔记', '意见正文', '修改要求'].map((purpose, index) => el('label', {class: 'stack'}, purpose,
+            el('textarea', {rows: 3, readOnly: true, placeholder: '空白', 'aria-label': prefix + purpose,
+              value: typeof texts[index] === 'string' ? texts[index] : ''}))),
+          draft && el('details', {}, el('summary', {}, '固定依据与引用'), el('pre', {class: 'evidence-json'}, JSON.stringify({
+            target: draft.target, base_revision: draft.base_revision, base_ref: draft.base_ref,
+            requirement_basis: content.requirement?.basis ?? null, annotation_refs: content.requirement?.annotation_refs || []}, null, 2))));
+      };
+      modal('保留两份个人草稿', el('div', {class: 'conflict-panes draft-conflict-panes'},
+        pane('本机', '你的本机草稿', local), pane('项目', '项目中已保存的草稿', saved)),
+        [button('下载本机稿', () => this.download(local)), button('另存为个人草稿', () => {
+          if (!this.archiveLocal()) { this.updateStatus(); return; }
+          this.persist(); this.draft = structuredClone(local); this.draft.draft_id = 'draft-' + crypto.randomUUID(); this.etag = null;
+          this.input.value = this.draft.content.text || '';
+          this.pendingSave = null; this.sequence = undefined; this.status = 'dirty'; this.persist(); this.updateStatus();
           document.querySelector('#modal').close(); this.save();
         })]);
     } catch (error) { this.note = readableError(error); this.updateStatus(); }
   }
-  async download() {
-    const value = structuredClone(this.draft);
-    // W03 content is text. This file never includes HTTP/session metadata.
+  async download(draft = this.draft) {
+    const value = structuredClone(draft);
+    // Preserve every content purpose and its basis, never HTTP/session metadata.
     const recovery = {schema_version: 'ui_draft_recovery.v1', draft: value, digest: await digest(value)};
     downloadJSON(recovery, 'deck-master-personal-draft.json');
     toast('恢复文件已下载。它可能包含内部提示词，请妥善保管。');

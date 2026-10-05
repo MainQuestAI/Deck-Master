@@ -41,7 +41,8 @@ export function trialActions(app, data) {
       el('label', {}, '阶段', stage), referenceArea, el('label', {}, '一句话要求', instruction),
       el('p', {class: 'muted'}, '试作自身不替换当前稿；已有自动生产仍可继续。'),
       el('div', {class: 'row wrap'}, planButton, commitButton), impact));
-  node.append(el('div', {class: 'panel-head'}, el('h2', {}, '本页候选'), compare), el('div', {class: 'panel-body stack'}, notice, candidateList), form);
+  node.append(el('div', {class: 'panel-head'}, el('h2', {}, '本页候选'), compare), el('div', {class: 'panel-body stack'}, notice,
+    el('p', {class: 'muted field-help'}, '列表固定在当前阅读版本；新返回的候选可在「任务与交付」中查看。'), candidateList), form);
   function editor() { return app.editor; }
   function state() { return {instruction: instruction.value, stage: stage.value, reference: fixedReference}; }
   function controls() {

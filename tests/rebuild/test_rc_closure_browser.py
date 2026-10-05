@@ -40,21 +40,29 @@ def persisted_requirement(workbench):
     return saved_requirement(page, '原要求：保留数字')
 
 
+def isolated_context(workbench, **options):
+    context = workbench[1].browser.new_context(**options)
+    context.on('page', lambda p: p.on('pageerror', lambda error: workbench[5].append(str(error))))
+    return context
+
+
 def recover_on_new_port(workbench, text, refs):
     from deck_master.web import WorkbenchServer
     page, context, store, old_url, goto, _ = workbench
     fragment = page.url.split('#')[1]
     goto.stop_server()
     server = WorkbenchServer(store.project_root)
-    fresh = context.browser.new_context()
+    fresh = isolated_context(workbench)
     try:
         url = server.start()
         assert url != old_url
         recovered = fresh.new_page()
         recovered.goto(url + '#' + fragment)
         expect(recovered.get_by_label('修改要求', exact=True)).to_have_value(text)
-        expect(recovered.get_by_label('选入意见 1', exact=True)).to_be_checked() if refs else expect(
-            recovered.get_by_label('选入意见 1', exact=True)).not_to_be_checked()
+        if refs:
+            expect(recovered.get_by_label('选入意见 1', exact=True)).to_be_checked()
+        else:
+            expect(recovered.get_by_label('选入意见 1', exact=True)).not_to_be_checked()
         assert saved_requirement(recovered, text)['annotation_refs'] == refs
     finally:
         fresh.close()
@@ -119,7 +127,7 @@ def test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect(workb
             store.load_document()['annotations'][0])['base_revision']
     ui_journal.save(store.project_root, draft=draft, expected_etag=record['etag'])
     original = copy.deepcopy(draft['content']['requirement'])
-    other = context.browser.new_context()
+    other = isolated_context(workbench)
     try:
         test_page = other.new_page()
         test_page.goto(url + '#' + page.url.split('#')[1])
@@ -154,7 +162,7 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
     draft['base_revision'] = old
     draft['content'] = {'text': '', 'requirement': state}
     ui_journal.save(store.project_root, draft=draft)
-    fresh = context.browser.new_context()
+    fresh = isolated_context(workbench)
     try:
         other = fresh.new_page()
         other.goto(url + '#' + page.url.split('#')[1])
@@ -194,6 +202,106 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
             server.stop()
     finally:
         fresh.close()
+
+
+@pytest.mark.parametrize('kind,width,height', [
+    ('note', 1280, 800), ('opinion', 1280, 800), ('requirement', 1280, 800),
+    ('same_note', 1280, 800), ('all', 1440, 900), ('all', 1280, 800), ('all', 390, 844),
+])
+def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, tmp_path, kind, width, height):
+    import copy
+    import os
+    from pathlib import Path
+    from deck_master import ui_journal
+    page, context, store, url, _, errors = workbench
+    state = persisted_requirement(workbench)
+    record = next(r for r in ui_journal.list_drafts(store.project_root)['records']
+                  if r['draft']['content'].get('requirement') == state)
+    initial = copy.deepcopy(record['draft'])
+    initial['content']['text'] = '共同笔记' if kind == 'same_note' else ''
+    initial['content']['annotation'] = {'body': '', 'scope': 'page', 'regions': [], 'intent': '修改建议',
+                                      'chapter_id': page.get_by_label('意见所属章节').input_value()}
+    initial['content']['requirement']['text'] = ''
+    ui_journal.save(store.project_root, draft=initial, expected_etag=record['etag'])
+    project_texts = ['共同笔记' if kind == 'same_note' else '', '', '']
+    local_texts = list(project_texts)
+    for index, purpose in enumerate(['笔记', '意见', '要求']):
+        if kind == 'all' or kind == ['note', 'opinion', 'requirement'][index] or kind == 'same_note' and index == 2:
+            project_texts[index] = f'项目{purpose} A\n保留换行'
+            local_texts[index] = f'本机{purpose} B\n保留换行'
+    a_context = context.browser.new_context(viewport={'width': width, 'height': height})
+    b_context = context.browser.new_context(viewport={'width': width, 'height': height}, accept_downloads=True)
+    for browser_context in [a_context, b_context]:
+        browser_context.on('page', lambda p: p.on('pageerror', lambda error: errors.append(str(error))))
+    try:
+        a, b = a_context.new_page(), b_context.new_page()
+        for window in [a, b]:
+            window.goto(url + '#' + page.url.split('#')[1])
+            expect(window.get_by_label('意见正文', exact=True)).to_be_editable()
+            window.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
+            expect(window.get_by_label('个人草稿', exact=True)).to_have_value(initial['content']['text'])
+        labels = ['个人草稿', '意见正文', '修改要求']
+        def edit(window, texts):
+            for label, value in zip(labels, texts, strict=True):
+                if window.get_by_label(label, exact=True).input_value() != value:
+                    window.get_by_label(label, exact=True).fill(value)
+        edit(a, project_texts)
+        expect(a.locator('.draft-state')).to_contain_text('已保存到项目')
+        with b.expect_response(lambda response: '/api/drafts/save' in response.url and response.status == 409) as conflict:
+            edit(b, local_texts)
+        assert conflict.value.status == 409
+        expect(b.locator('.draft-state')).to_contain_text('保存冲突')
+        b.get_by_role('button', name='比较两份草稿', exact=True).click()
+        dialog = b.get_by_role('dialog')
+        expect(dialog).to_be_visible()
+        expect(dialog.locator('.conflict-panes textarea')).to_have_count(6)
+        for prefix, texts in [('本机', local_texts), ('项目', project_texts)]:
+            for purpose, value in zip(['私人笔记', '意见正文', '修改要求'], texts, strict=True):
+                field = dialog.get_by_label(prefix + purpose, exact=True)
+                expect(field).to_have_value(value)
+                expect(field).not_to_be_editable()
+                if not value:
+                    expect(field).to_have_attribute('placeholder', '空白')
+        panes = dialog.locator('.draft-conflict-pane')
+        expect(panes).to_have_count(2)
+        for index in range(2):
+            detail = json.loads(panes.nth(index).locator('pre').text_content())
+            assert detail['target'] == initial['target']
+            assert detail['base_revision'] == initial['base_revision']
+            assert detail['base_ref'] == initial['base_ref']
+            assert detail['requirement_basis'] == state['basis']
+            assert detail['annotation_refs'] == state['annotation_refs']
+        assert b.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        assert dialog.evaluate('(node) => node.scrollWidth <= node.clientWidth')
+        evidence = Path(os.environ.get('DECK_MASTER_RC_EVIDENCE', str(tmp_path)))
+        evidence.mkdir(parents=True, exist_ok=True)
+        b.screenshot(path=str(evidence / f'conflict-{kind}-{width}.png'))
+        with b.expect_download() as downloaded:
+            dialog.get_by_role('button', name='下载本机稿', exact=True).click()
+        recovery = json.loads(Path(downloaded.value.path()).read_text())
+        expected = copy.deepcopy(initial)
+        expected['content']['text'] = local_texts[0]
+        expected['content']['annotation']['body'] = local_texts[1]
+        expected['content']['requirement']['text'] = local_texts[2]
+        assert recovery['draft'] == expected
+        # The open comparison stays frozen if the other window saves again.
+        a.get_by_label('个人草稿', exact=True).fill('项目后续修改')
+        expect(a.locator('.draft-state')).to_contain_text('已保存到项目')
+        expect(dialog.get_by_label('项目私人笔记', exact=True)).to_have_value(project_texts[0])
+        dialog.get_by_role('button', name='另存为个人草稿', exact=True).click()
+        expect(b.locator('.draft-state')).to_contain_text('已保存到项目')
+        records = ui_journal.list_drafts(store.project_root)['records']
+        new = next(r['draft'] for r in records if r['draft']['draft_id'] != initial['draft_id'] and
+                   r['draft']['content'] == expected['content'])
+        expected['draft_id'] = new['draft_id']
+        assert new == expected
+        original = ui_journal.get(store.project_root, initial['draft_id'])['record']['draft']
+        assert original['content']['text'] == '项目后续修改'
+        assert original['content']['annotation']['body'] == project_texts[1]
+        assert original['content']['requirement']['text'] == project_texts[2]
+    finally:
+        a_context.close()
+        b_context.close()
 
 
 def test_requirement_survives_reload_and_deselect(workbench):
@@ -345,13 +453,13 @@ def test_commit_conflict_shows_frozen_requirement_and_later_draft(workbench):
     with page.expect_response('**/api/changes/commit') as response:
         held[0].fulfill(response=held[0].fetch())
     assert response.value.status == 409
-    expect(page.get_by_label('未提交的本机草稿', exact=True)).to_have_value(original)
+    expect(page.get_by_label('冻结的原请求', exact=True)).to_have_value(original)
     expect(page.get_by_label('之后继续编辑的草稿', exact=True)).to_have_value(later)
     expect(page.get_by_label('修改要求', exact=True)).to_have_value(later)
 
 
 def test_page_candidate_uses_one_fixed_lineage_read(workbench):
-    from urllib.parse import urlencode, parse_qs, urlsplit
+    from urllib.parse import urlencode
     import uuid
     from deck_master import changes
     from test_content_candidates import content_intent, start_task, page_envelope, accept
@@ -374,7 +482,7 @@ def test_page_candidate_uses_one_fixed_lineage_read(workbench):
 
 def test_prepared_prompt_selection_mounts_one_recovery_panel(workbench):
     import uuid
-    from urllib.parse import urlencode, parse_qs, urlsplit
+    from urllib.parse import urlencode
     from deck_master import changes
     page, _, store, url, _, _ = workbench
     for instruction in ['仅调整标题层级', '仅调整配色']:
@@ -425,7 +533,7 @@ def test_loading_draft_is_readonly_and_old_pending_shows_exact_request(workbench
       await business.conflict({pending: {payload: {action: 'changes.commit', request: {plan_id: 'old-plan'}}},
         editor: {pendingText: () => '后写文字'}, note: '旧请求冲突'}, {details: {}});
     }''')
-    assert json.loads(page.get_by_label('未提交的本机草稿', exact=True).input_value()) == {'plan_id': 'old-plan'}
+    assert json.loads(page.get_by_label('冻结的原请求', exact=True).input_value()) == {'plan_id': 'old-plan'}
     expect(page.get_by_label('之后继续编辑的草稿', exact=True)).to_have_value('后写文字')
     expect(page.get_by_role('dialog')).to_contain_text('旧记录未保存修改要求正文')
 

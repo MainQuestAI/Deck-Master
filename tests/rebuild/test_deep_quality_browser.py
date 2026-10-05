@@ -415,7 +415,7 @@ def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):
     with page.expect_response('**/api/changes/plan') as response:page.get_by_role('button',name='预览修改影响',exact=True).click()
     assert response.value.status==409
     expect(page.get_by_role('dialog')).to_be_visible()
-    expect(page.get_by_label('未提交的本机草稿')).to_have_value(text)
+    expect(page.get_by_label('当前草稿')).to_have_value(text)
     expect(page.get_by_role('dialog').get_by_role('button',name='查看新的当前版本',exact=True)).to_be_enabled()
 
 
