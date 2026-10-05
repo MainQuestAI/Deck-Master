@@ -20,6 +20,9 @@ export class Annotations {
     this.basis = el('p', {class: 'muted'});
     this.regionList = el('div', {class: 'annotation-regions stack'});
     this.savedList = el('div', {class: 'saved-annotations stack'});
+    this.listState = 'loading';
+    this.listNotice = el('p', {class: 'muted annotation-list-state', role: 'status'});
+    this.listRetry = button('重新读取已保存意见', () => this.loadSaved(), false, {hidden: true});
     this.preview = el('div', {class: 'change-plan-preview stack'});
     this.intent = field('意见目的', el('input', {value: '修改建议', maxlength: 256}));
     this.scope = el('select', {'aria-label': '意见作用范围'}, ['artifact', 'page', 'chapter', 'project'].map((value, i) => el('option', {value}, ['当前图层', '整页', '章节', '项目'][i])));
@@ -66,7 +69,7 @@ export class Annotations {
         this.tools, this.modeHint,
         this.geometry, this.regionList, this.noteEntry,
         el('p', {class: 'muted field-help'}, '保存意见不启动制作；选入已保存意见后再预览修改计划。'),
-        el('h3', {}, '已保存意见'), this.savedList,
+        el('h3', {}, '已保存意见'), this.listNotice, this.listRetry, this.savedList,
         this.requirementSection, this.preview));
     this.scope.addEventListener('change', () => { if (this.scope.value !== 'artifact') this.setMode('whole'); this.changed(); });
     this.chapter.addEventListener('change', () => this.changed()); this.intent.input.addEventListener('input', () => this.changed());
@@ -142,6 +145,14 @@ export class Annotations {
     return note.page_id === this.data.page_id && canonical(note.page_ref) === canonical(this.data.stages.content.ref) &&
       (note.scope === 'page' || note.scope === 'artifact' && note.layer === this.layer && canonical(note.artifact_ref) === canonical(this.ref));
   }
+  listReady() { return this.listState === 'ready' && this.loadedListRevision === this.listRevisionId(); }
+  renderListState() {
+    this.listNotice.hidden = this.listReady();
+    this.listNotice.textContent = this.listState === 'error'
+      ? `已保存意见尚未读取：${this.listError} 文字与原引用仍保留，可继续写要求；请重试后预览计划。`
+      : '正在读取已保存意见；文字可继续编辑，读取完成后再预览修改计划。';
+    this.listRetry.hidden = this.listState !== 'error';
+  }
   restoreRequirement() {
     const state = this.editor?.draft.content.requirement;
     this.selected.clear(); this.requirementMissing = false;
@@ -150,18 +161,21 @@ export class Annotations {
     const refs = Array.isArray(state?.annotation_refs) ? state.annotation_refs : [];
     const matching = state && canonical(state.basis) === canonical(this.requirementBasis());
     for (const ref of refs) {
-      const record = this.records.find(row => canonical(row.ref) === canonical(ref));
+      const record = this.listReady() && this.records.find(row => canonical(row.ref) === canonical(ref));
       if (matching && record && this.applicable(record)) this.selected.set(ref.sha256, record);
-      else this.requirementMissing = true;
+      else if (this.listReady()) this.requirementMissing = true;
     }
     if (state && !matching) this.requirementMissing = true;
     this.syncRequirement();
   }
-  persistRequirement() {
+  persistRequirement(selectionChanged = false) {
     if (!this.canEditDraft()) return;
-    this.editor.draft.content.requirement = {text: this.requirementField.input.value,
-      edited: Boolean(this.requirementTouched), annotation_refs: [...this.selected.values()].map(row => row.ref),
-      basis: this.requirementBasis()};
+    // Unresolved references belong to the saved draft. Editing text is not a
+    // selection change, nor permission to move an old requirement to this basis.
+    const state = this.editor.draft.content.requirement || {annotation_refs: [], basis: this.requirementBasis()};
+    this.editor.draft.content.requirement = {...state, text: this.requirementField.input.value,
+      edited: Boolean(this.requirementTouched), ...(selectionChanged ? {
+        annotation_refs: [...this.selected.values()].map(row => row.ref), basis: this.requirementBasis()} : {})};
     this.editor.changed();
   }
   syncRequirement() {
@@ -171,7 +185,9 @@ export class Annotations {
     this.requirementRefs.replaceChildren(...rows.map(row => el('p', {class: 'requirement-ref'},
       `${this.scopeName(row.annotation)}｜${row.annotation.body}`)));
     this.requirementTarget.textContent = `目标：本页 ${layers[this.layer]} · 底稿 ${version(this.data.revision_id)}`;
-    this.requirementNote.textContent = this.requirementMissing
+    this.requirementNote.textContent = !this.listReady()
+      ? '意见尚未读取完成；文字与原引用保留，读取成功后再核对选择并预览。'
+      : this.requirementMissing
       ? '恢复的要求或意见属于其它依据，文字与原引用已保留；请重新选择适用意见并预览。'
       : !rows.length ? '修改要求已保留；请先选择适用意见，再预览修改影响。'
       : this.layer === 'content' ? '正文修改按协议的 content 类型记录；你的意见目的仍保留在意见记录里。'
@@ -195,7 +211,7 @@ export class Annotations {
     // An empty body keeps the button pressable: the click explains what is
     // missing instead of leaving a dead control with no visible reason.
     this.saveButton.disabled = Boolean(blocked || this.mode === 'read' || unchanged);
-    this.planButton.disabled = Boolean(blocked || !this.selected.size || this.requirementMissing);
+    this.planButton.disabled = Boolean(blocked || !this.listReady() || !this.selected.size || this.requirementMissing);
     this.newButton.disabled = !editable;
     this.copyNoteButton.disabled = Boolean(!editable || !this.editor.input.value.trim());
     this.chapter.hidden = this.scope.value !== 'chapter';
@@ -222,7 +238,7 @@ export class Annotations {
     this.savedList.querySelectorAll('.saved-opinion').forEach(article => {
       const check = article.querySelector('input[type=checkbox]');
       const row = this.records.find(row => row.ref.sha256 === article.dataset.ref);
-      check.disabled = !editable || !row || !this.applicable(row);
+      check.disabled = !editable || !this.listReady() || !row || !this.applicable(row);
       check.checked = Boolean(row && this.selected.has(row.ref.sha256));
     });
     this.draw();
@@ -347,13 +363,13 @@ export class Annotations {
   }
   savedCard(record, group, index) {
     const note = record.annotation, isNew = this.newRefs.has(record.ref.sha256);
-    const check = el('input', {type: 'checkbox', checked: this.selected.has(record.ref.sha256), 'aria-label': `选入意见 ${index}`, disabled: !group.selectable || !this.applicable(record) || !this.canEditDraft()});
+    const check = el('input', {type: 'checkbox', checked: this.selected.has(record.ref.sha256), 'aria-label': `选入意见 ${index}`, disabled: !group.selectable || !this.applicable(record) || !this.canEditDraft() || !this.listReady()});
     check.addEventListener('change', () => {
-      if (!this.canEditDraft()) { check.checked = this.selected.has(record.ref.sha256); return; }
+      if (!this.canEditDraft() || !this.listReady()) { check.checked = this.selected.has(record.ref.sha256); return; }
       if (check.checked) this.selected.set(record.ref.sha256, record); else this.selected.delete(record.ref.sha256);
       this.requirementMissing = false;
       if (!this.requirementTouched && this.selected.size) this.requirementField.input.value = [...this.selected.values()].map(row => row.annotation.body).join('\n\n');
-      this.persistRequirement(); this.syncRequirement(); this.update();
+      this.persistRequirement(true); this.syncRequirement(); this.update();
     });
     const article = el('article', {class: `saved-opinion${isNew ? ' is-new' : ''}`, 'data-ref': record.ref.sha256},
       el('label', {}, check, `意见 ${index} · ${note.intent}`),
@@ -375,9 +391,11 @@ export class Annotations {
   async loadSaved() {
     const serial = this.listSerial = (this.listSerial || 0) + 1, revision = this.listRevisionId();
     const active = () => !this.disposed && serial === this.listSerial && revision === this.listRevisionId();
+    this.listState = 'loading'; this.listError = ''; this.planRecord = null; this.preview.replaceChildren();
+    this.restoreRequirement(); this.renderListState(); this.update();
     try {
       const response = await get('/api/annotations?' + new URLSearchParams({revision})); if (!active()) return;
-      this.records = response.annotations;
+      this.records = response.annotations; this.loadedListRevision = revision; this.listState = 'ready';
       this.restoreRequirement();
       const nodes = []; let index = 0;
       for (const group of this.savedGroups()) {
@@ -389,9 +407,13 @@ export class Annotations {
       }
       if (!this.records.length) nodes.push(el('p', {class: 'muted'}, '尚无已保存意见。'));
       this.savedList.replaceChildren(...nodes);
-      this.syncRequirement();
+      this.syncRequirement(); this.renderListState();
       this.update();
-    } catch (error) { if (active()) this.error.textContent = readableError(error); }
+    } catch (error) {
+      if (!active()) return;
+      this.listState = 'error'; this.listError = readableError(error);
+      this.restoreRequirement(); this.renderListState(); this.update();
+    }
   }
   async save() {
     delete this.error.dataset.success;
@@ -440,6 +462,7 @@ export class Annotations {
     delete this.error.dataset.success;
     try {
       await this.app.business.available();
+      if (!this.listReady()) throw new Error('先重新读取已保存意见，再预览修改计划。');
       if (this.requirementMissing) throw new Error('恢复的要求依据不适用，请重新选择意见。');
       if (!this.selected.size) throw new Error('先在上方选入至少一条已保存意见。');
       if (!this.basisMatches()) throw new Error('先回到草稿绑定的原版本，再预览影响。');
@@ -447,13 +470,14 @@ export class Annotations {
       if (!instruction) throw new Error('请先写明修改要求，再预览影响。');
       if (['svg', 'ppt'].includes(this.layer) && this.data.stages.blueprint.existence !== 'recorded')
         throw new Error('这一页还没有可用的原图；SVG 修复与重建需要先有当前原图。请先生成或更新原图，再计划修改。');
-      const signature = this.signature(), current = await get('/api/view/summary');
+      const signature = this.signature(), listSerial = this.listSerial, current = await get('/api/view/summary');
+      if (this.disposed || !this.listReady() || listSerial !== this.listSerial || signature !== this.signature()) return;
       const input = {schema_version: 'change_intent.v1', project_id: this.app.info.project_id, base_revision: current.revision_id,
         targets: [{page_id: this.data.page_id, page_ref: this.data.stages.content.ref, layer: this.layer, artifact_ref: this.ref}],
         intent: this.protocolIntent(), instruction, annotation_refs: [...this.selected.values()].map(r => r.ref),
         mode: 'trial',
         max_calls: ['original_image', 'prepared_prompt', 'submitted_prompt'].includes(this.layer) ? 1 : 0};
-      const response = await post('/api/changes/plan', {input}); if (this.disposed || signature !== this.signature()) return;
+      const response = await post('/api/changes/plan', {input}); if (this.disposed || !this.listReady() || listSerial !== this.listSerial || signature !== this.signature()) return;
       this.planRecord = response; this.planSignature = signature; this.planContext = {instruction, annotation_refs: input.annotation_refs, targets: input.targets};
       const names = {page: '逐页稿', blueprint: '原图', svg: '可编辑 SVG', svg_preview: 'SVG 预览', ppt_preview: 'PPT 逐页预览', deck_outputs: '整稿交付文件', quality_applicability: '质量检查依据'};
       this.preview.replaceChildren(el('h3', {}, '修改影响预览'),
@@ -476,6 +500,7 @@ export class Annotations {
     delete this.error.dataset.success;
     try {
       const record = this.planRecord;
+      if (!this.listReady() || this.requirementMissing) throw new Error('先核对已保存意见并重新预览。');
       if (!record || this.planSignature !== this.signature()) throw new Error('要求已改变，请重新预览。');
       await this.app.business.submit(this.editor, 'changes.commit', {plan_id: record.plan_id, base_revision: record.plan.base_revision}, {plan_id: record.plan_id, plan: record.plan}, result => {
         this.app.go({surface: 'runs', revision: result.revision_id, task_id: result.task_ids[0]});

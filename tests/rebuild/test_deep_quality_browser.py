@@ -28,6 +28,7 @@ def workbench(icon_store):
             link=url+'#'+urlencode({'project':info['project_identity'],'surface':surface,'page':'p01','layer':'svg','revision':revision or icon_store.current_revision_id()})
             page.goto(link)
             return link
+        goto.stop_server = server.stop
         try:yield page,ctx,icon_store,url,goto,errors
         finally:ctx.close();browser.close();server.stop()
         assert errors==[]

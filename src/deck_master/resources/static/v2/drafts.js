@@ -170,7 +170,7 @@ export class DraftEditor {
     draft.content = {text, ...(annotation ? {annotation: {body: annotation.body, scope: 'page', regions: [], intent: '修改建议'}} : {}),
       ...(requirement ? {requirement: {text: requirement.text || '', edited: true, annotation_refs: [], basis: null}} : {})};
     this.draft = draft; this.etag = null; this.pendingSave = null; this.sequence = undefined;
-    this.status = text || annotation?.body ? 'dirty' : 'empty'; this.note = ''; this.restoreNotice = '';
+    this.status = [text, annotation?.body, requirement?.text].some(value => typeof value === 'string' && value.trim()) ? 'dirty' : 'empty'; this.note = ''; this.restoreNotice = '';
     this.persist(); this.updateStatus();
     this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles: true}));
   }

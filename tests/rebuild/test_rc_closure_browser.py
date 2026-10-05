@@ -9,11 +9,11 @@ from test_icon_quality import icon_store  # noqa: F401
 pytestmark = pytest.mark.browser
 
 
-def saved_requirement(page, text):
+def saved_requirement(page, text, refs=None):
     for _ in range(100):
         records = page.request.get(page.url.split('#')[0] + 'api/drafts').json()['records']
         matching = [r for r in records if r['draft']['content'].get('requirement', {}).get('text') == text]
-        if matching:
+        if matching and (refs is None or matching[-1]['draft']['content']['requirement']['annotation_refs'] == refs):
             return matching[-1]['draft']['content']['requirement']
         page.wait_for_timeout(50)
     raise AssertionError({'records': records, 'state': page.locator('.draft-state').all_text_contents(),
@@ -27,6 +27,173 @@ def opinion(page, text='缩短标题'):
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.locator('.field-error[data-success]')).to_be_visible()
     page.get_by_label('选入意见 1', exact=True).check()
+
+
+def persisted_requirement(workbench):
+    page, _, store, _, goto, _ = workbench
+    goto()
+    opinion(page)
+    goto()
+    expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', store.current_revision_id())
+    page.get_by_label('选入意见 1', exact=True).check()
+    page.get_by_label('修改要求', exact=True).fill('原要求：保留数字')
+    return saved_requirement(page, '原要求：保留数字')
+
+
+def recover_on_new_port(workbench, text, refs):
+    from deck_master.web import WorkbenchServer
+    page, context, store, old_url, goto, _ = workbench
+    fragment = page.url.split('#')[1]
+    goto.stop_server()
+    server = WorkbenchServer(store.project_root)
+    fresh = context.browser.new_context()
+    try:
+        url = server.start()
+        assert url != old_url
+        recovered = fresh.new_page()
+        recovered.goto(url + '#' + fragment)
+        expect(recovered.get_by_label('修改要求', exact=True)).to_have_value(text)
+        expect(recovered.get_by_label('选入意见 1', exact=True)).to_be_checked() if refs else expect(
+            recovered.get_by_label('选入意见 1', exact=True)).not_to_be_checked()
+        assert saved_requirement(recovered, text)['annotation_refs'] == refs
+    finally:
+        fresh.close()
+        server.stop()
+
+
+@pytest.mark.parametrize('list_error', [False, True])
+def test_unresolved_requirement_refs_survive_edit_save_and_new_port(workbench, list_error):
+    page, _, _, _, _, _ = workbench
+    original = persisted_requirement(workbench)
+    held = []
+    page.route('**/api/annotations?*', lambda route: held.append(route))
+    page.reload()
+    requirement = page.get_by_label('修改要求', exact=True)
+    expect(requirement).to_be_editable()
+    expect(requirement).to_have_value(original['text'])
+    expect(page.get_by_role('button', name='预览修改影响', exact=True)).to_be_disabled()
+    text = '列表等待期间改写：\n保留原数字与换行'
+    requirement.fill(text)
+    stored = saved_requirement(page, text)
+    assert stored['annotation_refs'] == original['annotation_refs']
+    assert stored['basis'] == original['basis']
+    assert held
+    if list_error:
+        held.pop(0).abort('failed')
+        expect(page.get_by_role('button', name='重新读取已保存意见', exact=True)).to_be_visible()
+        requirement.fill(text + '（失败后继续写）')
+        text += '（失败后继续写）'
+        assert saved_requirement(page, text)['annotation_refs'] == original['annotation_refs']
+        page.unroute('**/api/annotations?*')
+        page.get_by_role('button', name='重新读取已保存意见', exact=True).click()
+    else:
+        for route in held:
+            route.fulfill(response=route.fetch())
+        page.unroute('**/api/annotations?*')
+    expect(page.get_by_label('选入意见 1', exact=True)).to_be_checked()
+    expect(requirement).to_have_value(text)
+    page.reload()
+    expect(page.get_by_label('选入意见 1', exact=True)).to_be_checked()
+    page.get_by_label('选入意见 1', exact=True).uncheck()
+    assert saved_requirement(page, text, refs=[])['annotation_refs'] == []
+    page.reload()
+    expect(page.get_by_label('选入意见 1', exact=True)).not_to_be_checked()
+    page.get_by_label('选入意见 1', exact=True).check()
+    assert saved_requirement(page, text, refs=original['annotation_refs'])['annotation_refs'] == original['annotation_refs']
+    recover_on_new_port(workbench, text, original['annotation_refs'])
+
+
+@pytest.mark.parametrize('invalid', ['missing_ref', 'old_basis'])
+def test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect(workbench, invalid):
+    import copy
+    from deck_master import ui_journal
+    page, context, store, url, _, _ = workbench
+    state = persisted_requirement(workbench)
+    record = next(r for r in ui_journal.list_drafts(store.project_root)['records']
+                  if r['draft']['content'].get('requirement') == state)
+    draft = copy.deepcopy(record['draft'])
+    if invalid == 'missing_ref':
+        draft['content']['requirement']['annotation_refs'][0]['sha256'] = '0' * 64
+    else:
+        draft['content']['requirement']['basis']['revision_id'] = store.read_object_json(
+            store.load_document()['annotations'][0])['base_revision']
+    ui_journal.save(store.project_root, draft=draft, expected_etag=record['etag'])
+    original = copy.deepcopy(draft['content']['requirement'])
+    other = context.browser.new_context()
+    try:
+        test_page = other.new_page()
+        test_page.goto(url + '#' + page.url.split('#')[1])
+        expect(test_page.locator('.requirement-ref')).to_have_count(0)
+        expect(test_page.locator('.change-requirement')).to_contain_text('请重新选择')
+        text = '只改文字，保留原来的引用证据'
+        test_page.get_by_label('修改要求', exact=True).fill(text)
+        stored = saved_requirement(test_page, text)
+        assert stored['annotation_refs'] == original['annotation_refs']
+        assert stored['basis'] == original['basis']
+        test_page.reload()
+        expect(test_page.get_by_role('button', name='预览修改影响', exact=True)).to_be_disabled()
+        test_page.get_by_label('选入意见 1', exact=True).check()
+        expect(test_page.get_by_role('button', name='预览修改影响', exact=True)).to_be_enabled()
+        test_page.get_by_role('button', name='预览修改影响', exact=True).click()
+        expect(test_page.get_by_role('button', name='确认计划并创建交接', exact=True)).to_be_visible()
+    finally:
+        other.close()
+
+
+def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
+    import copy
+    from deck_master import ui_journal
+    page, context, store, url, goto, _ = workbench
+    state = persisted_requirement(workbench)
+    record = next(r for r in ui_journal.list_drafts(store.project_root)['records']
+                  if r['draft']['content'].get('requirement') == state)
+    old = store.read_object_json(store.load_document()['annotations'][0])['base_revision']
+    # A separate historical draft, with no note or opinion body.
+    draft = copy.deepcopy(record['draft'])
+    draft['draft_id'] = 'requirement-only-old'
+    draft['base_revision'] = old
+    draft['content'] = {'text': '', 'requirement': state}
+    ui_journal.save(store.project_root, draft=draft)
+    fresh = context.browser.new_context()
+    try:
+        other = fresh.new_page()
+        other.goto(url + '#' + page.url.split('#')[1])
+        other.get_by_text('恢复、下载与版本详情', exact=True).click()
+        other.get_by_label('恢复项目中的个人草稿').select_option(draft['draft_id'])
+        other.get_by_role('button', name='对当前版本写新意见', exact=True).click()
+        other.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
+        expect(other.get_by_role('button', name='保存个人草稿', exact=True)).to_be_enabled()
+        other.get_by_role('button', name='保存个人草稿', exact=True).click()
+        expect(other.locator('.draft-state')).to_contain_text('已保存到项目')
+        records = ui_journal.list_drafts(store.project_root)['records']
+        copied = next(r['draft'] for r in records if r['draft']['draft_id'] not in
+                      [draft['draft_id'], record['draft']['draft_id']] and
+                      'requirement' in r['draft']['content'] and
+                      r['draft']['content']['requirement']['basis'] is None)
+        assert copied['content']['requirement']['text'] == state['text']
+        assert copied['content']['requirement']['annotation_refs'] == []
+        assert copied['pending'] is None
+        assert 'annotation' not in copied['content']
+        assert 'trial' not in copied['content']
+        assert any(r['draft']['draft_id'] == draft['draft_id'] for r in records)
+        # Restore only the saved new draft in another origin, without browser buffers.
+        fragment = other.url.split('#')[1]
+        goto.stop_server()
+        from deck_master.web import WorkbenchServer
+        server = WorkbenchServer(store.project_root)
+        try:
+            new_url = server.start()
+            assert new_url != url
+            restored = fresh.new_page()
+            restored.goto(new_url + '#' + fragment)
+            restored.get_by_text('恢复、下载与版本详情', exact=True).click()
+            restored.get_by_label('恢复项目中的个人草稿').select_option(copied['draft_id'])
+            expect(restored.get_by_label('修改要求', exact=True)).to_have_value(state['text'])
+            expect(restored.get_by_role('button', name='预览修改影响', exact=True)).to_be_disabled()
+        finally:
+            server.stop()
+    finally:
+        fresh.close()
 
 
 def test_requirement_survives_reload_and_deselect(workbench):
