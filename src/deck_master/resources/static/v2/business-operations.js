@@ -67,7 +67,7 @@ export class BusinessOperations {
     if (this.loadWarning) throw new Error('项目恢复状态尚未读取，请先重新连接。');
     if (this.entries.size) throw new Error('先核实上一次保存结果；当前输入会继续保留。');
   }
-  async submit(editor, action, request, basisPayload, onComplete) {
+  async submit(editor, action, request, basisPayload, onComplete, displayContext=null) {
     await this.available(); await editor.ready;
     if (this.entries.size || this.loadWarning) throw new Error('先核实上一次保存结果；当前输入会继续保留。');
     if (this.preparing) throw new Error('上一项请求正在保存副本，请稍候。');
@@ -80,7 +80,7 @@ export class BusinessOperations {
     request = {...structuredClone(request), operation_id};
     const request_digest = await digest({protocol: 'changes.v1', kind: action, project_id: this.app.info.project_id,
       base_revision: request.base_revision, payload: basisPayload});
-    const payload = {action, request, request_digest};
+    const payload = {action, request, request_digest, ...(displayContext ? {display_context: structuredClone(displayContext)} : {})};
     const pending = {operation_id, payload, payload_digest: await digest(payload)};
     const entry = {pending, draft_id: editor.draft.draft_id, editor, onComplete, state: 'preparing'};
     editor.draft.pending = structuredClone(pending); editor.status = 'dirty'; editor.persist(); editor.updateStatus();
@@ -167,7 +167,8 @@ export class BusinessOperations {
     modal(payload?.action === 'candidates.adopt' ? '本次未采用任何页，选择已保留' : '本次未提交，输入已保留', el('div', {class: 'stack'}, el('p', {class: 'field-error'}, entry.note),
       error.details?.items?.length && el('ul', {}, error.details.items.map(item => el('li', {}, `${item.page_id || '候选'}：${item.cause === 'generation_basis_changed' ? '生成依据已变化' : item.cause === 'one_candidate_per_page' ? '同一页只能选择一个候选' : '请重新核对采用目标'}`))),
       el('div', {class: 'conflict-panes'},
-        el('section', {}, el('h3', {}, '你的本机草稿'), el('textarea', {readOnly: true, value: editor?.pendingText?.() || JSON.stringify(payload?.request || {}), 'aria-label': '未提交的本机草稿'})),
+        el('section', {}, el('h3', {}, '你的本机草稿'), el('textarea', {readOnly: true, value: payload ? payload.display_context?.instruction ?? JSON.stringify(payload.request || {}) : editor?.pendingText?.() || '', 'aria-label': '未提交的本机草稿'})),
+        payload && el('section', {}, el('h3', {}, '之后继续编辑的草稿'), el('textarea', {readOnly: true, value: editor?.pendingText?.() || '当前窗口未打开草稿；可从恢复入口查看。', 'aria-label': '之后继续编辑的草稿'}), !payload.display_context && el('p', {}, '旧记录未保存修改要求正文，以上按真实原请求展示。')),
         el('section', {}, el('h3', {}, '服务端新基准'), el('p', {}, latest ? version(latest.revision_id) : '暂时无法读取'),
           el('p', {}, '没有采用或覆盖任何页。重新阅读差异后，再建立新计划。')))),
       [editor && button('下载保留的草稿', () => editor.download()), latest && button('查看新的当前版本', () => {

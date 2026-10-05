@@ -163,8 +163,10 @@ export function pageDetail(app, data) {
   const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(poll, 5000);
   app.disposables.push(() => { clearInterval(timer); app.root.removeEventListener('summary-refreshed', fromSummary); });
   const aside = el('aside', {class: 'page-context stack'}), draftSlot = el('div');
-  let annotations, draftRef, noteRecovery = null;
+  const noteRecovery = el('div', {class: 'note-recovery-slot'});
+  let annotations, draftRef;
   function bindDraft(ref, text) {
+    noteRecovery.replaceChildren();
     draftRef = ref;
     app.editor?.dispose(); app.editor = null;
     if (layer === 'source') {
@@ -187,7 +189,7 @@ export function pageDetail(app, data) {
     const download = draftView.querySelector('.panel-body > .row button:last-child');
     if (download) recovery.append(download);
     draftView.querySelectorAll('.recovery-import, .field-help, .draft-restore').forEach(control => recovery.append(control));
-    noteRecovery = recovery;
+    noteRecovery.replaceChildren(recovery);
     draftSlot.replaceChildren(draftView);
     annotations?.bind(app.editor, ref);
     if (text !== null) draftSlot.append(button('比较原文与草稿', () => {
@@ -210,7 +212,7 @@ export function pageDetail(app, data) {
     if (app.editor) annotations.bind(app.editor, draftRef);
     aside.append(annotations.node); app.disposables.push(() => annotations.dispose());
   } else aside.append(draftSlot);
-  if (noteRecovery) aside.append(noteRecovery);
+  aside.append(noteRecovery);
   if (production) aside.append(production);
   const layout = el('div', {class: 'page-columns'}, reading, aside);
   const compareControls = el('div', {class: 'fixed-compare-controls stack', hidden: true});

@@ -97,7 +97,7 @@ export class DraftEditor {
   // A draft is labelled by whichever text it actually carries: the personal note,
   // or the opinion body when the note is empty.
   static summary(draft) {
-    return String(draft?.content?.text || draft?.content?.annotation?.body || '空白草稿').slice(0, 45);
+    return String(draft?.content?.text || draft?.content?.annotation?.body || draft?.content?.requirement?.text || '空白草稿').slice(0, 45);
   }
   showLocalCopies() {
     this.localRestoreNode.replaceChildren();
@@ -159,14 +159,16 @@ export class DraftEditor {
   // Start a new draft on this editor's basis, keeping the older record and its
   // local copy. Both texts move forward: the personal note and the opinion body.
   // Regions, scope and intent describe the old artifact's selection state, so the
-  // regions are dropped and never migrated silently.
+  // old targeting is dropped and never migrated silently.
   writeNewOnCurrent() {
     if (this.readonly || this.disposed || !this.staleBasis()) return;
     if (!this.archiveLocal()) { this.updateStatus(); return; }
     const text = this.input.value;
     const annotation = this.draft.content?.annotation;
     const draft = this.fresh();
-    draft.content = {text, ...(annotation ? {annotation: {...annotation, regions: []}} : {})};
+    const requirement = this.draft.content?.requirement;
+    draft.content = {text, ...(annotation ? {annotation: {body: annotation.body, scope: 'page', regions: [], intent: '修改建议'}} : {}),
+      ...(requirement ? {requirement: {text: requirement.text || '', edited: true, annotation_refs: [], basis: null}} : {})};
     this.draft = draft; this.etag = null; this.pendingSave = null; this.sequence = undefined;
     this.status = text || annotation?.body ? 'dirty' : 'empty'; this.note = ''; this.restoreNotice = '';
     this.persist(); this.updateStatus();
@@ -175,7 +177,10 @@ export class DraftEditor {
   // The text a pending operation was about. An editor that carries an opinion
   // body must show that body in recovery panes, not the personal note that now
   // has its own box.
-  pendingText() {
+  pendingText(payload) {
+    if (payload) return payload.display_context?.instruction ?? JSON.stringify(payload.request || {});
+    const requirement = this.draft?.content?.requirement?.text;
+    if (requirement) return requirement;
     const opinion = this.draft?.content?.annotation?.body;
     return opinion && opinion.trim() ? opinion : (this.input?.value || '');
   }
