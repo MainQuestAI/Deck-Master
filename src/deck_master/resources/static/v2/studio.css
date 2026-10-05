@@ -209,3 +209,12 @@ input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
 .content-impact>strong { font-size:16px; line-height:1.6; }
 .content-impact>p { max-width:72ch; font-size:14px; }
 .content-impact>button { margin-top:4px; }
+/* Keep recovery actions visible while long, complete draft snapshots scroll. */
+#modal:has(.draft-conflict-panes) .modal-body {
+  height:min(800px,calc(100dvh - 48px));
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  gap:20px;
+}
+.draft-conflict-panes { min-height:0; overflow:auto; align-items:start; scroll-padding:8px; }
+#modal:has(.draft-conflict-panes) .modal-actions { margin:0; padding-top:16px; }
