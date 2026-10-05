@@ -91,6 +91,8 @@ jobs:
           python -m pip install --no-deps /tmp/workbench-wheel/deck_master-*.whl
       - name: Offline installed UI and fixed-version downloads
         run: python examples/workbench/w12_offline_browser.py --require-installed --font 'DejaVu Sans' --out /tmp/workbench-browser
+      - name: Installed recovery boundaries (runtime paths audited)
+        run: python examples/workbench/w12_installed_regressions.py --out /tmp/workbench-browser/installed-regressions.json
       - name: Preserve installed UI evidence
         if: always()
         uses: actions/upload-artifact@v4
