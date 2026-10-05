@@ -130,7 +130,7 @@ def test_late_annotation_list_cannot_remove_a_saved_opinion(workbench, old_error
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.locator('.saved-annotations')).to_contain_text('意见 B')
     assert held
-    prior = page.locator('.annotations-panel .field-error').inner_text()
+    prior = page.locator('.annotations-panel .field-error[role=status]').inner_text()
     if old_error:
         held[0][0].abort('failed')
     else:
@@ -138,7 +138,7 @@ def test_late_annotation_list_cannot_remove_a_saved_opinion(workbench, old_error
             held[0][0].fulfill(response=held[0][1])
     page.wait_for_timeout(100)
     expect(page.locator('.saved-annotations')).to_contain_text('意见 B')
-    expect(page.locator('.annotations-panel .field-error')).to_have_text(prior)
+    expect(page.locator('.annotations-panel .field-error[role=status]')).to_have_text(prior)
 
 
 def test_commit_conflict_shows_frozen_requirement_and_later_draft(workbench):
@@ -256,3 +256,24 @@ def test_loading_draft_is_readonly_and_old_pending_shows_exact_request(workbench
     assert json.loads(page.get_by_label('未提交的本机草稿', exact=True).input_value()) == {'plan_id': 'old-plan'}
     expect(page.get_by_label('之后继续编辑的草稿', exact=True)).to_have_value('后写文字')
     expect(page.get_by_role('dialog')).to_contain_text('旧记录未保存修改要求正文')
+
+
+def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench):
+    page, _, _, _, goto, _ = workbench
+    goto()
+    body = page.get_by_label('意见正文', exact=True)
+    expect(body).to_be_editable()
+    body.fill('已有浏览器缓冲')
+    page.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
+    page.get_by_role('button', name='保存个人草稿', exact=True).click()
+    expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
+    held = []
+    page.route('**/api/drafts', lambda route: held.append(route))
+    page.reload()
+    expect(body).not_to_be_editable()
+    expect(page.locator('.annotation-notice')).to_contain_text('正在读取草稿')
+    for route in list(held):
+        route.fulfill(response=route.fetch())
+    page.unroute('**/api/drafts')
+    expect(body).to_be_editable()
+    expect(body).to_have_value('已有浏览器缓冲')

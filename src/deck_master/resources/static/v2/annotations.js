@@ -94,7 +94,7 @@ export class Annotations {
   }
   bind(editor, ref) {
     this.editor?.input.removeEventListener('draft-state-changed', this.editorListener);
-    this.editor = editor; this.ref = ref; this.selected.clear(); this.requirementField.input.value = ''; this.requirementTouched = false; this.requirementMissing = false; this.savedMetadata = null; this.planRecord = null; this.savedSubmission = null; this.newRefs = new Set();
+    this.editor = editor; this.editorReady = false; this.ref = ref; this.selected.clear(); this.requirementField.input.value = ''; this.requirementTouched = false; this.requirementMissing = false; this.savedMetadata = null; this.planRecord = null; this.savedSubmission = null; this.newRefs = new Set();
     if (!editor) { this.regions = []; this.setMode('read'); this.renderRegions(); return; }
     // The draft owns "write a new opinion on the current basis". It belongs next
     // to the opinion actions, not inside the collapsed personal note.
@@ -104,7 +104,7 @@ export class Annotations {
     this.setMode('read');
     editor.ready.then(() => {
       if (this.disposed || this.editor !== editor) return;
-      this.syncFromDraft(true); this.update();
+      this.editorReady = true; this.syncFromDraft(true); this.update();
     });
   }
   syncFromDraft(force = false) {
@@ -134,7 +134,7 @@ export class Annotations {
       page_ref: this.data.stages.content.ref, artifact_ref: this.ref};
   }
   canEditDraft() {
-    return Boolean(this.editor && !this.editor.disposed && !this.editor.readonly &&
+    return Boolean(this.editorReady && this.editor && !this.editor.disposed && !this.editor.readonly &&
       this.editor.status !== 'loading' && this.basisMatches());
   }
   applicable(record) {
@@ -209,7 +209,7 @@ export class Annotations {
     this.basis.textContent = `${target} · 底稿 ${version(this.data.revision_id)} · 草稿区域 ${this.regions.length} 个` + (this.editor && !this.basisMatches() ? '。恢复稿属于其它基准：先回原版本，或用「对当前版本写新意见」复制文字后保存；原有范围不迁移。' : this.app.historical && this.editor && !this.editor.readonly ? '。原内容只读；新意见仍绑定这里的原版本。' : '');
     const editorNotice = this.editor?.noticeText?.() || (!this.editor ? '先选择明确的原文基准，再填写意见。'
       : this.editor.readonly ? '此处只读，输入不会保存；可下载已有草稿，或回到可编辑的当前版本。'
-      : this.editor.status === 'loading' ? '正在读取草稿；读取完成后即可编辑。' : '');
+      : !this.editorReady || this.editor.status === 'loading' ? '正在读取草稿；读取完成后即可编辑。' : '');
     this.notice.textContent = editorNotice; this.notice.hidden = !editorNotice;
     for (const control of this.tools.querySelectorAll('button')) {
       const active = control.dataset.mode === this.mode;
