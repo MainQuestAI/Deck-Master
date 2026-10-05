@@ -1070,6 +1070,10 @@ def _accept_result_locked(
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
     if task["kind"] == "style_analyze":
+        from .generation import check_host
+        check_host(task)
+        if task.get("status") != "running" or not task.get("execution_ref"):
+            raise TaskConflict(f"(task {task_id})/execution_ref", "claim visual analysis before returning its result")
         from .visual_styles import accept_analysis
         return accept_analysis(store, document, task, envelope, produced_against, result_digest)
     if envelope.get("style_analysis") is not None:

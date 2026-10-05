@@ -6,6 +6,9 @@ import urllib.error
 
 from test_styles import flow  # noqa: F401
 from test_visual_styles import image_bytes
+from test_visual_styles import imported, analysis, result
+from deck_master import service, tasks, generation
+import pytest
 from deck_master.web import WorkbenchServer
 from deck_master.cli import main
 
@@ -15,6 +18,51 @@ def request(url, data=None, headers=None):
     try:
         with urllib.request.urlopen(req,timeout=10) as res:return res.status,json.loads(res.read())
     except urllib.error.HTTPError as err:return err.code,json.loads(err.read())
+
+
+@pytest.mark.parametrize('claim', ['unclaimed', 'wrong_protocol', 'missing_capability', 'missing_execution'])
+def test_analysis_accept_requires_claim_and_declared_host(flow, claim):
+    row, _, _ = imported(flow)
+    task = analysis(flow, [row['reference_id']])
+    if claim != 'unclaimed':
+        flow.start(task)
+        document = flow.store.load_document()
+        task = flow.task(task['task_id'])
+        updated = dict(task)
+        if claim == 'wrong_protocol':
+            updated['host_protocol'] = {'supported_protocols': ['generation.v1'], 'capabilities': ['visual_reference']}
+        elif claim == 'missing_capability':
+            updated['host_protocol'] = {'supported_protocols': ['changes.v1'], 'capabilities': []}
+        else:
+            updated['execution_ref'] = None
+        service._commit_task_update(flow.store, document, task, updated, 'Synthetic invalid claim boundary')
+    before = flow.store.read_current()
+    with pytest.raises((tasks.TaskConflict, generation.GenerationError)):
+        service.accept_result(flow.project, task_id=task['task_id'], operation_id=task['operation_id'],
+                              produced_against=task['produced_against'], result_payload=result(row['reference_id']))
+    assert flow.store.read_current() == before
+    assert flow.task(task['task_id'])['result_refs'] == []
+
+
+def test_cli_analysis_claim_accept_and_exact_replay(flow, tmp_path, capsys):
+    row, _, _ = imported(flow)
+    task = analysis(flow, [row['reference_id']])
+    payload = tmp_path / 'analysis.json'
+    payload.write_text(json.dumps(result(row['reference_id'])))
+    args = ['task', 'accept', '--project', str(flow.project), '--task-id', task['task_id'],
+            '--operation-id', task['operation_id'], '--produced-against', task['produced_against'],
+            '--result', str(payload), '--json']
+    before = flow.store.read_current()
+    assert main(args) != 0
+    capsys.readouterr()
+    assert flow.store.read_current() == before
+    flow.start(task)
+    assert main(args) == 0
+    capsys.readouterr()
+    current = flow.store.read_current()
+    assert main(args) == 0
+    assert json.loads(capsys.readouterr().out)['status'] == 'already_applied'
+    assert flow.store.read_current() == current
 
 
 def test_binary_upload_uses_token_and_separate_limit_with_receipt_replay(flow):
