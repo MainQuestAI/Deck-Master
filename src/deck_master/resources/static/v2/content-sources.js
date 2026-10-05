@@ -166,7 +166,7 @@ export function content(app, data) {
     operation.preview(value);
   }
   drawSources();drawPages();drawGoals();
-  const hostImpact=el('div',{class:'stack'});
+  const hostImpact=el('div',{class:'stack content-impact'});
   const resolved=inputs?.content_basis?.resolved_by_task_id;
   if(resolved) get('/api/tasks/'+encodeURIComponent(resolved)+revisionQuery(readingRevision), {signal:controller.signal}).then(async result=>{
     if(disposed || result.task.status!=='completed')return;

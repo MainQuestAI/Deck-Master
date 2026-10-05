@@ -205,3 +205,7 @@ input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
   .draft-conflict-pane { padding:12px; }
 }
 
+.content-impact:not(:empty) { display:flex; flex-direction:column; align-items:flex-start; gap:10px; padding:20px 0 24px; margin-bottom:24px; border-bottom:1px solid var(--studio-line); }
+.content-impact>strong { font-size:16px; line-height:1.6; }
+.content-impact>p { max-width:72ch; font-size:14px; }
+.content-impact>button { margin-top:4px; }
