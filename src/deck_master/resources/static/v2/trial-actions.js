@@ -67,9 +67,9 @@ export function trialActions(app, data) {
   reference.addEventListener('change', () => { fixedReference = options.get(reference.value) || null; renderReference(); changed(); });
   async function loadCandidates() {
     try {
-      const value = await get('/api/candidates?' + new URLSearchParams({page_id: data.page_id})); if (disposed) return;
+      const value = await get('/api/candidates?' + new URLSearchParams({page_id: data.page_id, revision: data.revision_id})); if (disposed) return;
       const records = value.candidates.filter(item => item.candidate.stage === slot);
-      candidateList.replaceChildren(...records.map((item, index) => button(`候选 ${index + 1}${item.status === 'adopted' ? ' · 曾采用' : ''}`, () => openCandidate(app, item.candidate, value.revision_id))));
+      candidateList.replaceChildren(...records.map((item, index) => button(`候选 ${index + 1}${item.status === 'adopted' ? ' · 曾采用' : ''}`, () => openCandidate(app, item.candidate, data.revision_id))));
       const pending = records.filter(item => item.pending).length;
       counts.textContent = records.length ? `候选 ${records.length} · 待比较 ${pending}` : '尚无候选';
       notice.textContent = records.length ? `${records.length} 个已返回候选；选择一个查看固定比较。` : '尚无本层候选。可以先保存一次明确范围的试作要求。';
