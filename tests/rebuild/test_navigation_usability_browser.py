@@ -12,6 +12,8 @@ def test_mobile_gallery_reads_on_page_and_restores_desktop_preference(workbench_
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.get_by_role('button', name='整稿画廊', exact=True).click()
     page.locator('.gallery-viewport').wait_for()
+    if not page.get_by_role('button', name='联系表', exact=True).is_visible():
+        page.get_by_text('阅读设置', exact=True).click()
     expect(page.get_by_role('button', name='联系表', exact=True)).to_have_attribute('aria-pressed', 'true')
     page.locator('.slide-tile canvas').first.wait_for()
     actual_columns = page.locator('.gallery').evaluate('(node) => node.style.getPropertyValue("--gallery-columns")')
@@ -37,6 +39,8 @@ def test_mobile_gallery_reads_on_page_and_restores_desktop_preference(workbench_
     assert pool['large'] <= 4 and pool['network_peak'] <= 6 and pool['decode_peak'] <= 2
     page.set_viewport_size({'width': 1440, 'height': 900})
     expect(page.locator('.gallery-viewport')).to_have_attribute('data-mode', 'grid')
+    if not page.get_by_role('button', name='联系表', exact=True).is_visible():
+        page.get_by_text('阅读设置', exact=True).click()
     expect(page.get_by_role('button', name='联系表', exact=True)).to_have_attribute('aria-pressed', 'true')
     assert errors == []
 
@@ -54,6 +58,8 @@ def test_history_modes_keep_reading_and_page_comparison_fixed(workbench_page):
     assert selected.input_value() == selected_revision and page.url == url
     assert 'R ' not in selected.locator('option').first.inner_text()
     page.get_by_role('button', name='逐页查看与固定比较', exact=True).click()
+    if not page.get_by_role('button', name='比较此页版本', exact=True).is_visible():
+        page.get_by_text('页面操作', exact=True).click()
     page.get_by_role('button', name='比较此页版本', exact=True).click()
     page.get_by_role('combobox', name='选择同页比较版本').wait_for()
     fixed = page.locator('[aria-label="页面内容"]').get_attribute('data-revision')
@@ -84,6 +90,8 @@ def test_fixed_history_images_share_a_row_with_candidate_entry(workbench_page, t
     page.set_viewport_size({'width':width, 'height':height})
     page.goto(base + '#' + urlencode({'project':info['project_identity'], 'surface':'page',
         'page':'p06', 'layer':layer, 'revision':after['revision_id']}))
+    if not page.get_by_role('button', name='比较此页版本', exact=True).is_visible():
+        page.get_by_text('页面操作', exact=True).click()
     page.get_by_role('button', name='比较此页版本', exact=True).click()
     all_history = page.get_by_role('checkbox', name='显示这页全部历史记录', exact=True)
     all_history.check()
@@ -101,13 +109,13 @@ def test_fixed_history_images_share_a_row_with_candidate_entry(workbench_page, t
     right.locator('canvas.page-image').wait_for()
     expect(page.locator('.page-trial-entry')).not_to_have_attribute('open', '')
     rect = page.locator('.fixed-page-pair').evaluate('''node => {
-      const boxes = [...node.children].map(n => ({tag:n.tagName, ...n.getBoundingClientRect().toJSON()}));
-      return {entry:boxes[0], left:boxes[1], right:boxes[2]};
+      const box = selector => node.querySelector(selector).getBoundingClientRect().toJSON();
+      return {entry:box('.page-trial-entry'), left:box('[aria-label="页面内容"]'), right:box('[aria-label="比较版本内容"]')};
     }''')
     assert abs(rect['left']['y'] - rect['right']['y']) < 1, rect
     assert rect['left']['x'] < rect['right']['x'], rect
-    assert rect['entry']['y'] + rect['entry']['height'] <= rect['left']['y'], rect
-    assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth')
+    assert rect['entry']['y'] >= max(rect['left']['bottom'], rect['right']['bottom']), rect
+    assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth'), page.evaluate('''() => [...document.querySelectorAll('body *')].filter(n => n.getBoundingClientRect().right > innerWidth + 1).map(n => ({tag:n.tagName, cls:n.className, text:n.textContent.slice(0,80), right:n.getBoundingClientRect().right})).slice(0,15)''')
 
 
 def test_host_handoff_clipboard_failure_remains_pending(workbench_page):

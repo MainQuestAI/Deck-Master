@@ -139,6 +139,7 @@ export function gallery(app, data) {
   }
   function renderControls() {
     const s = state();
+    const settingsOpen = Boolean(controls.querySelector('.gallery-reading-settings')?.open);
     const isNarrow = narrow(), mode = effectiveMode();
     const tabs = el('div', {class: 'segmented', role: 'group', 'aria-label': '画廊图层'});
     for (const [key, label] of Object.entries(layerNames)) tabs.append(button(`${label} ${recordCount(key)}/${pages.length}`,
@@ -174,7 +175,12 @@ export function gallery(app, data) {
     if (isNarrow) {
       const expanded = Boolean(query || s.filter.chapter_id || s.filter.status !== 'all');
       controls.replaceChildren(tabs, el('details', {class: 'gallery-filter-disclosure', open: expanded}, el('summary', {}, expanded ? '筛选作品（已筛选）' : '筛选作品与管理选页'), filters));
-    } else controls.replaceChildren(el('div', {class: 'row wrap'}, tabs, chapter, filter), el('div', {class: 'row wrap'}, searchSlot, modes, columns), extras);
+    } else {
+      const settings = el('details', {class: 'gallery-reading-settings', open: settingsOpen}, el('summary', {}, '阅读设置'),
+        el('div', {class: 'stack'}, modes, columns));
+      controls.replaceChildren(el('div', {class: 'row wrap'}, tabs, searchSlot, settings),
+        el('div', {class: 'row wrap'}, chapter, filter, extras));
+    }
     renderLegend();
   }
   function renderLegend() {

@@ -135,8 +135,13 @@ export function pageDetail(app, data) {
   const primaryReleases = [], compareReleases = [];
   app.disposables.push(() => { disposed = true; compareSerial++; primaryReleases.forEach(fn => fn()); compareReleases.forEach(fn => fn()); });
   const selector = el('select', {'aria-label': '转到页面'});
-  app.summary.pages.forEach((p, n) => selector.append(el('option', {value: p.page_id}, pageTitle(p, n))));
+  app.summary.pages.forEach((p, n) => selector.append(el('option', {value: p.page_id}, `第 ${n + 1} / ${app.summary.pages.length} 页`)));
   selector.value = page.page_id; selector.addEventListener('change', () => app.go({page_id: selector.value}));
+  pager.prepend(selector);
+  const layerSelect = el('select', {class: 'compact-layer-select', 'aria-label': '查看制作图层'},
+    chainStages.map((item, i) => el('option', {value: item.layer}, `${item.label} · ${chainStates[i]}`)));
+  layerSelect.value = layer === 'submitted_prompt' ? 'prepared_prompt' : layer;
+  layerSelect.addEventListener('change', () => app.go({layer: layerSelect.value}));
   const update = el('div', {class: 'notice', role: 'status', hidden: true});
   let lastSync = Date.now(), polling = false;
   const poll = async () => {
@@ -275,6 +280,7 @@ export function pageDetail(app, data) {
   allHistory.addEventListener('change', () => loadHistory(true));
   compareControls.append(el('div', {class: 'row wrap'}, moreHistory, el('label', {class: 'inline-control'}, allHistory, '全部记录')));
   const openCompare = button('比较此页版本', async () => {
+    pageActions.open = false;
     compareControls.hidden = false;
     if (!historyLoaded) await loadHistory(true);
     revisionSelect.focus();
@@ -282,7 +288,7 @@ export function pageDetail(app, data) {
   const closeCompare = button('结束固定比较', () => {
     compareSerial++; compareData = null; compareReleases.splice(0).forEach(fn => fn()); comparison.replaceChildren(); comparison.hidden = true; original.hidden = false;
     compareControls.hidden = true; fixedLabel.hidden = true; reading.classList.remove('is-comparing'); layout.classList.remove('with-fixed-compare'); compareButton.disabled = false;
-    openCompare.focus();
+    pageActions.querySelector('summary').focus();
   }); compareControls.querySelector('.row').append(closeCompare);
   // Escape handles the topmost layer: an open dialog or a fullscreen element wins,
   // then an open fixed comparison ends without the same keypress also leaving the
@@ -295,15 +301,23 @@ export function pageDetail(app, data) {
   };
   document.addEventListener('keydown', escapeCompare, true);
   app.disposables.push(() => document.removeEventListener('keydown', escapeCompare, true));
-  const toolbar = el('div', {class: 'toolbar'}, selector, button('回到整稿画廊', () => app.go({surface: 'gallery'})), openCompare, ...(styleReference ? [styleReference] : []));
+  const pageActions = detail('页面操作', el('div', {class: 'stack'}, openCompare, styleReference));
+  pageActions.classList.add('page-actions');
+  pageActions.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !pageActions.open) return;
+    event.preventDefault(); event.stopPropagation(); pageActions.open = false;
+    pageActions.querySelector('summary').focus();
+  });
+  const toolbar = el('div', {class: 'toolbar reading-toolbar'},
+    button('回到整稿画廊', () => app.go({surface: 'gallery'}), false, {class: 'quiet'}), layerSelect, pageActions);
   if (['original_image', 'svg', 'ppt'].includes(layer)) {
     const zoom = el('select', {'aria-label': '阅读缩放'}, [.5, .75, 1, 1.25, 1.5, 2, 3].map(value => el('option', {value}, `${value * 100}%`)));
     zoom.value = String(app.route.zoom || 1); zoom.addEventListener('change', () => {
       const value = Number(zoom.value); node.querySelectorAll('.page-image-viewport>.stack,.page-image-viewport>.pooled-image').forEach(image => { image.style.width = `${value * 100}%`; image.style.height = `${value * 100}%`; });
       app.route.zoom = value; history.replaceState(null, '', routeHash(app.info, app.route)); app.savePosition();
-    }); toolbar.append(el('label', {}, '阅读缩放 ', zoom));
+    }); pageActions.querySelector(':scope > div').append(el('label', {}, '阅读缩放 ', zoom));
   }
   const trials = trialActions(app, data);
-  if (trials.classList.contains('page-trial-entry')) reading.prepend(trials);
+  if (trials.classList.contains('page-trial-entry')) reading.append(trials);
   node.append(chain, toolbar, update, compareControls, layout, iconWorkbench(app, data)); return node;
 }

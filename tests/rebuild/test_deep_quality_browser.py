@@ -121,6 +121,8 @@ def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
     page.get_by_role('button',name='保存意见',exact=True).click()
     expect(page.locator('.annotations-panel .field-error[role=status]')).to_contain_text('请填写意见正文')
     assert page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']==[]
+    if not page.get_by_role('button',name='从私人笔记复制',exact=True).is_visible():
+        page.get_by_text('草稿操作', exact=True).click()
     page.get_by_role('button',name='从私人笔记复制',exact=True).click()
     expect(body).to_have_value('这是我自己的备忘，不是给制作的意见。')
     expect(note).to_have_value('这是我自己的备忘，不是给制作的意见。')
@@ -134,6 +136,8 @@ def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
     # second save uses the artwork scope.
     expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_disabled()
     expect(page.locator('.field-error[data-success]')).to_contain_text('不会重复新增')
+    if not page.get_by_label('意见作用范围').is_visible():
+        page.get_by_text('范围与标注工具', exact=True).click()
     page.get_by_label('意见作用范围').select_option('artifact')
     expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
     page.get_by_role('button',name='保存意见',exact=True).click()
@@ -153,13 +157,21 @@ def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
     body.fill('这一页要改标题')
     write_opinion('这一页要改标题')
     expect(page.get_by_role('heading',name='本页整页意见（1）',exact=True)).to_be_visible()
+    if not page.get_by_role('button',name='写新意见',exact=True).is_visible():
+        page.get_by_text('草稿操作', exact=True).click()
     page.get_by_role('button',name='写新意见',exact=True).click()
     page.get_by_role('button',name='整页意见',exact=True).click()
+    if not page.get_by_label('意见作用范围').is_visible():
+        page.get_by_text('范围与标注工具', exact=True).click()
     page.get_by_label('意见作用范围').select_option('artifact')
     body.fill('这张图稿的线宽要收一点')
     write_opinion('这张图稿的线宽要收一点')
     expect(page.get_by_role('heading',name='当前图稿意见 · SVG（1）',exact=True)).to_be_visible()
+    if not page.get_by_role('button',name='写新意见',exact=True).is_visible():
+        page.get_by_text('草稿操作', exact=True).click()
     page.get_by_role('button',name='写新意见',exact=True).click()
+    if not page.get_by_label('意见作用范围').is_visible():
+        page.get_by_text('范围与标注工具', exact=True).click()
     page.get_by_label('意见作用范围').select_option('project')
     body.fill('整稿方向已认可')
     write_opinion('整稿方向已认可')
@@ -253,6 +265,8 @@ def test_page_candidate_compares_its_own_basis_not_the_current_revision(workbenc
 
 def test_escape_ends_the_open_comparison_before_leaving_the_page(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
+    if not page.get_by_role('button',name='比较此页版本',exact=True).is_visible():
+        page.get_by_text('页面操作', exact=True).click()
     page.get_by_role('button',name='比较此页版本',exact=True).click()
     select=page.get_by_label('选择同页比较版本')
     expect(select).to_be_visible()
@@ -266,12 +280,14 @@ def test_escape_ends_the_open_comparison_before_leaving_the_page(workbench):
     # surface stays where it was, with focus back on the entry that opened it.
     expect(page.locator('.page-columns.with-fixed-compare')).to_have_count(0)
     assert 'surface=page' in page.url, page.url
-    expect(page.get_by_role('button',name='比较此页版本',exact=True)).to_be_focused()
+    expect(page.locator('.page-actions > summary')).to_be_focused()
     assert page.locator('.fixed-compare-controls').is_hidden()
 
 
 def test_escape_inside_fullscreen_does_not_navigate_the_surface(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
+    if not page.get_by_role('button',name='比较此页版本',exact=True).is_visible():
+        page.get_by_text('页面操作', exact=True).click()
     page.get_by_role('button',name='比较此页版本',exact=True).click()   # user activation for fullscreen
     assert page.evaluate('''async () => { try { await document.querySelector('.page-columns').requestFullscreen(); return true; } catch { return false; } }''')
     expect(page.locator('.page-columns')).to_be_visible()

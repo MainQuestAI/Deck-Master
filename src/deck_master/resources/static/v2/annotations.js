@@ -34,7 +34,7 @@ export class Annotations {
     this.tools = el('div', {class: 'segmented annotation-tools', role: 'group', 'aria-label': '画面操作模式'});
     this.modeHint = el('p', {class: 'form-hint'});
     this.modes = [['read', '阅读模式'], ['whole', '整页意见'], ...(image ? [['point', '点标注'], ['rect', '框选模式']] : [['text', '文本意见']])];
-    for (const [mode, label] of this.modes) this.tools.append(button(label, () => this.chooseMode(mode), false, {'data-mode': mode}));
+    for (const [mode, label] of this.modes.filter(([mode]) => mode !== 'whole')) this.tools.append(button(label, () => this.chooseMode(mode), false, {'data-mode': mode}));
     this.fields = Object.fromEntries(['x', 'y', 'width', 'height'].map((key, i) => [key, field(['横向起点 %', '纵向起点 %', '区域宽度 %', '区域高度 %'][i], el('input', {type: 'number', min: 0, max: 100, step: .1, value: i < 2 ? 10 : 20}))]));
     this.geometry = el('details', {class: 'geometry-fields', hidden: true}, el('summary', {}, '用百分比定位区域'),
       el('div', {class: 'range-fields'}, Object.values(this.fields).map(f => f.node)), button('添加百分比区域', () => this.keyboardRegion()));
@@ -56,18 +56,24 @@ export class Annotations {
       placeholder: '写下这条意见要改什么。输入会自动保留；保存后进入正式记录。'}));
     this.bodyField.input.addEventListener('input', () => this.changed());
     this.notice = el('p', {class: 'muted annotation-notice', hidden: true});
-    this.actions = el('div', {class: 'row wrap opinion-actions'}, this.saveButton, this.newButton, this.copyNoteButton);
+    const secondaryActions = el('details', {class: 'opinion-secondary'}, el('summary', {}, '草稿操作'),
+      el('div', {class: 'stack'}, this.newButton, this.copyNoteButton));
+    this.actions = el('div', {class: 'row wrap opinion-actions'}, this.saveButton, secondaryActions);
+    const annotationSettings = el('details', {class: 'annotation-settings'}, el('summary', {}, '范围与标注工具'),
+      el('div', {class: 'stack'}, el('div', {class: 'row wrap opinion-meta'}, this.scopeLabel, this.intent.node, this.chapter),
+        this.tools, this.geometry, this.regionList));
+    this.startOpinion = button('整页意见', () => { this.chooseMode('whole'); this.bodyField.input.focus(); }, false,
+      {class: 'opinion-start'});
     this.noteEntry = el('details', {class: 'note-entry'},
       el('summary', {}, '私人笔记（不进入意见与制作）'), draftSlot);
     this.node.append(el('div', {class: 'panel-head'}, el('h2', {}, '标注与意见')),
       el('div', {class: 'panel-body stack'}, this.basis, this.notice,
-        el('div', {class: 'row wrap opinion-meta'}, this.scopeLabel, this.intent.node, this.chapter),
+        this.startOpinion,
         this.bodyField.node,
         // The save row sits with the input it saves, before the optional region
         // tools, so writing and saving stay in one screen.
-        this.actions, this.error,
-        this.tools, this.modeHint,
-        this.geometry, this.regionList, this.noteEntry,
+        this.actions, this.error, this.modeHint,
+        annotationSettings, this.noteEntry,
         el('p', {class: 'muted field-help'}, '保存意见不启动制作；选入已保存意见后再预览修改计划。'),
         el('h3', {}, '已保存意见'), this.listNotice, this.listRetry, this.savedList,
         this.requirementSection, this.preview));
@@ -213,6 +219,7 @@ export class Annotations {
     this.saveButton.disabled = Boolean(blocked || this.mode === 'read' || unchanged);
     this.planButton.disabled = Boolean(blocked || !this.listReady() || !this.selected.size || this.requirementMissing);
     this.newButton.disabled = !editable;
+    this.startOpinion.disabled = !editable;
     this.copyNoteButton.disabled = Boolean(!editable || !this.editor.input.value.trim());
     this.chapter.hidden = this.scope.value !== 'chapter';
     if (unchanged) {
@@ -253,7 +260,7 @@ export class Annotations {
   }
   setMode(mode) {
     this.mode = mode; this.drag = null;
-    this.modeHint.textContent = mode === 'read' ? '阅读模式不产生标注，保存意见也保持停用；选「整页意见」或区域模式后即可保存。'
+    this.modeHint.textContent = mode === 'read' ? '先选「整页意见」，或打开标注工具，再保存意见。'
       : mode === 'rect' ? '拖动框选；Esc 取消并返回阅读。'
       : mode === 'point' ? '点击放置标注点；Esc 移除并返回阅读。'
       : mode === 'text' ? '在原文中选择文本；Esc 移除并返回阅读。'

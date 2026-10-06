@@ -20,7 +20,8 @@ def main():
     assert deck_master.web._static_dir().resolve().is_relative_to(package)
     # Preload the installed parent before conftest inserts src. Every subsequent
     # submodule must resolve through this parent's installed __path__, audited below.
-    result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'), '--require-browser'])
+    result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
+                         str(repo / 'tests/rebuild/test_workbench_usability_browser.py'), '--require-browser'])
     modules = {name: str(Path(module.__file__).resolve()) for name, module in sys.modules.items()
                if (name == 'deck_master' or name.startswith('deck_master.')) and getattr(module, '__file__', None)}
     assert all(Path(path).is_relative_to(package) for path in modules.values()), modules
