@@ -116,6 +116,31 @@ function textFields(value, path = [], out = []) {
   return out;
 }
 const at = (value, path) => path.reduce((v,k) => v[k], value);
+// F06/N04：字段标签必须表达作品位置，不能用全局序号——同文节点靠"块 + 块内
+// 位置"区分，块标题（相邻文本）一并给出。
+const leafNames = {title: '标题', subtitle: '副标题', heading: '小标题', label: '标签', text: '文字', display_text: '显示文字'};
+const blockKeyNames = {body_blocks: '正文块', sections: '章节', paragraphs: '段落组', items: '条目组'};
+const containerKeyNames = {items: '条目', rows: '行', columns: '列', cells: '单元格', children: '子条目'};
+function blockAt(path) { return path.findIndex((segment, i) => i > 0 && typeof segment === 'number'); }
+function blockHeading(value, path, arrayAt) {
+  if (arrayAt < 1) return null;
+  const container = at(value, path.slice(0, arrayAt + 1));
+  const anchor = container && typeof container === 'object' && !Array.isArray(container)
+    ? [container.title, container.heading, container.label].find(v => typeof v === 'string' && v.trim()) : null;
+  const key = path[arrayAt - 1];
+  const base = `${blockKeyNames[key] || key} ${path[arrayAt] + 1}`;
+  return anchor ? `${base} · ${anchor.trim().slice(0, 24)}` : base;
+}
+function leafLabel(path, arrayAt) {
+  const parts = [];
+  for (let i = arrayAt + 1; i < path.length; i++) {
+    const segment = path[i];
+    if (typeof segment === 'number') parts.push(`${containerKeyNames[path[i - 1]] || '条目'} ${segment + 1}`);
+    else if (i + 1 < path.length && typeof path[i + 1] === 'number') continue;
+    else parts.push(leafNames[segment] || segment);
+  }
+  return parts.join(' · ') || '文字';
+}
 export function pageContentEditor(app, data) {
   if (app.readonly || !data.page?.customer_visible) return null;
   let value = structuredClone(data.page.customer_visible); const fields = el('div', {class:'stack'});
@@ -124,9 +149,21 @@ export function pageContentEditor(app, data) {
   function draw() {
     fields.replaceChildren();
     const rank = path => path.length === 1 && path[0] === 'title' ? 0 : path.length === 1 && path[0] === 'subtitle' ? 1 : 2;
-    for (const [index,path] of textFields(value).sort((a,b)=>rank(a)-rank(b)).entries()) {
-      const label = path.length === 1 ? ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字') : `正文文字 ${index + 1}`;
-      const item = inputField(label, at(value,path), path.length === 1 ? 2 : 4);
+    let lastHeading = null;
+    for (const path of textFields(value).sort((a,b)=>rank(a)-rank(b))) {
+      if (path.length === 1) {
+        const label = ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字');
+        const item = inputField(label, at(value,path), 2);
+        item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); });
+        fields.append(item.node);
+        lastHeading = null;
+        continue;
+      }
+      const arrayAt = blockAt(path);
+      const head = blockHeading(value, path, arrayAt);
+      if (head !== lastHeading) { fields.append(el('p', {class:'muted content-block-label'}, head || '正文')); lastHeading = head; }
+      const label = `${head || '正文'} · ${leafLabel(path, arrayAt)}`;
+      const item = inputField(label, at(value,path), 4);
       item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); });
       fields.append(item.node);
     }

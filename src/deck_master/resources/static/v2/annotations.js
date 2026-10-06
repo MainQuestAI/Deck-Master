@@ -317,7 +317,10 @@ export class Annotations {
     Object.assign(this.overlay.style, {left: `${rect.left - parent.left}px`, top: `${rect.top - parent.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, pointerEvents: ['point', 'rect'].includes(this.mode) ? 'auto' : 'none'});
     const visible = [...this.regions.map((location, i) => ({location, label: String(i + 1), saved: false})), ...this.records.flatMap((r, i) => {
       const n = r.annotation;
-      return n.base_revision === this.data.revision_id && n.layer === this.layer && canonical(n.artifact_ref) === canonical(this.ref) ? [{location: n.location, label: `已存 ${i + 1}`, saved: true}] : [];
+      // F10/N11：画布叠层与意见列表用同一产物身份规则（artifact_ref 相等即同
+      // 一产物，几何有效）；不再要求快照 revision 相等，否则列表里"适用"的
+      // 意见在画布上消失。
+      return n.layer === this.layer && canonical(n.artifact_ref) === canonical(this.ref) ? [{location: n.location, label: `已存 ${i + 1}`, saved: true}] : [];
     })];
     this.overlay.replaceChildren(...visible.filter(r => ['point', 'rect'].includes(r.location.kind)).map(r => {
       const n = r.location, mark = el('span', {class: `annotation-mark ${n.kind}${r.saved ? ' saved' : ''}`}, r.label);
