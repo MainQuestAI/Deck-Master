@@ -60,15 +60,17 @@ export function visualStyle(app){
   const savedAnalysis=el('select',{'aria-label':'恢复已保存的截图分析'},el('option',{value:''},'选择已保存分析，不自动切换'));
   const savedRecipe=el('select',{'aria-label':'恢复已确认的截图规范'},el('option',{value:''},'选择已确认规范，不自动切换'));
   const savedPager=el('div',{class:'row wrap'});
-  async function loadSaved(){const token=++savedCatalogSerial;
+  let savedLoading=false;
+  async function loadSaved(){if(savedLoading)return;savedLoading=true;const token=++savedCatalogSerial;
     try{const q=new URLSearchParams({revision:app.route.revision,limit:30,offset:savedTaskPage*30});
       const [taskPage,versions]=await Promise.all([get('/api/tasks?'+q),get('/api/styles?'+new URLSearchParams({revision:app.route.revision}))]);
       if(disposed||token!==savedCatalogSerial)return;savedTasks=taskPage.tasks.filter(t=>t.kind==='style_analyze');
       savedAnalysis.replaceChildren(el('option',{value:''},'选择已保存分析，不自动切换'),...savedTasks.map(t=>el('option',{value:t.task_id},`${t.instruction.slice(0,45)} · ${t.status==='completed'?'已返回':t.status==='awaiting_host'?'待接手':t.status==='running'?'处理中':'已停止'} · ${t.task_id.slice(-6)}`)));
       savedRecipe.replaceChildren(el('option',{value:''},'选择已确认规范，不自动切换'),...versions.recipes.filter(v=>v.recipe.schema_version==='style_recipe.v2').map(v=>el('option',{value:v.recipe.recipe_id},`V${v.recipe.version} · ${v.recipe.input.instruction.slice(0,45)} · ${v.recipe.input.target_page_ids?.length||0} 页 · ${v.recipe.recipe_id.slice(-6)}`)));
-      savedPager.replaceChildren(button('上一组保存任务',()=>{savedTaskPage--;loadSaved();},false,{disabled:savedTaskPage===0}),el('span',{},`第 ${savedTaskPage+1} 组任务`),button('下一组保存任务',()=>{savedTaskPage++;loadSaved();},false,{disabled:taskPage.pagination.next_offset===null}));
+      savedPager.replaceChildren(button('上一组保存任务',()=>{savedTaskPage=Math.max(0,savedTaskPage-1);loadSaved();},false,{disabled:savedTaskPage===0}),el('span',{},`第 ${savedTaskPage+1} 组任务`),button('下一组保存任务',()=>{savedTaskPage++;loadSaved();},false,{disabled:taskPage.pagination.next_offset===null}));
       controls();
     }catch(error){if(!disposed)status.textContent=readableError(error);}
+    finally{savedLoading=false;}
   }
   savedAnalysis.addEventListener('change',async()=>{const chosen=savedAnalysis.value,task=savedTasks.find(t=>t.task_id===chosen);if(!task)return;
     invalidateAnalysis();state.task_id=chosen;state.instruction=task.instruction;requirement.value=task.instruction;persist();await readAnalysis();});

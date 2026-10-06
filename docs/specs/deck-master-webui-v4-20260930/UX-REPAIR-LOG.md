@@ -2,7 +2,7 @@
 
 日期：2026-10-06 · 基线：`4fefd0b3`（`codex/v1-rc-closure` 审计基线）· 实施分支：`codex/webui-ux-repair`。
 
-按[最终修复方案](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/evidence/product-design-final-20261006/FINAL-REPAIR-PLAN.md)逐包实施。本文件记录每包的代码变化、反例测试与验证结论；产品决定见 [UX-REPAIR-DECISIONS](UX-REPAIR-DECISIONS.md)。测试命令：`python -m pytest tests/rebuild -q`（浏览器用例加 `-m browser`）。
+按[最终修复方案](../../../evidence/product-design-final-20261006/FINAL-REPAIR-PLAN.md)逐包实施。本文件记录每包的代码变化、反例测试与验证结论；产品决定见 [UX-REPAIR-DECISIONS](UX-REPAIR-DECISIONS.md)。测试命令：`python -m pytest tests/rebuild -q`（浏览器用例加 `-m browser`）。
 
 ## 环境备注（预先存在的失败，均在干净基线 `4fefd0b3` 上复现，不计入实施回归）
 
@@ -76,11 +76,6 @@
 
 反例测试：`test_ux05_runs_delivery_browser.py`。旧代码失败点：render 任务快捷层为原图（测试断言 PPT 层即失败）。
 
-- UX-06 恢复异常与响应式（F11/F13/F15，AC19–AC22）
-- UX-07 样式收敛与规范同步（F16/F17，AC23）
-- UX-08 组合验收与交付结论（AC24）
-
-这些包的状态是**未开始**；任何 AC 不因其它包的通过而视为通过。
 ## UX-06 · 恢复异常与响应式（已完成：AC19–AC22）
 
 - **AC20/F13/N14**：launcher 的"新建项目"在创建成功而打开失败后，主动作变为"打开已创建的项目"（绑定登记条目）；路由恢复后打开同一项目，不重复创建、不覆盖（`launcher-ui.js`）。反例经真实 registry 服务驱动，拦截 `/api/projects/open` 验证恢复往返。
@@ -116,3 +111,29 @@
 - *任务体验*：以走查反例（AC01–AC22）与记录代替"用户确认"；用户对实际样例的最终确认是发布前剩余的用户侧检查。
 
 **未完成/明确撤回项**：无遗留待修项进入实施清单；撤回项见 FINAL-DIAGNOSIS §2.1–2.4，保留记录。环境备注中 3 个预存失败不属于本工作树代码缺陷，移交运行环境侧跟进。
+## 评审修复附录（2026-10-06 三轮评审后）
+
+对本分支的三方评审（in-host 对抗子代理、Claude Code 对抗轮、Claude Code 结构化轮；0 P1、6 P2、多项 P3）确认的问题及处置：
+
+| 发现 | 处置 |
+|---|---|
+| 偏好记录 32KB 读上限 vs 新选择字段可把记录写坏且 UI 拒自愈（F1/P0，双源一致） | `overview_state.py`：写入前按 `MAX_RECORD_BYTES` 预算裁剪最旧状态；单份仍放不下则明确拒绝（保存显示未确认，输入保留），永不落盘读不回的记录；新增预算单测 |
+| launcher 恢复按钮在 await 后引用 `event.currentTarget`（null）→ 二次失败死路（三源一致） | 捕获按钮引用后再进入 await；重试失败保留按钮并只更新文字；`createForm` 补关闭刷新 |
+| localStorage 非数组值展开使总览白屏（双源一致） | `Array.isArray` + 字符串过滤守卫 |
+| 双事实源并集使"清除选择"可复活（三源一致） | 单一事实源：localStorage 键存在且合法时以它为准，否则回退服务端按版本记录 |
+| "读取项目保存的偏好"后勾选不变、随后被旧选择覆盖（三源一致） | `applyMemorySelection()`：读取后重建勾选集合并写入 localStorage |
+| 保存任务分页快速双击产生负 offset（违反 AC03 声明） | `Math.max(0, …)` 钳制 + 读取期间守卫 |
+| 同字节产物跨页意见误叠（模板/复制页） | 叠层补 `page_id` 相等条件，与列表分组规则一致 |
+| 旧核 `/api/changes` 无 `page_ids` 显示"0 页"虚假事实 | 页数后缀改为条件显示（与 run-desk 一致） |
+| 组读取失败后横幅仍说"正在读取" | 失败态独立文案 + 失败时重绘 |
+| gallery 冲突面板 undefined/网格误标、替换方向措辞反 | 字段描述补未记录回退；措辞改为"当前窗口整份变为所选一侧" |
+| launcher 测试泄漏后台进程、未计数 create、未断言同一条目 | finally 停服务；计数 create/open 并断言恢复不再创建 |
+| AC22 测试未走到影响预览（日志表述超前） | 测试延伸：整页意见 → 选入修改要求 → 预览影响，全程 390px |
+| UX-02 未证明服务端记录 | 勾选后断言 `overview_state.get` 的 `selected_page_ids`（含落盘同步点） |
+| LOG 残留"未开始"矛盾段、文档绝对路径 | 已清理；链接改仓库相对路径 |
+
+**留待用户决定**：批量"制作要求"在提交成功后是否清空（结构化轮 P2：残留旧要求有重复交接风险；但 D1/AC08 的留存语义与 lost-commit 测试以留存为预期——产品取舍，见最终询问）。
+
+**知悉未改（P3）**：>500 页全选的 schema 上限（现实页数 ≤300，不可达）；短尾 6 位碰撞（uuid 后缀，可忽略）；窄屏说明位于折叠的工具详情内（与工具同处，可发现）；N08 断言可再收紧。
+
+修复后同一组合串行验证：非浏览器 1285 通过 + 3 个已记录预存环境项；浏览器 162 通过、零失败。

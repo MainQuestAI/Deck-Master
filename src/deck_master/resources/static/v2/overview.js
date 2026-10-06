@@ -147,13 +147,17 @@ function matrixPanel(app, saved) {
   let filter = memory.state.filter, search = memory.state.search, ascending = memory.state.sort === 'ascending', disposed = false, tableState = null;
   // D1：选择随个人阅读状态持久化。改变筛选只改变可见范围，不再清空选择；
   // 筛选外选择始终有计数，只有「清除选择」或移除受限页才改变选择集合。
-  // localStorage（项目键）承载跨刷新/版本前进的连续性；ui_overview 的
-  // selected_page_ids 字段保存该版本阅读的选择记录（恢复的不是可提交计划）。
+  // localStorage（项目键）是跨刷新/版本前进的连续事实源：键存在且合法时以它
+  // 为准（清除后立即刷新不会从服务端旧记录复活）；键缺失或损坏时才回退到
+  // ui_overview 按版本记录的选择。恢复选择不恢复可提交计划。
   const pageIdSet = new Set(pages.map(page => page.page_id));
   const selectionKey = 'deck-master:overview-selection:' + app.info.project_identity;
-  let storedSelection = [];
-  try { storedSelection = JSON.parse(localStorage.getItem(selectionKey) || '[]'); } catch { /* 选择是阅读辅助，读不到就从空开始 */ }
-  const selected = new Set([...(memory.state.selected_page_ids || []), ...storedSelection].filter(id => pageIdSet.has(id)));
+  let storedSelection = null;
+  try {
+    const parsed = JSON.parse(localStorage.getItem(selectionKey) ?? 'null');
+    if (Array.isArray(parsed)) storedSelection = parsed.filter(id => typeof id === 'string');
+  } catch { /* 选择是阅读辅助，读不到就从服务端记录恢复 */ }
+  const selected = new Set((storedSelection !== null ? storedSelection : (memory.state.selected_page_ids || [])).filter(id => pageIdSet.has(id)));
   const count = el('span', {class: 'muted', role: 'status'});
   const selectionNote = el('span', {class: 'muted', role: 'status'});
   const clearButton = button('清除选择', () => { selected.clear(); batch.invalidate(); saveSelection(); render(); });
@@ -176,8 +180,8 @@ function matrixPanel(app, saved) {
         el('h3', {}, '此窗口'), description(memory.state),
         el('h3', {}, '项目保存的偏好'), description(stored.record?.state),
         el('details', {}, el('summary', {}, '固定版本与恢复详情'), el('pre', {class:'evidence-json'}, JSON.stringify({window:memory.state, saved:stored.record}, null, 2)))),
-        [button('读取项目保存的偏好', () => { document.querySelector('#modal').close(); memory.useSaved(stored); reflectURL(); }),
-          button('明确保存此窗口偏好', () => { document.querySelector('#modal').close(); memory.useWindow(stored); })]);
+        [button('读取项目保存的偏好', () => { document.querySelector('#modal').close(); memory.useSaved(stored); applyMemorySelection(); reflectURL(); }),
+          button('明确保存此窗口偏好', () => { document.querySelector('#modal').close(); memory.useWindow(stored); saveSelection(); })]);
     } catch { if (!disposed) preferenceStatus.textContent = '总览偏好核实未完成，当前输入保留；连接恢复后重试。'; }
     finally { compareButton.disabled = false; }
   });
@@ -187,6 +191,13 @@ function matrixPanel(app, saved) {
     try { localStorage.setItem(selectionKey, JSON.stringify([...selected])); } catch { /* 选择保留在本页，未写入本机 */ }
     memory.update({search,filter,sort:ascending ? 'ascending' : 'descending',selected_page_ids:[...selected]});
     reflectURL();
+  }
+  // 读取项目保存的偏好后，勾选集合必须跟着替换，否则界面仍显示本窗口的选择，
+  // 下一次输入会用旧选择把刚读取的记录覆盖回去（两套事实源打架）。
+  function applyMemorySelection() {
+    selected.clear();
+    for (const id of memory.state.selected_page_ids || []) if (pageIdSet.has(id)) selected.add(id);
+    saveSelection();
   }
   function saveReading() { saveSelection(); }
 

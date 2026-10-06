@@ -108,6 +108,7 @@ def test_filters_keep_selection_and_show_out_of_filter_count(overview30):
 
 def test_refresh_and_version_advance_keep_draft_and_invalidate_old_plan(overview30):
     from playwright.sync_api import expect
+    from deck_master import overview_state
     page, server, path, store = overview30
     page.goto(server.start())
     page.get_by_role('checkbox', name='选择第 01 页', exact=True).check()
@@ -116,6 +117,10 @@ def test_refresh_and_version_advance_keep_draft_and_invalidate_old_plan(overview
     page.get_by_role('button', name='按所选页设置调用上限', exact=True).click()
     page.get_by_role('button', name='预览所选页试作', exact=True).click()
     expect(page.locator('.batch-impact').get_by_role('heading', name='确认本次范围')).to_be_visible()
+    # 勾选动作确实把选择按版本写入了服务端 ui_overview 记录（不只是本机）。
+    expect(page.locator('.overview-preference-status')).to_have_text('总览阅读偏好已保存', timeout=8000)
+    record = overview_state.get(path, revision=store.current_revision_id())['record']
+    assert set(record['state']['selected_page_ids']) == {'p01', 'p02'}
 
     # 项目版本前进（经正常入口的另一次提交）。重新打开项目时恢复上次的阅读
     # 位置（旧版本、只读）——选择与要求仍然保留；点「查看当前版本」回到最新

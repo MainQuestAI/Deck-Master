@@ -372,16 +372,16 @@ export function gallery(app, data) {
             return index >= 0 ? `第 ${index + 1} 页` : id;
           }).join('、') : '未选页'}`,
           layer: v => `图层：${layers[v] || '未记录'}`,
-          mode: v => `模式：${v === 'compare' ? '固定比较' : '网格'}`,
-          columns: v => `列数：${v}`,
-          zoom: v => `缩放：${v}`,
+          mode: v => `模式：${v === 'compare' ? '固定比较' : v === 'grid' ? '网格' : '未记录'}`,
+          columns: v => `列数：${v ?? '未记录'}`,
+          zoom: v => `缩放：${v ?? '未记录'}`,
           references: v => `固定比较引用：${(v || []).length ? v.map(r => r.page_id || '未记录页').join('、') : '未固定'}`,
         };
         const fields = Object.keys(describe).filter(key => canonical(windowState[key]) !== canonical(savedState[key]));
         const rows = (fields.length ? fields : ['selected_page_ids', 'layer']).map(key => el('p', {},
           `${describe[key](windowState[key])} ｜ 项目保存：${describe[key](savedState[key])}`));
         modal('两个窗口的画廊阅读状态', el('div', {class: 'stack'},
-          el('p', {}, fields.length ? '以下阅读状态在两个窗口不同；采用任何一侧都会替换这一侧的全部字段。' : '两个窗口的阅读状态字段一致。'),
+          el('p', {}, fields.length ? '以下阅读状态在两个窗口不同；任一侧被采用后，当前窗口的阅读状态会整份变为那一侧。' : '两个窗口的阅读状态字段一致。'),
           ...rows,
           el('details', {}, el('summary', {}, '两份完整快照'), el('pre', {class: 'evidence-json'}, JSON.stringify({window: windowState, saved: savedState}, null, 2))),
           el('div', {class: 'row wrap'},

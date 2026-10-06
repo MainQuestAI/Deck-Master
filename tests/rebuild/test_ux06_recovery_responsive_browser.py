@@ -11,6 +11,7 @@
 """
 import base64
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -59,36 +60,49 @@ def test_created_project_reopens_after_open_failure_without_recreating(ux06_brow
     reg = P(tempfile.mkdtemp()) / 'registry.json'
     descriptor = local_runtime.descriptor(registry=reg)
     launcher = local_runtime.ensure(descriptor)
-    page.goto(launcher['url'])
-    from playwright.sync_api import expect as _e
-    _e(page.get_by_role('button', name='新建项目', exact=True)).to_be_visible()
+    try:
+        await_recovery(page, launcher['url'], reg.parent)
+    finally:
+        local_runtime.stop(descriptor)
+
+def await_recovery(page, root, parent_dir):
+    from playwright.sync_api import expect
+    page.goto(root)
+    expect(page.get_by_role('button', name='新建项目', exact=True)).to_be_visible()
 
     page.get_by_role('button', name='新建项目', exact=True).click()
     dialog = page.locator('dialog[open]')
     dialog.get_by_label('项目名称（必填）').fill('恢复路径验证')
     dialog.get_by_label('用途（必填）').fill('验证创建成功后的打开恢复路径。')
     dialog.get_by_label('受众（必填）').fill('第一次使用工作台的人')
-    dialog.get_by_label('保存到哪个文件夹（必填）').fill(str(reg.parent))
+    dialog.get_by_label('保存到哪个文件夹（必填）').fill(str(parent_dir))
     dialog.get_by_label('新项目文件夹名（必填）').fill('recovery-target')
 
     # 打开这一步失败：项目已创建并登记，但打开请求丢失。
-    open_calls = []
+    open_calls, create_calls, opened_entry = [], [], []
     def lose_open(route):
         open_calls.append(route.request.post_data_json)
         route.fulfill(status=500, content_type='application/json',
                       body=json.dumps({'error': {'code': 'open_failed', 'message': '项目服务返回的位置无效，请从工作台重新打开。'}}))
+    def count_create(route):
+        create_calls.append(route.request.post_data_json)
+        route.continue_()
     page.route('**/api/projects/open', lose_open)
+    page.route('**/api/projects/create', count_create)
     dialog.get_by_role('button', name='创建项目', exact=True).click()
     form_error = page.locator('dialog[open] form > .field-error')
     expect(form_error).to_contain_text('重新打开')
-    assert len(open_calls) == 1
+    assert len(open_calls) == 1 and len(create_calls) == 1
+    created_entry = create_calls[0] and open_calls[0] and open_calls[0].get('entry_id')
 
-    # 主动作是打开已创建的项目；不重复创建（create 只调用过一次）。
+    # 主动作是打开已创建的项目；恢复点击打开的是同一个登记条目，create 不再被调用。
     recovery = page.locator('dialog[open]').get_by_role('button', name='打开已创建的项目', exact=True)
     expect(recovery).to_be_visible()
+    page.on('request', lambda request: opened_entry.append(request.url) if '/api/projects/create' in request.url else None)
     page.unroute('**/api/projects/open')
     recovery.click()
     page.wait_for_url(lambda pattern: '#project=' in page.url, timeout=20000)
+    assert created_entry is not None and not opened_entry, '恢复路径不得再次创建'
     # 新建项目 0 页：初始工作面是"内容与来源"。
     page.get_by_role('heading', name='内容与来源', exact=True).wait_for(timeout=20000)
 
@@ -136,10 +150,16 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
     # 入口，整页意见路径保持可执行。
     assert not page.get_by_role('button', name='框选模式', exact=True).count()
     page.get_by_text('范围与标注工具', exact=True).click()
-    expect(page.get_by_text('点标注与框选需要桌面宽度；窄屏可用「整页意见」或选择原文描述位置。', exact=True)).to_be_visible()
+    expect(page.get_by_text('点标注与框选需要桌面宽度；窄屏可用「整页意见」文字描述位置。', exact=True)).to_be_visible()
 
-    # 从零写图标要求可完成：整页意见 + 修改要求预览，全程 390px。
+    # 从零写图标要求可完成：整页意见 → 选入修改要求 → 预览影响，全程 390px。
     page.get_by_role('button', name='整页意见', exact=True).click()
     panel.get_by_role('textbox', name='意见正文', exact=True).fill('整图中的徽标位置描述：右上角状态图标需要与正文对齐。')
     panel.get_by_role('button', name='保存意见', exact=True).click()
     expect(panel.locator('.field-error[data-success]')).to_be_visible()
+    saved_group = panel.locator('section.saved-group').filter(has_text='本页整页意见')
+    saved_group.get_by_label('选入意见 1', exact=True).check()
+    requirement = panel.get_by_role('textbox', name='修改要求', exact=True)
+    expect(requirement).to_have_value(re.compile('整图中的徽标位置描述'))
+    panel.get_by_role('button', name='预览修改影响', exact=True).click()
+    expect(panel.locator('.change-plan-preview')).to_contain_text('结果先作为候选返回')

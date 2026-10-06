@@ -180,3 +180,27 @@ def test_http_requires_fixed_query_allows_personal_readonly_preferences_and_chan
         assert business(project) == before
     finally:
         server.stop()
+
+
+def test_oversized_selection_record_is_trimmed_or_refused_never_written_unreadable(project):
+    """评审 F1：写入永不产生读不回的记录——超预算先丢最旧，单份也放不下就拒绝。"""
+    import pytest as _pytest
+    from deck_master.local_state import LocalStateError
+    store = Store(project)
+    long_ids = [f'page-{index:05d}-' + 'a' * 16 for index in range(500)]
+    # 三份各自可放下、合计超预算的状态：保存第三份时最旧的一份被丢弃。
+    revisions, saved = [], None
+    for index in range(3):
+        commit(store, copy.deepcopy(store.load_document()), str(uuid.uuid4()))
+        revisions.append(store.current_revision_id())
+        value = state(project, selected_page_ids=long_ids)
+        saved = overview_state.save(project, state=value, expected_etag=saved['record']['etag'] if saved else None)
+    assert overview_state.get(project, revision=revisions[0])['record'] is None
+    assert overview_state.get(project, revision=revisions[-1])['record']['state']['selected_page_ids'] == long_ids
+    assert overview_state._file(Store(project)).stat().st_size <= 32_000
+    # 单份也放不下（合法 schema 的超长选择）：明确拒绝，文件保持可读。
+    huge = ['x' * 128 for _ in range(500)]
+    with _pytest.raises(LocalStateError):
+        overview_state.save(project, state=state(project, selected_page_ids=huge),
+                            expected_etag=saved['record']['etag'])
+    assert overview_state.get(project, revision=revisions[-1])['record'] is not None

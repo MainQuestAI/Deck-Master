@@ -122,7 +122,7 @@ def test_version_selection_reading_and_restore_state_their_targets(ux05_browser)
     assert store.current_revision_id() == latest
 
 
-def test_historical_record_is_fixed_latest_has_todo_and_unknown_next_step_is_honest(ux05_browser):
+def test_historical_record_is_fixed_latest_todo_reachable_and_status_honest(ux05_browser):
     from playwright.sync_api import expect
     page, server, path, store = ux05_browser
     url = server.start()

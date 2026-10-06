@@ -1,6 +1,6 @@
 # UX 整改产品决定记录（D1–D4）
 
-日期：2026-10-06 · 状态：按[最终修复方案](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/evidence/product-design-final-20261006/FINAL-REPAIR-PLAN.md)第 2 节的推荐默认定稿并随实施生效；用户如改变决定，在此记录替代项并回滚对应行为，不修改历史报告。
+日期：2026-10-06 · 状态：按[最终修复方案](../../../evidence/product-design-final-20261006/FINAL-REPAIR-PLAN.md)第 2 节的推荐默认定稿并随实施生效；用户如改变决定，在此记录替代项并回滚对应行为，不修改历史报告。
 
 本记录是 UX-01 的交付物之一。四个决定都在实施对应工作包时落到代码、规范与测试；本文件只记录决定本身、生效范围与回归判据。
 

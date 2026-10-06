@@ -61,7 +61,7 @@ export class Annotations {
     this.actions = el('div', {class: 'row wrap opinion-actions'}, this.saveButton, secondaryActions);
     const annotationSettings = el('details', {class: 'annotation-settings'}, el('summary', {}, '范围与标注工具'),
       el('div', {class: 'stack'}, el('div', {class: 'row wrap opinion-meta'}, this.scopeLabel, this.intent.node, this.chapter),
-        el('p', {class: 'muted annotation-mobile-note'}, '点标注与框选需要桌面宽度；窄屏可用「整页意见」或选择原文描述位置。'),
+        el('p', {class: 'muted annotation-mobile-note'}, '点标注与框选需要桌面宽度；窄屏可用「整页意见」文字描述位置。'),
         this.tools, this.geometry, this.regionList));
     this.startOpinion = button('整页意见', () => { this.chooseMode('whole'); this.bodyField.input.focus(); }, false,
       {class: 'opinion-start'});
@@ -321,7 +321,7 @@ export class Annotations {
       // F10/N11：画布叠层与意见列表用同一产物身份规则（artifact_ref 相等即同
       // 一产物，几何有效）；不再要求快照 revision 相等，否则列表里"适用"的
       // 意见在画布上消失。
-      return n.layer === this.layer && canonical(n.artifact_ref) === canonical(this.ref) ? [{location: n.location, label: `已存 ${i + 1}`, saved: true}] : [];
+      return n.page_id === this.data.page_id && n.layer === this.layer && canonical(n.artifact_ref) === canonical(this.ref) ? [{location: n.location, label: `已存 ${i + 1}`, saved: true}] : [];
     })];
     this.overlay.replaceChildren(...visible.filter(r => ['point', 'rect'].includes(r.location.kind)).map(r => {
       const n = r.location, mark = el('span', {class: `annotation-mark ${n.kind}${r.saved ? ' saved' : ''}`}, r.label);

@@ -17,12 +17,12 @@ export function changeHandoffs(app) {
   const notice = el('p', {role: 'status', class: 'muted'});
   node.append(heading, el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '这里读取当前交接事实；页面与任务的历史阅读版本保持不变。'), notice, list, detail));
   const modern = app.health.ui_capabilities?.includes('run_desk.v1');
-  let disposed = false, busy = false, timer, delay = 3000, active = null, lastSync = null, latest, latestChangeId = null, rerun = false, lastList, candidateRows = [], candidateRevision = null, candidateSignature = "";
+  let disposed = false, busy = false, timer, delay = 3000, active = null, lastSync = null, latest, latestChangeId = null, rerun = false, readFailed = false, lastList, candidateRows = [], candidateRevision = null, candidateSignature = "";
   const copied = new Set();
   try { for (const id of JSON.parse(localStorage.getItem(`deck-master:v3:copied:${app.info.project_identity}`) || '[]')) copied.add(id); } catch { /* Copy hints are not execution facts. */ }
   const recovery = cancelRecovery(app), cancelUnknown = recovery.pending;
   const open = async id => {
-    active = id; notice.textContent = '正在读取已保存的要求与执行状态…';
+    active = id; readFailed = false; notice.textContent = '正在读取已保存的要求与执行状态…';
     // 立即以旧组内容重绘：复制按钮对新对象停用并说明原因，面板标签仍指向
     // 已读取的那一组；等待响应期间切换组不得复制旧内容（C01/N01）。
     renderDetail();
@@ -56,7 +56,7 @@ export function changeHandoffs(app) {
     const staleSelection = latestChangeId !== active;
     const title = trial && latest.status === 'completed' ? '候选已返回 · 待比较' : latest.status === 'awaiting_host' && copied.has(latestChangeId) ? '已复制、未接手' : labels[latest.status] || '执行状态待核实';
     detail.replaceChildren(el('div', {class: 'stack'}, el('h3', {'data-change-id': latestChangeId}, title),
-      staleSelection && el('p', {class: 'muted'}, '正在读取所选修改组；下面仍是上一组的内容，复制暂不可用。'),
+      staleSelection && el('p', {class: 'muted'}, readFailed ? '所选修改组读取失败；下面仍是上一组的内容，复制暂不可用。可重试核实。' : '正在读取所选修改组；下面仍是上一组的内容，复制暂不可用。'),
       el('p', {class: 'handoff-progress', role: 'status'}, `${latest.completed_count} / ${latest.total_count} 项已返回 · ${version(latest.handoff.base_revision)} 的计划`),
       latest.needs_verification && el('p', {class: 'field-error'}, '已超过等待阈值或调用状态不明。请核实原执行，或确认取消后重新计划；不会自动重试。'),
       el('p', {}, latest.handoff.plan.input.instruction.slice(0,200)+(latest.handoff.plan.input.instruction.length>200?'…':'')),
@@ -101,9 +101,9 @@ export function changeHandoffs(app) {
         lastList = nextList;
         if (modern && changes.changes.length > 6) {
           const select = el('select', {'aria-label': '选择修改交接组'}, changes.changes.map(change => el('option', {value: change.change_id},
-            `${labels[change.status] || '待核实'} · ${change.completed_count}/${change.total_count} 项 · ${change.page_ids?.length || 0} 页 · ${change.change_id.slice(-6)}`)));
+            `${labels[change.status] || '待核实'} · ${change.completed_count}/${change.total_count} 项${change.page_ids?.length ? ` · ${change.page_ids.length} 页` : ''} · ${change.change_id.slice(-6)}`)));
           select.value = active || changes.changes.at(-1).change_id; select.addEventListener('change', () => open(select.value)); list.replaceChildren(select);
-        } else list.replaceChildren(...changes.changes.map(change => button(`${labels[change.status] || '待核实'} · ${change.completed_count}/${change.total_count} 项 · ${change.page_ids?.length || 0} 页 · ${change.change_id.slice(-6)}`, () => open(change.change_id), false,
+        } else list.replaceChildren(...changes.changes.map(change => button(`${labels[change.status] || '待核实'} · ${change.completed_count}/${change.total_count} 项${change.page_ids?.length ? ` · ${change.page_ids.length} 页` : ''} · ${change.change_id.slice(-6)}`, () => open(change.change_id), false,
           {'aria-pressed': active === change.change_id})));
         if (!changes.changes.length) list.append(el('p', {class: 'muted'}, '尚无已提交修改。保存意见、预览影响后，交接会持续保留在这里。'));
       }
@@ -123,13 +123,17 @@ export function changeHandoffs(app) {
         if (disposed || id !== active) return;
         const contentChanged = candidatesChanged || JSON.stringify(latest) !== JSON.stringify(result);
         const identityChanged = latestChangeId !== id;
-        latest = result; latestChangeId = id;
+        latest = result; latestChangeId = id; readFailed = false;
         if (contentChanged || identityChanged) renderDetail();
       }
       lastSync = new Date(); notice.textContent = '最后同步：' + lastSync.toLocaleTimeString();
       delay = latest && ['awaiting_host', 'running', 'partial', 'unknown'].includes(latest.status) ? 3000 : 15000;
     } catch (error) {
-      if (!disposed) notice.textContent = readableError(error) + (lastSync ? ' 保留最后同步内容：' + lastSync.toLocaleTimeString() : '');
+      if (!disposed) {
+        readFailed = true;
+        notice.textContent = readableError(error) + (lastSync ? ' 保留最后同步内容：' + lastSync.toLocaleTimeString() : '');
+        if (latest && latestChangeId !== active) renderDetail();
+      }
       delay = Math.min(30000, delay * 2);
     } finally {
       busy = false;

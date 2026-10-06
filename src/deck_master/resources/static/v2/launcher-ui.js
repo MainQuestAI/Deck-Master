@@ -112,7 +112,10 @@ export async function launcher(root, health) {
       el('div', {class: 'form-pair'}, parent.node, folder.node), button('选择保存文件夹', event => picker(parent.input, parent.error, event.currentTarget)),
       limit.node, el('p', {class: 'muted'}, '材料列表暂为空。创建后补充材料，再交接内容整理；创建项目不会启动模型。'), error);
     const submit = button('创建项目', () => form.requestSubmit(), true);
-    modal('新建项目', form, [submit]);
+    const dialog = modal('新建项目', form, [submit]);
+    // 创建成功后关闭对话框也要刷新列表：新项目出现在列表里，而不是邀请用户
+    // 在同一路径再次创建（F13/N14 的另一半）。
+    dialog.addEventListener('close', refresh, {once:true});
     form.addEventListener('submit', async event => {
       event.preventDefault(); submit.disabled = true; error.textContent = '';
       const path = parent.input.value.trim().replace(/\/+$/, '') + '/' + folder.input.value.trim();
@@ -130,9 +133,17 @@ export async function launcher(root, health) {
         error.textContent = readableError(failure);
         if (created) {
           error.append(' ');
-          error.append(button('打开已创建的项目', async trigger => {
-            trigger.currentTarget.disabled = true;
-            try { await open(created.entry_id); } catch (openFailure) { error.textContent = readableError(openFailure); trigger.currentTarget.disabled = false; }
+          error.append(button('打开已创建的项目', trigger => {
+            // 事件派发结束后 currentTarget 会变 null：先捕获按钮引用再进入 await。
+            const control = trigger.currentTarget;
+            control.disabled = true;
+            const note = el('span', {}, '');
+            error.append(note);
+            open(created.entry_id).then(() => { control.remove(); note.remove(); })
+              .catch(openFailure => {
+                note.textContent = readableError(openFailure) + ' ';
+                control.disabled = false;
+              });
           }, true));
         } else submit.disabled = false;
       }

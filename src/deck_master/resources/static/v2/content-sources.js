@@ -188,8 +188,8 @@ export function content(app, data) {
   // independent evidence. A stored extract ref alone makes no reading claim.
   // 历史修订不加载当前输入的材料清单：不显示虚假的 0 份断言（评审 reading-P2）。
   // 新增/调整入口持有明确控件引用（C02/CS-01）：不得用第一个 `.materials-aside
-  // details` 定位——材料卡各自的「调整此材料」折叠会排在它前面；历史版本没有
-  // 当前输入，入口禁用而不是命中不存在的控件。
+  // details` 定位——材料卡各自的「调整此材料」折叠会排在它前面；历史版本只读时
+  // 入口不渲染（disabled 分支仅防御"可写但当前输入未加载"的窗口态）。
   const adjustDetails = !app.readonly&&inputs ? el('details', {class: 'materials-adjust-form'}, el('summary', {}, '调整任务要求与材料'), editable(el('div', {class: 'stack'}, brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),
       additions.node,reason.node,button('预览材料与任务变化',inputPreview)))) : null;
   const openAdjustForm = () => { adjustDetails.open = true; additions.input.focus(); };
