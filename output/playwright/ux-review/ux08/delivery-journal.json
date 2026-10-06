@@ -9,118 +9,40 @@
       "screenshot": "delivery-02-file-purposes.png"
     },
     {
-      "step": "review-package-result",
-      "screenshot": "delivery-03-review-package-result.png"
+      "step": "review-package-generated",
+      "screenshot": "delivery-03-review-package-generated.png"
+    },
+    {
+      "step": "delivery-blocked-with-gaps",
+      "screenshot": "delivery-04-delivery-blocked-with-gaps.png"
     }
   ],
-  "requests": [
+  "calls": [
     {
-      "method": "GET",
-      "path": "/api/health"
-    },
-    {
-      "method": "GET",
-      "path": "/api/project"
-    },
-    {
-      "method": "GET",
-      "path": "/api/view/summary?personal=1"
-    },
-    {
-      "method": "GET",
-      "path": "/api/ui-state"
-    },
-    {
-      "method": "GET",
-      "path": "/api/drafts"
-    },
-    {
-      "method": "GET",
-      "path": "/api/project"
-    },
-    {
-      "method": "GET",
-      "path": "/api/view/summary?personal=1"
-    },
-    {
-      "method": "GET",
-      "path": "/api/overview?revision=8e31d8c5a9b343d38d2094273e2f4850"
-    },
-    {
-      "method": "GET",
-      "path": "/api/drafts"
-    },
-    {
-      "method": "GET",
-      "path": "/api/content-plan?revision=8e31d8c5a9b343d38d2094273e2f4850"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F81%2F81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png&sha256=81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2Fd4%2Fd4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5.png&sha256=d4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F35%2F35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774.png&sha256=35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/session"
+      "method": "POST",
+      "path": "/api/exports",
+      "payload": {
+        "purpose": "review",
+        "revision": "d1b0b6c590a34927ba0a10739d5f124f",
+        "export_id": "export-9a117857-1406-4928-bd43-8cf961a1ed87"
+      },
+      "status": 200,
+      "receipt": {
+        "revision_id": "d1b0b6c590a34927ba0a10739d5f124f",
+        "export_id": "export-9a117857-1406-4928-bd43-8cf961a1ed87",
+        "status": "exported"
+      }
     },
     {
       "method": "POST",
-      "path": "/api/ui-state"
-    },
-    {
-      "method": "GET",
-      "path": "/api/project"
-    },
-    {
-      "method": "GET",
-      "path": "/api/view/summary?personal=1"
-    },
-    {
-      "method": "GET",
-      "path": "/api/tasks?revision=8e31d8c5a9b343d38d2094273e2f4850&limit=30&personal=1&reading_etag=b1c04a7bdc953cc08e18c4108df5649838ffaa084c748b34f4affca3f0c5c23f"
-    },
-    {
-      "method": "GET",
-      "path": "/api/history?revision=8e31d8c5a9b343d38d2094273e2f4850&limit=20"
-    },
-    {
-      "method": "POST",
-      "path": "/api/overview"
-    },
-    {
-      "method": "GET",
-      "path": "/api/tasks?limit=1"
-    },
-    {
-      "method": "GET",
-      "path": "/api/drafts"
-    },
-    {
-      "method": "POST",
-      "path": "/api/ui-state"
-    },
-    {
-      "method": "GET",
-      "path": "/api/candidates"
-    },
-    {
-      "method": "GET",
-      "path": "/api/result-reading"
-    },
-    {
-      "method": "GET",
-      "path": "/api/tasks?limit=30&offset=0&personal=1&reading_etag=b1c04a7bdc953cc08e18c4108df5649838ffaa084c748b34f4affca3f0c5c23f"
-    },
-    {
-      "method": "POST",
-      "path": "/api/exports"
+      "path": "/api/exports",
+      "payload": {
+        "purpose": "delivery",
+        "revision": "d1b0b6c590a34927ba0a10739d5f124f",
+        "export_id": "export-6ecd2bb9-1cdf-4781-b07f-f0fd12e0a9bd"
+      },
+      "status": 409,
+      "receipt": null
     }
   ]
 }

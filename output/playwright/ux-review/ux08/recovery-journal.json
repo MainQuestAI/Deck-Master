@@ -1,114 +1,17 @@
 {
   "steps": [
     {
-      "step": "lost-response-shows-input-kept",
-      "screenshot": "recovery-01-lost-response-shows-input-kept.png"
+      "step": "real-409-conflict",
+      "screenshot": "recovery-01-real-409-conflict.png"
     },
     {
-      "step": "retry-recovers",
-      "screenshot": "recovery-02-retry-recovers.png"
+      "step": "conflict-panel-real-differences",
+      "screenshot": "recovery-02-conflict-panel-real-differences.png"
+    },
+    {
+      "step": "recovered-by-adopting-saved-side",
+      "screenshot": "recovery-03-recovered-by-adopting-saved-side.png"
     }
   ],
-  "requests": [
-    {
-      "method": "GET",
-      "path": "/api/health"
-    },
-    {
-      "method": "GET",
-      "path": "/api/project"
-    },
-    {
-      "method": "GET",
-      "path": "/api/view/summary?personal=1"
-    },
-    {
-      "method": "GET",
-      "path": "/api/ui-state"
-    },
-    {
-      "method": "GET",
-      "path": "/api/drafts"
-    },
-    {
-      "method": "GET",
-      "path": "/api/project"
-    },
-    {
-      "method": "GET",
-      "path": "/api/view/summary?personal=1"
-    },
-    {
-      "method": "GET",
-      "path": "/api/overview?revision=bfd4b116cf964a2eb2f7bbc0b8d90140"
-    },
-    {
-      "method": "GET",
-      "path": "/api/drafts"
-    },
-    {
-      "method": "GET",
-      "path": "/api/content-plan?revision=bfd4b116cf964a2eb2f7bbc0b8d90140"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F81%2F81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png&sha256=81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2Fd4%2Fd4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5.png&sha256=d4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F35%2F35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774.png&sha256=35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/session"
-    },
-    {
-      "method": "POST",
-      "path": "/api/ui-state"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F81%2F81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png&sha256=81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2Fd4%2Fd4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5.png&sha256=d4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F35%2F35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774.png&sha256=35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774&retry=0"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnail-file?cache_key=111c62f8a252f86e1afaaf1ccbbb9a71cae901fc0a937400665e2f889cf3fbf1"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnail-file?cache_key=3269c48e02174d9ab400332bcbb8b33e70a7bfb98e0e45907384b8467758532a"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnail-file?cache_key=021b56c094f3c9b7f825396ef65b47aa16cf880b99785b3f31dae133f0c6b39c"
-    },
-    {
-      "method": "GET",
-      "path": "/api/view/summary"
-    },
-    {
-      "method": "POST",
-      "path": "/api/changes/plan"
-    },
-    {
-      "method": "GET",
-      "path": "/api/view/summary"
-    },
-    {
-      "method": "POST",
-      "path": "/api/changes/plan"
-    }
-  ]
+  "calls": []
 }
