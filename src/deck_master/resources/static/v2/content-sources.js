@@ -111,17 +111,25 @@ export function content(app, data) {
       const chapterPagesList = ids.map(id => pageMap.get(id)).filter(Boolean);
       if (!chapterPagesList.length) return null;
       const first = chapterPagesList[0], last = chapterPagesList[chapterPagesList.length - 1];
-      const links = [...new Set(goals.filter(goal => ids.includes(goal.page_id))
-        .flatMap(goal => goal.source_links.map(link => link.locator || '材料')))];
+      const chapterGoals = goals.filter(goal => ids.includes(goal.page_id));
+      const links = [...new Set(chapterGoals.flatMap(goal => goal.source_links.map(link => link.locator || '材料')))];
+      // UX-04b（对账 §5「章节指定页、就近来源」）：章节内明确指定要打开的页，
+      // 目标来源按钮也放在该块内，不再只能进入"首个匹配页"并到别处找来源。
+      const pageChoice = el('select', {'aria-label': `章节内页面 ${chapter.title}`},
+        chapterPagesList.map(page => el('option', {value: page.page_id}, `第 ${order.indexOf(page.page_id) + 1} 页 · ${page.title || '未命名页面'}`)));
+      const targets = chapterGoals.flatMap(goal => goal.source_links.map(link => ({goal, link})));
       return el('div', {class: 'outline-block'},
         el('span', {class: 'mono'}, String(index + 1).padStart(2, '0')),
         el('div', {},
           el('h3', {}, chapter.title),
-          el('p', {}, goals.find(goal => ids.includes(goal.page_id))?.purpose || ''),
+          el('p', {}, chapterGoals[0]?.purpose || ''),
           el('p', {class: 'small-text outline-source-note'},
             chapterPagesList.length > 1 ? `第 ${order.indexOf(first.page_id) + 1}–${order.indexOf(last.page_id) + 1} 页` : `第 ${order.indexOf(first.page_id) + 1} 页`,
             links.length ? ` · ${links.join('、')}` : ' · 未记录来源关联'),
-          app.summary.pages.some(p => ids.includes(p.page_id)) && button('看逐页稿', () => app.go({surface: 'page', page_id: first.page_id, layer: 'content'}), false, {class: 'quiet'})));
+          el('div', {class: 'row wrap outline-actions'}, pageChoice,
+            button('打开所选页', () => app.go({surface: 'page', page_id: pageChoice.value, layer: 'content'}), false, {class: 'quiet'}),
+            ...targets.slice(0, 4).map(({goal, link}) => button(`查看目标来源 · ${pageMap.get(goal.page_id)?.title || goal.page_id} · ${link.locator || '材料'}`,
+              () => sourceReader(app, link), false, {class: 'text-link'})))));
     }).filter(Boolean);
   }
   function chapterPages(chapter) {

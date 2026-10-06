@@ -38,7 +38,13 @@ export function modal(title, body, actions = []) {
   dialog.setAttribute('aria-labelledby', heading.id);
   dialog.className = '';
   if (!dialog.open) dialog.showModal();
-  dialog.onclose = () => { if (trigger?.isConnected) trigger.focus(); };
+  dialog.onclose = () => {
+    if (trigger?.isConnected) { trigger.focus(); return; }
+    // UX-06b：触发器在模态期间被卸载（列表刷新、条目移除）：焦点回退到工作面
+    // 标题，而不是留在 body 或被移除的节点上。
+    const fallback = document.querySelector('#view-title') || document.querySelector('main h1, main h2');
+    fallback?.focus({preventScroll: true});
+  };
   return dialog;
 }
 export async function copyText(text) {

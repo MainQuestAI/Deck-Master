@@ -86,9 +86,12 @@ export function runDesk(app, data) {
     group.value = state.group; status.value = state.status; attention.checked = state.attention;
     notice.textContent = `${live ? '当前执行状态' : '固定执行记录'} · 共 ${page.pagination.total} 项`;
     const tasks = page.tasks.filter(task => !state.attention || todo(task).length);
+    // UX-05b：每条运行记录默认回答「做什么、对哪些页、现在怎样」，要求原文
+    // 折叠在详情里，列表本身不再只有任务类型和内部时间。
     rows.replaceChildren(...tasks.map(task => el('article', {class: 'run-task stack', 'data-task-id': task.task_id},
       el('div', {class: 'row wrap'}, el('strong', {}, names[task.kind] || '制作任务'), el('span', {class: 'status'}, statuses[task.status] || task.status)),
-      el('p', {}, scopeLabel(task)),
+      el('p', {class: 'run-requirement'}, `要求：${(task.instruction || '').trim() || '未记录制作要求'}`),
+      el('p', {}, `目标：${scopeLabel(task)}`),
       el('p', {class: 'muted'}, `接手时间：${clock(task.execution_started_at)}`),
       task.human_actions?.includes('verify_execution') && el('p', {class: 'field-error'}, '需要核实原执行。不会自动重试或取消；未确认取消前请勿重复派发。'),
       todo(task).length > 0 && el('p', {class: 'run-actions'}, todo(task).map(key => actions[key] || key).join(' · ')),

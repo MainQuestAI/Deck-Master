@@ -143,9 +143,29 @@ function leafLabel(path, arrayAt) {
 }
 export function pageContentEditor(app, data) {
   if (app.readonly || !data.page?.customer_visible) return null;
-  let value = structuredClone(data.page.customer_visible); const fields = el('div', {class:'stack'});
+  let value = structuredClone(data.page.customer_visible);
+  let original = structuredClone(data.page.customer_visible);
+  const fields = el('div', {class:'stack'});
+  // UX-04b（对账 §5「具体文字差异」）：具体改动常驻显示「块位置：原文 → 改文」，
+  // 与影响预览同屏；用户不必在整页文本框之间自行回忆改了什么。
+  const changes = el('div', {class:'stack content-changes'});
   const reason = inputField('正文修改说明', '调整本页标题或正文', 2);
   let operation;
+  function leafLabelFor(path) {
+    if (path.length === 1) return ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字');
+    const arrayAt = blockAt(path);
+    return `${blockHeading(value, path, arrayAt) || '正文'} · ${leafLabel(path, arrayAt)}`;
+  }
+  function drawChanges() {
+    const rows = textFields(value).filter(path => at(original, path) !== at(value, path)).map(path => el('li', {},
+      el('span', {class:'content-change-label'}, leafLabelFor(path)),
+      el('span', {class:'content-change-before'}, at(original, path) || '（空）'),
+      el('span', {class:'content-change-arrow'}, ' → '),
+      el('span', {class:'content-change-after'}, at(value, path) || '（空）')));
+    changes.replaceChildren(el('h3', {}, `本次具体改动（${rows.length}）`),
+      rows.length ? el('ul', {class:'content-change-list'}, rows)
+        : el('p', {class:'muted'}, '尚未改动文字。这里逐条显示「原文 → 改文」，与下方影响预览同屏核对。'));
+  }
   function draw() {
     fields.replaceChildren();
     const rank = path => path.length === 1 && path[0] === 'title' ? 0 : path.length === 1 && path[0] === 'subtitle' ? 1 : 2;
@@ -154,7 +174,7 @@ export function pageContentEditor(app, data) {
       if (path.length === 1) {
         const label = ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字');
         const item = inputField(label, at(value,path), 2);
-        item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); });
+        item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); drawChanges(); });
         fields.append(item.node);
         lastHeading = null;
         continue;
@@ -164,12 +184,17 @@ export function pageContentEditor(app, data) {
       if (head !== lastHeading) { fields.append(el('p', {class:'muted content-block-label'}, head || '正文')); lastHeading = head; }
       const label = `${head || '正文'} · ${leafLabel(path, arrayAt)}`;
       const item = inputField(label, at(value,path), 4);
-      item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); });
+      item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); drawChanges(); });
       fields.append(item.node);
     }
+    drawChanges();
   }
   draw();
-  operation = contentOperation(app, 'page_edit', () => ({visible:value,reason:reason.input.value}), saved => { if (saved.visible) value = saved.visible; reason.input.value = saved.reason || ''; draw(); }, data.stages.content.ref,
+  operation = contentOperation(app, 'page_edit', () => ({visible:value,reason:reason.input.value}), saved => {
+    // 保存后改文成为新的已保存原文，对照清单重新从零开始。
+    if (saved.visible) value = saved.visible;
+    original = structuredClone(value); reason.input.value = saved.reason || ''; draw();
+  }, data.stages.content.ref,
     result => app.go({revision:result.revision_id, layer:'content'}));
   reason.input.addEventListener('input', operation.changed);
   const preview = button('预览正文修改影响', () => operation.preview({content_plan_ref:data.content_plan?.ref || null, action:'edit', instruction:reason.input.value,
@@ -180,5 +205,5 @@ export function pageContentEditor(app, data) {
       ...result.records.map(r => button('查看来源页关系', () => modal('新页的来源', el('div', {class:'stack'},
         r.derivation.source_pages.map(p => button('打开来源页 '+p.page_id, () => { document.querySelector('#modal').close(); app.go({page_id:p.page_id,revision:r.derivation.source_revision,layer:'content'}); })))))));
   }).catch(error => derivations.append(el('p', {class:'field-error'}, readableError(error))));
-  return el('details', {class:'content-editor'}, el('summary', {}, '编辑本页标题与正文'), el('div', {class:'stack'}, derivations, operation.guard(el('div', {class:'stack'}, fields, reason.node, preview)), operation.node));
+  return el('details', {class:'content-editor'}, el('summary', {}, '编辑本页标题与正文'), el('div', {class:'stack'}, derivations, operation.guard(el('div', {class:'stack'}, changes, fields, reason.node, preview)), operation.node));
 }

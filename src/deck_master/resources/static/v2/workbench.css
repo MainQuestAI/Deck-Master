@@ -161,6 +161,12 @@ textarea{font-size:14px;line-height:1.7}
 .run-pagination, .candidate-pagination { justify-content: space-between; }
 
 .run-rows:not([hidden]), .candidate-batch-rows { max-height: 480px; overflow: auto; overscroll-behavior: contain; }
+/* UX-05b: one runs subarea at a time; .stack would otherwise beat [hidden]. */
+.runs-subarea[hidden] { display: none; }
+.runs-subareas { gap: 8px; padding: 4px 0 12px; border-bottom: 1px solid var(--border-soft); margin-bottom: 16px; }
+.runs-subareas button { min-height: 44px; }
+.runs-subareas button[aria-pressed=true] { background: var(--fg); border-color: var(--fg); color: var(--bg); font-weight: 600; }
+.run-requirement { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .change-list select { max-width: 100%; }
 .run-desk .run-task { padding: 12px; }
 .run-filters { align-items: center; }
@@ -187,6 +193,16 @@ textarea{font-size:14px;line-height:1.7}
 .content-editor>summary{font-weight:650;cursor:pointer;margin-bottom:16px}
 .content-operation{padding:16px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
 .content-operation-note:empty{display:none}
+/* UX-04b: the concrete change list sits with the impact preview, not in another surface. */
+.content-changes{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-warm)}
+.content-changes h3{margin:0;font-size:14px}
+.content-change-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.content-change-list li{font-size:13px;overflow-wrap:anywhere}
+.content-change-label{font-weight:600;margin-right:6px}
+.content-change-before{color:var(--muted)}
+.content-change-arrow{color:var(--muted)}
+.outline-actions{margin-top:10px;align-items:center}
+.outline-actions select{max-width:280px;min-height:44px}
 
 .content-form-fields{border:0;padding:0;margin:0;min-width:0}
 
@@ -200,6 +216,14 @@ textarea{font-size:14px;line-height:1.7}
 .export-file-list{list-style:none;padding:0;display:grid;gap:12px}.export-file-list a{overflow-wrap:anywhere}
 .gap-list{padding-left:20px;display:grid;gap:10px}.gap-list li>span{margin-right:12px}.gap-list button{font-size:12px;padding:5px 10px}
 .export-facts>summary{cursor:pointer;padding:12px 0;font-weight:600}.export-purpose h3,.export-result h3{margin:0}
+/* UX-05b: version → purpose → result; official purposes first, recovery secondary. */
+.export-group-title{margin:0;font-size:13px;letter-spacing:0;color:var(--muted);text-transform:none}
+.export-recovery{border-top:1px solid var(--border-soft);padding-top:12px}
+.export-recovery>summary{cursor:pointer;padding:12px 0;font-weight:600}
+.export-recovery .export-purpose{margin-top:12px;background:var(--surface-warm)}
+.history-identity{gap:8px;margin:0}
+.history-identity .state-chip{padding:4px 10px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:12px}
+.history-identity .state-chip:first-child{background:var(--surface-warm);font-weight:600}
 .restore-impact .conflict-panes section{padding:16px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 @media(max-width:1200px){.export-purpose-grid{grid-template-columns:1fr}.export-purpose{display:grid;grid-template-columns:140px 1fr auto;align-items:center}.export-purpose p{margin:0}}
 @media(max-width:760px){.export-purpose{display:flex}}
@@ -262,7 +286,10 @@ textarea{font-size:14px;line-height:1.7}
 .style-target-card{min-width:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg)}
 .style-target-card .inline-control{padding:12px;line-height:1.5}.style-target-thumb,.style-missing-thumb{aspect-ratio:16/9;display:grid;place-items:center;background:var(--surface);overflow:auto;font-size:12px}
 .style-target-thumb>.pooled-image{height:100%;min-height:0}.style-target-thumb canvas{height:100%;object-fit:contain}.style-target-thumb .pooled-image[data-image-state=failed]{min-height:0;padding:8px;font-size:12px}
-.style-target-thumb button{min-height:44px}.style-plan:has(.stack:empty){display:none}
+.style-target-thumb button{min-height:44px}
+/* UX-07b 收敛：删去 `.style-plan:has(.stack:empty){display:none}`——它把内部空的影响
+   预览节点当成"整块为空"，在没有计划时连交接动作一起隐藏；显隐改由代码按 plan 状态
+   明确设置（含截图路线）。 */
 .content-order-scroll{max-height:520px;overflow:auto;padding:4px}.material-state{font-size:12px}.source-card .status{align-self:flex-start}
 @media(max-width:767px){.style-phase>summary{align-items:flex-start}.style-phase-state{text-align:left;margin-left:0}.style-calibration .style-targets{grid-template-columns:1fr;max-height:460px}.style-phase input[type=search]{width:100%}.content-order-scroll{max-height:520px}}
 @media(max-width:767px){.matrix-search,.matrix-search input{width:100%}.style-targets{grid-template-columns:1fr}}

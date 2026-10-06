@@ -340,6 +340,8 @@ def test_delivery_gaps_name_rules_and_keep_unknown_reasons_blocked(workbench):
     """Labelled contract/UI fixture: proves the branches, not that real business hit them."""
     import json as json_mod
     page,ctx,store,url,goto,_=workbench;goto('runs')
+    # 文件子区是分段上下文：先进入「文件」，正式交付用途在生成结果之前。
+    page.get_by_role('button',name='文件',exact=True).click()
     page.route('**/api/exports',lambda route:route.fulfill(status=409,content_type='application/json',body=json_mod.dumps(
       {'error':{'code':'delivery_blocked','message':'交付被拒绝：存在未解决项。','revision_id':store.current_revision_id(),'gaps':[
         {'layer':'ppt','reason':'page_limit_violation','page_id':None,'scope':'deck'},
@@ -398,6 +400,8 @@ def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
 def test_handoff_navigation_opens_current_task(workbench):
     page,ctx,store,url,goto,_=workbench
     task=dispatch(store,confirm(store,input_for(store)))[0];goto('runs');bad=[]
+    # 交接组在「待决定」子区；任务与交付一次只呈现一个子区。
+    page.get_by_role('button',name='待决定',exact=True).click()
     page.on('response',lambda r:bad.append(r.url) if 'revision=null' in r.url else None)
     page.get_by_role('button',name='查看任务与调用记录',exact=True).first.click()
     expect(page.locator('.run-detail')).to_be_visible()
@@ -414,9 +418,12 @@ def test_historical_candidate_list_never_acquires_future_candidate(workbench):
     accept(store,task,icons.draft(store.project_root,recipe_id=rec['recipe_id'],page_id='p01')['svg'].encode())
     goto('runs',old)
     expect(page.locator('.history-banner')).to_contain_text('历史版本')
+    # 候选与试作归「待决定」子区；先切入该子区再核对历史/最新两份记录。
+    page.get_by_role('button',name='待决定',exact=True).click()
     expect(page.get_by_text('还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务仍在下方交接面板。',exact=True)).to_be_visible()
     expect(page.locator('.candidate-batch-row')).to_have_count(0)
-    goto('runs');expect(page.locator('.candidate-batch-row')).to_have_count(1)
+    goto('runs');page.get_by_role('button',name='待决定',exact=True).click()
+    expect(page.locator('.candidate-batch-row')).to_have_count(1)
 
 
 def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):

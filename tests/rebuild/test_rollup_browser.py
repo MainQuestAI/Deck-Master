@@ -311,6 +311,8 @@ def test_pagination_draft_restores_only_a_verified_reading_snapshot(action_brows
     _open_attention(page, server.start())
     page.get_by_role('button', name='下一页任务', exact=True).click()
     expect(page.locator('.run-task')).to_have_count(5)
+    # 候选批次与个人草稿在「待决定」子区；分页状态由运行记录持有，切换不会复位。
+    page.get_by_role('button', name='待决定', exact=True).click()
     page.get_by_text('个人记录与操作恢复', exact=True).click()
     page.get_by_role('button', name='保存个人草稿', exact=True).click()
     expect(page.locator('.candidate-recovery .draft-state')).to_contain_text('已保存到项目')
@@ -381,6 +383,7 @@ def test_explicit_reading_write_restarts_pagination_from_first_page(action_brows
         page.get_by_role('button', name='查看全部任务', exact=True).click()
     else:
         target = tasks[-1]
+        page.get_by_role('button', name='待决定', exact=True).click()
         page.get_by_text('个人记录与操作恢复', exact=True).click()
         page.get_by_role('button', name='保存个人草稿', exact=True).click()
         expect(page.locator('.candidate-recovery .draft-state')).to_contain_text('已保存到项目')

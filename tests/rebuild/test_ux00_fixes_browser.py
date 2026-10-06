@@ -96,6 +96,8 @@ def test_handoff_copy_binds_to_the_loaded_group_not_the_pending_selection(ux00_b
     page.goto(url)
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
+    # 交接组在「待决定」子区；任务与交付一次只呈现一个子区。
+    page.get_by_role('button', name='待决定', exact=True).click()
     panel = page.locator('.change-handoffs')
     buttons = panel.locator('.change-list button')
     expect(buttons).to_have_count(2)

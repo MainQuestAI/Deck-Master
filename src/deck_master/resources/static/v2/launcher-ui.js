@@ -121,30 +121,38 @@ export async function launcher(root, health) {
       const path = parent.input.value.trim().replace(/\/+$/, '') + '/' + folder.input.value.trim();
       const data = {path, title: title.input.value.trim(), brief: brief.input.value.trim(), audience: audience.input.value.trim()};
       if (limit.input.value) data.page_limit = Number(limit.input.value);
-      // 依据已发生事实恢复（F13/N14）：创建已成功时，主动作是打开该项目，
-      // 不引导用户重新创建同一位置。
+      // 依据已发生事实恢复（F13/N14 + UX-06b）：创建成功后无论登记还是打开失败，
+      // 主动作都是「登记并打开这个位置」——登记按路径幂等，不会重复创建或覆盖；
+      // 创建响应本身丢失时同样只核实这个位置，绝不再次创建。
+      const recovery = known => button('登记并打开这个位置', async trigger => {
+        // 事件派发结束后 currentTarget 会变 null：先捕获按钮引用再进入 await。
+        const control = trigger.currentTarget;
+        control.disabled = true;
+        const note = el('span', {}, '');
+        error.append(note);
+        try {
+          const entry = await post('/api/projects/register', {path: known ? known.path : path});
+          await open(entry.project.entry_id);
+        } catch (openFailure) {
+          note.textContent = readableError(openFailure) + ' 没有创建或覆盖任何目录。';
+          control.disabled = false;
+        }
+      }, Boolean(known));
       let created = null;
       try {
         const result = await post('/api/projects/create', data);
-        if (!result.registered) throw new Error('项目已完整建立，但未能登记。请用“选择项目文件夹”重新登记此保存位置。');
         created = result.project;
+        if (!result.registered) throw new Error('项目已完整建立，但未能登记；请重新登记并打开这个位置，不要重复创建。');
         await open(result.project.entry_id);
       } catch (failure) {
         error.textContent = readableError(failure);
-        if (created) {
-          error.append(' ');
-          error.append(button('打开已创建的项目', trigger => {
-            // 事件派发结束后 currentTarget 会变 null：先捕获按钮引用再进入 await。
-            const control = trigger.currentTarget;
-            control.disabled = true;
-            const note = el('span', {}, '');
-            error.append(note);
-            open(created.entry_id).then(() => { control.remove(); note.remove(); })
-              .catch(openFailure => {
-                note.textContent = readableError(openFailure) + ' ';
-                control.disabled = false;
-              });
-          }, true));
+        const lost = !created && (!failure.status || failure.status >= 500 || failure.code === 'invalid_response');
+        if (created) error.append(' ', recovery(created));
+        else if (lost) {
+          // 请求可能已被执行：保留位置，用登记动作按事实核实，不再重复创建。
+          error.append(el('span', {}, ' 未能核实这次创建的结果；下面的动作只登记已存在的位置。'));
+          error.append(' ', recovery(null));
+          submit.disabled = true;
         } else submit.disabled = false;
       }
     });

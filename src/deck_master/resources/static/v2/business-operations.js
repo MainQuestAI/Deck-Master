@@ -48,6 +48,20 @@ export class BusinessOperations {
       this.storageWarning = ''; return true;
     } catch { this.storageWarning = '浏览器未保存请求副本；只有项目草稿收到确认后才能发送。'; return false; }
   }
+  // UX-06b：待核实条目必须给出真实目标（要求摘要或引用范围），用户才能判断
+  // 这条记录指向哪一次操作，而不是只看到一个业务名称。
+  targetOf(entry) {
+    const {payload} = entry.pending, request = payload.request || {}, context = payload.display_context || {};
+    const text = [context.instruction, request.instruction].find(value => typeof value === 'string' && value.trim());
+    if (text) return text.trim().slice(0, 120);
+    if (request.reference_ids?.length) return `${request.reference_ids.length} 张参考截图`;
+    if (request.input?.annotations?.length) return `${request.input.annotations.length} 条意见`;
+    if (request.input?.targets?.length) return `${request.input.targets.length} 页`;
+    if (request.page_ids?.length) return `${request.page_ids.length} 页`;
+    if (request.page_id) return `页面 ${request.page_id}`;
+    if (request.plan_id) return `计划 ${String(request.plan_id).slice(-6)}`;
+    return '未记录可读目标；按原请求编号核实。';
+  }
   render() {
     this.node.hidden = !this.entries.size && !this.storageWarning && !this.loadWarning;
     this.node.replaceChildren(el('div', {class: 'stack'}, el('strong', {}, this.entries.size ? '保存结果待核实 · 新的业务提交已暂停' : '恢复请求'),
@@ -56,6 +70,7 @@ export class BusinessOperations {
       [...this.entries.values()].map(entry => el('div', {class: 'pending-operation stack'},
         el('p', {}, ({'styles.analyze':'截图风格分析', 'icons.confirm':'图标范围确认', 'history.restore':'历史恢复', 'content.commit':'内容变更', 'content.inputs':'材料与任务要求', 'styles.confirm': '风格版本确认', 'annotations.save': '意见保存', 'changes.commit': '修改计划提交', 'candidates.adopt': '候选采用', 'candidates.decide': '候选决定', 'stages.assemble': '整稿制作'})[canonicalAction(entry.pending.payload.action)]),
         el('p', {role: 'status'}, entry.note || (entry.state === 'sending' ? '正在确认保存结果，输入仍可继续写。' : '保留原请求和编号，后写草稿不会替换它。')),
+        el('p', {class: 'muted'}, `原请求目标：${this.targetOf(entry)}`),
         el('div', {class: 'row wrap'}, button('核实保存结果', () => this.verify(entry), false, {disabled: ['preparing', 'sending', 'checking'].includes(entry.state)}),
           entry.state === 'not_found' && button('重放已保存的原请求', () => this.execute(entry)),
           button('查看原请求', () => modal('已冻结的原请求', el('pre', {class: 'evidence-json'}, JSON.stringify(entry.pending.payload.request, null, 2)))))))));

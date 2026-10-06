@@ -49,6 +49,8 @@ def test_history_modes_keep_reading_and_page_comparison_fixed(workbench_page):
     from playwright.sync_api import expect
     page = workbench_page
     page.get_by_role('button', name='任务与交付', exact=True).click()
+    # 版本记录在「版本」子区：任务与交付一次只呈现一个工作上下文。
+    page.get_by_role('button', name='版本', exact=True).click()
     page.get_by_role('heading', name='版本记录', exact=True).wait_for()
     selected = page.get_by_role('combobox', name='阅读历史版本', exact=True)
     selected_revision = selected.input_value()

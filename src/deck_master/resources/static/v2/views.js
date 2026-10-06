@@ -24,11 +24,6 @@ export function runs(app, data) {
   const selected = data.runDetail?.task || data.tasks.find(task => task.task_id === app.route.task_id);
   const node = el('div', {}, heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
     selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null));
-  // F12：任务与交付的四个子区可直接到达，不是必须依次完成的阶段。
-  const toSubarea = id => () => { const target = document.getElementById(id); target?.scrollIntoView({block: 'start'}); const head = target?.querySelector('h2'); if (head) { head.tabIndex = -1; head.focus({preventScroll: true}); } };
-  if (app.health.ui_capabilities?.includes('exports.v1')) node.append(el('div', {class: 'row wrap runs-subareas', role: 'navigation', 'aria-label': '任务与交付的子区'},
-    ...[['runs-tasks', '正在进行'], ['runs-decisions', '待决定'], ['runs-versions', '版本'], ['runs-files', '文件']]
-      .map(([id, name]) => button(`到「${name}」`, toSubarea(id), false, {class: 'quiet'}))));
   if (selected && app.returnTo && !app.returnTo.task_id) node.append(button('返回上次工作面', () => app.go(app.returnTo)));
   const handoffs = app.health.ui_capabilities?.includes('changes.v1') ? changeHandoffs(app) : null;
   const batch = candidateBatch(app);
@@ -37,10 +32,33 @@ export function runs(app, data) {
     el('div', {}, el('h2', {}, taskNames[task.kind] || '制作任务'), el('p', {class: 'muted'}, `${taskStatus[task.status] || '状态待核实'} · 任务 ${task.task_id}`),
       task.result_refs?.length > 0 && el('p', {class: 'muted'}, `${task.result_refs.length} 项已记录结果；这不代表专业质量通过。`)),
     !selected && button('查看这项任务', () => app.go({task_id: task.task_id})), selected && button('查看全部任务', () => app.go({task_id: null}))))): empty('没有已记录的任务', '此版本还没有制作任务。');
-  node.append(el('div', {id: 'runs-tasks'}, runsPanel));
-  node.append(el('div', {id: 'runs-decisions', class: 'stack'}, ...(handoffs ? [handoffs] : []), batch));
-  if (app.health.ui_capabilities?.includes('exports.v1')) node.append(el('div', {id: 'runs-versions'}, historyDesk(app, data.history)), el('div', {id: 'runs-files'}, deliveryDesk(app)));
-  else node.append(panel('版本与文件', el('p', {}, '升级核心后可读取固定版本的导出与恢复功能。')));
+  // UX-05b（对账报告 §5：任务/决定/版本/文件职责混排）：四个子区改为分段切换——
+  // 同一时刻只呈现一个工作上下文，默认进入「正在进行」；切换后焦点落到该子区
+  // 标题，按钮以 aria-pressed 说明当前所在，而不是把四段内容纵向堆在一起。
+  const subareas = [
+    ['runs-tasks', '正在进行', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel)],
+    ['runs-decisions', '待决定', el('div', {id: 'runs-decisions', class: 'stack runs-subarea'}, ...(handoffs ? [handoffs] : []), batch)],
+  ];
+  if (app.health.ui_capabilities?.includes('exports.v1')) {
+    subareas.push(['runs-versions', '版本', el('div', {id: 'runs-versions', class: 'stack runs-subarea'}, historyDesk(app, data.history))]);
+    subareas.push(['runs-files', '文件', el('div', {id: 'runs-files', class: 'stack runs-subarea'}, deliveryDesk(app))]);
+  } else subareas.push(['runs-versions', '版本与文件', el('div', {id: 'runs-versions', class: 'stack runs-subarea'},
+    panel('版本与文件', el('p', {}, '升级核心后可读取固定版本的导出与恢复功能。')))]);
+  const switchers = new Map();
+  const showSubarea = (key, {focus = false} = {}) => {
+    for (const [id, , section] of subareas) section.hidden = id !== key;
+    for (const [id, control] of switchers) control.setAttribute('aria-pressed', String(id === key));
+    if (!focus) return;
+    const head = subareas.find(([id]) => id === key)?.[2].querySelector('h2');
+    if (head) { head.tabIndex = -1; head.focus({preventScroll: true}); }
+  };
+  node.append(el('div', {class: 'row wrap runs-subareas', role: 'group', 'aria-label': '任务与交付的子区'},
+    ...subareas.map(([id, name]) => {
+      const control = button(name, () => showSubarea(id, {focus: true}), false, {class: 'quiet', 'aria-controls': id, 'aria-pressed': 'false'});
+      switchers.set(id, control); return control;
+    })));
+  node.append(...subareas.map(([, , section]) => section));
+  showSubarea('runs-tasks');
   return node;
 }
 export {style} from './style-calibration.js';

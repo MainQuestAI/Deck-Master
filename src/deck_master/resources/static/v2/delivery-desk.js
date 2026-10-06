@@ -75,10 +75,18 @@ export function deliveryDesk(app) {
   const revision = app.route.revision, key = `deck-master:v3:exports:${app.info.project_identity}`;
   const status = el('p', {role: 'status'}), results = el('div', {class: 'stack export-results'}), facts = el('div', {class: 'stack'});
   let disposed = false; app.disposables.push(() => { disposed = true; });
+  // UX-05b：文件区按「版本—用途—结果」组织：版本先固定，正式用途（交付/审阅）
+  // 在先，工程恢复包退到辅助位置；生成结果按同一用途与版本列出。
+  const purposeCard = (purpose, primary) => el('article', {class: 'export-purpose stack'},
+    el('h3', {}, names[purpose]), el('p', {}, descriptions[purpose]),
+    button('生成' + names[purpose], event => create(purpose, event.currentTarget), primary, {disabled: Boolean(app.info.sample?.readonly)}));
   const node = panel('版本与文件', el('p', {class: 'export-version'}, `本次文件固定为 ${version(revision)}。后台新结果不会改变已经生成的包。`),
-    el('div', {class: 'export-purpose-grid'}, Object.entries(names).map(([purpose, name]) => el('article', {class: 'export-purpose stack'},
-      el('h3', {}, name), el('p', {}, descriptions[purpose]), button('生成' + name, event => create(purpose, event.currentTarget), purpose === 'review', {disabled: Boolean(app.info.sample?.readonly)})))),
-    app.info.sample?.readonly && el('p', {class: 'muted'}, '只读示例不生成文件包。请在自己的项目操作。'), status, results);
+    el('section', {class: 'export-group stack'}, el('h3', {class: 'export-group-title'}, '正式用途（按此版本生成）'),
+      el('div', {class: 'export-purpose-grid'}, purposeCard('delivery', true), purposeCard('review', false))),
+    el('details', {class: 'export-group export-recovery'}, el('summary', {}, '工程恢复包（辅助，仅在需要恢复或交付内部材料时使用）'),
+      el('div', {class: 'stack'}, purposeCard('engineering', false))),
+    app.info.sample?.readonly && el('p', {class: 'muted'}, '只读示例不生成文件包。请在自己的项目操作。'), status,
+    el('h3', {class: 'export-group-title'}, '生成结果'), results);
   node.id = 'delivery-desk'; node.querySelector('h2').tabIndex = -1;
   function read() {
     const value = JSON.parse(localStorage.getItem(key) || '[]');
@@ -154,6 +162,20 @@ export function historyDesk(app, history) {
   const rows = new Map();
   const restore = button('预览恢复此版本', preview, false, {disabled: !app.historical || Boolean(app.info.sample?.readonly)});
   const more = button('更早的修改', () => load(false), false, {disabled: !cursor});
+  // UX-05b：版本区把三个身份分开说清（对账 AC17 的选 A/读 B/当前 C）：
+  // 选中＝下一步操作的目标，已读＝正在查看的版本，当前版本＝项目最新记录。
+  const identity = el('p', {class: 'row wrap history-identity'});
+  const nameFor = rev => {
+    const record = rows.get(rev);
+    if (record) return historyLabel(record, pageLabels);
+    return rev === revision ? (app.historical ? '正在阅读的历史版本' : '当前项目版本') : version(rev);
+  };
+  function stateIdentity() {
+    identity.replaceChildren(
+      el('span', {class: 'state-chip'}, `选中：${nameFor(selected.value)}`),
+      el('span', {class: 'state-chip'}, `已读：${nameFor(revision)}`),
+      el('span', {class: 'state-chip'}, `当前版本：${nameFor(history.current)}`));
+  }
   function append(records, reset = false) {
     const chosen = reset ? revision : selected.value;
     if (reset) rows.clear();
@@ -163,8 +185,9 @@ export function historyDesk(app, history) {
     selected.replaceChildren(...options); selected.value = chosen;
     if (!selected.value) selected.value = revision;
     restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly);
+    stateIdentity();
   }
-  selected.addEventListener('change', () => { restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly); });
+  selected.addEventListener('change', () => { restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly); stateIdentity(); });
   allRecords.addEventListener('change', () => load(true));
   async function load(reset) {
     if (busy || disposed) { allRecords.checked = showingAll; return; }
@@ -183,7 +206,7 @@ export function historyDesk(app, history) {
     } finally { if (!disposed && token === serial) { busy = false; more.disabled = !cursor; allRecords.disabled = false; } }
   }
   append(history.revisions, true);
-  const node = panel('版本记录', el('div', {class: 'row wrap history-reading-controls'}, selected,
+  const node = panel('版本记录', identity, el('div', {class: 'row wrap history-reading-controls'}, selected,
     button('读取所选版本', () => app.go({revision: selected.value, task_id: null})), more,
     app.summary.pages.length > 0 && button('逐页查看与固定比较', () => app.go({surface: 'page', page_id: app.summary.pages[0].page_id, layer: 'content', revision})), restore),
     el('label', {class: 'inline-control'}, allRecords, '全部记录（包括执行与个人状态）'), notice,

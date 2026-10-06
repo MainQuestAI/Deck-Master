@@ -1,0 +1,118 @@
+{
+  "steps": [
+    {
+      "step": "phase-one",
+      "screenshot": "style-01-phase-one.png"
+    },
+    {
+      "step": "screenshot-route-phases",
+      "screenshot": "style-02-screenshot-route-phases.png"
+    },
+    {
+      "step": "phase-two-spec",
+      "screenshot": "style-03-phase-two-spec.png"
+    },
+    {
+      "step": "phase-three-trial",
+      "screenshot": "style-04-phase-three-trial.png"
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/health"
+    },
+    {
+      "method": "GET",
+      "path": "/api/project"
+    },
+    {
+      "method": "GET",
+      "path": "/api/view/summary?personal=1"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ui-state"
+    },
+    {
+      "method": "GET",
+      "path": "/api/drafts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/project"
+    },
+    {
+      "method": "GET",
+      "path": "/api/view/summary?personal=1"
+    },
+    {
+      "method": "GET",
+      "path": "/api/overview?revision=6af1dbc677d242008fbbc33bfb4251e0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/drafts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/content-plan?revision=6af1dbc677d242008fbbc33bfb4251e0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F81%2F81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png&sha256=81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29&retry=0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2Fd4%2Fd4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5.png&sha256=d4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5&retry=0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F35%2F35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774.png&sha256=35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774&retry=0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/session"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ui-state"
+    },
+    {
+      "method": "GET",
+      "path": "/api/project"
+    },
+    {
+      "method": "GET",
+      "path": "/api/view/summary?personal=1"
+    },
+    {
+      "method": "POST",
+      "path": "/api/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/api/drafts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/styles/references?revision=6af1dbc677d242008fbbc33bfb4251e0"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ui-state"
+    },
+    {
+      "method": "GET",
+      "path": "/api/styles?revision=6af1dbc677d242008fbbc33bfb4251e0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/tasks?revision=6af1dbc677d242008fbbc33bfb4251e0&limit=30&offset=0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/styles?revision=6af1dbc677d242008fbbc33bfb4251e0"
+    }
+  ]
+}

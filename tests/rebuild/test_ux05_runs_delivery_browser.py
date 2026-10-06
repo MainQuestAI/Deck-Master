@@ -71,14 +71,27 @@ def test_runs_subareas_reach_decisions_versions_files_and_shortcuts_match_layers
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
 
-    # 四个子区直达：点击后焦点落在子区标题，大量记录也不需要手动翻找。
+    # 四个子区是分段工作上下文：默认进入「正在进行」，同一时刻只呈现一个子区，
+    # 切换后焦点落在该子区标题，大量记录也不需要手动翻找。
+    running = page.get_by_role('button', name='正在进行', exact=True)
+    expect(running).to_have_attribute('aria-pressed', 'true')
+    expect(page.locator('.run-desk')).to_be_visible()
+    expect(page.locator('#runs-versions')).to_be_hidden()
     for name, expected_head in [('待决定', '修改交接'), ('版本', '版本记录'), ('文件', '版本与文件')]:
-        page.get_by_role('button', name=f'到「{name}」', exact=True).click()
+        page.get_by_role('button', name=name, exact=True).click()
         expect(page.locator('h2:focus')).to_have_text(expected_head)
+        expect(running).to_have_attribute('aria-pressed', 'false')
+    expect(page.locator('#runs-decisions')).to_be_hidden()
+    expect(page.locator('#runs-tasks')).to_be_hidden()
 
     # SVG 族任务的快捷阅读标注 SVG 层；render 任务标注 PPT 层。
-    page.get_by_role('button', name='到「正在进行」', exact=True).click()
+    running.click()
+    expect(page.locator('#runs-tasks')).to_be_visible()
     svg_card = page.locator('.run-task').filter(has_text='制作可编辑稿').first
+    # 运行列表默认回答要求、目标与状态，而不是只有任务类型和时间。
+    expect(svg_card).to_contain_text('要求：重建这一页的 SVG。')
+    expect(svg_card).to_contain_text('目标：')
+    expect(svg_card.locator('.status')).to_have_text('结果已记录')
     svg_card.get_by_role('button', name='查看这项任务').click()
     import re
     page.get_by_role('button', name=re.compile(r'^阅读 第 1 页 .* · SVG$')).click()
@@ -88,6 +101,26 @@ def test_runs_subareas_reach_decisions_versions_files_and_shortcuts_match_layers
     render_card.get_by_role('button', name='查看这项任务').click()
     page.get_by_role('button', name=re.compile(r'^阅读 第 1 页 .* · PPT$')).click()
     assert 'layer=ppt' in page.url
+
+
+def test_file_area_orders_version_purpose_result_with_recovery_secondary(ux05_browser):
+    from playwright.sync_api import expect
+    page, server, path, store = ux05_browser
+    url = server.start()
+    page.goto(url)
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    page.get_by_role('button', name='任务与交付', exact=True).click()
+    page.get_by_role('button', name='文件', exact=True).click()
+    files = page.locator('#runs-files')
+    expect(files.locator('.export-version')).to_contain_text('本次文件固定为')
+    # 版本—用途—结果：正式用途在前，工程恢复包退到辅助折叠，需要时才展开。
+    expect(files.get_by_role('button', name='生成正式交付包', exact=True)).to_be_visible()
+    expect(files.get_by_role('button', name='生成审阅包', exact=True)).to_be_visible()
+    recovery = files.locator('details.export-recovery')
+    expect(recovery.get_by_role('button', name='生成内部工程包', exact=True)).to_be_hidden()
+    recovery.locator('summary').click()
+    expect(recovery.get_by_role('button', name='生成内部工程包', exact=True)).to_be_visible()
+    expect(files.get_by_role('heading', name='生成结果', exact=True)).to_be_visible()
 
 
 def test_version_selection_reading_and_restore_state_their_targets(ux05_browser):
@@ -101,17 +134,27 @@ def test_version_selection_reading_and_restore_state_their_targets(ux05_browser)
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
+    page.get_by_role('button', name='版本', exact=True).click()
     expect(page.get_by_text('先读取历史版本并查看差异，再预览恢复影响。恢复会创建新版本，当前执行与调用记录不会回滚。')).to_be_visible()
+
+    # 三个身份分开呈现：选中（下一步操作目标）/ 已读（正在查看的版本）/ 当前版本。
+    identity = page.locator('.history-identity')
+    expect(identity).to_contain_text('选中：')
+    expect(identity).to_contain_text('已读：')
+    expect(identity).to_contain_text('当前版本：')
+    chosen_before = identity.locator('.state-chip').first.inner_text()
 
     # 选中 A（历史版本）→ 打开此版本切换已读对象；URL 与顶部横幅指明阅读版本。
     version_select = page.get_by_label('阅读历史版本')
     version_select.select_option(value=basis)
+    expect(identity.locator('.state-chip').first).not_to_have_text(chosen_before)
     page.get_by_role('button', name='读取所选版本', exact=True).click()
     assert f'revision={basis}' in page.url
     expect(page.get_by_text('查看当前版本', exact=True)).to_be_visible()
 
     # 恢复预览同时显示来源版本与当前基准；取消恢复不改变任何业务事实。
     page.get_by_role('button', name='任务与交付', exact=True).click()
+    page.get_by_role('button', name='版本', exact=True).click()
     page.get_by_role('button', name='预览恢复此版本', exact=True).click()
     dialog = page.locator('dialog[open]')
     expect(dialog).to_contain_text('来源版本')

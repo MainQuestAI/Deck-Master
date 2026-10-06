@@ -86,9 +86,17 @@ def test_same_text_body_nodes_are_distinguishable_and_editable_separately(ux04_b
     expect(page.get_by_label('正文块 2 · 发布检查单 · 条目 1 · 文字')).to_be_visible()
     expect(page.get_by_label('正文块 2 · 发布检查单 · 条目 2 · 文字')).to_have_value('不同的另一句。')
 
+    # 具体改动常驻：块位置 + 原文 → 改文，与影响预览同屏，不必自行对照文本框。
+    changes = page.locator('.content-changes')
+    expect(changes).to_contain_text('本次具体改动（0）')
     # 分别修改其一：另一个同文节点保持原值；影响预览同屏可核对。
     page.get_by_label('正文块 1 · 文字').fill('第一块已改写为新的表述。')
     expect(page.get_by_label('正文块 2 · 发布检查单 · 条目 1 · 文字')).to_have_value(SAME_TEXT)
+    expect(changes).to_contain_text('本次具体改动（1）')
+    row = changes.locator('.content-change-list li').first
+    expect(row.locator('.content-change-label')).to_have_text('正文块 1 · 文字')
+    expect(row.locator('.content-change-before')).to_have_text(SAME_TEXT)
+    expect(row.locator('.content-change-after')).to_have_text('第一块已改写为新的表述。')
     page.get_by_role('button', name='预览正文修改影响', exact=True).click()
     expect(page.locator('.content-operation')).to_contain_text('本次影响预览')
     expect(page.locator('.content-operation')).to_contain_text('修改 1 页')
@@ -147,11 +155,15 @@ def test_outline_block_reaches_its_pages_and_return_keeps_surface(ux04_browser):
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='内容与来源', exact=True).click()
     page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
-    # 大纲块显示章节与页范围（合成样例为单章"第 1–2 页"），直达逐页稿。
-    outline = page.locator('.outline-block')
-    expect(outline.first).to_contain_text('第 1–2 页')
-    outline.first.get_by_role('button', name='看逐页稿', exact=True).click()
-    expect(page.locator('#view-title')).to_contain_text('第 1 页')
+    # 大纲块显示章节与页范围（合成样例为单章"第 1–2 页"），并可在章节内指定页直达，
+    # 不再固定打开"首个匹配页"。
+    outline = page.locator('.outline-block').first
+    expect(outline).to_contain_text('第 1–2 页')
+    chapter_pages = outline.get_by_label('章节内页面', exact=False)
+    assert chapter_pages.locator('option').count() == 2
+    chapter_pages.select_option(value='p02')
+    outline.get_by_role('button', name='打开所选页', exact=True).click()
+    expect(page.locator('#view-title')).to_contain_text('第 2 页')
     assert 'surface=page' in page.url and 'layer=content' in page.url
     # 返回内容与来源：工作面可达，大纲仍在。
     page.get_by_role('button', name='内容与来源', exact=True).click()

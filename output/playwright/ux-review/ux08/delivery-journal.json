@@ -1,0 +1,126 @@
+{
+  "steps": [
+    {
+      "step": "version-identities",
+      "screenshot": "delivery-01-version-identities.png"
+    },
+    {
+      "step": "file-purposes",
+      "screenshot": "delivery-02-file-purposes.png"
+    },
+    {
+      "step": "review-package-result",
+      "screenshot": "delivery-03-review-package-result.png"
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/health"
+    },
+    {
+      "method": "GET",
+      "path": "/api/project"
+    },
+    {
+      "method": "GET",
+      "path": "/api/view/summary?personal=1"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ui-state"
+    },
+    {
+      "method": "GET",
+      "path": "/api/drafts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/project"
+    },
+    {
+      "method": "GET",
+      "path": "/api/view/summary?personal=1"
+    },
+    {
+      "method": "GET",
+      "path": "/api/overview?revision=40d8107b97f74f308aa85d804164b131"
+    },
+    {
+      "method": "GET",
+      "path": "/api/drafts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/content-plan?revision=40d8107b97f74f308aa85d804164b131"
+    },
+    {
+      "method": "GET",
+      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F81%2F81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png&sha256=81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29&retry=0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2Fd4%2Fd4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5.png&sha256=d4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5&retry=0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F35%2F35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774.png&sha256=35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774&retry=0"
+    },
+    {
+      "method": "GET",
+      "path": "/api/session"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ui-state"
+    },
+    {
+      "method": "GET",
+      "path": "/api/project"
+    },
+    {
+      "method": "GET",
+      "path": "/api/view/summary?personal=1"
+    },
+    {
+      "method": "GET",
+      "path": "/api/tasks?revision=40d8107b97f74f308aa85d804164b131&limit=30&personal=1&reading_etag=0289e0f36cdc4e24eb695a0384f9dec385ca74dcc9a5b055516b5af0e5c365ff"
+    },
+    {
+      "method": "GET",
+      "path": "/api/history?revision=40d8107b97f74f308aa85d804164b131&limit=20"
+    },
+    {
+      "method": "POST",
+      "path": "/api/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/api/tasks?limit=1"
+    },
+    {
+      "method": "GET",
+      "path": "/api/drafts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ui-state"
+    },
+    {
+      "method": "GET",
+      "path": "/api/candidates"
+    },
+    {
+      "method": "GET",
+      "path": "/api/result-reading"
+    },
+    {
+      "method": "GET",
+      "path": "/api/tasks?limit=30&offset=0&personal=1&reading_etag=0289e0f36cdc4e24eb695a0384f9dec385ca74dcc9a5b055516b5af0e5c365ff"
+    },
+    {
+      "method": "POST",
+      "path": "/api/exports"
+    }
+  ]
+}

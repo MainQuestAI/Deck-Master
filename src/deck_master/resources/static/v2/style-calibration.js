@@ -96,7 +96,8 @@ export function style(app) {
       el('div',{class:'stack'},el('label',{class:'stack'},'固定参考原图',reference),referenceView,detail('查找其它参考页',referenceSearch,referenceCount)),
       el('div',{class:'stack'},el('label',{class:'stack'},'先试哪一页',primaryTarget),primaryPreview)),
       el('label', {}, '一句话要求', instruction),
-      el('div', {class: 'row wrap style-primary-actions'}, proposeButton, confirmButton), notice, preview,
+      // UX-07b 收敛：确认动作归「确认规范」阶段；这里不再重复挂同一个按钮节点。
+      el('div', {class: 'row wrap style-primary-actions'}, proposeButton), notice, preview,
       detail('其它目标页',el('div',{class:'row wrap'},targetSearch,selectedFilter),targetCount,targets),
       detail('高级：借用维度、原文选段与建议',
         dimensionFields, el('p', {class: 'muted'}, '构图须单独选择。生成仍可能偏离，返回后逐项核对。'),
@@ -113,11 +114,16 @@ export function style(app) {
   ];
   phases.forEach((p,i) => { p.summary.addEventListener('click', () => { userPhase = i + 1; }); });
   phases[0].node.classList.add('style-primary-phase');
+  // UX-07b/UX-08b：交接区按真实状态显隐（无当前计划时不出现），不再依赖
+  // `.style-plan:has(.stack:empty){display:none}` 这类会被内部空节点误触发的覆盖。
+  const planBox = el('div', {class:'style-plan stack'}, impact, dispatchButton);
   const node = el('div', {class: 'style-calibration stack'}, heading('风格校准', '固定一张参考原图，保留目标内容。先试一页，比较采用后再扩展。'),
-    phases.map(p => p.node), el('div', {class:'style-plan stack'}, impact, dispatchButton), detail('个人草稿与恢复',draftNode));
-  const external=visualStyle(app), internal=phases.map(p=>p.node).concat([impact.parentElement]);
+    phases.map(p => p.node), planBox, detail('个人草稿与恢复',draftNode));
+  let sourceIsScreenshot = false;
+  const syncPlanVisibility = () => { planBox.hidden = sourceIsScreenshot || !plan; };
+  const external=visualStyle(app), internal=phases.map(p=>p.node);
   const source=el('select',{'aria-label':'风格参考来源',disabled:true},el('option',{value:'page'},'借用项目内页面'),el('option',{value:'screenshot'},'从外部截图提取规范'));
-  const switchSource=()=>{internal.forEach(n=>n.hidden=source.value==='screenshot');external.hidden=source.value!=='screenshot';};
+  const switchSource=()=>{sourceIsScreenshot=source.value==='screenshot';internal.forEach(n=>n.hidden=sourceIsScreenshot);external.hidden=!sourceIsScreenshot;syncPlanVisibility();};
   source.addEventListener('change',async()=>{const chosen=source.value,current=app.editor;await current.ready;if(disposed||current!==app.editor)return;try{localStorage.setItem('deck-master:style-source:'+app.info.project_identity,source.value);}catch{}switchSource();if(!current.readonly&&!current.disposed){current.draft.content.style_source=chosen;current.changed();}});
   const restoreSource=()=>{const current=app.editor;current.ready.then(()=>{if(disposed||current!==app.editor)return;const saved=current.draft.content.style_source;if(['page','screenshot'].includes(saved))source.value=saved;source.disabled=false;switchSource();});};
   app.root.addEventListener('draft-editor-replaced',restoreSource);restoreSource();
@@ -145,6 +151,7 @@ export function style(app) {
     phases[0].summary.textContent = `${fixed ? label(fixed.page_id) + ' 已固定' : '尚未固定参考'} · 已选 ${selected.size} 页`;
     phases[1].summary.textContent = recipe ? `V${recipe.version} · ${recipe.input.target_page_ids.length} 页范围` : '尚未确认风格版本';
     phases[2].summary.textContent = adoptedCandidate.value ? '已选择候选，待计划核实' : '需先比较采用单页候选';
+    syncPlanVisibility();
   }
   function persist() { if (loaded && !editor().readonly && !editor().disposed) { editor().draft.content.style_calibration = state(); editor().changed(); } }
   function changed() { serial++; proposal = null; plan = null; preview.replaceChildren(); impact.replaceChildren(); confirmButton.disabled = true; showPhase(1); persist(); controls(); }
