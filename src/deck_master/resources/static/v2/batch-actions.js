@@ -33,11 +33,14 @@ export function batchActions(app, selected, onSelectionChange) {
   const preview = button('预览所选页试作', previewSelection);
   const commit = button('保存并交接所选试作', commitSelection, true, {disabled: true});
   const toStyle = button('带所选页进入风格校准', enterStyle, true);
+  // F05/§4.1：空选页只提示如何选页，不展开整套调用参数；有选择时才显示
+  // 配置区（所选页摘要—要求—可选参考—真实调用影响—预览/确认）。
+  const fields = el('div', {class: 'stack batch-fields'}, excluded,
+    el('label', {}, '一句话要求', instruction), el('label', {}, '固定参考原图（可选）', reference), refPicture,
+    budgetArea, el('div', {class: 'row wrap'}, preview, commit, toStyle), impact);
   const node = el('section', {class: 'panel batch-actions', 'aria-label': '所选页制作'},
     el('div', {class: 'panel-head'}, el('h2', {}, '所选页制作')),
-    el('div', {class: 'panel-body stack'}, notice, excluded,
-      el('label', {}, '一句话要求', instruction), el('label', {}, '固定参考原图（可选）', reference), refPicture,
-      budgetArea, el('div', {class: 'row wrap'}, preview, commit, toStyle), impact));
+    el('div', {class: 'panel-body stack'}, notice, fields));
   if (app.business && app.health.ui_capabilities?.includes('ui_draft.v1')) {
     app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
     node.lastChild.append(el('details', {}, el('summary', {}, '个人记录与提交恢复'), app.editor.mount()));
@@ -47,6 +50,7 @@ export function batchActions(app, selected, onSelectionChange) {
   function invalidate() { serial++; plan = null; impact.replaceChildren(); }
   function render() {
     const unavailable = exclusions(), image = action.value === 'blueprint', style = action.value === 'style';
+    fields.hidden = !selected.size;
     const saving = !editor || editor.disposed || editor.readonly || ['loading', 'unknown', 'conflict', 'saving'].includes(editor.status);
     const calls = Number(budget.value), budgetInvalid = image && (!Number.isInteger(calls) || calls < selected.size || calls > 300);
     notice.textContent = selected.size ? `${selected.size} 页用于${batchNames[action.value]}${unavailable.length ? `，其中 ${unavailable.length} 页需要调整范围` : ''}。` : '先选择动作，再勾选此动作允许处理的页面。选页不会自动执行；已选范围随个人阅读状态保留，计划仍需重新预览。';

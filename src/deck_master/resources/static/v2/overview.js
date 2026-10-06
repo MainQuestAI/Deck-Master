@@ -181,15 +181,15 @@ function matrixPanel(app, saved) {
         el('h3', {}, '项目保存的偏好'), description(stored.record?.state),
         el('details', {}, el('summary', {}, '固定版本与恢复详情'), el('pre', {class:'evidence-json'}, JSON.stringify({window:memory.state, saved:stored.record}, null, 2)))),
         [button('读取项目保存的偏好', () => { document.querySelector('#modal').close(); memory.useSaved(stored); applyMemorySelection(); reflectURL(); }),
-          button('明确保存此窗口偏好', () => { document.querySelector('#modal').close(); memory.useWindow(stored); saveSelection(); })]);
+          button('明确保存此窗口偏好', () => { document.querySelector('#modal').close(); memory.useWindow(stored); saveSelection({quiet: false}); })]);
     } catch { if (!disposed) preferenceStatus.textContent = '总览偏好核实未完成，当前输入保留；连接恢复后重试。'; }
     finally { compareButton.disabled = false; }
   });
   const downloadButton = button('下载总览偏好副本', () => downloadJSON(memory.state, 'deck-master-overview-preferences.json'));
   function reflectURL() { app.route.overview_preferences = {search,filter,sort:ascending ? 'ascending' : 'descending'}; history.replaceState(null, '', routeHash(app.info, app.route)); }
-  function saveSelection() {
+  function saveSelection({quiet = true} = {}) {
     try { localStorage.setItem(selectionKey, JSON.stringify([...selected])); } catch { /* 选择保留在本页，未写入本机 */ }
-    memory.update({search,filter,sort:ascending ? 'ascending' : 'descending',selected_page_ids:[...selected]});
+    memory.update({search,filter,sort:ascending ? 'ascending' : 'descending',selected_page_ids:[...selected]}, {quiet});
     reflectURL();
   }
   // 读取项目保存的偏好后，勾选集合必须跟着替换，否则界面仍显示本窗口的选择，
@@ -199,7 +199,7 @@ function matrixPanel(app, saved) {
     for (const id of memory.state.selected_page_ids || []) if (pageIdSet.has(id)) selected.add(id);
     saveSelection();
   }
-  function saveReading() { saveSelection(); }
+  function saveReading() { saveSelection({quiet: false}); }
 
   function setFilter(value) {
     if (filter === value) return;

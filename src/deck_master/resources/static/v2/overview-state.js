@@ -30,22 +30,27 @@ export class OverviewMemory {
   }
   subscribe(callback) { this.listeners.add(callback); return () => this.listeners.delete(callback); }
   notify() { if (!this.disposed) this.listeners.forEach(callback => callback()); }
-  update(patch) {
+  update(patch, {quiet = false} = {}) {
     this.state = {...this.state, ...patch}; this.app.overviewSession.set(this.key, reading(this.state));
     this.dirty = true;
-    if (!this.error) this.message = this.supported ? '总览阅读偏好待保存' : '仅保留本窗口会话，未写入项目。';
+    // 合并语义：只要自上次落盘以来有过一次"有声"改动，本次落盘就有声。
+    if (!quiet) this.quietNext = false;
+    else if (this.quietNext === undefined) this.quietNext = true;
+    // 勾选变化等静默保存不驱动偏好状态行，避免每次点选都闪过保存提示。
+    if (!quiet && !this.error) this.message = this.supported ? '总览阅读偏好待保存' : '仅保留本窗口会话，未写入项目。';
     this.notify(); clearTimeout(this.timer);
     if (this.supported && !this.error) this.timer = setTimeout(() => this.flush(), 300);
   }
   async flush() {
     clearTimeout(this.timer);
     if (!this.supported || this.saving || this.error || !this.dirty) return;
+    const quiet = this.quietNext === true; this.quietNext = undefined;
     this.pending ||= {state:structuredClone(this.state), expected_etag:this.etag};
-    this.saving = true; this.message = '正在保存总览阅读偏好…'; this.notify();
+    this.saving = true; if (!quiet) { this.message = '正在保存总览阅读偏好…'; this.notify(); }
     try {
       const result = await post('/api/overview', this.pending);
       this.etag = result.record.etag; this.dirty = canonical(this.state) !== canonical(this.pending.state);
-      this.pending = null; this.message = this.dirty ? '后续输入待保存' : '总览阅读偏好已保存';
+      this.pending = null; if (!quiet) this.message = this.dirty ? '后续输入待保存' : '总览阅读偏好已保存';
     } catch (error) {
       this.error = error;
       this.message = error.code === 'local_state_conflict' ? '另一个窗口修改或清理了偏好；此窗口输入保留。请核实后明确选择。' : '总览偏好保存尚未确认；此窗口输入保留，可核实或下载。';
