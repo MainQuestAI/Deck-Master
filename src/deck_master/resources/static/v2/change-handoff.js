@@ -101,9 +101,9 @@ export function changeHandoffs(app) {
         lastList = nextList;
         if (modern && changes.changes.length > 6) {
           const select = el('select', {'aria-label': '选择修改交接组'}, changes.changes.map(change => el('option', {value: change.change_id},
-            `${labels[change.status] || '待核实'} · ${change.completed_count}/${change.total_count} 项 · ${change.change_id}`)));
+            `${labels[change.status] || '待核实'} · ${change.completed_count}/${change.total_count} 项 · ${change.page_ids?.length || 0} 页 · ${change.change_id.slice(-6)}`)));
           select.value = active || changes.changes.at(-1).change_id; select.addEventListener('change', () => open(select.value)); list.replaceChildren(select);
-        } else list.replaceChildren(...changes.changes.map(change => button(`${labels[change.status] || '待核实'} · ${change.completed_count}/${change.total_count} 项`, () => open(change.change_id), false,
+        } else list.replaceChildren(...changes.changes.map(change => button(`${labels[change.status] || '待核实'} · ${change.completed_count}/${change.total_count} 项 · ${change.page_ids?.length || 0} 页 · ${change.change_id.slice(-6)}`, () => open(change.change_id), false,
           {'aria-pressed': active === change.change_id})));
         if (!changes.changes.length) list.append(el('p', {class: 'muted'}, '尚无已提交修改。保存意见、预览影响后，交接会持续保留在这里。'));
       }

@@ -49,7 +49,7 @@ def test_fixed_revision_states_cas_replay_and_business_immutability(project):
     assert saved2['record']['etag'] != saved['record']['etag']
 
 
-@pytest.mark.parametrize('patch', [{'selected_page_ids': ['p01']}, {'plan_id': 'plan'}, {'operation_id': 'op'}, {'search': 'x' * 201}, {'filter': 'ready'}, {'sort': 'reverse'}, {'project_identity': '0' * 64}, {'revision_id': 'not-in-this-project'}])
+@pytest.mark.parametrize('patch', [{'selected_page_ids': ['p01', 42]}, {'selected_page_ids': 'p01'}, {'selected_page_ids': ['p0' + '1' * 200]}, {'plan_id': 'plan'}, {'operation_id': 'op'}, {'search': 'x' * 201}, {'filter': 'ready'}, {'sort': 'reverse'}, {'project_identity': '0' * 64}, {'revision_id': 'not-in-this-project'}])
 def test_invalid_or_business_fields_never_overwrite_personal_record(project, patch):
     value = state(project)
     saved = overview_state.save(project, state=value)
@@ -57,6 +57,16 @@ def test_invalid_or_business_fields_never_overwrite_personal_record(project, pat
     with pytest.raises((RuntimeError, ValueError)):
         overview_state.save(project, state={**value, **patch}, expected_etag=saved['record']['etag'])
     assert overview_state._file(Store(project)).read_bytes() == before
+
+
+def test_selected_page_ids_is_a_persisted_reading_field_and_never_business(project):
+    """D1：选择是 ui_overview 的阅读状态字段；合法值可保存，业务事实不受影响。"""
+    store = Store(project)
+    value = state(project, selected_page_ids=['p01', 'p02'])
+    before = business(project)
+    saved = overview_state.save(project, state=value)
+    assert overview_state.get(project, revision=value['revision_id'])['record']['state']['selected_page_ids'] == ['p01', 'p02']
+    assert business(project) == before
 
 
 def test_retention_is_bounded_reads_do_not_add_history_and_versions_do_not_inherit(project):

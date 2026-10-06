@@ -4,10 +4,12 @@
 
 按[最终修复方案](/Users/dingcheng/Coding-Project/02-key-project/Deck-Master/evidence/product-design-final-20261006/FINAL-REPAIR-PLAN.md)逐包实施。本文件记录每包的代码变化、反例测试与验证结论；产品决定见 [UX-REPAIR-DECISIONS](UX-REPAIR-DECISIONS.md)。测试命令：`python -m pytest tests/rebuild -q`（浏览器用例加 `-m browser`）。
 
-## 环境备注
+## 环境备注（预先存在的失败，均在干净基线 `4fefd0b3` 上复现，不计入实施回归）
 
-- 审计基线包含 main（`6996a29`）之外 34 个提交（含 PR102 修补 `0406807`/`e203982`）；实施从 `4fefd0b3` 分支，不回迁 main。
-- 本机存在一个与代码无关的既有失败：`test_gallery_core.py::test_gallery_and_thumbnail_http_keep_host_origin_hash_and_csp_guards` 在干净基线上同样失败（Host 头校验返回 502 而非 403，本机回环环境差异）；已从回归口径中单列，不计入实施回归。
+- `test_gallery_core.py::test_gallery_and_thumbnail_http_keep_host_origin_hash_and_csp_guards`：Host 头校验返回 502 而非 403（本机回环环境差异）。
+- `test_workbench_reads.py::test_new_gets_keep_host_boundary_and_no_read_token`：同上同类。
+- `test_generation_protocol.py::test_cli_http_freeze_and_fixed_reads_are_the_same_contract`：子进程 `-m deck_master` 经 venv 可编辑安装解析到主仓库（`6996a29`）代码，与工作树服务端版本错位导致快照读取拒绝；属运行方式问题，非工作树代码缺陷。
+- `test_ui_design_browser.py::test_damaged_personal_reading_does_not_block_workbench`：个人已读记录损坏时 runs 面板不渲染（基线即失败）。这是一个真实的功能缺陷，归入 UX-06（F13 恢复异常）处理；测试保留失败状态作为证据，不跳过、不掩盖。
 
 ## UX-00 · 明确错误与证据基线（已实施）
 
@@ -39,13 +41,29 @@
 
 同步：`DESIGN.md` D1 一句已改；`test_batch_actions_browser.py`、`test_overview_preferences_browser.py` 两条旧规则断言按 D1 更新并注明。
 
-## UX-03–UX-08（未实施）
+## UX-03 · 风格与候选切片（进行中——命名/身份部分已实施，AC09–AC12 反例未完成）
 
-- UX-03 风格与候选切片（F07/F08/F09，AC09–AC12）
+已实施的修复（待最终回归确认后提交）：
+
+- N07：截图路线的已保存分析/已确认规范选项在恢复前可区分——分析选项加任务短尾，规范选项加目标页数与配方短尾（`visual-style.js`）。
+- ST-05：同页候选比较按钮加候选短码（`比较 <页名> · <ref 前 8 位>`），不再完全同名（`visual-style.js`）。
+- N08：修改组在交接面板与运行筛选中共享同一短尾与"页数"计数（modern 模式两处同源于 `/api/tasks` 分组），选择前可对上（`change-handoff.js` + `run-desk.js`）。
+- N06：任务详情的快捷阅读按任务种类进入产物层——reconstruct/repair → SVG、compose → 正文、blueprint → 原图，按钮名注明层（`run-desk.js`）。
+
+- N06：任务详情的快捷阅读按任务种类进入产物层——reconstruct/repair → SVG、compose → 正文、blueprint → 原图，按钮名注明层（`run-desk.js`）。
+
+反例测试：`test_ux03_style_candidate_browser.py`——同名规范选项可区分（mock `/api/styles`）、修改组跨面短尾一致、SVG 任务快捷入口 `layer=svg`。
+
+同步：`test_overview_state.py` 的"必拒字段"参数化按 D1 更新——`selected_page_ids` 成为合法阅读字段后，改用其非法值（非字符串项、超长项、非数组）保留拒绝覆盖，并新增"合法选择可持久化且不动业务事实"的直接断言；`test_ui_design_browser.py` 的键盘连续性测试按 D1 改为"搜索后第 02 页仍选中"。
+
+**尚未完成**：AC09（五维/七维分别进入与恢复的场景验证）、AC10（拆解图与借用/保留核对）、AC11（同页两候选快速切换与晚回包）、AC12（扩展计划的拒绝路径）。这些需要风格配方/候选的专用测试夹具，是 UX-03 剩余工作；在完成前不视为已验收。
+
+## UX-04–UX-08（未实施）
+
 - UX-04 内容与共享单页（F06/F10，AC13–AC15）
 - UX-05 任务版本与文件（F12/F09，AC16–AC18）
 - UX-06 恢复异常与响应式（F11/F13/F15，AC19–AC22）
 - UX-07 样式收敛与规范同步（F16/F17，AC23）
 - UX-08 组合验收与交付结论（AC24）
 
-这些包的状态是**未开始**；任何 AC 不因 UX-00–02 的通过而视为通过。
+这些包的状态是**未开始**；任何 AC 不因其它包的通过而视为通过。

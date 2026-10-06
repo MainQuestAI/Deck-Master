@@ -78,7 +78,8 @@ def test_matrix_keyboard_selection_sort_and_search_keep_focus(workbench_page):
     search.fill('p02')
     expect(search).to_be_focused()
     expect(page.locator('.matrix tbody .title-button')).to_have_count(1)
-    expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).not_to_be_checked()
+    # D1：搜索是筛选，保留批量选择——全选选中的第 02 页仍是选中状态。
+    expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).to_be_checked()
 
 
 def test_page_shortcuts_respect_controls_and_dialogs(workbench_page):

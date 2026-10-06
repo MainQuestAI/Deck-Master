@@ -1,5 +1,5 @@
 import {get, post, postBinary, digest, fileURL, readableError} from './api.js';
-import {el, button, copyText} from './dom.js';
+import {el, button, copyText, shortRef} from './dom.js';
 import {imageView} from './images.js';
 import {openCandidate} from './trial-actions.js';
 const names={palette:'配色',typography:'文字层级',composition:'构图',spacing:'间距',density:'密度',lines:'线条',icons:'图标'};
@@ -54,7 +54,7 @@ export function visualStyle(app){
       const result=await get('/api/candidates?'+new URLSearchParams({revision:app.route.revision}));if(disposed||state.recipe!==chosen||epoch!==analysisSerial||hydration!==hydrateSerial)return;
       const rows=result.candidates.filter(v=>v.style_recipe_ref?.sha256===value.ref.sha256&&recipe.input.target_page_ids.includes(v.candidate.page_id)&&v.candidate.stage==='blueprint');
       sample.replaceChildren(el('option',{value:''},'选择已采用的样例'),...rows.filter(v=>v.status==='adopted').map(v=>el('option',{value:v.candidate.candidate_id,'data-page':v.candidate.page_id},app.summary.pages.find(p=>p.page_id===v.candidate.page_id)?.title||v.candidate.page_id)));
-      candidateRows.replaceChildren(el('p',{},'已确认视觉规范。先比较并采用单页试作，再明确勾选扩展页。'),...rows.slice(-30).map(v=>button('比较 '+(app.summary.pages.find(p=>p.page_id===v.candidate.page_id)?.title||v.candidate.page_id),()=>openCandidate(app,v.candidate,result.revision_id))));renderExpansion();
+      candidateRows.replaceChildren(el('p',{},'已确认视觉规范。先比较并采用单页试作，再明确勾选扩展页。'),...rows.slice(-30).map(v=>button(`比较 ${app.summary.pages.find(p=>p.page_id===v.candidate.page_id)?.title||v.candidate.page_id} · ${shortRef(v.ref?.sha256||v.candidate.result_ref?.sha256)}`,()=>openCandidate(app,v.candidate,result.revision_id))));renderExpansion();
     }catch(error){if(!disposed)status.textContent=readableError(error);}finally{controls();}}
 
   const savedAnalysis=el('select',{'aria-label':'恢复已保存的截图分析'},el('option',{value:''},'选择已保存分析，不自动切换'));
@@ -64,8 +64,8 @@ export function visualStyle(app){
     try{const q=new URLSearchParams({revision:app.route.revision,limit:30,offset:savedTaskPage*30});
       const [taskPage,versions]=await Promise.all([get('/api/tasks?'+q),get('/api/styles?'+new URLSearchParams({revision:app.route.revision}))]);
       if(disposed||token!==savedCatalogSerial)return;savedTasks=taskPage.tasks.filter(t=>t.kind==='style_analyze');
-      savedAnalysis.replaceChildren(el('option',{value:''},'选择已保存分析，不自动切换'),...savedTasks.map(t=>el('option',{value:t.task_id},`${t.instruction.slice(0,45)} · ${t.status==='completed'?'已返回':t.status==='awaiting_host'?'待接手':t.status==='running'?'处理中':'已停止'}`)));
-      savedRecipe.replaceChildren(el('option',{value:''},'选择已确认规范，不自动切换'),...versions.recipes.filter(v=>v.recipe.schema_version==='style_recipe.v2').map(v=>el('option',{value:v.recipe.recipe_id},`V${v.recipe.version} · ${v.recipe.input.instruction.slice(0,45)}`)));
+      savedAnalysis.replaceChildren(el('option',{value:''},'选择已保存分析，不自动切换'),...savedTasks.map(t=>el('option',{value:t.task_id},`${t.instruction.slice(0,45)} · ${t.status==='completed'?'已返回':t.status==='awaiting_host'?'待接手':t.status==='running'?'处理中':'已停止'} · ${t.task_id.slice(-6)}`)));
+      savedRecipe.replaceChildren(el('option',{value:''},'选择已确认规范，不自动切换'),...versions.recipes.filter(v=>v.recipe.schema_version==='style_recipe.v2').map(v=>el('option',{value:v.recipe.recipe_id},`V${v.recipe.version} · ${v.recipe.input.instruction.slice(0,45)} · ${v.recipe.input.target_page_ids?.length||0} 页 · ${v.recipe.recipe_id.slice(-6)}`)));
       savedPager.replaceChildren(button('上一组保存任务',()=>{savedTaskPage--;loadSaved();},false,{disabled:savedTaskPage===0}),el('span',{},`第 ${savedTaskPage+1} 组任务`),button('下一组保存任务',()=>{savedTaskPage++;loadSaved();},false,{disabled:taskPage.pagination.next_offset===null}));
       controls();
     }catch(error){if(!disposed)status.textContent=readableError(error);}

@@ -81,7 +81,7 @@ export function runDesk(app, data) {
     ref: error.docs_ref || 'docs/agent-recovery-playbook.md#run-desk-recovery'});
   function render() {
     group.replaceChildren(el('option', {value: ''}, '所有修改组'), ...page.groups.filter(item => item.change_id).map(item =>
-      el('option', {value: item.change_id}, `修改组 ${page.groups.indexOf(item) + 1} · ${item.completed_count}/${item.total_count} 项已返回`)));
+      el('option', {value: item.change_id}, `修改组 ${page.groups.indexOf(item) + 1} · ${item.completed_count}/${item.total_count} 项已返回${item.page_ids?.length ? ` · ${item.page_ids.length} 页` : ''} · ${item.change_id.slice(-6)}`)));
     if (state.group && !page.groups.some(item => item.change_id === state.group)) state.group = '';
     group.value = state.group; status.value = state.status; attention.checked = state.attention;
     notice.textContent = `${live ? '当前执行状态' : '固定执行记录'} · 共 ${page.pagination.total} 项`;
@@ -128,7 +128,10 @@ export function runDesk(app, data) {
       el('details', {}, el('summary',{},'制作要求与执行身份'), el('p',{},task.instruction),el('p',{class:'muted'},`任务 ${task.task_id} · ${version(revision)}`)),
       el('p', {}, `真实接手时间：${clock(task.execution_started_at)}${task.execution_started_at ? '' : '，不会用最后更新时间代替'}`),
       el('details',{},el('summary',{},'执行记录'),el('p',{class:'execution-reference'},task.execution_ref ? `执行标识：${task.execution_ref}` : '尚无接手记录')),
-      el('div', {class: 'row wrap'}, (task.scope_pages || []).map(id => button(`阅读 ${pageLabels.get(id) || '对应页面'}`, () => app.go({surface: 'page', page_id: id, layer: 'original_image', revision})))),
+      // 快捷阅读去任务实际产物所在层：SVG 族任务不再落到原图（N06）。
+      (() => { const shortcutLayer = {compose: 'content', blueprint: 'original_image', svg: 'svg', reconstruct: 'svg', repair: 'svg'}[task.kind] || 'original_image';
+        const layerName = {content: '正文', original_image: '原图', svg: 'SVG'}[shortcutLayer] || '原图';
+        return el('div', {class: 'row wrap'}, (task.scope_pages || []).map(id => button(`阅读 ${pageLabels.get(id) || '对应页面'} · ${layerName}`, () => app.go({surface: 'page', page_id: id, layer: shortcutLayer, revision})))); })(),
       el('p', {}, `已记录结果 ${task.result_refs.length} 项 · 候选 ${task.candidate_refs.length} 项 · 未知调用 ${task.call_counts.unknown || 0} 次`),
       (task.call_counts.unknown || 0) > 0 && el('p', {class: 'field-error'}, '未知调用不等于未执行。请核实原调用；本工作台不会重新分配额度或自动重试。'),
       recovery.pending.has(task.task_id) && el('p', {class: 'field-error'}, '取消结果待核实，未安排替代任务。'),
