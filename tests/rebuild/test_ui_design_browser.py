@@ -131,7 +131,9 @@ def test_damaged_personal_reading_does_not_block_workbench(workbench_page,tmp_pa
     path.parent.mkdir(parents=True,exist_ok=True);path.write_text('damaged reading record')
     page.reload();page.get_by_role('heading',name='制作总览',exact=True).wait_for()
     expect(page.get_by_text('个人已读记录暂不可用，已显示未过滤的业务记录；损伤文件保留，请先核实恢复资料。',exact=True)).to_be_visible()
-    page.evaluate("()=>{const q=new URLSearchParams(location.hash.slice(1));q.set('surface','runs');location.hash=q.toString();}")
+    # 沿导航按钮切换工作面（真实用户路径）。手工改写 hash 会把总览偏好参数带进
+    # runs 路由而被路由守卫拒绝——那是链接校验，不是本测试的对象。
+    page.get_by_role('button',name='任务与交付',exact=True).click()
     page.get_by_role('heading',name='运行记录',exact=True).wait_for()
     expect(page.get_by_text('个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。',exact=True)).to_be_visible()
     assert path.read_text()=='damaged reading record'

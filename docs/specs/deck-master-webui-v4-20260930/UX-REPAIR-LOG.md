@@ -9,7 +9,7 @@
 - `test_gallery_core.py::test_gallery_and_thumbnail_http_keep_host_origin_hash_and_csp_guards`：Host 头校验返回 502 而非 403（本机回环环境差异）。
 - `test_workbench_reads.py::test_new_gets_keep_host_boundary_and_no_read_token`：同上同类。
 - `test_generation_protocol.py::test_cli_http_freeze_and_fixed_reads_are_the_same_contract`：子进程 `-m deck_master` 经 venv 可编辑安装解析到主仓库（`6996a29`）代码，与工作树服务端版本错位导致快照读取拒绝；属运行方式问题，非工作树代码缺陷。
-- `test_ui_design_browser.py::test_damaged_personal_reading_does_not_block_workbench`：个人已读记录损坏时 runs 面板不渲染（基线即失败）。这是一个真实的功能缺陷，归入 UX-06（F13 恢复异常）处理；测试保留失败状态作为证据，不跳过、不掩盖。
+- ~~`test_ui_design_browser.py::test_damaged_personal_reading_does_not_block_workbench`~~（已解决）：复核证明产品降级链路本身正常（runs 面板如实显示"个人已读记录暂不可用，任务按未过滤状态展示"）；测试先前失败的原因是它用手改 hash 切换工作面，把总览偏好参数（q/filter/sort）带进 runs 路由而被路由守卫按设计拒绝。测试改用导航按钮（真实用户路径）后通过，产品代码无需改动。
 
 ## UX-00 · 明确错误与证据基线（已实施）
 
