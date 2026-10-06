@@ -24,18 +24,22 @@ export function runs(app, data) {
   const selected = data.runDetail?.task || data.tasks.find(task => task.task_id === app.route.task_id);
   const node = el('div', {}, heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
     selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null));
-  if (app.health.ui_capabilities?.includes('exports.v1')) node.append(button('查看版本与文件', () => { const target = document.querySelector('#delivery-desk'); target?.scrollIntoView({block: 'start'}); target?.querySelector('h2')?.focus({preventScroll: true}); }));
+  // F12：任务与交付的四个子区可直接到达，不是必须依次完成的阶段。
+  const toSubarea = id => () => { const target = document.getElementById(id); target?.scrollIntoView({block: 'start'}); const head = target?.querySelector('h2'); if (head) { head.tabIndex = -1; head.focus({preventScroll: true}); } };
+  if (app.health.ui_capabilities?.includes('exports.v1')) node.append(el('div', {class: 'row wrap runs-subareas', role: 'navigation', 'aria-label': '任务与交付的子区'},
+    ...[['runs-tasks', '正在进行'], ['runs-decisions', '待决定'], ['runs-versions', '版本'], ['runs-files', '文件']]
+      .map(([id, name]) => button(`到「${name}」`, toSubarea(id), false, {class: 'quiet'}))));
   if (selected && app.returnTo && !app.returnTo.task_id) node.append(button('返回上次工作面', () => app.go(app.returnTo)));
   const handoffs = app.health.ui_capabilities?.includes('changes.v1') ? changeHandoffs(app) : null;
   const batch = candidateBatch(app);
   const tasks = selected ? [selected] : data.tasks;
-  node.append(data.runPage ? runDesk(app, data) : tasks.length ? el('div', {class: 'task-list stack'}, tasks.map(task => el('article', {class: 'panel task-row'},
+  const runsPanel = data.runPage ? runDesk(app, data) : tasks.length ? el('div', {class: 'task-list stack'}, tasks.map(task => el('article', {class: 'panel task-row'},
     el('div', {}, el('h2', {}, taskNames[task.kind] || '制作任务'), el('p', {class: 'muted'}, `${taskStatus[task.status] || '状态待核实'} · 任务 ${task.task_id}`),
       task.result_refs?.length > 0 && el('p', {class: 'muted'}, `${task.result_refs.length} 项已记录结果；这不代表专业质量通过。`)),
-    !selected && button('查看这项任务', () => app.go({task_id: task.task_id})), selected && button('查看全部任务', () => app.go({task_id: null}))))): empty('没有已记录的任务', '此版本还没有制作任务。'));
-  if (handoffs) node.append(handoffs);
-  node.append(batch);
-  if (app.health.ui_capabilities?.includes('exports.v1')) node.append(historyDesk(app, data.history), deliveryDesk(app));
+    !selected && button('查看这项任务', () => app.go({task_id: task.task_id})), selected && button('查看全部任务', () => app.go({task_id: null}))))): empty('没有已记录的任务', '此版本还没有制作任务。');
+  node.append(el('div', {id: 'runs-tasks'}, runsPanel));
+  node.append(el('div', {id: 'runs-decisions', class: 'stack'}, ...(handoffs ? [handoffs] : []), batch));
+  if (app.health.ui_capabilities?.includes('exports.v1')) node.append(el('div', {id: 'runs-versions'}, historyDesk(app, data.history)), el('div', {id: 'runs-files'}, deliveryDesk(app)));
   else node.append(panel('版本与文件', el('p', {}, '升级核心后可读取固定版本的导出与恢复功能。')));
   return node;
 }

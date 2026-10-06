@@ -128,9 +128,10 @@ export function runDesk(app, data) {
       el('details', {}, el('summary',{},'制作要求与执行身份'), el('p',{},task.instruction),el('p',{class:'muted'},`任务 ${task.task_id} · ${version(revision)}`)),
       el('p', {}, `真实接手时间：${clock(task.execution_started_at)}${task.execution_started_at ? '' : '，不会用最后更新时间代替'}`),
       el('details',{},el('summary',{},'执行记录'),el('p',{class:'execution-reference'},task.execution_ref ? `执行标识：${task.execution_ref}` : '尚无接手记录')),
-      // 快捷阅读去任务实际产物所在层：SVG 族任务不再落到原图（N06）。
-      (() => { const shortcutLayer = {compose: 'content', blueprint: 'original_image', svg: 'svg', reconstruct: 'svg', repair: 'svg'}[task.kind] || 'original_image';
-        const layerName = {content: '正文', original_image: '原图', svg: 'SVG'}[shortcutLayer] || '原图';
+      // 快捷阅读去任务实际产物所在层：SVG 族任务不再落到原图（N06）；
+      // render 任务去 PPT 层（AC16 快捷入口与名称相符）。
+      (() => { const shortcutLayer = {compose: 'content', blueprint: 'original_image', svg: 'svg', reconstruct: 'svg', repair: 'svg', render: 'ppt'}[task.kind] || 'original_image';
+        const layerName = {content: '正文', original_image: '原图', svg: 'SVG', ppt: 'PPT'}[shortcutLayer] || '原图';
         return el('div', {class: 'row wrap'}, (task.scope_pages || []).map(id => button(`阅读 ${pageLabels.get(id) || '对应页面'} · ${layerName}`, () => app.go({surface: 'page', page_id: id, layer: shortcutLayer, revision})))); })(),
       el('p', {}, `已记录结果 ${task.result_refs.length} 项 · 候选 ${task.candidate_refs.length} 项 · 未知调用 ${task.call_counts.unknown || 0} 次`),
       (task.call_counts.unknown || 0) > 0 && el('p', {class: 'field-error'}, '未知调用不等于未执行。请核实原调用；本工作台不会重新分配额度或自动重试。'),
