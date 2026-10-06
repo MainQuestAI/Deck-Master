@@ -1,6 +1,6 @@
 import {comparisonCanvas} from './comparison-canvas.js';
 import {get, post, canonical, readableError, revisionQuery} from './api.js';
-import {el, button, heading, empty, modal, version} from './dom.js';
+import {el, button, heading, empty, modal, version, shortRef} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {imageView} from './images.js';
 import {routeHash} from './routes.js';
@@ -77,8 +77,8 @@ export function candidateDesk(app, data) {
     status.replaceChildren(el('div', {class: 'stack'}, el('strong', {}, current ? '这个候选已是当前采用' : live?.generation_basis.status === 'changed' ? '生成依据已变化，暂不能采用' : '候选可比较，采用前请检查事实与数字'),
       el('span', {}, ` · ${candidate.page_id} · ${stageName(candidate.stage)} · 返回 ${clock(candidate.created_at)}`),
       live?.generation_basis.status === 'changed' && el('p', {class: 'field-error'}, `Page、设计、输入或原图依据已变化（${live.generation_basis.changed_fields.join('、')}）。固定比较仍保留；请按新依据重新试作。`),
-      live?.decision?.state === 'keep_current' && !current && live?.status !== 'adopted' && el('p', {class: 'status ok'}, `已保留当前（决定 ${version(live.decision.decision_ref?.sha256)} · ${live.decision.decided_at ? clock(live.decision.decided_at) : ''}）。候选与比较保留，可随时重新打开。`),
-      live?.decision?.state === 'keep_current' && (current || live?.status === 'adopted') && el('p', {class: 'status ok'}, `此前保留决定仍留档（${version(live.decision.decision_ref?.sha256)}）；该候选现已是当前采用，决定不再适用。`),
+      live?.decision?.state === 'keep_current' && !current && live?.status !== 'adopted' && el('p', {class: 'status ok'}, `已保留当前（决定 ${shortRef(live.decision.decision_ref?.sha256)} · ${live.decision.decided_at ? clock(live.decision.decided_at) : ''}）。候选与比较保留，可随时重新打开。`),
+      live?.decision?.state === 'keep_current' && (current || live?.status === 'adopted') && el('p', {class: 'status ok'}, `此前保留决定仍留档（决定 ${shortRef(live.decision.decision_ref?.sha256)}）；该候选现已是当前采用，决定不再适用。`),
       live?.adoption_target.status === 'changed' && !current && el('p', {}, '当前采用产物已更新。这里仍显示原固定比较，重新预览后才能决定是否覆盖新的采用目标。'),
       planInvalid && el('p', {class: 'field-error'}, '项目版本已前进，旧采用计划已禁用。请重新预览；不会重新生成候选。'),
       candidate.status === 'available' && live?.adopted_revisions.length > 0 && el('p', {class: 'muted'}, '曾采用到：' + live.adopted_revisions.map(version).join('、')),

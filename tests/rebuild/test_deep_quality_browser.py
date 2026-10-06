@@ -175,13 +175,14 @@ def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
     page.get_by_label('意见作用范围').select_option('project')
     body.fill('整稿方向已认可')
     write_opinion('整稿方向已认可')
-    # 整稿认可 is a review record, not a page requirement: it stays in its own
-    # collapsed group and cannot be selected into this page's change plan.
-    deck=page.locator('details.saved-group').filter(has_text='整稿认可与章节意见')
+    # 整稿意见 is a review record, not a page requirement: it stays in its own
+    # collapsed group and cannot be selected into this page's change plan. The
+    # label states scope only — approval comes from an explicit decision (F04).
+    deck=page.locator('details.saved-group').filter(has_text='整稿意见与章节意见')
     expect(deck.locator('summary')).to_contain_text('（1）')
     deck.locator('summary').click()
     expect(deck).to_contain_text('整稿方向已认可')
-    expect(deck).to_contain_text('整稿认可不是本页的修改要求')
+    expect(deck).to_contain_text('也不是本页的修改要求')
     expect(deck.get_by_label('选入意见 3')).to_be_disabled()
     # Another page at the current version must not inherit these opinions: they are
     # counted, collapsed and not selectable, with the reason shown. (Saving bumped

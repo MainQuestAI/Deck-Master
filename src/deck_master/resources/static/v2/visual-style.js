@@ -66,7 +66,7 @@ export function visualStyle(app){
       if(disposed||token!==savedCatalogSerial)return;savedTasks=taskPage.tasks.filter(t=>t.kind==='style_analyze');
       savedAnalysis.replaceChildren(el('option',{value:''},'选择已保存分析，不自动切换'),...savedTasks.map(t=>el('option',{value:t.task_id},`${t.instruction.slice(0,45)} · ${t.status==='completed'?'已返回':t.status==='awaiting_host'?'待接手':t.status==='running'?'处理中':'已停止'}`)));
       savedRecipe.replaceChildren(el('option',{value:''},'选择已确认规范，不自动切换'),...versions.recipes.filter(v=>v.recipe.schema_version==='style_recipe.v2').map(v=>el('option',{value:v.recipe.recipe_id},`V${v.recipe.version} · ${v.recipe.input.instruction.slice(0,45)}`)));
-      savedPager.replaceChildren(button('上一组保存任务',()=>{savedTaskPage--;loadSaved();},savedTaskPage===0),el('span',{},`第 ${savedTaskPage+1} 组任务`),button('下一组保存任务',()=>{savedTaskPage++;loadSaved();},taskPage.pagination.next_offset===null));
+      savedPager.replaceChildren(button('上一组保存任务',()=>{savedTaskPage--;loadSaved();},false,{disabled:savedTaskPage===0}),el('span',{},`第 ${savedTaskPage+1} 组任务`),button('下一组保存任务',()=>{savedTaskPage++;loadSaved();},false,{disabled:taskPage.pagination.next_offset===null}));
       controls();
     }catch(error){if(!disposed)status.textContent=readableError(error);}
   }
@@ -100,7 +100,7 @@ export function visualStyle(app){
     check.addEventListener('change',()=>{if(check.checked&&state.ids.length>=5){check.checked=false;status.textContent='一次最多选择5张参考，请先取消一张。';return;}const id=row.reference.reference_id;state.ids=check.checked?[...state.ids,id]:state.ids.filter(x=>x!==id);invalidateAnalysis();persist();renderReferences();});
     const view=imageView(app,row.preview,`参考截图 ${i+1}`);leases.push(view);
     return el('label',{class:'visual-reference-choice'},view.node,el('span',{class:'inline-control'},check,`参考 ${i+1} · ${row.reference.width}×${row.reference.height}`));}));
-    if(pages>1)images.append(el('div',{class:'row wrap'},button('上一组参考',()=>{referencePage--;renderReferences();},referencePage===0),el('span',{},`第 ${referencePage+1} / ${pages} 组 · 已选 ${state.ids.length} 张`),button('下一组参考',()=>{referencePage++;renderReferences();},referencePage===pages-1)));
+    if(pages>1)images.append(el('div',{class:'row wrap'},button('上一组参考',()=>{referencePage--;renderReferences();},false,{disabled:referencePage===0}),el('span',{},`第 ${referencePage+1} / ${pages} 组 · 已选 ${state.ids.length} 张`),button('下一组参考',()=>{referencePage++;renderReferences();},false,{disabled:referencePage===pages-1})));
     controls();}
   async function uploadFile(file,base){
     if(file.size>64*1024*1024)throw new Error('单张截图不能超过64 MiB。');

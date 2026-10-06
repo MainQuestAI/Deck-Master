@@ -187,14 +187,19 @@ export function content(app, data) {
   // Registration, verified extraction, adopted impact and alignment have
   // independent evidence. A stored extract ref alone makes no reading claim.
   // 历史修订不加载当前输入的材料清单：不显示虚假的 0 份断言（评审 reading-P2）。
+  // 新增/调整入口持有明确控件引用（C02/CS-01）：不得用第一个 `.materials-aside
+  // details` 定位——材料卡各自的「调整此材料」折叠会排在它前面；历史版本没有
+  // 当前输入，入口禁用而不是命中不存在的控件。
+  const adjustDetails = !app.readonly&&inputs ? el('details', {class: 'materials-adjust-form'}, el('summary', {}, '调整任务要求与材料'), editable(el('div', {class: 'stack'}, brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),
+      additions.node,reason.node,button('预览材料与任务变化',inputPreview)))) : null;
+  const openAdjustForm = () => { adjustDetails.open = true; additions.input.focus(); };
   const materialAside=el('aside',{class:'panel materials-aside','aria-label':'使用中的材料'},
     el('div',{class:'panel-head'},el('h2',{},'使用中的材料'),el('span',{class:'status'},inputs?(inputs.sources.length+' 份'):'历史版本')),
     el('div',{class:'panel-body stack'},inputs?sourceList:el('p',{class:'muted'},'材料清单按当前输入读取；正在看历史版本，未加载材料列表。'),
       el('p',{class:'muted'},aligned?'当前输入已由内容结果对齐；这不是独立事实核验。':'输入待协调：制作工具尚需按最新材料判断影响。'),
-      !app.readonly&&inputs&&el('details',{},el('summary',{},'调整任务要求与材料'),editable(el('div',{class:'stack'},brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),
-        additions.node,reason.node,button('预览材料与任务变化',inputPreview)))),
+      adjustDetails,
       el('p',{class:'footer-note muted'},'更新材料后，先确认受影响的页面，再比较修改结果。')));
-  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&button('添加材料或调整要求',()=>{const details=node.querySelector('.materials-aside details');details.open=true;details.querySelector('textarea,input,select')?.focus();},!app.readonly)),
+  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&button('添加材料或调整要求',openAdjustForm,false,{disabled:!inputs, title: inputs ? '' : '历史版本不加载当前输入；回到当前版本后再添加材料或调整要求。'})),
     el('div',{class:aligned?'notice':'history-banner'},el('strong',{},aligned?'当前输入已由内容结果对齐':'输入待协调'),el('p',{},aligned?'已有内容结果采用了这一版输入；这不是独立事实核验。':'已保存的稿件仍可阅读。制作工具尚需按最新材料、受众和用途判断影响。')),
     hostImpact,
     el('div',{class:'content-layout'},

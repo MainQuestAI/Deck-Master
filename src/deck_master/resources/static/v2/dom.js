@@ -46,6 +46,9 @@ export async function copyText(text) {
   catch { modal('复制制作要求', el('textarea', {'aria-label': '制作要求', readOnly: true, rows: 10, value: text})); }
 }
 export const version = (revision) => revision ? `R ${revision.slice(0, 8)}` : '当前版本';
+// Non-revision refs (decisions, recipes) must not borrow the "R" revision prefix:
+// the short code aids tracing only and never claims to be a version (C01).
+export const shortRef = (ref) => ref ? String(ref).slice(0, 8) : '未记录';
 export function field(label, input, help = '') {
   input.id ||= `field-${crypto.randomUUID()}`;
   const error = el('p', {class: 'field-error', role: 'alert', id: `${input.id}-error`});

@@ -228,7 +228,7 @@ export class Annotations {
     } else if (this.error.dataset.success) { delete this.error.dataset.success; this.error.textContent = ''; }
     // The effective target stays above the input: object, scope and the basis
     // version the note will be written against.
-    const target = {project: '整稿认可（项目范围）', chapter: '章节意见', page: '本页整页意见', artifact: `当前图稿（${layers[this.layer]}）`}[this.scope.value] || this.scope.value;
+    const target = {project: '整稿意见（项目范围）', chapter: '章节意见', page: '本页整页意见', artifact: `当前图稿（${layers[this.layer]}）`}[this.scope.value] || this.scope.value;
     this.basis.textContent = `${target} · 底稿 ${version(this.data.revision_id)} · 草稿区域 ${this.regions.length} 个` + (this.editor && !this.basisMatches() ? '。恢复稿属于其它基准：先回原版本，或用「对当前版本写新意见」复制文字后保存；原有范围不迁移。' : this.app.historical && this.editor && !this.editor.readonly ? '。原内容只读；新意见仍绑定这里的原版本。' : '');
     const editorNotice = this.editor?.noticeText?.() || (!this.editor ? '先选择明确的原文基准，再填写意见。'
       : this.editor.readonly ? '此处只读，输入不会保存；可下载已有草稿，或回到可编辑的当前版本。'
@@ -341,7 +341,7 @@ export class Annotations {
       button(`删除区域 ${index + 1}`, () => { this.regions.splice(index, 1); this.changed(); }, false, {disabled: !this.basisMatches() || this.editor?.readonly})))); this.draw();
   }
   scopeName(note) {
-    if (note.scope === 'project') return '整稿认可';
+    if (note.scope === 'project') return '整稿意见';
     if (note.scope === 'chapter') return '章节意见';
     if (note.scope === 'page') return '本页整页意见';
     return `当前图稿（${layers[note.layer] || note.layer}）`;
@@ -361,8 +361,8 @@ export class Annotations {
       {key: 'other_pages', title: '其它页面的局部意见', open: false, selectable: false,
        reason: '此意见属于其它页面，不能选入本页的修改计划。',
        rows: notes.filter(row => ['page', 'artifact'].includes(row.note.scope) && row.note.page_id && row.note.page_id !== page)},
-      {key: 'whole_deck', title: '整稿认可与章节意见', open: false, selectable: false,
-       reason: '整稿认可不是本页的修改要求；如要修改本页，请另写本页意见。',
+      {key: 'whole_deck', title: '整稿意见与章节意见', open: false, selectable: false,
+       reason: '整稿意见是范围记录，不表示已认可整稿，也不是本页的修改要求；如要修改本页，请另写本页意见。',
        rows: notes.filter(row => ['project', 'chapter'].includes(row.note.scope))},
     ];
     for (const group of groups) if (!group.selectable) for (const row of group.rows) this.selected.delete(row.record.ref.sha256);
