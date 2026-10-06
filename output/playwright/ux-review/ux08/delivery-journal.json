@@ -44,7 +44,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/overview?revision=f93a8e9d38aa4ba186c84a600828b223"
+      "path": "/api/overview?revision=8e31d8c5a9b343d38d2094273e2f4850"
     },
     {
       "method": "GET",
@@ -52,7 +52,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/content-plan?revision=f93a8e9d38aa4ba186c84a600828b223"
+      "path": "/api/content-plan?revision=8e31d8c5a9b343d38d2094273e2f4850"
     },
     {
       "method": "GET",
@@ -84,11 +84,11 @@
     },
     {
       "method": "GET",
-      "path": "/api/tasks?revision=f93a8e9d38aa4ba186c84a600828b223&limit=30&personal=1&reading_etag=e7c159d9b37364094d068f3eaaf3d03805995a2be7bea0422b273bf650a8de96"
+      "path": "/api/tasks?revision=8e31d8c5a9b343d38d2094273e2f4850&limit=30&personal=1&reading_etag=b1c04a7bdc953cc08e18c4108df5649838ffaa084c748b34f4affca3f0c5c23f"
     },
     {
       "method": "GET",
-      "path": "/api/history?revision=f93a8e9d38aa4ba186c84a600828b223&limit=20"
+      "path": "/api/history?revision=8e31d8c5a9b343d38d2094273e2f4850&limit=20"
     },
     {
       "method": "POST",
@@ -116,7 +116,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/tasks?limit=30&offset=0&personal=1&reading_etag=e7c159d9b37364094d068f3eaaf3d03805995a2be7bea0422b273bf650a8de96"
+      "path": "/api/tasks?limit=30&offset=0&personal=1&reading_etag=b1c04a7bdc953cc08e18c4108df5649838ffaa084c748b34f4affca3f0c5c23f"
     },
     {
       "method": "POST",

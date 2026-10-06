@@ -56,9 +56,12 @@ export class Annotations {
       placeholder: '写下这条意见要改什么。输入会自动保留；保存后进入正式记录。'}));
     this.bodyField.input.addEventListener('input', () => this.changed());
     this.notice = el('p', {class: 'muted annotation-notice', hidden: true});
-    const secondaryActions = el('details', {class: 'opinion-secondary'}, el('summary', {}, '草稿操作'),
+    // TA-03/§4.5：正常输入与维护设施分层——草稿操作与私人笔记属于本机维护，
+    // 由页面把它们与「恢复、下载与版本详情」放在同一个维护区，意见面板只留
+    // 写作、阅读与选入。异常发生时私人笔记就近展开（见 syncFromDraft）。
+    this.draftActions = el('details', {class: 'opinion-secondary'}, el('summary', {}, '草稿操作'),
       el('div', {class: 'stack'}, this.newButton, this.copyNoteButton));
-    this.actions = el('div', {class: 'row wrap opinion-actions'}, this.saveButton, secondaryActions);
+    this.actions = el('div', {class: 'row wrap opinion-actions'}, this.saveButton);
     const annotationSettings = el('details', {class: 'annotation-settings'}, el('summary', {}, '范围与标注工具'),
       el('div', {class: 'stack'}, el('div', {class: 'row wrap opinion-meta'}, this.scopeLabel, this.intent.node, this.chapter),
         el('p', {class: 'muted annotation-mobile-note'}, '点标注与框选需要桌面宽度；窄屏可用「整页意见」文字描述位置。'),
@@ -67,6 +70,7 @@ export class Annotations {
       {class: 'opinion-start'});
     this.noteEntry = el('details', {class: 'note-entry'},
       el('summary', {}, '私人笔记（不进入意见与制作）'), draftSlot);
+    this.maintenanceNodes = [this.noteEntry, this.draftActions];
     this.node.append(el('div', {class: 'panel-head'}, el('h2', {}, '标注与意见')),
       el('div', {class: 'panel-body stack'}, this.basis, this.notice,
         this.startOpinion,
@@ -74,7 +78,7 @@ export class Annotations {
         // The save row sits with the input it saves, before the optional region
         // tools, so writing and saving stay in one screen.
         this.actions, this.error, this.modeHint,
-        annotationSettings, this.noteEntry,
+        annotationSettings,
         el('p', {class: 'muted field-help'}, '保存意见不启动制作；选入已保存意见后再预览修改计划。'),
         el('h3', {}, '已保存意见'), this.listNotice, this.listRetry, this.savedList,
         this.requirementSection, this.preview));
@@ -118,6 +122,14 @@ export class Annotations {
     });
   }
   syncFromDraft(force = false) {
+    // 草稿"进入"冲突状态的那一刻就近展开维护项：差异比较与恢复动作就在私人笔记里，
+    // 用户不必先猜到要打开它。未确认的保存已由顶部待核实面板说明，不重复抢展开；
+    // 再往后一切以用户开关为准（重复自动打开会与用户操作互相打架）。
+    const status = this.editor?.status;
+    if (status !== this.draftStatus) {
+      if (status === 'conflict') this.noteEntry.open = true;
+      this.draftStatus = status;
+    }
     const content = this.editor?.draft.content || {}, state = content.annotation, key = canonical({annotation: state, requirement: content.requirement});
     if (!force && key === this.savedMetadata) return;
     this.savedMetadata = key; this.regions = structuredClone(state?.regions || []);

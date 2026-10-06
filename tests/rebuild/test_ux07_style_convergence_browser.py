@@ -16,7 +16,8 @@ from deck_master.web import WorkbenchServer
 pytestmark = pytest.mark.browser
 
 EVIDENCE = Path(__file__).resolve().parents[2] / 'output/playwright/ux-review'
-WIDTHS = [1440, 1280, 390]
+# AC23 规范给的是 1440/1280 桌面与 390×844 手机三种视口。
+VIEWPORTS = [(1440, 900), (1280, 800), (390, 844)]
 
 MEASURE = """selector => Array.from(document.querySelectorAll(selector))
   .filter(node => node.getClientRects().length && node.getBoundingClientRect().height > 0)
@@ -54,13 +55,13 @@ def assert_touch_targets(page, selector):
     assert not small, f'{selector} 存在小于 44px 的触点: {small}'
 
 
-@pytest.mark.parametrize('width', WIDTHS)
-def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser, width):
+@pytest.mark.parametrize('width,height', VIEWPORTS)
+def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser, width, height):
     from playwright.sync_api import expect
     page, server, path, store = ux07_browser
     url = server.start()
     EVIDENCE.mkdir(parents=True, exist_ok=True)
-    page.set_viewport_size({'width': width, 'height': 900})
+    page.set_viewport_size({'width': width, 'height': height})
     page.goto(url)
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
 
@@ -101,3 +102,16 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     expect(page.get_by_role('button', name='版本', exact=True)).to_have_attribute('aria-pressed', 'true')
     expect(page.locator('.history-identity')).to_contain_text('选中：')
     page.screenshot(path=str(EVIDENCE / f'ux07-{width}-runs-versions.png'), full_page=False)
+
+    # AC23 剩余：受影响消费者一并检查——画廊与内容面同样不能横向溢出，
+    # 主要动作触点 ≥44px，字体回退来自 token（中文界面要有中文字族）。
+    fonts = page.evaluate('() => getComputedStyle(document.body).fontFamily')
+    assert 'PingFang SC' in fonts or 'Noto Sans CJK SC' in fonts or 'Microsoft YaHei' in fonts, fonts
+    for surface, heading, selector in [('整稿画廊', '整稿画廊', '.gallery-controls button'),
+                                       ('内容与来源', '内容与来源', '.content-sources button')]:
+        page.get_by_role('button', name=surface, exact=True).click()
+        page.get_by_role('heading', name=heading, exact=True).wait_for()
+        page.wait_for_timeout(300)
+        assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth + 1'), f'{surface} 横向溢出'
+        assert_touch_targets(page, selector)
+        page.screenshot(path=str(EVIDENCE / f'ux07-{width}-{surface}.png'), full_page=False)

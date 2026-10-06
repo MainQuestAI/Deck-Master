@@ -161,6 +161,13 @@ textarea{font-size:14px;line-height:1.7}
 .run-pagination, .candidate-pagination { justify-content: space-between; }
 
 .run-rows:not([hidden]), .candidate-batch-rows { max-height: 480px; overflow: auto; overscroll-behavior: contain; }
+/* F16/AC23 剩余：`.stack` 是共同行为里使用最广的类（41 个模块都在用），
+   但当前 CSS 没有任何基础规则——`<label class="stack">` 会退化成 inline 行框压住
+   相邻内容（UX-03b 记录过一次），`hidden` 在 `.stack` 上也会被任何作者规则盖掉。
+   这里补一条最小基础规则：垂直块级流 + hidden 守卫，不改变现有块级布局计算。 */
+.stack { display: block; }
+.stack[hidden] { display: none; }
+
 /* AC06/§2.1：长列表选页时摘要与配置入口吸附在顶部，滚到第 28 页也够得着。 */
 .overview-selection-bar[hidden] { display: none; }
 .overview-selection-bar { position: sticky; top: 0; z-index: 3; align-items: center; gap: 12px;
@@ -184,7 +191,6 @@ textarea{font-size:14px;line-height:1.7}
 /* F16/N04：.stack 无基础 display 规则（CSS 漂移），样式面里的 label.stack 退化为
    inline，行框会压进上方 .style-working-pair 网格并遮挡参考缩略图选择框。
    最小作用域修复：样式面内的堆叠标签恢复块级。 */
-.style-calibration label.stack { display: block; }
 .style-calibration .evidence-json { max-height: 320px; overflow: auto; }
 .style-calibration .row > input:not([type=checkbox]) { flex: 1; min-width: 180px; }
 

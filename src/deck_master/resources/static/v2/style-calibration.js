@@ -352,6 +352,10 @@ export function style(app) {
       if (saved) hydrateState(saved); else renderTargets();
       if (app.styleSelection && !app.readonly) {
         const seed = app.styleSelection; delete app.styleSelection;
+        // N09：带选页进来就是要用项目内参考/目标——显式动作覆盖记住的来源偏好，
+        // 否则刚才用过截图来源的用户会落在截图上而看不到带进来的页。
+        source.value = 'page'; switchSource();
+        try { localStorage.setItem('deck-master:style-source:' + app.info.project_identity, 'page'); } catch { /* 偏好写入失败不阻塞带页进入 */ }
         const validContext = (!seed.project_identity || seed.project_identity === app.info.project_identity) && (!seed.revision || seed.revision === app.route.revision);
         const validTargets = (seed.target_ids || []).every(id => pages.some(page => page.page_id === id)) && (!seed.target_refs || seed.target_refs.length === seed.target_ids.length && seed.target_refs.every(ref => canonical(ref.page_ref) === canonical(pages.find(page => page.page_id === ref.page_id)?.stages.content.ref)));
         if (validContext && validTargets) {

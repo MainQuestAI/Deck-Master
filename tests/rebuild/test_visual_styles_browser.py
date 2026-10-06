@@ -211,7 +211,8 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             # 并等参考列表读取完成（恢复与列表读取是两个独立请求）。
             open_visual_phase(page, 0)
             expect(page.locator('.visual-reference-choice')).to_have_count(1, timeout=15000)
-            expect(page.get_by_role('checkbox', name='选用参考截图 1', exact=True)).to_be_checked()
+            # 参考选择由草稿恢复写入：整机负载下要比默认等待更宽（状态本身不放松）。
+            expect(page.get_by_role('checkbox', name='选用参考截图 1', exact=True)).to_be_checked(timeout=15000)
             expect(page.get_by_role('combobox', name='截图风格试作目标')).to_have_value('p02')
             expect(page.get_by_role('textbox', name='截图风格要求')).to_have_value('Cross-origin recovery: preserve complete body')
             open_visual_phase(page, 1)

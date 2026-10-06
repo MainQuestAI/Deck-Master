@@ -194,7 +194,8 @@ export function pageDetail(app, data) {
     const download = draftView.querySelector('.panel-body > .row button:last-child');
     if (download) recovery.append(download);
     draftView.querySelectorAll('.recovery-import, .field-help, .draft-restore').forEach(control => recovery.append(control));
-    noteRecovery.replaceChildren(recovery);
+    // 维护区顺序：私人笔记与草稿操作（意见面板移交）→ 恢复、下载与版本详情。
+    noteRecovery.replaceChildren(...(annotations?.maintenanceNodes || [draftSlot]), recovery);
     draftSlot.replaceChildren(draftView);
     annotations?.bind(app.editor, ref);
     if (text !== null) draftSlot.append(button('比较原文与草稿', () => {
@@ -215,6 +216,8 @@ export function pageDetail(app, data) {
   if (app.business && app.health.ui_capabilities?.includes('annotations.v1') && layer !== 'source') {
     annotations = new Annotations(app, data, layer, original, draftSlot);
     if (app.editor) annotations.bind(app.editor, draftRef);
+    // 面板可能在草稿绑定之后才建立：这里把它的维护项补进维护区（顺序在恢复入口之前）。
+    noteRecovery.prepend(...annotations.maintenanceNodes);
     aside.append(annotations.node); app.disposables.push(() => annotations.dispose());
   } else aside.append(draftSlot);
   aside.append(noteRecovery);
