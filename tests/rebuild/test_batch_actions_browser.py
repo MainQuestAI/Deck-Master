@@ -131,8 +131,11 @@ def test_lost_commit_response_verify_original_receipt_reload_never_redispatches(
     page.reload()
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     expect(page.locator('.business-pending')).to_be_visible()
-    assert page.get_by_role('checkbox', name='选择第 01 页', exact=True).is_checked() is False
-    assert page.get_by_role('textbox', name='所选页的制作要求').input_value() == ''
+    # D1 keeps the selection across reload; the working requirement is restored
+    # with it (AC08). The lost commit must still wait for explicit verification
+    # instead of being replayed or silently applied.
+    expect(page.get_by_role('checkbox', name='选择第 01 页', exact=True)).to_be_checked()
+    assert page.get_by_role('textbox', name='所选页的制作要求').input_value() == '保留事实与数字，统一标题层级。'
     page.get_by_role('button', name='核实保存结果', exact=True).click()
     expect(page.locator('.business-pending')).to_be_hidden()
     assert len(requests) == 1 and len(store.load_document()['tasks']) == len(before_tasks) + 2

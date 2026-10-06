@@ -16,8 +16,14 @@ export class OverviewMemory {
     app.overviewMemories.set(this.key, this);
     app.overviewSession ||= new Map();
     const initial = app.route.overview_preferences || saved.record?.state || ((!this.supported || saved.error) && app.overviewSession.get(this.key)) || {search:'', filter:'all', sort:'ascending'};
+    // D1：批量选择随个人阅读状态持久化（ui_overview.v1 的可选字段）。URL 只承载
+    // 阅读偏好，不承载选择；刷新后选择从已保存状态恢复。恢复选择只恢复"选中了
+    // 谁"，不恢复可提交计划（计划仍需重新预览）。
+    const savedSelection = saved.record?.state?.selected_page_ids;
     this.state = {schema_version:'ui_overview.v1', project_id:app.info.project_id, project_identity:app.info.project_identity,
-      revision_id:app.route.revision, ...reading(initial)};
+      revision_id:app.route.revision, ...reading(initial),
+      selected_page_ids: Array.isArray(savedSelection) ? savedSelection
+        : Array.isArray(initial.selected_page_ids) ? initial.selected_page_ids : []};
     this.error = saved.error || null;
     this.message = this.error ? '总览偏好暂不可读；当前输入保留，可重试读取或下载。' : this.supported ? '个人总览阅读偏好' : '当前核心未提供偏好保存；仅保留本窗口会话。';
     // Opening a link only reads preferences. Explicit edits trigger saves.
@@ -63,7 +69,9 @@ export class OverviewMemory {
   }
   useWindow(saved) { this.etag = saved.etag; this.error = null; this.pending = null; this.dirty = true; this.flush(); }
   useSaved(saved) {
-    this.state = {...this.state, ...reading(saved.record?.state || {search:'',filter:'all',sort:'ascending'})};
+    const savedState = saved.record?.state || {search:'',filter:'all',sort:'ascending'};
+    this.state = {...this.state, ...reading(savedState),
+      selected_page_ids: Array.isArray(savedState.selected_page_ids) ? savedState.selected_page_ids : []};
     this.etag = saved.etag; this.pending = null; this.error = null; this.dirty = false;
     this.app.overviewSession.set(this.key, reading(this.state)); this.message = '已读取项目保存的总览偏好'; this.notify();
   }

@@ -14,6 +14,12 @@ export function batchActions(app, selected, onSelectionChange) {
   const toolbar = el('label', {class: 'row'}, '选页用于', action);
   const notice = el('p', {role: 'status'}), excluded = el('div', {class: 'stack'}), impact = el('div', {class: 'stack batch-impact'});
   const instruction = el('textarea', {rows: 2, maxLength: 4000, 'aria-label': '所选页的制作要求', placeholder: '写明本次需要修改的内容和应保留的内容。'});
+  // 返回/刷新后要求保留（F05/AC06）：要求是个人工作配置，保存在本机项目键下；
+  // 它不是业务草稿，也不进入任何提交 payload，直到用户明确预览。
+  const workingKey = 'deck-master:overview-working:' + app.info.project_identity;
+  try { const storedWorking = JSON.parse(localStorage.getItem(workingKey) || '{}'); if (typeof storedWorking.instruction === 'string') instruction.value = storedWorking.instruction; } catch { /* 读取失败则从空要求开始 */ }
+  const saveWorking = () => { try { localStorage.setItem(workingKey, JSON.stringify({instruction: instruction.value})); } catch { /* 要求保留在本页 */ } };
+  instruction.addEventListener('input', saveWorking);
   const reference = el('select', {'aria-label': '批量固定参考原图'}, el('option', {value: ''}, '不指定参考，进入风格面后仍可确认'));
   const refs = new Map();
   for (const page of pages) if (page.stages.blueprint?.existence === 'recorded' && page.stages.blueprint.file) {
@@ -43,7 +49,7 @@ export function batchActions(app, selected, onSelectionChange) {
     const unavailable = exclusions(), image = action.value === 'blueprint', style = action.value === 'style';
     const saving = !editor || editor.disposed || editor.readonly || ['loading', 'unknown', 'conflict', 'saving'].includes(editor.status);
     const calls = Number(budget.value), budgetInvalid = image && (!Number.isInteger(calls) || calls < selected.size || calls > 300);
-    notice.textContent = selected.size ? `${selected.size} 页用于${batchNames[action.value]}${unavailable.length ? `，其中 ${unavailable.length} 页需要调整范围` : ''}。` : '先选择动作，再勾选此动作允许处理的页面。选页不会自动执行或在刷新后恢复。';
+    notice.textContent = selected.size ? `${selected.size} 页用于${batchNames[action.value]}${unavailable.length ? `，其中 ${unavailable.length} 页需要调整范围` : ''}。` : '先选择动作，再勾选此动作允许处理的页面。选页不会自动执行；已选范围随个人阅读状态保留，计划仍需重新预览。';
     excluded.replaceChildren(...(unavailable.length ? [el('p', {class: 'field-error'}, '未自动忽略任何页。明确调整范围后才可预览：'),
       el('ul', {}, unavailable.map(item => el('li', {}, label(item.id) + '：' + item.reason))),
       button('移除列出的受限页', () => { unavailable.forEach(item => selected.delete(item.id)); invalidate(); onSelectionChange(); })] : []));
