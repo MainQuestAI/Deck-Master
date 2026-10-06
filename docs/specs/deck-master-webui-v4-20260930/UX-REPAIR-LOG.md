@@ -41,22 +41,24 @@
 
 同步：`DESIGN.md` D1 一句已改；`test_batch_actions_browser.py`、`test_overview_preferences_browser.py` 两条旧规则断言按 D1 更新并注明。
 
-## UX-03 · 风格与候选切片（进行中——命名/身份部分已实施，AC09–AC12 反例未完成）
+## UX-03 · 风格与候选切片（已完成：AC09–AC12）
 
-已实施的修复（待最终回归确认后提交）：
+已实施的修复：
 
 - N07：截图路线的已保存分析/已确认规范选项在恢复前可区分——分析选项加任务短尾，规范选项加目标页数与配方短尾（`visual-style.js`）。
 - ST-05：同页候选比较按钮加候选短码（`比较 <页名> · <ref 前 8 位>`），不再完全同名（`visual-style.js`）。
 - N08：修改组在交接面板与运行筛选中共享同一短尾与"页数"计数（modern 模式两处同源于 `/api/tasks` 分组），选择前可对上（`change-handoff.js` + `run-desk.js`）。
 - N06：任务详情的快捷阅读按任务种类进入产物层——reconstruct/repair → SVG、compose → 正文、blueprint → 原图，按钮名注明层（`run-desk.js`）。
 
-- N06：任务详情的快捷阅读按任务种类进入产物层——reconstruct/repair → SVG、compose → 正文、blueprint → 原图，按钮名注明层（`run-desk.js`）。
-
 反例测试：`test_ux03_style_candidate_browser.py`——同名规范选项可区分（mock `/api/styles`）、修改组跨面短尾一致、SVG 任务快捷入口 `layer=svg`。
 
 同步：`test_overview_state.py` 的"必拒字段"参数化按 D1 更新——`selected_page_ids` 成为合法阅读字段后，改用其非法值（非字符串项、超长项、非数组）保留拒绝覆盖，并新增"合法选择可持久化且不动业务事实"的直接断言；`test_ui_design_browser.py` 的键盘连续性测试按 D1 改为"搜索后第 02 页仍选中"。
 
-**尚未完成**：AC11（同页两候选快速切换与晚回包的候选台反例）、AC12（扩展计划的拒绝路径）、AC09 的"五维/七维目标与来源正确"全场景走查。这些需要候选台/扩展计划的专用夹具，是 UX-03 剩余工作；在完成前不视为已验收。
+- **AC09/AC10（截图路线恢复与规范核对）**：截图路线恢复 `style_recipe.v2` 后，拆解图可完整查看，借用/保留维度默认借用配色与文字层级，证据按"已观察/待核实"呈现，近似字体判断如实标注；样例选择只列已采用候选（确认规范不显示为已采用页面）；同页两候选比较按钮以短码区分；项目内配方传入截图路线被明确拒绝（"这不是截图视觉规范"）。v1 路线的恢复与试作流程由既有 `test_style_content_browser.py` 覆盖。
+- **AC11（候选台反例）**：同页两候选快速切换后展示对象随选择切换；候选 2 的状态回包晚到（先切回候选 1 再放行回包）时被代次守卫丢弃，展示对象与固定比较不变；读取期间保留/采用/预览停用且显示"正在读取所选候选"；采用计划与保留决定的 payload 均绑定当时展示的候选（捕获 `/api/candidates/plan`、`/api/candidates/decision` 请求体断言）。
+- **AC12（扩展拒绝路径）**：核心侧拒绝（错配方、未选页/参考页、目标基准变化使样例失效、非当前采用候选）由既有 `test_styles.py::test_unselected_or_reference_page_and_other_recipe_cannot_expand` 与 `test_visual_style_freshness.py::test_self_adoption_permits_expansion_but_later_target_changes_invalidate_sample` 覆盖；新增 UI 腿反例——扩展请求 payload 绑定仍采用样例与明确选页（`adopted_candidate_id`、`page_ids`），`style_conflict` 拒绝以业务翻译呈现（"风格要求或目标页基准已变化……"）而非原始失败。
+
+**UX-03 完成**：AC09–AC12 全部有通过的反例与回归；F07/F08/F09 的实现落点为命名身份修复 + 既有守卫/恢复机制的验收。
 
 ## UX-04–UX-08（未实施）
 

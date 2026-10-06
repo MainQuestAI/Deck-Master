@@ -240,3 +240,120 @@ def test_screenshot_route_refuses_a_project_recipe_with_a_clear_message(ux03_bro
       select.dispatchEvent(new Event('change'));
     }""")
     expect(page.locator('.visual-style p[role=status]')).to_contain_text('这不是截图视觉规范')
+
+
+def test_candidate_desk_rapid_switch_late_reply_and_decisions_target_displayed_object(ux03_browser):
+    """AC11：同页两候选快速切换与晚回包；比较两侧保持固定；采用/保留只针对展示对象。"""
+    import json
+    import re
+    from playwright.sync_api import expect
+    from test_candidates import candidate
+    page, server, path, store = ux03_browser
+    url = server.start()
+    cid1 = candidate(store, width=20)
+    cid2 = candidate(store, width=24)
+    assert cid1 != cid2
+    plan_bodies, decision_bodies = [], []
+    page.route('**/api/candidates/plan', lambda route: (plan_bodies.append(route.request.post_data_json), route.continue_()))
+    page.route('**/api/candidates/decision', lambda route: (decision_bodies.append(route.request.post_data_json), route.continue_()))
+
+    def desk_id():
+        return page.locator('.candidate-desk').get_attribute('data-candidate-id')
+
+    page.goto(url)
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: 'p01', layer: 'svg', candidate: args[1], revision: args[2]})}",
+                  [page.request.get(url.rstrip('/') + '/api/project').json()['project_identity'], cid1, store.current_revision_id()])
+    expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', cid1)
+
+    # 快速切换：候选 2 正常应用，展示对象随之切换。
+    page.get_by_label('选择本页候选').select_option(index=1)
+    expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', cid2)
+
+    # 采用/保留只针对展示对象：payload 绑定候选 2。
+    page.get_by_role('button', name='预览采用这个候选', exact=True).click()
+    expect(page.locator('.candidate-impact')).to_contain_text('本次采用 1 页')
+    assert plan_bodies and plan_bodies[-1]['input']['candidate_ids'] == [cid2]
+    page.get_by_role('button', name='保留当前', exact=True).click()
+    expect(page.locator('.candidate-state')).to_contain_text('已保留当前')
+    assert decision_bodies and decision_bodies[-1]['input']['candidate_id'] == cid2
+
+    # 切回候选 1，再让候选 2 的状态回包晚到：晚回包被丢弃，展示对象不变。
+    page.get_by_role('button', name='刷新候选与当前状态', exact=True).click()
+    held = []
+    page.route(f'**/api/candidates/{cid2}', lambda route: held.append(route))
+    page.get_by_role('button', name='刷新候选与当前状态', exact=True).click()
+    page.get_by_label('选择本页候选').select_option(index=0)
+    expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', cid1)
+    assert held, '候选 2 的状态请求应处于挂起状态'
+    late_route = held.pop(0)
+    late_route.fulfill(response=late_route.fetch())
+    page.wait_for_timeout(300)
+    expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', cid1)
+    expect(page.locator('.candidate-state')).to_contain_text('候选可比较')
+
+    # 读取期间动作禁用：先拦截候选 2 的详情，再切换——比较两侧保持候选 1 的
+    # 固定画面，保留/采用停用；放行详情后候选 2 才应用。
+    held2 = []
+    page.unroute(f'**/api/candidates/{cid2}')
+    page.route(f'**/api/candidates/{cid2}', lambda route: held2.append(route))
+    page.get_by_label('选择本页候选').select_option(index=1)
+    expect(page.locator('.candidate-impact')).to_contain_text('正在读取所选候选')
+    expect(page.get_by_role('button', name='保留当前', exact=True)).to_be_disabled()
+    expect(page.get_by_role('button', name='预览采用这个候选', exact=True)).to_be_disabled()
+    expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', cid1)
+    late2 = held2.pop(0)
+    late2.fulfill(response=late2.fetch())
+    expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', cid2)
+
+
+def test_expansion_plan_carries_adopted_sample_and_explains_core_rejection(ux03_browser):
+    """AC12：扩展请求绑定仍采用样例与明确选页；核心拒绝时 UI 给出准确解释。
+
+    核心侧拒绝路径（错配方、未选页/参考页、目标基准变化使样例失效）由
+    test_styles.py 与 test_visual_style_freshness.py 覆盖；本反例验证 UI 层：
+    扩展请求的 payload 绑定样例，style_conflict 显示业务翻译而非原始失败。
+    """
+    import json
+    from playwright.sync_api import expect
+    from test_candidates import candidate
+    page, server, path, store = ux03_browser
+    recipe_sha = 'e' * 64
+    recipe = v2_recipe(1)
+    recipe['input']['target_page_ids'] = ['p01', 'p03']
+    recipes = [{'recipe': recipe, 'ref': {'sha256': recipe_sha}}]
+    detail = {'recipe': recipe, 'ref': {'sha256': recipe_sha}}
+    rows = [candidate_row(1, 'p01', 'adopted', recipe_sha)]
+    install_style_mocks(page, recipes=recipes, detail=detail, candidates=rows)
+    plan_posts = []
+
+    def plan_rejection(route):
+        plan_posts.append(route.request.post_data_json)
+        route.fulfill(status=409, content_type='application/json', body=json.dumps({'error': {
+            'code': 'style_conflict', 'field': 'targets',
+            'message': 'selected target bases changed; unaffected targets remain readable',
+            'details': {'items': [{'page_id': 'p03', 'cause': 'generation_basis_changed'}]}}}))
+    page.route('**/api/styles/plan*', plan_rejection)
+
+    page.goto(server.start())
+    page.get_by_role('button', name='风格校准', exact=True).click()
+    page.get_by_role('heading', name='风格校准', exact=True).wait_for()
+    page.get_by_label('风格参考来源').select_option('screenshot')
+    restore = page.get_by_text('恢复项目中的截图分析与规范', exact=True)
+    restore.scroll_into_view_if_needed()
+    restore.click()
+    page.get_by_label('已确认的截图规范').select_option(index=1)
+    expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+
+    # 从仍采用样例扩展到明确选页：请求绑定样例与目标页。
+    page.get_by_text('采用样例后扩展', exact=True).click()
+    sample = page.get_by_label('已采用的截图风格样例')
+    expect(sample.locator('option')).to_have_count(2)
+    sample.select_option(index=1)
+    expansion = page.get_by_label('本次扩展到', exact=False)
+    expansion.check()
+    page.get_by_role('button', name='预览所选页扩展', exact=True).click()
+    expect(page.locator('.visual-style p[role=status]')).to_contain_text('风格要求或目标页基准已变化')
+    assert plan_posts, '扩展计划请求应已发出'
+    sent = plan_posts[-1]['input']
+    assert sent['adopted_candidate_id'] == 'candidate-0000000000000001' and sent['page_ids'] == ['p03']
