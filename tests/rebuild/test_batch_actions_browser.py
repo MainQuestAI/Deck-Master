@@ -100,6 +100,8 @@ def test_explicit_budget_exact_plan_and_duplicate_click_create_one_batch(batch_b
     assert store.load_document() == before
     page.get_by_role('button', name='保存并交接所选试作', exact=True).evaluate('(button) => {button.click(); button.click();}')
     expect(page.locator('.batch-impact')).to_contain_text('已保存 2 项待交接任务，尚未开始制作')
+    # D1（评审裁决）：交接成功后制作要求清空，不再预填下一批。
+    assert page.get_by_role('textbox', name='所选页的制作要求').input_value() == ''
     assert len(commits) == 1
     doc = store.load_document()
     tasks = [store.read_object_json(ref) for ref in doc['tasks'] if ref not in before['tasks']]

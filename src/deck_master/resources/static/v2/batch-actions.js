@@ -104,6 +104,10 @@ export function batchActions(app, selected, onSelectionChange) {
       await app.business.submit(editor, 'changes.commit', {plan_id: approved.plan_id, base_revision: approved.plan.base_revision}, {plan_id: approved.plan_id, plan: approved.plan}, result => {
         if (disposed || token !== serial) return;
         plan = null;
+        // D1（评审裁决）：交接成功即周期结束——清空制作要求，防止旧要求/旧预算
+        // 预填进下一批页面。刷新与版本前进期间的留存语义不变（AC08）。
+        instruction.value = '';
+        try { localStorage.removeItem(workingKey); } catch { /* 存储不可用时以输入框为准 */ }
         impact.replaceChildren(el('p', {class: 'success-note'}, `已保存 ${result.task_ids.length} 项待交接任务，尚未开始制作。`),
           button('查看本次交接', () => app.go({surface: 'runs', revision: result.revision_id, task_id: result.task_ids.length === 1 ? result.task_ids[0] : null, candidate_id: null})));
       });
