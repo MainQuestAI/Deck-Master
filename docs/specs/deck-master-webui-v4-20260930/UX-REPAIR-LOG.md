@@ -95,3 +95,24 @@
 - **F16/CSS 诊断记录**（作为诊断基线，不设替代目标）：六份运行 CSS 的简单扫描——font-size 逐文件为 7/3/40/87/0/72（共 209，全部直接 px）；@media 7 类（绝大多数为 767px 窄屏降级）；裸色值主要残留在 studio.css（82，多为原设计 maroon 调试残留）与 tokens.css（15，本身是 token 定义处）；重复选择器集中于 shell/sidebar/topbar/nav 布局覆盖层（studio.css 对既有结构的覆盖）。本包随实际改动新增的规则仅 `.annotation-mobile-note` 一条全局 + 局部媒体查询调整，均有具名消费者（AC22）。
 - **AC23 覆盖核对**：三视口（1280×800、1440×900、390×844）×七工作面几何与横向溢出检查由 `test_work_surface_browser.py::test_seven_surfaces_at_all_acceptance_sizes`（21 项）覆盖；矩阵标题/控件几何与 44px 命中区由 `test_ui_design_browser.py` 覆盖；字体仅用合法随包资产或系统回退（DESIGN.md 视觉规则，未新增字体依赖）；`test_ux06` 的 390px 路径补齐窄屏标注链路。
 
+## UX-08 · 组合验收与交付结论（AC24）
+
+**组合作业草稿**：基线 `4fefd0b3`（codex/v1-rc-closure）→ 实施 12 个提交（`151be8d`…`4352ba4`，见下表包来源），全部工作包对应同一分支 `codex/webui-ux-repair`。
+
+**同一组合的最终验证**（2026-10-06，串行执行，工作树 0 处未提交变化）：
+
+| 覆盖 | 结果 | 证据 |
+|---|---|---|
+| 功能与数据行为（非浏览器） | 1284 passed | /tmp/ux08-nonbrowser.log；3 个失败均为环境备注所列的预存项（2 个本机 Host 边界，1 个 venv 可编辑安装指向主仓库），逐一在干净基线复现过 |
+| 真实浏览器（Chromium） | 162 passed | /tmp/ux08-browser.log；0 失败——含此前记录的 damaged reading（测试导航缺陷已修正） |
+| 任务体验（五工作面走查反例） | 36 条新反例通过 | test_ux00_fixes_browser、test_ux02_batch_slice_browser、test_ux03_style_candidate_browser、test_ux04_content_annotations_browser、test_ux05_runs_delivery_browser、test_ux06_recovery_responsive_browser、test_ux06_gallery_conflict_browser |
+
+**包来源（每包对应的提交）**：UX-00=151be8d；UX-01=26ece27；UX-02=cb1162c；UX-03=e1ae4bc+ce7a278+288846c；UX-04=9242282；UX-05=7d3c3ea；UX-06=1d50063+e75a1fe；UX-07=4352ba4；UX-08=本提交；决定记录 D1–D4 在 UX-01 提交内。
+
+**按结论类别的诚实边界**：
+
+- *功能与数据行为*：上表通过数覆盖 UX 反例与全部既有回归（除 3 个预存环境项）。历史 E1/E2 保护（撤销/迟到/幂等/三用途/冻结请求）未回退——其对应套件（test_rc_closure、test_workbench_actions、test_candidates、test_annotations 等）全部通过。
+- *视觉与组件质量*：由既有几何/截图套件 + 新反例在三视口断言；未重新执行视觉规范页全截图验收（270 个视口组合），本轮未新增全局样式迁移故未重复全套。
+- *任务体验*：以走查反例（AC01–AC22）与记录代替"用户确认"；用户对实际样例的最终确认是发布前剩余的用户侧检查。
+
+**未完成/明确撤回项**：无遗留待修项进入实施清单；撤回项见 FINAL-DIAGNOSIS §2.1–2.4，保留记录。环境备注中 3 个预存失败不属于本工作树代码缺陷，移交运行环境侧跟进。
