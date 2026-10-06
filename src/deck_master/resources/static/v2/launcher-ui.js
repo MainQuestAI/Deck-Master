@@ -118,11 +118,24 @@ export async function launcher(root, health) {
       const path = parent.input.value.trim().replace(/\/+$/, '') + '/' + folder.input.value.trim();
       const data = {path, title: title.input.value.trim(), brief: brief.input.value.trim(), audience: audience.input.value.trim()};
       if (limit.input.value) data.page_limit = Number(limit.input.value);
+      // 依据已发生事实恢复（F13/N14）：创建已成功时，主动作是打开该项目，
+      // 不引导用户重新创建同一位置。
+      let created = null;
       try {
         const result = await post('/api/projects/create', data);
         if (!result.registered) throw new Error('项目已完整建立，但未能登记。请用“选择项目文件夹”重新登记此保存位置。');
+        created = result.project;
         await open(result.project.entry_id);
-      } catch (failure) { error.textContent = readableError(failure); submit.disabled = false; }
+      } catch (failure) {
+        error.textContent = readableError(failure);
+        if (created) {
+          error.append(' ');
+          error.append(button('打开已创建的项目', async trigger => {
+            trigger.currentTarget.disabled = true;
+            try { await open(created.entry_id); } catch (openFailure) { error.textContent = readableError(openFailure); trigger.currentTarget.disabled = false; }
+          }, true));
+        } else submit.disabled = false;
+      }
     });
   }
 }

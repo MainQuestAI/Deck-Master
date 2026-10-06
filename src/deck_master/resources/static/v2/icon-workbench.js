@@ -41,7 +41,7 @@ export function iconWorkbench(app,data){
   const asset=el('select',{'aria-label':'建议的标准图标'}), sample=el('select',{'aria-label':'已采用图标样例'}), opinions=el('div',{class:'icon-opinions stack'});
   const selected=new Map();let disposed=false,busy=false,plan=null,samples=[],serial=0;const dialogs=[];
   root.append(el('div',{class:'panel-head'},el('h2',{},'优化图标'),button('刷新图标方案',refresh)),body);
-  body.append(el('p',{class:'muted'},'先在画面框选并保存意见，再交给 Agent 定位对象。查看高亮和处理方式后确认范围，返回候选后再决定采用。'),
+  body.append(el('p',{class:'muted'},'先在画面框选并保存意见，再交给 Agent 定位对象；窄屏没有拖拽框选，可用「整页意见」文字描述图标位置，精确框选请回到桌面宽度打开。查看高亮和处理方式后确认范围，返回候选后再决定采用。'),
     el('label',{},'处理方式',method),el('label',{},'标准图标建议',asset),el('label',{},'跨页复用样例',sample),opinions,
     button('复制给 Agent 的图标要求',handoff),status,proposals,recipes);
   function persist(){const e=app.editor;if(!e||e.readonly||disposed)return;e.draft.content.icon_ui={method:method.value,asset:asset.value,sample_identity:samples.find(v=>sampleKey(v)===sample.value)||null,annotation_refs:[...selected.values()].map(n=>n.ref)};e.changed();}

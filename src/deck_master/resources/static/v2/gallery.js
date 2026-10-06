@@ -363,9 +363,30 @@ export function gallery(app, data) {
     if (memory.error?.code === 'local_state_conflict') status.append(button('比较窗口选择', async () => {
       try {
         const saved = await memory.compareSaved();
-        modal('两个窗口的画廊选择', el('div', {class: 'stack'},
-          el('p', {}, `此窗口：${state().selected_page_ids.join('、') || '未选页'}；${layers[state().layer]}`),
-          el('p', {}, `项目保存：${saved.record?.state.selected_page_ids.join('、') || '未选页'}；${layers[saved.record?.state.layer] || '未记录'}`)),
+        // F11/C09/N10：冲突面板列出真正不同的字段（不只选页/层）；双方均可
+        // 下载，采用任何一侧都是明确动作，替换前用户看到完整差异。
+        const windowState = state(), savedState = saved.record?.state || {};
+        const describe = {
+          selected_page_ids: v => `选页：${(v || []).length ? (v || []).map(id => {
+            const index = app.summary.pages.findIndex(p => p.page_id === id);
+            return index >= 0 ? `第 ${index + 1} 页` : id;
+          }).join('、') : '未选页'}`,
+          layer: v => `图层：${layers[v] || '未记录'}`,
+          mode: v => `模式：${v === 'compare' ? '固定比较' : '网格'}`,
+          columns: v => `列数：${v}`,
+          zoom: v => `缩放：${v}`,
+          references: v => `固定比较引用：${(v || []).length ? v.map(r => r.page_id || '未记录页').join('、') : '未固定'}`,
+        };
+        const fields = Object.keys(describe).filter(key => canonical(windowState[key]) !== canonical(savedState[key]));
+        const rows = (fields.length ? fields : ['selected_page_ids', 'layer']).map(key => el('p', {},
+          `${describe[key](windowState[key])} ｜ 项目保存：${describe[key](savedState[key])}`));
+        modal('两个窗口的画廊阅读状态', el('div', {class: 'stack'},
+          el('p', {}, fields.length ? '以下阅读状态在两个窗口不同；采用任何一侧都会替换这一侧的全部字段。' : '两个窗口的阅读状态字段一致。'),
+          ...rows,
+          el('details', {}, el('summary', {}, '两份完整快照'), el('pre', {class: 'evidence-json'}, JSON.stringify({window: windowState, saved: savedState}, null, 2))),
+          el('div', {class: 'row wrap'},
+            button('下载此窗口副本', () => downloadJSON(windowState, 'gallery-selection-window.json')),
+            button('下载项目保存副本', () => downloadJSON(savedState, 'gallery-selection-saved.json')))),
           [button('保存此窗口选择', () => { memory.useWindow(saved.record); document.querySelector('#modal').close(); }),
             button('读取项目保存的选择', () => { memory.useSaved(saved.record); document.querySelector('#modal').close(); app.go({surface: 'gallery', revision: state().revision_id, layer: state().layer}); })]);
       } catch { toast('暂时无法读取另一个窗口的选择，请恢复连接后重试。'); }

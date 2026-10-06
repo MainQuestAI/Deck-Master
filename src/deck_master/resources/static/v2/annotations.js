@@ -61,6 +61,7 @@ export class Annotations {
     this.actions = el('div', {class: 'row wrap opinion-actions'}, this.saveButton, secondaryActions);
     const annotationSettings = el('details', {class: 'annotation-settings'}, el('summary', {}, '范围与标注工具'),
       el('div', {class: 'stack'}, el('div', {class: 'row wrap opinion-meta'}, this.scopeLabel, this.intent.node, this.chapter),
+        el('p', {class: 'muted annotation-mobile-note'}, '点标注与框选需要桌面宽度；窄屏可用「整页意见」或选择原文描述位置。'),
         this.tools, this.geometry, this.regionList));
     this.startOpinion = button('整页意见', () => { this.chooseMode('whole'); this.bodyField.input.focus(); }, false,
       {class: 'opinion-start'});
