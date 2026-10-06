@@ -62,9 +62,11 @@ export function batchActions(app, selected, onSelectionChange) {
     refPicture.hidden = !['blueprint', 'style'].includes(action.value);
     instruction.readOnly = busy || app.readonly;
     const blocked = busy || saving || !selected.size || unavailable.length > 0;
-    preview.hidden = style; commit.hidden = style; toStyle.hidden = !style;
+    // §4.1「核对后才出现交接主动作」：没有当前有效计划时交接按钮不出现。
+    const planReady = Boolean(plan) && plan.plan.base_revision === app.latest?.revision_id;
+    preview.hidden = style; commit.hidden = style || !planReady; toStyle.hidden = !style;
     preview.disabled = blocked || budgetInvalid || !instruction.value.trim();
-    commit.disabled = blocked || !plan || plan.plan.base_revision !== app.latest.revision_id;
+    commit.disabled = blocked || !planReady;
     toStyle.disabled = blocked;
     if (budgetInvalid && selected.size) notice.textContent += ` 原图需要 ${selected.size} 次调用；请明确填写或设置允许的上限，当前为 ${budget.value}。`;
     if (saving && selected.size) notice.textContent += ' 个人保存状态尚未就绪，请先核实。';

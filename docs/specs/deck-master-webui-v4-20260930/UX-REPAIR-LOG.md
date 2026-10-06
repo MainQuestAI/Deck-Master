@@ -1,5 +1,11 @@
 # UX 整改实施日志（UX-00–UX-08）
 
+> **状态口径更正（2026-10-06，对账报告后）**：本日志内“已完成”只代表对应包内已落地的部分。
+> 包级真实状态以 [补充实施方案](../../../evidence/product-design-final-20261006/SUPPLEMENTARY-IMPLEMENTATION-PLAN.md)
+> 与 [逐项对账](../../../evidence/product-design-final-20261006/ITEM-BY-ITEM-STATUS.md) 为准：
+> UX-02/UX-03 的核心重组为**待实现**（UX-02b 已按 §4.1 完成选择—配置—核对三态重组；UX-03b 四阶段与规范先读后改为待实现），
+> 其余包按三态（局部完成/待实现/待验证）标注。不得再把包标成“全部完成、仅待用户确认”。
+
 日期：2026-10-06 · 基线：`4fefd0b3`（`codex/v1-rc-closure` 审计基线）· 实施分支：`codex/webui-ux-repair`。
 
 按[最终修复方案](../../../evidence/product-design-final-20261006/FINAL-REPAIR-PLAN.md)逐包实施。本文件记录每包的代码变化、反例测试与验证结论；产品决定见 [UX-REPAIR-DECISIONS](UX-REPAIR-DECISIONS.md)。测试命令：`python -m pytest tests/rebuild -q`（浏览器用例加 `-m browser`）。

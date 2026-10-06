@@ -357,11 +357,15 @@ function matrixPanel(app, saved) {
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     el('div', {class: 'toolbar'}, el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo),
       el('div', {class: 'row wrap matrix-search'}, searchInput, batch.toolbar, selectionNote, clearButton)),
+    // F05/§4.1：配置区紧邻选页工具条（不再隔着整张矩阵），三态在同一处
+    // 演进：未选=引导；选后=配置（目标摘要—要求—参考—影响—预览）；
+    // 核对通过后=交接主动作出现。
+    batch.node,
     el('div', {class:'row wrap overview-preferences'}, preferenceStatus, compareButton, downloadButton),
     el('div', {class: 'matrix-wrap'}, table),
     el('div', {class: 'matrix-caption'},
       el('span', {}, icon('check'), ' 可查看　', icon('attention'), ' 需要处理　', icon('minus'), ' 尚未生成'),
-      el('span', {}, '按 Tab 访问产物与操作；窄屏可横向滚动查看完整进度。')), batch.node);
+      el('span', {}, '按 Tab 访问产物与操作；窄屏可横向滚动查看完整进度。')));
   render();
   return node;
 }

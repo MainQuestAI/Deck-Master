@@ -151,7 +151,7 @@ def test_changes_to_range_inputs_filter_version_and_late_preview_invalidate_plan
     select(page, 1, 2)
     preview(page)
     page.get_by_role('textbox', name='所选页的制作要求').fill('新的明确要求。')
-    assert page.get_by_role('button', name='保存并交接所选试作', exact=True).is_disabled()
+    expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_hidden()
     pending = []
     def delay(route):
         pending.append((route, route.fetch()))
@@ -170,7 +170,7 @@ def test_changes_to_range_inputs_filter_version_and_late_preview_invalidate_plan
     page.unroute('**/api/changes/plan', delay)
     preview(page)
     page.get_by_role('button', name='只看需要处理 3 页', exact=True).click()
-    assert page.get_by_role('button', name='保存并交接所选试作', exact=True).is_disabled()
+    expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_hidden()
     select(page, 1)
     preview(page)
     doc = copy.deepcopy(store.load_document())
@@ -179,7 +179,7 @@ def test_changes_to_range_inputs_filter_version_and_late_preview_invalidate_plan
     # Trigger the actual summary poll's focus handler, without changing the URL.
     page.evaluate("() => window.dispatchEvent(new Event('focus'))")
     expect(page.locator('.batch-actions')).to_contain_text('项目已有新版本')
-    assert page.get_by_role('button', name='保存并交接所选试作', exact=True).is_disabled()
+    expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_hidden()
     assert store.load_document()['tasks'] == before_tasks
 
 

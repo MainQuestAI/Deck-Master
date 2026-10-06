@@ -143,9 +143,49 @@ def test_refresh_and_version_advance_keep_draft_and_invalidate_old_plan(overview
     expect(page.get_by_role('checkbox', name='选择第 01 页', exact=True)).to_be_checked()
     assert page.get_by_role('textbox', name='所选页的制作要求', exact=True).input_value() == REQUIREMENT
     expect(page.locator('.batch-impact')).not_to_contain_text('确认本次范围')
-    assert page.get_by_role('button', name='保存并交接所选试作', exact=True).is_disabled()
+    expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_hidden()
 
     page.get_by_role('button', name='按所选页设置调用上限', exact=True).click()
     page.get_by_role('button', name='预览所选页试作', exact=True).click()
     expect(page.locator('.batch-impact').get_by_role('heading', name='确认本次范围')).to_be_visible()
     expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_enabled()
+
+
+def test_batch_surface_states_choose_configure_confirm_adjacent_to_selection(overview30):
+    """UX-02b：未选只引导；选后配置紧邻工具条（单屏内，不隔矩阵）；
+    核对（预览）通过后交接主动作才出现。"""
+    from playwright.sync_api import expect
+    page, server, path, store = overview30
+    page.goto(server.start())
+    fields = page.locator('.batch-fields')
+    commit = page.get_by_role('button', name='保存并交接所选试作', exact=True)
+
+    # 状态一（choose）：未选页只有引导，配置与交接都不出现。
+    expect(page.locator('.batch-actions')).to_contain_text('先选择动作，再勾选此动作允许处理的页面')
+    expect(fields).to_be_hidden()
+    assert commit.count() == 0
+
+    # 状态二（configure）：选页后配置展开且仍不出现交接；配置区位于工具条
+    # 与矩阵之间——几何断言替代"滚动可达"。
+    page.get_by_role('checkbox', name='选择第 02 页', exact=True).check()
+    page.get_by_role('checkbox', name='选择第 28 页', exact=True).check()
+    expect(fields).to_be_visible()
+    expect(page.locator('.batch-actions')).to_contain_text('2 页用于原图试作')
+    assert commit.count() == 0
+    geometry = page.evaluate("""() => {
+      const batch = document.querySelector('.batch-actions').getBoundingClientRect();
+      const toolbar = document.querySelector('.matrix-search').getBoundingClientRect();
+      const matrix = document.querySelector('.matrix-wrap').getBoundingClientRect();
+      return {batchTop: batch.top, toolbarBottom: toolbar.bottom, matrixTop: matrix.top};
+    }""")
+    assert geometry['batchTop'] >= geometry['toolbarBottom'] - 1 and geometry['batchTop'] <= geometry['matrixTop'], geometry
+    page.screenshot(path=str(path.parent / 'batch-configure-state.png'), full_page=True)
+
+    # 状态三（confirm）：预览核对后交接主动作出现。
+    page.get_by_role('textbox', name='所选页的制作要求', exact=True).fill(REQUIREMENT)
+    page.get_by_role('button', name='按所选页设置调用上限', exact=True).click()
+    page.get_by_role('button', name='预览所选页试作', exact=True).click()
+    expect(page.locator('.batch-impact').get_by_role('heading', name='确认本次范围')).to_be_visible()
+    expect(commit).to_be_visible()
+    expect(commit).to_be_enabled()
+    page.screenshot(path=str(path.parent / 'batch-confirm-state.png'), full_page=True)
