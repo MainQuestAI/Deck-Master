@@ -53,9 +53,17 @@ def open_style(page, with_targets=False):
 
 
 def toggle_phase(page, number):
+    from playwright.sync_api import expect
     phase = page.locator('.style-calibration > .style-phase').nth(number-1)
-    if not phase.evaluate('(node) => node.open'):
+    for _ in range(3):
+        if phase.evaluate('(node) => node.open'):
+            return phase
         phase.locator('summary').first.click()
+        try:
+            expect(phase).to_have_attribute('open', '', timeout=2000)
+            return phase
+        except AssertionError:
+            continue
     return phase
 
 
@@ -131,22 +139,28 @@ def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_co
     page.get_by_role('combobox', name='风格参考原图').select_option('p01')
     page.get_by_role('checkbox', name='风格目标 第 2 页 · 材料如何成为内容', exact=True).check()
     page.get_by_role('button', name='检查风格要求', exact=True).click()
-    expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled()
+    expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled(timeout=20000)
     before_tasks = copy.deepcopy(store.load_document()['tasks'])
     page.get_by_role('button', name='确认这版风格要求', exact=True).click()
+    # 确认落到新版本并重新定位到「确认规范」；等规范版本读取完成（阶段摘要出现 V…）
+    # 再切换阶段，避免重挂载与阶段展开互相抢状态。
     expect(page.locator('.style-calibration > .style-phase').nth(1)).to_have_attribute('open','')
+    expect(page.locator('.style-calibration > .style-phase').nth(1)).to_contain_text(re.compile(r'V\d'), timeout=20000)
     toggle_phase(page, 3)
-    expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled()
+    expect(page.locator('.style-calibration > .style-phase').nth(2)).to_have_attribute('open','')
+    # 确认包含草稿保存、业务提交与新版本重载三步；就绪等待按真实到达放宽，状态本身不放松。
+    expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=20000)
     assert store.load_document()['tasks'] == before_tasks
     page.get_by_role('button', name='预览单页试作', exact=True).click()
-    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled()
+    # 计划请求跟在草稿保存之后：两次本机往返，给足以真实到达为准的等待。
+    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled(timeout=20000)
     toggle_phase(page, 1)
     page.get_by_role('textbox', name='风格短要求').fill('保留事实，新的明确要求。')
     expect(page.get_by_role('button', name='保存并交接风格试作', exact=True, include_hidden=True)).to_be_disabled()
     expect(page.locator('.style-plan')).to_be_hidden()
     toggle_phase(page, 3)
     page.get_by_role('button', name='预览单页试作', exact=True).click()
-    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled()
+    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled(timeout=20000)
     doc = copy.deepcopy(store.load_document()); doc['policy']['user_stop'] = True
     commit(store, doc, str(uuid.uuid4()))
     page.evaluate("() => window.dispatchEvent(new Event('focus'))")

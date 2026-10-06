@@ -53,12 +53,13 @@ def test_gallery_reading_preferences_remain_open_and_restore(workbench):
     page, _, _, _, goto, _ = workbench
     goto('gallery')
     expect(page.locator('.gallery-viewport')).to_be_visible()
-    expect(page.get_by_role('button', name='连续阅读', exact=True)).not_to_be_visible()
-    page.get_by_text('阅读设置', exact=True).click()
+    # §4.4：阅读方式与「并排比较」在工具条上直接可见，不再藏进「阅读设置」。
+    expect(page.get_by_role('button', name='连续阅读', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='并排比较', exact=True)).to_be_visible()
     page.get_by_role('button', name='连续阅读', exact=True).click()
-    expect(page.locator('.gallery-reading-settings')).to_have_attribute('open', '')
     expect(page.locator('.gallery-viewport')).to_have_attribute('data-mode', 'continuous')
     page.get_by_role('button', name='联系表', exact=True).click()
+    page.get_by_text('阅读设置', exact=True).click()
     page.get_by_role('button', name='2 列', exact=True).click()
     expect(page.locator('.gallery-reading-settings')).to_have_attribute('open', '')
     page.get_by_label('搜索页面', exact=True).fill('01')

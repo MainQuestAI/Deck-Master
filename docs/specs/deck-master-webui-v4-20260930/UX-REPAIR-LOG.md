@@ -182,6 +182,10 @@
 - 清理失效覆盖：删除 `.style-plan:has(.stack:empty){display:none}`（它把内部空的影响节点当成整块为空，在没有计划时连交接动作一起隐藏）——交接区显隐改由 `plan`/来源状态在代码里明确设置；删除 `.batch-actions{margin-top:24px}`（配置区已紧邻工具条，旧的上边距属于配置排在矩阵之后的旧布局）；阶段一的确认按钮引用去重（确认动作只属于第 2 阶段）。
 - 新增 `test_ux07_style_convergence_browser.py`：1440/1280/390 三视口检查迁移组件（批量配置—阶段组—子区分段）的触点 ≥44px、配置与工具条几何间距、状态文字与 `aria-pressed`，并输出 9 张截图到 `output/playwright/ux-review/ux07-*`。
 
+### 附带结清两项旧缺口（同批）
+- §4.4/F09 比较入口：并排比较与阅读方式移出「阅读设置」，常驻画廊工具条；未选够两页时保持可见但禁用（不是消失），选满两页可直接进入比较（`gallery.js`；用例 `test_ux05_*::test_gallery_comparison_entry_stays_on_the_toolbar`）。
+- OV-02 字段级反馈：批量配置的阻断原因就近贴在字段——要求为空、原图上限不足各自带字段错误与 `aria-invalid`，不再只汇总成面板级一句话（`batch-actions.js`；用例 `test_batch_blocking_reasons_sit_beside_the_field`）。
+
 ### UX-08b 组合验收（三类结论分开出具）
 - 功能行为：见本轮套件数字（工作树源码；安装产物身份见 [UX-08-ACCEPTANCE](../../../evidence/product-design-final-20261006/UX-08-ACCEPTANCE.md)）。
 - 视觉质量：三视口截图 + 触点/间距/状态断言（UX-07b）。

@@ -35,9 +35,13 @@ export function batchActions(app, selected, onSelectionChange) {
   const toStyle = button('带所选页进入风格校准', enterStyle, true);
   // F05/§4.1：空选页只提示如何选页，不展开整套调用参数；有选择时才显示
   // 配置区（所选页摘要—要求—可选参考—真实调用影响—预览/确认）。
+  // OV-02：阻断原因就近贴在对应字段，而不是只汇成面板级一句话。
+  const requirementError = el('p', {class: 'field-error', role: 'alert', hidden: true});
+  const budgetError = el('p', {class: 'field-error', role: 'alert', hidden: true});
   const fields = el('div', {class: 'stack batch-fields'}, excluded,
-    el('label', {}, '一句话要求', instruction), el('label', {}, '固定参考原图（可选）', reference), refPicture,
-    budgetArea, el('div', {class: 'row wrap'}, preview, commit, toStyle), impact);
+    el('label', {}, '一句话要求', instruction), requirementError,
+    el('label', {}, '固定参考原图（可选）', reference), refPicture,
+    budgetArea, budgetError, el('div', {class: 'row wrap'}, preview, commit, toStyle), impact);
   const node = el('section', {class: 'panel batch-actions', 'aria-label': '所选页制作'},
     el('div', {class: 'panel-head'}, el('h2', {}, '所选页制作')),
     el('div', {class: 'panel-body stack'}, notice, fields));
@@ -68,7 +72,15 @@ export function batchActions(app, selected, onSelectionChange) {
     preview.disabled = blocked || budgetInvalid || !instruction.value.trim();
     commit.disabled = blocked || !planReady;
     toStyle.disabled = blocked;
-    if (budgetInvalid && selected.size) notice.textContent += ` 原图需要 ${selected.size} 次调用；请明确填写或设置允许的上限，当前为 ${budget.value}。`;
+    // 字段级原因：要求为空、原图上限不足时，原因贴在对应输入旁边。
+    const missingRequirement = selected.size > 0 && !instruction.value.trim();
+    requirementError.hidden = !missingRequirement;
+    requirementError.textContent = missingRequirement ? '先写明本次要修改和要保留的内容，才能预览所选页试作。' : '';
+    instruction.setAttribute('aria-invalid', String(missingRequirement));
+    const badBudget = budgetInvalid && selected.size > 0;
+    budgetError.hidden = !badBudget;
+    budgetError.textContent = badBudget ? `原图需要 ${selected.size} 次调用；请填写允许的上限，当前为 ${budget.value}。` : '';
+    budget.setAttribute('aria-invalid', String(badBudget));
     if (saving && selected.size) notice.textContent += ' 个人保存状态尚未就绪，请先核实。';
   }
   action.addEventListener('change', () => { invalidate(); onSelectionChange(); });

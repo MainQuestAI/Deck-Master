@@ -103,6 +103,27 @@ def test_runs_subareas_reach_decisions_versions_files_and_shortcuts_match_layers
     assert 'layer=ppt' in page.url
 
 
+def test_gallery_comparison_entry_stays_on_the_toolbar(ux05_browser):
+    """AC11/§4.4：并排比较是工具条上的常驻入口，不埋在「阅读设置」里。"""
+    from playwright.sync_api import expect
+    page, server, path, store = ux05_browser
+    url = server.start()
+    page.goto(url)
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    page.get_by_role('button', name='整稿画廊', exact=True).click()
+    page.locator('.gallery-viewport').wait_for()
+    compare = page.get_by_role('button', name='并排比较', exact=True)
+    expect(compare).to_be_visible()
+    expect(page.get_by_role('button', name='联系表', exact=True)).to_be_visible()
+    # 未选够两页时比较保持禁用（不是消失），选满两页后可直接进入。
+    expect(compare).to_be_disabled()
+    tiles = page.locator('.slide-tile .tile-select input')
+    tiles.nth(0).check(); tiles.nth(1).check()
+    expect(compare).to_be_enabled()
+    compare.click()
+    expect(page.locator('.gallery-viewport')).to_have_attribute('data-mode', 'compare')
+
+
 def test_file_area_orders_version_purpose_result_with_recovery_secondary(ux05_browser):
     from playwright.sync_api import expect
     page, server, path, store = ux05_browser
@@ -190,3 +211,26 @@ def test_historical_record_is_fixed_latest_todo_reachable_and_status_honest(ux05
     # 未知/失败任务的下一步与事实一致：awaiting_host 说明尚未接手，不是失败重试。
     todo_card = page.locator('.run-task').filter(has_text='制作可编辑稿')
     expect(todo_card.first).to_contain_text('待接手')
+
+
+def test_batch_blocking_reasons_sit_beside_the_field(ux05_browser):
+    """OV-02：预览被挡住时，原因贴在对应字段（要求/上限），不是只有面板级一句话。"""
+    from playwright.sync_api import expect
+    page, server, path, store = ux05_browser
+    url = server.start()
+    page.goto(url)
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    page.get_by_role('checkbox', name='选择第 01 页', exact=True).check()
+    batch = page.locator('.batch-actions')
+    expect(batch.locator('.batch-fields')).to_be_visible()
+    requirement = page.get_by_label('所选页的制作要求')
+    expect(requirement).to_have_attribute('aria-invalid', 'true')
+    expect(batch).to_contain_text('先写明本次要修改和要保留的内容')
+    expect(page.get_by_label('批量图像调用上限')).to_have_attribute('aria-invalid', 'true')
+    expect(batch).to_contain_text('原图需要 1 次调用')
+    requirement.fill('统一标题层级，保留正文事实。')
+    expect(requirement).to_have_attribute('aria-invalid', 'false')
+    expect(batch).not_to_contain_text('先写明本次要修改和要保留的内容')
+    page.get_by_label('批量图像调用上限').fill('1')
+    expect(page.get_by_label('批量图像调用上限')).to_have_attribute('aria-invalid', 'false')
+    expect(page.get_by_role('button', name='预览所选页试作', exact=True)).to_be_enabled()

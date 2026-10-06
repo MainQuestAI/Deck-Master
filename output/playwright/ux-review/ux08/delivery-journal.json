@@ -44,7 +44,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/overview?revision=bbb6bf1eb6fb4b2786e0221036b7ea96"
+      "path": "/api/overview?revision=f5ab2d9f47dd46e0860aad47aae4e6de"
     },
     {
       "method": "GET",
@@ -52,7 +52,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/content-plan?revision=bbb6bf1eb6fb4b2786e0221036b7ea96"
+      "path": "/api/content-plan?revision=f5ab2d9f47dd46e0860aad47aae4e6de"
     },
     {
       "method": "GET",
@@ -84,11 +84,11 @@
     },
     {
       "method": "GET",
-      "path": "/api/tasks?revision=bbb6bf1eb6fb4b2786e0221036b7ea96&limit=30&personal=1&reading_etag=503231e5b07c9610c825135b178f736e36e8d45671cb677c3badf45d3f72bc97"
+      "path": "/api/tasks?revision=f5ab2d9f47dd46e0860aad47aae4e6de&limit=30&personal=1&reading_etag=1159b898a94d57c11e620f1c0ca1dad27b65f116327f9f9a2045ab6723a67cd2"
     },
     {
       "method": "GET",
-      "path": "/api/history?revision=bbb6bf1eb6fb4b2786e0221036b7ea96&limit=20"
+      "path": "/api/history?revision=f5ab2d9f47dd46e0860aad47aae4e6de&limit=20"
     },
     {
       "method": "POST",
@@ -116,7 +116,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/tasks?limit=30&offset=0&personal=1&reading_etag=503231e5b07c9610c825135b178f736e36e8d45671cb677c3badf45d3f72bc97"
+      "path": "/api/tasks?limit=30&offset=0&personal=1&reading_etag=1159b898a94d57c11e620f1c0ca1dad27b65f116327f9f9a2045ab6723a67cd2"
     },
     {
       "method": "POST",

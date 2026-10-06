@@ -176,10 +176,12 @@ export function gallery(app, data) {
       const expanded = Boolean(query || s.filter.chapter_id || s.filter.status !== 'all');
       controls.replaceChildren(tabs, el('details', {class: 'gallery-filter-disclosure', open: expanded}, el('summary', {}, expanded ? '筛选作品（已筛选）' : '筛选作品与管理选页'), filters));
     } else {
+      // F09/TA-01（§4.4）：并排比较与阅读方式是常用动作，直接留在工具条上；「阅读
+      // 设置」只保留联系表列数这类显示偏好，不再把比较入口藏进折叠。
       const settings = el('details', {class: 'gallery-reading-settings', open: settingsOpen}, el('summary', {}, '阅读设置'),
-        el('div', {class: 'stack'}, modes, columns));
+        el('div', {class: 'stack'}, columns));
       controls.replaceChildren(el('div', {class: 'row wrap'}, tabs, searchSlot, settings),
-        el('div', {class: 'row wrap'}, chapter, filter, extras));
+        el('div', {class: 'row wrap'}, modes, chapter, filter, extras));
     }
     renderLegend();
   }
