@@ -89,3 +89,9 @@
 - **AC22/D4/N03**：窄屏隐藏拖拽标注与百分比定位，但以仅在窄屏显示的说明行写明"点标注与框选需要桌面宽度"；图标工作台指引如实说明窄屏路径（整页意见文字描述），不再要求操作已隐藏的框选（`annotations.js`、`icon-workbench.js`、`workbench.css`）。反例：390px 下从整页意见到影响预览全程可走。关闭模态后焦点回到触发按钮由既有 `test_page_shortcuts` 覆盖。
 - **damaged reading**（基线遗留失败）：复核确认产品降级链路（runs 面板"个人已读记录暂不可用，任务按未过滤状态展示"）本身正常；此前失败源于测试改写 hash 切换工作面时把总览偏好参数带入 runs 路由而被路由守卫按设计拒绝。测试改为导航按钮后通过（`test_ui_design_browser.py`）。
 
+## UX-07 · 样式收敛与规范同步（已完成：AC23）
+
+- **F17/活动文档**：`product-ui-language.md` 的"生成、导出和云端同步尚未连接"原型说明改为现行能力事实（本机核心读写、制作工具接手执行、无云端同步）——活动文档不再把已接线的生产功能描述为未接入。DESIGN.md 的 D1 句已在 UX-02 同步。
+- **F16/CSS 诊断记录**（作为诊断基线，不设替代目标）：六份运行 CSS 的简单扫描——font-size 逐文件为 7/3/40/87/0/72（共 209，全部直接 px）；@media 7 类（绝大多数为 767px 窄屏降级）；裸色值主要残留在 studio.css（82，多为原设计 maroon 调试残留）与 tokens.css（15，本身是 token 定义处）；重复选择器集中于 shell/sidebar/topbar/nav 布局覆盖层（studio.css 对既有结构的覆盖）。本包随实际改动新增的规则仅 `.annotation-mobile-note` 一条全局 + 局部媒体查询调整，均有具名消费者（AC22）。
+- **AC23 覆盖核对**：三视口（1280×800、1440×900、390×844）×七工作面几何与横向溢出检查由 `test_work_surface_browser.py::test_seven_surfaces_at_all_acceptance_sizes`（21 项）覆盖；矩阵标题/控件几何与 44px 命中区由 `test_ui_design_browser.py` 覆盖；字体仅用合法随包资产或系统回退（DESIGN.md 视觉规则，未新增字体依赖）；`test_ux06` 的 390px 路径补齐窄屏标注链路。
+
