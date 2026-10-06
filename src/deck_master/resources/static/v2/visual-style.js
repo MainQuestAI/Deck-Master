@@ -93,10 +93,12 @@ export function visualStyle(app){
     el('div',{class:'row wrap'},analyze,handoff));
   const phase2=el('details',{class:'style-phase'},el('summary',{},'2 · 确认规范'),
     el('div',{class:'row wrap'},refresh),rules,el('div',{class:'row wrap'},confirm));
+  // §2.2（深度复审）：试作动作属于阶段 3；扩展动作属于阶段 4。两路线共用同一
+  // 规则——动作随所在阶段出现，交接随有效计划出现，计划结果与错误常驻阶段之外。
   const phase3=el('details',{class:'style-phase'},el('summary',{},'3 · 试作与采用'),
-    candidateRows);
+    candidateRows, el('div',{class:'row wrap'},trial));
   const phase4=el('details',{class:'style-phase'},el('summary',{},'4 · 扩展'),
-    sample,expansionTargets,el('div',{class:'row wrap'},expand),planBox,dispatch);
+    sample,expansionTargets,el('div',{class:'row wrap'},expand));
   const phaseNodes=[phase1,phase2,phase3,phase4];
   // 自动推进（分析返回、恢复完成）只在用户尚未主动选择阶段时生效——
   // 否则慢恢复会在用户已经打开"试作与采用"后把阶段抢回"确认规范"。
@@ -105,15 +107,17 @@ export function visualStyle(app){
   function openPhase(next,{auto=false}={}){ if(auto&&userPhase&&userPhase!==next)return; phaseNodes.forEach((node,i)=>{node.open=i+1===next;}); }
   root.append(el('details',{},el('summary',{},'恢复项目中的截图分析与规范'),el('label',{class:'stack'},'已保存分析任务',savedAnalysis),savedPager,el('label',{class:'stack'},'已确认视觉规范',savedRecipe)),
     phase1,status,phase2,phase3,phase4,
-    // 试作与交接动作常驻可见（同项目路线的 style-plan）：阶段只组织阅读与结果，
-    // 不把可执行主动作藏进折叠。
-    el('div',{class:'visual-plan stack'},el('div',{class:'row wrap'},trial),planBox,dispatch));
+    // 计划结果与错误出口常驻阶段之外（阶段切换不顺带隐藏失败原因）；
+    // 交接动作只在有当前有效计划时出现。
+    el('div',{class:'visual-plan stack'},planBox,dispatch));
   // 状态行在各阶段之外，任何阶段的提示都可见。
   openPhase(1);
   function controls(){const blocked=!loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size);
     input.disabled=blocked||Boolean(pending);savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
     analyze.disabled=blocked||!state.ids.length||state.ids.length>5||!requirement.value.trim();refresh.disabled=!loaded||busy||!state.task_id;handoff.hidden=!state.task_id;
-    confirm.disabled=blocked||!spec||Boolean(spec.conflicts.length)||!state.targets.length;trial.disabled=blocked||!state.recipe||!recipe;dispatch.disabled=blocked||!plan;expand.disabled=blocked||!recipe||!sample.value||!expansion.size;}
+    confirm.disabled=blocked||!spec||Boolean(spec.conflicts.length)||!state.targets.length;trial.disabled=blocked||!state.recipe||!recipe;
+    // 交接动作按真实状态出现：没有当前计划时不出现，也不隐藏计划错误。
+    dispatch.hidden=!plan;dispatch.disabled=blocked||!plan;expand.disabled=blocked||!recipe||!sample.value||!expansion.size;}
   function release(){leases.splice(0).forEach(view=>view.dispose());}
   async function loadReferences(){
     const value=await get('/api/styles/references?'+new URLSearchParams({revision:app.route.revision}));if(disposed)return;refs=value.references;fonts=value.fonts||[];

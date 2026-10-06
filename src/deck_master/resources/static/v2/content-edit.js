@@ -144,11 +144,16 @@ function leafLabel(path, arrayAt) {
 export function pageContentEditor(app, data) {
   if (app.readonly || !data.page?.customer_visible) return null;
   let value = structuredClone(data.page.customer_visible);
-  let original = structuredClone(data.page.customer_visible);
+  // R3（深度复审）：比较基准固定为所读正式页面内容——个人草稿恢复只改当前输入，
+  // 不能把未提交的草稿当成"原文"；正式提交并读取新版本后才会由新实例建立新基准。
+  const original = structuredClone(data.page.customer_visible);
   const fields = el('div', {class:'stack'});
   // UX-04b（对账 §5「具体文字差异」）：具体改动常驻显示「块位置：原文 → 改文」，
   // 与影响预览同屏；用户不必在整页文本框之间自行回忆改了什么。
   const changes = el('div', {class:'stack content-changes'});
+  // 2.3（深度复审）：核对状态把「具体差异 + 范围与下游影响 + 确认动作」放在同一块，
+  // 预览后滚动到这里就能同屏核对；逐项文本框仍保留在下方随时返回修改。
+  const check = el('div', {class:'stack content-check'});
   const reason = inputField('正文修改说明', '调整本页标题或正文', 2);
   let operation;
   function leafLabelFor(path) {
@@ -191,9 +196,9 @@ export function pageContentEditor(app, data) {
   }
   draw();
   operation = contentOperation(app, 'page_edit', () => ({visible:value,reason:reason.input.value}), saved => {
-    // 保存后改文成为新的已保存原文，对照清单重新从零开始。
+    // 草稿恢复只更新当前输入；比较基准见上（R3）。
     if (saved.visible) value = saved.visible;
-    original = structuredClone(value); reason.input.value = saved.reason || ''; draw();
+    reason.input.value = saved.reason || ''; draw();
   }, data.stages.content.ref,
     result => app.go({revision:result.revision_id, layer:'content'}));
   reason.input.addEventListener('input', operation.changed);
@@ -205,5 +210,7 @@ export function pageContentEditor(app, data) {
       ...result.records.map(r => button('查看来源页关系', () => modal('新页的来源', el('div', {class:'stack'},
         r.derivation.source_pages.map(p => button('打开来源页 '+p.page_id, () => { document.querySelector('#modal').close(); app.go({page_id:p.page_id,revision:r.derivation.source_revision,layer:'content'}); })))))));
   }).catch(error => derivations.append(el('p', {class:'field-error'}, readableError(error))));
-  return el('details', {class:'content-editor'}, el('summary', {}, '编辑本页标题与正文'), el('div', {class:'stack'}, derivations, operation.guard(el('div', {class:'stack'}, changes, fields, reason.node, preview)), operation.node));
+  check.append(changes, operation.node);
+  return el('details', {class:'content-editor'}, el('summary', {}, '编辑本页标题与正文'),
+    el('div', {class:'stack'}, derivations, check, operation.guard(el('div', {class:'stack'}, fields, reason.node, preview))));
 }

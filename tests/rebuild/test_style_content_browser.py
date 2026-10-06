@@ -164,10 +164,12 @@ def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_co
     doc = copy.deepcopy(store.load_document()); doc['policy']['user_stop'] = True
     commit(store, doc, str(uuid.uuid4()))
     page.evaluate("() => window.dispatchEvent(new Event('focus'))")
-    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True, include_hidden=True)).to_be_disabled()
+    # 版本前进使计划失效：交接动作按真实计划出现——没有计划就不出现。
+    expect(page.locator('.style-plan button').filter(has_text='保存并交接风格试作')).to_be_hidden()
     toggle_phase(page, 1)
     expect(page.get_by_role('textbox', name='风格短要求')).to_have_value('保留事实，新的明确要求。')
-    expect(page.locator('.style-calibration > .style-phase').first).to_contain_text('当前项目已有更新')
+    # 状态与错误常驻阶段之外：版本前进的提示不再随阶段折叠被隐藏。
+    expect(page.locator('.style-calibration > [role="status"]')).to_contain_text('当前项目已有更新')
     assert store.load_document()['tasks'] == before_tasks
 
 

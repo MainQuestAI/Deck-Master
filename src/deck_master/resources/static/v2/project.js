@@ -142,6 +142,9 @@ export class Project {
     if (!('review_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.review_id = null;
     if (!('candidate_id' in patch) && (patch.surface || patch.page_id || patch.layer)) route.candidate_id = null;
     if (patch.surface && patch.surface !== 'page' && !('page_id' in patch)) route.page_id = null;
+    // R4（深度复审）：显式打开某一项任务时落到「正在进行」；读取版本、面返回等
+    // 只带 task_id: null 的导航保留记住的子区（链接里的 area）。
+    if (patch.task_id && !('runs_area' in patch)) route.runs_area = 'tasks';
     const hash = routeHash(this.info, route);
     if (location.hash === hash) this.loadRoute(route); else location.hash = hash;
   }

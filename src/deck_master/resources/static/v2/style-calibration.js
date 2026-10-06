@@ -96,15 +96,16 @@ export function style(app) {
       el('div',{class:'stack'},el('label',{class:'stack'},'固定参考原图',reference),referenceView,detail('查找其它参考页',referenceSearch,referenceCount)),
       el('div',{class:'stack'},el('label',{class:'stack'},'先试哪一页',primaryTarget),primaryPreview)),
       el('label', {}, '一句话要求', instruction),
-      // UX-07b 收敛：确认动作归「确认规范」阶段；这里不再重复挂同一个按钮节点。
-      el('div', {class: 'row wrap style-primary-actions'}, proposeButton), notice, preview,
+      el('div', {class: 'row wrap style-primary-actions'}, proposeButton),
       detail('其它目标页',el('div',{class:'row wrap'},targetSearch,selectedFilter),targetCount,targets),
       detail('高级：借用维度、原文选段与建议',
         dimensionFields, el('p', {class: 'muted'}, '构图须单独选择。生成仍可能偏离，返回后逐项核对。'),
         sourceView, excerpt, detail('对照目标页原文', targetSource, targetSourceView), el('label', {}, '制作工具建议（待你确认）', suggestion))),
-    // F07/§4.3/D2：四阶段（参考与目标—确认规范—试作与采用—扩展），
-    // 与截图路线共用同一阶段语义；确认动作属于"确认规范"。
-    phase('2 · 确认规范', el('div', {class: 'row wrap'}, recipes, button('刷新风格版本', loadRecipes)), confirmButton, recipeView),
+    // F07/§4.3/D2：四阶段（参考与目标—确认规范—试作与采用—扩展）。
+    // R1（深度复审）：本次方案的目标、借用/保留、冲突取舍与确认动作必须在同一个
+    // 确认上下文（阶段 2）里；不能再让用户回到上一阶段才能解锁确认。
+    phase('2 · 确认规范', el('div', {class: 'row wrap'}, recipes, button('刷新风格版本', loadRecipes)),
+      preview, confirmButton, recipeView),
     phase('3 · 试作与采用', el('label', {class:'stack'}, '先试一页', trialPage), firstButton,
       el('p', {class: 'muted'}, '候选返回不替换当前稿；到固定比较中逐页核对文字、配色及未选择的维度。'),
       button('刷新风格目标候选', loadCandidates), candidateRows),
@@ -118,9 +119,15 @@ export function style(app) {
   // `.style-plan:has(.stack:empty){display:none}` 这类会被内部空节点误触发的覆盖。
   const planBox = el('div', {class:'style-plan stack'}, impact, dispatchButton);
   const node = el('div', {class: 'style-calibration stack'}, heading('风格校准', '固定一张参考原图，保留目标内容。先试一页，比较采用后再扩展。'),
-    phases.map(p => p.node), planBox, detail('个人草稿与恢复',draftNode));
+    // R1/R2：状态与错误常驻在阶段之外——阶段切换不得顺带隐藏失败原因。
+    notice, phases.map(p => p.node), planBox, detail('个人草稿与恢复',draftNode));
   let sourceIsScreenshot = false;
-  const syncPlanVisibility = () => { planBox.hidden = sourceIsScreenshot || !plan; };
+  // R2（深度复审）：只按「有没有当前计划」控制交接动作；错误与请求状态独立可见。
+  // 计划被作废时 impact 会被清空，所以"既无计划也无内容"才隐藏整块。
+  const syncPlanVisibility = () => {
+    planBox.hidden = sourceIsScreenshot || (!plan && impact.childElementCount === 0);
+    dispatchButton.hidden = !plan;
+  };
   const external=visualStyle(app), internal=phases.map(p=>p.node);
   const source=el('select',{'aria-label':'风格参考来源',disabled:true},el('option',{value:'page'},'借用项目内页面'),el('option',{value:'screenshot'},'从外部截图提取规范'));
   const switchSource=()=>{sourceIsScreenshot=source.value==='screenshot';internal.forEach(n=>n.hidden=sourceIsScreenshot);external.hidden=!sourceIsScreenshot;syncPlanVisibility();};
@@ -238,7 +245,13 @@ export function style(app) {
       if (parent) input.parent_recipe_id = parent;
       const result = await prepare('/api/styles/propose', {input}); if (disposed || token !== serial) return;
       proposal = result; showPhase(2); notice.textContent = '要求已检查；确认版本不会调用模型。';
-      preview.replaceChildren(el('p', {}, `保留 ${result.proposal.targets.length} 页内容；默认先试其中 1 页。`), ...result.proposal.conflicts.map(c => {
+      const borrowed = Object.keys(result.proposal.dimensions || {}).map(k => names[k] || k);
+      const kept = Object.keys(result.proposal.preserve_dimensions || {}).map(k => names[k] || k);
+      preview.replaceChildren(
+        el('h3', {}, '本次方案（确认前核对）'),
+        el('p', {}, `保留 ${result.proposal.targets.length} 页内容；默认先试其中 1 页。`),
+        el('p', {class:'muted'}, `借用：${borrowed.join('、') || '未记录'}；保留：${kept.join('、') || '其余维度'}`),
+        ...result.proposal.conflicts.map(c => {
         const choice = el('select', {'aria-label': label(c.page_id) + ' 密度取舍'}, el('option', {value:''}, '明确选择取舍'), el('option', {value:'keep_target'}, '保留目标页密度'), el('option', {value:'use_reference'}, '允许参考密度替代目标'));
         choice.value = c.resolution || ''; choice.addEventListener('change', () => { if (choice.value) resolutions[c.conflict_id] = choice.value; else delete resolutions[c.conflict_id]; changed(); notice.textContent = '取舍已保留，请重新检查要求。'; });
         return el('div', {class:'notice stack'}, el('strong', {}, label(c.page_id) + '：极简与高密度要求冲突'), choice, detail('查看冲突原文', json(c)));
@@ -320,7 +333,8 @@ export function style(app) {
       const entries = result.candidates.filter(v => chosen.input.target_page_ids.includes(v.candidate.page_id) && v.candidate.stage === 'blueprint').slice(-30);
       candidateRows.append(...entries.map(v => el('div', {class:'row wrap'}, el('span', {}, label(v.candidate.page_id) + (v.status === 'adopted' ? ' · 曾采用' : ' · 待比较')),
         button('比较候选 '+v.candidate.candidate_id.slice(-6), () => openCandidate(app, v.candidate, result.revision_id)),
-        v.status === 'adopted' && !app.readonly && button('从此候选扩展', () => { adoptedCandidate.value = v.candidate.candidate_id; invalidatePlan(); showPhase(3); }))));
+        // 扩展动作属于阶段 4（试作与采用是阶段 3）：入口必须落在真实阶段。
+        v.status === 'adopted' && !app.readonly && button('从此候选扩展', () => { adoptedCandidate.value = v.candidate.candidate_id; invalidatePlan(); showPhase(4); }))));
       candidateRows.append(el('p', {class:'muted'}, '显示最近一批目标页候选。是否属于这版风格、仍被采用及依据有效，由扩展计划再次核对。'), button('到任务页查看全部候选', () => app.go({surface:'runs', revision:result.revision_id, task_id:null})));
     } catch (error) { if (!disposed && token === candidateSerial) candidateRows.append(el('p', {class:'field-error'}, readableError(error))); }
   }

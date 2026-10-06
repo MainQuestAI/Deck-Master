@@ -3,6 +3,7 @@ import {runDesk} from './run-desk.js';
 import {candidateBatch} from './candidate-desk.js';
 import {el, button, empty, heading} from './dom.js';
 import {changeHandoffs} from './change-handoff.js';
+import {runsAreas, routeHash} from './routes.js';
 
 const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
 export {overview} from './overview.js';
@@ -35,30 +36,36 @@ export function runs(app, data) {
   // UX-05b（对账报告 §5：任务/决定/版本/文件职责混排）：四个子区改为分段切换——
   // 同一时刻只呈现一个工作上下文，默认进入「正在进行」；切换后焦点落到该子区
   // 标题，按钮以 aria-pressed 说明当前所在，而不是把四段内容纵向堆在一起。
+  // R4（深度复审）：子区上下文随链接保存与恢复——读取版本、刷新或从别的工作面
+  // 返回后仍落在同一个子区；只有初次访问（链接里没有 area）才默认「正在进行」。
   const subareas = [
-    ['runs-tasks', '正在进行', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel)],
-    ['runs-decisions', '待决定', el('div', {id: 'runs-decisions', class: 'stack runs-subarea'}, ...(handoffs ? [handoffs] : []), batch)],
+    ['tasks', 'runs-tasks', '正在进行', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel)],
+    ['decisions', 'runs-decisions', '待决定', el('div', {id: 'runs-decisions', class: 'stack runs-subarea'}, ...(handoffs ? [handoffs] : []), batch)],
   ];
   if (app.health.ui_capabilities?.includes('exports.v1')) {
-    subareas.push(['runs-versions', '版本', el('div', {id: 'runs-versions', class: 'stack runs-subarea'}, historyDesk(app, data.history))]);
-    subareas.push(['runs-files', '文件', el('div', {id: 'runs-files', class: 'stack runs-subarea'}, deliveryDesk(app))]);
-  } else subareas.push(['runs-versions', '版本与文件', el('div', {id: 'runs-versions', class: 'stack runs-subarea'},
+    subareas.push(['versions', 'runs-versions', '版本', el('div', {id: 'runs-versions', class: 'stack runs-subarea'}, historyDesk(app, data.history))]);
+    subareas.push(['files', 'runs-files', '文件', el('div', {id: 'runs-files', class: 'stack runs-subarea'}, deliveryDesk(app))]);
+  } else subareas.push(['versions', 'runs-versions', '版本与文件', el('div', {id: 'runs-versions', class: 'stack runs-subarea'},
     panel('版本与文件', el('p', {}, '升级核心后可读取固定版本的导出与恢复功能。')))]);
   const switchers = new Map();
-  const showSubarea = (key, {focus = false} = {}) => {
-    for (const [id, , section] of subareas) section.hidden = id !== key;
-    for (const [id, control] of switchers) control.setAttribute('aria-pressed', String(id === key));
+  const showSubarea = (key, {focus = false, persist = false} = {}) => {
+    for (const [area, , , section] of subareas) section.hidden = area !== key;
+    for (const [area, control] of switchers) control.setAttribute('aria-pressed', String(area === key));
+    if (persist) {
+      app.route.runs_area = key;
+      history.replaceState(null, '', routeHash(app.info, app.route));
+    }
     if (!focus) return;
-    const head = subareas.find(([id]) => id === key)?.[2].querySelector('h2');
+    const head = subareas.find(([area]) => area === key)?.[3].querySelector('h2');
     if (head) { head.tabIndex = -1; head.focus({preventScroll: true}); }
   };
   node.append(el('div', {class: 'row wrap runs-subareas', role: 'group', 'aria-label': '任务与交付的子区'},
-    ...subareas.map(([id, name]) => {
-      const control = button(name, () => showSubarea(id, {focus: true}), false, {class: 'quiet', 'aria-controls': id, 'aria-pressed': 'false'});
-      switchers.set(id, control); return control;
+    ...subareas.map(([area, id, name]) => {
+      const control = button(name, () => showSubarea(area, {focus: true, persist: true}), false, {class: 'quiet', 'aria-controls': id, 'aria-pressed': 'false'});
+      switchers.set(area, control); return control;
     })));
-  node.append(...subareas.map(([, , section]) => section));
-  showSubarea('runs-tasks');
+  node.append(...subareas.map(([, , , section]) => section));
+  showSubarea(runsAreas.includes(app.route.runs_area) ? app.route.runs_area : 'tasks');
   return node;
 }
 export {style} from './style-calibration.js';

@@ -330,6 +330,9 @@ def test_pagination_draft_restores_only_a_verified_reading_snapshot(action_brows
     previous = page
     page = previous.context.browser.new_page()
     page.goto(previous.url)
+    page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
+    # 子区上下文随链接保留：断点前在「待决定」，重开先回到运行记录再核对分页。
+    page.get_by_role('button', name='正在进行', exact=True).click()
     page.get_by_role('heading', name='运行记录', exact=True).wait_for()
     if binding == 'same':
         expect(page.locator('.run-task')).to_have_count(5)
@@ -395,6 +398,7 @@ def test_explicit_reading_write_restarts_pagination_from_first_page(action_brows
         previous = page
         page = previous.context.browser.new_page()
         page.goto(previous.url)
+        page.get_by_role('button', name='正在进行', exact=True).click()
         expect(page.locator('.run-task')).to_have_count(5)
         page.get_by_role('button', name='核实并导入旧草稿的已读记录', exact=True).click()
         expect(page.get_by_text('已核实导入 1 项旧记录，原草稿保留。', exact=True)).to_be_visible()

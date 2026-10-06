@@ -147,5 +147,10 @@ export function batchActions(app, selected, onSelectionChange) {
   app.disposables.push(() => { disposed = true; serial++; referenceView?.dispose(); app.root.removeEventListener('summary-refreshed', sync); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', replaced); });
   editor?.ready.then(() => { if (!disposed) { render(); onSelectionChange(); } });
   render();
-  return {node, toolbar, render, invalidate, eligible: page => !batchExclusion(app, page, action.value, fixed)};
+  return {node, toolbar, render, invalidate, eligible: page => !batchExclusion(app, page, action.value, fixed),
+    // AC06/§2.1（深度复审）：长列表里选择摘要与配置入口必须持续可达——
+    // 概览用这两个方法渲染常驻选择条，并让「配置要求」把用户带回配置区。
+    selectionSummary: hidden => selected.size ? `已选 ${selected.size} 页用于${batchNames[action.value]}${hidden ? ` · 筛选外 ${hidden} 页` : ''}` : '',
+    selectedCount: () => selected.size,
+    openConfig: () => { node.scrollIntoView({block: 'center'}); instruction.focus({preventScroll: true}); }};
 }

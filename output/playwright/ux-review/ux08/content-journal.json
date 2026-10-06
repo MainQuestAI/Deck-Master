@@ -40,7 +40,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/overview?revision=adc65a6c985c4aa09f6bcf5d97354e25"
+      "path": "/api/overview?revision=495614c8ade1405fb7b245e3ade85157"
     },
     {
       "method": "GET",
@@ -48,7 +48,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/content-plan?revision=adc65a6c985c4aa09f6bcf5d97354e25"
+      "path": "/api/content-plan?revision=495614c8ade1405fb7b245e3ade85157"
     },
     {
       "method": "GET",
@@ -80,7 +80,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/pages/p01/lineage?revision=adc65a6c985c4aa09f6bcf5d97354e25"
+      "path": "/api/pages/p01/lineage?revision=495614c8ade1405fb7b245e3ade85157"
     },
     {
       "method": "POST",
@@ -92,11 +92,11 @@
     },
     {
       "method": "GET",
-      "path": "/api/content/lineage/p01?revision=adc65a6c985c4aa09f6bcf5d97354e25"
+      "path": "/api/content/lineage/p01?revision=495614c8ade1405fb7b245e3ade85157"
     },
     {
       "method": "GET",
-      "path": "/api/annotations?revision=adc65a6c985c4aa09f6bcf5d97354e25"
+      "path": "/api/annotations?revision=495614c8ade1405fb7b245e3ade85157"
     },
     {
       "method": "POST",
@@ -128,7 +128,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/annotations?revision=adc65a6c985c4aa09f6bcf5d97354e25"
+      "path": "/api/annotations?revision=495614c8ade1405fb7b245e3ade85157"
     },
     {
       "method": "GET",
@@ -144,7 +144,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/pages/p01/lineage?revision=060036cb695c4baeb03b13f6a3ae20d0"
+      "path": "/api/pages/p01/lineage?revision=c303486791bf4ca98381eb83eb2b3123"
     },
     {
       "method": "GET",
@@ -152,11 +152,11 @@
     },
     {
       "method": "GET",
-      "path": "/api/content/lineage/p01?revision=060036cb695c4baeb03b13f6a3ae20d0"
+      "path": "/api/content/lineage/p01?revision=c303486791bf4ca98381eb83eb2b3123"
     },
     {
       "method": "GET",
-      "path": "/api/annotations?revision=060036cb695c4baeb03b13f6a3ae20d0"
+      "path": "/api/annotations?revision=c303486791bf4ca98381eb83eb2b3123"
     },
     {
       "method": "POST",

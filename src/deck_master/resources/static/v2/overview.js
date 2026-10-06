@@ -160,6 +160,11 @@ function matrixPanel(app, saved) {
   const selected = new Set((storedSelection !== null ? storedSelection : (memory.state.selected_page_ids || [])).filter(id => pageIdSet.has(id)));
   const count = el('span', {class: 'muted', role: 'status'});
   const selectionNote = el('span', {class: 'muted', role: 'status'});
+  // AC06/§2.1：常驻选择条——选页后在长列表任意位置都能看到范围摘要并进入配置。
+  const selectionBarSummary = el('strong', {class: 'overview-selection-summary'});
+  const selectionBar = el('div', {class: 'row wrap overview-selection-bar', hidden: true},
+    selectionBarSummary,
+    button('配置要求', () => batch.openConfig(), false, {class: 'quiet'}));
   const clearButton = button('清除选择', () => { selected.clear(); batch.invalidate(); saveSelection(); render(); });
   const searchInput = el('input', {type: 'search', value:search, maxLength:200, placeholder: '搜索页码或标题', 'aria-label': '搜索页码或标题', autocomplete: 'off'});
   const filterAll = button('', () => setFilter('all'), false, {'aria-pressed': 'true'});
@@ -252,6 +257,10 @@ function matrixPanel(app, saved) {
     clearButton.disabled = !selected.size;
     clearButton.hidden = !selected.size;
     selectionNote.hidden = !selected.size;
+    // AC06/§2.1（深度复审）：30 页末尾选完页后，选择摘要与配置入口仍要在视口内
+    // ——常驻选择条随滚动吸附在顶部，点击「配置要求」回到配置区并聚焦要求。
+    selectionBar.hidden = !selected.size;
+    selectionBarSummary.textContent = batch.selectionSummary(hiddenSelected);
     allCheckbox.checked = operable.length > 0 && operable.every(page => selected.has(page.page_id));
     allCheckbox.indeterminate = operable.some(page => selected.has(page.page_id)) && !allCheckbox.checked;
     allCheckbox.disabled = !operable.length;
@@ -361,6 +370,8 @@ function matrixPanel(app, saved) {
     // 演进：未选=引导；选后=配置（目标摘要—要求—参考—影响—预览）；
     // 核对通过后=交接主动作出现。
     batch.node,
+    // 选择摘要条紧贴列表：向下滚动选页时它吸附在顶部，配置入口始终够得着。
+    selectionBar,
     el('div', {class:'row wrap overview-preferences'}, preferenceStatus, compareButton, downloadButton),
     el('div', {class: 'matrix-wrap'}, table),
     el('div', {class: 'matrix-caption'},

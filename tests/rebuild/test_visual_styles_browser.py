@@ -9,6 +9,31 @@ from test_visual_styles import result,image_bytes
 pytestmark=pytest.mark.browser
 
 
+def click_visual_trial(page, timeout=25000):
+    """试作动作属于「试作与采用」阶段；确认与恢复会重挂载界面并合上阶段，
+    因此"展开阶段再点"需要可重试——否则点的是被卸载的旧实例。"""
+    import time as _time
+    from playwright.sync_api import expect
+    deadline = _time.time() + timeout / 1000
+    last = None
+    while _time.time() < deadline:
+        open_visual_phase(page, 2)
+        trial = page.get_by_role('button', name='预览单页试作', exact=True)
+        try:
+            expect(trial).to_be_enabled(timeout=3000)
+            trial.click(timeout=3000)
+            return
+        except Exception as error:
+            last = error
+            page.wait_for_timeout(250)
+    raise AssertionError(f'试作动作在阶段 3 未就绪：{last}')
+
+
+def handoff_action(page):
+    """交接动作按真实计划出现；用容器定位以便断言"不出现"（role 定位看不到隐藏元素）。"""
+    return page.locator('.visual-plan button').filter(has_text='保存并交接试作')
+
+
 def open_visual_phase(page, index):
     """四阶段组织（UX-03b）：控件在阶段折叠内，核对前先展开该阶段。
 
@@ -44,13 +69,12 @@ def test_screenshot_ui_upload_reasoning_confirmation_dispatch_and_restore(flow):
             page.reload();page.get_by_role('button',name='查看分析结果',exact=True).click();page.get_by_text('调整借用维度',exact=True).click();page.get_by_role('textbox',name='配色规范').wait_for()
             page.get_by_role('textbox',name='配色规范').fill('Use blue #225588 and white')
             page.get_by_role('button',name='检查并确认视觉规范',exact=True).click()
-            # 确认后自动恢复规范并停在"确认规范"；打开第三阶段再试作（恢复链路含
-            # 规范详情与固定依据读取，放宽等待）。
-            # 确认后自动恢复规范；试作动作常驻可见（不藏进阶段折叠）。
+            # 确认后自动恢复规范并停在"确认规范"；试作动作属于「试作与采用」阶段，
+            # 打开该阶段再试作（恢复链路含规范详情与固定依据读取，放宽等待）。
             assert flow.store.load_document()['pages']==before
-            page.get_by_role('button',name='预览单页试作',exact=True).click()
-            expect(page.get_by_role('button',name='保存并交接试作',exact=True)).to_be_enabled()
-            page.get_by_role('button',name='保存并交接试作',exact=True).click()
+            click_visual_trial(page)
+            expect(handoff_action(page)).to_be_enabled()
+            handoff_action(page).click()
             page.get_by_role('heading',name='当前任务',exact=True).wait_for()
             assert flow.store.load_document()['pages']==before
             assert not errors
@@ -162,8 +186,9 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             page.get_by_text('调整借用维度', exact=True).click()
             page.get_by_role('textbox', name='配色规范', exact=True).fill('Keep edited blue #225588 rules')
             page.get_by_role('button', name='检查并确认视觉规范', exact=True).click()
-            # 确认后自动恢复规范；试作动作常驻可见（不藏进阶段折叠）。
-            expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=20000)
+            # 确认后自动恢复规范；试作动作属于「试作与采用」阶段，确认会重挂载界面。
+            click_visual_trial(page)
+            expect(handoff_action(page)).to_be_hidden()
             # Returned analysis/recipe pointers must already be on disk before navigation settles.
             saved = page.request.get(first_url + 'api/drafts').json()['records']
             state = next(r['draft']['content']['visual_style'] for r in saved
@@ -194,14 +219,16 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             spec_editor = page.locator('.visual-style .visual-spec-editor')
             if not spec_editor.evaluate('node => node.open'): spec_editor.locator(':scope > summary').click()
             expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_value('Keep edited blue #225588 rules')
+            open_visual_phase(page, 2)
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=15000)
             # A frozen plan is deliberately not restored as an executable pending action.
-            expect(page.get_by_role('button', name='保存并交接试作', exact=True)).to_be_disabled()
+            expect(handoff_action(page)).to_be_hidden()
             page.locator('summary').filter(has_text='个人草稿与恢复').click()
             restore = page.get_by_role('combobox', name='恢复项目中的个人草稿', exact=True)
             option = restore.locator('option').filter(has_text='Saved recovery note')
             restore.select_option(option.get_attribute('value'))
             expect(page.get_by_role('textbox', name='个人草稿', exact=True)).to_have_value('Saved recovery note')
+            open_visual_phase(page, 2)
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=15000)
             # Explicit persisted task/recipe selections work without an automatic latest choice.
             page.locator('summary').filter(has_text='恢复项目中的截图分析与规范').click()
@@ -210,14 +237,14 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             editor = page.locator('.visual-style .visual-spec-editor')
             if not editor.evaluate('node => node.open'): editor.locator(':scope > summary').click()
             expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_be_visible()
+            open_visual_phase(page, 2)
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_disabled()
             page.get_by_role('combobox', name='恢复已确认的截图规范').select_option(recipe_id)
             expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_value('Keep edited blue #225588 rules')
-            expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=15000)
-            page.get_by_role('button', name='预览单页试作', exact=True).click()
-            expect(page.get_by_role('button', name='保存并交接试作', exact=True)).to_be_enabled()
+            click_visual_trial(page)
+            expect(handoff_action(page)).to_be_enabled()
             # This business write must use the replacement DraftEditor, not its disposed predecessor.
-            page.get_by_role('button', name='保存并交接试作', exact=True).click()
+            handoff_action(page).click()
             page.get_by_role('heading', name='当前任务', exact=True).wait_for()
             assert any(flow.store.read_object_json(ref).get('change_binding')
                        for ref in flow.store.load_document()['tasks'])
@@ -264,6 +291,7 @@ def test_saved_analysis_selection_binds_its_reference_and_cancelled_task_stays_s
             expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_count(0)
             expect(page.locator('.visual-style [role=status]')).to_contain_text('cancelled')
             expect(page.get_by_role('button', name='检查并确认视觉规范', exact=True)).to_be_disabled()
+            open_visual_phase(page, 2)
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_disabled()
             assert flow.task(cancelled['task_id'])['status'] == 'cancelled'
         finally: browser.close(); server.stop()

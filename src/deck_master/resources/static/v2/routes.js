@@ -1,5 +1,7 @@
 export const surfaces = {overview: '制作总览', content: '内容与来源', gallery: '整稿画廊', style: '风格校准', runs: '任务与交付'};
 export const layers = {source: '来源', content: '逐页稿', original_image: '原图', svg: 'SVG', ppt: 'PPT', prepared_prompt: '预备提示词', submitted_prompt: '实际提示词'};
+// R4（深度复审）：任务与交付的四个子区是工作区上下文，随链接保存与恢复。
+export const runsAreas = ['tasks', 'decisions', 'versions', 'files'];
 export function readRoute(info, position, summary) {
   const params = new URLSearchParams(location.hash.slice(1));
   if (!params.size) {
@@ -11,7 +13,7 @@ export function readRoute(info, position, summary) {
   const route = {surface: params.get('surface') || (params.get('task') ? 'runs' : params.has('page') ? 'page' : 'overview'),
     page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision') === 'null' ? null : params.get('revision'),
     candidate_id: params.get('candidate'), zoom: params.has('zoom') ? Number(params.get('zoom')) : 1, task_id: params.get('task'),
-    action_id: params.get('action'), review_id: params.get('review')};
+    action_id: params.get('action'), review_id: params.get('review'), runs_area: params.get('area')};
   if (['q','filter','sort'].some(key => params.has(key))) {
     if (route.surface !== 'overview' || ['q','filter','sort'].some(key => params.getAll(key).length > 1) || (params.get('q') || '').length > 200 || (params.has('filter') && !['all','todo'].includes(params.get('filter'))) || (params.has('sort') && !['ascending','descending'].includes(params.get('sort'))))
       throw new Error('总览链接中的搜索、筛选或排序无效，当前内容保留。');
@@ -25,6 +27,7 @@ export function readRoute(info, position, summary) {
       (route.candidate_id && !['page', 'content'].includes(route.surface)) ||
       [route.action_id, route.review_id, route.candidate_id, route.task_id].filter(Boolean).length > 1 ||
       ((route.action_id || route.review_id || route.candidate_id) && !route.revision) ||
+      (route.runs_area && !runsAreas.includes(route.runs_area)) ||
       [route.page_id, route.task_id, route.review_id, route.candidate_id, route.revision].some(id => id !== null && !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(id)))
     throw new Error('链接中的页面、对象、层或版本无效，请检查链接。');
   return route;
@@ -37,6 +40,8 @@ export function routeHash(info, route) {
   if (route.task_id) params.set('task', route.task_id);
   if (route.action_id) params.set('action', route.action_id);
   if (route.review_id) params.set('review', route.review_id);
+  // 子区上下文随链接全程保留：跨面返回再进任务与交付时仍落在同一工作区。
+  if (route.runs_area) params.set('area', route.runs_area);
   if (route.surface === 'overview' && route.overview_preferences) {
     params.set('q', route.overview_preferences.search); params.set('filter', route.overview_preferences.filter); params.set('sort', route.overview_preferences.sort);
   }

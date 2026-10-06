@@ -161,6 +161,11 @@ textarea{font-size:14px;line-height:1.7}
 .run-pagination, .candidate-pagination { justify-content: space-between; }
 
 .run-rows:not([hidden]), .candidate-batch-rows { max-height: 480px; overflow: auto; overscroll-behavior: contain; }
+/* AC06/§2.1：长列表选页时摘要与配置入口吸附在顶部，滚到第 28 页也够得着。 */
+.overview-selection-bar[hidden] { display: none; }
+.overview-selection-bar { position: sticky; top: 0; z-index: 3; align-items: center; gap: 12px;
+  padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-warm); }
+.overview-selection-summary { font-weight: 600; }
 /* UX-05b: one runs subarea at a time; .stack would otherwise beat [hidden]. */
 .runs-subarea[hidden] { display: none; }
 .runs-subareas { gap: 8px; padding: 4px 0 12px; border-bottom: 1px solid var(--border-soft); margin-bottom: 16px; }
@@ -196,7 +201,9 @@ textarea{font-size:14px;line-height:1.7}
 /* UX-04b: the concrete change list sits with the impact preview, not in another surface. */
 .content-changes{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-warm)}
 .content-changes h3{margin:0;font-size:14px}
-.content-change-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+/* 2.3：差异清单再长也不把影响与确认挤出同屏——清单自身滚动。 */
+.content-change-list{list-style:none;padding:0;margin:0;display:grid;gap:8px;max-height:32vh;overflow:auto;overscroll-behavior:contain}
+.content-check{gap:12px}
 .content-change-list li{font-size:13px;overflow-wrap:anywhere}
 .content-change-label{font-weight:600;margin-right:6px}
 .content-change-before{color:var(--muted)}

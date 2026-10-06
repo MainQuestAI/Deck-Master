@@ -1,4 +1,4 @@
-import {el, button, heading, empty, version, toast, modal, downloadJSON, icon} from './dom.js';
+import {el, button, heading, empty, version, shortRef, toast, modal, downloadJSON, icon} from './dom.js';
 import {imageView} from './images.js';
 import {GalleryMemory} from './gallery-state.js';
 import {layers} from './routes.js';
@@ -368,22 +368,31 @@ export function gallery(app, data) {
         // F11/C09/N10：冲突面板列出真正不同的字段（不只选页/层）；双方均可
         // 下载，采用任何一侧都是明确动作，替换前用户看到完整差异。
         const windowState = state(), savedState = saved.record?.state || {};
+        const pageLabel = id => {
+          const index = app.summary.pages.findIndex(p => p.page_id === id);
+          return index >= 0 ? `第 ${index + 1} 页` : (id || '未记录页');
+        };
+        // F11/C09/N10（深度复审 2.4）：替换决定所依赖的摘要必须覆盖真正会被替换的
+        // 全部字段——筛选、阅读位置、版本与缩放此前被漏掉，导致"字段一致"的错误结论。
         const describe = {
-          selected_page_ids: v => `选页：${(v || []).length ? (v || []).map(id => {
-            const index = app.summary.pages.findIndex(p => p.page_id === id);
-            return index >= 0 ? `第 ${index + 1} 页` : id;
-          }).join('、') : '未选页'}`,
+          revision_id: v => `版本：${version(v)}`,
           layer: v => `图层：${layers[v] || '未记录'}`,
-          mode: v => `模式：${v === 'compare' ? '固定比较' : v === 'grid' ? '网格' : '未记录'}`,
+          selected_page_ids: v => `选页：${(v || []).length ? (v || []).map(pageLabel).join('、') : '未选页'}`,
+          mode: v => `模式：${v === 'compare' ? '固定比较' : v === 'grid' ? '网格' : v === 'continuous' ? '连续阅读' : '未记录'}`,
           columns: v => `列数：${v ?? '未记录'}`,
-          zoom: v => `缩放：${v ?? '未记录'}`,
-          references: v => `固定比较引用：${(v || []).length ? v.map(r => r.page_id || '未记录页').join('、') : '未固定'}`,
+          filter: v => `筛选：${v?.chapter_id ? `章节 ${v.chapter_id}` : '全部章节'} · ${statuses[v?.status] || '全部页面'}`,
+          anchor: v => `阅读位置：${v?.page_id ? pageLabel(v.page_id) : '未固定'}${v?.offset ? ` · 行偏移 ${v.offset}` : ''}`,
+          zoom: v => `缩放：${v?.synchronized ? '同步' : '各自'} · ${Math.round((v?.scale ?? 1) * 100)}%`,
+          references: v => `固定比较引用：${(v || []).length
+            ? v.map(r => `${pageLabel(r.page_id)} · 原图 · ${version(r.revision_id)} · ${shortRef(r.original_ref?.sha256)}`).join('；')
+            : '未固定'}`,
         };
         const fields = Object.keys(describe).filter(key => canonical(windowState[key]) !== canonical(savedState[key]));
-        const rows = (fields.length ? fields : ['selected_page_ids', 'layer']).map(key => el('p', {},
+        // 一致时也逐项列出被核对过的字段，"一致"才有可核对的范围。
+        const rows = (fields.length ? fields : Object.keys(describe)).map(key => el('p', {},
           `${describe[key](windowState[key])} ｜ 项目保存：${describe[key](savedState[key])}`));
         modal('两个窗口的画廊阅读状态', el('div', {class: 'stack'},
-          el('p', {}, fields.length ? '以下阅读状态在两个窗口不同；任一侧被采用后，当前窗口的阅读状态会整份变为那一侧。' : '两个窗口的阅读状态字段一致。'),
+          el('p', {}, fields.length ? '以下阅读状态在两个窗口不同；任一侧被采用后，当前窗口的阅读状态会整份变为那一侧。' : '上面列出的阅读状态字段在两个窗口一致；两份完整快照仍保留在下方，可逐项核对。'),
           ...rows,
           el('details', {}, el('summary', {}, '两份完整快照'), el('pre', {class: 'evidence-json'}, JSON.stringify({window: windowState, saved: savedState}, null, 2))),
           el('div', {class: 'row wrap'},
