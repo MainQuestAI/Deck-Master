@@ -196,8 +196,13 @@ def test_screenshot_recipe_restore_verifies_spec_and_keeps_schema_boundary(ux03_
     page.get_by_label('已确认的截图规范').select_option(index=1)
     expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
 
-    # AC10：拆解图、借用/保留维度与字体判断都可核对；默认借用配色与文字层级。
-    expect(page.get_by_text('查看视觉拆解图', exact=True)).to_be_visible()
+    # AC10：拆解图直接可见；规范先显示借用/保留摘要；编辑器按需展开。
+    expect(page.get_by_text('截图拆解图', exact=True)).to_be_visible()
+    expect(page.locator('.visual-breakdown')).to_contain_text('截图拆解图')
+    expect(page.locator('.visual-keep-summary')).to_contain_text('借用：配色、文字层级')
+    expect(page.locator('.visual-keep-summary')).to_contain_text('保留：')
+    assert page.get_by_label('借用截图配色').count() == 0 or not page.get_by_label('借用截图配色').is_visible()
+    page.get_by_text('调整借用维度', exact=True).click()
     expect(page.get_by_label('借用截图配色')).to_be_checked()
     expect(page.get_by_label('借用截图文字层级')).to_be_checked()
     expect(page.get_by_label('借用截图构图')).not_to_be_checked()
@@ -211,6 +216,7 @@ def test_screenshot_recipe_restore_verifies_spec_and_keeps_schema_boundary(ux03_
     expect(page.get_by_text('字体判断：Synthetic Sans（近似）：来自截图的近似判断', exact=False)).to_be_visible()
 
     # AC10：样例选择只列已采用候选；同页两候选按钮以短码区分（ST-05）。
+    page.locator('.visual-style').get_by_text('3 · 试作与采用', exact=True).click()
     sample = page.get_by_label('已采用的截图风格样例')
     expect(sample.locator('option')).to_have_count(2)
     compare_buttons = page.locator('.visual-style button').filter(has_text='比较 ')
@@ -346,7 +352,7 @@ def test_expansion_plan_carries_adopted_sample_and_explains_core_rejection(ux03_
     expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
 
     # 从仍采用样例扩展到明确选页：请求绑定样例与目标页。
-    page.get_by_text('采用样例后扩展', exact=True).click()
+    page.locator('.visual-style').get_by_text('4 · 扩展', exact=True).click()
     sample = page.get_by_label('已采用的截图风格样例')
     expect(sample.locator('option')).to_have_count(2)
     sample.select_option(index=1)

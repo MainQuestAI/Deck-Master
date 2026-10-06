@@ -101,11 +101,13 @@ export function style(app) {
       detail('高级：借用维度、原文选段与建议',
         dimensionFields, el('p', {class: 'muted'}, '构图须单独选择。生成仍可能偏离，返回后逐项核对。'),
         sourceView, excerpt, detail('对照目标页原文', targetSource, targetSourceView), el('label', {}, '制作工具建议（待你确认）', suggestion))),
-    phase('2 · 确认与单页试作', el('div', {class: 'row wrap'}, recipes, button('刷新风格版本', loadRecipes)), recipeView,
-      el('label', {class:'stack'}, '先试一页', trialPage), firstButton,
+    // F07/§4.3/D2：四阶段（参考与目标—确认规范—试作与采用—扩展），
+    // 与截图路线共用同一阶段语义；确认动作属于"确认规范"。
+    phase('2 · 确认规范', el('div', {class: 'row wrap'}, recipes, button('刷新风格版本', loadRecipes)), confirmButton, recipeView),
+    phase('3 · 试作与采用', el('label', {class:'stack'}, '先试一页', trialPage), firstButton,
       el('p', {class: 'muted'}, '候选返回不替换当前稿；到固定比较中逐页核对文字、配色及未选择的维度。'),
       button('刷新风格目标候选', loadCandidates), candidateRows),
-    phase('3 · 采用后扩展', el('p', {class:'muted'}, '先比较并采用单页候选。扩展计划会核实它是否仍在采用、属于这版风格及目标依据是否有效。'),
+    phase('4 · 扩展', el('p', {class:'muted'}, '先比较并采用单页候选。扩展计划会核实它是否仍在采用、属于这版风格及目标依据是否有效。'),
         el('label', {}, '已采用候选', adoptedCandidate), expansionTargets,
         el('label', {class:'stack'}, '本次调用上限', calls), expandButton)
   ];
@@ -223,7 +225,7 @@ export function style(app) {
       if (suggestion.value.trim()) input.host_suggestion = suggestion.value;
       if (parent) input.parent_recipe_id = parent;
       const result = await prepare('/api/styles/propose', {input}); if (disposed || token !== serial) return;
-      proposal = result; notice.textContent = '要求已检查；确认版本不会调用模型。';
+      proposal = result; showPhase(2); notice.textContent = '要求已检查；确认版本不会调用模型。';
       preview.replaceChildren(el('p', {}, `保留 ${result.proposal.targets.length} 页内容；默认先试其中 1 页。`), ...result.proposal.conflicts.map(c => {
         const choice = el('select', {'aria-label': label(c.page_id) + ' 密度取舍'}, el('option', {value:''}, '明确选择取舍'), el('option', {value:'keep_target'}, '保留目标页密度'), el('option', {value:'use_reference'}, '允许参考密度替代目标'));
         choice.value = c.resolution || ''; choice.addEventListener('change', () => { if (choice.value) resolutions[c.conflict_id] = choice.value; else delete resolutions[c.conflict_id]; changed(); notice.textContent = '取舍已保留，请重新检查要求。'; });

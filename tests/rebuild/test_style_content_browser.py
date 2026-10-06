@@ -53,7 +53,7 @@ def open_style(page, with_targets=False):
 
 
 def toggle_phase(page, number):
-    phase = page.locator('.style-phase').nth(number-1)
+    phase = page.locator('.style-calibration > .style-phase').nth(number-1)
     if not phase.evaluate('(node) => node.open'):
         phase.locator('summary').first.click()
     return phase
@@ -76,12 +76,12 @@ def test_thirty_page_mobile_search_counts_missing_images_and_release(style_conte
     open_style(page, with_targets=True)
     page.set_viewport_size({'width':390,'height':844})
     target = page.get_by_role('searchbox', name='搜索风格目标')
-    expect(page.locator('.style-phase').first).to_have_attribute('open', '')
-    assert not page.locator('.style-phase').nth(1).evaluate('(node) => node.open')
+    expect(page.locator('.style-calibration > .style-phase').first).to_have_attribute('open', '')
+    assert not page.locator('.style-calibration > .style-phase').nth(1).evaluate('(node) => node.open')
     target.fill('p30')
     expect(page.locator('.style-target-card')).to_have_count(1)
     page.get_by_role('checkbox', name='风格目标 第 30 页 · 交付前查看缺口', exact=True).check()
-    expect(page.locator('.style-phase').first).to_contain_text('已选 1 页')
+    expect(page.locator('.style-calibration > .style-phase').first).to_contain_text('已选 1 页')
     target.fill('p03')
     expect(page.locator('.style-target-card')).to_contain_text('未记录原图')
     target.fill('没有这页')
@@ -134,7 +134,8 @@ def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_co
     expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled()
     before_tasks = copy.deepcopy(store.load_document()['tasks'])
     page.get_by_role('button', name='确认这版风格要求', exact=True).click()
-    expect(page.locator('.style-phase').nth(1)).to_have_attribute('open','')
+    expect(page.locator('.style-calibration > .style-phase').nth(1)).to_have_attribute('open','')
+    toggle_phase(page, 3)
     expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled()
     assert store.load_document()['tasks'] == before_tasks
     page.get_by_role('button', name='预览单页试作', exact=True).click()
@@ -143,7 +144,7 @@ def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_co
     page.get_by_role('textbox', name='风格短要求').fill('保留事实，新的明确要求。')
     expect(page.get_by_role('button', name='保存并交接风格试作', exact=True, include_hidden=True)).to_be_disabled()
     expect(page.locator('.style-plan')).to_be_hidden()
-    toggle_phase(page, 2)
+    toggle_phase(page, 3)
     page.get_by_role('button', name='预览单页试作', exact=True).click()
     expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled()
     doc = copy.deepcopy(store.load_document()); doc['policy']['user_stop'] = True
@@ -152,7 +153,7 @@ def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_co
     expect(page.get_by_role('button', name='保存并交接风格试作', exact=True, include_hidden=True)).to_be_disabled()
     toggle_phase(page, 1)
     expect(page.get_by_role('textbox', name='风格短要求')).to_have_value('保留事实，新的明确要求。')
-    expect(page.locator('.style-phase').first).to_contain_text('当前项目已有更新')
+    expect(page.locator('.style-calibration > .style-phase').first).to_contain_text('当前项目已有更新')
     assert store.load_document()['tasks'] == before_tasks
 
 
@@ -167,6 +168,7 @@ def test_late_style_plan_leaving_face_cannot_restore_controls(style_content_brow
     open_style(page)
     toggle_phase(page, 2)
     page.get_by_role('combobox', name='已确认的风格版本').select_option(index=1)
+    toggle_phase(page, 3)
     held = []
     def delay(route):
         held.append((route,route.fetch()))

@@ -54,6 +54,7 @@ export function visualStyle(app){
       const result=await get('/api/candidates?'+new URLSearchParams({revision:app.route.revision}));if(disposed||state.recipe!==chosen||epoch!==analysisSerial||hydration!==hydrateSerial)return;
       const rows=result.candidates.filter(v=>v.style_recipe_ref?.sha256===value.ref.sha256&&recipe.input.target_page_ids.includes(v.candidate.page_id)&&v.candidate.stage==='blueprint');
       sample.replaceChildren(el('option',{value:''},'选择已采用的样例'),...rows.filter(v=>v.status==='adopted').map(v=>el('option',{value:v.candidate.candidate_id,'data-page':v.candidate.page_id},app.summary.pages.find(p=>p.page_id===v.candidate.page_id)?.title||v.candidate.page_id)));
+      openPhase(2);
       candidateRows.replaceChildren(el('p',{},'已确认视觉规范。先比较并采用单页试作，再明确勾选扩展页。'),...rows.slice(-30).map(v=>button(`比较 ${app.summary.pages.find(p=>p.page_id===v.candidate.page_id)?.title||v.candidate.page_id} · ${shortRef(v.ref?.sha256||v.candidate.result_ref?.sha256)}`,()=>openCandidate(app,v.candidate,result.revision_id))));renderExpansion();
     }catch(error){if(!disposed)status.textContent=readableError(error);}finally{controls();}}
 
@@ -84,8 +85,24 @@ export function visualStyle(app){
     }catch(error){if(!disposed)status.textContent=readableError(error);}finally{busy=false;controls();}});
   const reference=el('div',{class:'stack'},el('label',{},'参考截图（1–5 张）',input),images);
   const targetBox=el('div',{class:'stack'},el('label',{},'试作目标',target),targetPreview);
-  root.append(el('details',{},el('summary',{},'恢复项目中的截图分析与规范'),el('label',{class:'stack'},'已保存分析任务',savedAnalysis),savedPager,el('label',{class:'stack'},'已确认视觉规范',savedRecipe)),el('div',{class:'style-working-pair'},reference,targetBox),el('details',{},el('summary',{},'预先允许后续扩展的页面（默认不选）'),futureTargets),el('label',{class:'stack'},'想借用怎样的视觉风格',requirement),
-    el('div',{class:'row wrap'},analyze,refresh,handoff),status,rules,el('div',{class:'row wrap'},confirm,trial),candidateRows,el('details',{},el('summary',{},'采用样例后扩展'),sample,expansionTargets,expand),planBox,dispatch);
+  // F07/§4.3/D2：截图路线由平铺改为四阶段，与项目路线共用阶段语义。
+  const phase1=el('details',{class:'style-phase'},el('summary',{},'1 · 参考与目标'),
+    el('div',{class:'style-working-pair'},reference,targetBox),
+    el('label',{class:'stack'},'想借用怎样的视觉风格',requirement),
+    el('details',{},el('summary',{},'预先允许后续扩展的页面（默认不选）'),futureTargets),
+    el('div',{class:'row wrap'},analyze,handoff));
+  const phase2=el('details',{class:'style-phase'},el('summary',{},'2 · 确认规范'),
+    el('div',{class:'row wrap'},refresh),rules,el('div',{class:'row wrap'},confirm));
+  const phase3=el('details',{class:'style-phase'},el('summary',{},'3 · 试作与采用'),
+    el('div',{class:'row wrap'},trial),candidateRows);
+  const phase4=el('details',{class:'style-phase'},el('summary',{},'4 · 扩展'),
+    sample,expansionTargets,el('div',{class:'row wrap'},expand),planBox,dispatch);
+  const phaseNodes=[phase1,phase2,phase3,phase4];
+  function openPhase(next){phaseNodes.forEach((node,i)=>{node.open=i+1===next;});}
+  root.append(el('details',{},el('summary',{},'恢复项目中的截图分析与规范'),el('label',{class:'stack'},'已保存分析任务',savedAnalysis),savedPager,el('label',{class:'stack'},'已确认视觉规范',savedRecipe)),
+    phase1,status,phase2,phase3,phase4);
+  // 状态行在各阶段之外，任何阶段的提示都可见。
+  openPhase(1);
   function controls(){const blocked=!loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size);
     input.disabled=blocked||Boolean(pending);savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
     analyze.disabled=blocked||!state.ids.length||state.ids.length>5||!requirement.value.trim();refresh.disabled=!loaded||busy||!state.task_id;handoff.hidden=!state.task_id;
@@ -136,15 +153,23 @@ export function visualStyle(app){
     try{const value=await get('/api/tasks/'+chosen+(current?'':'?'+new URLSearchParams({revision:app.route.revision})));if(disposed||token!==analysisSerial||state.task_id!==chosen)return;if(current&&value.revision_id!==app.route.revision){app.go({revision:value.revision_id});return;}const task=value.task;
       if(task.status!=='completed'){clearSpec();status.textContent=task.status==='awaiting_host'?'分析要求已保存，等待 Agent 接手。':task.status==='running'?'Agent 已接手，等待分析结果。':`分析尚未完成：${task.status}。请核实或取消原任务。`;return;}
       if(task.kind!=='style_analyze'||task.result_refs.length!==1)throw new Error('分析结果类型不匹配。');
-      const result=await get(fileURL(task.result_refs[0]));if(disposed||token!==analysisSerial||state.task_id!==chosen)return;spec={...result,ref:task.result_refs[0]};const ids=refs.filter(row=>result.references.some(ref=>ref.sha256===row.ref.sha256)).map(row=>row.reference.reference_id);if(JSON.stringify(ids)!==JSON.stringify(state.ids)){state.ids=ids;renderReferences();persist();}renderSpec();status.textContent='分析已返回，尚未确认或修改任何页。';
+      const result=await get(fileURL(task.result_refs[0]));if(disposed||token!==analysisSerial||state.task_id!==chosen)return;spec={...result,ref:task.result_refs[0]};const ids=refs.filter(row=>result.references.some(ref=>ref.sha256===row.ref.sha256)).map(row=>row.reference.reference_id);if(JSON.stringify(ids)!==JSON.stringify(state.ids)){state.ids=ids;renderReferences();persist();}renderSpec();openPhase(2);status.textContent='分析已返回，尚未确认或修改任何页。';
     }catch(error){status.textContent=readableError(error);}finally{controls();}
   }
   function renderSpec(){specLeases.splice(0).forEach(v=>v.dispose());rules.replaceChildren();choices.clear();const view=imageView(app,{file:spec.breakdown},'截图视觉规范拆解图');specLeases.push(view);
-    rules.append(el('details',{},el('summary',{},'查看视觉拆解图'),view.node));
+    // §4.3：拆解图在规范核对阶段直接可见并可完整查看（不再默认折叠）。
+    rules.append(el('div',{class:'visual-breakdown'},el('h3',{},'截图拆解图'),view.node));
+    // 规范先显示借用/保留摘要；点击"调整借用维度"才出现对应编辑器。
+    const borrowed=()=>state.spec_edits?.ref===spec.ref.sha256 ? Object.keys(state.spec_edits.dimensions) : ['palette','typography'];
+    const summaryNode=el('p',{class:'muted visual-keep-summary'});
+    const refreshSummary=()=>{const b=borrowed(),all=Object.keys(spec.dimensions);summaryNode.textContent=`借用：${b.map(k=>names[k]).join('、')||'无'}；保留：${all.filter(k=>!b.includes(k)).map(k=>names[k]).join('、')}。生成仍可能偏离，返回后逐项核对。`;};
+    refreshSummary();rules.append(summaryNode);
+    const editorBody=el('div',{class:'stack'});
     for(const [key,value] of Object.entries(spec.dimensions)){const check=el('input',{type:'checkbox',checked:state.spec_edits?.ref===spec.ref.sha256 ? key in state.spec_edits.dimensions : ['palette','typography'].includes(key),'aria-label':'借用截图'+names[key]});const text=el('textarea',{rows:2,maxLength:4000,value:state.spec_edits?.ref===spec.ref.sha256 ? state.spec_edits.dimensions[key]??value.summary : value.summary,'aria-label':names[key]+'规范'});choices.set(key,{check,text});
       const detail=el('details',{},el('summary',{},'参考位置与不确定说明'),value.evidence.map(item=>el('p',{},`${item.certainty==='unknown'?'待核实':item.certainty==='approximate'?'近似判断':'已观察'}：${item.observation}`)));
-      rules.append(el('div',{class:'visual-rule'},el('label',{class:'inline-control'},check,names[key]),text,detail));
-      const saveRules=()=>{state.spec_edits={ref:spec.ref.sha256,dimensions:Object.fromEntries([...choices].filter(([,v])=>v.check.checked).map(([key,v])=>[key,v.text.value]))};state.recipe=null;recipe=null;invalidatePlan();persist();controls();};text.addEventListener('input',saveRules);check.addEventListener('change',saveRules);}
+      editorBody.append(el('div',{class:'visual-rule'},el('label',{class:'inline-control'},check,names[key]),text,detail));
+      const saveRules=()=>{state.spec_edits={ref:spec.ref.sha256,dimensions:Object.fromEntries([...choices].filter(([,v])=>v.check.checked).map(([key,v])=>[key,v.text.value]))};state.recipe=null;recipe=null;invalidatePlan();refreshSummary();persist();controls();};text.addEventListener('input',saveRules);check.addEventListener('change',saveRules);}
+    rules.append(el('details',{class:'visual-spec-editor'},el('summary',{},'调整借用维度'),editorBody));
     if(spec.conflicts.length)rules.prepend(el('section',{class:'field-error'},el('h3',{},'参考风格存在冲突'),spec.conflicts.map(item=>el('p',{},item.description)),
       el('p',{},'选择其中一张重新分析，再确认单一规范。'),...state.ids.map((id,i)=>button(`以参考 ${i+1} 为准重新分析`,()=>startAnalysis([id])))));
     const font=el('select',{'aria-label':'确认使用的已注册字体'},el('option',{value:''},'沿用目标页已安装字体'),...fonts.map(f=>el('option',{value:f.font_id},f.family+' · '+f.face)));font.value=state.font_id||'';font.addEventListener('change',()=>{state.font_id=font.value;state.recipe=null;recipe=null;invalidatePlan();persist();controls();});rules.append(el('label',{},'字体选择',font));
