@@ -20,6 +20,10 @@ from deck_master import changes as changes_mod
 
 pytestmark = pytest.mark.browser
 
+import base64
+PNG_1PX = base64.b64decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')
+
 RECIPE_SHA = 'b' * 64
 
 
@@ -117,3 +121,122 @@ def test_svg_task_shortcut_opens_the_svg_layer(ux03_browser):
     shortcut = page.get_by_role('button', name=re.compile(r'^阅读 第 1 页 .* · SVG$'))
     shortcut.click()
     assert 'layer=svg' in page.url, page.url
+
+
+SPEC_SHA = 'c' * 64
+BREAKDOWN_SHA = 'd' * 64
+
+
+def spec_document():
+    return {'schema_version': 'visual_style_spec.v1', 'project_id': 'demo', 'analysis_request_ref': None,
+            'references': [], 'palette': {'dominant': []},
+            'dimensions': {key: {'summary': f'{key} 维度摘要', 'evidence': [
+                {'certainty': 'observed' if key == 'palette' else 'unknown', 'observation': f'{key} 的观察记录'}]}
+                for key in ['palette', 'typography', 'composition', 'spacing', 'density', 'lines', 'icons']},
+            'font_suggestions': [{'family': 'Synthetic Sans', 'approximate': True, 'reason': '来自截图的近似判断'}],
+            'conflicts': [], 'limitations': ['合成规范的局限说明'],
+            'breakdown': {'path': f'.deckmaster/objects/ab/{BREAKDOWN_SHA}.png', 'sha256': BREAKDOWN_SHA}}
+
+
+def v2_recipe(index, page_id='p01'):
+    return {'schema_version': 'style_recipe.v2', 'recipe_id': f'recipe-{index:016x}', 'version': 1,
+            'input': {'instruction': '同样的风格要求，非常相似。', 'target_page_ids': [page_id],
+                      'visual_style_ref': {'path': f'.deckmaster/objects/ab/{SPEC_SHA}.json', 'sha256': SPEC_SHA}},
+            'dimensions': {'palette': '借用配色摘要', 'typography': '借用文字层级摘要'}}
+
+
+def install_style_mocks(page, *, recipes, detail, candidates=()):
+    import json
+    # 真实服务端把 reference_sources 一并放进 recipe 对象（confirm 从 proposal 拷贝）。
+    recipe = detail.get('recipe', {})
+    ref = recipe.get('input', {}).get('visual_style_ref')
+    if ref:
+        detail = {**detail, 'recipe': {**recipe,
+                  'reference_sources': {'references': [], 'visual_style_ref': ref,
+                                        'spec': spec_document(), 'breakdown': spec_document()['breakdown']}}}
+    page.route('**/api/styles?*', lambda route: route.fulfill(
+        status=200, content_type='application/json', body=json.dumps({'recipes': recipes})))
+    page.route('**/api/styles/recipe-*', lambda route: route.fulfill(
+        status=200, content_type='application/json', body=json.dumps(detail)))
+    page.route('**/api/candidates?*', lambda route: route.fulfill(
+        status=200, content_type='application/json', body=json.dumps({'candidates': list(candidates), 'revision_id': 'r'})))
+    page.route('**/api/file*', lambda route: route.fulfill(
+        status=200, content_type='application/json', body=json.dumps(spec_document())))
+    page.route('**/api/thumbnails*', lambda route: route.fulfill(
+        status=200, content_type='application/json',
+        body=json.dumps({'status': 'ready', 'url': '/api/thumbnail-file?cache_key=' + 'a' * 64})))
+    page.route('**/api/thumbnail-file*', lambda route: route.fulfill(
+        status=200, content_type='image/png', body=PNG_1PX))
+
+
+def candidate_row(index, page_id, status, recipe_sha):
+    sha = f'{index:08x}' + '0' * 56
+    return {'candidate': {'candidate_id': f'candidate-{index:016x}', 'page_id': page_id, 'stage': 'blueprint',
+                          'created_at': '2026-10-06T09:0%d:00Z' % index, 'result_ref': {'sha256': sha}},
+            'ref': {'sha256': sha}, 'status': status,
+            'style_recipe_ref': {'sha256': recipe_sha}}
+
+
+def test_screenshot_recipe_restore_verifies_spec_and_keeps_schema_boundary(ux03_browser):
+    from playwright.sync_api import expect
+    page, server, path, store = ux03_browser
+    recipe_sha = 'e' * 64
+    recipes = [{'recipe': v2_recipe(1), 'ref': {'sha256': recipe_sha}}]
+    detail = {'recipe': v2_recipe(1), 'ref': {'sha256': recipe_sha}}
+    rows = [candidate_row(1, 'p01', 'adopted', recipe_sha), candidate_row(2, 'p01', 'available', recipe_sha)]
+    install_style_mocks(page, recipes=recipes, detail=detail, candidates=rows)
+
+    page.goto(server.start())
+    page.get_by_role('button', name='风格校准', exact=True).click()
+    page.get_by_role('heading', name='风格校准', exact=True).wait_for()
+    page.get_by_label('风格参考来源').select_option('screenshot')
+    restore = page.get_by_text('恢复项目中的截图分析与规范', exact=True)
+    restore.scroll_into_view_if_needed()
+    restore.click()
+    page.get_by_label('已确认的截图规范').select_option(index=1)
+    expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+
+    # AC10：拆解图、借用/保留维度与字体判断都可核对；默认借用配色与文字层级。
+    expect(page.get_by_text('查看视觉拆解图', exact=True)).to_be_visible()
+    expect(page.get_by_label('借用截图配色')).to_be_checked()
+    expect(page.get_by_label('借用截图文字层级')).to_be_checked()
+    expect(page.get_by_label('借用截图构图')).not_to_be_checked()
+    expect(page.get_by_label('构图规范')).to_have_value('composition 维度摘要')
+    icons_rule = page.locator('.visual-rule').filter(has_text='图标')
+    icons_rule.locator('summary').click()
+    expect(icons_rule.get_by_text('待核实：icons 的观察记录')).to_be_visible()
+    palette_rule = page.locator('.visual-rule').filter(has_text='配色')
+    palette_rule.locator('summary').click()
+    expect(palette_rule.get_by_text('已观察：palette 的观察记录')).to_be_visible()
+    expect(page.get_by_text('字体判断：Synthetic Sans（近似）：来自截图的近似判断', exact=False)).to_be_visible()
+
+    # AC10：样例选择只列已采用候选；同页两候选按钮以短码区分（ST-05）。
+    sample = page.get_by_label('已采用的截图风格样例')
+    expect(sample.locator('option')).to_have_count(2)
+    compare_buttons = page.locator('.visual-style button').filter(has_text='比较 ')
+    expect(compare_buttons.first).to_be_visible()
+    labels = [compare_buttons.nth(i).inner_text() for i in range(compare_buttons.count())]
+    assert len(labels) == 2 and labels[0] != labels[1], labels
+
+
+def test_screenshot_route_refuses_a_project_recipe_with_a_clear_message(ux03_browser):
+    from playwright.sync_api import expect
+    page, server, path, store = ux03_browser
+    detail = {'recipe': {'schema_version': 'style_recipe.v1', 'recipe_id': 'recipe-legacy', 'version': 1,
+                         'input': {'instruction': '项目内配方', 'target_page_ids': ['p01']}}}
+    install_style_mocks(page, recipes=[], detail=detail)
+    page.goto(server.start())
+    page.get_by_role('button', name='风格校准', exact=True).click()
+    page.get_by_role('heading', name='风格校准', exact=True).wait_for()
+    page.get_by_label('风格参考来源').select_option('screenshot')
+    restore = page.get_by_text('恢复项目中的截图分析与规范', exact=True)
+    restore.scroll_into_view_if_needed()
+    restore.click()
+    page.evaluate("""async () => {
+      const select = document.querySelector('.visual-style select[aria-label="恢复已确认的截图规范"]');
+      const option = document.createElement('option');
+      option.value = 'recipe-legacy'; option.textContent = 'V1 · 项目内配方';
+      select.append(option); select.value = 'recipe-legacy';
+      select.dispatchEvent(new Event('change'));
+    }""")
+    expect(page.locator('.visual-style p[role=status]')).to_contain_text('这不是截图视觉规范')
