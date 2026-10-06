@@ -9,6 +9,18 @@ from test_visual_styles import result,image_bytes
 pytestmark=pytest.mark.browser
 
 
+def open_visual_phase(page, index):
+    """四阶段组织（UX-03b）：控件在阶段折叠内，核对前先展开该阶段。
+
+    展开动作与真实用户一致（点击阶段摘要）；自动定位仍由产品负责（有规范即
+    打开"确认规范"），这里只补"回看阶段一"这一步。
+    """
+    phase = page.locator('.visual-style .style-phase').nth(index)
+    if not phase.evaluate('node => node.open'):
+        phase.locator(':scope > summary').click()
+    return phase
+
+
 def test_screenshot_ui_upload_reasoning_confirmation_dispatch_and_restore(flow):
     from playwright.sync_api import sync_playwright,expect
     server=WorkbenchServer(flow.project)
@@ -119,7 +131,6 @@ def test_late_reference_catalog_after_leaving_style_does_not_acquire_images(flow
             server.stop()
 
 
-@pytest.mark.xfail(strict=False, reason='四阶段 UI 重组后，本用例的逐条阶段断言待迁移（UX-03b 后续项，见 SUPPLEMENTARY-IMPLEMENTATION-PLAN）；产品流程本身已由 ux03/ux06 组用例覆盖')
 def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_editor(flow):
     """Close both browser/service; restore a real project draft with no storage seed."""
     from playwright.sync_api import sync_playwright, expect
@@ -171,9 +182,17 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             page = browser.new_page(viewport={'width': 1280, 'height': 800})
             page.goto(second_url); page.get_by_role('button', name='风格校准', exact=True).click()
             expect(page.get_by_role('combobox', name='风格参考来源')).to_have_value('screenshot')
+            # 恢复后定位在「确认规范」；回看阶段一的选择（参考资料与目标页）需展开该阶段，
+            # 并等参考列表读取完成（恢复与列表读取是两个独立请求）。
+            open_visual_phase(page, 0)
+            expect(page.locator('.visual-reference-choice')).to_have_count(1, timeout=15000)
             expect(page.get_by_role('checkbox', name='选用参考截图 1', exact=True)).to_be_checked()
             expect(page.get_by_role('combobox', name='截图风格试作目标')).to_have_value('p02')
             expect(page.get_by_role('textbox', name='截图风格要求')).to_have_value('Cross-origin recovery: preserve complete body')
+            open_visual_phase(page, 1)
+            # 规范先读后改：编辑视图按需展开（已保存的编辑内容不丢）。
+            spec_editor = page.locator('.visual-style .visual-spec-editor')
+            if not spec_editor.evaluate('node => node.open'): spec_editor.locator(':scope > summary').click()
             expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_value('Keep edited blue #225588 rules')
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=15000)
             # A frozen plan is deliberately not restored as an executable pending action.
@@ -187,6 +206,9 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             # Explicit persisted task/recipe selections work without an automatic latest choice.
             page.locator('summary').filter(has_text='恢复项目中的截图分析与规范').click()
             page.get_by_role('combobox', name='恢复已保存的截图分析').select_option(task['task_id'])
+            open_visual_phase(page, 1)
+            editor = page.locator('.visual-style .visual-spec-editor')
+            if not editor.evaluate('node => node.open'): editor.locator(':scope > summary').click()
             expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_be_visible()
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_disabled()
             page.get_by_role('combobox', name='恢复已确认的截图规范').select_option(recipe_id)
@@ -204,7 +226,6 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             for server in servers: server.stop()
 
 
-@pytest.mark.xfail(strict=False, reason='四阶段 UI 重组后，本用例的逐条阶段断言待迁移（UX-03b 后续项，见 SUPPLEMENTARY-IMPLEMENTATION-PLAN）；产品流程本身已由 ux03/ux06 组用例覆盖')
 def test_saved_analysis_selection_binds_its_reference_and_cancelled_task_stays_stopped(flow):
     from deck_master import service
     from test_visual_styles import imported, analysis
@@ -235,6 +256,8 @@ def test_saved_analysis_selection_binds_its_reference_and_cancelled_task_stays_s
                 if not editor.evaluate('node => node.open'):
                     editor.locator(':scope > summary').click()
                 expect(editor.get_by_role('textbox', name='配色规范', exact=True)).to_have_value(('RULE-A','RULE-B')[index])
+                # 阶段一的选择与规范一并切换：回看该阶段的参考资料。
+                open_visual_phase(page, 0)
                 expect(page.get_by_role('checkbox', name=f'选用参考截图 {index+1}', exact=True)).to_be_checked()
                 expect(page.get_by_role('checkbox', name=f'选用参考截图 {2-index}', exact=True)).not_to_be_checked()
             selector.select_option(cancelled['task_id'])

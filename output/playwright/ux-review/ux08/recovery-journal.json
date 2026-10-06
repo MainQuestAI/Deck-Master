@@ -40,7 +40,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/overview?revision=5183ad7c8f5b4cea9d9d0e55002bdd38"
+      "path": "/api/overview?revision=1d37533bf30b4982864c57f9840ba697"
     },
     {
       "method": "GET",
@@ -48,7 +48,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/content-plan?revision=5183ad7c8f5b4cea9d9d0e55002bdd38"
+      "path": "/api/content-plan?revision=1d37533bf30b4982864c57f9840ba697"
     },
     {
       "method": "GET",
@@ -72,6 +72,10 @@
     },
     {
       "method": "GET",
+      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F35%2F35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774.png&sha256=35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774&retry=0"
+    },
+    {
+      "method": "GET",
       "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2Fd4%2Fd4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5.png&sha256=d4a0a17415ea444221f034b8d8687b6274a5f7dabb3b292347f0e443e54223e5&retry=0"
     },
     {
@@ -80,19 +84,15 @@
     },
     {
       "method": "GET",
-      "path": "/api/thumbnails?path=.deckmaster%2Fobjects%2F35%2F35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774.png&sha256=35a60292a7383d8516a5afe5cf42aad7a5c11cb89012c7b60bd28eca0a927774&retry=0"
+      "path": "/api/thumbnail-file?cache_key=afe00fa26d4d2ca1e96ee112f8e3b9db795547edbedf90a310963a7b1fb54a6e"
     },
     {
       "method": "GET",
-      "path": "/api/thumbnail-file?cache_key=cf9d27a89e32d32177d1f63f10cc8b8cd7996a9d940c7ef98dde5ba319703913"
+      "path": "/api/thumbnail-file?cache_key=d06272c05a0a908350c0db0fe6a03c65a91ee3bc74898cb70762d6c4066982fe"
     },
     {
       "method": "GET",
-      "path": "/api/thumbnail-file?cache_key=8edf88a5b0c6d9f1363d7aa10a0636df9240c074d5141302ebc3b6a76e2421be"
-    },
-    {
-      "method": "GET",
-      "path": "/api/thumbnail-file?cache_key=c339bee983410a9e668fb289949120ff90af082d58e6b6bdf41cae618c394afd"
+      "path": "/api/thumbnail-file?cache_key=4f5b0916496f7c403cd6652464a387aed0775bd50ce81ad251591e700ead7649"
     },
     {
       "method": "GET",

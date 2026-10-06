@@ -48,7 +48,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/overview?revision=6af1dbc677d242008fbbc33bfb4251e0"
+      "path": "/api/overview?revision=03d67289afd14816991d9adf99a3ad14"
     },
     {
       "method": "GET",
@@ -56,7 +56,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/content-plan?revision=6af1dbc677d242008fbbc33bfb4251e0"
+      "path": "/api/content-plan?revision=03d67289afd14816991d9adf99a3ad14"
     },
     {
       "method": "GET",
@@ -96,7 +96,7 @@
     },
     {
       "method": "GET",
-      "path": "/api/styles/references?revision=6af1dbc677d242008fbbc33bfb4251e0"
+      "path": "/api/styles/references?revision=03d67289afd14816991d9adf99a3ad14"
     },
     {
       "method": "POST",
@@ -104,15 +104,15 @@
     },
     {
       "method": "GET",
-      "path": "/api/styles?revision=6af1dbc677d242008fbbc33bfb4251e0"
+      "path": "/api/styles?revision=03d67289afd14816991d9adf99a3ad14"
     },
     {
       "method": "GET",
-      "path": "/api/tasks?revision=6af1dbc677d242008fbbc33bfb4251e0&limit=30&offset=0"
+      "path": "/api/tasks?revision=03d67289afd14816991d9adf99a3ad14&limit=30&offset=0"
     },
     {
       "method": "GET",
-      "path": "/api/styles?revision=6af1dbc677d242008fbbc33bfb4251e0"
+      "path": "/api/styles?revision=03d67289afd14816991d9adf99a3ad14"
     }
   ]
 }
