@@ -170,6 +170,10 @@ textarea{font-size:14px;line-height:1.7}
 .style-reference .pooled-image { aspect-ratio: 16 / 9; }
 .style-targets { display: flex; flex-wrap: wrap; gap: 12px 24px; max-height: 240px; overflow: auto; }
 .style-calibration details > .stack { padding-top: 16px; }
+/* F16/N04：.stack 无基础 display 规则（CSS 漂移），样式面里的 label.stack 退化为
+   inline，行框会压进上方 .style-working-pair 网格并遮挡参考缩略图选择框。
+   最小作用域修复：样式面内的堆叠标签恢复块级。 */
+.style-calibration label.stack { display: block; }
 .style-calibration .evidence-json { max-height: 320px; overflow: auto; }
 .style-calibration .row > input:not([type=checkbox]) { flex: 1; min-width: 180px; }
 

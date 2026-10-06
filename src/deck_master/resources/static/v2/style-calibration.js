@@ -111,6 +111,7 @@ export function style(app) {
         el('label', {}, '已采用候选', adoptedCandidate), expansionTargets,
         el('label', {class:'stack'}, '本次调用上限', calls), expandButton)
   ];
+  phases.forEach((p,i) => { p.summary.addEventListener('click', () => { userPhase = i + 1; }); });
   phases[0].node.classList.add('style-primary-phase');
   const node = el('div', {class: 'style-calibration stack'}, heading('风格校准', '固定一张参考原图，保留目标内容。先试一页，比较采用后再扩展。'),
     phases.map(p => p.node), el('div', {class:'style-plan stack'}, impact, dispatchButton), detail('个人草稿与恢复',draftNode));
@@ -122,7 +123,11 @@ export function style(app) {
   app.root.addEventListener('draft-editor-replaced',restoreSource);restoreSource();
   try{source.value=localStorage.getItem('deck-master:style-source:'+app.info.project_identity)||'page';}catch{}
   node.insertBefore(el('label',{class:'stack'},'参考来源',source),phases[0].node);node.insertBefore(external,phases[0].node);switchSource();
-  function showPhase(next) {
+  // 自动推进（恢复规范等异步完成后的展开）不抢用户已主动选择的阶段，
+  // 否则慢恢复会把刚打开的"试作与采用"合上。changed() 的显式重置不受此限。
+  let userPhase = 0;
+  function showPhase(next, {auto = false} = {}) {
+    if (auto && userPhase && userPhase !== next) return;
     if (currentPhase !== next) { phases.forEach((p,i) => { p.node.open = i + 1 === next; }); currentPhase = next; }
   }
   function editor() { return app.editor; }
@@ -259,7 +264,7 @@ export function style(app) {
   function selectRecipe(restore = false) {
     recipe = recipeRecords.get(recipes.value) || null; expansion.clear(); adoptedCandidate.value = ''; invalidatePlan(false); recipeView.replaceChildren(); trialPage.replaceChildren(); expansionTargets.replaceChildren();
     if (!recipe) return;
-    showPhase(2);
+    showPhase(2, {auto: true});
     recipeView.append(el('p', {}, `V${recipe.version} · 参考 ${label(recipe.input.reference.page_id)} · ${version(recipe.input.reference.revision_id)}`), el('p', {}, recipe.input.instruction),
       el('p', {class:'muted'}, '借用：' + Object.keys(recipe.dimensions).map(k => names[k]).join('、')),
       el('p', {class:'muted'}, '试作只使用这里已确认的版本。上方未确认的修改不会进入试作；需要使用新要求时，请先检查并确认。'),
