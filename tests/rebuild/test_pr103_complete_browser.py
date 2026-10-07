@@ -38,6 +38,12 @@ def browser_for(project):
             yield page, server
             assert errors == []
         finally:
+            state = page.evaluate('''() => ({url: location.href,
+              draft: document.querySelector('.draft-state')?.textContent,
+              recovery: document.querySelector('.visual-upload-recovery')?.textContent,
+              references: document.querySelectorAll('.visual-reference-choice').length})''')
+            (evidence / 'final-state.json').write_text(json.dumps(state, ensure_ascii=False, indent=2))
+            print('FINAL_UI_STATE', json.dumps(state, ensure_ascii=False))
             page.screenshot(path=str(evidence / 'final.png'), full_page=True)
             (evidence / 'requests.json').write_text(json.dumps(requests, ensure_ascii=False, indent=2))
             (evidence / 'page-errors.json').write_text(json.dumps(errors, ensure_ascii=False))
@@ -282,21 +288,35 @@ def test_partial_upload_keeps_successful_files_and_retries_only_failed_file(tmp_
         page.get_by_label('风格参考来源').select_option('screenshot')
         requests = []
         page.on('request', lambda r: requests.append(r.url) if '/api/styles/references/import?' in r.url else None)
-        page.get_by_label('导入参考截图', exact=True).set_input_files([
+        upload = page.get_by_label('导入参考截图', exact=True)
+        expect(upload).to_be_enabled()
+        upload.set_input_files([
             {'name': 'first.png', 'mimeType': 'image/png', 'buffer': image_bytes()},
             {'name': 'second.png', 'mimeType': 'image/png', 'buffer': image_bytes()},
             {'name': 'broken.png', 'mimeType': 'image/png', 'buffer': b'not an image'},
         ])
         expect(page.locator('.visual-reference-choice')).to_have_count(2)
         expect(page.get_by_role('button', name='结束失败上传，重新选图', exact=True)).to_be_enabled()
+        successful = flow.store.load_document()['style_references']
+        assert len(successful) == 2
         page.reload()
         expect(page.locator('.visual-reference-choice')).to_have_count(2)
         page.get_by_role('button', name='结束失败上传，重新选图', exact=True).click()
-        page.get_by_label('导入参考截图', exact=True).set_input_files(
-            {'name': 'third.png', 'mimeType': 'image/png', 'buffer': image_bytes()})
+        # set_input_files does not wait for enabled like an actual file-picker
+        # click. Respect readiness, then distinguish the receipt from the mount.
+        expect(upload).to_be_enabled()
+        with page.expect_response(lambda response: '/api/styles/references/import?' in response.url) as retried:
+            upload.set_input_files({'name': 'third.png', 'mimeType': 'image/png', 'buffer': image_bytes()})
+        assert retried.value.ok
+        receipt = retried.value.json()['operation_result']
+        import re
+        expect(page).to_have_url(re.compile('revision=' + re.escape(receipt['revision_id'])))
         expect(page.locator('.visual-reference-choice')).to_have_count(3)
         assert len(requests) == 4
-        assert len(flow.store.load_document()['style_references']) == 3
+        references = flow.store.load_document()['style_references']
+        assert len(references) == 3 and references[:2] == successful
+        expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
+        expect(page.locator('.visual-upload-recovery')).to_be_empty()
 
 
 def test_upload_success_has_visible_recovery_when_private_save_fails(tmp_path):
