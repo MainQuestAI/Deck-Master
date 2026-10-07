@@ -171,11 +171,14 @@ export function historyDesk(app, history) {
     return rev === revision ? (app.historical ? '正在阅读的历史版本' : '当前项目版本') : version(rev);
   };
   function stateIdentity() {
+    restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly);
+    restore.title = selected.value !== revision ? '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。' : '';
     identity.replaceChildren(
       el('span', {class: 'state-chip'}, `选中：${nameFor(selected.value)}`),
       el('span', {class: 'state-chip'}, `已读：${nameFor(revision)}`),
       el('span', {class: 'state-chip'}, `当前版本：${nameFor(history.current)}`),
-      el('span', {class: 'state-chip'}, history.head && history.head !== history.current && history.head !== revision ? `读取锚点：${nameFor(history.head)}` : ''));
+      el('span', {class: 'state-chip'}, history.head && history.head !== history.current && history.head !== revision ? `读取锚点：${nameFor(history.head)}` : ''),
+      selected.value !== revision && el('span', {}, '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。'));
   }
   function append(records, reset = false) {
     const chosen = reset ? revision : selected.value;
@@ -242,7 +245,7 @@ export function historyDesk(app, history) {
           if (!editor.input.value) editor.input.value = `将 ${version(revision)} 的内容恢复到 ${version(current.revision_id)} 之后的新版本；保留执行与停止事实。`; editor.changed();
           await app.business.submit(editor, 'history.restore', {plan_id: planned.plan_id, base_revision: current.revision_id}, {plan_id: planned.plan_id, plan: planned.plan}, result => {
             dialog.close(); app.go({surface: 'runs', revision: result.revision_id, task_id: null});
-          });
+          }, {instruction: `把已阅读的 ${version(revision)} 恢复为 ${version(current.revision_id)} 之后的新版本；恢复 ${impact.changed_pages.length} 页，保留执行与停止记录。`});
           status.textContent = app.business.entries.size ? '结果待核实；原请求已保留，可关闭后在顶部核实。' : '请求已处理；若基准变化，请先比较后重新预览。';
         } catch (error) { status.textContent = readableError(error); }
         finally { confirm.disabled = false; }
@@ -250,7 +253,7 @@ export function historyDesk(app, history) {
       const dialog = modal('确认历史恢复影响', body, [button('取消恢复', () => dialog.close()), confirm]);
       dialog.addEventListener('close', () => editor.dispose(), {once: true}); app.disposables.push(() => editor.dispose());
     } catch (error) { modal('暂不能预览恢复', el('p', {class: 'field-error'}, readableError(error))); }
-    finally { restore.disabled = !app.historical || Boolean(app.info.sample?.readonly); }
+    finally { stateIdentity(); }
   }
   return node;
 }

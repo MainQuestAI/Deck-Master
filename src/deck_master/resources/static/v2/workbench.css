@@ -200,7 +200,9 @@ textarea{font-size:14px;line-height:1.7}
 /* UX-05b: one runs subarea at a time; .stack would otherwise beat [hidden]. */
 .runs-subarea[hidden] { display: none; }
 .runs-subareas { gap: 8px; padding: 4px 0 12px; border-bottom: 1px solid var(--border-soft); margin-bottom: 16px; }
-.runs-subareas button { min-height: 44px; }
+/* Selected state changes foreground and background together; a background-only
+   transition briefly leaves white text on the previous white surface. */
+.runs-subareas button { min-height: 44px; transition: none; }
 .runs-subareas button[aria-pressed=true] { background: var(--fg); border-color: var(--fg); color: var(--bg); font-weight: 600; }
 .run-requirement { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .change-list select { max-width: 100%; }
