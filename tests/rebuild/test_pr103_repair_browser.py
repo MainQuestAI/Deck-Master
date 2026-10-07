@@ -5,6 +5,7 @@ checks are not Host generation or professional visual acceptance.
 """
 import pytest
 import os
+import re
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -246,6 +247,166 @@ def test_reference_preview_and_same_file_retry_after_not_found(flow):
         finally:
             browser.close()
             server.stop()
+
+
+@pytest.mark.parametrize('rejection', ['decode', 'pixels', 'basis'])
+def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection):
+    # Regression: PR103 P2 — confirmed rejection must not trap a new upload.
+    # Value: protects=new file/current base after rejection; fails_when=all errors stay unknown;
+    # why_new=existing retry case only exercises missing response; seam=none
+    import io
+    from PIL import Image
+    from urllib.parse import parse_qs, urlparse
+    from playwright.sync_api import sync_playwright, expect
+    from deck_master import visual_styles
+    import uuid
+    server = WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(args=['--no-sandbox']); page = browser.new_page()
+        requests, errors = [], []
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        try:
+            page.goto(server.start()); page.get_by_role('button', name='风格校准', exact=True).click()
+            page.get_by_label('风格参考来源').select_option('screenshot')
+            upload = page.get_by_label('导入参考截图', exact=True)
+            expect(upload).to_be_enabled()
+            before = flow.store.current_revision_id()
+            initial_references = len(flow.store.load_document().get('style_references', []))
+            data = b'not an image'
+            if rejection == 'pixels':
+                output = io.BytesIO(); Image.new('RGB', (8001, 4000)).save(output, format='PNG')
+                data = output.getvalue()
+            elif rejection == 'basis':
+                data = image_bytes()
+                visual_styles.import_reference(flow.project, data=image_bytes(), base_revision=before,
+                                               operation_id=str(uuid.uuid4()))
+            current = flow.store.current_revision_id()
+            page.on('request', lambda request: requests.append(parse_qs(urlparse(request.url).query))
+                    if '/api/styles/references/import?' in request.url else None)
+            with page.expect_response(lambda response: '/api/styles/references/import?' in response.url) as rejected:
+                upload.set_input_files({'name':'rejected.png', 'mimeType':'image/png', 'buffer':data})
+            assert rejected.value.status == (409 if rejection == 'basis' else 422)
+            assert rejected.value.json()['error']['operation_state'] == 'not_committed'
+            assert flow.store.current_revision_id() == current
+            assert len(flow.store.load_document().get('style_references', [])) == initial_references + (rejection == 'basis')
+            action = '读取当前版本并重新上传' if rejection == 'basis' else '结束失败上传，重新选图'
+            restart = page.get_by_role('button', name=action, exact=True)
+            screenshot(page, 'upload-rejected-'+rejection)
+            expect(restart).to_be_enabled()
+            expect(upload).to_be_disabled()
+            page.reload(); expect(restart).to_be_enabled()
+            if rejection == 'basis':
+                def unavailable_current(route):
+                    route.fulfill(status=503, json={'error':{'code':'operation_unavailable','message':'当前版本暂时无法核实'}})
+                page.route('**/api/view/summary*', unavailable_current)
+                with page.expect_response(lambda response: '/api/view/summary' in response.url):
+                    restart.click()
+                expect(restart).to_be_enabled(); expect(upload).to_be_disabled()
+                page.unroute('**/api/view/summary*', unavailable_current)
+            restart.click(); expect(upload).to_be_enabled()
+            if rejection == 'basis':
+                expect(page).to_have_url(re.compile('revision='+current))
+            else:
+                expect(upload).to_be_focused()
+            with page.expect_response(lambda response: '/api/styles/references/import?' in response.url) as accepted:
+                upload.set_input_files({'name':'valid.png', 'mimeType':'image/png', 'buffer':image_bytes()})
+            assert accepted.value.status == 200
+            expect(page.locator('.visual-upload-recovery')).to_be_empty()
+            assert len(requests) == 2
+            assert requests[0]['operation_id'] != requests[1]['operation_id']
+            assert requests[0]['base_revision'] == [before]
+            assert requests[1]['base_revision'] == [current]
+            assert len(flow.store.load_document()['style_references']) == initial_references + 1 + (rejection == 'basis')
+            expect(page.locator('.visual-reference-choice .pooled-image').last).to_have_attribute('data-image-state', 'ready')
+            screenshot(page, 'upload-restarted-'+rejection)
+            assert errors == []
+        finally:
+            browser.close(); server.stop()
+
+
+@pytest.mark.parametrize('status,body', [
+    (422, {'error':{'code':'visual_reference_invalid','operation_state':'unknown'}}),
+    (422, {'error':{'code':'visual_reference_invalid'}}),
+    (403, {'error':{'code':'sample_readonly','operation_state':'not_committed'}}),
+    (500, {'error':{'code':'visual_reference_invalid','operation_state':'not_committed'}}),
+    (409, {'error':{'code':'operation_payload_conflict','operation_state':'committed'}}),
+    (409, {'error':{'code':'visual_reference_conflict','field':'page_id','operation_state':'not_committed'}}),
+    (422, {'error':{'code':'visual_reference_invalid','operation_state':'not_committed','operation_id':'unrelated'}}),
+    (200, None),
+    (200, {'status':'committed','operation_id':'unrelated','request_digest':'unrelated',
+           'operation_result':{'revision_id':'unrelated'}}),
+])
+def test_untrusted_upload_failure_keeps_original_request(flow, status, body):
+    # Value: protects=unknown-result exact replay; fails_when=all 4xx or state alone clears pending;
+    # why_new=error classification is new; seam=none
+    from playwright.sync_api import sync_playwright, expect
+    server = WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(args=['--no-sandbox']); page = browser.new_page(); requests = []
+        try:
+            page.goto(server.start()); page.get_by_role('button',name='风格校准',exact=True).click()
+            page.get_by_label('风格参考来源').select_option('screenshot')
+            upload = page.get_by_label('导入参考截图',exact=True)
+            expect(upload).to_be_enabled()
+            def fault(route):
+                requests.append(route.request.url)
+                if body is None:
+                    route.fulfill(status=status, content_type='text/plain', body='unreadable response')
+                else:
+                    route.fulfill(status=status, json=body)
+            page.route('**/api/styles/references/import?*',fault)
+            file = {'name':'original.png','mimeType':'image/png','buffer':image_bytes()}
+            before = flow.store.current_revision_id()
+            upload.set_input_files(file)
+            verify = page.get_by_role('button',name='核实原上传',exact=True)
+            expect(verify).to_be_enabled(); expect(upload).to_be_disabled()
+            expect(page.locator('.visual-upload-recovery')).not_to_contain_text('已明确拒绝')
+            assert flow.store.current_revision_id() == before
+            page.reload(); expect(verify).to_be_enabled(); expect(upload).to_be_disabled()
+            verify.click(); expect(upload).to_be_enabled()
+            page.unroute('**/api/styles/references/import?*',fault)
+            page.on('request',lambda request: requests.append(request.url)
+                    if '/api/styles/references/import?' in request.url else None)
+            upload.set_input_files(file)
+            expect(page.locator('.visual-reference-choice .pooled-image')).to_have_attribute('data-image-state','ready')
+            assert len(requests) == 2 and requests[0] == requests[1]
+            assert len(flow.store.load_document()['style_references']) == 1
+        finally:
+            browser.close(); server.stop()
+
+
+def test_committed_upload_with_lost_response_recovers_without_new_attempt(flow):
+    # Value: protects=one reference when committed ACK is lost; fails_when=unknown failure clears UUID;
+    # why_new=existing lost-ACK test has no reload; seam=none
+    from playwright.sync_api import sync_playwright, expect
+    server = WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(args=['--no-sandbox']); page = browser.new_page(); requests = []
+        try:
+            page.goto(server.start()); page.get_by_role('button',name='风格校准',exact=True).click()
+            page.get_by_label('风格参考来源').select_option('screenshot')
+            upload = page.get_by_label('导入参考截图',exact=True); expect(upload).to_be_enabled()
+            def lose_receipt(route):
+                requests.append(route.request.url)
+                response = route.fetch()
+                assert response.status == 200
+                route.abort()
+            page.route('**/api/styles/references/import?*',lose_receipt)
+            upload.set_input_files({'name':'committed.png','mimeType':'image/png','buffer':image_bytes()})
+            verify = page.get_by_role('button',name='核实原上传',exact=True)
+            expect(verify).to_be_enabled(); expect(upload).to_be_disabled()
+            assert len(flow.store.load_document()['style_references']) == 1
+            page.reload()
+            # A committed upload advanced the project. Fixed historical reading
+            # correctly stays readonly; explicitly return to current before saving.
+            page.get_by_role('button',name='查看当前版本',exact=True).click()
+            expect(verify).to_be_enabled(); verify.click()
+            expect(page.locator('.visual-upload-recovery')).to_be_empty()
+            expect(page.locator('.visual-reference-choice .pooled-image')).to_have_attribute('data-image-state','ready')
+            assert len(requests) == 1
+            assert len(flow.store.load_document()['style_references']) == 1
+        finally:
+            browser.close(); server.stop()
 
 
 @pytest.mark.parametrize('keyboard', [False, True])

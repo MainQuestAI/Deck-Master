@@ -124,7 +124,8 @@ export function visualStyle(app){
   function controls(){const blocked=!loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size);
     input.disabled=blocked||Boolean(pending&&pending.state!=='not_found');savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
     uploadRecovery.replaceChildren();
-    if(pending)uploadRecovery.append(el('p',{},pending.state==='not_found'?'原上传尚未找到提交回执。请重新选择同一张截图，使用原编号重试。':'存在待核实的截图上传。原文件和请求编号保留。'),button('核实原上传',verifyUpload,false,{disabled:blocked}));
+    if(pending?.state==='rejected')uploadRecovery.append(el('p',{},pending.rejection?.code==='visual_reference_conflict'?'本次上传因版本变化已明确拒绝，未提交。先读取当前版本，再重新选择截图上传。':'本次截图上传已明确拒绝，未提交。请结束这次失败上传后重新选择合法截图。'),button(pending.rejection?.code==='visual_reference_conflict'?'读取当前版本并重新上传':'结束失败上传，重新选图',restartRejectedUpload,false,{disabled:!loaded||busy||disposed||Boolean(app.business.entries.size)}));
+    else if(pending)uploadRecovery.append(el('p',{},pending.state==='not_found'?'原上传尚未找到提交回执。请重新选择同一张截图，使用原编号重试。':'存在待核实的截图上传。原文件和请求编号保留。'),button('核实原上传',verifyUpload,false,{disabled:blocked}));
     analyze.disabled=blocked||!state.ids.length||state.ids.length>5||!requirement.value.trim();refresh.disabled=!loaded||busy||!state.task_id;handoff.hidden=!state.task_id;
     confirm.disabled=blocked||!spec||Boolean(spec.conflicts.length)||!state.targets.length;trial.disabled=blocked||!state.recipe||!recipe;
     // 交接动作按真实状态出现：没有当前计划时不出现，也不隐藏计划错误。
@@ -150,9 +151,36 @@ export function visualStyle(app){
     if(pending && pending.sha256!==sha)throw new Error('请先核实原上传，或重新选择同一张图片以重试。');
     if(!pending){pending={operation_id:crypto.randomUUID(),base_revision:base,sha256:sha};pending.request_digest=await digest({protocol:'changes.v1',kind:'styles.references.import',project_id:app.info.project_id,base_revision:base,payload:{sha256:sha}});}
     pending.state='unknown';localStorage.setItem(uploadKey,JSON.stringify(pending));
-    const value=await postBinary('/api/styles/references/import?'+new URLSearchParams({base_revision:pending.base_revision,operation_id:pending.operation_id}),file);
+    const original=pending;let value;
+    try{value=await postBinary('/api/styles/references/import?'+new URLSearchParams({base_revision:original.base_revision,operation_id:original.operation_id}),file);}
+    catch(error){
+      // Only this endpoint's explicit pre-commit validation/CAS failures end
+      // an attempt. Generic 4xx, 5xx, unreadable or mismatched receipts do not.
+      const details=error.details;
+      if(pending===original&&details?.operation_state==='not_committed'&&(!details.operation_id||details.operation_id===original.operation_id)&&
+          (error.status===422&&error.code==='visual_reference_invalid'||error.status===409&&error.code==='visual_reference_conflict'&&error.field==='base_revision')){
+        pending.state='rejected';pending.rejection={code:error.code,field:error.field};localStorage.setItem(uploadKey,JSON.stringify(pending));
+      }
+      throw error;
+    }
     if(value.status!=='committed'||!value.operation_result?.revision_id||value.operation_id!==pending.operation_id||value.request_digest!==pending.request_digest)throw new Error('上传回执身份不匹配，请保留原文件并核实。');
     pending=null;localStorage.removeItem(uploadKey);state.ids=[...state.ids,value.operation_result.reference_id].slice(-5);persist();return value.operation_result.revision_id;
+  }
+  async function restartRejectedUpload(){
+    if(!pending||pending.state!=='rejected'||busy)return;const original=pending;let focusUpload=false;busy=true;controls();
+    try{
+      let current=null;
+      if(original.rejection?.code==='visual_reference_conflict'){
+        current=await get(app.summaryURL());
+        if(current.project_id!==app.info.project_id||!current.revision_id)throw new Error('当前项目版本无法核对，原失败请求仍保留。');
+      }
+      if(disposed||pending!==original)return;
+      // User explicitly starts a new attempt; never rebase or replay the old UUID.
+      localStorage.removeItem(uploadKey);pending=null;
+      if(current&&current.revision_id!==app.route.revision)app.go({revision:current.revision_id});
+      else{status.textContent='失败上传已结束。请重新选择截图，新上传使用新的请求编号。';focusUpload=true;}
+    }catch(error){if(!disposed)status.textContent=readableError(error);}
+    finally{busy=false;if(!disposed){controls();if(focusUpload)input.focus();}}
   }
   async function verifyUpload(){
     if(!pending||busy)return;busy=true;controls();
