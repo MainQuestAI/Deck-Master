@@ -108,7 +108,8 @@ def test_same_text_body_nodes_are_distinguishable_and_editable_separately(ux04_b
     assert store.read_current() == before
 
 
-def test_point_overlay_follows_artifact_identity_across_snapshots(ux04_browser):
+@pytest.mark.parametrize('location_kind', ['point', 'rect'])
+def test_point_overlay_follows_artifact_identity_across_snapshots(ux04_browser, location_kind):
     from playwright.sync_api import expect
     page, server, path, store = ux04_browser
     url = server.start()
@@ -125,6 +126,9 @@ def test_point_overlay_follows_artifact_identity_across_snapshots(ux04_browser):
                'scope': 'artifact', 'page_id': 'p02', 'page_ref': p02['page'], 'layer': 'original_image',
                'artifact_ref': p02['blueprint'], 'intent': 'clarify', 'body': '另一页的意见不叠到本页', 'status': 'open',
                'location': {'kind': 'point', 'canvas': {'width': 960, 'height': 540}, 'x': 0.2, 'y': 0.2}}
+    if location_kind == 'rect':
+        note['location'] = {'kind': 'rect', 'canvas': {'width': 960, 'height': 540},
+                            'x': 0.3, 'y': 0.3, 'width': 0.2, 'height': 0.2}
     annotation_service.save(path, input={'schema_version': 'annotation_batch.v1', 'project_id': doc['project_id'],
                                          'annotations': [note, foreign]},
                             base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
