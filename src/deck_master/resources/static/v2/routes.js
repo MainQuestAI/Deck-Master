@@ -13,7 +13,7 @@ export function readRoute(info, position, summary) {
   const route = {surface: params.get('surface') || (params.get('task') ? 'runs' : params.has('page') ? 'page' : 'overview'),
     page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision') === 'null' ? null : params.get('revision'),
     candidate_id: params.get('candidate'), zoom: params.has('zoom') ? Number(params.get('zoom')) : 1, task_id: params.get('task'),
-    action_id: params.get('action'), review_id: params.get('review'), runs_area: params.get('area')};
+    action_id: params.get('action'), review_id: params.get('review'), runs_area: runsAreas.includes(params.get('area')) ? params.get('area') : null};
   if (['q','filter','sort'].some(key => params.has(key))) {
     if (route.surface !== 'overview' || ['q','filter','sort'].some(key => params.getAll(key).length > 1) || (params.get('q') || '').length > 200 || (params.has('filter') && !['all','todo'].includes(params.get('filter'))) || (params.has('sort') && !['ascending','descending'].includes(params.get('sort'))))
       throw new Error('总览链接中的搜索、筛选或排序无效，当前内容保留。');
@@ -27,7 +27,6 @@ export function readRoute(info, position, summary) {
       (route.candidate_id && !['page', 'content'].includes(route.surface)) ||
       [route.action_id, route.review_id, route.candidate_id, route.task_id].filter(Boolean).length > 1 ||
       ((route.action_id || route.review_id || route.candidate_id) && !route.revision) ||
-      (route.runs_area && !runsAreas.includes(route.runs_area)) ||
       [route.page_id, route.task_id, route.review_id, route.candidate_id, route.revision].some(id => id !== null && !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(id)))
     throw new Error('链接中的页面、对象、层或版本无效，请检查链接。');
   return route;

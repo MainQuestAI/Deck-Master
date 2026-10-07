@@ -174,7 +174,8 @@ def test_style_route_conflict_resolution_trial_plan_and_extension_error(walkthro
         expect(conflict).to_be_visible(timeout=15000)
         journal.shot('conflict-choice-in-confirm-phase')
         conflict.select_option('keep_target')
-        page.get_by_role('button', name='检查风格要求', exact=True).click()
+        # 复审 P1：取舍后的重新检查入口就在同一确认上下文里（不回阶段 1）。
+        page.get_by_role('button', name='按此取舍重新检查要求', exact=True).click()
         expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled(timeout=15000)
         journal.shot('conflict-resolved-confirm-enabled')
 

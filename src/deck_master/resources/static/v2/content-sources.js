@@ -36,7 +36,7 @@ export function content(app, data) {
   operation=contentOperation(app,'content_sources',read,hydrate,ref,result=>{
     if (result.task_ids?.length || result.pending_tasks?.length) {
       const ids = result.task_ids || result.pending_tasks.map(task => task.task_id);
-      app.go({surface:'runs',revision:result.revision_id,task_id:ids.length === 1 ? ids[0] : null});
+      app.go({surface:'runs',revision:result.revision_id,task_id:ids.length === 1 ? ids[0] : null,runs_area:'tasks'});
     }
     else if (completedAction==='remove') {
       const first=order.findIndex(id=>selected.has(id)); const remaining=order.filter(id=>!selected.has(id));

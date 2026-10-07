@@ -42,7 +42,7 @@ export class Project {
       if (event.detail.action !== 'history.restore') return;
       const revision = event.detail.result.revision_id;
       this.setNotice(`历史恢复已确认，已创建 ${version(revision)}。当前阅读位置保持不变。`);
-      this.notice?.append(button('查看恢复后的版本', () => this.go({surface: 'runs', revision, task_id: null})));
+      this.notice?.append(button('查看恢复后的版本', () => this.go({surface: 'runs', revision, task_id: null, runs_area: 'versions'})));
     });
     addEventListener('beforeunload', () => this.editor?.persist());
     addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。'));
@@ -239,7 +239,8 @@ export class Project {
       }
     });
     const pending = this.summary.task_counts.awaiting_host || 0;
-    this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null}), false, {'aria-label': `查看待交接任务，${pending} 项`});
+    // 顶栏入口承诺的是"查看待交接任务"：显式落到「正在进行」，不被记住的子区劫持。
+    this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
     const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿')),
       this.pendingButton);
     this.root.className = 'shell';

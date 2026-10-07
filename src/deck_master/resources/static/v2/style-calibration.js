@@ -130,7 +130,7 @@ export function style(app) {
   };
   const external=visualStyle(app), internal=phases.map(p=>p.node);
   const source=el('select',{'aria-label':'风格参考来源',disabled:true},el('option',{value:'page'},'借用项目内页面'),el('option',{value:'screenshot'},'从外部截图提取规范'));
-  const switchSource=()=>{sourceIsScreenshot=source.value==='screenshot';internal.forEach(n=>n.hidden=sourceIsScreenshot);external.hidden=!sourceIsScreenshot;syncPlanVisibility();};
+  const switchSource=()=>{sourceIsScreenshot=source.value==='screenshot';internal.forEach(n=>n.hidden=sourceIsScreenshot);external.hidden=!sourceIsScreenshot;notice.hidden=sourceIsScreenshot;syncPlanVisibility();};
   source.addEventListener('change',async()=>{const chosen=source.value,current=app.editor;await current.ready;if(disposed||current!==app.editor)return;try{localStorage.setItem('deck-master:style-source:'+app.info.project_identity,source.value);}catch{}switchSource();if(!current.readonly&&!current.disposed){current.draft.content.style_source=chosen;current.changed();}});
   const restoreSource=()=>{const current=app.editor;current.ready.then(()=>{if(disposed||current!==app.editor)return;const saved=current.draft.content.style_source;if(['page','screenshot'].includes(saved))source.value=saved;source.disabled=false;switchSource();});};
   app.root.addEventListener('draft-editor-replaced',restoreSource);restoreSource();
@@ -253,8 +253,17 @@ export function style(app) {
         el('p', {class:'muted'}, `借用：${borrowed.join('、') || '未记录'}；保留：${kept.join('、') || '其余维度'}`),
         ...result.proposal.conflicts.map(c => {
         const choice = el('select', {'aria-label': label(c.page_id) + ' 密度取舍'}, el('option', {value:''}, '明确选择取舍'), el('option', {value:'keep_target'}, '保留目标页密度'), el('option', {value:'use_reference'}, '允许参考密度替代目标'));
-        choice.value = c.resolution || ''; choice.addEventListener('change', () => { if (choice.value) resolutions[c.conflict_id] = choice.value; else delete resolutions[c.conflict_id]; changed(); notice.textContent = '取舍已保留，请重新检查要求。'; });
-        return el('div', {class:'notice stack'}, el('strong', {}, label(c.page_id) + '：极简与高密度要求冲突'), choice, detail('查看冲突原文', json(c)));
+        choice.value = c.resolution || '';
+        // R1 收口（复审 P1）：取舍改变只作废"待重新检查"的部分——不销毁确认上下文
+        // （不回阶段 1、不清空取舍控件），重新检查的入口就在同一块里。
+        const recheck = button('按此取舍重新检查要求', () => propose(), true, {disabled: !choice.value});
+        choice.addEventListener('change', () => {
+          if (choice.value) resolutions[c.conflict_id] = choice.value; else delete resolutions[c.conflict_id];
+          recheck.disabled = !choice.value;
+          serial++; proposal = null; plan = null; impact.replaceChildren(); persist(); controls();
+          notice.textContent = '取舍已保留，请在下方重新检查后确认。';
+        });
+        return el('div', {class:'notice stack'}, el('strong', {}, label(c.page_id) + '：极简与高密度要求冲突'), choice, recheck, detail('查看冲突原文', json(c)));
       }), detail('相对上一版的差异', json(result.proposal.diff)), suggestion.value && el('p', {}, '确认后才使用上述制作工具建议；它不是历史实际提交记录。'));
     } catch (error) { if (!disposed && token === serial) notice.textContent = readableError(error); }
     finally { busy = false; if (!disposed) controls(); }
@@ -320,7 +329,7 @@ export function style(app) {
   }
   async function dispatch() {
     if (!plan || busy) return; busy = true; const value = plan; controls();
-    try { await app.business.submit(editor(), 'changes.commit', {plan_id:value.plan_id, base_revision:value.plan.base_revision}, {plan_id:value.plan_id, plan:value.plan}, result => app.go({surface:'runs', revision:result.revision_id, task_id:result.task_ids.length === 1 ? result.task_ids[0] : null, candidate_id:null})); }
+    try { await app.business.submit(editor(), 'changes.commit', {plan_id:value.plan_id, base_revision:value.plan.base_revision}, {plan_id:value.plan_id, plan:value.plan}, result => app.go({surface:'runs', revision:result.revision_id, task_id:result.task_ids.length === 1 ? result.task_ids[0] : null, candidate_id:null, runs_area:'tasks'})); }
     catch (error) { impact.replaceChildren(el('p', {class:'field-error'}, readableError(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }
@@ -335,7 +344,7 @@ export function style(app) {
         button('比较候选 '+v.candidate.candidate_id.slice(-6), () => openCandidate(app, v.candidate, result.revision_id)),
         // 扩展动作属于阶段 4（试作与采用是阶段 3）：入口必须落在真实阶段。
         v.status === 'adopted' && !app.readonly && button('从此候选扩展', () => { adoptedCandidate.value = v.candidate.candidate_id; invalidatePlan(); showPhase(4); }))));
-      candidateRows.append(el('p', {class:'muted'}, '显示最近一批目标页候选。是否属于这版风格、仍被采用及依据有效，由扩展计划再次核对。'), button('到任务页查看全部候选', () => app.go({surface:'runs', revision:result.revision_id, task_id:null})));
+      candidateRows.append(el('p', {class:'muted'}, '显示最近一批目标页候选。是否属于这版风格、仍被采用及依据有效，由扩展计划再次核对。'), button('到任务页查看全部候选', () => app.go({surface:'runs', revision:result.revision_id, task_id:null, runs_area:'decisions'})));
     } catch (error) { if (!disposed && token === candidateSerial) candidateRows.append(el('p', {class:'field-error'}, readableError(error))); }
   }
   function hydrateState(value) {
@@ -352,13 +361,15 @@ export function style(app) {
       if (saved) hydrateState(saved); else renderTargets();
       if (app.styleSelection && !app.readonly) {
         const seed = app.styleSelection; delete app.styleSelection;
-        // N09：带选页进来就是要用项目内参考/目标——显式动作覆盖记住的来源偏好，
-        // 否则刚才用过截图来源的用户会落在截图上而看不到带进来的页。
-        source.value = 'page'; switchSource();
-        try { localStorage.setItem('deck-master:style-source:' + app.info.project_identity, 'page'); } catch { /* 偏好写入失败不阻塞带页进入 */ }
         const validContext = (!seed.project_identity || seed.project_identity === app.info.project_identity) && (!seed.revision || seed.revision === app.route.revision);
         const validTargets = (seed.target_ids || []).every(id => pages.some(page => page.page_id === id)) && (!seed.target_refs || seed.target_refs.length === seed.target_ids.length && seed.target_refs.every(ref => canonical(ref.page_ref) === canonical(pages.find(page => page.page_id === ref.page_id)?.stages.content.ref)));
         if (validContext && validTargets) {
+          // N09：带选页进来就是要用项目内参考/目标。只在校验通过后切换来源，并
+          // 同步两处持久化（localStorage 偏好 + 草稿 content），否则一次无效的带
+          // 入也会永久改写用户偏好，或被 restoreSource 翻回截图来源。
+          source.value = 'page'; switchSource();
+          try { localStorage.setItem('deck-master:style-source:' + app.info.project_identity, 'page'); } catch { /* 偏好写入失败不阻塞带页进入 */ }
+          if (!editor().readonly && !editor().disposed) editor().draft.content.style_source = 'page';
           hydrateState({...state(), reference:seed.reference ?? null, targets:seed.target_ids || [], instruction:seed.instruction ?? state().instruction}); persist();
         } else notice.textContent = '带入的选页属于其它项目或版本，未替换当前输入。请返回原总览明确重选。';
       }

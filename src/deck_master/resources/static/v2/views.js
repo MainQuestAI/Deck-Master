@@ -3,7 +3,7 @@ import {runDesk} from './run-desk.js';
 import {candidateBatch} from './candidate-desk.js';
 import {el, button, empty, heading} from './dom.js';
 import {changeHandoffs} from './change-handoff.js';
-import {runsAreas, routeHash} from './routes.js';
+import {routeHash} from './routes.js';
 
 const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
 export {overview} from './overview.js';
@@ -53,6 +53,9 @@ export function runs(app, data) {
     for (const [area, control] of switchers) control.setAttribute('aria-pressed', String(area === key));
     if (persist) {
       app.route.runs_area = key;
+      // 子区不是 tasks 时任务详情会被隐藏：持久化这一选择就同时放下 task_id，
+      // 否则刷新/分享该链接会得到"任务已校验但显示不出来"的状态。
+      if (key !== 'tasks') app.route.task_id = null;
       history.replaceState(null, '', routeHash(app.info, app.route));
     }
     if (!focus) return;
@@ -65,7 +68,10 @@ export function runs(app, data) {
       switchers.set(area, control); return control;
     })));
   node.append(...subareas.map(([, , , section]) => section));
-  showSubarea(runsAreas.includes(app.route.runs_area) ? app.route.runs_area : 'tasks');
+  // 链接里的 area 只在对应子区真的被构建时才生效：没有 exports.v1 的核心没有
+  // 「文件」子区，静态白名单会让所有 section 落到 hidden（整面空白）。
+  const remembered = subareas.some(([area]) => area === app.route.runs_area) ? app.route.runs_area : 'tasks';
+  showSubarea(remembered);
   return node;
 }
 export {style} from './style-calibration.js';

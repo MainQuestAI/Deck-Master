@@ -29,7 +29,7 @@
         "input": {
           "schema_version": "change_intent.v1",
           "project_id": "ux08-project",
-          "base_revision": "2aeac347ab844dd3a8e51f1131c55eb3",
+          "base_revision": "4b64b5c1203b4143a590ab3bbd1b912b",
           "mode": "trial",
           "intent": "reference_correction",
           "instruction": "统一标题层级，保留正文事实与图标。",
@@ -45,8 +45,8 @@
               "layer": "original_image",
               "stage": "blueprint",
               "artifact_ref": {
-                "path": ".deckmaster/objects/3d/3dff3053a9a46729dd0ed3d802eb831e27decc091b8d72744a983dba2b273765.json",
-                "sha256": "3dff3053a9a46729dd0ed3d802eb831e27decc091b8d72744a983dba2b273765"
+                "path": ".deckmaster/objects/0a/0aa23cf0392d591c7fa92f1b165c29fb60995c03923b08c4865f218774f56565.json",
+                "sha256": "0aa23cf0392d591c7fa92f1b165c29fb60995c03923b08c4865f218774f56565"
               }
             },
             {
@@ -58,8 +58,8 @@
               "layer": "original_image",
               "stage": "blueprint",
               "artifact_ref": {
-                "path": ".deckmaster/objects/ae/ae7c736a6a5c8de8dde4093c80700d85e5f0082d64cb065e0f446796b98f478a.json",
-                "sha256": "ae7c736a6a5c8de8dde4093c80700d85e5f0082d64cb065e0f446796b98f478a"
+                "path": ".deckmaster/objects/2d/2d4e0bed42eff7fd3edf51960720c050931f2752cfe8329765438a7198f6669b.json",
+                "sha256": "2d4e0bed42eff7fd3edf51960720c050931f2752cfe8329765438a7198f6669b"
               }
             }
           ],
@@ -74,7 +74,7 @@
         "input": {
           "schema_version": "change_intent.v1",
           "project_id": "ux08-project",
-          "base_revision": "2aeac347ab844dd3a8e51f1131c55eb3",
+          "base_revision": "4b64b5c1203b4143a590ab3bbd1b912b",
           "mode": "trial",
           "intent": "reference_correction",
           "instruction": "统一标题层级，保留正文事实与图标。",
@@ -90,8 +90,8 @@
               "layer": "original_image",
               "stage": "blueprint",
               "artifact_ref": {
-                "path": ".deckmaster/objects/3d/3dff3053a9a46729dd0ed3d802eb831e27decc091b8d72744a983dba2b273765.json",
-                "sha256": "3dff3053a9a46729dd0ed3d802eb831e27decc091b8d72744a983dba2b273765"
+                "path": ".deckmaster/objects/0a/0aa23cf0392d591c7fa92f1b165c29fb60995c03923b08c4865f218774f56565.json",
+                "sha256": "0aa23cf0392d591c7fa92f1b165c29fb60995c03923b08c4865f218774f56565"
               }
             },
             {
@@ -103,8 +103,8 @@
               "layer": "original_image",
               "stage": "blueprint",
               "artifact_ref": {
-                "path": ".deckmaster/objects/ae/ae7c736a6a5c8de8dde4093c80700d85e5f0082d64cb065e0f446796b98f478a.json",
-                "sha256": "ae7c736a6a5c8de8dde4093c80700d85e5f0082d64cb065e0f446796b98f478a"
+                "path": ".deckmaster/objects/2d/2d4e0bed42eff7fd3edf51960720c050931f2752cfe8329765438a7198f6669b.json",
+                "sha256": "2d4e0bed42eff7fd3edf51960720c050931f2752cfe8329765438a7198f6669b"
               }
             }
           ],
@@ -113,7 +113,7 @@
       },
       "status": 200,
       "receipt": {
-        "plan_id": "plan-cea087d3fa45b3a8ae74a08e5d1f5a1b783cc4cb96446152fe2cfb11db2ec429",
+        "plan_id": "plan-efef2fa4800af514c6a3e672fa7100455e00b5149660c9b8602a2dee1c91f87a",
         "status": "planned"
       }
     },
@@ -124,30 +124,30 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "5378603c8f810d7b0c04458e6fe49939511dbb3fc5700794fee51afd4ad86197",
-          "draft_id": "draft-2f91e4a0-610e-42b3-baf9-825ca9d818f2",
+          "project_identity": "1381f9c6060c99bb74b36db704fe22948dc288427176d8c4e3a0cce992b43827",
+          "draft_id": "draft-4416356a-4210-482b-b4fd-e5a2b47dbe4d",
           "target": {
             "scope": "project",
             "page_id": null,
             "layer": "notes"
           },
-          "base_revision": "2aeac347ab844dd3a8e51f1131c55eb3",
+          "base_revision": "4b64b5c1203b4143a590ab3bbd1b912b",
           "base_ref": null,
           "content": {
             "text": ""
           },
           "pending": {
-            "operation_id": "1e47f70e-048a-4eef-87e7-e30ceee3863d",
+            "operation_id": "05c89039-b98e-4dcd-b962-1cb4d0fa4197",
             "payload": {
               "action": "changes.commit",
               "request": {
-                "plan_id": "plan-cea087d3fa45b3a8ae74a08e5d1f5a1b783cc4cb96446152fe2cfb11db2ec429",
-                "base_revision": "2aeac347ab844dd3a8e51f1131c55eb3",
-                "operation_id": "1e47f70e-048a-4eef-87e7-e30ceee3863d"
+                "plan_id": "plan-efef2fa4800af514c6a3e672fa7100455e00b5149660c9b8602a2dee1c91f87a",
+                "base_revision": "4b64b5c1203b4143a590ab3bbd1b912b",
+                "operation_id": "05c89039-b98e-4dcd-b962-1cb4d0fa4197"
               },
-              "request_digest": "e0abd9027df6e4ec36e0d5d7b9e3ea90ece0765250883cd85ec6cc6ae30632c6"
+              "request_digest": "274c26059b3b3def978bb73b2099cd677bf4726d7a4268506bdc7303308507b1"
             },
-            "payload_digest": "42893b1a410c4fb122530eacff4c2df6e85a6d7cfd22a7e596b52827e70bdafa"
+            "payload_digest": "6f5bd4e261ab2d64bfa071f12743477c16d4df3c5e36fd366fe9c498265a17e8"
           }
         },
         "expected_etag": null
@@ -161,18 +161,18 @@
       "method": "POST",
       "path": "/api/changes/commit",
       "payload": {
-        "plan_id": "plan-cea087d3fa45b3a8ae74a08e5d1f5a1b783cc4cb96446152fe2cfb11db2ec429",
-        "base_revision": "2aeac347ab844dd3a8e51f1131c55eb3",
-        "operation_id": "1e47f70e-048a-4eef-87e7-e30ceee3863d"
+        "plan_id": "plan-efef2fa4800af514c6a3e672fa7100455e00b5149660c9b8602a2dee1c91f87a",
+        "base_revision": "4b64b5c1203b4143a590ab3bbd1b912b",
+        "operation_id": "05c89039-b98e-4dcd-b962-1cb4d0fa4197"
       },
       "status": 200,
       "receipt": {
-        "operation_id": "1e47f70e-048a-4eef-87e7-e30ceee3863d",
+        "operation_id": "05c89039-b98e-4dcd-b962-1cb4d0fa4197",
         "status": "committed",
-        "result.revision_id": "e8a8c638828144e38460a5d0a5577c70",
+        "result.revision_id": "71fd6a674ccf4386a31e22a26679f2e2",
         "result.task_ids": [
-          "task-9c35d32f3a6a407cb228c69bdb13a571",
-          "task-5bf3b407df7d4085aadcb39bda14f7ef"
+          "task-0235fa214c0544d6af6c11cd40b230df",
+          "task-c044f08ed818430a981f6bd3440c60d1"
         ]
       }
     },
@@ -183,21 +183,21 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "5378603c8f810d7b0c04458e6fe49939511dbb3fc5700794fee51afd4ad86197",
-          "draft_id": "draft-2f91e4a0-610e-42b3-baf9-825ca9d818f2",
+          "project_identity": "1381f9c6060c99bb74b36db704fe22948dc288427176d8c4e3a0cce992b43827",
+          "draft_id": "draft-4416356a-4210-482b-b4fd-e5a2b47dbe4d",
           "target": {
             "scope": "project",
             "page_id": null,
             "layer": "notes"
           },
-          "base_revision": "2aeac347ab844dd3a8e51f1131c55eb3",
+          "base_revision": "4b64b5c1203b4143a590ab3bbd1b912b",
           "base_ref": null,
           "content": {
             "text": ""
           },
           "pending": null
         },
-        "expected_etag": "7434aa67bb637df39dc73607a12c1b12042d3e3a727901b7c174b39d3d5affd1"
+        "expected_etag": "56bf3af9c2973bf4de1dca2975f001d0f87f71b7d6b0685c8c46d91ea1146634"
       },
       "status": 200,
       "receipt": {

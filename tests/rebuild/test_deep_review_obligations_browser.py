@@ -68,6 +68,8 @@ def test_selection_to_style_path_works_after_using_the_screenshot_source(obligat
     open_style(page)
     page.get_by_label('风格参考来源').select_option('screenshot')
     expect(page.locator('.visual-style')).to_be_visible()
+    # 项目路线的状态行不残留到截图路线（两条路线各有自己的状态出口）。
+    expect(page.locator('.style-calibration > [role="status"]')).to_be_hidden()
     page.get_by_role('button', name='整稿画廊', exact=True).click()
     page.locator('.gallery-viewport').wait_for()
     page.get_by_label(re.compile(r'^选择第 1 页 ')).check()
@@ -139,3 +141,70 @@ def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(obl
     expect(page.locator('.run-desk')).to_contain_text('固定执行记录')
     expect(page.locator('.run-task').filter(has_text='制作可编辑稿')).to_have_count(0)
     expect(page.locator('.run-task').filter(has_text='整理内容').first).to_contain_text('结果已记录')
+
+
+def test_topbar_pending_entry_always_lands_on_the_task_list(obligations_browser):
+    """复审 F2/F4（跨模型一致）：顶栏承诺"查看待交接任务"，不被记住的子区劫持。"""
+    from playwright.sync_api import expect
+    page, server, path, store = obligations_browser
+    add_task(store, 'todo-task-2', 'reconstruct', 'awaiting_host', '待接手任务用于顶栏入口核对。')
+    page.goto(server.start())
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    # 先把记住的子区切成「文件」——顶栏入口之后仍必须落在任务列表。
+    page.get_by_role('button', name='任务与交付', exact=True).click()
+    page.get_by_role('button', name='文件', exact=True).click()
+    page.get_by_role('button', name='制作总览', exact=True).click()
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    page.get_by_role('button', name=re.compile(r'^查看待交接任务，\d+ 项$')).click()
+    expect(page.locator('#runs-tasks')).to_be_visible(timeout=15000)
+    expect(page.locator('.runs-subareas button[aria-pressed="true"]')).to_have_text('正在进行')
+    expect(page.locator('.run-task').filter(has_text='制作可编辑稿').first).to_contain_text('待接手')
+
+
+def test_area_link_without_the_subarea_falls_back_to_tasks(obligations_browser):
+    """复审 F1（跨模型一致）：核心没有 exports.v1 时 area=files 不得把整个面变空白。"""
+    from playwright.sync_api import expect
+    import json as json_mod
+    page, server, path, store = obligations_browser
+    url = server.start()
+
+    def strip_exports(route):
+        body = json_mod.loads(route.fetch().text())
+        caps = [item for item in body.get('ui_capabilities', []) if item != 'exports.v1']
+        route.fulfill(status=200, content_type='application/json',
+                      body=json_mod.dumps({**body, 'ui_capabilities': caps}))
+    page.route('**/api/health', strip_exports)
+    page.goto(url)
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
+    page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'runs', revision: args[1], area: 'files'})}",
+                  [identity, store.current_revision_id()])
+    page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
+    expect(page.locator('#runs-tasks')).to_be_visible()
+    expect(page.locator('.runs-subareas button[aria-pressed="true"]')).to_have_text('正在进行')
+    # 非法 area 同样回落而不是让整条路由报错。
+    page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'runs', revision: args[1], area: 'bogus'})}",
+                  [identity, store.current_revision_id()])
+    page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
+    expect(page.locator('#runs-tasks')).to_be_visible()
+
+
+def test_persisting_a_non_task_area_drops_the_hidden_task_route(obligations_browser):
+    """复审 F5：任务详情打开时切走子区，链接不得留下"任务已校验但无处显示"的状态。"""
+    from playwright.sync_api import expect
+    import urllib.parse
+    page, server, path, store = obligations_browser
+    add_task(store, 'task-route-1', 'reconstruct', 'awaiting_host', '用于子区持久化与任务路由核对。')
+    page.goto(server.start())
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    page.get_by_role('button', name='任务与交付', exact=True).click()
+    page.locator('.run-task').first.get_by_role('button', name='查看这项任务').click()
+    expect(page.locator('.run-detail')).to_be_visible()
+    page.get_by_role('button', name='版本', exact=True).click()
+    params = dict(urllib.parse.parse_qsl(page.url.split('#')[1]))
+    assert 'task' not in params, params
+    page.reload()
+    page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
+    expect(page.locator('#runs-versions')).to_be_visible()
+    # 任务路由已随子区持久化放下：详情区为空（.run-detail:empty 折叠）。
+    expect(page.locator('.run-detail')).to_be_hidden()

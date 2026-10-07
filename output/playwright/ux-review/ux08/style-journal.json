@@ -25,13 +25,13 @@
         "input": {
           "schema_version": "style_input.v1",
           "project_id": "ux08-project",
-          "base_revision": "15ec3cac694a4f119886de924673b4ae",
+          "base_revision": "0f1821274cb545f69254bd7c505eae84",
           "reference": {
             "page_id": "p01",
-            "revision_id": "15ec3cac694a4f119886de924673b4ae",
+            "revision_id": "0f1821274cb545f69254bd7c505eae84",
             "artifact_ref": {
-              "path": ".deckmaster/objects/52/5264967e3f959708238c5c13b9893dc0a2bdc3b11a920824316e78a450e62de5.json",
-              "sha256": "5264967e3f959708238c5c13b9893dc0a2bdc3b11a920824316e78a450e62de5"
+              "path": ".deckmaster/objects/38/38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883.json",
+              "sha256": "38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883"
             },
             "role": "reference"
           },
@@ -58,13 +58,13 @@
         "input": {
           "schema_version": "style_input.v1",
           "project_id": "ux08-project",
-          "base_revision": "15ec3cac694a4f119886de924673b4ae",
+          "base_revision": "0f1821274cb545f69254bd7c505eae84",
           "reference": {
             "page_id": "p01",
-            "revision_id": "15ec3cac694a4f119886de924673b4ae",
+            "revision_id": "0f1821274cb545f69254bd7c505eae84",
             "artifact_ref": {
-              "path": ".deckmaster/objects/52/5264967e3f959708238c5c13b9893dc0a2bdc3b11a920824316e78a450e62de5.json",
-              "sha256": "5264967e3f959708238c5c13b9893dc0a2bdc3b11a920824316e78a450e62de5"
+              "path": ".deckmaster/objects/38/38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883.json",
+              "sha256": "38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883"
             },
             "role": "reference"
           },
@@ -93,24 +93,24 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "236bb57b5c5d46dd1626a22798165a07b45ef78f4fa1d01161a02d97b689c3c1",
-          "draft_id": "draft-f2bf668b-c132-4721-ab67-706b8b772368",
+          "project_identity": "585120683775cbf9a172f5c602f479dcc256dc121ac3cc711d78ede7d3881330",
+          "draft_id": "draft-44d867ed-2825-4996-bcc5-972d88300885",
           "target": {
             "scope": "project",
             "page_id": null,
             "layer": "notes"
           },
-          "base_revision": "15ec3cac694a4f119886de924673b4ae",
+          "base_revision": "0f1821274cb545f69254bd7c505eae84",
           "base_ref": null,
           "content": {
             "text": "",
             "style_calibration": {
               "reference": {
                 "page_id": "p01",
-                "revision_id": "15ec3cac694a4f119886de924673b4ae",
+                "revision_id": "0f1821274cb545f69254bd7c505eae84",
                 "artifact_ref": {
-                  "path": ".deckmaster/objects/52/5264967e3f959708238c5c13b9893dc0a2bdc3b11a920824316e78a450e62de5.json",
-                  "sha256": "5264967e3f959708238c5c13b9893dc0a2bdc3b11a920824316e78a450e62de5"
+                  "path": ".deckmaster/objects/38/38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883.json",
+                  "sha256": "38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883"
                 },
                 "file": {
                   "path": ".deckmaster/objects/81/81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png",
@@ -135,17 +135,17 @@
             }
           },
           "pending": {
-            "operation_id": "43cd5cfe-cd3b-4d6f-8a5a-452c0d5baee8",
+            "operation_id": "23bf2e3f-5aef-4f63-826b-180ea9c1baa4",
             "payload": {
               "action": "styles.confirm",
               "request": {
-                "proposal_id": "style-proposal-8ebf6f6b2f07df2d3e9364767b357db1c1ef5602d16500cad9205b9734cd27dd",
-                "base_revision": "15ec3cac694a4f119886de924673b4ae",
-                "operation_id": "43cd5cfe-cd3b-4d6f-8a5a-452c0d5baee8"
+                "proposal_id": "style-proposal-88d06301600a49ebbf4c0aca265a2e6c35c0556643d41bd86608f88688078d57",
+                "base_revision": "0f1821274cb545f69254bd7c505eae84",
+                "operation_id": "23bf2e3f-5aef-4f63-826b-180ea9c1baa4"
               },
-              "request_digest": "930ae44fc5ef60355153ed6d9adba7957b78cd0640e8daeb606267b9bf25fa48"
+              "request_digest": "4a09ece27af1f83c3c745a49520af924545cc60b8c9400ae65eb0280000ac01f"
             },
-            "payload_digest": "689b2f30fb4cd4fb60ec6d7104b8beb45bc4ac76e56cb9393889ac6b99bd4389"
+            "payload_digest": "458a719738e104989b5ef634579adbcf94a8a3119aa3fa36558fa17fbd9e05b6"
           }
         },
         "expected_etag": null
@@ -159,16 +159,16 @@
       "method": "POST",
       "path": "/api/styles/confirm",
       "payload": {
-        "proposal_id": "style-proposal-8ebf6f6b2f07df2d3e9364767b357db1c1ef5602d16500cad9205b9734cd27dd",
-        "base_revision": "15ec3cac694a4f119886de924673b4ae",
-        "operation_id": "43cd5cfe-cd3b-4d6f-8a5a-452c0d5baee8"
+        "proposal_id": "style-proposal-88d06301600a49ebbf4c0aca265a2e6c35c0556643d41bd86608f88688078d57",
+        "base_revision": "0f1821274cb545f69254bd7c505eae84",
+        "operation_id": "23bf2e3f-5aef-4f63-826b-180ea9c1baa4"
       },
       "status": 200,
       "receipt": {
-        "operation_id": "43cd5cfe-cd3b-4d6f-8a5a-452c0d5baee8",
+        "operation_id": "23bf2e3f-5aef-4f63-826b-180ea9c1baa4",
         "status": "committed",
-        "result.revision_id": "1ce2116816d84b9aa6fc2a24b1e39af3",
-        "result.recipe_id": "recipe-23a7043bb87b428192939087422c2984"
+        "result.revision_id": "b32cd11ddafc47f9a19f85db289824d3",
+        "result.recipe_id": "recipe-a7c6ff66d1e2450a944258b75987e68b"
       }
     },
     {
@@ -178,24 +178,24 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "236bb57b5c5d46dd1626a22798165a07b45ef78f4fa1d01161a02d97b689c3c1",
-          "draft_id": "draft-f2bf668b-c132-4721-ab67-706b8b772368",
+          "project_identity": "585120683775cbf9a172f5c602f479dcc256dc121ac3cc711d78ede7d3881330",
+          "draft_id": "draft-44d867ed-2825-4996-bcc5-972d88300885",
           "target": {
             "scope": "project",
             "page_id": null,
             "layer": "notes"
           },
-          "base_revision": "15ec3cac694a4f119886de924673b4ae",
+          "base_revision": "0f1821274cb545f69254bd7c505eae84",
           "base_ref": null,
           "content": {
             "text": "",
             "style_calibration": {
               "reference": {
                 "page_id": "p01",
-                "revision_id": "15ec3cac694a4f119886de924673b4ae",
+                "revision_id": "0f1821274cb545f69254bd7c505eae84",
                 "artifact_ref": {
-                  "path": ".deckmaster/objects/52/5264967e3f959708238c5c13b9893dc0a2bdc3b11a920824316e78a450e62de5.json",
-                  "sha256": "5264967e3f959708238c5c13b9893dc0a2bdc3b11a920824316e78a450e62de5"
+                  "path": ".deckmaster/objects/38/38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883.json",
+                  "sha256": "38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883"
                 },
                 "file": {
                   "path": ".deckmaster/objects/81/81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png",
@@ -221,7 +221,7 @@
           },
           "pending": null
         },
-        "expected_etag": "15ad959d3134d598de40420b327f4fafce3cb69849fb43c232fb623474d3d5b5"
+        "expected_etag": "e17fd46b6cf241873df11aa693089c5209f46287b358b8635e41d75fcb1122b3"
       },
       "status": 200,
       "receipt": {
@@ -233,7 +233,7 @@
       "path": "/api/styles/plan",
       "payload": {
         "input": {
-          "recipe_id": "recipe-23a7043bb87b428192939087422c2984",
+          "recipe_id": "recipe-a7c6ff66d1e2450a944258b75987e68b",
           "page_ids": [
             "p02"
           ],
@@ -242,7 +242,7 @@
       },
       "status": 200,
       "receipt": {
-        "plan_id": "plan-b0c7296a67eea4fe3287ba9e22e6514193104448812b2277657bd972c39c1253",
+        "plan_id": "plan-ba18cca56012bf1f1b35d420d7266bf8b17475d70e4a336000633f69ed5acb85",
         "status": "planned"
       }
     }

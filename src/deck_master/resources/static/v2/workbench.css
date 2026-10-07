@@ -167,6 +167,9 @@ textarea{font-size:14px;line-height:1.7}
    这里补一条最小基础规则：垂直块级流 + hidden 守卫，不改变现有块级布局计算。 */
 .stack { display: block; }
 .stack[hidden] { display: none; }
+/* 早于本文件加载的同类组合（style.css 的横幅族）此前由自身 display 生效——
+   基础规则不得顺带改掉它们的布局。 */
+.notice.stack, .history-banner.stack, .sample-banner.stack { display: flex; }
 
 /* AC06/§2.1：长列表选页时摘要与配置入口吸附在顶部，滚到第 28 页也够得着。 */
 .overview-selection-bar[hidden] { display: none; }
@@ -209,7 +212,7 @@ textarea{font-size:14px;line-height:1.7}
 .content-changes h3{margin:0;font-size:14px}
 /* 2.3：差异清单再长也不把影响与确认挤出同屏——清单自身滚动。 */
 .content-change-list{list-style:none;padding:0;margin:0;display:grid;gap:8px;max-height:32vh;overflow:auto;overscroll-behavior:contain}
-.content-check{gap:12px}
+.content-check{display:flex;flex-direction:column;gap:12px}
 .content-change-list li{font-size:13px;overflow-wrap:anywhere}
 .content-change-label{font-weight:600;margin-right:6px}
 .content-change-before{color:var(--muted)}

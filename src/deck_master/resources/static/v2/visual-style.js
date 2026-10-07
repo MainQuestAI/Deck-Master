@@ -207,7 +207,7 @@ export function visualStyle(app){
     if(disposed)return;if(result.plan.base_revision!==app.route.revision)throw new Error('项目已更新，请保留要求并返回当前版本重新预览。');
     plan=result;planBox.replaceChildren(el('p',{},`试作 ${ids.length} 页，最多 ${ids.length} 次生图；当前稿保留，返回后比较采用。`));
   }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
-  async function commitTrial(){if(!plan)return;busy=true;controls();try{const request={plan_id:plan.plan_id,base_revision:plan.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:plan.plan_id,plan:plan.plan},async result=>{state.change_id=result.change_id;await saveState();app.go({surface:'runs',revision:result.revision_id,task_id:result.task_ids.length===1?result.task_ids[0]:null,candidate_id:null});});}catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
+  async function commitTrial(){if(!plan)return;busy=true;controls();try{const request={plan_id:plan.plan_id,base_revision:plan.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:plan.plan_id,plan:plan.plan},async result=>{state.change_id=result.change_id;await saveState();app.go({surface:'runs',revision:result.revision_id,task_id:result.task_ids.length===1?result.task_ids[0]:null,candidate_id:null,runs_area:'tasks'});});}catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
   if(pending){status.append(el('span',{},'存在待核实的截图上传。'),button('核实原上传',verifyUpload));}
   const referencesReady=loadReferences();
   async function hydrate(){const current=editor(),token=++hydrateSerial;loaded=false;analysisSerial++;savedCatalogSerial++;clearSpec();recipe=null;invalidatePlan();candidateRows.replaceChildren();controls();

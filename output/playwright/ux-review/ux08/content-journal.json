@@ -25,14 +25,14 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "aae8a21a38c237b8808417354f7549a62ee9bc33ed5b3043cc9564d36a515462",
-          "draft_id": "draft-a9a4b6fa-7371-4624-8f78-90612d89bf78",
+          "project_identity": "f6725ad6746bc24abc9eb491eb4d22d6db8098b613ac15f5c1740429ac621c96",
+          "draft_id": "draft-21393111-854f-44cc-ab72-9138a8918d0d",
           "target": {
             "scope": "page",
             "page_id": "p01",
             "layer": "content"
           },
-          "base_revision": "ef58ba1b6288469da075c10ac9ae354a",
+          "base_revision": "4d7873eea86b4035a20d0d654a4a64a9",
           "base_ref": {
             "path": ".deckmaster/objects/6e/6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0.json",
             "sha256": "6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0"
@@ -63,10 +63,10 @@
         "input": {
           "schema_version": "content_operation_input.v1",
           "project_id": "ux08-project",
-          "base_revision": "ef58ba1b6288469da075c10ac9ae354a",
+          "base_revision": "4d7873eea86b4035a20d0d654a4a64a9",
           "content_plan_ref": {
-            "path": ".deckmaster/objects/cf/cfa712976c889af1de9e7d8f00125c6d9f17f7539f903f3b62b2679ac244f038.json",
-            "sha256": "cfa712976c889af1de9e7d8f00125c6d9f17f7539f903f3b62b2679ac244f038"
+            "path": ".deckmaster/objects/36/36db55673c617f8bbca2a1b47fc2a3b05706a24b7e93edb1fc11c04e3662d88d.json",
+            "sha256": "36db55673c617f8bbca2a1b47fc2a3b05706a24b7e93edb1fc11c04e3662d88d"
           },
           "action": "edit",
           "instruction": "调整本页标题或正文",
@@ -87,7 +87,7 @@
       },
       "status": 200,
       "receipt": {
-        "plan_id": "content-plan-4402d1eae2773133eb1f746c1bc1f8ca78c72c11f48da8ddcd1bf4535fd95996"
+        "plan_id": "content-plan-c5d7e61a8ea238b0e0ed0176b658a29f0487f96ee4d07926e1c8d68c21c0ae52"
       }
     },
     {
@@ -97,14 +97,14 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "aae8a21a38c237b8808417354f7549a62ee9bc33ed5b3043cc9564d36a515462",
-          "draft_id": "draft-a9a4b6fa-7371-4624-8f78-90612d89bf78",
+          "project_identity": "f6725ad6746bc24abc9eb491eb4d22d6db8098b613ac15f5c1740429ac621c96",
+          "draft_id": "draft-21393111-854f-44cc-ab72-9138a8918d0d",
           "target": {
             "scope": "page",
             "page_id": "p01",
             "layer": "content"
           },
-          "base_revision": "ef58ba1b6288469da075c10ac9ae354a",
+          "base_revision": "4d7873eea86b4035a20d0d654a4a64a9",
           "base_ref": {
             "path": ".deckmaster/objects/6e/6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0.json",
             "sha256": "6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0"
@@ -120,20 +120,20 @@
             }
           },
           "pending": {
-            "operation_id": "fc07b480-c0a3-444c-a56d-23c2ec9320b5",
+            "operation_id": "55b61285-1413-43de-8f4e-0a4a2cc313c4",
             "payload": {
               "action": "content.commit",
               "request": {
-                "plan_id": "content-plan-4402d1eae2773133eb1f746c1bc1f8ca78c72c11f48da8ddcd1bf4535fd95996",
-                "base_revision": "ef58ba1b6288469da075c10ac9ae354a",
-                "operation_id": "fc07b480-c0a3-444c-a56d-23c2ec9320b5"
+                "plan_id": "content-plan-c5d7e61a8ea238b0e0ed0176b658a29f0487f96ee4d07926e1c8d68c21c0ae52",
+                "base_revision": "4d7873eea86b4035a20d0d654a4a64a9",
+                "operation_id": "55b61285-1413-43de-8f4e-0a4a2cc313c4"
               },
-              "request_digest": "87e6139d88b7ff25739c1f5357f863fd3ef1e0cb9ce4bda6c9667eead6fc3699"
+              "request_digest": "fdfae289855fff62b3600d1531b42ea2a4993b6646b363eba86c37c1314138ce"
             },
-            "payload_digest": "269bb1d93e1587f439e25b233305677e70696aef4b18922679b8ac14d173dfc3"
+            "payload_digest": "b062d42415c34dc891f8a5fb4e31e661659b25e827ff0a397929ede988c79b8e"
           }
         },
-        "expected_etag": "1545731bb82b2a14d485e3053e843956111993ad0f927f3ae773c5bc35765a0f"
+        "expected_etag": "e70972cbe5182c3841f9bb6c76acdfa982e07e748b9a466b6396f100a50fef18"
       },
       "status": 200,
       "receipt": {
@@ -144,15 +144,15 @@
       "method": "POST",
       "path": "/api/content/commit",
       "payload": {
-        "plan_id": "content-plan-4402d1eae2773133eb1f746c1bc1f8ca78c72c11f48da8ddcd1bf4535fd95996",
-        "base_revision": "ef58ba1b6288469da075c10ac9ae354a",
-        "operation_id": "fc07b480-c0a3-444c-a56d-23c2ec9320b5"
+        "plan_id": "content-plan-c5d7e61a8ea238b0e0ed0176b658a29f0487f96ee4d07926e1c8d68c21c0ae52",
+        "base_revision": "4d7873eea86b4035a20d0d654a4a64a9",
+        "operation_id": "55b61285-1413-43de-8f4e-0a4a2cc313c4"
       },
       "status": 200,
       "receipt": {
-        "operation_id": "fc07b480-c0a3-444c-a56d-23c2ec9320b5",
+        "operation_id": "55b61285-1413-43de-8f4e-0a4a2cc313c4",
         "status": "committed",
-        "result.revision_id": "1691b1e46b444b85859db8662841a31c",
+        "result.revision_id": "1baf94b9cfc448558491934c3d5604d4",
         "result.task_ids": []
       }
     },
@@ -163,14 +163,14 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "aae8a21a38c237b8808417354f7549a62ee9bc33ed5b3043cc9564d36a515462",
-          "draft_id": "draft-a9a4b6fa-7371-4624-8f78-90612d89bf78",
+          "project_identity": "f6725ad6746bc24abc9eb491eb4d22d6db8098b613ac15f5c1740429ac621c96",
+          "draft_id": "draft-21393111-854f-44cc-ab72-9138a8918d0d",
           "target": {
             "scope": "page",
             "page_id": "p01",
             "layer": "content"
           },
-          "base_revision": "ef58ba1b6288469da075c10ac9ae354a",
+          "base_revision": "4d7873eea86b4035a20d0d654a4a64a9",
           "base_ref": {
             "path": ".deckmaster/objects/6e/6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0.json",
             "sha256": "6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0"
@@ -187,7 +187,7 @@
           },
           "pending": null
         },
-        "expected_etag": "fb5fe55d582796305ff55a56ca9df3837338606b45cf951b1bdeb78bb8b1361e"
+        "expected_etag": "01651f0ca6cfa0972010247ef1868cda7041b20286ea884e7c7f19d9707cfd30"
       },
       "status": 200,
       "receipt": {

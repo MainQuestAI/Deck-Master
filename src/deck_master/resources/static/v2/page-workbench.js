@@ -176,11 +176,14 @@ export function pageDetail(app, data) {
     app.editor?.dispose(); app.editor = null;
     if (layer === 'source') {
       annotations?.bind(null, null);
-      draftSlot.replaceChildren(el('p', {class: 'muted'}, '个人草稿绑定逐页稿或提示词层；来源层只提供阅读。')); return;
+      draftSlot.replaceChildren(el('p', {class: 'muted'}, '个人草稿绑定逐页稿或提示词层；来源层只提供阅读。'));
+      noteRecovery.replaceChildren(...(annotations?.maintenanceNodes || [draftSlot])); return;
     }
     if (layer === 'prepared_prompt' && preparedRecords(data).length > 1 && !ref) {
       annotations?.bind(null, null);
-      draftSlot.replaceChildren(el('p', {class: 'muted'}, '请选择明确的预备稿，再写绑定这份原文的个人草稿。')); return;
+      draftSlot.replaceChildren(el('p', {class: 'muted'}, '请选择明确的预备稿，再写绑定这份原文的个人草稿。'));
+      // draftSlot 住在维护区里：早退也必须把维护区装回去，否则提示写进脱离 DOM 的节点。
+      noteRecovery.replaceChildren(...(annotations?.maintenanceNodes || [draftSlot])); return;
     }
     const info = {...app.info, page_label: `第 ${index + 1} 页`};
     const samePageBasis = app.latest.pages.find(p => p.page_id === data.page_id)?.stages.content.ref?.sha256 === data.stages.content.ref?.sha256;

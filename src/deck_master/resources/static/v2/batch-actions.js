@@ -127,7 +127,7 @@ export function batchActions(app, selected, onSelectionChange) {
         instruction.value = '';
         try { localStorage.removeItem(workingKey); } catch { /* 存储不可用时以输入框为准 */ }
         impact.replaceChildren(el('p', {class: 'success-note'}, `已保存 ${result.task_ids.length} 项待交接任务，尚未开始制作。`),
-          button('查看本次交接', () => app.go({surface: 'runs', revision: result.revision_id, task_id: result.task_ids.length === 1 ? result.task_ids[0] : null, candidate_id: null})));
+          button('查看本次交接', () => app.go({surface: 'runs', revision: result.revision_id, task_id: result.task_ids.length === 1 ? result.task_ids[0] : null, candidate_id: null, runs_area: 'tasks'})));
       });
     } catch (error) { if (!disposed && token === serial) impact.replaceChildren(el('p', {role: 'alert'}, readableError(error))); }
     finally { busy = false; if (!disposed) render(); }
@@ -151,6 +151,5 @@ export function batchActions(app, selected, onSelectionChange) {
     // AC06/§2.1（深度复审）：长列表里选择摘要与配置入口必须持续可达——
     // 概览用这两个方法渲染常驻选择条，并让「配置要求」把用户带回配置区。
     selectionSummary: hidden => selected.size ? `已选 ${selected.size} 页用于${batchNames[action.value]}${hidden ? ` · 筛选外 ${hidden} 页` : ''}` : '',
-    selectedCount: () => selected.size,
     openConfig: () => { node.scrollIntoView({block: 'center'}); instruction.focus({preventScroll: true}); }};
 }

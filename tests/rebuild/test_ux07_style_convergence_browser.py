@@ -107,11 +107,12 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     # 主要动作触点 ≥44px，字体回退来自 token（中文界面要有中文字族）。
     fonts = page.evaluate('() => getComputedStyle(document.body).fontFamily')
     assert 'PingFang SC' in fonts or 'Noto Sans CJK SC' in fonts or 'Microsoft YaHei' in fonts, fonts
-    for surface, heading, selector in [('整稿画廊', '整稿画廊', '.gallery-controls button'),
-                                       ('内容与来源', '内容与来源', '.content-sources button')]:
+    for surface, slug, selector in [('整稿画廊', 'gallery', '.gallery-controls button'),
+                                    ('内容与来源', 'content', '.content-sources button')]:
         page.get_by_role('button', name=surface, exact=True).click()
-        page.get_by_role('heading', name=heading, exact=True).wait_for()
+        page.get_by_role('heading', name=surface, exact=True).wait_for()
         page.wait_for_timeout(300)
         assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth + 1'), f'{surface} 横向溢出'
         assert_touch_targets(page, selector)
-        page.screenshot(path=str(EVIDENCE / f'ux07-{width}-{surface}.png'), full_page=False)
+        # 证据文件名用 ASCII slug，避免非 ASCII 路径在其它环境/工具链上的兼容问题。
+        page.screenshot(path=str(EVIDENCE / f'ux07-{width}-{slug}.png'), full_page=False)

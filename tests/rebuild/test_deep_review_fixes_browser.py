@@ -99,12 +99,13 @@ def test_style_conflict_choices_live_with_the_confirm_action(style_browser):
     EVIDENCE.mkdir(parents=True, exist_ok=True)
     page.screenshot(path=str(EVIDENCE / 'r1-style-conflict-in-confirm-phase.png'))
 
-    # 明确取舍后重新检查，确认动作才可用。
+    # 明确取舍后在同一阶段内重新检查（复审 P1：不得回到阶段 1 才能解锁确认），
+    # 确认动作随后可用；阶段 1 全程保持关闭。
+    expect(page.locator('.style-calibration > .style-phase').first).not_to_have_attribute('open', '')
     conflict.select_option('keep_target')
-    page.get_by_role('button', name='检查风格要求', exact=True).click()
-    page.get_by_role('combobox', name='第 2 页 · 材料如何成为内容 密度取舍', exact=True).select_option('keep_target')
-    page.get_by_role('button', name='检查风格要求', exact=True).click()
+    page.get_by_role('button', name='按此取舍重新检查要求', exact=True).click()
     expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled(timeout=15000)
+    expect(page.locator('.style-calibration > .style-phase').first).not_to_have_attribute('open', '')
 
 
 # --------------------------------------------------------------------------- R2
