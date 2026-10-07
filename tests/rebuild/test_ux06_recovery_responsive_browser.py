@@ -141,6 +141,10 @@ def test_lost_create_response_offers_register_and_open_without_recreating(ux06_b
         create_attempts = len(attempts)
 
         # 恢复动作只登记已存在的位置并打开，不再创建。
+        page.route('**/api/projects/register', lambda route: route.abort(), times=1)
+        page.locator('dialog[open]').get_by_role('button', name='登记并打开这个位置', exact=True).click()
+        expect(page.locator('dialog[open]').get_by_role('button', name='登记并打开这个位置', exact=True)).to_be_enabled()
+        assert len(attempts) == create_attempts
         page.locator('dialog[open]').get_by_role('button', name='登记并打开这个位置', exact=True).click()
         page.wait_for_url(lambda pattern: '#project=' in page.url, timeout=20000)
         assert len(attempts) == create_attempts, '恢复路径不得再次创建'
@@ -268,4 +272,11 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
     expect(opinion).to_have_count(1)
     opinion.check()
     expect(opinion).to_be_checked()
+    page.evaluate("() => {window.iconCopy = null; Object.defineProperty(navigator, 'clipboard', {value: {writeText: async text => {window.iconCopy = text;}}});}")
+    handoff.click()
+    expect(workbench.get_by_role('status')).to_contain_text('图标要求已复制。尚未启动任务')
+    payload = page.evaluate('JSON.parse(window.iconCopy)')
+    assert payload['page_id'] == 'p01' and len(payload['annotation_refs']) == 1
+    assert payload['opinions'][0]['body'] == '图标间距需要与正文对齐。'
+    assert payload['opinions'][0]['layer'] == 'original_image'
     assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth')
