@@ -255,6 +255,8 @@ def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection)
     # Value: protects=new file/current base after rejection; fails_when=all errors stay unknown;
     # why_new=existing retry case only exercises missing response; seam=none
     import io
+    import json
+    import time
     from PIL import Image
     from urllib.parse import parse_qs, urlparse
     from playwright.sync_api import sync_playwright, expect
@@ -263,7 +265,12 @@ def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection)
     server = WorkbenchServer(flow.project)
     with sync_playwright() as runtime:
         browser = runtime.chromium.launch(args=['--no-sandbox']); page = browser.new_page()
-        requests, errors = [], []
+        requests, errors, network = [], [], []
+        started = time.monotonic()
+        page.on('request', lambda request: network.append({'event': 'request', 'at': time.monotonic()-started,
+            'method': request.method, 'url': request.url}) if '/api/' in request.url else None)
+        page.on('requestfinished', lambda request: network.append({'event': 'finished', 'at': time.monotonic()-started,
+            'method': request.method, 'url': request.url}) if '/api/' in request.url else None)
         page.on('pageerror', lambda error: errors.append(str(error)))
         try:
             page.goto(server.start()); page.get_by_role('button', name='风格校准', exact=True).click()
@@ -311,6 +318,12 @@ def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection)
             with page.expect_response(lambda response: '/api/styles/references/import?' in response.url) as accepted:
                 upload.set_input_files({'name':'valid.png', 'mimeType':'image/png', 'buffer':image_bytes()})
             assert accepted.value.status == 200
+            receipt = accepted.value.json()['operation_result']
+            # Upload success is not yet completion of the private save and result
+            # mount. Observe those actual milestones before checking retirement.
+            expect(page).to_have_url(re.compile('revision=' + re.escape(receipt['revision_id'])))
+            expect(page.locator('.visual-reference-choice .pooled-image').last).to_have_attribute('data-image-state', 'ready')
+            expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
             expect(page.locator('.visual-upload-recovery')).to_be_empty()
             assert len(requests) == 2
             assert requests[0]['operation_id'] != requests[1]['operation_id']
@@ -321,6 +334,17 @@ def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection)
             screenshot(page, 'upload-restarted-'+rejection)
             assert errors == []
         finally:
+            evidence = Path('output/playwright/pr103-complete/upload-rejection-milestones')
+            evidence.mkdir(parents=True, exist_ok=True)
+            state = page.evaluate("""() => ({url: location.href,
+              draft: document.querySelector('.draft-state')?.textContent,
+              recovery: document.querySelector('.visual-upload-recovery')?.textContent,
+              continuation: Object.fromEntries(Object.keys(localStorage).filter(key =>
+                key.startsWith('deck-master:visual-style:') && key.endsWith(':completed'))
+                .map(key => [key, JSON.parse(localStorage.getItem(key))]))})""")
+            diagnostic = json.dumps({'network': network, 'state': state}, ensure_ascii=False, indent=2)
+            (evidence/f'{rejection}.json').write_text(diagnostic)
+            print('UPLOAD_RECOVERY_MILESTONES', diagnostic)
             browser.close(); server.stop()
 
 
