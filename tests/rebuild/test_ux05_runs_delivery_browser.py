@@ -77,7 +77,7 @@ def test_runs_subareas_reach_decisions_versions_files_and_shortcuts_match_layers
     expect(running).to_have_attribute('aria-pressed', 'true')
     expect(page.locator('.run-desk')).to_be_visible()
     expect(page.locator('#runs-versions')).to_be_hidden()
-    for name, expected_head in [('待决定', '修改交接'), ('版本', '版本记录'), ('文件', '版本与文件')]:
+    for name, expected_head in [('待决定', '候选与当前稿'), ('版本', '版本记录'), ('文件', '版本与文件')]:
         page.get_by_role('button', name=name, exact=True).click()
         expect(page.locator('h2:focus')).to_have_text(expected_head)
         expect(running).to_have_attribute('aria-pressed', 'false')

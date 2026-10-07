@@ -10,6 +10,43 @@ const taskLabels = {queued: '等待', awaiting_host: '尚未接手', running: '�
 // 复制只作用于已成功读取且与当前所选一致的组。等待响应期间切换组时，
 // 旧组文本不得再被复制，本机复制提示也只属于被复制的那一组（C01/N01）。
 export const copySnapshot = (loaded, loadedId, selectedId) => loaded && loadedId != null && loadedId === selectedId ? {id: loadedId, text: loaded.text} : null;
+// A task owns the handoff target. Never default to the last group in the catalog.
+export function taskHandoff(app, task, groups) {
+  const group = groups.find(row => row.task_ids?.includes(task.task_id));
+  if (!group || app.historical || task.status !== 'awaiting_host') return null;
+  const note = el('p', {role: 'status'}, '正在读取这项任务的交接说明…');
+  const text = el('textarea', {readOnly: true, rows: 7, 'aria-label': '本任务完整交接说明'});
+  let snapshot = null, disposed = false;
+  const copy = button('复制交接说明', async () => {
+    const frozen = snapshot;
+    if (!frozen || disposed) return;
+    copy.disabled = true;
+    try {
+      await navigator.clipboard.writeText(frozen.text);
+      const key = `deck-master:v3:copied:${app.info.project_identity}`;
+      try { const ids = new Set(JSON.parse(localStorage.getItem(key) || '[]')); ids.add(frozen.id); localStorage.setItem(key, JSON.stringify([...ids])); } catch { /* Clipboard success is independent of the local hint. */ }
+      if (!disposed) note.textContent = '交接说明已复制 · 待接手。复制不会启动制作。';
+    } catch {
+      if (!disposed) { details.open = true; text.focus(); text.select(); note.textContent = '自动复制未完成，请复制下面的完整说明。'; }
+    } finally { if (!disposed) copy.disabled = !snapshot; }
+  }, true, {disabled: true});
+  const read = async () => {
+    snapshot = null; copy.disabled = true;
+    try {
+      const value = await get('/api/changes/' + encodeURIComponent(group.change_id) + '/handoff');
+      if (disposed) return;
+      if (!value.handoff.tasks.some(row => row.task_id === task.task_id)) throw new Error('交接说明与当前任务不一致，请核实原任务。');
+      if (!value.handoff.tasks.some(row => row.task_id === task.task_id && row.status === 'awaiting_host')) throw new Error('任务状态已经变化，请核实原任务后继续。');
+      snapshot = {id: group.change_id, text: value.text}; text.value = value.text;
+      note.textContent = `本次交接包含 ${value.handoff.tasks.length} 项任务。要求已保存，尚未接手。`;
+      copy.disabled = false;
+    } catch (error) { if (!disposed) note.textContent = readableError(error); }
+  };
+  const details = el('details', {}, el('summary', {}, '完整交接说明与涉及页面'),
+    el('p', {}, (group.page_ids || []).map(id => { const i = app.summary.pages.findIndex(p => p.page_id === id); return i < 0 ? id : `第 ${i + 1} 页 · ${app.summary.pages[i].title}`; }).join('、')), text);
+  const node = el('section', {class: 'task-handoff stack'}, note, el('div', {class: 'row wrap'}, copy, button('重新读取交接说明', read)), details);
+  read(); return {node, dispose: () => { disposed = true; }};
+}
 export function changeHandoffs(app) {
   const node = el('section', {class: 'panel change-handoffs', 'aria-label': '持久修改交接'});
   const heading = el('div', {class: 'panel-head'}, el('h2', {}, '修改交接'), el('span', {class: 'status'}, '当前执行状态'));

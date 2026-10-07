@@ -330,7 +330,7 @@ export function candidateBatch(app) {
       });
       return el('label', {}, input, el('span', {}, `${batchLabel(record)}候选 ${index + 1}`));
     }}));
-    if (!records.length) rows.append(el('p', {class: 'muted'}, '还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务仍在下方交接面板。'));
+    if (!records.length) rows.append(el('p', {class: 'muted'}, '还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务可到“正在进行”继续处理。'));
     pager.replaceChildren(button('上一页候选', () => { offset = Math.max(0, offset - 30); renderRows(); }, false, {disabled: offset === 0}),
       el('span', {}, `第 ${Math.floor(offset / 30) + 1} 页 · 选择跨页保留`),
       button('下一页候选', () => { offset += 30; renderRows(); }, false, {disabled: offset + 30 >= records.length}));

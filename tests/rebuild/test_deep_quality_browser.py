@@ -400,8 +400,8 @@ def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
 def test_handoff_navigation_opens_current_task(workbench):
     page,ctx,store,url,goto,_=workbench
     task=dispatch(store,confirm(store,input_for(store)))[0];goto('runs');bad=[]
-    # 交接组在「待决定」子区；任务与交付一次只呈现一个子区。
-    page.get_by_role('button',name='待决定',exact=True).click()
+    # 交接导航从任务区的辅助入口开始。
+    page.get_by_text('其它修改组的交接',exact=True).click()
     page.on('response',lambda r:bad.append(r.url) if 'revision=null' in r.url else None)
     page.get_by_role('button',name='查看任务与调用记录',exact=True).first.click()
     expect(page.locator('.run-detail')).to_be_visible()
@@ -420,7 +420,7 @@ def test_historical_candidate_list_never_acquires_future_candidate(workbench):
     expect(page.locator('.history-banner')).to_contain_text('历史版本')
     # 候选与试作归「待决定」子区；先切入该子区再核对历史/最新两份记录。
     page.get_by_role('button',name='待决定',exact=True).click()
-    expect(page.get_by_text('还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务仍在下方交接面板。',exact=True)).to_be_visible()
+    expect(page.get_by_text('还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务可到“正在进行”继续处理。',exact=True)).to_be_visible()
     expect(page.locator('.candidate-batch-row')).to_have_count(0)
     goto('runs');page.get_by_role('button',name='待决定',exact=True).click()
     expect(page.locator('.candidate-batch-row')).to_have_count(1)

@@ -1,4 +1,5 @@
 import {cancelRecovery} from './run-recovery.js';
+import {taskHandoff} from './change-handoff.js';
 import {get, post, readableError, revisionQuery, fileURL} from './api.js';
 import {el, button, empty, version, modal, loading, errorNote, disabledReason} from './dom.js';
 
@@ -55,6 +56,7 @@ export function runDesk(app, data) {
   const rows = el('div', {class: 'run-rows stack'}), pager = el('div', {class: 'row wrap run-pagination'});
   const notice = el('div', {class: 'muted run-notice'});
   const detail = el('div', {class: 'run-detail stack'});
+  let handoff = null;
   const group = el('select', {'aria-label': '按修改组筛选'}), status = el('select', {'aria-label': '按执行状态筛选'}, el('option', {value: ''}, '所有执行状态'),
     Object.entries(statuses).map(([key, label]) => el('option', {value: key}, label)));
   const attention = el('input', {type: 'checkbox', 'aria-label': '只看需我处理'});
@@ -121,6 +123,7 @@ export function runDesk(app, data) {
   }
   function renderDetail() {
     const task = selected.task, revision = selected.revision_id;
+    handoff?.dispose(); handoff = taskHandoff(app, task, page.groups);
     recovery.observe(task);
     const resultLinks = (task.result_refs || []).map((ref, index) => {
       const url = fileURL(ref);
@@ -128,6 +131,7 @@ export function runDesk(app, data) {
     });
     detail.replaceChildren(el('div', {class: 'stack'}, el('h3', {}, `${names[task.kind] || '制作任务'} · ${statuses[task.status] || task.status}`),
       el('p', {}, scopeLabel(task)),
+      handoff?.node,
       el('details', {}, el('summary',{},'制作要求与执行身份'), el('p',{},task.instruction),el('p',{class:'muted'},`任务 ${task.task_id} · ${version(revision)}`)),
       el('p', {}, `真实接手时间：${clock(task.execution_started_at)}${task.execution_started_at ? '' : '，不会用最后更新时间代替'}`),
       el('details',{},el('summary',{},'执行记录'),el('p',{class:'execution-reference'},task.execution_ref ? `执行标识：${task.execution_ref}` : '尚无接手记录')),
@@ -245,6 +249,6 @@ export function runDesk(app, data) {
   const onCancel = () => queueMicrotask(() => { if (!disposed && selected) renderDetail(); });
   app.root.addEventListener('cancel-state-changed', onCancel);
   app.root.addEventListener('draft-editor-replaced', hydrate);
-  app.disposables.push(() => { disposed = true; serial++; app.root.removeEventListener('cancel-state-changed', onCancel); app.root.removeEventListener('summary-refreshed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); });
+  app.disposables.push(() => { disposed = true; handoff?.dispose(); serial++; app.root.removeEventListener('cancel-state-changed', onCancel); app.root.removeEventListener('summary-refreshed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); });
   render(); hydrate(); return root;
 }

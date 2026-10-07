@@ -328,7 +328,7 @@ export function style(app) {
   }
   async function dispatch() {
     if (!plan || busy) return; busy = true; const value = plan; controls();
-    try { await app.business.submit(editor(), 'changes.commit', {plan_id:value.plan_id, base_revision:value.plan.base_revision}, {plan_id:value.plan_id, plan:value.plan}, result => app.go({surface:'runs', revision:result.revision_id, task_id:result.task_ids.length === 1 ? result.task_ids[0] : null, candidate_id:null, runs_area:'tasks'})); }
+    try { await app.business.submit(editor(), 'changes.commit', {plan_id:value.plan_id, base_revision:value.plan.base_revision}, {plan_id:value.plan_id, plan:value.plan}, result => app.go({surface:'runs', revision:result.revision_id, task_id:result.task_ids[0] || null, candidate_id:null, runs_area:'tasks'})); }
     catch (error) { impact.replaceChildren(el('p', {class:'field-error'}, readableError(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }

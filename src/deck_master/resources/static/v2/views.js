@@ -12,6 +12,14 @@ export {pageDetail} from './page-workbench.js';
 const taskNames = {compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
 const taskStatus = {awaiting_host: '待交接', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '已由新任务接续', blocked: '需要处理阻碍'};
 export function runs(app, data) {
+  // Consume a verified style continuation only after its actual task route loaded.
+  const continuationKey = `deck-master:visual-style:${app.info.project_identity}:completed`;
+  try {
+    const saved = JSON.parse(localStorage.getItem(continuationKey) || 'null');
+    if (saved?.route.surface === 'runs' && saved.revision === app.route.revision &&
+        (!saved.route.task_id || saved.route.task_id === data.runDetail?.task?.task_id)) localStorage.removeItem(continuationKey);
+  } catch { /* Keep unreadable recovery data intact. */ }
+
   if (data.review) {
     const review = data.review;
     return el('div', {class: 'stack'}, heading('质量记录', '此记录按正在阅读的版本固定；记录存在不代表所有交付条件已通过。',
@@ -39,8 +47,9 @@ export function runs(app, data) {
   // R4（深度复审）：子区上下文随链接保存与恢复——读取版本、刷新或从别的工作面
   // 返回后仍落在同一个子区；只有初次访问（链接里没有 area）才默认「正在进行」。
   const subareas = [
-    ['tasks', 'runs-tasks', '正在进行', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel)],
-    ['decisions', 'runs-decisions', '待决定', el('div', {id: 'runs-decisions', class: 'stack runs-subarea'}, ...(handoffs ? [handoffs] : []), batch)],
+    ['tasks', 'runs-tasks', '正在进行', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel,
+      handoffs && el('details', {}, el('summary', {}, '其它修改组的交接'), handoffs))],
+    ['decisions', 'runs-decisions', '待决定', el('div', {id: 'runs-decisions', class: 'stack runs-subarea'}, batch)],
   ];
   if (app.health.ui_capabilities?.includes('exports.v1')) {
     subareas.push(['versions', 'runs-versions', '版本', el('div', {id: 'runs-versions', class: 'stack runs-subarea'}, historyDesk(app, data.history))]);
