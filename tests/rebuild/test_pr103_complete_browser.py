@@ -528,3 +528,41 @@ def test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct
         footer=page.locator('.candidate-decisions')
         assert viewport.bounding_box()['y']+viewport.bounding_box()['height'] <= footer.bounding_box()['y']+1
         page.screenshot(path=str(page.evidence/'fit-above-actions.png'),full_page=True)
+
+
+def test_uploaded_result_finishes_recovery_after_late_draft_verification(tmp_path):
+    """A successfully mounted result must retire its continuation after a late draft ACK."""
+    from playwright.sync_api import expect
+    flow = Flow(tmp_path)
+    with browser_for(flow.project) as (page, _):
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_label('风格参考来源').select_option('screenshot')
+        expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
+        uploaded = []; lost = []
+        def import_image(route):
+            response = route.fetch()
+            uploaded.append(response.json()['operation_result']['revision_id'])
+            route.fulfill(response=response)
+        def lose_restored_save(route):
+            if uploaded and ('revision=' + uploaded[-1]) in page.url and not lost:
+                route.fetch()  # business succeeded, and the restored private selection was saved too
+                lost.append(True)
+                route.abort()
+            else:
+                route.continue_()
+        page.route('**/api/styles/references/import?*', import_image)
+        page.route('**/api/drafts/save', lose_restored_save)
+        page.get_by_label('导入参考截图', exact=True).set_input_files(
+            {'name': 'late-draft.png', 'mimeType': 'image/png', 'buffer': image_bytes()})
+        expect(page.locator('.visual-reference-choice .pooled-image')).to_have_attribute('data-image-state', 'ready')
+        expect(page.locator('.visual-upload-recovery')).to_contain_text('已上传')
+        page.get_by_text('个人草稿与恢复', exact=True).click()
+        expect(page.get_by_role('button', name='核实草稿保存', exact=True)).to_be_visible()
+        page.get_by_role('button', name='核实草稿保存', exact=True).click()
+        expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
+        expect(page.locator('.visual-upload-recovery')).to_be_empty()
+        assert lost and len(uploaded) == 1
+        assert page.evaluate("Object.keys(localStorage).filter(k=>k.startsWith('deck-master:visual-style:')&&k.endsWith(':completed')).length") == 0
+        page.reload()
+        expect(page.locator('.visual-reference-choice .pooled-image')).to_have_attribute('data-image-state', 'ready')
+        assert len(uploaded) == 1

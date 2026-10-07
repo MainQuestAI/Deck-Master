@@ -1,4 +1,4 @@
-import {get, post, postBinary, digest, fileURL, readableError} from './api.js';
+import {get, post, postBinary, digest, fileURL, readableError, canonical} from './api.js';
 import {el, button, copyText} from './dom.js';
 import {imageView} from './images.js';
 import {stylePhases} from './style-phases.js';
@@ -8,7 +8,7 @@ const names={palette:'配色',typography:'文字层级',composition:'构图',spa
 export function visualStyle(app){
   const root=el('section',{class:'visual-style stack','aria-label':'外部截图风格'}),status=el('p',{role:'status'}),images=el('div',{class:'visual-reference-list'}),rules=el('div',{class:'visual-rules stack'});
   const editor=()=>app.editor,key=`deck-master:visual-style:${app.info.project_identity}`,uploadKey=key+':upload',continuationKey=key+':completed';
-  let continuation=null,continuing=false,navigating=false;
+  let continuation=null,continuing=false,navigating=false,hydratedCompletion=null;
   try{continuation=JSON.parse(localStorage.getItem(continuationKey)||'null');}catch{/* Old or damaged continuation never proves a commit. */}
   if(continuation&&(!continuation.revision||typeof continuation.route!=='object'||!Array.isArray(continuation.state?.ids)||!Array.isArray(continuation.state?.targets)||typeof continuation.state?.instruction!=='string'))continuation=null;
   let state={ids:[],targets:[],instruction:'分析配色与文字层级，保留目标页完整内容',task_id:null,recipe:null},pending=null,refs=[],spec=null,busy=false,disposed=false,leases=[],specLeases=[],analysisSerial=0,hydrateSerial=0,loaded=false,recipe=null,fonts=[],referencePage=0,savedTaskPage=0,savedCatalogSerial=0,savedTasks=[],specEditorOpen=false;
@@ -34,7 +34,7 @@ export function visualStyle(app){
   }
   function rememberCompletion(revision, route={}, label='业务结果已保存', receipt=null){
     const receipts=[...(continuation?.receipts||[])];if(receipt&&!receipts.some(item=>item.operation_id===receipt.operation_id))receipts.push(receipt);
-    continuation={revision,route:{revision,...route},state:structuredClone(state),label,receipts:receipts.slice(-20)};
+    hydratedCompletion=null;continuation={revision,route:{revision,...route},state:structuredClone(state),label,receipts:receipts.slice(-20)};
     localStorage.setItem(continuationKey,JSON.stringify(continuation));
   }
   async function continueCompletion({preserveLocal=false}={}){
@@ -53,8 +53,15 @@ export function visualStyle(app){
   async function completedBusiness(result,route={},label='业务结果已保存'){
     rememberCompletion(result.revision_id,route,label);await continueCompletion();
   }
+  function finishCompletion(){
+    if(!disposed&&continuation&&hydratedCompletion===continuation&&app.route.revision===continuation.revision&&editor().status==='saved'&&canonical(editor().draft.content.visual_style)===canonical(state)){
+      localStorage.removeItem(continuationKey);continuation=null;hydratedCompletion=null;controls();
+    }
+  }
   function draftReady(){
-    if(loaded&&!busy&&!disposed&&continuation&&editor().status==='saved'&&app.route.revision!==continuation.revision)continueCompletion();
+    if(!loaded||disposed||!continuation||editor().status!=='saved')return;
+    if(app.route.revision===continuation.revision)finishCompletion();
+    else if(!busy)continueCompletion();
   }
   const input=el('input',{type:'file',accept:'image/png,image/jpeg,image/webp',multiple:true,'aria-label':'导入参考截图'});
   const uploadRecovery=el('div',{class:'stack visual-upload-recovery','aria-live':'polite'});
@@ -280,7 +287,7 @@ export function visualStyle(app){
   }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
   async function commitTrial(){if(!plan)return;busy=true;controls();try{const request={plan_id:plan.plan_id,base_revision:plan.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:plan.plan_id,plan:plan.plan},async result=>{state.change_id=result.change_id;await completedBusiness(result,{surface:'runs',task_id:result.task_ids[0]||null,candidate_id:null,runs_area:'tasks'},'试作要求已保存');});}catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
   const referencesReady=loadReferences();
-  async function hydrate(){const current=editor(),token=++hydrateSerial;loaded=false;analysisSerial++;savedCatalogSerial++;clearSpec();recipe=null;invalidatePlan();cards.reset();candidateRows.replaceChildren();controls();
+  async function hydrate(){const current=editor(),token=++hydrateSerial;loaded=false;hydratedCompletion=null;analysisSerial++;savedCatalogSerial++;clearSpec();recipe=null;invalidatePlan();cards.reset();candidateRows.replaceChildren();controls();
     try{await Promise.all([current.ready,referencesReady]);if(disposed||token!==hydrateSerial||current!==editor())return;
       const saved=current.draft.content.visual_style;
       if(saved&&Array.isArray(saved.ids)&&Array.isArray(saved.targets)&&typeof saved.instruction==='string')state=structuredClone(saved);
@@ -289,7 +296,7 @@ export function visualStyle(app){
       state.ids=state.ids.filter(id=>refs.some(row=>row.reference.reference_id===id));requirement.value=state.instruction;target.value=state.targets[0]||'';loaded=true;
       renderReferences();showTarget();renderFutureTargets();if(state.task_id)await readAnalysis();if(disposed||token!==hydrateSerial)return;
       await loadRecipe();if(disposed||token!==hydrateSerial)return;await loadSaved();
-      if(continuation?.revision===app.route.revision){persist();if(await saveState()){localStorage.removeItem(continuationKey);continuation=null;}}
+      if(continuation?.revision===app.route.revision){hydratedCompletion=continuation;persist();await saveState();finishCompletion();}
       controls();
     }catch(error){if(!disposed&&token===hydrateSerial){loaded=true;status.textContent=readableError(error);controls();}}}
   app.root.addEventListener('draft-editor-replaced',hydrate);app.root.addEventListener('draft-state-changed',draftReady);hydrate();
