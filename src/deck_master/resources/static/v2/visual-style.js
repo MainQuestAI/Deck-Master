@@ -7,7 +7,10 @@ const names={palette:'配色',typography:'文字层级',composition:'构图',spa
 
 export function visualStyle(app){
   const root=el('section',{class:'visual-style stack','aria-label':'外部截图风格'}),status=el('p',{role:'status'}),images=el('div',{class:'visual-reference-list'}),rules=el('div',{class:'visual-rules stack'});
-  const editor=()=>app.editor,key=`deck-master:visual-style:${app.info.project_identity}`,uploadKey=key+':upload';
+  const editor=()=>app.editor,key=`deck-master:visual-style:${app.info.project_identity}`,uploadKey=key+':upload',continuationKey=key+':completed';
+  let continuation=null,continuing=false,navigating=false;
+  try{continuation=JSON.parse(localStorage.getItem(continuationKey)||'null');}catch{/* Old or damaged continuation never proves a commit. */}
+  if(continuation&&(!continuation.revision||typeof continuation.route!=='object'||!Array.isArray(continuation.state?.ids)||!Array.isArray(continuation.state?.targets)||typeof continuation.state?.instruction!=='string'))continuation=null;
   let state={ids:[],targets:[],instruction:'分析配色与文字层级，保留目标页完整内容',task_id:null,recipe:null},pending=null,refs=[],spec=null,busy=false,disposed=false,leases=[],specLeases=[],analysisSerial=0,hydrateSerial=0,loaded=false,recipe=null,fonts=[],referencePage=0,savedTaskPage=0,savedCatalogSerial=0,savedTasks=[],specEditorOpen=false;
   try{state={...state,...JSON.parse(localStorage.getItem(key)||'{}')};
     // 复审 P3：恢复值按白名单定形——spec_edits.dimensions 不是对象时，borrowed/renderSpec 的 key-in 会崩掉整个规范阶段。
@@ -26,7 +29,32 @@ export function visualStyle(app){
     const current=editor();await current.ready;
     if(disposed||current!==editor()||current.disposed)throw new Error('工作区已切换，已保存业务结果保留，请从项目恢复入口继续。');
     persist();await current.pendingWrite;await current.save();
-    if(current.status!=='saved')throw new Error('工作状态尚未确认保存到项目，请核实个人草稿后继续。');
+    if(current.status==='dirty')await current.save();
+    return current.status==='saved';
+  }
+  function rememberCompletion(revision, route={}, label='业务结果已保存', receipt=null){
+    const receipts=[...(continuation?.receipts||[])];if(receipt&&!receipts.some(item=>item.operation_id===receipt.operation_id))receipts.push(receipt);
+    continuation={revision,route:{revision,...route},state:structuredClone(state),label,receipts:receipts.slice(-20)};
+    localStorage.setItem(continuationKey,JSON.stringify(continuation));
+  }
+  async function continueCompletion({preserveLocal=false}={}){
+    if(!continuation||continuing||disposed||navigating)return;
+    continuing=true;const original=continuation;
+    try{
+      state=structuredClone(original.state);
+      if(!await saveState()){
+        status.textContent=original.label+'；私人草稿仍待保存或核实，结果保留，不需要重新提交。';
+        if(!preserveLocal||!editor().archiveLocal())return;
+      }
+      if(!disposed&&continuation===original){navigating=true;app.go(original.route);}
+    }catch(error){if(!disposed)status.textContent=original.label+'；'+readableError(error);}
+    finally{continuing=false;if(!disposed)controls();}
+  }
+  async function completedBusiness(result,route={},label='业务结果已保存'){
+    rememberCompletion(result.revision_id,route,label);await continueCompletion();
+  }
+  function draftReady(){
+    if(loaded&&!busy&&!disposed&&continuation&&editor().status==='saved'&&app.route.revision!==continuation.revision)continueCompletion();
   }
   const input=el('input',{type:'file',accept:'image/png,image/jpeg,image/webp',multiple:true,'aria-label':'导入参考截图'});
   const uploadRecovery=el('div',{class:'stack visual-upload-recovery','aria-live':'polite'});
@@ -71,16 +99,18 @@ export function visualStyle(app){
   const savedRecipe=el('select',{'aria-label':'恢复已确认的截图规范'},el('option',{value:''},'选择已确认规范，不自动切换'));
   const savedPager=el('div',{class:'row wrap'});
   let savedLoading=false;
-  async function loadSaved(){if(savedLoading)return;savedLoading=true;const token=++savedCatalogSerial;
-    try{const q=new URLSearchParams({revision:app.route.revision,limit:30,offset:savedTaskPage*30});
+  async function loadSaved(requestedPage=savedTaskPage){if(savedLoading)return;savedLoading=true;const token=++savedCatalogSerial;
+    savedPager.querySelectorAll('button').forEach(node=>node.disabled=true);
+    try{const q=new URLSearchParams({revision:app.route.revision,limit:30,offset:requestedPage*30});
       const [taskPage,versions]=await Promise.all([get('/api/tasks?'+q),get('/api/styles?'+new URLSearchParams({revision:app.route.revision}))]);
-      if(disposed||token!==savedCatalogSerial)return;savedTasks=taskPage.tasks.filter(t=>t.kind==='style_analyze');
+      if(disposed||token!==savedCatalogSerial)return;savedTaskPage=requestedPage;savedTasks=taskPage.tasks.filter(t=>t.kind==='style_analyze');
       savedAnalysis.replaceChildren(el('option',{value:''},'选择已保存分析，不自动切换'),...savedTasks.map(t=>el('option',{value:t.task_id},`${t.instruction.slice(0,45)} · ${t.status==='completed'?'已返回':t.status==='awaiting_host'?'待接手':t.status==='running'?'处理中':'已停止'} · ${t.task_id.slice(-6)}`)));
       savedRecipe.replaceChildren(el('option',{value:''},'选择已确认规范，不自动切换'),...versions.recipes.filter(v=>v.recipe.schema_version==='style_recipe.v2').map(v=>el('option',{value:v.recipe.recipe_id},`V${v.recipe.version} · ${v.recipe.input.instruction.slice(0,45)} · ${v.recipe.input.target_page_ids?.length||0} 页 · ${v.recipe.recipe_id.slice(-6)}`)));
-      savedPager.replaceChildren(button('上一组保存任务',()=>{savedTaskPage=Math.max(0,savedTaskPage-1);loadSaved();},false,{disabled:savedTaskPage===0}),el('span',{},`第 ${savedTaskPage+1} 组任务`),button('下一组保存任务',()=>{savedTaskPage++;loadSaved();},false,{disabled:taskPage.pagination.next_offset===null}));
+      savedPager.replaceChildren(button('上一组保存任务',()=>loadSaved(Math.max(0,savedTaskPage-1)),false,{disabled:savedTaskPage===0,'data-boundary':String(savedTaskPage===0)}),el('span',{},`第 ${savedTaskPage+1} 组任务`),button('下一组保存任务',()=>loadSaved(savedTaskPage+1),false,{disabled:taskPage.pagination.next_offset===null,'data-boundary':String(taskPage.pagination.next_offset===null)}));
+      if(status.querySelector('button'))status.textContent=`已读取第 ${savedTaskPage+1} 组任务。`;
       controls();
-    }catch(error){if(!disposed)status.textContent=readableError(error);}
-    finally{savedLoading=false;}
+    }catch(error){if(!disposed)status.replaceChildren(el('span',{},readableError(error)+' 已显示的任务与组号保持不变。'),button('重试读取这组任务',()=>loadSaved(requestedPage)));}
+    finally{savedLoading=false;savedPager.querySelectorAll('button').forEach(node=>node.disabled=node.dataset.boundary==='true');}
   }
   savedAnalysis.addEventListener('change',async()=>{const chosen=savedAnalysis.value,task=savedTasks.find(t=>t.task_id===chosen);if(!task)return;
     invalidateAnalysis();openPhase(2);state.task_id=chosen;state.instruction=task.instruction;requirement.value=task.instruction;persist();await readAnalysis();});
@@ -124,6 +154,7 @@ export function visualStyle(app){
   function controls(){const blocked=!loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size);
     input.disabled=blocked||Boolean(pending&&pending.state!=='not_found');savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
     uploadRecovery.replaceChildren();
+    if(continuation)uploadRecovery.append(el('p',{},continuation.label+'；结果已保留。'),button('打开已保存的结果',()=>continueCompletion({preserveLocal:true}),false,{disabled:busy||continuing||!loaded}));
     if(pending?.state==='rejected')uploadRecovery.append(el('p',{},pending.rejection?.code==='visual_reference_conflict'?'本次上传因版本变化已明确拒绝，未提交。先读取当前版本，再重新选择截图上传。':'本次截图上传已明确拒绝，未提交。请结束这次失败上传后重新选择合法截图。'),button(pending.rejection?.code==='visual_reference_conflict'?'读取当前版本并重新上传':'结束失败上传，重新选图',restartRejectedUpload,false,{disabled:!loaded||busy||disposed||Boolean(app.business.entries.size)}));
     else if(pending)uploadRecovery.append(el('p',{},pending.state==='not_found'?'原上传尚未找到提交回执。请重新选择同一张截图，使用原编号重试。':'存在待核实的截图上传。原文件和请求编号保留。'),button('核实原上传',verifyUpload,false,{disabled:blocked}));
     analyze.disabled=blocked||!state.ids.length||state.ids.length>5||!requirement.value.trim();refresh.disabled=!loaded||busy||!state.task_id;handoff.hidden=!state.task_id;
@@ -164,7 +195,7 @@ export function visualStyle(app){
       throw error;
     }
     if(value.status!=='committed'||!value.operation_result?.revision_id||value.operation_id!==pending.operation_id||value.request_digest!==pending.request_digest)throw new Error('上传回执身份不匹配，请保留原文件并核实。');
-    pending=null;localStorage.removeItem(uploadKey);state.ids=[...state.ids,value.operation_result.reference_id].slice(-5);persist();return value.operation_result.revision_id;
+    state.ids=[...new Set([...state.ids,value.operation_result.reference_id])].slice(-5);rememberCompletion(value.operation_result.revision_id,{},'截图已上传',{operation_id:value.operation_id,request_digest:value.request_digest,...value.operation_result});pending=null;localStorage.removeItem(uploadKey);persist();return value.operation_result.revision_id;
   }
   async function restartRejectedUpload(){
     if(!pending||pending.state!=='rejected'||busy)return;const original=pending;let focusUpload=false;busy=true;controls();
@@ -185,20 +216,20 @@ export function visualStyle(app){
   async function verifyUpload(){
     if(!pending||busy)return;busy=true;controls();
     try{const value=await get('/api/operations/'+pending.operation_id);if(value.status!=='committed'||!value.operation_result?.revision_id||value.operation_id!==pending.operation_id||value.request_digest!==pending.request_digest)throw new Error('上传回执身份不匹配。');
-      pending=null;localStorage.removeItem(uploadKey);state.ids=[...state.ids,value.operation_result.reference_id].slice(-5);await saveState();app.go({revision:value.current_revision_id});
+      state.ids=[...new Set([...state.ids,value.operation_result.reference_id])].slice(-5);rememberCompletion(value.operation_result.revision_id,{},'截图已上传',{operation_id:value.operation_id,request_digest:value.request_digest,...value.operation_result});pending=null;localStorage.removeItem(uploadKey);await continueCompletion();
     }catch(error){if(pending){pending.state=error.status===404&&error.code==='operation_not_found'?'not_found':'unknown';localStorage.setItem(uploadKey,JSON.stringify(pending));}status.textContent=readableError(error);}
     finally{busy=false;if(!disposed)controls();}
   }
   input.addEventListener('change',async()=>{const files=[...input.files];input.value='';if(!files.length)return;if(files.length>5||pending&&files.length!==1){status.textContent=pending?'请只选择原上传的同一张截图。':'一次最多导入5张截图。';return;}
     busy=true;controls();let base=app.route.revision;
-    try{for(const file of files)base=await uploadFile(file,base);invalidateAnalysis();await saveState();if(!disposed)app.go({revision:base});}
-    catch(error){status.textContent=readableError(error);}
+    try{for(const file of files)base=await uploadFile(file,base);invalidateAnalysis();rememberCompletion(base,{},'截图已上传');await continueCompletion();}
+    catch(error){status.textContent=readableError(error);if(continuation){invalidateAnalysis();rememberCompletion(continuation.revision,{},'部分截图已上传');await continueCompletion();}}
     finally{busy=false;controls();}});
   async function startAnalysis(ids=state.ids){
     busy=true;controls();
     try{await editor().ready;const request={reference_ids:ids,instruction:requirement.value,base_revision:app.route.revision};
       await app.business.submit(editor(),'styles.analyze',request,{reference_ids:ids,instruction:requirement.value},async result=>{
-        state.ids=ids;state.task_id=result.task_id;state.recipe=null;spec=null;state.handoff=result.handoff;await saveState();app.go({revision:result.revision_id});});
+        state.ids=ids;state.task_id=result.task_id;state.recipe=null;spec=null;state.handoff=result.handoff;await completedBusiness(result,{},'截图分析要求已保存');});
     }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}
   }
   async function readAnalysis(current=false){
@@ -238,7 +269,7 @@ export function visualStyle(app){
       dimensions:Object.fromEntries([...choices].filter(([,v])=>v.check.checked).map(([key,v])=>[key,v.text.value]))};
     const value=await post('/api/styles/propose',{input});
     await app.business.submit(editor(),'styles.confirm',{proposal_id:value.proposal_id,base_revision:app.route.revision},{proposal_ref:value.proposal_ref},async result=>{
-      state.recipe=result.recipe_id;await saveState();app.go({revision:result.revision_id});});
+      state.recipe=result.recipe_id;await completedBusiness(result,{},'视觉规范已确认');});
   }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
   async function planTrial(expanding=false){busy=true;controls();try{
     await app.business.available();const ids=expanding?[...expansion]:[target.value];
@@ -247,17 +278,20 @@ export function visualStyle(app){
     if(disposed)return;if(result.plan.base_revision!==app.route.revision)throw new Error('项目已更新，请保留要求并返回当前版本重新预览。');
     plan=result;planBox.replaceChildren(el('p',{},`试作 ${ids.length} 页，最多 ${ids.length} 次生图；当前稿保留，返回后比较采用。`));
   }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
-  async function commitTrial(){if(!plan)return;busy=true;controls();try{const request={plan_id:plan.plan_id,base_revision:plan.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:plan.plan_id,plan:plan.plan},async result=>{state.change_id=result.change_id;await saveState();app.go({surface:'runs',revision:result.revision_id,task_id:result.task_ids.length===1?result.task_ids[0]:null,candidate_id:null,runs_area:'tasks'});});}catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
+  async function commitTrial(){if(!plan)return;busy=true;controls();try{const request={plan_id:plan.plan_id,base_revision:plan.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:plan.plan_id,plan:plan.plan},async result=>{state.change_id=result.change_id;await completedBusiness(result,{surface:'runs',task_id:result.task_ids[0]||null,candidate_id:null,runs_area:'tasks'},'试作要求已保存');});}catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
   const referencesReady=loadReferences();
   async function hydrate(){const current=editor(),token=++hydrateSerial;loaded=false;analysisSerial++;savedCatalogSerial++;clearSpec();recipe=null;invalidatePlan();cards.reset();candidateRows.replaceChildren();controls();
     try{await Promise.all([current.ready,referencesReady]);if(disposed||token!==hydrateSerial||current!==editor())return;
       const saved=current.draft.content.visual_style;
       if(saved&&Array.isArray(saved.ids)&&Array.isArray(saved.targets)&&typeof saved.instruction==='string')state=structuredClone(saved);
       else if(token>1)state={ids:[],targets:[],instruction:'分析配色与文字层级，保留目标页完整内容',task_id:null,recipe:null};
+      if(continuation?.revision===app.route.revision)state=structuredClone(continuation.state);
       state.ids=state.ids.filter(id=>refs.some(row=>row.reference.reference_id===id));requirement.value=state.instruction;target.value=state.targets[0]||'';loaded=true;
       renderReferences();showTarget();renderFutureTargets();if(state.task_id)await readAnalysis();if(disposed||token!==hydrateSerial)return;
-      await loadRecipe();if(disposed||token!==hydrateSerial)return;await loadSaved();controls();
+      await loadRecipe();if(disposed||token!==hydrateSerial)return;await loadSaved();
+      if(continuation?.revision===app.route.revision){persist();if(await saveState()){localStorage.removeItem(continuationKey);continuation=null;}}
+      controls();
     }catch(error){if(!disposed&&token===hydrateSerial){loaded=true;status.textContent=readableError(error);controls();}}}
-  app.root.addEventListener('draft-editor-replaced',hydrate);hydrate();
-  app.disposables.push(()=>{disposed=true;phaseReading.dispose();analysisSerial++;hydrateSerial++;savedCatalogSerial++;app.root.removeEventListener('draft-editor-replaced',hydrate);release();specLeases.splice(0).forEach(v=>v.dispose());targetLease?.dispose();});controls();return root;
+  app.root.addEventListener('draft-editor-replaced',hydrate);app.root.addEventListener('draft-state-changed',draftReady);hydrate();
+  app.disposables.push(()=>{disposed=true;phaseReading.dispose();analysisSerial++;hydrateSerial++;savedCatalogSerial++;app.root.removeEventListener('draft-editor-replaced',hydrate);app.root.removeEventListener('draft-state-changed',draftReady);release();specLeases.splice(0).forEach(v=>v.dispose());targetLease?.dispose();});controls();return root;
 }
