@@ -6,6 +6,7 @@ task_ids / operation_id / export_id / etag）写进 journal，供核对"操作�
 功能、视觉与任务体验三类结论分别出具（见 UX-08-ACCEPTANCE.md）。
 """
 import json
+import os
 import re
 import shutil
 import uuid
@@ -21,7 +22,7 @@ from test_ux06_gallery_conflict_browser import gallery_pair, open_gallery  # noq
 
 pytestmark = pytest.mark.browser
 
-EVIDENCE = Path(__file__).resolve().parents[2] / 'output/playwright/ux-review/ux08'
+EVIDENCE = Path(os.environ.get('DECK_MASTER_UI_EVIDENCE_DIR', Path(__file__).resolve().parents[2] / 'output/playwright/ux-review/ux08'))
 WATCHED = ('/api/changes/plan', '/api/changes/commit', '/api/styles/propose', '/api/styles/confirm',
            '/api/styles/plan', '/api/content/plan', '/api/content/commit', '/api/exports', '/api/drafts/save')
 

@@ -1,7 +1,8 @@
 import {get, post, postBinary, digest, fileURL, readableError} from './api.js';
-import {el, button, copyText, shortRef} from './dom.js';
+import {el, button, copyText} from './dom.js';
 import {imageView} from './images.js';
-import {openCandidate} from './trial-actions.js';
+import {stylePhases} from './style-phases.js';
+import {candidateCards} from './candidate-cards.js';
 const names={palette:'配色',typography:'文字层级',composition:'构图',spacing:'间距',density:'密度',lines:'线条',icons:'图标'};
 
 export function visualStyle(app){
@@ -28,6 +29,7 @@ export function visualStyle(app){
     if(current.status!=='saved')throw new Error('工作状态尚未确认保存到项目，请核实个人草稿后继续。');
   }
   const input=el('input',{type:'file',accept:'image/png,image/jpeg,image/webp',multiple:true,'aria-label':'导入参考截图'});
+  const uploadRecovery=el('div',{class:'stack visual-upload-recovery','aria-live':'polite'});
   const requirement=el('textarea',{rows:2,maxLength:4000,'aria-label':'截图风格要求',value:state.instruction});
   requirement.addEventListener('input',()=>{state.instruction=requirement.value;invalidateAnalysis();persist();controls();});
   const target=el('select',{'aria-label':'截图风格试作目标'},el('option',{value:''},'先选一页试作'),app.summary.pages.map((p,i)=>el('option',{value:p.page_id},`第 ${i+1} 页 · ${p.title}`)));
@@ -38,12 +40,13 @@ export function visualStyle(app){
   const confirm=button('检查并确认视觉规范',confirmSpec,true),trial=button('预览单页试作',()=>planTrial(false),true),dispatch=button('保存并交接试作',commitTrial,true);
   const planBox=el('div',{class:'stack'}),choices=new Map();let plan=null;
   const futureTargets=el('div',{class:'row wrap'}), expansionTargets=el('div',{class:'row wrap'}), candidateRows=el('div',{class:'stack'});
+  const cards=candidateCards(app);app.disposables.push(()=>cards.dispose());
   const sample=el('select',{'aria-label':'已采用的截图风格样例'},el('option',{value:''},'先采用一页满意的试作'));
   const expansion=new Set(),expand=button('预览所选页扩展',()=>planTrial(true),true);
   sample.addEventListener('change',()=>{expansion.clear();invalidatePlan();renderExpansion();controls();});
   function invalidatePlan(){plan=null;planBox.replaceChildren();}
   function clearSpec(){spec=null;specLeases.splice(0).forEach(v=>v.dispose());rules.replaceChildren();choices.clear();}
-  function invalidateAnalysis(){analysisSerial++;state.task_id=null;state.handoff=null;state.recipe=null;recipe=null;clearSpec();invalidatePlan();candidateRows.replaceChildren();sample.replaceChildren(el('option',{value:''},'先采用一页满意的试作'));}
+  function invalidateAnalysis(){analysisSerial++;state.task_id=null;state.handoff=null;state.recipe=null;recipe=null;clearSpec();invalidatePlan();cards.reset();candidateRows.replaceChildren();sample.replaceChildren(el('option',{value:''},'先采用一页满意的试作'));}
   function renderFutureTargets(){futureTargets.replaceChildren(...app.summary.pages.filter(p=>p.page_id!==target.value).map((p,i)=>{
     const check=el('input',{type:'checkbox',checked:state.targets.includes(p.page_id),'aria-label':'允许后续风格扩展到 '+p.title,disabled:app.readonly});
     check.addEventListener('change',()=>{state.targets=check.checked?[...new Set([...state.targets,p.page_id])]:state.targets.filter(id=>id!==p.page_id);state.recipe=null;recipe=null;invalidatePlan();persist();controls();});
@@ -61,7 +64,7 @@ export function visualStyle(app){
       const rows=result.candidates.filter(v=>v.style_recipe_ref?.sha256===value.ref.sha256&&recipe.input.target_page_ids.includes(v.candidate.page_id)&&v.candidate.stage==='blueprint');
       sample.replaceChildren(el('option',{value:''},'选择已采用的样例'),...rows.filter(v=>v.status==='adopted').map(v=>el('option',{value:v.candidate.candidate_id,'data-page':v.candidate.page_id},app.summary.pages.find(p=>p.page_id===v.candidate.page_id)?.title||v.candidate.page_id)));
       openPhase(2,{auto:true});
-      candidateRows.replaceChildren(el('p',{},'已确认视觉规范。先比较并采用单页试作，再明确勾选扩展页。'),...rows.slice(-30).map(v=>button(`比较 ${app.summary.pages.find(p=>p.page_id===v.candidate.page_id)?.title||v.candidate.page_id} · ${shortRef(v.ref?.sha256||v.candidate.result_ref?.sha256)}`,()=>openCandidate(app,v.candidate,result.revision_id))));renderExpansion();
+      candidateRows.replaceChildren(el('p',{},'已确认视觉规范。先比较并采用单页试作，再明确勾选扩展页。'),...cards.render(rows.slice(-30),result.revision_id,{namedComparison:true}),button('到任务页查看全部候选',()=>app.go({surface:'runs',revision:result.revision_id,task_id:null,runs_area:'decisions'})));renderExpansion();
     }catch(error){if(!disposed)status.textContent=readableError(error);}finally{controls();}}
 
   const savedAnalysis=el('select',{'aria-label':'恢复已保存的截图分析'},el('option',{value:''},'选择已保存分析，不自动切换'));
@@ -80,8 +83,9 @@ export function visualStyle(app){
     finally{savedLoading=false;}
   }
   savedAnalysis.addEventListener('change',async()=>{const chosen=savedAnalysis.value,task=savedTasks.find(t=>t.task_id===chosen);if(!task)return;
-    invalidateAnalysis();state.task_id=chosen;state.instruction=task.instruction;requirement.value=task.instruction;persist();await readAnalysis();});
+    invalidateAnalysis();openPhase(2);state.task_id=chosen;state.instruction=task.instruction;requirement.value=task.instruction;persist();await readAnalysis();});
   savedRecipe.addEventListener('change',async()=>{if(!savedRecipe.value)return;const chosen=savedRecipe.value,token=++analysisSerial;
+    openPhase(2);
     busy=true;controls();try{const value=await get('/api/styles/'+encodeURIComponent(chosen)+'?'+new URLSearchParams({revision:app.route.revision}));
       if(disposed||token!==analysisSerial)return;const r=value.recipe;if(r.schema_version!=='style_recipe.v2')throw new Error('这不是截图视觉规范。');
       const result=await get(fileURL(r.input.visual_style_ref));if(disposed||token!==analysisSerial)return;
@@ -108,18 +112,19 @@ export function visualStyle(app){
   const phaseNodes=[phase1,phase2,phase3,phase4];
   // 自动推进（分析返回、恢复完成）只在用户尚未主动选择阶段时生效——
   // 否则慢恢复会在用户已经打开"试作与采用"后把阶段抢回"确认规范"。
-  let userPhase=0;
-  phaseNodes.forEach((node,i)=>{node.querySelector('summary').addEventListener('click',()=>{userPhase=i+1;});});
-  function openPhase(next,{auto=false}={}){ if(auto&&userPhase&&userPhase!==next)return; phaseNodes.forEach((node,i)=>{node.open=i+1===next;}); }
+  const phaseReading=stylePhases(phaseNodes);
+  const openPhase=(next,options)=>phaseReading.show(next,options);
   root.append(el('details',{},el('summary',{},'恢复项目中的截图分析与规范'),el('label',{class:'stack'},'已保存分析任务',savedAnalysis),savedPager,el('label',{class:'stack'},'已确认视觉规范',savedRecipe)),
-    phase1,status,phase2,phase3,phase4,
+    phase1,uploadRecovery,status,phase2,phase3,phase4,
     // 计划结果与错误出口常驻阶段之外（阶段切换不顺带隐藏失败原因）；
     // 交接动作只在有当前有效计划时出现。
     el('div',{class:'visual-plan stack'},planBox,dispatch));
   // 状态行在各阶段之外，任何阶段的提示都可见。
   openPhase(1);
   function controls(){const blocked=!loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size);
-    input.disabled=blocked||Boolean(pending);savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
+    input.disabled=blocked||Boolean(pending&&pending.state!=='not_found');savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
+    uploadRecovery.replaceChildren();
+    if(pending)uploadRecovery.append(el('p',{},pending.state==='not_found'?'原上传尚未找到提交回执。请重新选择同一张截图，使用原编号重试。':'存在待核实的截图上传。原文件和请求编号保留。'),button('核实原上传',verifyUpload,false,{disabled:blocked}));
     analyze.disabled=blocked||!state.ids.length||state.ids.length>5||!requirement.value.trim();refresh.disabled=!loaded||busy||!state.task_id;handoff.hidden=!state.task_id;
     confirm.disabled=blocked||!spec||Boolean(spec.conflicts.length)||!state.targets.length;trial.disabled=blocked||!state.recipe||!recipe;
     // 交接动作按真实状态出现：没有当前计划时不出现，也不隐藏计划错误。
@@ -134,9 +139,8 @@ export function visualStyle(app){
     images.replaceChildren(...refs.map((row,i)=>({row,i})).filter(({row})=>visible.has(row.reference.reference_id)).map(({row,i})=>{
     const check=el('input',{type:'checkbox',checked:state.ids.includes(row.reference.reference_id),'aria-label':`选用参考截图 ${i+1}`,disabled:app.readonly});
     check.addEventListener('change',()=>{if(check.checked&&state.ids.length>=5){check.checked=false;status.textContent='一次最多选择5张参考，请先取消一张。';return;}const id=row.reference.reference_id;state.ids=check.checked?[...state.ids,id]:state.ids.filter(x=>x!==id);invalidateAnalysis();persist();renderReferences();});
-    // preview 是文件引用本身；imageView 需要 {file} 包装——直接传会让参考缩略图
-    // 永远停在"图片引用无效"（老缺陷，被本包测试暴露）。
-    const view=imageView(app,{file:row.preview},`参考截图 ${i+1}`);leases.push(view);
+    // The references API returns a complete preview Artifact, including .file.
+    const view=imageView(app,row.preview,`参考截图 ${i+1}`);leases.push(view);
     return el('label',{class:'visual-reference-choice'},view.node,el('span',{class:'inline-control'},check,`参考 ${i+1} · ${row.reference.width}×${row.reference.height}`));}));
     if(pages>1)images.append(el('div',{class:'row wrap'},button('上一组参考',()=>{referencePage--;renderReferences();},false,{disabled:referencePage===0}),el('span',{},`第 ${referencePage+1} / ${pages} 组 · 已选 ${state.ids.length} 张`),button('下一组参考',()=>{referencePage++;renderReferences();},false,{disabled:referencePage===pages-1})));
     controls();}
@@ -144,21 +148,23 @@ export function visualStyle(app){
     if(file.size>64*1024*1024)throw new Error('单张截图不能超过64 MiB。');
     const bytes=await file.arrayBuffer(),sha=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');
     if(pending && pending.sha256!==sha)throw new Error('请先核实原上传，或重新选择同一张图片以重试。');
-    if(!pending){pending={operation_id:crypto.randomUUID(),base_revision:base,sha256:sha};pending.request_digest=await digest({protocol:'changes.v1',kind:'styles.references.import',project_id:app.info.project_id,base_revision:base,payload:{sha256:sha}});localStorage.setItem(uploadKey,JSON.stringify(pending));}
+    if(!pending){pending={operation_id:crypto.randomUUID(),base_revision:base,sha256:sha};pending.request_digest=await digest({protocol:'changes.v1',kind:'styles.references.import',project_id:app.info.project_id,base_revision:base,payload:{sha256:sha}});}
+    pending.state='unknown';localStorage.setItem(uploadKey,JSON.stringify(pending));
     const value=await postBinary('/api/styles/references/import?'+new URLSearchParams({base_revision:pending.base_revision,operation_id:pending.operation_id}),file);
     if(value.status!=='committed'||!value.operation_result?.revision_id||value.operation_id!==pending.operation_id||value.request_digest!==pending.request_digest)throw new Error('上传回执身份不匹配，请保留原文件并核实。');
     pending=null;localStorage.removeItem(uploadKey);state.ids=[...state.ids,value.operation_result.reference_id].slice(-5);persist();return value.operation_result.revision_id;
   }
   async function verifyUpload(){
-    if(!pending)return;
+    if(!pending||busy)return;busy=true;controls();
     try{const value=await get('/api/operations/'+pending.operation_id);if(value.status!=='committed'||!value.operation_result?.revision_id||value.operation_id!==pending.operation_id||value.request_digest!==pending.request_digest)throw new Error('上传回执身份不匹配。');
       pending=null;localStorage.removeItem(uploadKey);state.ids=[...state.ids,value.operation_result.reference_id].slice(-5);await saveState();app.go({revision:value.current_revision_id});
-    }catch(error){status.textContent=error.status===404?'原上传尚未找到提交回执。请重新选择同一张截图，使用原编号重试。':readableError(error);input.disabled=false;}
+    }catch(error){if(pending){pending.state=error.status===404&&error.code==='operation_not_found'?'not_found':'unknown';localStorage.setItem(uploadKey,JSON.stringify(pending));}status.textContent=readableError(error);}
+    finally{busy=false;if(!disposed)controls();}
   }
-  input.addEventListener('change',async()=>{if(!input.files.length)return;if(input.files.length>5){status.textContent='一次最多导入5张截图。';return;}
+  input.addEventListener('change',async()=>{const files=[...input.files];input.value='';if(!files.length)return;if(files.length>5||pending&&files.length!==1){status.textContent=pending?'请只选择原上传的同一张截图。':'一次最多导入5张截图。';return;}
     busy=true;controls();let base=app.route.revision;
-    try{for(const file of input.files)base=await uploadFile(file,base);invalidateAnalysis();await saveState();if(!disposed)app.go({revision:base});}
-    catch(error){status.textContent=readableError(error);if(error.status && error.status<500){pending=null;localStorage.removeItem(uploadKey);}else if(pending)status.append(button('核实原上传',verifyUpload));}
+    try{for(const file of files)base=await uploadFile(file,base);invalidateAnalysis();await saveState();if(!disposed)app.go({revision:base});}
+    catch(error){status.textContent=readableError(error);}
     finally{busy=false;controls();}});
   async function startAnalysis(ids=state.ids){
     busy=true;controls();
@@ -168,7 +174,7 @@ export function visualStyle(app){
     }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}
   }
   async function readAnalysis(current=false){
-    if(!state.task_id)return;openPhase(2);const chosen=state.task_id,token=++analysisSerial;
+    if(!state.task_id)return;openPhase(2,{auto:!current});const chosen=state.task_id,token=++analysisSerial;
     try{const value=await get('/api/tasks/'+encodeURIComponent(chosen)+(current?'':'?'+new URLSearchParams({revision:app.route.revision})));if(disposed||token!==analysisSerial||state.task_id!==chosen)return;if(current&&value.revision_id!==app.route.revision){app.go({revision:value.revision_id});return;}const task=value.task;
       if(task.status!=='completed'){clearSpec();status.textContent=task.status==='awaiting_host'?'分析要求已保存，等待 Agent 接手。':task.status==='running'?'Agent 已接手，等待分析结果。':`分析尚未完成：${task.status}。请核实或取消原任务。`;return;}
       if(task.kind!=='style_analyze'||task.result_refs.length!==1)throw new Error('分析结果类型不匹配。');
@@ -214,9 +220,8 @@ export function visualStyle(app){
     plan=result;planBox.replaceChildren(el('p',{},`试作 ${ids.length} 页，最多 ${ids.length} 次生图；当前稿保留，返回后比较采用。`));
   }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
   async function commitTrial(){if(!plan)return;busy=true;controls();try{const request={plan_id:plan.plan_id,base_revision:plan.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:plan.plan_id,plan:plan.plan},async result=>{state.change_id=result.change_id;await saveState();app.go({surface:'runs',revision:result.revision_id,task_id:result.task_ids.length===1?result.task_ids[0]:null,candidate_id:null,runs_area:'tasks'});});}catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
-  if(pending){status.append(el('span',{},'存在待核实的截图上传。'),button('核实原上传',verifyUpload));}
   const referencesReady=loadReferences();
-  async function hydrate(){const current=editor(),token=++hydrateSerial;loaded=false;analysisSerial++;savedCatalogSerial++;clearSpec();recipe=null;invalidatePlan();candidateRows.replaceChildren();controls();
+  async function hydrate(){const current=editor(),token=++hydrateSerial;loaded=false;analysisSerial++;savedCatalogSerial++;clearSpec();recipe=null;invalidatePlan();cards.reset();candidateRows.replaceChildren();controls();
     try{await Promise.all([current.ready,referencesReady]);if(disposed||token!==hydrateSerial||current!==editor())return;
       const saved=current.draft.content.visual_style;
       if(saved&&Array.isArray(saved.ids)&&Array.isArray(saved.targets)&&typeof saved.instruction==='string')state=structuredClone(saved);
@@ -226,5 +231,5 @@ export function visualStyle(app){
       await loadRecipe();if(disposed||token!==hydrateSerial)return;await loadSaved();controls();
     }catch(error){if(!disposed&&token===hydrateSerial){loaded=true;status.textContent=readableError(error);controls();}}}
   app.root.addEventListener('draft-editor-replaced',hydrate);hydrate();
-  app.disposables.push(()=>{disposed=true;analysisSerial++;hydrateSerial++;savedCatalogSerial++;app.root.removeEventListener('draft-editor-replaced',hydrate);release();specLeases.splice(0).forEach(v=>v.dispose());targetLease?.dispose();});controls();return root;
+  app.disposables.push(()=>{disposed=true;phaseReading.dispose();analysisSerial++;hydrateSerial++;savedCatalogSerial++;app.root.removeEventListener('draft-editor-replaced',hydrate);release();specLeases.splice(0).forEach(v=>v.dispose());targetLease?.dispose();});controls();return root;
 }

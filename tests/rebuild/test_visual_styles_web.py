@@ -86,6 +86,39 @@ def test_binary_upload_uses_token_and_separate_limit_with_receipt_replay(flow):
     finally:server.stop()
 
 
+def test_missing_original_plan_is_a_structured_error_and_does_not_publish(flow):
+    import copy
+    from deck_master import styles
+    from test_visual_styles import completed
+    from test_workbench_actions import commit
+    ref, _, _ = completed(flow)
+    proposed = styles.propose(flow.project, input={'schema_version':'style_input.v2',
+        'project_id':flow.store.load_document()['project_id'], 'base_revision':flow.store.current_revision_id(),
+        'visual_style_ref':ref, 'target_page_ids':['p02'], 'instruction':'借用配色，保留正文'})
+    recipe = styles.confirm(flow.project, proposal_id=proposed['proposal_id'],
+        base_revision=flow.store.current_revision_id(), operation_id=str(uuid.uuid4()))['operation_result']
+    server = WorkbenchServer(flow.project); url = server.start().rstrip('/')
+    try:
+        token = request(url+'/api/session')[1]['token']
+        headers = {'X-Deck-Token':token, 'Origin':url, 'Content-Type':'application/json'}
+        payload = json.dumps({'input':{'recipe_id':recipe['recipe_id'], 'page_ids':['p02'], 'max_calls':1}}).encode()
+        assert request(url+'/api/styles/plan', payload, headers)[0] == 200
+        doc = copy.deepcopy(flow.store.load_document()); doc['pages'][1]['blueprint'] = None
+        commit(flow.store, doc, str(uuid.uuid4()))
+        before = flow.store.read_current()
+        objects = set(flow.store.objects_dir.rglob('*'))
+        status, out = request(url+'/api/styles/plan', payload, headers)
+        assert status >= 400 and out['error']['code'] != 'local_io_failed'
+        assert 'p02' in out['error']['message'] and '请先完成原图' in out['error']['message']
+        assert flow.store.read_current() == before
+        assert set(flow.store.objects_dir.rglob('*')) == objects
+        status, _ = request(url+'/api/styles/plan',json.dumps({'input':{'recipe_id':recipe['recipe_id'],'page_ids':[]}}).encode(),headers)
+        assert status >= 400 and flow.store.read_current() == before
+        assert set(flow.store.objects_dir.rglob('*')) == objects
+    finally:
+        server.stop()
+
+
 def test_cli_import_list_show_and_analysis(flow,tmp_path,capsys):
     file=tmp_path/'ref.png';file.write_bytes(image_bytes());base=flow.store.current_revision_id()
     assert main(['styles','references','import','--project',str(flow.project),'--file',str(file),'--base-revision',base,'--operation-id',str(uuid.uuid4()),'--json'])==0

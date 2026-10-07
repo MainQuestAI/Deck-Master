@@ -77,7 +77,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
     if (!currentBasis()) { versionChanged(); return; }
     pending = {action:'content.inputs', request:{input, base_revision:app.route.revision}, basis:{input}};
     impact.replaceChildren(el('strong', {}, '材料与任务要求变更'), el('p', {}, '确认后旧材料版本保留，输入进入待协调；原有未完任务会由新内容整理接续。只有制作工具判断并采用后才说明内容已对齐，不默认整套重制。'));
-    impact.append(el('ul', {}, differences.map(text=>el('li',{},text)))); impact.scrollIntoView({block:'center'});
+    impact.append(el('ul', {}, differences.map(text=>el('li',{},text))));
     submit.textContent = '确认输入并交接判断'; notice.textContent = ''; controls();
   }
   const reject = event => { if (event.detail.action.startsWith('content.')) { pending = null; controls(); } };

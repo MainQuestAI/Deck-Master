@@ -60,7 +60,7 @@ export function batchActions(app, selected, onSelectionChange) {
     notice.textContent = selected.size ? `${selected.size} 页用于${batchNames[action.value]}${unavailable.length ? `，其中 ${unavailable.length} 页需要调整范围` : ''}。` : '先选择动作，再勾选此动作允许处理的页面。选页不会自动执行；已选范围随个人阅读状态保留，计划仍需重新预览。';
     excluded.replaceChildren(...(unavailable.length ? [el('p', {class: 'field-error'}, '未自动忽略任何页。明确调整范围后才可预览：'),
       el('ul', {}, unavailable.map(item => el('li', {}, label(item.id) + '：' + item.reason))),
-      button('移除列出的受限页', () => { unavailable.forEach(item => selected.delete(item.id)); invalidate(); onSelectionChange(); })] : []));
+      button('移除列出的受限页', () => { unavailable.forEach(item => selected.delete(item.id)); invalidate(); onSelectionChange({selectionChanged:true}); })] : []));
     budgetArea.hidden = !image; exactBudget.disabled = !selected.size || busy;
     reference.disabled = busy || app.readonly || !['blueprint', 'style'].includes(action.value);
     refPicture.hidden = !['blueprint', 'style'].includes(action.value);

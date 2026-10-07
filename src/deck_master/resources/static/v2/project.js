@@ -67,10 +67,12 @@ export class Project {
   }
   async loadRoute(initial = null, focus = true) {
     const serial = ++this.generation;
+    const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
+    this.navigationPending = true;
     try {
       const [info, latest] = await Promise.all([get('/api/project'), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
-      const route = initial || readRoute(this.info, null, latest);
+      const route = requestedRoute || readRoute(this.info, null, latest, requestedHash);
       route.revision ||= latest.revision_id;
       const summary = route.revision === latest.revision_id ? latest : await get(this.summaryURL(route.revision));
       if (summary.project_id !== this.info.project_id) throw new Error('服务中的项目与当前窗口不一致，未替换已读内容。');
@@ -128,7 +130,7 @@ export class Project {
         this.root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('无法读取这个位置', readableError(error),
           button('打开项目当前版本', () => { history.replaceState(null, '', location.pathname + location.search); this.loadRoute({...this.route, surface: 'overview', page_id: null, task_id: null, revision: null}); }))));
       }
-    }
+    } finally { if (serial === this.generation) this.navigationPending = false; }
   }
   go(patch) {
     const route = {...this.route, ...patch};

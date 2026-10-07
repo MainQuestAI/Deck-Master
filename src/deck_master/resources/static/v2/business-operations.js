@@ -1,6 +1,7 @@
 import {get, post, digest, readableError} from './api.js';
 import {el, button, modal, version} from './dom.js';
 import {canonicalAction, expectedRequestDigest, receiptTerminal} from './receipt-verdict.js';
+import {rememberAnnotation} from './annotation-submission.js';
 
 const paths = {'styles.analyze':'/api/styles/analyze', 'icons.confirm':'/api/icons/confirm', 'history.restore':'/api/history/commit-restore', 'content.commit':'/api/content/commit', 'content.inputs':'/api/content/inputs', 'styles.confirm': '/api/styles/confirm', 'annotations.save': '/api/annotations/batch', 'changes.commit': '/api/changes/commit', 'candidates.adopt': '/api/candidates/adopt', 'candidates.decide': '/api/candidates/decision', 'stages.assemble': '/api/stages/assemble'};
 // 升级前的待核实记录以旧 action 名冻结（digest 也用旧 kind）。规范化映射让它们
@@ -148,6 +149,10 @@ export class BusinessOperations {
     if (!await receiptTerminal(entry, response, this.app.info.project_id))
       throw new Error('回包与原请求不一致，继续保留待核实状态。');
     const result = response.operation_result || response;
+    if (canonicalAction(entry.pending.payload.action) === 'annotations.save') {
+      try { await this.finishAnnotation(entry, result); }
+      catch (error) { throw new Error('意见业务回执已核实，草稿记录仍待确认。' + readableError(error)); }
+    }
     this.completed.set(entry.pending.operation_id, result);
     await this.clear(entry);
     if (!entry.editor?.disposed) {
@@ -156,6 +161,25 @@ export class BusinessOperations {
     }
     this.app.root.dispatchEvent(new CustomEvent('business-committed', {detail: {action: entry.pending.payload.action, result}}));
     this.render();
+  }
+  async finishAnnotation(entry, result) {
+    const editor = entry.editor;
+    if (editor && !editor.disposed && !editor.readonly && editor.draft.pending?.operation_id === entry.pending.operation_id) {
+      rememberAnnotation(editor.draft, entry.pending, result);
+      editor.draft.pending = null;
+      editor.changed(); await editor.save();
+      if (editor.status !== 'saved') {
+        editor.draft.pending = structuredClone(entry.pending); editor.persist(); editor.updateStatus();
+        throw new Error('意见已保存，草稿回执尚未确认。请保留当前输入并核实原请求。');
+      }
+      return;
+    }
+    const {record} = await get('/api/drafts/' + encodeURIComponent(entry.draft_id));
+    if (record?.draft.pending?.operation_id === entry.pending.operation_id) {
+      const draft = structuredClone(record.draft);
+      rememberAnnotation(draft, entry.pending, result); draft.pending = null;
+      await post('/api/drafts/save', {draft, expected_etag: record.etag});
+    }
   }
   async clear(entry) {
     this.entries.delete(entry.pending.operation_id); this.persist();

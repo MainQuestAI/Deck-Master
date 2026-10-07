@@ -172,7 +172,7 @@ function matrixPanel(app, saved) {
   const allCheckbox = el('input', {type: 'checkbox', 'aria-label': '选择当前筛选内所有可操作页面'});
   const table = el('table', {class: 'matrix', 'aria-label': '逐页制作进展'});
   let batch;
-  batch = batchActions(app, selected, () => { if (batch) { saveSelection(); render(); } });
+  batch = batchActions(app, selected, ({selectionChanged = false} = {}) => { if (batch && !disposed) { if (selectionChanged) saveSelection(); render(); } });
   const preferenceStatus = el('p', {role:'status', class:'muted overview-preference-status'});
   const compareButton = button('核实总览偏好', async () => {
     compareButton.disabled = true;
@@ -191,8 +191,9 @@ function matrixPanel(app, saved) {
     finally { compareButton.disabled = false; }
   });
   const downloadButton = button('下载总览偏好副本', () => downloadJSON(memory.state, 'deck-master-overview-preferences.json'));
-  function reflectURL() { app.route.overview_preferences = {search,filter,sort:ascending ? 'ascending' : 'descending'}; history.replaceState(null, '', routeHash(app.info, app.route)); }
+  function reflectURL() { if (disposed || app.navigationPending) return; app.route.overview_preferences = {search,filter,sort:ascending ? 'ascending' : 'descending'}; history.replaceState(null, '', routeHash(app.info, app.route)); }
   function saveSelection({quiet = true} = {}) {
+    if (disposed || app.navigationPending) return;
     try { localStorage.setItem(selectionKey, JSON.stringify([...selected])); } catch { /* 选择保留在本页，未写入本机 */ }
     memory.update({search,filter,sort:ascending ? 'ascending' : 'descending',selected_page_ids:[...selected]}, {quiet});
     reflectURL();

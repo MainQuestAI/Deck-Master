@@ -131,6 +131,7 @@ export class Annotations {
       this.draftStatus = status;
     }
     const content = this.editor?.draft.content || {}, state = content.annotation, key = canonical({annotation: state, requirement: content.requirement});
+    this.savedSubmission = content.annotation_submission?.confirmed?.input_key || null;
     if (!force && key === this.savedMetadata) return;
     this.savedMetadata = key; this.regions = structuredClone(state?.regions || []);
     if (this.bodyField.input.value !== (state?.body || '')) this.bodyField.input.value = state?.body || '';
@@ -147,7 +148,17 @@ export class Annotations {
   }
   // What this panel would send right now. Identical content, scope and basis never
   // create a second record; a different scope or region set is a new opinion.
-  submissionKey() { return canonical({body: this.bodyField.input.value, regions: this.regions, scope: this.scope.value, chapter: this.chapter.value, intent: this.intent.input.value, ref: this.ref}); }
+  submissionKey() { return canonical(this.annotationInput()); }
+  annotationInput() {
+    const scope = this.scope.value;
+    const locations = scope === 'artifact' && this.regions.length ? this.regions : [{kind: 'whole'}];
+    return {schema_version: 'annotation_batch.v1', project_id: this.app.info.project_id,
+      annotations: locations.map(location => ({schema_version: 'annotation.v1', project_id: this.app.info.project_id,
+        base_revision: this.data.revision_id, scope, intent: this.intent.input.value, body: this.bodyField.input.value, status: 'open', location,
+        ...(scope === 'chapter' ? {chapter_id: this.chapter.value, content_plan_ref: this.data.content_plan.ref} : {}),
+        ...(['page', 'artifact'].includes(scope) ? {page_id: this.data.page_id, page_ref: this.data.stages.content.ref} : {}),
+        ...(scope === 'artifact' ? {layer: this.layer, artifact_ref: this.ref} : {})}))};
+  }
   // The requirement is its own editable text, filled from the selected opinions.
   // It replaces the old flow where the plan silently reused whatever happened to
   // sit in the drafting box.
@@ -451,22 +462,18 @@ export class Annotations {
       if (!intent.trim()) throw new Error('请填写意见目的。');
       const key = this.submissionKey();
       if (this.savedSubmission === key) throw new Error('这条意见已保存；未发生变化时不会重复新增。');
-      const scope = this.scope.value, fixed = this.data.revision_id;
-      const locations = scope === 'artifact' && this.regions.length ? this.regions : [{kind: 'whole'}];
       if (this.mode !== 'whole' && !this.regions.length) throw new Error('请先添加区域，或选择整页意见。');
-      const annotations = locations.map(location => ({schema_version: 'annotation.v1', project_id: this.app.info.project_id, base_revision: fixed, scope, intent, body, status: 'open', location,
-        ...(scope === 'chapter' ? {chapter_id: this.chapter.value, content_plan_ref: this.data.content_plan.ref} : {}),
-        ...(['page', 'artifact'].includes(scope) ? {page_id: this.data.page_id, page_ref: this.data.stages.content.ref} : {}),
-        ...(scope === 'artifact' ? {layer: this.layer, artifact_ref: this.ref} : {})}));
-      const input = {schema_version: 'annotation_batch.v1', project_id: this.app.info.project_id, annotations};
+      const input = this.annotationInput();
+      this.editor.draft.content.annotation_submission ||= {draft_key: crypto.randomUUID()};
+      const draftKey = this.editor.draft.content.annotation_submission.draft_key;
       const current = await get('/api/view/summary');
       await this.app.business.submit(this.editor, 'annotations.save', {input, base_revision: current.revision_id}, input, async result => {
-        this.savedSubmission = key;
+        this.savedSubmission = this.editor.draft.content.annotation_submission?.confirmed?.input_key || null;
         this.listRevision = result?.revision_id || this.listRevision;
         this.newRefs = new Set((result?.annotations || []).map(item => item.ref?.sha256).filter(Boolean));
         this.error.dataset.success = 'true';
         await this.loadSaved();
-      });
+      }, {annotation_draft_key: draftKey, input_key: key});
     } catch (error) { this.error.textContent = readableError(error); }
   }
   // Writing the next opinion starts from an empty body and region set; scope and
@@ -474,6 +481,7 @@ export class Annotations {
   newOpinion() {
     if (!this.editor || this.editor.readonly) return;
     this.regions = []; this.newRefs = new Set(); this.savedSubmission = null;
+    this.editor.draft.content.annotation_submission = {draft_key: crypto.randomUUID()};
     this.bodyField.input.value = ''; this.error.textContent = ''; delete this.error.dataset.success;
     this.changed(); this.bodyField.input.focus();
   }

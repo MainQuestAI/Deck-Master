@@ -300,10 +300,10 @@ def plan(project, *, input):
              'style_recipe_ref': ref, 'targets': [{'page_id': pid, 'page_ref': entries[pid]['page'],
                     'layer': 'original_image', 'stage': 'blueprint', 'artifact_ref': entries[pid].get('blueprint')} for pid in ids]}
     if recipe['schema_version'] == 'style_recipe.v2':
-        # 复审 P2-3：无原图的目标页会让候选任务在 _new_task 读 blueprint 时 500。
+        # 截图风格以当前原图为依据，缺失时在计划之前返回结构化业务错误。
         missing = [pid for pid in ids if not entries[pid].get('blueprint')]
         if missing:
-            fail('page_ids', '目标页需要当前原图才能进入截图风格试作：' + '、'.join(label(pid) for pid in missing))
+            fail('page_ids', '目标页需要当前原图才能进入截图风格试作，请先完成原图：' + '、'.join(missing))
     if input.get('adopted_candidate_id'):
         value['style_adopted_candidate_id'] = input['adopted_candidate_id']
     return changes.plan(project, input=value)

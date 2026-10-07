@@ -2,8 +2,8 @@ export const surfaces = {overview: '制作总览', content: '内容与来源', g
 export const layers = {source: '来源', content: '逐页稿', original_image: '原图', svg: 'SVG', ppt: 'PPT', prepared_prompt: '预备提示词', submitted_prompt: '实际提示词'};
 // R4（深度复审）：任务与交付的四个子区是工作区上下文，随链接保存与恢复。
 export const runsAreas = ['tasks', 'decisions', 'versions', 'files'];
-export function readRoute(info, position, summary) {
-  const params = new URLSearchParams(location.hash.slice(1));
+export function readRoute(info, position, summary, hash = location.hash) {
+  const params = new URLSearchParams(hash.slice(1));
   if (!params.size) {
     if (position && position.project_identity === info.project_identity) return {...position};
     return {surface: summary.page_count ? 'overview' : 'content', page_id: null, layer: 'original_image',

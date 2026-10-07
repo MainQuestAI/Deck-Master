@@ -344,7 +344,8 @@ def history(project_dir, *, revision=None, page_id=None, layer=None, limit=None,
         row = _history_row(document, parent)
         relevant = [item for item in row['changed_pages'] if (not page_id or item['page_id'] == page_id)
                     and (not layer or layer in item['layers'] or 'basis' in item['layers'])]
-        if limit is None or not related_only or relevant or (not page_id and (row['outputs_changed'] or row['order_changed'])):
+        legacy_full = limit is None and not page_id and not layer
+        if legacy_full or not related_only or relevant or (not page_id and not layer and (row['outputs_changed'] or row['order_changed'])):
             records.append(row)
         if limit is not None and len(records) >= limit:
             next_cursor = head + ':' + parent_id if parent_id else None

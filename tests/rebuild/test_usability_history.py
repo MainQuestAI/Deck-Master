@@ -20,6 +20,10 @@ def test_relevant_history_keeps_content_changes_and_excludes_task_only(flow):
     assert row['created_at'] == before['created_at']
     assert result['current'] == updated['revision_id']
     assert editing.history(flow.project,page_id='p01',limit=10)['revisions'][0]['revision_id'] != changed['revision_id']
+    assert editing.history(flow.project,page_id='p02')['revisions'] == editing.history(flow.project,page_id='p02',limit=100)['revisions']
+    assert editing.history(flow.project,layer='content')['revisions'] == editing.history(flow.project,layer='content',limit=100)['revisions']
+    assert len(editing.history(flow.project)['revisions']) > len(editing.history(flow.project,page_id='p02')['revisions'])
+    assert editing.history(flow.project,page_id='p02',related_only=False)['revisions'][0]['revision_id'] == updated['revision_id']
 
 
 def test_old_history_time_is_not_invented(flow):

@@ -41,8 +41,14 @@ def open_visual_phase(page, index):
     打开"确认规范"），这里只补"回看阶段一"这一步。
     """
     phase = page.locator('.visual-style .style-phase').nth(index)
+    # Read after the first real click has registered the user's choice. Reading
+    # before that click races passive hydration and can double-toggle to closed.
+    summary = phase.locator(':scope > summary')
+    summary.click()
     if not phase.evaluate('node => node.open'):
-        phase.locator(':scope > summary').click()
+        summary.click()
+    from playwright.sync_api import expect
+    expect(phase).to_have_attribute('open', '')
     return phase
 
 

@@ -1,11 +1,12 @@
 import {visualStyle} from './visual-style.js';
+import {stylePhases} from './style-phases.js';
+import {candidateCards} from './candidate-cards.js';
 import {get, post, canonical, readableError} from './api.js';
 import {el, button, heading, empty, version} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {imageView} from './images.js';
 import {textObject} from './text-selection.js';
 import {observerLabels} from './request-view.js';
-import {openCandidate} from './trial-actions.js';
 
 const names = {palette: '配色', typography: '文字层级', density: '密度', lines: '线条', composition: '构图'};
 const defaults = {palette: '借用参考页配色', typography: '借用参考页文字层级'};
@@ -23,7 +24,7 @@ export function style(app) {
   const draftNode = app.editor.mount();
   let disposed = false, loaded = false, busy = false, serial = 0, sourceSerial = 0, proposal = null, plan = null, recipe = null;
   let fixed = null, selected = new Set(), resolutions = {}, promptSelection = null, parent = null, release;
-  let currentPhase = 0, onlySelected = false, targetViews = [];
+  let onlySelected = false, targetViews = [];
   const requests = new Set();
   async function read(path) {
     const controller = new AbortController(); requests.add(controller);
@@ -87,6 +88,7 @@ export function style(app) {
   const expandButton = button('预览明确选页的扩展', () => planTrial(true));
   const dispatchButton = button('保存并交接风格试作', dispatch, true, {disabled: true});
   const impact = el('div', {class: 'stack'}), candidateRows = el('div', {class: 'stack'});
+  const cards = candidateCards(app); app.disposables.push(() => cards.dispose());
   const primaryTarget=el('select',{'aria-label':'当前风格试作目标'},el('option',{value:''},'选择先试的一页'),pages.map(p=>el('option',{value:p.page_id},label(p.page_id))));
   const primaryPreview=el('div',{class:'style-primary-target'});let primaryView;
   function showPrimary(){primaryView?.dispose();primaryPreview.replaceChildren();const p=pages.find(p=>p.page_id===primaryTarget.value);if(p?.stages.blueprint.file){primaryView=imageView(app,p.stages.blueprint,'当前风格试作目标');primaryPreview.append(primaryView.node);}}
@@ -113,7 +115,8 @@ export function style(app) {
         el('label', {}, '已采用候选', adoptedCandidate), expansionTargets,
         el('label', {class:'stack'}, '本次调用上限', calls), expandButton)
   ];
-  phases.forEach((p,i) => { p.summary.addEventListener('click', () => { userPhase = i + 1; }); });
+  const phaseReading = stylePhases(phases.map(p => p.node));
+  app.disposables.push(() => phaseReading.dispose());
   phases[0].node.classList.add('style-primary-phase');
   // UX-07b/UX-08b：交接区按真实状态显隐（无当前计划时不出现），不再依赖
   // `.style-plan:has(.stack:empty){display:none}` 这类会被内部空节点误触发的覆盖。
@@ -138,11 +141,7 @@ export function style(app) {
   node.insertBefore(el('label',{class:'stack'},'参考来源',source),phases[0].node);node.insertBefore(external,phases[0].node);switchSource();
   // 自动推进（恢复规范等异步完成后的展开）不抢用户已主动选择的阶段，
   // 否则慢恢复会把刚打开的"试作与采用"合上。changed() 的显式重置不受此限。
-  let userPhase = 0;
-  function showPhase(next, {auto = false} = {}) {
-    if (auto && userPhase && userPhase !== next) return;
-    if (currentPhase !== next) { phases.forEach((p,i) => { p.node.open = i + 1 === next; }); currentPhase = next; }
-  }
+  const showPhase = (next, options) => phaseReading.show(next, options);
   function editor() { return app.editor; }
   function state() { return {reference: fixed, targets: [...selected], instruction: instruction.value, dimensions: Object.fromEntries([...dimensions].filter(([,v]) => v.check.checked).map(([k,v]) => [k,v.text.value])), host_suggestion: suggestion.value, prompt_selection: promptSelection, resolutions, parent_recipe_id: parent}; }
   function controls() {
@@ -293,7 +292,7 @@ export function style(app) {
   function selectRecipe(restore = false) {
     recipe = recipeRecords.get(recipes.value) || null; expansion.clear(); adoptedCandidate.value = ''; invalidatePlan(false); recipeView.replaceChildren(); trialPage.replaceChildren(); expansionTargets.replaceChildren();
     if (!recipe) return;
-    showPhase(2, {auto: true});
+    showPhase(2, {auto: restore});
     recipeView.append(el('p', {}, `V${recipe.version} · 参考 ${label(recipe.input.reference.page_id)} · ${version(recipe.input.reference.revision_id)}`), el('p', {}, recipe.input.instruction),
       el('p', {class:'muted'}, '借用：' + Object.keys(recipe.dimensions).map(k => names[k]).join('、')),
       el('p', {class:'muted'}, '试作只使用这里已确认的版本。上方未确认的修改不会进入试作；需要使用新要求时，请先检查并确认。'),
@@ -336,14 +335,13 @@ export function style(app) {
   let candidateSerial = 0;
   async function loadCandidates() {
     const token = ++candidateSerial, chosen = recipe;
-    candidateRows.replaceChildren(); if (!chosen) return;
+    cards.reset();candidateRows.replaceChildren(); if (!chosen) return;
     try {
       const result = await read('/api/candidates?' + new URLSearchParams({revision:app.route.revision})); if (disposed || token !== candidateSerial) return;
       const entries = result.candidates.filter(v => chosen.input.target_page_ids.includes(v.candidate.page_id) && v.candidate.stage === 'blueprint').slice(-30);
-      candidateRows.append(...entries.map(v => el('div', {class:'row wrap'}, el('span', {}, label(v.candidate.page_id) + (v.status === 'adopted' ? ' · 曾采用' : ' · 待比较')),
-        button('比较候选 '+v.candidate.candidate_id.slice(-6), () => openCandidate(app, v.candidate, result.revision_id)),
+      candidateRows.append(...cards.render(entries, result.revision_id, {namedComparison:true,extra:v => el('div', {class:'row wrap'},
         // 扩展动作属于阶段 4（试作与采用是阶段 3）：入口必须落在真实阶段。
-        v.status === 'adopted' && !app.readonly && button('从此候选扩展', () => { adoptedCandidate.value = v.candidate.candidate_id; invalidatePlan(); showPhase(4); }))));
+        v.status === 'adopted' && !app.readonly && button('从此候选扩展', () => { adoptedCandidate.value = v.candidate.candidate_id; invalidatePlan(); showPhase(4); }))}));
       candidateRows.append(el('p', {class:'muted'}, '显示最近一批目标页候选。是否属于这版风格、仍被采用及依据有效，由扩展计划再次核对。'), button('到任务页查看全部候选', () => app.go({surface:'runs', revision:result.revision_id, task_id:null, runs_area:'decisions'})));
     } catch (error) { if (!disposed && token === candidateSerial) candidateRows.append(el('p', {class:'field-error'}, readableError(error))); }
   }

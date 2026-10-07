@@ -146,8 +146,8 @@ def test_material_entry_opens_the_adjust_form_not_the_first_material_card(ux00_b
     assert page.locator('.materials-adjust-form').get_attribute('open') == ''
     assert page.evaluate('() => document.activeElement && document.activeElement.getAttribute("aria-label")') \
         == '新增材料完整路径（每行一个）'
-    assert page.locator('.source-card details').first.get_attribute('open') is None, \
-        '入口不得展开任何一张旧材料卡'
+    expect(page.locator('.materials-adjust-form h2')).to_have_text('添加材料')
+    expect(page.locator('.source-card textarea, .source-card select')).to_have_count(0)
 
     # 历史版本不加载当前输入：入口禁用并说明原因，而不是命中不存在的控件。
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'content', revision: args[1]})}",

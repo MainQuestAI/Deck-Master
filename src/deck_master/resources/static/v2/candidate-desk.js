@@ -6,6 +6,7 @@ import {imageView} from './images.js';
 import {routeHash} from './routes.js';
 import {diffView} from './text-diff.js';
 import {pageText} from './page-text.js';
+import {candidateCards} from './candidate-cards.js';
 import {candidateIconReview} from './icon-workbench.js';
 import {openCandidate} from './trial-actions.js';
 
@@ -290,6 +291,7 @@ export function candidateBatch(app) {
     ? `${pageLabels.get(record.page_id) || '对应页面'} · ${stageName(record.stage)}` : '整稿正文变更集 · ';
   const root = el('section', {class: 'panel candidate-batch', 'aria-label': '候选集合采用'});
   const rows = el('div', {class: 'candidate-batch-rows stack'}), notice = el('p', {role: 'status'}), impact = el('div', {class: 'stack'});
+  const cards = candidateCards(app); app.disposables.push(() => cards.dispose());
   const pager = el('div', {class: 'row wrap candidate-pagination'});
   let offset = 0;
   let records = [], selected = new Set(), currentPlan = null, disposed = false, busy = false, polling = false, revision = null, serial = 0;
@@ -314,7 +316,7 @@ export function candidateBatch(app) {
     const missing = [...selected].filter(id => !records.some(row => row.candidate.candidate_id === id));
     notice.textContent = `${records.length} 个已返回候选 · 已选 ${selected.size} 个${missing.length ? `（${missing.length} 个暂未读到，选择仍保留）` : ''}`;
     offset = Math.min(offset, Math.max(0, Math.floor((records.length - 1) / 30) * 30));
-    rows.replaceChildren(...records.slice(offset, offset + 30).map((row, localIndex) => {
+    rows.replaceChildren(...cards.render(records.slice(offset, offset + 30), revision, {selection:(row, localIndex) => {
       const index = offset + localIndex;
       const record = row.candidate, id = record.candidate_id;
       const input = el('input', {type: 'checkbox', checked: selected.has(id), 'aria-label': `选择 ${batchLabel(record)}候选 ${index + 1}`});
@@ -326,11 +328,8 @@ export function candidateBatch(app) {
         } else selected.delete(id);
         persist(); renderRows();
       });
-      return el('article', {class: 'candidate-batch-row', 'data-candidate-id': id}, el('label', {}, input,
-        el('span', {}, `${batchLabel(record)}候选 ${index + 1}`)),
-        el('p', {class: 'muted'}, `${clock(record.created_at)} · ${row.generation_basis.status === 'changed' ? '依据已变化' : canonical(row.adoption_target.current_ref) === canonical(record.result_ref) ? '当前采用' : row.status === 'adopted' ? '曾采用' : row.decision?.state === 'keep_current' ? '已保留当前' : '待决定'}`),
-        button('比较这个候选', () => openCandidate(app, record, revision)));
-    }));
+      return el('label', {}, input, el('span', {}, `${batchLabel(record)}候选 ${index + 1}`));
+    }}));
     if (!records.length) rows.append(el('p', {class: 'muted'}, '还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务仍在下方交接面板。'));
     pager.replaceChildren(button('上一页候选', () => { offset = Math.max(0, offset - 30); renderRows(); }, false, {disabled: offset === 0}),
       el('span', {}, `第 ${Math.floor(offset / 30) + 1} 页 · 选择跨页保留`),

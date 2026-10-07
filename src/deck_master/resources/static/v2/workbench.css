@@ -131,6 +131,27 @@ textarea{font-size:14px;line-height:1.7}
 .candidate-batch-row label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .candidate-batch-row input { width: 20px; height: 20px; flex: none; }
 .candidate-batch-row p { margin: 0; }
+.candidate-page-group > h3 { margin: 8px 0; font-size: 16px; }
+.candidate-card.candidate-batch-row { grid-template-columns: minmax(140px, 180px) minmax(0, 1fr); border: 1px solid var(--border); border-radius: 8px; padding: 16px; align-items: start; }
+.candidate-card > label { grid-column: 1 / -1; grid-row: 1; }
+.candidate-card > h4 { grid-column: 2; grid-row: 2; margin: 0; }
+.candidate-card > .candidate-card-preview { grid-column: 1; grid-row: 2 / span 3; min-width: 0; }
+.candidate-card.candidate-batch-row > p { grid-column: 2; grid-row: 3; }
+.candidate-card > .row { grid-column: 2; grid-row: 4; }
+.candidate-card-preview .pooled-image canvas { width: 100%; height: auto; display: block; }
+.candidate-text-summary { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 200px; overflow: auto; font-size: 14px; }
+.materials-adjust-form { scroll-margin-top: 20px; }
+.material-edit-context { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.material-edit-context fieldset { min-width: 0; }
+.material-input-impact { position: sticky; top: 16px; }
+@media (max-width: 700px) {
+  .candidate-card.candidate-batch-row { grid-template-columns: 1fr; }
+  .candidate-card > label, .candidate-card > h4, .candidate-card > .candidate-card-preview, .candidate-card.candidate-batch-row > p, .candidate-card > .row { grid-column: 1; grid-row: auto; }
+  .candidate-card-preview { max-width: 320px; }
+  .material-edit-context { grid-template-columns: 1fr; gap: 16px; }
+  .material-input-impact { position: static; }
+  .materials-adjust-form[data-step="review"] .material-input-fields { display: none; }
+}
 .candidate-impact:not(:empty) { padding: 14px; border: 1px solid var(--line, var(--border)); border-radius: var(--radius-sm); }
 .candidate-basis pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .candidate-recovery > summary, .trial-form > summary { padding: 16px 20px; cursor: pointer; font-weight: 600; }
