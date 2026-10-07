@@ -23,13 +23,13 @@
       "path": "/api/exports",
       "payload": {
         "purpose": "review",
-        "revision": "a806baf4b60d4be38be8f8f72867fb2e",
-        "export_id": "export-ea81710a-d23e-4d50-a15a-36e5b4e23e74"
+        "revision": "e98ba488641145f5942f18f00436abb7",
+        "export_id": "export-db4e0388-8038-4a2a-b977-7ee4a405ff79"
       },
       "status": 200,
       "receipt": {
-        "revision_id": "a806baf4b60d4be38be8f8f72867fb2e",
-        "export_id": "export-ea81710a-d23e-4d50-a15a-36e5b4e23e74",
+        "revision_id": "e98ba488641145f5942f18f00436abb7",
+        "export_id": "export-db4e0388-8038-4a2a-b977-7ee4a405ff79",
         "status": "exported"
       }
     },
@@ -38,8 +38,8 @@
       "path": "/api/exports",
       "payload": {
         "purpose": "delivery",
-        "revision": "a806baf4b60d4be38be8f8f72867fb2e",
-        "export_id": "export-a1f7b530-4b0a-49b3-ae35-bd3f349bd74f"
+        "revision": "e98ba488641145f5942f18f00436abb7",
+        "export_id": "export-a14e46ea-1fee-4f85-a3bc-ce2ade1bd255"
       },
       "status": 409,
       "receipt": null

@@ -350,7 +350,10 @@ def history(project_dir, *, revision=None, page_id=None, layer=None, limit=None,
             next_cursor = head + ':' + parent_id if parent_id else None
             break
         document = parent
-    return {'current': head, 'revisions': records, 'pagination': {'limit': limit, 'next_cursor': next_cursor},
+    # `current` keeps its historical meaning (project head); `head` is this
+    # read's anchor. delivery-desk marks the anchor with its own field so the
+    # identity chips no longer mislabel a historical revision as 当前版本.
+    return {'current': store.current_revision_id(), 'head': head, 'revisions': records, 'pagination': {'limit': limit, 'next_cursor': next_cursor},
             'time_policy': 'committed_at only; historical absence remains unknown'}
 
 

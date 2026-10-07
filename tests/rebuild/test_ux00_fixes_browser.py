@@ -173,7 +173,8 @@ def test_style_saved_task_and_reference_pagers_stay_within_bounds(ux00_browser):
     def reference(index):
         sha = hashlib.sha256(str(index).encode()).hexdigest()
         return {'reference': {'reference_id': f'ref-{index:02}', 'width': 96, 'height': 64},
-                'preview': {'path': f'.deckmaster/objects/ab/{sha}.png', 'sha256': sha}}
+                'preview': {'schema_version': 'deck_artifact.v1', 'artifact_id': 'reference-' + sha,
+                            'file': {'path': f'.deckmaster/objects/ab/{sha}.png', 'sha256': sha}}}
     page.route('**/api/styles/references*', lambda route: route.fulfill(
         status=200, content_type='application/json',
         body=json.dumps({'references': [reference(index) for index in range(13)], 'fonts': []})))

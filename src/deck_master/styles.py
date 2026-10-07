@@ -299,6 +299,11 @@ def plan(project, *, input):
              'max_calls': input.get('max_calls'), 'mode': 'trial', 'references': recipe_references(store, doc, recipe),
              'style_recipe_ref': ref, 'targets': [{'page_id': pid, 'page_ref': entries[pid]['page'],
                     'layer': 'original_image', 'stage': 'blueprint', 'artifact_ref': entries[pid].get('blueprint')} for pid in ids]}
+    if recipe['schema_version'] == 'style_recipe.v2':
+        # 复审 P2-3：无原图的目标页会让候选任务在 _new_task 读 blueprint 时 500。
+        missing = [pid for pid in ids if not entries[pid].get('blueprint')]
+        if missing:
+            fail('page_ids', '目标页需要当前原图才能进入截图风格试作：' + '、'.join(label(pid) for pid in missing))
     if input.get('adopted_candidate_id'):
         value['style_adopted_candidate_id'] = input['adopted_candidate_id']
     return changes.plan(project, input=value)

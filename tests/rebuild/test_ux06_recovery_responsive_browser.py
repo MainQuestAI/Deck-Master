@@ -189,7 +189,8 @@ def test_pending_style_analysis_shows_business_name_and_verify(ux06_browser):
     page.route('**/api/styles/references*', lambda route: route.fulfill(
         status=200, content_type='application/json',
         body=json.dumps({'references': [{'reference': {'reference_id': 'ref-1', 'width': 96, 'height': 64},
-                                         'preview': {'path': f'.deckmaster/objects/ab/{64*"a"}.png', 'sha256': 64 * 'a'}}], 'fonts': []})))
+                                         'preview': {'schema_version': 'deck_artifact.v1', 'artifact_id': 'reference-' + 64 * 'a',
+                                         'file': {'path': f'.deckmaster/objects/ab/{64 * "a"}.png', 'sha256': 64 * 'a'}}}], 'fonts': []})))
     page.route('**/api/thumbnails*', lambda route: route.fulfill(
         status=200, content_type='application/json',
         body=json.dumps({'status': 'ready', 'url': '/api/thumbnail-file?cache_key=' + 'a' * 64})))

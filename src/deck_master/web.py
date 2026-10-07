@@ -454,7 +454,13 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     raise ValueError('use one nonempty value per supported history parameter')
                 if params.get('related_only', ['1'])[0] not in ('0', '1'):
                     raise ValueError('related_only must be 0 or 1')
-                self._send_json(history(self.store.project_root, revision=params.get('revision', [None])[0], page_id=params.get('page_id', [None])[0], layer=params.get('layer', [None])[0], limit=int(params['limit'][0]) if 'limit' in params else None, cursor=params.get('cursor', [None])[0], related_only=params.get('related_only', ['1'])[0] != '0'))
+                from .operations import OperationError
+                limit_value = params.get('limit', [None])[0]
+                try:
+                    limit = int(limit_value) if limit_value is not None else None
+                except ValueError:
+                    raise OperationError('invalid_input', 'limit', 'limit must be an integer') from None
+                self._send_json(history(self.store.project_root, revision=params.get('revision', [None])[0], page_id=params.get('page_id', [None])[0], layer=params.get('layer', [None])[0], limit=limit, cursor=params.get('cursor', [None])[0], related_only=params.get('related_only', ['1'])[0] != '0'))
             except Exception as exc:
                 self._send_error(exc)
             return

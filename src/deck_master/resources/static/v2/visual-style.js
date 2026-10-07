@@ -8,7 +8,13 @@ export function visualStyle(app){
   const root=el('section',{class:'visual-style stack','aria-label':'外部截图风格'}),status=el('p',{role:'status'}),images=el('div',{class:'visual-reference-list'}),rules=el('div',{class:'visual-rules stack'});
   const editor=()=>app.editor,key=`deck-master:visual-style:${app.info.project_identity}`,uploadKey=key+':upload';
   let state={ids:[],targets:[],instruction:'分析配色与文字层级，保留目标页完整内容',task_id:null,recipe:null},pending=null,refs=[],spec=null,busy=false,disposed=false,leases=[],specLeases=[],analysisSerial=0,hydrateSerial=0,loaded=false,recipe=null,fonts=[],referencePage=0,savedTaskPage=0,savedCatalogSerial=0,savedTasks=[],specEditorOpen=false;
-  try{state={...state,...JSON.parse(localStorage.getItem(key)||'{}')};pending=JSON.parse(localStorage.getItem(uploadKey)||'null');}catch{status.textContent='本机恢复记录无法读取，请核对已保存参考与任务。';}
+  try{state={...state,...JSON.parse(localStorage.getItem(key)||'{}')};
+    // 复审 P3：恢复值按白名单定形——spec_edits.dimensions 不是对象时，borrowed/renderSpec 的 key-in 会崩掉整个规范阶段。
+    if(!state.spec_edits||typeof state.spec_edits!=='object'||Array.isArray(state.spec_edits))state.spec_edits={};
+    else for(const key of Object.keys(state.spec_edits.dimensions||{}))if(!state.spec_edits.dimensions[key]||typeof state.spec_edits.dimensions[key]!=='string')delete state.spec_edits.dimensions[key];
+    if(!Array.isArray(state.ids))state.ids=[];
+    if(!Array.isArray(state.targets))state.targets=[];
+    pending=JSON.parse(localStorage.getItem(uploadKey)||'null');}catch{status.textContent='本机恢复记录无法读取，请核对已保存参考与任务。';}
   if(!Array.isArray(state.ids)||!Array.isArray(state.targets)||typeof state.instruction!=='string')state={ids:[],targets:[],instruction:'分析配色与文字层级，保留目标页完整内容',task_id:null,recipe:null};
   function persist(){
     try{localStorage.setItem(key,JSON.stringify(state));}catch{status.textContent='本机缓冲未保存，请先保存项目草稿或下载恢复文件。';}
@@ -48,7 +54,7 @@ export function visualStyle(app){
       check.addEventListener('change',()=>{check.checked?expansion.add(id):expansion.delete(id);invalidatePlan();controls();});return el('label',{class:'inline-control'},check,page?.title||id);}));
   }
   async function loadRecipe(){if(!state.recipe)return;const chosen=state.recipe,epoch=analysisSerial,hydration=hydrateSerial;
-    try{const value=await get('/api/styles/'+chosen+'?'+new URLSearchParams({revision:app.route.revision}));if(disposed||state.recipe!==chosen||epoch!==analysisSerial||hydration!==hydrateSerial)return;
+    try{const value=await get('/api/styles/'+encodeURIComponent(chosen)+'?'+new URLSearchParams({revision:app.route.revision}));if(disposed||state.recipe!==chosen||epoch!==analysisSerial||hydration!==hydrateSerial)return;
       if(value.recipe.schema_version!=='style_recipe.v2')throw new Error('这不是截图风格规范。');recipe=value.recipe;
       if(!spec){const result=await get(fileURL(recipe.input.visual_style_ref));if(disposed||state.recipe!==chosen||epoch!==analysisSerial||hydration!==hydrateSerial)return;spec={...result,ref:recipe.input.visual_style_ref};renderSpec();}
       const result=await get('/api/candidates?'+new URLSearchParams({revision:app.route.revision}));if(disposed||state.recipe!==chosen||epoch!==analysisSerial||hydration!==hydrateSerial)return;
@@ -76,7 +82,7 @@ export function visualStyle(app){
   savedAnalysis.addEventListener('change',async()=>{const chosen=savedAnalysis.value,task=savedTasks.find(t=>t.task_id===chosen);if(!task)return;
     invalidateAnalysis();state.task_id=chosen;state.instruction=task.instruction;requirement.value=task.instruction;persist();await readAnalysis();});
   savedRecipe.addEventListener('change',async()=>{if(!savedRecipe.value)return;const chosen=savedRecipe.value,token=++analysisSerial;
-    busy=true;controls();try{const value=await get('/api/styles/'+chosen+'?'+new URLSearchParams({revision:app.route.revision}));
+    busy=true;controls();try{const value=await get('/api/styles/'+encodeURIComponent(chosen)+'?'+new URLSearchParams({revision:app.route.revision}));
       if(disposed||token!==analysisSerial)return;const r=value.recipe;if(r.schema_version!=='style_recipe.v2')throw new Error('这不是截图视觉规范。');
       const result=await get(fileURL(r.input.visual_style_ref));if(disposed||token!==analysisSerial)return;
       clearSpec();invalidatePlan();state={...state,ids:r.reference_sources.references.map(v=>v.reference_id),targets:[...r.input.target_page_ids],instruction:r.input.instruction,recipe:chosen,task_id:null,font_id:r.input.font_id||'',spec_edits:{ref:r.input.visual_style_ref.sha256,dimensions:structuredClone(r.dimensions)}};
@@ -163,7 +169,7 @@ export function visualStyle(app){
   }
   async function readAnalysis(current=false){
     if(!state.task_id)return;openPhase(2);const chosen=state.task_id,token=++analysisSerial;
-    try{const value=await get('/api/tasks/'+chosen+(current?'':'?'+new URLSearchParams({revision:app.route.revision})));if(disposed||token!==analysisSerial||state.task_id!==chosen)return;if(current&&value.revision_id!==app.route.revision){app.go({revision:value.revision_id});return;}const task=value.task;
+    try{const value=await get('/api/tasks/'+encodeURIComponent(chosen)+(current?'':'?'+new URLSearchParams({revision:app.route.revision})));if(disposed||token!==analysisSerial||state.task_id!==chosen)return;if(current&&value.revision_id!==app.route.revision){app.go({revision:value.revision_id});return;}const task=value.task;
       if(task.status!=='completed'){clearSpec();status.textContent=task.status==='awaiting_host'?'分析要求已保存，等待 Agent 接手。':task.status==='running'?'Agent 已接手，等待分析结果。':`分析尚未完成：${task.status}。请核实或取消原任务。`;return;}
       if(task.kind!=='style_analyze'||task.result_refs.length!==1)throw new Error('分析结果类型不匹配。');
       const result=await get(fileURL(task.result_refs[0]));if(disposed||token!==analysisSerial||state.task_id!==chosen)return;spec={...result,ref:task.result_refs[0]};const ids=refs.filter(row=>result.references.some(ref=>ref.sha256===row.ref.sha256)).map(row=>row.reference.reference_id);if(JSON.stringify(ids)!==JSON.stringify(state.ids)){state.ids=ids;renderReferences();persist();}renderSpec();openPhase(2,{auto:true});status.textContent='分析已返回，尚未确认或修改任何页。';

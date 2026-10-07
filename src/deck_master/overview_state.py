@@ -16,7 +16,7 @@ def _file(store):
     return safe_path(store.deck_root, 'workbench', 'overview.json')
 
 
-def _fit(current, identity, states):
+def _fit(current, identity, states, previous=None):
     """Drop the oldest readings until the record fits the reader's budget.
 
     A single state that cannot fit on its own is refused loudly instead of
@@ -24,9 +24,15 @@ def _fit(current, identity, states):
     the save as unconfirmed (existing error handling), instead of a
     permanently damaged preference file.
     """
+    next_sequence = (previous['sequence'] + 1) if previous else 1
     while True:
+        # Probe the exact final shape: same serializer as _write, the real
+        # sequence, and an etag placeholder of the true 64-hex length. The
+        # first probe omitted the etag (~74 bytes) and could let a record slip
+        # through at 31.9–32 KB, then be permanently unreadable by _read (F1).
         probe = {'schema_version': 'ui_overview_record.v1', 'project_id': current['project_id'],
-                 'project_identity': identity, 'states': states, 'sequence': 1}
+                 'project_identity': identity, 'states': states, 'sequence': next_sequence,
+                 'etag': 'd' * 64}
         if len(canonical_json_bytes(probe)) <= MAX_RECORD_BYTES:
             return states
         if len(states) == 1:
@@ -101,7 +107,7 @@ def save(project, *, state, expected_etag=None):
         if expected_etag != (previous['etag'] if previous else None):
             raise LocalStateConflict('expected_etag', 'overview preferences changed or were cleared; current input is retained')
         states = [value for value in (previous['states'] if previous else []) if value['revision_id'] != state['revision_id']]
-        states = _fit(current, identity, [*states, state][-MAX_READINGS:])
+        states = _fit(current, identity, [*states, state][-MAX_READINGS:], previous)
         record = _write(store, current, identity, states, previous)
     return {'status': 'saved', 'record': {'state': state, 'etag': record['etag']}, 'replayed': False}
 

@@ -204,3 +204,40 @@ def test_oversized_selection_record_is_trimmed_or_refused_never_written_unreadab
         overview_state.save(project, state=state(project, selected_page_ids=huge),
                             expected_etag=saved['record']['etag'])
     assert overview_state.get(project, revision=revisions[-1])['record'] is not None
+
+
+def test_fit_probe_is_byte_exact_at_the_reader_boundary(project):
+    """复审 P1-1：探针省掉 etag/真实 sequence 会漏掉 31.9–32 KB 边界带，
+    写出读取端拒收的文件（F1 永久卡死）。边界构造必须能写且能读回。"""
+    from deck_master import overview_state as module
+    from deck_master.local_state import read_json
+    from deck_master.ui_journal import context
+
+    store, document, identity = context(project)
+    revision = document['revision_id']
+
+    def state_with_selection(page_count):
+        return {'schema_version': 'ui_overview.v1', 'revision_id': revision,
+                'search': '', 'filter': 'all', 'sort': 'ascending',
+                'selected_page_ids': [f'p{n:03}' for n in range(1, page_count + 1)]}
+
+    # 找到恰好落在预算边界内层的规模：先粗放放大到被裁剪，再二分回可用规模。
+    low, high = 1, 300
+    while low < high:
+        mid = (low + high + 1) // 2
+        try:
+            module._fit(current=document, identity=identity,
+                        states=[state_with_selection(mid)] * module.MAX_READINGS, previous=None)
+            low = mid
+        except module.LocalStateError:
+            high = mid - 1
+    boundary = state_with_selection(low)
+
+    # 用 _fit 的最终结果直接写出（探针判 OK 的规模必须真的可写可读）。
+    states = [boundary] * module.MAX_READINGS
+    fitted = module._fit(current=document, identity=identity, states=states, previous=None)
+    record = module._write(store, document, identity, fitted, None)
+    path = module._file(store)
+    assert path.stat().st_size <= module.MAX_RECORD_BYTES, path.stat().st_size
+    assert read_json(path, max_bytes=module.MAX_RECORD_BYTES) is not None
+    assert len(fitted) == module.MAX_READINGS or record['etag']

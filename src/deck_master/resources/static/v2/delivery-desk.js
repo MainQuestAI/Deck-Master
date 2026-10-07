@@ -174,13 +174,16 @@ export function historyDesk(app, history) {
     identity.replaceChildren(
       el('span', {class: 'state-chip'}, `选中：${nameFor(selected.value)}`),
       el('span', {class: 'state-chip'}, `已读：${nameFor(revision)}`),
-      el('span', {class: 'state-chip'}, `当前版本：${nameFor(history.current)}`));
+      el('span', {class: 'state-chip'}, `当前版本：${nameFor(history.current)}`),
+      el('span', {class: 'state-chip'}, history.head && history.head !== history.current && history.head !== revision ? `读取锚点：${nameFor(history.head)}` : ''));
   }
   function append(records, reset = false) {
     const chosen = reset ? revision : selected.value;
     if (reset) rows.clear();
     records.forEach(item => rows.set(item.revision_id, item));
-    const options = [...rows.values()].map(item => el('option', {value: item.revision_id}, historyLabel(item, pageLabels) + (item.revision_id === history.current ? ' · 当前阅读版本' : '')));
+    // `current` 是项目最新版本；"当前阅读版本"是本次读取的锚点（history.head）。
+    const options = [...rows.values()].map(item => el('option', {value: item.revision_id}, historyLabel(item, pageLabels)
+      + (item.revision_id === revision ? ' · 当前阅读版本' : item.revision_id === history.current ? ' · 项目最新版本' : '')));
     if (!rows.has(revision)) options.unshift(el('option', {value: revision}, app.historical ? '正在阅读的历史版本' : '当前项目版本'));
     selected.replaceChildren(...options); selected.value = chosen;
     if (!selected.value) selected.value = revision;

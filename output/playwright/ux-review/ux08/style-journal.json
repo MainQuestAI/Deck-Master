@@ -25,13 +25,13 @@
         "input": {
           "schema_version": "style_input.v1",
           "project_id": "ux08-project",
-          "base_revision": "0f1821274cb545f69254bd7c505eae84",
+          "base_revision": "789678d2b78548f28d872ed521f9010e",
           "reference": {
             "page_id": "p01",
-            "revision_id": "0f1821274cb545f69254bd7c505eae84",
+            "revision_id": "789678d2b78548f28d872ed521f9010e",
             "artifact_ref": {
-              "path": ".deckmaster/objects/38/38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883.json",
-              "sha256": "38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883"
+              "path": ".deckmaster/objects/8e/8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787.json",
+              "sha256": "8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787"
             },
             "role": "reference"
           },
@@ -58,13 +58,13 @@
         "input": {
           "schema_version": "style_input.v1",
           "project_id": "ux08-project",
-          "base_revision": "0f1821274cb545f69254bd7c505eae84",
+          "base_revision": "789678d2b78548f28d872ed521f9010e",
           "reference": {
             "page_id": "p01",
-            "revision_id": "0f1821274cb545f69254bd7c505eae84",
+            "revision_id": "789678d2b78548f28d872ed521f9010e",
             "artifact_ref": {
-              "path": ".deckmaster/objects/38/38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883.json",
-              "sha256": "38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883"
+              "path": ".deckmaster/objects/8e/8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787.json",
+              "sha256": "8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787"
             },
             "role": "reference"
           },
@@ -93,24 +93,24 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "585120683775cbf9a172f5c602f479dcc256dc121ac3cc711d78ede7d3881330",
-          "draft_id": "draft-44d867ed-2825-4996-bcc5-972d88300885",
+          "project_identity": "93428dd6ba9842c734d78ccb9449a6de933efb1e0b3f8c450954c9bc286d666d",
+          "draft_id": "draft-5150bde5-1af0-4075-8f47-66205dd0e55c",
           "target": {
             "scope": "project",
             "page_id": null,
             "layer": "notes"
           },
-          "base_revision": "0f1821274cb545f69254bd7c505eae84",
+          "base_revision": "789678d2b78548f28d872ed521f9010e",
           "base_ref": null,
           "content": {
             "text": "",
             "style_calibration": {
               "reference": {
                 "page_id": "p01",
-                "revision_id": "0f1821274cb545f69254bd7c505eae84",
+                "revision_id": "789678d2b78548f28d872ed521f9010e",
                 "artifact_ref": {
-                  "path": ".deckmaster/objects/38/38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883.json",
-                  "sha256": "38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883"
+                  "path": ".deckmaster/objects/8e/8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787.json",
+                  "sha256": "8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787"
                 },
                 "file": {
                   "path": ".deckmaster/objects/81/81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png",
@@ -135,17 +135,17 @@
             }
           },
           "pending": {
-            "operation_id": "23bf2e3f-5aef-4f63-826b-180ea9c1baa4",
+            "operation_id": "0a8a8953-7f35-45f3-bee7-b94ecc10e37b",
             "payload": {
               "action": "styles.confirm",
               "request": {
-                "proposal_id": "style-proposal-88d06301600a49ebbf4c0aca265a2e6c35c0556643d41bd86608f88688078d57",
-                "base_revision": "0f1821274cb545f69254bd7c505eae84",
-                "operation_id": "23bf2e3f-5aef-4f63-826b-180ea9c1baa4"
+                "proposal_id": "style-proposal-b2062766fa69527f67a0b932c10cad221f8a8c026f2a1944f767e1f28e3599ce",
+                "base_revision": "789678d2b78548f28d872ed521f9010e",
+                "operation_id": "0a8a8953-7f35-45f3-bee7-b94ecc10e37b"
               },
-              "request_digest": "4a09ece27af1f83c3c745a49520af924545cc60b8c9400ae65eb0280000ac01f"
+              "request_digest": "d80b55832a921f4b106ebc43aa3d9c6b06dd1f544764c8a6c6ea1da85dbbb469"
             },
-            "payload_digest": "458a719738e104989b5ef634579adbcf94a8a3119aa3fa36558fa17fbd9e05b6"
+            "payload_digest": "7d8504efcfb9faefeeb5063b55071407b97eeeeef34e31f0d062bfd32ca00270"
           }
         },
         "expected_etag": null
@@ -159,16 +159,16 @@
       "method": "POST",
       "path": "/api/styles/confirm",
       "payload": {
-        "proposal_id": "style-proposal-88d06301600a49ebbf4c0aca265a2e6c35c0556643d41bd86608f88688078d57",
-        "base_revision": "0f1821274cb545f69254bd7c505eae84",
-        "operation_id": "23bf2e3f-5aef-4f63-826b-180ea9c1baa4"
+        "proposal_id": "style-proposal-b2062766fa69527f67a0b932c10cad221f8a8c026f2a1944f767e1f28e3599ce",
+        "base_revision": "789678d2b78548f28d872ed521f9010e",
+        "operation_id": "0a8a8953-7f35-45f3-bee7-b94ecc10e37b"
       },
       "status": 200,
       "receipt": {
-        "operation_id": "23bf2e3f-5aef-4f63-826b-180ea9c1baa4",
+        "operation_id": "0a8a8953-7f35-45f3-bee7-b94ecc10e37b",
         "status": "committed",
-        "result.revision_id": "b32cd11ddafc47f9a19f85db289824d3",
-        "result.recipe_id": "recipe-a7c6ff66d1e2450a944258b75987e68b"
+        "result.revision_id": "a36ba7ddace2464cb3f4f646487f0295",
+        "result.recipe_id": "recipe-40713ac681f246899c1704be7abac35a"
       }
     },
     {
@@ -178,24 +178,24 @@
         "draft": {
           "schema_version": "ui_draft.v1",
           "project_id": "ux08-project",
-          "project_identity": "585120683775cbf9a172f5c602f479dcc256dc121ac3cc711d78ede7d3881330",
-          "draft_id": "draft-44d867ed-2825-4996-bcc5-972d88300885",
+          "project_identity": "93428dd6ba9842c734d78ccb9449a6de933efb1e0b3f8c450954c9bc286d666d",
+          "draft_id": "draft-5150bde5-1af0-4075-8f47-66205dd0e55c",
           "target": {
             "scope": "project",
             "page_id": null,
             "layer": "notes"
           },
-          "base_revision": "0f1821274cb545f69254bd7c505eae84",
+          "base_revision": "789678d2b78548f28d872ed521f9010e",
           "base_ref": null,
           "content": {
             "text": "",
             "style_calibration": {
               "reference": {
                 "page_id": "p01",
-                "revision_id": "0f1821274cb545f69254bd7c505eae84",
+                "revision_id": "789678d2b78548f28d872ed521f9010e",
                 "artifact_ref": {
-                  "path": ".deckmaster/objects/38/38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883.json",
-                  "sha256": "38ef8f632b8a3ff06fab9b6662cea2917026f10f5b388ba669bac2a862017883"
+                  "path": ".deckmaster/objects/8e/8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787.json",
+                  "sha256": "8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787"
                 },
                 "file": {
                   "path": ".deckmaster/objects/81/81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png",
@@ -221,7 +221,7 @@
           },
           "pending": null
         },
-        "expected_etag": "e17fd46b6cf241873df11aa693089c5209f46287b358b8635e41d75fcb1122b3"
+        "expected_etag": "3a8efce342f18ac79732c1b184f1067953b059d2e1d25cba709aac2e1f374929"
       },
       "status": 200,
       "receipt": {
@@ -233,7 +233,7 @@
       "path": "/api/styles/plan",
       "payload": {
         "input": {
-          "recipe_id": "recipe-a7c6ff66d1e2450a944258b75987e68b",
+          "recipe_id": "recipe-40713ac681f246899c1704be7abac35a",
           "page_ids": [
             "p02"
           ],
@@ -242,7 +242,7 @@
       },
       "status": 200,
       "receipt": {
-        "plan_id": "plan-ba18cca56012bf1f1b35d420d7266bf8b17475d70e4a336000633f69ed5acb85",
+        "plan_id": "plan-392acb3d3517565f4b4359917044c7e740ca126716f8ce065d7c9137cf3e2472",
         "status": "planned"
       }
     }

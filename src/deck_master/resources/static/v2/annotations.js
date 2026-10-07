@@ -401,7 +401,6 @@ export class Annotations {
       el('p', {}, note.body),
       group.reason && el('p', {class: 'muted field-help'}, group.reason),
       button(`回到意见 ${index} 的原版本`, () => this.app.go({surface: note.page_id ? 'page' : 'content', revision: note.base_revision, page_id: note.page_id || null, layer: note.layer || 'content'})));
-    if (isNew) article.scrollIntoView({block: 'nearest'});
     return article;
   }
   // Which snapshot the saved list is read from. Historical reads stay fixed to
@@ -430,6 +429,11 @@ export class Annotations {
       }
       if (!this.records.length) nodes.push(el('p', {class: 'muted'}, '尚无已保存意见。'));
       this.savedList.replaceChildren(...nodes);
+      // 挂载后滚动才生效（复审 P3-6）：新增意见在列表可见时跳到它本身。
+      if (this.listSerial && nodes.some(node => node.querySelector?.('.is-new'))) {
+        const fresh = this.savedList.querySelector('.is-new');
+        fresh?.scrollIntoView({block: 'nearest'});
+      }
       this.syncRequirement(); this.renderListState();
       this.update();
     } catch (error) {
