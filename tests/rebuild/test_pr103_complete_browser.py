@@ -486,6 +486,21 @@ def test_gallery_conflict_same_selection_and_layer_exposes_reference_difference(
         second.close()
 
 
+def visible_button_style(page, text, pressed=None):
+    from playwright.sync_api import expect
+    # Enabled does not imply visible during a route remount. Re-resolve only a
+    # visible button and sample geometry/style in one browser execution.
+    button = page.get_by_role('button', name=text, exact=True).and_(page.locator('button:visible'))
+    expect(button).to_be_enabled()
+    if pressed is not None:
+        expect(button).to_have_attribute('aria-pressed', pressed)
+    return button.evaluate("""button => {
+      const box = button.getBoundingClientRect(), style = getComputedStyle(button);
+      return {height: box.height, color: style.color,
+              background: style.backgroundColor, transition: style.transitionDuration};
+    }""")
+
+
 @pytest.mark.parametrize('width,height', [(1440,900), (1280,800), (390,844)])
 def test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports(tmp_path, width, height):
     from playwright.sync_api import expect
@@ -496,15 +511,15 @@ def test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports(t
         page.locator('.todo-priority').get_by_role('button', name='去交接', exact=True).click()
         copy = page.get_by_role('button', name='复制交接说明', exact=True)
         expect(copy).to_be_enabled()
-        assert copy.bounding_box()['height'] >= 44
+        assert visible_button_style(page, '复制交接说明')['height'] >= 44
         page.screenshot(path=str(page.evidence/'task-handoff.png'), full_page=True)
         for name in ('待决定', '版本', '文件', '正在进行'):
             control = page.get_by_role('button', name=name, exact=True)
             control.click()
             expect(control).to_have_attribute('aria-pressed', 'true')
-            colors = control.evaluate('(el)=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor,s.transitionDuration]}')
-            assert colors[0] != colors[1] and colors[2] == '0s'
-            assert control.bounding_box()['height'] >= 44
+            style = visible_button_style(page, name, pressed='true')
+            assert style['color'] != style['background'] and style['transition'] == '0s'
+            assert style['height'] >= 44
             page.screenshot(path=str(page.evidence/f'area-{name}.png'), full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
 
