@@ -9,24 +9,29 @@ from test_visual_styles import result,image_bytes
 pytestmark=pytest.mark.browser
 
 
-def click_visual_trial(page, timeout=25000):
-    """试作动作属于「试作与采用」阶段；确认与恢复会重挂载界面并合上阶段，
-    因此"展开阶段再点"需要可重试——否则点的是被卸载的旧实例。"""
-    import time as _time
+def confirm_visual_spec(page):
+    """Wait for this confirmation's persisted recipe on its returned revision."""
+    import re
     from playwright.sync_api import expect
-    deadline = _time.time() + timeout / 1000
-    last = None
-    while _time.time() < deadline:
-        open_visual_phase(page, 2)
-        trial = page.get_by_role('button', name='预览单页试作', exact=True)
-        try:
-            expect(trial).to_be_enabled(timeout=3000)
-            trial.click(timeout=3000)
-            return
-        except Exception as error:
-            last = error
-            page.wait_for_timeout(250)
-    raise AssertionError(f'试作动作在阶段 3 未就绪：{last}')
+    with page.expect_response(lambda response: response.request.method == 'POST' and
+                              response.url.endswith('/api/styles/confirm')) as response:
+        page.get_by_role('button', name='检查并确认视觉规范', exact=True).click()
+    assert response.value.ok
+    receipt = response.value.json()['operation_result']
+    expect(page).to_have_url(re.compile('revision=' + re.escape(receipt['revision_id'])))
+    expect(page.get_by_label('已确认的截图规范').locator(
+        f'option[value="{receipt["recipe_id"]}"]')).to_be_attached()
+    expect(page.locator('.visual-upload-recovery')).to_be_empty()
+    return receipt
+
+
+def click_visual_trial(page):
+    """Operate only after the restored recipe enables the real trial action."""
+    from playwright.sync_api import expect
+    trial = page.locator('.visual-style').get_by_role('button', name='预览单页试作', exact=True, include_hidden=True)
+    expect(trial).to_be_enabled()
+    open_visual_phase(page, 2)
+    trial.click()
 
 
 def handoff_action(page):
@@ -74,7 +79,7 @@ def test_screenshot_ui_upload_reasoning_confirmation_dispatch_and_restore(flow):
             tasks.accept_result(flow.store,task_id=task['task_id'],operation_id=task['operation_id'],produced_against=task['produced_against'],envelope_raw=result(row['reference_id']))
             page.reload();page.get_by_role('button',name='查看分析结果',exact=True).click();page.get_by_text('调整借用维度',exact=True).click();page.get_by_role('textbox',name='配色规范').wait_for()
             page.get_by_role('textbox',name='配色规范').fill('Use blue #225588 and white')
-            page.get_by_role('button',name='检查并确认视觉规范',exact=True).click()
+            confirm_visual_spec(page)
             # 确认后自动恢复规范并停在"确认规范"；试作动作属于「试作与采用」阶段，
             # 打开该阶段再试作（恢复链路含规范详情与固定依据读取，放宽等待）。
             assert flow.store.load_document()['pages']==before
@@ -191,7 +196,7 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             page.get_by_role('button', name='查看分析结果', exact=True).click()
             page.get_by_text('调整借用维度', exact=True).click()
             page.get_by_role('textbox', name='配色规范', exact=True).fill('Keep edited blue #225588 rules')
-            page.get_by_role('button', name='检查并确认视觉规范', exact=True).click()
+            confirm_visual_spec(page)
             # 确认后自动恢复规范；试作动作属于「试作与采用」阶段，确认会重挂载界面。
             click_visual_trial(page)
             expect(handoff_action(page)).to_be_hidden()
