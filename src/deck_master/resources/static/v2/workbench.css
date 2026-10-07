@@ -344,7 +344,9 @@ textarea{font-size:14px;line-height:1.7}
 .icon-crop-scroll canvas { display:block; max-width:none; }
 .icon-proposal,.icon-recipe { border:1px solid var(--border,#dedede); padding:16px; }
 .candidate-icon-review { padding:16px; }
-.icon-opinions label { display:flex; align-items:flex-start; gap:8px; }
+.icon-opinions label { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:4px 8px; min-height:44px; }
+.icon-opinions label input { grid-row:1 / 3; }
+.icon-opinions label span { grid-column:2; overflow-wrap:anywhere; }
 @media(max-width:800px) { .icon-compare-grid { grid-template-columns:1fr; } .icon-crop-scroll { max-height:320px; } }
 /* WQ: the work leads; evidence follows. */
 .comparison-canvas {min-width:0;width:100%}

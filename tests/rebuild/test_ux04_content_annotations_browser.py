@@ -97,6 +97,10 @@ def test_same_text_body_nodes_are_distinguishable_and_editable_separately(ux04_b
     expect(row.locator('.content-change-label')).to_have_text('正文块 1 · 文字')
     expect(row.locator('.content-change-before')).to_have_text(SAME_TEXT)
     expect(row.locator('.content-change-after')).to_have_text('第一块已改写为新的表述。')
+    page.get_by_label('正文块 2 · 发布检查单 · 条目 1 · 文字').fill('第二块按自己的位置单独改写。')
+    expect(changes).to_contain_text('本次具体改动（2）')
+    expect(changes.locator('.content-change-list li').nth(1).locator('.content-change-before')).to_have_text(SAME_TEXT)
+    expect(changes.locator('.content-change-list li').nth(1).locator('.content-change-after')).to_have_text('第二块按自己的位置单独改写。')
     page.get_by_role('button', name='预览正文修改影响', exact=True).click()
     expect(page.locator('.content-operation')).to_contain_text('本次影响预览')
     expect(page.locator('.content-operation')).to_contain_text('修改 1 页')
@@ -148,6 +152,15 @@ def test_point_overlay_follows_artifact_identity_across_snapshots(ux04_browser, 
     foreign_group.locator('summary').click()
     expect(foreign_group.locator('.saved-opinion').filter(has_text='另一页的意见不叠到本页')).to_be_visible()
     assert page.locator('.annotation-mark.saved').count() == 1
+    changed = copy.deepcopy(store.load_document())
+    changed['pages'][0]['blueprint'] = store.put_json_object({
+        **store.read_object_json(changed['pages'][0]['blueprint']),
+        'limitations': ['Synthetic replacement basis; old locations must not overlay it']})
+    commit(store, changed, str(uuid.uuid4()))
+    page.get_by_role('button', name='制作总览', exact=True).click()
+    goto_page(page, url, identity, 'p01', 'original_image', store.current_revision_id())
+    page.locator('[data-image-state="ready"] canvas:visible').first.wait_for()
+    expect(page.locator('.annotation-mark.saved')).to_have_count(0)
 
 
 def test_outline_block_reaches_its_pages_and_return_keeps_surface(ux04_browser):
@@ -173,3 +186,56 @@ def test_outline_block_reaches_its_pages_and_return_keeps_surface(ux04_browser):
     page.get_by_role('button', name='内容与来源', exact=True).click()
     page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
     expect(page.locator('.outline-block').first).to_be_visible()
+
+
+@pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+def test_icon_opinions_distinguish_same_text_layers_and_old_basis(ux04_browser, width, height):
+    from playwright.sync_api import expect
+    page, server, path, store = ux04_browser
+    page.set_viewport_size({'width': width, 'height': height})
+    doc = copy.deepcopy(store.load_document()); entry = doc['pages'][0]
+    artifact = {**store.read_object_json(entry['blueprint']), 'role': 'svg', 'media_type': 'image/svg+xml',
+                'file': store.put_blob(b'<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><rect width="960" height="540" fill="white"/></svg>', ext='svg')}
+    entry['svg'] = store.put_json_object(artifact)
+    commit(store, doc, str(uuid.uuid4()))
+    doc = store.load_document(); entry = doc['pages'][0]
+    base = {'schema_version': 'annotation.v1', 'project_id': doc['project_id'],
+            'base_revision': doc['revision_id'], 'scope': 'artifact', 'page_id': 'p01',
+            'page_ref': entry['page'], 'intent': 'clarify', 'body': '相同的图标意见', 'status': 'open'}
+    old = {**base, 'layer': 'original_image', 'artifact_ref': entry['blueprint'],
+           'location': {'kind': 'point', 'canvas': {'width': 960, 'height': 540}, 'x': 0.2, 'y': 0.3}}
+    svg = {**base, 'layer': 'svg', 'artifact_ref': entry['svg'],
+           'location': {'kind': 'rect', 'canvas': {'width': 960, 'height': 540}, 'x': 0.3, 'y': 0.4, 'width': 0.1, 'height': 0.2}}
+    annotation_service.save(path, input={'schema_version': 'annotation_batch.v1', 'project_id': doc['project_id'], 'annotations': [old, svg]},
+                            base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+    doc = copy.deepcopy(store.load_document())
+    artifact = {**store.read_object_json(entry['blueprint']), 'limitations': ['Synthetic changed original basis for identity acceptance']}
+    doc['pages'][0]['blueprint'] = store.put_json_object(artifact)
+    commit(store, doc, str(uuid.uuid4()))
+    doc = store.load_document()
+    current = {**old, 'base_revision': doc['revision_id'], 'artifact_ref': doc['pages'][0]['blueprint'], 'location': {'kind': 'whole'}}
+    annotation_service.save(path, input={'schema_version': 'annotation_batch.v1', 'project_id': doc['project_id'], 'annotations': [current]},
+                            base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+    records = annotation_service.list_annotations(path)['annotations']
+    old_record = next(row for row in records if row['annotation'].get('artifact_ref') == old['artifact_ref'])
+    old_ref = old_record['ref']
+    url = server.start(); page.goto(url)
+    identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
+    goto_page(page, url, identity, 'p01', 'svg', store.current_revision_id())
+    labels = page.locator('.icon-opinions label')
+    expect(labels).to_have_count(3)
+    stale = labels.filter(has_text='旧底稿意见 · 需重新定位')
+    expect(stale).to_have_count(1)
+    expect(stale).to_contain_text('原图 · 点位 20% / 30%')
+    expect(labels.filter(has_text='SVG · 框选')).to_contain_text('与当前产物一致')
+    expect(labels.filter(has_text='原图 · 整图文字定位')).to_contain_text('与当前产物一致')
+    stale.locator('input').check()
+    page.evaluate("() => {window.iconCopy=null;Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.iconCopy=text;}}});}")
+    page.get_by_role('button', name='复制给 Agent 的图标要求', exact=True).click()
+    expect(page.locator('.icon-workbench [role=status]')).to_contain_text('图标要求已复制')
+    payload = page.evaluate('JSON.parse(window.iconCopy)')
+    assert payload['annotation_refs'] == [old_ref] and payload['opinions'] == [old_record['annotation']]
+    output = Path('output/playwright/pr103-complete/icon-identities'); output.mkdir(parents=True, exist_ok=True)
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    assert all(label.bounding_box()['height'] >= 44 for label in labels.all())
+    page.screenshot(path=str(output/f'same-text-three-bases-{width}.png'), full_page=True)

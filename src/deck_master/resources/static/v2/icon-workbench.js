@@ -79,7 +79,7 @@ export function iconWorkbench(app,data){
     await app.business.submit(app.editor,'changes.commit',{plan_id:value.plan_id,base_revision:value.plan.base_revision},{plan_id:value.plan_id,plan:value.plan},r=>app.go({surface:'runs',revision:r.revision_id,task_id:r.task_ids[0]}));
   }catch(error){status.textContent=readableError(error);}finally{busy=false;}}
   async function refresh(){++serial;plan=null;try{
-    const [listing,notes,cat]=await Promise.all([get('/api/icons/list?'+new URLSearchParams({include_stale:'true',...(app.historical?{revision:data.revision_id}:{})})),get('/api/annotations'),get('/api/icons/catalog')]);if(disposed)return;
+    const [listing,notes,cat]=await Promise.all([get('/api/icons/list?'+new URLSearchParams({include_stale:'true',...(app.historical?{revision:data.revision_id}:{})})),get('/api/annotations'+(app.historical?'?'+new URLSearchParams({revision:data.revision_id}):'')),get('/api/icons/catalog')]);if(disposed)return;
     asset.replaceChildren(...cat.icons.map(v=>el('option',{value:v.id},v.label)));
     if(listing.samples_unavailable)status.textContent='已采用样例的依据暂不可读取，请核实原记录；原选择与意见保留。';
     samples=listing.samples||[];sample.replaceChildren(el('option',{value:''},'请选择已采用样例'),...samples.map(v=>el('option',{value:sampleKey(v)},`${v.page_id} · ${v.label} · ${v.semantic_key}`)));
@@ -88,7 +88,12 @@ export function iconWorkbench(app,data){
     opinions.replaceChildren(...notes.annotations.filter(n=>n.annotation.page_id===data.page_id&&['svg','ppt','original_image'].includes(n.annotation.layer)).map(n=>{
       const checked=selected.has(n.ref.sha256)||saved?.annotation_refs?.some(r=>canonical(r)===canonical(n.ref));if(checked)selected.set(n.ref.sha256,n);
       const box=el('input',{type:'checkbox',checked});box.addEventListener('change',()=>{if(box.checked)selected.set(n.ref.sha256,n);else selected.delete(n.ref.sha256);persist();});
-      return el('label',{},box,n.annotation.body);
+      const note=n.annotation, stage={original_image:'blueprint',svg:'svg',ppt:'ppt_preview'}[note.layer];
+      const same=canonical(note.page_ref)===canonical(data.stages.content.ref)&&canonical(note.artifact_ref)===canonical(data.stages[stage]?.ref);
+      const loc=note.location, pct=value=>Math.round(value*100)+'%';
+      const position=loc.kind==='point'?`点位 ${pct(loc.x)} / ${pct(loc.y)}`:loc.kind==='rect'?`框选 ${pct(loc.x)} / ${pct(loc.y)} · ${pct(loc.width)} × ${pct(loc.height)}`:'整图文字定位';
+      return el('label',{class:'icon-opinion'},box,el('span',{},note.body),
+        el('span',{class:'muted'},`${{original_image:'原图',svg:'SVG',ppt:'PPT'}[note.layer]} · ${position} · ${same?'与当前产物一致':'旧底稿意见 · 需重新定位'} · 底稿 ${(note.artifact_ref?.sha256||'未记录').slice(0,8)} · ${version(note.base_revision)}`));
     }));
     const relevant=listing.proposals.filter(v=>v.proposal.input.targets.some(t=>t.page_id===data.page_id));
     proposals.replaceChildren(el('h3',{},'Agent 提出的范围'),...relevant.map(v=>el('article',{class:'stack icon-proposal'},
