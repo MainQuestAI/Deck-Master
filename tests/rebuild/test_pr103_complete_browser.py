@@ -505,3 +505,26 @@ def test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports(t
             assert control.bounding_box()['height'] >= 44
             page.screenshot(path=str(page.evidence/f'area-{name}.png'), full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+
+
+@pytest.mark.parametrize('width,height', [(1440,900), (1280,800)])
+def test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct_empty_state(tmp_path, width, height):
+    from playwright.sync_api import expect
+    flow = Flow(tmp_path)
+    doc = flow.store.load_document()
+    doc['pages'][1]['blueprint'] = None
+    commit(flow.store, doc, str(uuid.uuid4()))
+    task = flow.dispatch('p02', instruction='仅制作第一份原图，保留正文')
+    candidate = flow.image(task)['candidate_ids'][0]
+    with browser_for(flow.project) as (page, _):
+        page.set_viewport_size({'width':width,'height':height})
+        page.get_by_role('button', name='任务与交付', exact=True).click()
+        page.get_by_role('button', name='待决定', exact=True).click()
+        page.locator(f'.candidate-batch [data-candidate-id="{candidate}"]').get_by_role('button', name='比较这个候选', exact=True).click()
+        expect(page.locator('.candidate-column[data-side=candidate] .pooled-image')).to_have_attribute('data-image-state','ready')
+        current=page.locator('.candidate-column[data-side=current]')
+        expect(current).not_to_contain_text('实际 PPT')
+        viewport=page.locator('.candidate-column[data-side=candidate] .comparison-viewport')
+        footer=page.locator('.candidate-decisions')
+        assert viewport.bounding_box()['y']+viewport.bounding_box()['height'] <= footer.bounding_box()['y']+1
+        page.screenshot(path=str(page.evidence/'fit-above-actions.png'),full_page=True)

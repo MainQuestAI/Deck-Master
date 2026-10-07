@@ -7,6 +7,8 @@
 .comparison-viewport canvas {flex:none;object-fit:contain;max-width:none;max-height:none}
 .canvas-tools {flex-wrap:wrap}
 .canvas-tools output {min-width:6ch;font-variant-numeric:tabular-nums}
+.candidate-desk>.page-head {padding-bottom:12px}
+.candidate-desk>.toolbar,.candidate-desk .canvas-tools {margin:10px 0}
 .comparison-preview-tools {display:flex;flex-wrap:wrap;align-items:center;gap:12px}
 .comparison-preview-tools p {margin:0}
 .candidate-desk:fullscreen {box-sizing:border-box;background:#fff;padding:16px;display:flex;flex-direction:column;height:100vh;overflow:hidden;gap:8px}

@@ -12,6 +12,15 @@ export function comparisonCanvas(app, panels, {fullscreenTarget = null} = {}) {
   const pair=el('div',{class:'comparison-pair'}),status=el('output',{'aria-live':'polite'});
   const sync=el('input',{type:'checkbox',checked:true,'aria-label':'同步缩放和平移'});
   const views=[];let active=0,disposed=false;
+  function fitWorkspace(){
+    if(disposed||!node.isConnected||!fullscreenTarget?.classList.contains('candidate-desk'))return;
+    const desktop=innerWidth>=768&&!document.fullscreenElement;
+    const reserve=(fullscreenTarget.querySelector('.candidate-decisions')?.offsetHeight||44)+24;
+    for(const item of views){
+      const height=desktop?`${Math.max(180,innerHeight-item.viewport.getBoundingClientRect().top-reserve)}px`:'';
+      if(item.viewport.style.height!==height)item.viewport.style.height=height;
+    }
+  }
   const dimension=(item,axis)=>((axis==='x'?item.canvas?.width:item.canvas?.height)||0)*item.scale;
   const frame=(item,axis)=>axis==='x'?item.viewport.clientWidth:item.viewport.clientHeight;
   const padding=(item,axis)=>Math.max(0,frame(item,axis)-dimension(item,axis))/2;
@@ -36,7 +45,7 @@ export function comparisonCanvas(app, panels, {fullscreenTarget = null} = {}) {
     try{if(document.fullscreenElement)await document.exitFullscreen();else await(fullscreenTarget||node).requestFullscreen();}
     catch{status.textContent='当前窗口不支持全屏，可使用100%与局部滚动。';}
   });
-  const fullscreenChanged=()=>{fullscreen.textContent=document.fullscreenElement?'退出全屏':'全屏比较';views.forEach(v=>redraw(v));};
+  const fullscreenChanged=()=>{fullscreen.textContent=document.fullscreenElement?'退出全屏':'全屏比较';fitWorkspace();views.forEach(v=>redraw(v));};
   document.addEventListener('fullscreenchange',fullscreenChanged);
   const controls=el('div',{class:'toolbar canvas-tools'},button('适应窗口',()=>changeZoom('fit')),button('100%',()=>changeZoom(1)),
     button('缩小',()=>changeZoom(views[active].scale/1.25)),button('放大',()=>changeZoom(views[active].scale*1.25)),status,
@@ -64,8 +73,10 @@ export function comparisonCanvas(app, panels, {fullscreenTarget = null} = {}) {
     viewport.addEventListener('keydown',event=>{if(event.ctrlKey||event.metaKey)return;if(event.key==='+'||event.key==='='){event.preventDefault();changeZoom(item.scale*1.25);}else if(event.key==='-'){event.preventDefault();changeZoom(item.scale/1.25);}else if(event.key==='0'){event.preventDefault();changeZoom('fit');}});
     column.append(viewport);pair.append(column);
   });
-  const resize=new ResizeObserver(()=>{if(!disposed){views.forEach(v=>{if(v.mode==='fit')redraw(v);});describe();}});views.forEach(v=>resize.observe(v.viewport));
+  const resize=new ResizeObserver(()=>{if(!disposed){fitWorkspace();views.forEach(v=>{if(v.mode==='fit')redraw(v);});describe();}});views.forEach(v=>resize.observe(v.viewport));
+  if(fullscreenTarget)resize.observe(fullscreenTarget);
+  addEventListener('resize',fitWorkspace);
   node.append(controls,pair);describe();
-  return {node,dispose(){disposed=true;resize.disconnect();document.removeEventListener('fullscreenchange',fullscreenChanged);views.forEach(v=>v.dispose?.());
+  return {node,dispose(){disposed=true;resize.disconnect();removeEventListener('resize',fitWorkspace);document.removeEventListener('fullscreenchange',fullscreenChanged);views.forEach(v=>v.dispose?.());
     if(document.fullscreenElement===node||(fullscreenTarget&&document.fullscreenElement===fullscreenTarget))document.exitFullscreen().catch(()=>{});}};
 }
