@@ -530,6 +530,11 @@ def test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct
         footer=page.locator('.candidate-decisions')
         assert viewport.bounding_box()['y']+viewport.bounding_box()['height'] <= footer.bounding_box()['y']+1
         page.screenshot(path=str(page.evidence/'fit-above-actions.png'),full_page=True)
+        page.get_by_role('button', name='预览采用这个候选', exact=True).click()
+        page.get_by_role('button', name='采用这个候选', exact=True).click()
+        expect(page.locator('.candidate-state')).to_contain_text('当前采用')
+        expect(current).not_to_contain_text('待决定')
+        expect(current).not_to_contain_text('右侧')
 
 
 def test_uploaded_result_finishes_recovery_after_late_draft_verification(tmp_path):

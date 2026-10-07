@@ -138,7 +138,7 @@ export function candidateDesk(app, data) {
     const previewFile=preview?.status==='ready'?preview.files?.['candidate.png']?.file:null;
     const candidatePpt=previewFile?{file:{...previewFile,...(preview.check_id?{check_id:preview.check_id}:{})}}:null;
     const canvas = comparisonCanvas(app,[
-      {stage:ppt?currentPpt:leftStage,label,caption:ppt?'固定版本 · 实际 PPT':'固定版本 · '+stageName(selected.candidate.stage),missing:ppt?'此固定版本没有有效的实际 PPT 预览；可更新当前整稿并重新预览采用目标。':`此固定版本尚无${stageName(selected.candidate.stage)}；右侧是待决定的候选，采用前不会替换当前稿。`,attributes:{'data-side':'current','data-revision':leftRevision}},
+      {stage:ppt?currentPpt:leftStage,label,caption:ppt?'固定版本 · 实际 PPT':'固定版本 · '+stageName(selected.candidate.stage),missing:ppt?'此固定版本没有有效的实际 PPT 预览；可更新当前整稿并重新预览采用目标。':`此固定版本尚无${stageName(selected.candidate.stage)}；所选候选单独展示，采用状态见上方说明。`,attributes:{'data-side':'current','data-revision':leftRevision}},
       {stage:ppt?candidatePpt:selected.artifact,label:'所选候选',caption:ppt?'实际 PPT 渲染':stageName(selected.candidate.stage),missing:previewDescription(preview||{status:'not_requested'}),attributes:{'data-side':'candidate','data-candidate-id':selected.candidate_id}}
     ],{fullscreenTarget:root});
     releases.push(()=>canvas.dispose());columns.replaceChildren(canvas.node);
