@@ -382,6 +382,9 @@ textarea{font-size:14px;line-height:1.7}
 .visual-reference-choice canvas {max-height:90px;object-fit:contain}
 .visual-rule {display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--border,#e5e5e5)}
 .visual-rule details {grid-column:2}
-.visual-rules>details .pooled-image {max-height:320px}
-.visual-rules>details canvas {max-height:320px;object-fit:contain}
+.visual-breakdown .pooled-image {height:min(320px,40vh);max-height:320px;aspect-ratio:auto}
+.visual-breakdown canvas {height:100%;max-height:320px;width:100%;object-fit:contain}
+.visual-breakdown-full {max-height:65vh;overflow:auto}
+.visual-breakdown-full .pooled-image {aspect-ratio:auto}
+.visual-breakdown-full canvas {width:auto;max-width:none;height:auto;max-height:none}
 @media(max-width:767px){.style-working-pair{grid-template-columns:1fr}.visual-reference-list{grid-template-columns:repeat(2,minmax(0,1fr))}.visual-rule{grid-template-columns:1fr}.visual-rule details{grid-column:1}}

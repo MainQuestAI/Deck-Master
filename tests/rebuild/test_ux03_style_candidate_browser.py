@@ -364,3 +364,36 @@ def test_expansion_plan_carries_adopted_sample_and_explains_core_rejection(ux03_
     assert plan_posts, '扩展计划请求应已发出'
     sent = plan_posts[-1]['input']
     assert sent['adopted_candidate_id'] == 'candidate-0000000000000001' and sent['page_ids'] == ['p03']
+
+
+@pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, width, height):
+    from playwright.sync_api import expect
+    page, server, path, store = ux03_browser
+    page.set_viewport_size({'width': width, 'height': height})
+    detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+    install_style_mocks(page, recipes=[detail], detail=detail)
+    page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+    page.goto(server.start())
+    page.get_by_role('button', name='风格校准', exact=True).click()
+    page.get_by_label('风格参考来源').select_option('screenshot')
+    page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+    page.get_by_label('已确认的截图规范').select_option(index=1)
+    expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+    canvas = page.locator('.visual-breakdown canvas')
+    expect(canvas).to_be_visible()
+    assert canvas.bounding_box()['height'] <= 320
+    expect(page.locator('.visual-keep-summary')).to_be_visible()
+    open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+    open_full.focus(); page.keyboard.press('Enter')
+    dialog = page.get_by_role('dialog')
+    expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+    assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+    page.keyboard.press('Escape'); expect(dialog).not_to_be_visible(); expect(open_full).to_be_focused()
+    # Decoded images remain in the bounded cache; closing must release the live lease.
+    pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(entry => entry.kind==='large').reduce((sum,entry)=>sum+entry.pins,0)")
+    assert pins == 0
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    evidence = Path('output/playwright/pr103-complete/breakdown'); evidence.mkdir(parents=True, exist_ok=True)
+    page.locator('.visual-breakdown').scroll_into_view_if_needed()
+    page.screenshot(path=str(evidence/f'summary-{width}.png'))

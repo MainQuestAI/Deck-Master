@@ -25,6 +25,7 @@ def main():
                          str(repo / 'tests/rebuild/test_pr103_repair_browser.py'),
                          str(repo / 'tests/rebuild/test_pr103_complete_browser.py'),
                          str(repo / 'tests/rebuild/test_ux04_content_annotations_browser.py'),
+                         str(repo / 'tests/rebuild/test_ux03_style_candidate_browser.py'),
                          str(repo / 'tests/rebuild/test_ux08_task_walkthrough_browser.py'), '--require-browser'])
     modules = {name: str(Path(module.__file__).resolve()) for name, module in sys.modules.items()
                if (name == 'deck_master' or name.startswith('deck_master.')) and getattr(module, '__file__', None)}

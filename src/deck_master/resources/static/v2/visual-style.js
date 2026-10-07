@@ -1,5 +1,5 @@
 import {get, post, postBinary, digest, fileURL, readableError, canonical} from './api.js';
-import {el, button, copyText} from './dom.js';
+import {el, button, copyText, modal} from './dom.js';
 import {imageView} from './images.js';
 import {stylePhases} from './style-phases.js';
 import {candidateCards} from './candidate-cards.js';
@@ -249,7 +249,12 @@ export function visualStyle(app){
   }
   function renderSpec(){specLeases.splice(0).forEach(v=>v.dispose());rules.replaceChildren();choices.clear();const view=imageView(app,{file:spec.breakdown},'截图视觉规范拆解图');specLeases.push(view);
     // §4.3：拆解图在规范核对阶段直接可见并可完整查看（不再默认折叠）。
-    rules.append(el('div',{class:'visual-breakdown'},el('h3',{},'截图拆解图'),view.node));
+    const full = button('查看完整拆解图',()=>{
+      const image=imageView(app,{file:spec.breakdown},'完整截图拆解图',{kind:'large'});
+      const dialog=modal('完整截图拆解图',el('div',{class:'visual-breakdown-full',tabindex:0},image.node));
+      dialog.addEventListener('close',()=>image.dispose(),{once:true});app.disposables.push(()=>image.dispose());
+    });
+    rules.append(el('div',{class:'visual-breakdown'},el('div',{class:'row wrap'},el('h3',{},'截图拆解图'),full),view.node));
     // 规范先显示借用/保留摘要；点击"调整借用维度"才出现对应编辑器。
     const borrowed=()=>state.spec_edits?.ref===spec.ref.sha256 ? Object.keys(state.spec_edits.dimensions) : ['palette','typography'];
     const summaryNode=el('p',{class:'muted visual-keep-summary'});

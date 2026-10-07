@@ -259,6 +259,8 @@ def test_style_ui_trial_adoption_and_successful_expansion(tmp_path, source):
         page.get_by_role('button', name='查看当前版本', exact=True).click()
         page.get_by_role('button', name='待决定', exact=True).click()
         page.locator(f'.candidate-batch [data-candidate-id="{expanded_candidate}"]').get_by_role('button', name='比较这个候选', exact=True).click()
+        expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', expanded_candidate)
+        expect(page.locator('.comparison-viewport canvas').last).to_be_visible()
         page.screenshot(path=str(page.evidence / 'expansion-compare.png'), full_page=True)
         page.get_by_role('button', name='预览采用这个候选', exact=True).click()
         page.get_by_role('button', name='采用这个候选', exact=True).click()
