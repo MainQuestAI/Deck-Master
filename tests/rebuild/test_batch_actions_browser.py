@@ -110,8 +110,13 @@ def test_explicit_budget_exact_plan_and_duplicate_click_create_one_batch(batch_b
     assert doc['pages'] == before['pages']
     assert all(not task.get('generation_attempts') for task in tasks)
     page.get_by_role('button', name='查看本次交接', exact=True).click()
-    page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
-    assert 'task=' not in page.url
+    page.get_by_role('heading', name='当前任务', exact=True).wait_for()
+    assert f"task={tasks[0]['task_id']}" in page.url
+    expect(page.locator('.task-handoff')).to_contain_text('本次交接包含 2 项任务')
+    expect(page.get_by_role('button', name='复制交接说明', exact=True)).to_be_enabled()
+    page.get_by_text('完整交接说明与涉及页面', exact=True).click()
+    for task in tasks:
+        assert task['task_id'] in page.get_by_label('本任务完整交接说明').input_value()
 
 
 def test_lost_commit_response_verify_original_receipt_reload_never_redispatches(batch_browser):

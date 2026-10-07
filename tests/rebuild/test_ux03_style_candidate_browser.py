@@ -75,6 +75,7 @@ def test_same_name_saved_recipes_and_groups_are_distinguishable_before_selection
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
+    page.get_by_text('其它修改组的交接', exact=True).click()
     panel = page.locator('.change-handoffs')
     buttons = panel.locator('.change-list button')
     expect(buttons).to_have_count(2)
