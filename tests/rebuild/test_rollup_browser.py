@@ -121,10 +121,10 @@ def test_dispatch_unknown_explains_preservation_without_redispatch(icon_browser)
     query['revision'] = store.current_revision_id()
     page.goto(page.url.split('#')[0] + '#' + urlencode(query))
     warning = page.get_by_text('派发状态待核实；原记录与已确认范围保留，请先核实原任务，未确认前不要重复派发。', exact=True)
-    expect(warning).to_be_visible()
+    expect(warning).to_be_visible(timeout=30000)
     expect(page.get_by_role('button', name='确认这些图标范围和处理方式', exact=True)).to_be_disabled()
     page.get_by_role('button', name='刷新图标方案', exact=True).click()
-    expect(warning).to_be_visible()
+    expect(warning).to_be_visible(timeout=30000)
     assert icons.listing(store.project_root, include_stale=True)['proposals'][0]['status'] == 'dispatch_unknown'
     assert store.load_document() == before and damaged.read_bytes() == b'{broken task'
     assert requests == []

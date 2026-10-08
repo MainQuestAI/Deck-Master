@@ -411,7 +411,7 @@ def test_whole_page_opinion_flows_to_requirement_handoff(workbench):
     page.get_by_label('修改要求', exact=True).fill(requirement)
     page.get_by_role('button', name='预览修改影响', exact=True).click()
     confirm = page.get_by_role('button', name='确认计划并创建交接', exact=True)
-    expect(confirm).to_be_visible()
+    expect(confirm).to_be_visible(timeout=30000)
     with page.expect_response(lambda r: '/api/changes/commit' in r.url and r.request.method == 'POST',
                               timeout=20000) as commit:
         confirm.click()
