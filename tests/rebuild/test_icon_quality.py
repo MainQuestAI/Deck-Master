@@ -344,3 +344,15 @@ def test_icon_listing_isolates_unreadable_dispatch(icon_store,monkeypatch):
     monkeypatch.setattr(icons.Store,'read_object_json',damaged)
     listing=icons.listing(icon_store.project_root,include_stale=True)
     assert listing['proposals'][0]['status']=='dispatch_unknown'
+
+
+def test_catalog_asset_bytes_serve_packaged_whitelist_only():
+    """P03b:catalog/file 内部读取=manifest 白名单;换 sha/未知 id/路径形 id 一律结构化拒绝。"""
+    cat=icons.catalog();one=cat['icons'][0]
+    assert icons.catalog_asset_bytes(one['id'],one['sha256'])==(icons.CATALOG/(one['id']+'.svg')).read_bytes()
+    other=next(v for v in cat['icons'] if v['id']!=one['id'])
+    for asset_id,sha in [(one['id'],other['sha256']),('absent-icon',one['sha256']),
+                         ('../blueprint',one['sha256']),(one['id']+',evil',one['sha256']),
+                         (one['id'].upper(),one['sha256']),(one['id'],'deadbeef'),(None,None)]:
+        with pytest.raises(OperationError):
+            icons.catalog_asset_bytes(asset_id,sha)

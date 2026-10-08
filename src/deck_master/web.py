@@ -328,7 +328,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_error(exc)
             return
-        if parsed.path in ('/api/icons/inspect', '/api/icons/catalog', '/api/icons/list', '/api/candidate-preview/status', '/api/candidate-preview/file'):
+        if parsed.path in ('/api/icons/inspect', '/api/icons/catalog', '/api/icons/list', '/api/icons/catalog/file', '/api/candidate-preview/status', '/api/candidate-preview/file'):
             try:
                 from . import icons, candidate_preview
                 query = parse_qs(parsed.query)
@@ -337,6 +337,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 if parsed.path == '/api/candidate-preview/file':
                     data, media = candidate_preview.file_bytes(self.store.project_root, **fields)
                     self._send_bytes(data, media)
+                elif parsed.path == '/api/icons/catalog/file':
+                    self._send_bytes(icons.catalog_asset_bytes(fields.get('asset_id'), fields.get('sha256')), 'image/svg+xml', immutable=True)
                 else:
                     action = {'/api/icons/inspect':icons.inspect, '/api/icons/catalog':icons.catalog, '/api/icons/list':icons.listing, '/api/candidate-preview/status':candidate_preview.status}[parsed.path]
                     self._send_json(action(self.store.project_root, **fields))

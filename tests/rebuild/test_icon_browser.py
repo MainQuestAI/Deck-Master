@@ -211,3 +211,83 @@ def test_icon_opinion_scope_and_basis_rows(icon_browser):
     assert payload['annotation_refs']==[page_record['ref']]
     assert payload['opinions'][0]['body']=='整页意见正文样例。'
     assert 'layer' not in payload['opinions'][0] and 'artifact_ref' not in payload['opinions'][0]
+
+
+def test_catalog_file_endpoint_serves_whitelisted_bytes_and_rejects_bogus(icon_browser):
+    """P03b:GET /api/icons/catalog/file 只送出 manifest 白名单字节;非法/重复参数结构化拒绝。"""
+    from playwright.sync_api import expect
+    page,_,_=icon_browser
+    base=page.url.split('#')[0]
+    cat=icons.catalog();one=cat['icons'][0]
+    resp=page.request.get(base+'api/icons/catalog/file?'+urlencode({'asset_id':one['id'],'sha256':one['sha256']}))
+    assert resp.status==200 and resp.headers['content-type']=='image/svg+xml'
+    assert resp.headers['content-security-policy'].startswith('sandbox')
+    assert resp.body()==(icons.CATALOG/(one['id']+'.svg')).read_bytes()
+    queries=[
+        base+'api/icons/catalog/file?asset_id='+one['id'],
+        base+'api/icons/catalog/file?sha256='+one['sha256'],
+        base+'api/icons/catalog/file?'+urlencode({'asset_id':'absent-icon','sha256':one['sha256']}),
+        base+'api/icons/catalog/file?'+urlencode({'asset_id':'../../etc/passwd','sha256':one['sha256']}),
+        base+'api/icons/catalog/file?'+urlencode({'asset_id':one['id'],'sha256':'a'*64}),
+    ]
+    for url in queries:
+        bad=page.request.get(url)
+        assert bad.status==422,(url,bad.status)
+        assert bad.json()['error']['code']=='icon_invalid'
+        expect(page.locator('body')).to_be_visible()
+    bad=page.request.get(base+'api/icons/catalog/file?asset_id='+one['id']+'&asset_id='+one['id']+'&sha256='+one['sha256'])
+    assert bad.status==400,bad.status
+
+
+def test_catalog_zone_fails_independently_and_retries_without_first_item_default(icon_browser):
+    """P03b/D3-A:目录读取失败只阻断标准替换;意见/方案不受影响;重试后不默认第一项。"""
+    from playwright.sync_api import expect
+    page,_,_=icon_browser
+    page.route('**/api/icons/catalog',lambda route:route.abort())
+    page.get_by_role('button',name='刷新图标方案',exact=True).click()
+    asset=page.get_by_label('建议的标准图标')
+    expect(asset).to_be_disabled(timeout=20000)
+    assert page.locator('select[aria-label="图标处理方式"] option[value=standard]').evaluate('(o) => o.disabled')
+    expect(page.get_by_text('标准目录读取未完成',exact=False)).to_be_visible()
+    expect(page.get_by_text('已保存意见读取未完成',exact=False)).to_have_count(0)
+    expect(page.get_by_text('图标方案与样例读取未完成',exact=False)).to_have_count(0)
+    page.unroute('**/api/icons/catalog')
+    asset_new=page.get_by_label('建议的标准图标')
+    page.get_by_role('button',name='重新读取标准目录',exact=True).click()
+    expect(asset_new.locator('option').first).to_have_text('请选择标准图标',timeout=20000)
+    assert asset_new.input_value()==''
+    expect(asset_new).to_be_enabled()
+
+
+def test_layer_switch_entry_requires_saved_local_draft(icon_browser):
+    """P03b/D8-A:内容层点「打开SVG层处理图标」先等真实保存;409 则暂停换层,解决后用户再点。"""
+    from playwright.sync_api import expect
+    page,store,_=icon_browser
+    base=page.url.split('#')[0]
+    identity=page.request.get(base+'api/project').json()['project_identity']
+    page.evaluate("args => {location.hash = new URLSearchParams(args)}",
+        {'project':identity,'surface':'page','page':'p01','layer':'content','revision':store.current_revision_id()})
+    # 先在意见面(默认面)制造 dirty 草稿,再切到图标面走换层门控。
+    body=page.get_by_label('意见正文',exact=True)
+    expect(body).to_be_visible(timeout=15000)
+    body.fill('换层门控测试意见')
+    page.route('**/api/drafts/save',lambda route:route.fulfill(status=409,
+        json={'error':{'code':'local_state_conflict','message':'held for gate test'}}))
+    page.get_by_role('button',name='图标优化',exact=True).click()
+    entry=page.get_by_role('button',name='打开SVG层处理图标',exact=True)
+    expect(entry).to_be_visible()
+    entry.click()
+    expect(page.locator('.icon-workbench .field-error').last).to_contain_text('暂停换层',timeout=20000)
+    assert 'layer=content' in page.url
+    expect(page.locator('.page-tools-anomalies .tool-anomaly-chip')).to_be_visible()
+    # 冲突暂停后:经笔记面「比较两份草稿→另存为个人草稿」真实解决,由用户再次点击换层。
+    page.unroute('**/api/drafts/save')
+    page.get_by_role('button',name='笔记',exact=True).click()
+    page.get_by_role('button',name='比较两份草稿',exact=True).click()
+    expect(page.locator('#modal')).to_contain_text('保留两份个人草稿',timeout=20000)
+    page.get_by_role('button',name='另存为个人草稿',exact=True).click()
+    expect(page.locator('.draft-state').first).to_contain_text('已保存到项目',timeout=20000)
+    page.get_by_role('button',name='图标优化',exact=True).click()
+    entry.click()
+    expect(page.locator('.page-tools')).to_be_visible(timeout=20000)
+    assert 'layer=svg' in page.url

@@ -33,8 +33,40 @@ export function iconComparison(app, columns, {highlight = true} = {}) {
 
 export const sampleKey = sample => JSON.stringify([sample.sample_candidate_id,sample.sample_icon_index]);
 
+// D8-A:非 SVG/PPT 图层不再空白。显式换层前先确认原层草稿已保存(persist≠save):
+// dirty/error 先走真实保存;conflict/unknown/saving 悬停换层,由共享异常条或笔记面
+// 定位该保存操作,解决后由用户再次点击;失败路径既不自动重试,也不重建请求绕过。
+// 换层走现有 loadRoute(app.go);原层草稿与 icon_ui 留在原 target/base_ref,SVG 层
+// 从空草稿开始,由用户显式重选同一正式 page 意见 ref。
+function iconSwitchEntry(app,data){
+  const labels={loading:'正在读取个人草稿…',dirty:'尚未保存到项目',saving:'保存请求仍在进行',
+    unknown:'保存结果待核实',conflict:'保存冲突待比较',error:'上次保存未完成'};
+  const state=el('p',{class:'muted'}), message=el('p',{class:'field-error'});
+  function toSvg(){app.go({layer:'svg',page_id:data.page_id,revision:data.revision_id});}
+  return el('section',{class:'panel icon-workbench','aria-label':'优化图标'},
+    el('h2',{},'优化图标'),
+    el('p',{class:'muted'},'图标定位与重构在 SVG 图层（PPT 图层为实际检查）上进行；当前阅读层没有可直接编辑的图标规则。两层草稿各自独立，已保存意见照常阅读，换层不会丢失。'),
+    message,button('打开SVG层处理图标',async()=>{
+      const editor=app.editor;
+      if(editor&&!editor.readonly){
+        if(['dirty','error'].includes(editor.status)){
+          state.textContent='先确认原层草稿保存…';message.textContent='';
+          try{await editor.save();}catch(error){}
+        }
+        const after=editor.status;
+        if(!['saved','empty'].includes(after)){
+          state.textContent='';
+          message.textContent='当前层个人草稿'+(labels[after]||after)+'——暂停换层；先在异常条或笔记面解决保存状态，再点一次这里。';
+          return;
+        }
+      }
+      state.textContent='';message.textContent='';
+      toSvg();
+    }),state);
+}
+
 export function iconWorkbench(app,data){
-  if(!['svg','ppt'].includes(app.route.layer))return el('div');
+  if(!['svg','ppt'].includes(app.route.layer))return iconSwitchEntry(app,data);
   if(!app.business||!app.health.ui_capabilities?.includes('icon_quality.v1'))
     return el('section',{class:'panel icon-workbench','aria-label':'优化图标'},
       el('h2',{},'优化图标'),
@@ -44,7 +76,14 @@ export function iconWorkbench(app,data){
   const status=el('p',{role:'status'}), proposals=el('div',{class:'stack'}), recipes=el('div',{class:'stack'});
   const method=el('select',{'aria-label':'图标处理方式'},el('option',{value:'redraw'},'忠实原图精细重绘'),el('option',{value:'standard'},'提出标准图标替换'),el('option',{value:'reuse'},'应用已采用样例到其它页'));
   const asset=el('select',{'aria-label':'建议的标准图标'}), sample=el('select',{'aria-label':'已采用图标样例'}), opinions=el('div',{class:'icon-opinions stack'});
-  const selected=new Map();let disposed=false,busy=false,plan=null,samples=[],serial=0;const dialogs=[];
+  // D3-A:正式意见 / 方案样例 / 标准目录各自独立读取、独立呈现加载/空/失败/成功状态;
+  // 一个区读取失败不再掩盖其它区,重试只重发各自失败的读取,不重放任何业务写。
+  const notesState=el('p',{class:'muted'}), notesRetry=button('重新读取已保存意见',()=>loadNotes(),false,{hidden:true});
+  const listingState=el('p',{class:'muted'}), listingRetry=button('重新读取图标方案',()=>loadListing(),false,{hidden:true});
+  const assetPreview=el('div',{class:'icon-catalog-preview-slot'});
+  const catalogState=el('p',{class:'muted'}), catalogRetry=button('重新读取标准目录',()=>loadCatalog(),false,{hidden:true});
+  const selected=new Map();let disposed=false,busy=false,plan=null,samples=[],serial=0,
+    catalogManifest=null,notesSerial=0,listingSerial=0,catalogSerial=0;const dialogs=[];
   // §3.2 精确门槛：SVG 定位与提案需要当前原图和 SVG；缺件时保留意见阅读与已有方案，
   // 只有缺失产物对应的配置与复制入口收起，缺 PPT 预览不拦定位。
   const unavailable=stage=>!stage||stage.existence!=='recorded';
@@ -52,15 +91,18 @@ export function iconWorkbench(app,data){
   const missingDependencys=['原图','SVG 图层'].filter((label,index)=>unavailable([stages.blueprint,stages.svg][index]));
   root.append(el('div',{class:'panel-head'},el('h2',{},'优化图标'),button('刷新图标方案',refresh)),body);
   body.append(el('p',{class:'muted'},'先在画面框选并保存意见，再交给 Agent 定位对象；窄屏没有拖拽框选，可用「整页意见」文字描述图标位置，精确框选请回到桌面宽度打开。查看高亮和处理方式后确认范围，返回候选后再决定采用。'),
-    opinions);
+    opinions,notesState,notesRetry);
   if(missingDependencys.length)body.append(el('p',{class:'field-error'},`图标定位需要本页的 ${missingDependencys.join(' 和 ')}，此刻还未生成或暂不可读。请先完成对应图层的生成再进入定位与要求；已经保存的意见和已有方案仍可阅读。`));
-  else body.append(el('label',{},'处理方式',method),el('label',{},'标准图标建议',asset),el('label',{},'跨页复用样例',sample),
+  else body.append(el('label',{},'处理方式',method),el('label',{},'标准图标建议',asset),assetPreview,catalogState,catalogRetry,
+    el('label',{},'跨页复用样例',sample),
     button('复制给 Agent 的图标要求',handoff));
-  body.append(status,proposals,recipes);
+  body.append(listingState,listingRetry,status,proposals,recipes);
   function persist(){const e=app.editor;if(!e||e.readonly||disposed)return;e.draft.content.icon_ui={method:method.value,asset:asset.value,sample_identity:samples.find(v=>sampleKey(v)===sample.value)||null,annotation_refs:[...selected.values()].map(n=>n.ref)};e.changed();}
-  method.addEventListener('change',persist);asset.addEventListener('change',persist);sample.addEventListener('change',persist);
+  method.addEventListener('change',persist);sample.addEventListener('change',persist);
+  asset.addEventListener('change',()=>{persist();drawAssetPreview();});
   function blocked(){return disposed||busy||app.readonly||app.historical||app.editor?.readonly||!app.editor||app.business.entries.size||app.business.loadWarning;}
   async function handoff(){try{
+    if(method.value==='standard'&&!asset.value)throw new Error('标准目录还未选择建议图标；请先读取目录并从「建议的标准图标」选择一个。');
     if(method.value==='reuse'&&!samples.some(v=>sampleKey(v)===sample.value))throw new Error('原样例已失效或旧草稿仅有序号，请重新选择已采用样例。');
     const chosen=[...selected.values()];if(!chosen.length)throw new Error('请先框选、保存意见并在这里选入。');persist();await app.editor.save();
     const payload={project_id:app.info.project_id,base_revision:data.revision_id,page_id:data.page_id,annotation_refs:chosen.map(v=>v.ref),
@@ -91,56 +133,102 @@ export function iconWorkbench(app,data){
   async function commit(value,token){if(blocked()||plan!==value||token!==serial)return;busy=true;try{
     await app.business.submit(app.editor,'changes.commit',{plan_id:value.plan_id,base_revision:value.plan.base_revision},{plan_id:value.plan_id,plan:value.plan},r=>app.go({surface:'runs',revision:r.revision_id,task_id:r.task_ids[0]}));
   }catch(error){status.textContent=readableError(error);}finally{busy=false;}}
-  async function refresh(){++serial;plan=null;try{
-    const [listing,notes,cat]=await Promise.all([get('/api/icons/list?'+new URLSearchParams({include_stale:'true',...(app.historical?{revision:data.revision_id}:{})})),get('/api/annotations'+(app.historical?'?'+new URLSearchParams({revision:data.revision_id}):'')),get('/api/icons/catalog')]);if(disposed)return;
-    asset.replaceChildren(...cat.icons.map(v=>el('option',{value:v.id},v.label)));
-    const noteLines=[];
-    if(listing.samples_unavailable)noteLines.push('已采用样例的依据暂不可读取，请核实原记录；原选择与意见保留。');
-    samples=listing.samples||[];sample.replaceChildren(el('option',{value:''},'请选择已采用样例'),...samples.map(v=>el('option',{value:sampleKey(v)},`${v.page_id} · ${v.label} · ${v.semantic_key}`)));
-    method.querySelector('[value="reuse"]').disabled=!samples.length;sample.disabled=!samples.length;
-    const saved=app.editor?.draft.content.icon_ui;if(saved){method.value=saved.method||'redraw';asset.value=saved.asset||cat.icons[0].id;sample.value=saved.sample_identity?sampleKey(saved.sample_identity):'';if(saved.sample!==undefined||saved.sample_identity&&!sample.value)noteLines.push('原样例已失效或旧草稿仅有序号，请重新选择；已保存意见仍保留。');}
-    // §3.1 意见范围：page 意见同项目同 page_id 即列入（合法数据本就不带 layer/artifact_ref）；
-    // artifact 按 page_ref 与产物引用核验；其它页与 project/chapter 不进入本页图标清单。
-    const layerRefs={content:stages.content?.ref,blueprint:stages.blueprint?.ref,svg:stages.svg?.ref,ppt:stages.ppt_preview?.ref};
-    const entries=notes.annotations.filter(n=>{
-      const note=n.annotation,scope=note.scope||'artifact';
-      if(note.page_id!==data.page_id)return false;
-      if(scope==='page')return true;
-      return scope==='artifact'&&['original_image','svg','ppt'].includes(note.layer);
-    }).map(n=>{
-      const note=n.annotation,scope=note.scope||'artifact';
-      const stage=({original_image:'blueprint',svg:'svg',ppt:'ppt_preview'})[note.layer];
-      const pageMatches=canonical(note.page_ref)===canonical(layerRefs.content);
-      const basisSame=scope==='page'?pageMatches:pageMatches&&canonical(note.artifact_ref)===canonical(layerRefs[stage]);
-      const checked=selected.has(n.ref.sha256)||saved?.annotation_refs?.some(r=>canonical(r)===canonical(n.ref));if(checked)selected.set(n.ref.sha256,n);
-      const box=el('input',{type:'checkbox',checked});box.addEventListener('change',()=>{if(box.checked)selected.set(n.ref.sha256,n);else selected.delete(n.ref.sha256);persist();});
-      const loc=note.location, pct=value=>Math.round(value*100)+'%';
-      const position=scope==='page'?'整页文字定位':loc.kind==='point'?`点位 ${pct(loc.x)} / ${pct(loc.y)}`:loc.kind==='rect'?`框选 ${pct(loc.x)} / ${pct(loc.y)} · ${pct(loc.width)} × ${pct(loc.height)}`:'整图文字定位';
-      const scopeLabel=scope==='page'?'整页':({original_image:'原图',svg:'SVG',ppt:'PPT'})[note.layer];
-      return {ref:n.ref,node:el('label',{class:'icon-opinion'},box,el('span',{},note.body),
-        el('span',{class:'muted'},`${scopeLabel} · ${position}${scope==='page'&&basisSame?' · 尚待制作工具定位真实图标对象':''} · ${basisSame?'与当前产物一致':'旧底稿意见 · 需重新定位'} · 底稿 ${(scope==='page'?note.page_ref:note.artifact_ref)?.sha256?.slice(0,8)||'未记录'} · ${version(note.base_revision)}`))};
-    });
-    opinions.replaceChildren(...entries.map(e=>e.node));
-    // 选中集合按正式 ref 重建：不以数组序号续选，消失/变依据的选择静默带入复制的路径不存在。
-    // 两种键形都收进去，避免 canonical 形式差异让列表刷新把刚选入的 ref 误剪掉。
-    const visible=new Set(entries.flatMap(e=>[e.ref.sha256,canonical(e.ref)]).filter(Boolean));
-    for(const key of [...selected.keys()])if(!visible.has(key))selected.delete(key);
-    const stale=(saved?.annotation_refs||[]).filter(r=>r && !visible.has(r.sha256) && !visible.has(canonical(r)));
-    if(stale.length)noteLines.push(`先前选入的 ${stale.length} 条意见的引用已不在本页图标列表（依据变化或已移除），复制不会带上它们；请重新选入。`);
-    status.textContent=noteLines.join('；');
-    const relevant=listing.proposals.filter(v=>v.proposal.input.targets.some(t=>t.page_id===data.page_id));
-    proposals.replaceChildren(el('h3',{},'Agent 提出的范围'),...relevant.map(v=>el('article',{class:'stack icon-proposal'},
-      el('p',{},v.proposal.input.instruction),el('p',{class:'muted'},({pending:'待确认范围',stale:'方案已过期，请重新定位；固定比较和意见仍保留',confirmed:'范围已确认',handed_off:'已交接修复',dispatch_unknown:'派发状态待核实；原记录与已确认范围保留，请先核实原任务，未确认前不要重复派发。'})[v.status]),...v.proposal.input.targets.map(t=>el('div',{},button(`查看 ${t.page_id} 的图标范围`,()=>compare(t,v.proposal,v.proposal_id)),
-        el('p',{},t.icons.map(n=>`${n.label} · ${n.method==='redraw'?'忠实重绘':n.method==='standard'?'标准替换 '+n.asset_id:'复用已采用样例'} · ${n.objects.length} 个对象`).join('；')))),
-      v.status==='stale'?button('复制重新定位要求',()=>relocate(v)):button('确认这些图标范围和处理方式',()=>confirm(v),true,{disabled:Boolean(v.status!=='pending'||app.readonly||app.historical||app.editor?.readonly)}))));
-    recipes.replaceChildren(el('h3',{},'已确认范围 · 明确选页后交接'));
-    for(const record of listing.recipes.filter(v=>v.recipe.input.targets.some(t=>t.page_id===data.page_id))){
-      const r=record.recipe,ids=new Set(),impact=el('div',{class:'stack'}),row=el('article',{class:'stack icon-recipe'},el('p',{},r.input.instruction));
-      for(const target of r.input.targets){const check=el('input',{type:'checkbox','aria-label':'选入图标页 '+target.page_id});check.addEventListener('change',()=>{if(check.checked)ids.add(target.page_id);else ids.delete(target.page_id);++serial;plan=null;impact.replaceChildren();});row.append(el('label',{},check,target.page_id,' · ',target.icons.map(n=>n.label).join('、')),button('查看 '+target.page_id+' 范围',()=>compare(target,r)));}
-      row.append(button('预览选中页图标试作',()=>prepare(r,[...ids],impact),false,{disabled:Boolean(app.readonly||app.historical||app.editor?.readonly)}),impact);recipes.append(row);
-    }
-    if(!relevant.length)proposals.append(el('p',{class:'muted'},'此版本尚无待确认的图标方案。已保存的意见仍在上方，后台制作状态不会被推测为已启动。'));
-  }catch(error){if(!disposed)status.textContent=readableError(error);}}
+  async function loadNotes(){const token=++notesSerial;notesRetry.hidden=true;
+    try{
+      const notes=await get('/api/annotations'+(app.historical?'?'+new URLSearchParams({revision:data.revision_id}):''));
+      if(disposed||token!==notesSerial)return;
+      // §3.1 意见范围：page 意见同项目同 page_id 即列入（合法数据本就不带 layer/artifact_ref）；
+      // artifact 按 page_ref 与产物引用核验；其它页与 project/chapter 不进入本页图标清单。
+      const layerRefs={content:stages.content?.ref,blueprint:stages.blueprint?.ref,svg:stages.svg?.ref,ppt:stages.ppt_preview?.ref};
+      const saved=app.editor?.draft.content.icon_ui;
+      const entries=notes.annotations.filter(n=>{
+        const note=n.annotation,scope=note.scope||'artifact';
+        if(note.page_id!==data.page_id)return false;
+        if(scope==='page')return true;
+        return scope==='artifact'&&['original_image','svg','ppt'].includes(note.layer);
+      }).map(n=>{
+        const note=n.annotation,scope=note.scope||'artifact';
+        const stage=({original_image:'blueprint',svg:'svg',ppt:'ppt_preview'})[note.layer];
+        const pageMatches=canonical(note.page_ref)===canonical(layerRefs.content);
+        const basisSame=scope==='page'?pageMatches:pageMatches&&canonical(note.artifact_ref)===canonical(layerRefs[stage]);
+        const checked=selected.has(n.ref.sha256)||saved?.annotation_refs?.some(r=>canonical(r)===canonical(n.ref));if(checked)selected.set(n.ref.sha256,n);
+        const box=el('input',{type:'checkbox',checked});box.addEventListener('change',()=>{if(box.checked)selected.set(n.ref.sha256,n);else selected.delete(n.ref.sha256);persist();});
+        const loc=note.location, pct=value=>Math.round(value*100)+'%';
+        const position=scope==='page'?'整页文字定位':loc.kind==='point'?`点位 ${pct(loc.x)} / ${pct(loc.y)}`:loc.kind==='rect'?`框选 ${pct(loc.x)} / ${pct(loc.y)} · ${pct(loc.width)} × ${pct(loc.height)}`:'整图文字定位';
+        const scopeLabel=scope==='page'?'整页':({original_image:'原图',svg:'SVG',ppt:'PPT'})[note.layer];
+        return {ref:n.ref,node:el('label',{class:'icon-opinion'},box,el('span',{},note.body),
+          el('span',{class:'muted'},`${scopeLabel} · ${position}${scope==='page'&&basisSame?' · 尚待制作工具定位真实图标对象':''} · ${basisSame?'与当前产物一致':'旧底稿意见 · 需重新定位'} · 底稿 ${(scope==='page'?note.page_ref:note.artifact_ref)?.sha256?.slice(0,8)||'未记录'} · ${version(note.base_revision)}`))};
+      });
+      opinions.replaceChildren(...entries.map(e=>e.node));
+      // 选中集合按正式 ref 重建：不以数组序号续选，消失/变依据的选择静默带入复制的路径不存在。
+      // 两种键形都收进去，避免 canonical 形式差异让列表刷新把刚选入的 ref 误剪掉。
+      const visible=new Set(entries.flatMap(e=>[e.ref.sha256,canonical(e.ref)]).filter(Boolean));
+      for(const key of [...selected.keys()])if(!visible.has(key))selected.delete(key);
+      const stale=(saved?.annotation_refs||[]).filter(r=>r && !visible.has(r.sha256) && !visible.has(canonical(r)));
+      notesState.textContent=entries.length
+        ? (stale.length ? `先前选入的 ${stale.length} 条意见的引用已不在本页图标列表（依据变化或已移除），复制不会带上它们；请重新选入。` : '')
+        : '本页此版本尚无已保存意见；在画面保存意见后才会进入这一份图标清单。';
+      notesRetry.hidden=true;
+    }catch(error){if(disposed||token!==notesSerial)return;
+      notesState.textContent='已保存意见读取未完成：'+readableError(error)+';方案与标准目录照常。';
+      notesRetry.hidden=false;}}
+  function drawAssetPreview(){
+    const entry=(catalogManifest?.icons||[]).find(v=>v.id===asset.value);
+    if(!entry){assetPreview.replaceChildren();return;}
+    // <img> 同源只读 URL(sha256 即校验);失败显示错误与重试,不用装饰图标顶替。
+    const img=el('img',{src:'/api/icons/catalog/file?'+new URLSearchParams({asset_id:entry.id,sha256:entry.sha256}),alt:entry.label,class:'icon-catalog-preview'});
+    const errorLine=el('p',{class:'field-error'}),again=button('重新读取图标预览',()=>drawAssetPreview(),false,{hidden:true});
+    img.addEventListener('load',()=>{errorLine.textContent='';again.hidden=true;});
+    img.addEventListener('error',()=>{errorLine.textContent='图标预览读取失败；已确认范围与复制不受影响,可重试。';again.hidden=false;});
+    assetPreview.replaceChildren(img,errorLine,again);
+  }
+  async function loadCatalog(){const token=++catalogSerial;catalogRetry.hidden=true;
+    try{
+      const cat=await get('/api/icons/catalog');
+      if(disposed||token!==catalogSerial)return;
+      catalogManifest=cat;
+      asset.replaceChildren(el('option',{value:''},'请选择标准图标'),...cat.icons.map(v=>el('option',{value:v.id},v.label)));
+      const saved=app.editor?.draft.content.icon_ui;
+      if(saved&&saved.method&&method.querySelector('[value="'+saved.method+'"]'))method.value=saved.method;
+      // 恢复/已保存选择按目录白名单核验:不在目录的 asset 不顺移第一项,留在占位并说明。
+      asset.value=saved?.asset&&cat.icons.some(v=>v.id===saved.asset)?saved.asset:'';
+      asset.disabled=false;method.querySelector('[value="standard"]').disabled=false;
+      catalogState.textContent=saved?.asset&&!asset.value?'已保存的标准图标已不在打包目录中，请重新选择；已保存意见与已采用样例不受影响。':'';
+      drawAssetPreview();
+    }catch(error){if(disposed||token!==catalogSerial)return;
+      catalogManifest=null;asset.replaceChildren(el('option',{value:''},'标准目录未读取'));asset.disabled=true;
+      method.querySelector('[value="standard"]').disabled=true;assetPreview.replaceChildren();
+      catalogState.textContent='标准目录读取未完成：'+readableError(error)+'——标准替换暂不可用；忠实重绘与已采用样例不受影响，已保存意见照常。';
+      catalogRetry.hidden=false;}}
+  async function loadListing(){const token=++listingSerial;listingRetry.hidden=true;
+    try{
+      const listing=await get('/api/icons/list?'+new URLSearchParams({include_stale:'true',...(app.historical?{revision:data.revision_id}:{})}));
+      if(disposed||token!==listingSerial)return;
+      const noteLines=[];
+      if(listing.samples_unavailable)noteLines.push('已采用样例的依据暂不可读取，请核实原记录；原选择与意见保留。');
+      samples=listing.samples||[];sample.replaceChildren(el('option',{value:''},'请选择已采用样例'),...samples.map(v=>el('option',{value:sampleKey(v)},`${v.page_id} · ${v.label} · ${v.semantic_key}`)));
+      method.querySelector('[value="reuse"]').disabled=!samples.length;sample.disabled=!samples.length;
+      const saved=app.editor?.draft.content.icon_ui;
+      if(saved&&saved.sample_identity!==undefined){sample.value=saved.sample_identity?sampleKey(saved.sample_identity):'';
+        if(saved.sample!==undefined||saved.sample_identity&&!sample.value)noteLines.push('原样例已失效或旧草稿仅有序号，请重新选择；已保存意见仍保留。');}
+      const relevant=listing.proposals.filter(v=>v.proposal.input.targets.some(t=>t.page_id===data.page_id));
+      // 读取绑定当前装配实例与页数据;迟到回包不再写入新界面(token 校验)。
+      proposals.replaceChildren(el('h3',{},'Agent 提出的范围'),...relevant.map(v=>el('article',{class:'stack icon-proposal'},
+        el('p',{},v.proposal.input.instruction),el('p',{class:'muted'},({pending:'待确认范围',stale:'方案已过期，请重新定位；固定比较和意见仍保留',confirmed:'范围已确认',handed_off:'已交接修复',dispatch_unknown:'派发状态待核实；原记录与已确认范围保留，请先核实原任务，未确认前不要重复派发。'})[v.status]),...v.proposal.input.targets.map(t=>el('div',{},button(`查看 ${t.page_id} 的图标范围`,()=>compare(t,v.proposal,v.proposal_id)),
+          el('p',{},t.icons.map(n=>`${n.label} · ${n.method==='redraw'?'忠实重绘':n.method==='standard'?'标准替换 '+n.asset_id:'复用已采用样例'} · ${n.objects.length} 个对象`).join('；')))),
+        v.status==='stale'?button('复制重新定位要求',()=>relocate(v)):button('确认这些图标范围和处理方式',()=>confirm(v),true,{disabled:Boolean(v.status!=='pending'||app.readonly||app.historical||app.editor?.readonly)}))));
+      recipes.replaceChildren(el('h3',{},'已确认范围 · 明确选页后交接'));
+      for(const record of listing.recipes.filter(v=>v.recipe.input.targets.some(t=>t.page_id===data.page_id))){
+        const r=record.recipe,ids=new Set(),impact=el('div',{class:'stack'}),row=el('article',{class:'stack icon-recipe'},el('p',{},r.input.instruction));
+        for(const target of r.input.targets){const check=el('input',{type:'checkbox','aria-label':'选入图标页 '+target.page_id});check.addEventListener('change',()=>{if(check.checked)ids.add(target.page_id);else ids.delete(target.page_id);++serial;plan=null;impact.replaceChildren();});row.append(el('label',{},check,target.page_id,' · ',target.icons.map(n=>n.label).join('、')),button('查看 '+target.page_id+' 范围',()=>compare(target,r)));}
+        row.append(button('预览选中页图标试作',()=>prepare(r,[...ids],impact),false,{disabled:Boolean(app.readonly||app.historical||app.editor?.readonly)}),impact);recipes.append(row);
+      }
+      listingState.textContent=noteLines.join('；');
+      if(!relevant.length)proposals.append(el('p',{class:'muted'},'此版本尚无待确认的图标方案。已保存的意见仍在上方，后台制作状态不会被推测为已启动。'));
+    }catch(error){if(disposed||token!==listingSerial)return;
+      listingState.textContent='图标方案与样例读取未完成：'+readableError(error)+';已保存意见与标准目录照常。';
+      listingRetry.hidden=false;}}
+  function refresh(){plan=null;loadNotes();loadListing();if(!missingDependencys.length)loadCatalog();}
   const listener=()=>refresh();
   // E02：真实恢复替换 editor 后图标区必须重新接入当前实例——按新草稿的 icon_ui 与
   // annotation_refs 重新核验（§3.1），旧 editor 的 ready/读取回包不会写入这里。
