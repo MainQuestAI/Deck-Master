@@ -210,7 +210,7 @@ function matrixPanel(app, saved) {
   function setFilter(value) {
     if (filter === value) return;
     filter = value;
-    batch.invalidate();
+    batch.invalidate({keepErrors: true});
     saveReading();
     render();
   }
@@ -331,7 +331,7 @@ function matrixPanel(app, saved) {
       : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
     if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
   }
-  searchInput.addEventListener('input', () => { search = searchInput.value; batch.invalidate(); saveReading(); render(); });
+  searchInput.addEventListener('input', () => { search = searchInput.value; batch.invalidate({keepErrors: true}); saveReading(); render(); });
   allCheckbox.addEventListener('change', () => {
     for (const page of visiblePages().filter(batch.eligible)) {
       if (allCheckbox.checked) selected.add(page.page_id); else selected.delete(page.page_id);
@@ -365,8 +365,12 @@ function matrixPanel(app, saved) {
 
   const node = el('section', {class: 'stack', 'aria-label': '逐页制作进展'},
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
-    el('div', {class: 'toolbar'}, el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo),
-      el('div', {class: 'row wrap matrix-search'}, searchInput, batch.toolbar, selectionNote, clearButton)),
+    // UAC12:阅读筛选(范围+搜索)与批量选页动作分两行、各自成组;选择摘要条
+    // 与配置区独立演进,空选只给短提示(UX-02b),异常恢复不被筛选空态收起。
+    el('div', {class: 'row wrap toolbar overview-reading-tools', role: 'group', 'aria-label': '阅读筛选'},
+      el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput),
+    el('div', {class: 'row wrap matrix-search', role: 'group', 'aria-label': '批量选页动作'},
+      batch.toolbar, selectionNote, clearButton),
     // F05/§4.1：配置区紧邻选页工具条（不再隔着整张矩阵），三态在同一处
     // 演进：未选=引导；选后=配置（目标摘要—要求—参考—影响—预览）；
     // 核对通过后=交接主动作出现。

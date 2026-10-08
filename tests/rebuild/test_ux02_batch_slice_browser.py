@@ -189,3 +189,35 @@ def test_batch_surface_states_choose_configure_confirm_adjacent_to_selection(ove
     expect(commit).to_be_visible()
     expect(commit).to_be_enabled()
     page.screenshot(path=str(path.parent / 'batch-confirm-state.png'), full_page=True)
+
+
+def test_reading_and_batch_tools_distinct_and_recovery_survives_empty_filter(overview30):
+    """UAC12/13:阅读筛选与批量动作分两行成组;预览失败的恢复提示不被筛选空态收起;
+    筛选外已选计数与 2/28 精确对象保留。"""
+    from playwright.sync_api import expect
+    page, server, path, store = overview30
+    page.goto(server.start())
+    reading = page.locator('.overview-reading-tools')
+    batchRow = page.locator('.matrix-search')
+    expect(reading.get_by_role('searchbox', name='搜索页码或标题')).to_be_visible()
+    expect(batchRow.get_by_label('批量动作')).to_be_visible()
+    # 两行各成一组、互不含对方控件;批量选择摘要条是第三个独立容器。
+    assert reading.evaluate('(n) => n.querySelectorAll("[aria-label=批量动作], .overview-selection-bar").length') == 0
+    assert batchRow.evaluate('(n) => n.querySelectorAll("input[type=search], .overview-selection-bar").length') == 0
+    # 恢复:预览失败(field-error)后筛到空矩阵,错误与配置不收起。
+    page.get_by_role('checkbox', name='选择第 02 页', exact=True).check()
+    page.get_by_role('checkbox', name='选择第 28 页', exact=True).check()
+    page.get_by_role('textbox', name='所选页的制作要求', exact=True).fill(REQUIREMENT)
+    page.get_by_role('button', name='按所选页设置调用上限', exact=True).click()
+    page.route('**/api/changes/plan', lambda route: route.abort())
+    page.get_by_role('button', name='预览所选页试作', exact=True).click()
+    expect(page.locator('.batch-impact .field-error')).to_be_visible()
+    page.get_by_role('searchbox', name='搜索页码或标题').fill('没有这样的页面')
+    expect(page.get_by_role('heading', name='没有符合条件的页面')).to_be_visible()
+    expect(page.locator('.batch-impact .field-error')).to_be_visible()
+    expect(page.locator('.batch-fields')).to_be_visible()
+    expect(page.get_by_text('已选择 2 页，当前筛选外 2 页')).to_be_visible()
+    page.unroute('**/api/changes/plan')
+    page.get_by_role('button', name='清除筛选', exact=True).click()
+    expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).to_be_checked()
+    expect(page.get_by_role('checkbox', name='选择第 28 页', exact=True)).to_be_checked()

@@ -51,7 +51,9 @@ export function batchActions(app, selected, onSelectionChange) {
   }
   let editor = app.editor;
   function exclusions() { return [...selected].map(id => ({id, reason: batchExclusion(app, pages.find(page => page.page_id === id), action.value, fixed)})).filter(item => item.reason); }
-  function invalidate() { serial++; plan = null; impact.replaceChildren(); }
+  // UAC12:范围性变化(选页/动作/预算/要求)使计划失效并清空确认区;阅读筛选
+  // (搜索/只看筛选)也使旧计划失效,但异常恢复提示保留,不被空态收起。
+  function invalidate({keepErrors} = {}) { serial++; plan = null; if (!keepErrors) impact.replaceChildren(); }
   function render() {
     const unavailable = exclusions(), image = action.value === 'blueprint', style = action.value === 'style';
     fields.hidden = !selected.size;
