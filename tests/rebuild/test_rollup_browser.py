@@ -120,6 +120,12 @@ def test_dispatch_unknown_explains_preservation_without_redispatch(icon_browser)
     query = dict(part.split('=', 1) for part in page.url.split('#')[1].split('&'))
     query['revision'] = store.current_revision_id()
     page.goto(page.url.split('#')[0] + '#' + urlencode(query))
+    # P02a:按新修订进入会重建工作区,活动面重置为意见;派发状态在「图标优化」面。
+    tools_entry = page.get_by_role('button', name='工具', exact=True)
+    if tools_entry.is_visible():
+        tools_entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='图标优化', exact=True).click()
     warning = page.get_by_text('派发状态待核实；原记录与已确认范围保留，请先核实原任务，未确认前不要重复派发。', exact=True)
     expect(warning).to_be_visible(timeout=30000)
     expect(page.get_by_role('button', name='确认这些图标范围和处理方式', exact=True)).to_be_disabled()
