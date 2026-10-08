@@ -334,3 +334,69 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
     assert payload2['opinions'][0]['body'].startswith('整图中的徽标位置')
     assert 'layer' not in payload2['opinions'][0] and 'artifact_ref' not in payload2['opinions'][0]
     assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth')
+
+
+def test_complete_draft_restore_reaches_icon_consumer_through_real_entry(ux06_browser):
+    """E01/E02 补充(UAC08/22 前半):带意见/要求/icon_ui/试作的完整草稿经真实
+    恢复入口替换当前 editor;图标消费方按当前草稿重新核验,不残留旧选择。"""
+    from playwright.sync_api import expect
+    from urllib.parse import urlencode
+    from deck_master import annotation_service
+    page, server, path, store, context = ux06_browser
+    url = server.start()
+    # 意见经服务预置(保存意见会推进版本,UI 只在最新修订上操作)。
+    doc = store.load_document()
+    entry = doc['pages'][0]
+    note = {'schema_version': 'annotation.v1', 'project_id': doc['project_id'], 'base_revision': doc['revision_id'],
+            'scope': 'page', 'page_id': 'p01', 'page_ref': entry['page'], 'intent': 'clarify',
+            'body': '恢复完整草稿的原始意见', 'status': 'open', 'location': {'kind': 'whole'}}
+    annotation_service.save(path, input={'schema_version': 'annotation_batch.v1', 'project_id': doc['project_id'],
+                                         'annotations': [note]},
+                            base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+    identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
+    revision = store.current_revision_id()
+    page.goto(url.split('#')[0] + '#' + urlencode({'project': identity, 'surface': 'page',
+                                                   'page': 'p01', 'layer': 'svg', 'revision': revision}))
+    def face(name):
+        page.get_by_role('button', name=name, exact=True).click()
+    # ① 意见面:填意见正文(入草稿)、选入预置意见,填修改要求。
+    face('意见')
+    page.get_by_label('意见正文', exact=True).fill('恢复完整草稿的原始意见')
+    page.get_by_label('选入意见 1', exact=True).check()
+    page.get_by_label('修改要求', exact=True).fill('完整恢复的要求：保留数字')
+    # ② 图标面:标准方式 + 明确选一个标准图标 + 在图标面勾选意见(icon_ui 入草稿)。
+    face('图标优化')
+    page.get_by_label('图标处理方式').select_option('standard')
+    page.get_by_label('建议的标准图标').select_option(index=1)
+    page.locator('.icon-opinions input[type=checkbox]').first.check()
+    # ③ 试作面:两层折叠(本页候选与试作 → 试作表单);要求框为「本页试作短要求」。
+    face('试作与候选')
+    page.get_by_text('本页候选与试作', exact=True).click()
+    page.get_by_text('仅重建或修复本页 SVG', exact=True).click()
+    page.get_by_label('本页试作短要求', exact=True).fill('完整恢复的试作要求')
+    # ④ 笔记面:保存完整草稿 v1。
+    face('笔记')
+    page.get_by_label('个人草稿', exact=True).fill('完整恢复的笔记')
+    page.get_by_role('button', name='保存个人草稿', exact=True).click()
+    expect(page.locator('.draft-state').first).to_contain_text('已保存到项目', timeout=20000)
+    records = page.request.get(url.split('#')[0] + 'api/drafts').json()['records']
+    v1 = next(r['draft'] for r in records if r['draft']['content']['icon_ui'])
+    assert v1['content']['icon_ui']['annotation_refs'] and v1['content']['trial']['instruction'] == '完整恢复的试作要求'
+    # ⑤⑥ 真实恢复入口:恢复列表由编辑器 load 构建,先 reload 再展开恢复详情;
+    # saved 状态直接恢复,不弹保留输入弹窗。
+    page.reload()
+    face('笔记')
+    page.get_by_text('恢复、下载与版本详情', exact=True).click()
+    page.get_by_label('恢复项目中的个人草稿').select_option(v1['draft_id'])
+    expect(page.get_by_label('意见正文', exact=True)).to_have_value('恢复完整草稿的原始意见', timeout=20000)
+    expect(page.get_by_label('修改要求', exact=True)).to_have_value('完整恢复的要求：保留数字')
+    expect(page.get_by_label('个人草稿', exact=True)).to_have_value('完整恢复的笔记')
+    # ⑦ 图标消费方按当前草稿重新核验(E02):asset 与选入意见都回到 v1。
+    face('图标优化')
+    expect(page.get_by_label('建议的标准图标')).to_have_value(v1['content']['icon_ui']['asset'])
+    expect(page.locator('.icon-opinions input[type=checkbox]')).to_be_checked()
+    # ⑧ 试作面同样回到 v1 配置。
+    face('试作与候选')
+    page.get_by_text('本页候选与试作', exact=True).click()
+    page.get_by_text('仅重建或修复本页 SVG', exact=True).click()
+    expect(page.get_by_label('本页试作短要求', exact=True)).to_have_value('完整恢复的试作要求')
