@@ -1,5 +1,5 @@
 {
-  "schema_version": "pr104_evidence_index.v1",
+  "schema_version": "pr104_evidence_index.v1.1",
   "date": "2026-10-08",
   "reviewed_head": "d64c8b0d7ba3a2981ebfa02e7cdfeb4d8a88c539",
   "base": "6996a29b1792e39199cf0ae968deaaaba381d9e1",
@@ -652,7 +652,8 @@
       "passed": 303,
       "failed": 0,
       "skipped": 0,
-      "seconds": 580.07
+      "seconds": 580.07,
+      "test_revision": "58ec8d076b738ae05ae0898f14c2a7a1702fe9f9"
     },
     "remote_exact_sha_ci": {
       "status": "not_run_at_capture",
@@ -706,8 +707,41 @@
       {
         "name": "browser-final-pass.log",
         "sha256": "6e0abab6fd996f8885e116a4caab4acead3da3f960b0cecd555a3a9d2158a80d"
+      },
+      {
+        "name": "ci-selector-review-suite.log",
+        "sha256": "9790a76dba36b94969b982cbc13294b787e4c5a78c4b7bd61788443d874cc1db"
+      },
+      {
+        "name": "ci-pr-failed.log",
+        "sha256": "2946a1b4db79cc1600ee50fe9c2c27739cc7931c59f98eb0a208efe122a51ff0"
+      },
+      {
+        "name": "ci-push-failed.log",
+        "sha256": "5ca0cd096440b7612bd9c6ec38abe288dca1d4489ef68dd3ce89acf8959991b7"
       }
-    ]
+    ],
+    "review_suite_after_ci_selector_fix": {
+      "status": "pass",
+      "passed": 30,
+      "seconds": 37.13,
+      "product_code_changed": false,
+      "guard": "combobox locator with loaded preview; all target and plan assertions retained"
+    },
+    "remote_prior_repair_sha_ci": {
+      "sha": "58ec8d076b738ae05ae0898f14c2a7a1702fe9f9",
+      "pr_run": 37816037806,
+      "push_run": 37816028878,
+      "unit_matrix": "pass",
+      "render": "pass",
+      "browser": {
+        "passed": 302,
+        "failed": 1,
+        "cause": "new primary target test label also matched loaded canvas; strict locator violation in both runs"
+      },
+      "wheel_and_installed": "skipped",
+      "followup": "test locator corrected without production change; new exact SHA CI pending commit"
+    }
   },
   "baseline_counterexamples": {
     "reviewed_static_selected": {
@@ -748,7 +782,7 @@
   "test_snapshot": [
     {
       "path": "tests/rebuild/test_pr104_review_browser.py",
-      "sha256": "8a84f89bcd35e2c0c30588cf70be8d8b2f8b28e76c75c7fe2db239d024a21937"
+      "sha256": "c1e7343b34450d71ce9d1f1e7d4fb932a5c330f0e6839c592dd3bf6c7404ee04"
     },
     {
       "path": "tests/rebuild/test_pr103_repair_browser.py",

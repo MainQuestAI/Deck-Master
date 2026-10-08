@@ -283,8 +283,13 @@ def test_primary_style_target_survives_restore_confirm_refresh_and_first_plan(fl
     with browser_for(flow.project) as (page, _server):
         page.get_by_role('button', name='风格校准', exact=True).click()
         page.get_by_label('风格参考原图').select_option('p01')
-        primary = page.get_by_label('当前风格试作目标')
-        primary.select_option('p02'); primary.select_option('p03')
+        primary = page.locator('.style-calibration').get_by_role('combobox', name='当前风格试作目标', exact=True)
+        primary.select_option('p02')
+        # The preview deliberately shares the target's accessible description.
+        # Wait until it is present to cover slow image-pool scheduling as in CI,
+        # then select through the actual form control rather than a label alias.
+        expect(page.locator('.style-primary-target [aria-label="当前风格试作目标"]')).to_be_attached()
+        primary.select_option('p03')
         expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
         records = ui_journal.list_drafts(flow.project)['records']
         saved = next(r['draft'] for r in records if r['draft']['content'].get('style_calibration'))
