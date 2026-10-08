@@ -11,25 +11,32 @@ pytestmark = pytest.mark.browser
 
 
 
-def open_opinion_face(page):
-    """P02:回到意见面(与 open_note_face 对称)。"""
+def open_face(page, name):
+    """P02b:五工具容器统一切面。窄屏先开工具面板;面板已开不重复点入口
+    (showModal 对已开 dialog 会抛错,入口被遮罩时点击也会超时)。"""
     entry = page.get_by_role('button', name='工具', exact=True)
-    if entry.count() and entry.first.is_visible():
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    panel_open = page.locator('dialog.page-tools-panel[open]').count() > 0
+    if entry.count() and entry.first.is_visible() and not panel_open:
         entry.click()
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
-    page.get_by_role('button', name='意见', exact=True).click()
+    face_button = page.get_by_role('button', name=name, exact=True)
+    expect(face_button.first).to_be_visible(timeout=15000)
+    face_button.first.click()
+
+
+def open_opinion_face(page):
+    open_face(page, '意见')
 
 
 def open_note_face(page):
-    """P02:个人笔记位于五工具容器的「笔记」面;先切面(窄屏先开工具面板)。"""
-    entry = page.get_by_role('button', name='工具', exact=True)
-    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
-    if entry.count() and entry.first.is_visible():
-        entry.click()
-        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
-    note_button = page.get_by_role('button', name='笔记', exact=True)
-    expect(note_button.first).to_be_visible(timeout=15000)
-    note_button.first.click()
+    """个人笔记(默认展开的 maintenance 节点)与恢复详情都在笔记面。"""
+    open_face(page, '笔记')
+
+
+def open_trial_face(page):
+    """试作与候选入口在「试作与候选」面。"""
+    open_face(page, '试作与候选')
 
 
 
@@ -195,9 +202,9 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
         open_note_face(other)
         other.get_by_text('恢复、下载与版本详情', exact=True).click()
         other.get_by_label('恢复项目中的个人草稿').select_option(draft['draft_id'])
+        open_opinion_face(other)
         other.get_by_role('button', name='对当前版本写新意见', exact=True).click()
         open_note_face(other)
-        other.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
         expect(other.get_by_role('button', name='保存个人草稿', exact=True)).to_be_enabled()
         other.get_by_role('button', name='保存个人草稿', exact=True).click()
         expect(other.locator('.draft-state')).to_contain_text('已保存到项目')
@@ -225,6 +232,7 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
             open_note_face(restored)
             restored.get_by_text('恢复、下载与版本详情', exact=True).click()
             restored.get_by_label('恢复项目中的个人草稿').select_option(copied['draft_id'])
+            open_opinion_face(restored)
             expect(restored.get_by_label('修改要求', exact=True)).to_have_value(state['text'])
             expect(restored.get_by_role('button', name='预览修改影响', exact=True)).to_be_disabled()
         finally:
@@ -268,7 +276,6 @@ def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, t
             window.goto(url + '#' + page.url.split('#')[1])
             expect(window.get_by_label('意见正文', exact=True)).to_be_editable()
             open_note_face(window)
-            window.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
             expect(window.get_by_label('个人草稿', exact=True)).to_have_value(initial['content']['text'])
         labels = ['个人草稿', '意见正文', '修改要求']
         def edit(window, texts):
@@ -285,8 +292,10 @@ def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, t
             edit(b, local_texts)
         assert conflict.value.status == 409
         expect(b.locator('.draft-state')).to_contain_text('保存冲突')
+        open_note_face(b)
         b.get_by_role('button', name='比较两份草稿', exact=True).click()
-        dialog = b.get_by_role('dialog')
+        # 冲突弹窗与窄屏工具面板同为 dialog;用可访问名称锁定冲突弹窗。
+        dialog = b.get_by_role('dialog', name='保留两份个人草稿')
         expect(dialog).to_be_visible()
         expect(dialog.locator('.conflict-panes textarea')).to_have_count(6)
         for prefix, texts in [('本机', local_texts), ('项目', project_texts)]:
@@ -319,6 +328,7 @@ def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, t
         expected['content']['requirement']['text'] = local_texts[2]
         assert recovery['draft'] == expected
         # The open comparison stays frozen if the other window saves again.
+        open_note_face(a)
         a.get_by_label('个人草稿', exact=True).fill('项目后续修改')
         expect(a.locator('.draft-state')).to_contain_text('已保存到项目')
         expect(dialog.get_by_label('项目私人笔记', exact=True)).to_have_value(project_texts[0])
@@ -376,13 +386,42 @@ def test_old_basis_copy_clears_scope_and_requirement_selection(workbench):
     page.get_by_text('恢复、下载与版本详情', exact=True).click()
     choices = page.get_by_label('恢复项目中的个人草稿')
     choices.select_option(draft['draft_id'])
+    open_opinion_face(page)
     expect(page.get_by_label('意见正文', exact=True)).not_to_be_editable()
+    # 「对当前版本写新意见」由 annotations.bind 放进意见面板的动作区(不在私人笔记里)。
     page.get_by_role('button', name='对当前版本写新意见', exact=True).click()
     expect(page.get_by_label('意见作用范围', exact=True)).to_have_value('page')
     expect(page.get_by_label('意见正文', exact=True)).to_have_value('缩短标题')
     expect(page.get_by_label('修改要求', exact=True)).to_have_value('保留原数字')
     expect(page.get_by_label('选入意见 1', exact=True)).not_to_be_checked()
     expect(page.get_by_role('button', name='预览修改影响', exact=True)).to_be_disabled()
+
+
+def test_whole_page_opinion_flows_to_requirement_handoff(workbench):
+    """UAC07:画面→整页意见→保存→选入→修改要求→预览影响→确认交接;五工具全程路径。"""
+    page, _, store, _, goto, _ = workbench
+    goto()
+    open_opinion_face(page)
+    page.get_by_role('button', name='整页意见', exact=True).click()
+    page.get_by_label('意见正文', exact=True).fill('缩短标题并保留原数字')
+    page.get_by_role('button', name='保存意见', exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    page.get_by_label('选入意见 1', exact=True).check()
+    requirement = '标题 12 字以内，保留原数字；数字与换行不变'
+    page.get_by_label('修改要求', exact=True).fill(requirement)
+    page.get_by_role('button', name='预览修改影响', exact=True).click()
+    confirm = page.get_by_role('button', name='确认计划并创建交接', exact=True)
+    expect(confirm).to_be_visible()
+    with page.expect_response(lambda r: '/api/changes/commit' in r.url and r.request.method == 'POST',
+                              timeout=20000) as commit:
+        confirm.click()
+    assert commit.value.status == 200
+    # 交接载荷携带正式意见身份与修改要求原文;确认后编辑不丢。
+    records = page.request.get(page.url.split('#')[0] + 'api/drafts').json()['records']
+    pending = [r['draft']['pending'] for r in records if r['draft']['pending']]
+    assert pending and pending[0]['payload']['display_context']['instruction'] == requirement
+    # 交接后总结轮询会重渲染工作区:断言用值检查而非点击(焦点回归不抢面,动作面保持)。
+    expect(page.get_by_label('修改要求', exact=True)).to_have_value(requirement, timeout=20000)
 
 
 def test_nearby_candidates_bind_historical_revision(workbench):
@@ -395,6 +434,7 @@ def test_nearby_candidates_bind_historical_revision(workbench):
     requests = []
     page.on('request', lambda r: requests.append(r.url) if '/api/candidates?' in r.url else None)
     goto(revision=old)
+    open_trial_face(page)
     page.get_by_text('本页候选与试作', exact=True).wait_for()
     expect(page.locator('.page-trial-entry')).to_contain_text('尚无候选')
     assert requests and all('revision=' + old in url for url in requests)
@@ -541,11 +581,15 @@ def test_prepared_prompt_selection_mounts_one_recovery_panel(workbench):
     values = select.locator('option').evaluate_all('(options) => options.map(o => o.value).filter(Boolean)')
     for ref in [values[0], values[1], values[0]]:
         select.select_option(ref)
+        # 恢复详情在笔记面且每次恢复替换后重建(默认收起):每轮先切面再重开。
+        open_note_face(page)
         recovery = page.get_by_text('恢复、下载与版本详情', exact=True)
         expect(recovery).to_have_count(1)
         recovery.click()
         expect(page.get_by_role('button', name='下载草稿恢复文件', exact=True)).to_be_visible()
+        open_opinion_face(page)
         expect(page.get_by_label('意见正文', exact=True)).to_be_editable()
+        open_note_face(page)
         with page.expect_download() as download:
             page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
         from pathlib import Path
@@ -585,7 +629,6 @@ def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench)
     expect(body).to_be_editable()
     body.fill('已有浏览器缓冲')
     open_note_face(page)
-    page.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
     page.get_by_role('button', name='保存个人草稿', exact=True).click()
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
     held = []
