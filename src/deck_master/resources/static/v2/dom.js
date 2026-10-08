@@ -29,7 +29,7 @@ export function toast(message) {
   toast.timer = setTimeout(() => target.classList.remove('visible'), 4500);
 }
 export function announce(message) { document.querySelector('#route-status').textContent = message; }
-export function modal(title, body, actions = []) {
+export function modal(title, body, actions = [], {fallback} = {}) {
   const dialog = document.querySelector('#modal');
   const trigger = document.activeElement;
   const heading = el('h2', {id: 'dialog-title'}, title);
@@ -40,13 +40,15 @@ export function modal(title, body, actions = []) {
   if (!dialog.open) dialog.showModal();
   dialog.onclose = () => {
     if (trigger?.isConnected) { trigger.focus(); return; }
-    // UX-06b：触发器在模态期间被卸载（列表刷新、条目移除）：焦点回退到工作面
-    // 标题，而不是留在 body 或被移除的节点上。
-    const fallback = document.querySelector('#view-title') || document.querySelector('main h1, main h2');
-    fallback?.focus({preventScroll: true});
+    // UX-06b：触发器在模态期间被卸载（列表刷新、条目移除）：调用方可以在 O2 里
+    // 指定工具内的回退目标（如工具标题）；没有指定则回退到工作面标题。
+    (fallback?.isConnected ? fallback : document.querySelector('#view-title') || document.querySelector('main h1, main h2'))?.focus({preventScroll: true});
   };
   return dialog;
 }
+// 独立动作分组（§6）：一次一组动作容器承载间距与触点规则；只服务于独立按钮
+// 组，分段共享边缘控件继续用各自的局部容器。
+export const actionGroup = (...controls) => el('div', {class: 'row wrap action-group'}, controls);
 export async function copyText(text) {
   try { await navigator.clipboard.writeText(text); toast('已复制，尚未开始。请在制作工具中发送。'); }
   catch { modal('复制制作要求', el('textarea', {'aria-label': '制作要求', readOnly: true, rows: 10, value: text})); }

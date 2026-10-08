@@ -137,3 +137,33 @@ def test_damaged_personal_reading_does_not_block_workbench(workbench_page,tmp_pa
     page.get_by_role('heading',name='运行记录',exact=True).wait_for()
     expect(page.get_by_text('个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。',exact=True)).to_be_visible()
     assert path.read_text()=='damaged reading record'
+
+
+def test_modal_falls_back_to_the_caller_provided_focus_when_trigger_gone(workbench_page):
+    # O2/P01：触发器被移除时，弹窗关闭后焦点回调用方指定的目标（工具标题），
+    # 没有指定则维持回工作面标题。
+    page = workbench_page
+    outcome = page.evaluate('''async () => {
+      const {modal} = await import('/v2/dom.js');
+      const group = document.createElement('section'); document.body.append(group);
+      group.innerHTML = '<button id="p01-trigger">打开比较</button><h2 id="p01-fallback" tabindex="-1">工具标题</h2><h2 id="p01-plain">页面标题</h2>';
+      const trigger = group.querySelector('#p01-trigger');
+      trigger.focus();
+      const dialog = modal('范围比较', document.createElement('p'));
+      await new Promise(r => setTimeout(r, 40));
+      trigger.remove();
+      dialog.close();
+      await new Promise(r => setTimeout(r, 40));
+      const withoutFallback = document.activeElement.id;
+
+      const second = document.createElement('button'); second.textContent = '触发';
+      group.append(second); second.focus();
+      const dialog2 = modal('范围比较', document.createElement('p'), [], {fallback: group.querySelector('#p01-fallback')});
+      await new Promise(r => setTimeout(r, 40));
+      second.remove();
+      dialog2.close();
+      await new Promise(r => setTimeout(r, 40));
+      return {withoutFallback, withFallback: document.activeElement.id, top: group.querySelector('#p01-plain').isConnected};
+    }''')
+    assert outcome['withoutFallback'] == 'view-title'
+    assert outcome['withFallback'] == 'p01-fallback'

@@ -1,5 +1,5 @@
 import {get, post, readableError, canonical, digest} from './api.js';
-import {el, button, modal, toast, downloadJSON, version} from './dom.js';
+import {el, button, modal, toast, downloadJSON, version, actionGroup} from './dom.js';
 import {layers} from './routes.js';
 
 // sessionStorage is copied by same-origin window.open. It is a recovery hint,
@@ -46,7 +46,7 @@ export class DraftEditor {
       el('div', {class: 'panel-head'}, el('h2', {}, '个人草稿'), el('span', {class: 'status'}, '不提交制作任务')),
       el('div', {class: 'panel-body stack'}, el('label', {for: this.input.id}, '留给自己的内容与意见'), this.input,
         this.basisNode, this.noticeNode, this.stateNode, this.storageNode,
-        el('div', {class: 'row wrap'}, this.saveButton, this.rebaseButton, this.verifyButton, this.conflictButton,
+        actionGroup(this.saveButton, this.rebaseButton, this.verifyButton, this.conflictButton,
           button('下载草稿恢复文件', () => this.download())),
         el('label', {class: 'recovery-import'}, '导入草稿恢复文件', file),
         el('p', {class: 'muted field-help'}, '恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。'),

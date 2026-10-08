@@ -1,6 +1,6 @@
 import {historyLabel} from './history-labels.js';
 import {get, post, revisionQuery, readableError} from './api.js';
-import {el, button, modal, version} from './dom.js';
+import {el, button, modal, version, actionGroup} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {productionView} from './production-view.js';
 
@@ -215,9 +215,11 @@ export function historyDesk(app, history) {
     } finally { if (!disposed && token === serial) { busy = false; more.disabled = !cursor; allRecords.disabled = false; } }
   }
   append(history.revisions, true);
-  const node = panel('版本记录', identity, el('div', {class: 'row wrap history-reading-controls'}, selected,
+  const versionControls = actionGroup(selected,
     button('读取所选版本', () => app.go({revision: selected.value, task_id: null})), more,
-    app.summary.pages.length > 0 && button('逐页查看与固定比较', () => app.go({surface: 'page', page_id: app.summary.pages[0].page_id, layer: 'content', revision})), restore),
+    app.summary.pages.length > 0 && button('逐页查看与固定比较', () => app.go({surface: 'page', page_id: app.summary.pages[0].page_id, layer: 'content', revision})), restore);
+  versionControls.classList.add('history-reading-controls');
+  const node = panel('版本记录', identity, versionControls,
     el('label', {class: 'inline-control'}, allRecords, '全部记录（包括执行与个人状态）'), notice,
     el('p', {class: 'muted'}, '先读取历史版本并查看差异，再预览恢复影响。恢复会创建新版本，当前执行与调用记录不会回滚。'));
   app.disposables.push(() => { disposed = true; serial++; });

@@ -57,6 +57,10 @@ small,.small-text{font-size:12px}
 .row{display:flex;align-items:center;gap:12px}
 .wrap{flex-wrap:wrap}
 .between{justify-content:space-between}
+/* §6/P01：独立动作组——组内独立按钮间距 ≥8px（.row 已有 12px）、触点目标 44px；
+   分段共享边缘控件（.segmented 等）属于各自的局部容器，不在本规则内。 */
+.action-group{align-items:center;gap:8px}
+.action-group>button{min-height:44px}
 
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:20px 0}
 .segmented{display:flex;padding:3px}

@@ -320,7 +320,7 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
     prior_ref = payload['annotation_refs'][0]['sha256']
     handoff.click()
     # 第二次复制前状态行已是「已复制」：以剪贴板 ref 变化为准，避免读到上次的 payload。
-    page.wait_for_function("src => window.iconCopy && JSON.parse(window.iconCopy).annotation_refs[0]?.sha256 !== src", arg=prior_ref)
+    page.wait_for_function("src => window.iconCopy && JSON.parse(window.iconCopy).annotation_refs[0]?.sha256 !== src", arg=prior_ref, timeout=15000)
     payload2 = page.evaluate('JSON.parse(window.iconCopy)')
     assert payload2['page_id'] == 'p01' and len(payload2['annotation_refs']) == 1
     assert payload2['annotation_refs'][0] == page_record['ref']
