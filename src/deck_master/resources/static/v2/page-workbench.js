@@ -192,11 +192,26 @@ export function pageDetail(app, data) {
     const draftView = app.editor.mount();
     app.editor.input.rows = 2;
     // Recovery and portability stay a separate secondary entry next to the note,
-    // not nested one level deeper behind it.
-    const recovery = detail('恢复、下载与版本详情', app.editor.basisNode);
-    const download = draftView.querySelector('.panel-body > .row button:last-child');
-    if (download) recovery.append(download);
-    draftView.querySelectorAll('.recovery-import, .field-help, .draft-restore').forEach(control => recovery.append(control));
+    // not nested one level deeper behind it. The hoist runs again whenever the
+    // editor is restored-replaced: stale entries dispatched from a detached input
+    // would bubble nowhere and misreport a real restore as an unusable buffer.
+    const recovery = detail('恢复、下载与版本详情');
+    const hoistRecovery = editor => {
+      if (editor !== app.editor) return;
+      const view = editor.basisNode?.closest('section.personal-draft');
+      if (!view) return;
+      const download = view.querySelector('.panel-body > .row button:last-child');
+      recovery.replaceChildren(recovery.firstElementChild);
+      recovery.append(editor.basisNode, ...(download ? [download] : []),
+        ...view.querySelectorAll('.recovery-import, .field-help, .draft-restore'));
+    };
+    hoistRecovery(app.editor);
+    const replacedListener = event => {
+      if (!recovery.isConnected) return;
+      hoistRecovery(event.detail);
+    };
+    app.root.addEventListener('draft-editor-replaced', replacedListener);
+    app.disposables.push(() => app.root.removeEventListener('draft-editor-replaced', replacedListener));
     // 维护区顺序：私人笔记与草稿操作（意见面板移交）→ 恢复、下载与版本详情。
     noteRecovery.replaceChildren(...(annotations?.maintenanceNodes || [draftSlot]), recovery);
     draftSlot.replaceChildren(draftView);

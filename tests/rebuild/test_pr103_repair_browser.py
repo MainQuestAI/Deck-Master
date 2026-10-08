@@ -590,3 +590,69 @@ def test_candidate_cards_show_real_fixed_images_and_release_on_navigation(flow, 
             assert page.evaluate("async () => (await import('/v2/images.js')).imagePool.snapshot().pinned") == 0
         finally:
             browser.close();server.stop()
+
+
+def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_browser):
+    """P07a 关键反例：恢复必须走真实选择入口，替换当前 editor，恢复区跟随新 editor 重建。
+
+    恢复区搬移节点若残留旧 editor，旧 select 从脱离 DOM 的 input 派发事件，真实
+    恢复会被误报成「本机缓冲不可用」；新 editor 的恢复入口也必须重新接进恢复区。
+    保存意见会推进修订，因此每次装载都按最新当前稿打开，不固定旧修订。
+    """
+    from playwright.sync_api import expect
+    page, server, _project, store = ux04_browser
+    base = server.start().split('#')[0]
+    page.goto(base)
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    info = page.request.get(base + 'api/project').json()
+
+    def goto_page():
+        page.goto(base + '#' + urlencode({'project': info['project_identity'], 'surface': 'page',
+            'page': 'p01', 'layer': 'original_image'}))
+        page.reload()
+
+    def open_note():
+        details = page.locator('details.note-entry').first
+        if details.count():
+            if not details.evaluate('node => node.open'):
+                details.locator('summary').click()
+        expect(page.get_by_role('textbox', name='个人草稿', exact=True)).to_be_visible()
+
+    def save_pair(body, note):
+        page.get_by_role('button', name='整页意见', exact=True).click()
+        page.get_by_role('textbox', name='意见正文', exact=True).fill(body)
+        save = page.get_by_role('button', name='保存意见', exact=True)
+        expect(save).to_be_enabled()
+        save.click()
+        open_note()
+        page.get_by_role('textbox', name='个人草稿', exact=True).fill(note)
+        expect(page.locator('.draft-state').first).to_contain_text('已保存到项目')
+
+    goto_page()
+    save_pair('恢复来源意见正文甲', '甲的私人备注')
+    first_record = next(record for record in page.request.get(base + 'api/drafts').json()['records']
+                        if record['draft']['content']['text'] == '甲的私人备注')
+    page.evaluate('() => localStorage.clear()')
+    goto_page()
+    save_pair('恢复来源意见正文乙', '乙的私人备注')
+
+    # 恢复列表同时列出两份；从真实 select 恢复甲（不得用合成事件）。
+    goto_page()
+    recovery = page.locator('details.source-detail').filter(has_text='恢复、下载与版本详情').first
+    recovery.locator('summary').click()
+    select = page.get_by_role('combobox', name='恢复项目中的个人草稿')
+    expect(select).to_be_visible()
+    select.select_option(value=first_record['draft']['draft_id'])
+    editor = page.locator('#personal-draft')
+    expect(page.locator('.personal-draft')).to_have_count(1)
+    expect(editor).to_have_value('甲的私人备注')
+    expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_have_value('恢复来源意见正文甲')
+    expect(page.locator('.draft-state').first).to_contain_text('已保存到项目')
+
+    # 恢复区现在必须持有当前 editor 的入口：换回乙也走同一个恢复 select，而不是死节点。
+    second_record = next(record for record in page.request.get(base + 'api/drafts').json()['records']
+                         if record['draft']['content']['text'] == '乙的私人备注')
+    recovery.get_by_role('combobox', name='恢复项目中的个人草稿').select_option(value=second_record['draft']['draft_id'])
+    expect(editor).to_have_value('乙的私人备注')
+    expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_have_value('恢复来源意见正文乙')
+    screenshot(page, 'p07a-restore-replaces-editor')
