@@ -494,6 +494,7 @@ export class Annotations {
     if (!note.trim()) { this.error.textContent = '私人笔记为空，没有可复制的内容。'; return; }
     this.bodyField.input.value = note;
     this.error.textContent = '已从私人笔记复制到意见正文；保存前仍可修改，私人笔记本身不变。';
+    this.node.dispatchEvent(new CustomEvent('activate-opinion-face', {bubbles: true}));
     this.changed(); this.bodyField.input.focus();
   }
   async plan() {

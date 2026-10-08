@@ -265,6 +265,7 @@ export function pageDetail(app, data) {
     return [key, control];
   }));
   function activateFace(key) {
+    if(key!=='opinions'&&annotations&&['point','rect','text'].includes(annotations.mode))annotations.setMode('read');
     for (const [area, node] of faceNode) node.hidden = area !== key;
     for (const [area, control] of faceControl) control.setAttribute('aria-pressed', String(area === key));
   }

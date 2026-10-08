@@ -174,7 +174,9 @@ def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
     assert page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']==[]
     open_note_face(page)
     page.get_by_role('button',name='从私人笔记复制',exact=True).click()
-    expect(note).to_have_value('这是我自己的备忘，不是给制作的意见。')
+    # Copying now activates the opinion face, so inspect the preserved private
+    # field explicitly even though its face has become hidden.
+    expect(page.get_by_role('textbox',name='个人草稿',exact=True,include_hidden=True)).to_have_value('这是我自己的备忘，不是给制作的意见。')
     open_opinion_face(page)
     expect(body).to_have_value('这是我自己的备忘，不是给制作的意见。')
     page.get_by_role('button',name='保存意见',exact=True).click()

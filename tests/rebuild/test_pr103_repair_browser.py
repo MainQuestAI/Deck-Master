@@ -646,10 +646,26 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
         page.get_by_role('textbox', name='意见正文', exact=True).fill(body)
         save = page.get_by_role('button', name='保存意见', exact=True)
         expect(save).to_be_enabled()
-        save.click()
+        with page.expect_response('**/api/annotations/batch') as receipt:
+            save.click()
+        assert receipt.value.ok, receipt.value.json()
+        # This scenario tests restoring completed drafts. Finish the formal
+        # receipt before writing the private note; the held-receipt test covers
+        # concurrent writing separately without weakening production gating.
+        page.wait_for_function('''async body => {
+          const records = (await (await fetch('/api/drafts')).json()).records;
+          return records.some(r => r.draft.content.annotation?.body === body && !r.draft.pending);
+        }''', arg=body)
+        expect(page.locator('.business-pending')).to_be_hidden()
         open_note()
         page.get_by_role('textbox', name='个人草稿', exact=True).fill(note)
         expect(page.locator('.draft-state').first).to_contain_text('已保存到项目')
+        # Do not clear local recovery / navigate until both durable states retire.
+        expect(page.locator('.business-pending')).to_be_hidden()
+        page.wait_for_function('''async note => {
+          const records = (await (await fetch('/api/drafts')).json()).records;
+          return records.some(r => r.draft.content.text === note && !r.draft.pending);
+        }''', arg=note)
 
     goto_page()
     save_pair('恢复来源意见正文甲', '甲的私人备注')

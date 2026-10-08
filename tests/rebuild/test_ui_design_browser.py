@@ -150,19 +150,15 @@ def test_modal_falls_back_to_the_caller_provided_focus_when_trigger_gone(workben
       const trigger = group.querySelector('#p01-trigger');
       trigger.focus();
       const dialog = modal('范围比较', document.createElement('p'));
-      await new Promise(r => setTimeout(r, 40));
       trigger.remove();
-      dialog.close();
-      await new Promise(r => setTimeout(r, 40));
+      await new Promise(resolve => {dialog.addEventListener('close', resolve, {once:true});dialog.close();});
       const withoutFallback = document.activeElement.id;
 
       const second = document.createElement('button'); second.textContent = '触发';
       group.append(second); second.focus();
       const dialog2 = modal('范围比较', document.createElement('p'), [], {fallback: group.querySelector('#p01-fallback')});
-      await new Promise(r => setTimeout(r, 40));
       second.remove();
-      dialog2.close();
-      await new Promise(r => setTimeout(r, 40));
+      await new Promise(resolve => {dialog2.addEventListener('close', resolve, {once:true});dialog2.close();});
       return {withoutFallback, withFallback: document.activeElement.id, top: group.querySelector('#p01-plain').isConnected};
     }''')
     assert outcome['withoutFallback'] == 'view-title'

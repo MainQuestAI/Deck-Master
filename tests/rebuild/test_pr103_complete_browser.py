@@ -514,11 +514,19 @@ def visible_button_style(page, text, pressed=None):
     expect(button).to_be_enabled()
     if pressed is not None:
         expect(button).to_have_attribute('aria-pressed', pressed)
-    return button.evaluate("""button => {
+    # The selected-task route rebuild can replace this locator's resolved node
+    # between the assertions and evaluate. Sample only a connected, visible
+    # current button, keeping all geometry/color assertions in the caller.
+    return page.wait_for_function("""({text, pressed}) => {
+      const button = [...document.querySelectorAll('button')].find(n =>
+        n.textContent.trim() === text && n.isConnected && n.getClientRects().length &&
+        !n.disabled && (!pressed || n.getAttribute('aria-pressed') === pressed));
+      if (!button) return null;
       const box = button.getBoundingClientRect(), style = getComputedStyle(button);
+      if (!style.color || !style.backgroundColor) return null;
       return {height: box.height, color: style.color,
               background: style.backgroundColor, transition: style.transitionDuration};
-    }""")
+    }""", arg={'text': text, 'pressed': pressed}).json_value()
 
 
 @pytest.mark.parametrize('width,height', [(1440,900), (1280,800), (390,844)])

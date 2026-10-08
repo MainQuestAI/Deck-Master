@@ -142,6 +142,7 @@ input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
 .page-context { gap:16px; }
 .page-context>.generation-basis { margin-bottom:12px; }
 .annotations-panel .panel-head { background:#fff; }
+.page-tools .annotations-panel .panel-head { padding:12px 16px; }
 .annotations-panel>.panel-body { padding:16px; gap:12px; }
 .annotation-tools { background:var(--studio-ground); border-color:var(--studio-line); }
 .annotation-tools button[aria-pressed=true] { background:#fff; border-color:#b8c0c9; }

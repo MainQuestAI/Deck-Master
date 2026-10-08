@@ -75,6 +75,9 @@ export function runs(app, data) {
     for (const [area, control] of switchers) control.setAttribute('aria-pressed', String(area === key));
     syncTaskContext(key);
     if (persist) {
+      // Leaving a selected task changes the route's object identity. Rebuild via
+      // normal navigation so runDesk cannot retain the old detail in a closure.
+      if(selected){app.go({runs_area:key,task_id:null});return;}
       app.route.runs_area = key;
       // 子区不是 tasks 时任务详情会被隐藏：持久化这一选择就同时放下 task_id，
       // 否则刷新/分享该链接会得到"任务已校验但显示不出来"的状态。

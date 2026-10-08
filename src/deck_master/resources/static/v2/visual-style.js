@@ -160,6 +160,7 @@ export function visualStyle(app){
   openPhase(1);
   function controls(){const blocked=!loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size);
     input.disabled=blocked||Boolean(pending&&pending.state!=='not_found');savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
+    for(const control of [...rules.querySelectorAll('input,textarea,select,button'),...images.querySelectorAll('input'),...futureTargets.querySelectorAll('input')])control.disabled=blocked;
     uploadRecovery.replaceChildren();
     if(continuation)uploadRecovery.append(el('p',{},continuation.label+'；结果已保留。'),button('打开已保存的结果',()=>continueCompletion({preserveLocal:true}),false,{disabled:busy||continuing||!loaded}));
     if(pending?.state==='rejected')uploadRecovery.append(el('p',{},pending.rejection?.code==='visual_reference_conflict'?'本次上传因版本变化已明确拒绝，未提交。先读取当前版本，再重新选择截图上传。':'本次截图上传已明确拒绝，未提交。请结束这次失败上传后重新选择合法截图。'),button(pending.rejection?.code==='visual_reference_conflict'?'读取当前版本并重新上传':'结束失败上传，重新选图',restartRejectedUpload,false,{disabled:!loaded||busy||disposed||Boolean(app.business.entries.size)}));
@@ -276,13 +277,17 @@ export function visualStyle(app){
     if(spec.font_suggestions.length)rules.append(el('p',{class:'muted'},'字体判断：'+spec.font_suggestions.map(f=>`${f.family}${f.approximate?'（近似）':''}：${f.reason}`).join('；')));
     if(spec.limitations.length)rules.append(el('p',{class:'muted'},spec.limitations.join('；')));
   }
-  async function confirmSpec(){busy=true;controls();try{
+  async function confirmSpec(){if(busy||!loaded||!spec)return;const current=editor(),generation=hydrateSerial,epoch=analysisSerial;
+    const active=()=>!disposed&&current===editor()&&!current.disposed&&generation===hydrateSerial&&epoch===analysisSerial;
+    busy=true;controls();try{
     const input={schema_version:'style_input.v2',project_id:app.info.project_id,base_revision:app.route.revision,visual_style_ref:spec.ref,target_page_ids:state.targets,instruction:requirement.value,...(state.font_id?{font_id:state.font_id}:{}),
       dimensions:Object.fromEntries([...choices].filter(([,v])=>v.check.checked).map(([key,v])=>[key,v.text.value]))};
     const value=await post('/api/styles/propose',{input});
-    await app.business.submit(editor(),'styles.confirm',{proposal_id:value.proposal_id,base_revision:app.route.revision},{proposal_ref:value.proposal_ref},async result=>{
+    if(!active())return;
+    await app.business.submit(current,'styles.confirm',{proposal_id:value.proposal_id,base_revision:input.base_revision},{proposal_ref:value.proposal_ref},async result=>{
+      if(!active())return;
       state.recipe=result.recipe_id;await completedBusiness(result,{},'视觉规范已确认');});
-  }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
+  }catch(error){if(active())status.textContent=readableError(error);}finally{busy=false;if(!disposed)controls();}}
   async function planTrial(expanding=false){busy=true;controls();try{
     await app.business.available();const ids=expanding?[...expansion]:[target.value];
     if(!ids.length||!recipe)throw new Error('先确认规范并明确选择目标页。');

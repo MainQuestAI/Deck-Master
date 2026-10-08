@@ -161,7 +161,11 @@ def test_artwork_and_save_row_share_the_first_screen(workbench_page, width, heig
     assert artwork['y'] >= 0 and artwork['y'] + artwork['height'] <= height, artwork
     body = page.get_by_role('textbox', name='意见正文', exact=True).bounding_box()
     save = page.get_by_role('button', name='保存意见', exact=True).bounding_box()
-    assert body['y'] + body['height'] < height and save['y'] + save['height'] < height, (body, save)
+    # Keep actual layout headroom; one CSS pixel only absorbs device rounding.
+    assert body['y'] + body['height'] <= height - 8 + 1 and save['y'] + save['height'] <= height - 8 + 1, (body, save)
+    assert page.get_by_role('button', name='保存意见', exact=True).evaluate('''n => {
+      const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+    }''')
     # The default fit keeps exactly one scroll container over the artwork.
     assert page.evaluate('() => { const vp = document.querySelector(".page-image-viewport"); return vp.scrollHeight <= vp.clientHeight + 1; }')
 

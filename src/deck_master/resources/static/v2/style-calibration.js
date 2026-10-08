@@ -92,7 +92,7 @@ export function style(app) {
   const primaryTarget=el('select',{'aria-label':'当前风格试作目标'},el('option',{value:''},'选择先试的一页'),pages.map(p=>el('option',{value:p.page_id},label(p.page_id))));
   const primaryPreview=el('div',{class:'style-primary-target'});let primaryView;
   function showPrimary(){primaryView?.dispose();primaryPreview.replaceChildren();const p=pages.find(p=>p.page_id===primaryTarget.value);if(p?.stages.blueprint.file){primaryView=imageView(app,p.stages.blueprint,'当前风格试作目标');primaryPreview.append(primaryView.node);}}
-  primaryTarget.addEventListener('change',()=>{if(primaryTarget.value)selected.add(primaryTarget.value);renderTargets();showPrimary();changed();});
+  primaryTarget.addEventListener('change',()=>{if(primaryTarget.value)selected=new Set([primaryTarget.value,...selected]);renderTargets();showPrimary();changed();});
   const phases = [
     phase('1 · 参考与目标',el('div',{class:'style-working-pair'},
       el('div',{class:'stack'},el('label',{class:'stack'},'固定参考原图',reference),referenceView,detail('查找其它参考页',referenceSearch,referenceCount)),
@@ -176,7 +176,7 @@ export function style(app) {
     targets.replaceChildren(...visible.map(p => {
       const check = el('input', {type: 'checkbox', checked: selected.has(p.page_id), 'aria-label': '风格目标 ' + label(p.page_id)});
       check.dataset.reference = String(p.page_id === fixed?.page_id);
-      check.addEventListener('change', () => { check.checked ? selected.add(p.page_id) : selected.delete(p.page_id); resolutions = {}; notice.textContent = ''; count(); changed(); });
+      check.addEventListener('change', () => { check.checked ? selected.add(p.page_id) : selected.delete(p.page_id); if(primaryTarget.value===p.page_id&&!check.checked){primaryTarget.value=[...selected][0]||'';showPrimary();} resolutions = {}; notice.textContent = ''; count(); changed(); });
       let thumb;
       if (p.stages.blueprint.existence === 'recorded' && p.stages.blueprint.file) {
         thumb = el('div', {class:'style-target-thumb'}, el('span', {class:'muted'}, '原图预览'));
