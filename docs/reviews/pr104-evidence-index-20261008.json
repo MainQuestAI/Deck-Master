@@ -1,5 +1,5 @@
 {
-  "schema_version": "pr104_evidence_index.v1.2",
+  "schema_version": "pr104_evidence_index.v1.3",
   "date": "2026-10-08",
   "reviewed_head": "d64c8b0d7ba3a2981ebfa02e7cdfeb4d8a88c539",
   "base": "6996a29b1792e39199cf0ae968deaaaba381d9e1",
@@ -743,6 +743,14 @@
       {
         "name": "review-suite-private-receipt-final.log",
         "sha256": "128b79e9821a4eabd14dd12cce5b4183ef867077006cf4e6a24cc49cc92f2d1e"
+      },
+      {
+        "name": "ci-680c46c8-pr-final-failed.log",
+        "sha256": "4ec753aedb0f1826549c94460c69165a01066295dd5a5e03846cdadfcced4500"
+      },
+      {
+        "name": "upload-source-installed-sync-final.log",
+        "sha256": "211cd05599094e0784594ff463f83563efee417e732c4789113d0797b5272c3d"
       }
     ],
     "review_suite_after_ci_selector_fix": {
@@ -807,6 +815,26 @@
       "pr_offline": "pass",
       "pr_installed": "in_progress",
       "pr_render": "in_progress_at_Install_renderer_toolchain"
+    },
+    "remote_680c46c8_after_capture": {
+      "pr_installed": {
+        "passed": 142,
+        "failed": 1,
+        "cause": "partial upload test reload while private receipt not durable"
+      },
+      "pr_render": "cancelled_during_slow_LibreOffice_and_fonts_download",
+      "pr_render_tests": "skipped",
+      "pr_source_browser": "pass",
+      "pr_wheel": "pass",
+      "pr_offline": "pass"
+    },
+    "source_installed_upload_sync_final": {
+      "status": "pass",
+      "passed": 5,
+      "seconds": 12.55,
+      "production_changed": false,
+      "full_browser_expected": 304,
+      "installed_expected": 144
     }
   },
   "baseline_counterexamples": {
@@ -856,7 +884,7 @@
     },
     {
       "path": "tests/rebuild/test_pr103_complete_browser.py",
-      "sha256": "d0fb742cf1e6f6f9917d74c88ac5854070f7e69843865598ac561810d3d7635e"
+      "sha256": "a8b148e8f8970ac101c1a4ad1d4f121bfc73c319227f14c169db086ee3feb588"
     },
     {
       "path": "tests/rebuild/test_deep_quality_browser.py",

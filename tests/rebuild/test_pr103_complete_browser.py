@@ -286,6 +286,7 @@ def test_partial_upload_keeps_successful_files_and_retries_only_failed_file(tmp_
     with browser_for(flow.project) as (page, _):
         page.get_by_role('button', name='风格校准', exact=True).click()
         page.get_by_label('风格参考来源').select_option('screenshot')
+        expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
         requests = []
         page.on('request', lambda r: requests.append(r.url) if '/api/styles/references/import?' in r.url else None)
         upload = page.get_by_label('导入参考截图', exact=True)
@@ -299,8 +300,12 @@ def test_partial_upload_keeps_successful_files_and_retries_only_failed_file(tmp_
         expect(page.get_by_role('button', name='结束失败上传，重新选图', exact=True)).to_be_enabled()
         successful = flow.store.load_document()['style_references']
         assert len(successful) == 2
+        # The images can finish before the restored private selection is saved.
+        # Keep reload separate from the lost-private-receipt recovery cases.
+        expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
         page.reload()
         expect(page.locator('.visual-reference-choice')).to_have_count(2)
+        expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
         page.get_by_role('button', name='结束失败上传，重新选图', exact=True).click()
         # set_input_files does not wait for enabled like an actual file-picker
         # click. Respect readiness, then distinguish the receipt from the mount.
