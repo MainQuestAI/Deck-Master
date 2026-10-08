@@ -18,8 +18,33 @@ from pathlib import Path
 
 import pytest
 
+import copy
+import uuid as uuid_lib
+from xml.etree import ElementTree
+
+from deck_master import icons
+from deck_master.models import bump_revision
 from deck_master.samples import create_sample
 from deck_master.store import Store
+
+# 与 test_icon_quality.icon_store 一致的合成 SVG 图层写入方式，为 F02 提供真实可读 SVG。
+SVG_LAYER = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540"><text x="30" y="80" font-family="Arial" font-size="24">SYNTHETIC SVG LAYER</text></svg>'
+
+
+def add_svg_layers(store):
+    doc = store.load_document(); new = copy.deepcopy(doc)
+    for entry in new['pages']:
+        root = icons.tree(SVG_LAYER)
+        root[0].set('font-family', 'Arial')
+        original = store.read_object_json(entry['blueprint'])['file']['sha256']
+        root.set('data-blueprint-sha256', original)
+        artifact = store.read_object_json(entry['blueprint'])
+        artifact['role'] = 'svg'; artifact['media_type'] = 'image/svg+xml'
+        artifact['file'] = store.put_blob(ElementTree.tostring(root), ext='svg')
+        entry['svg'] = store.put_json_object(artifact)
+    new = bump_revision(new, {'operation_id': str(uuid_lib.uuid4()), 'kind': 'artifact_adoption',
+                              'description': 'synthetic svg layers', 'read_set': []})
+    store.commit_change(base_revision=doc['revision_id'], document=new, operation_id=new['change']['operation_id'])
 from deck_master.web import WorkbenchServer
 
 pytestmark = pytest.mark.browser
@@ -34,6 +59,7 @@ def ux06_browser(tmp_path):
     path = tmp_path / 'ux06-project'
     create_sample(path, page_count=2, readonly=False)
     store = Store(path)
+    add_svg_layers(store)
     server = WorkbenchServer(path)
     with playwright.sync_playwright() as runtime:
         executable = shutil.which('chromium') or shutil.which('chromium-browser')
@@ -279,4 +305,25 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
     assert payload['page_id'] == 'p01' and len(payload['annotation_refs']) == 1
     assert payload['opinions'][0]['body'] == '图标间距需要与正文对齐。'
     assert payload['opinions'][0]['layer'] == 'original_image'
+
+    # P03a/UAC25 前半：刚才在 390px 从零写的整页意见以同一条正式 ref 进入同一图标
+    # 面板——不因没有 layer/artifact_ref 被排除；选入后复制沿用合法 page 字段，
+    # 不补造 layer/artifact_ref。
+    page_record = next(record for record in page.request.get(url.rstrip('/') + '/api/annotations').json()['annotations']
+                       if record['annotation']['body'].startswith('整图中的徽标位置'))
+    page_choice = workbench.locator('label').filter(has_text='整图中的徽标位置').locator('input[type=checkbox]')
+    expect(page_choice).to_have_count(1)
+    page_label = workbench.locator('label').filter(has_text='整图中的徽标位置')
+    expect(page_label).to_contain_text('整页文字定位')
+    opinion.uncheck()
+    page_choice.check()
+    prior_ref = payload['annotation_refs'][0]['sha256']
+    handoff.click()
+    # 第二次复制前状态行已是「已复制」：以剪贴板 ref 变化为准，避免读到上次的 payload。
+    page.wait_for_function("src => window.iconCopy && JSON.parse(window.iconCopy).annotation_refs[0]?.sha256 !== src", arg=prior_ref)
+    payload2 = page.evaluate('JSON.parse(window.iconCopy)')
+    assert payload2['page_id'] == 'p01' and len(payload2['annotation_refs']) == 1
+    assert payload2['annotation_refs'][0] == page_record['ref']
+    assert payload2['opinions'][0]['body'].startswith('整图中的徽标位置')
+    assert 'layer' not in payload2['opinions'][0] and 'artifact_ref' not in payload2['opinions'][0]
     assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth')

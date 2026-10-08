@@ -138,7 +138,7 @@ def test_saved_sample_identity_survives_reorder_and_missing(icon_browser):
       const original=window.fetch;let samples=[b,a];
       window.fetch=async(url,...args)=>String(url).startsWith('/api/icons/list')?new Response(JSON.stringify({samples,proposals:[],recipes:[]})):original(url,...args);
       const app={business:{entries:new Map()},health:{ui_capabilities:['icon_quality.v1']},route:{layer:'svg'},root:document.createElement('div'),disposables:[],editor:{draft:{content:{icon_ui:{method:'reuse',sample_identity:a}}},ready:Promise.resolve(),changed(){}}};
-      async function build(){const root=iconWorkbench(app,{page_id:'p01'});document.body.append(root);for(let i=0;i<100&&!root.querySelector('[aria-label="已采用图标样例"]').options.length;i++)await new Promise(r=>setTimeout(r,10));return root;}
+      async function build(){const root=iconWorkbench(app,{page_id:'p01',stages:{content:{ref:{sha256:'content'}},blueprint:{existence:'recorded',ref:{sha256:'bp'},file:'bp.png'},svg:{existence:'recorded',ref:{sha256:'svg'},file:'layer.svg'},ppt_preview:{existence:'not_generated'}}});document.body.append(root);for(let i=0;i<100&&!root.querySelector('[aria-label="已采用图标样例"]').options.length;i++)await new Promise(r=>setTimeout(r,10));return root;}
       let root=await build();const restored=root.querySelector('[aria-label="已采用图标样例"]').value;root.remove();samples=[b];root=await build();
       const missing=root.querySelector('[aria-label="已采用图标样例"]').value;const warning=root.textContent.includes('请重新选择');root.remove();samples=[];root=await build();const emptyMethod=root.querySelector('[aria-label="图标处理方式"]').value;root.querySelectorAll('button')[1].click();await new Promise(r=>setTimeout(r,10));const blocked=root.textContent.includes('请重新选择');root.remove();app.disposables.forEach(fn=>fn());window.fetch=original;
       return {restored,expected:sampleKey(a),missing,warning,emptyMethod,blocked};
@@ -158,3 +158,51 @@ def test_missing_compare_column_keeps_stable_focus_identity(icon_browser):
     assert page.locator('[data-icon-column="2"]').get_attribute('aria-label')=='候选实际 PPT'
     page.locator('[data-icon-column="1"]').focus();fixed=page.url;page.keyboard.press('ArrowRight');assert page.url==fixed
     page.evaluate('()=>{focusProbe.dispose();focusProbe.node.remove();delete window.focusProbe;}')
+
+
+def test_icon_opinion_scope_and_basis_rows(icon_browser):
+    # §3.1/UAC25 参数行：page 意见可列入；其它页排除；仅 revision 推进不判失效；
+    # artifact_ref 变化才标旧底稿；复制沿用合法 page 字段不补造 layer/artifact_ref。
+    import copy as copy_mod
+    import uuid as uuid_mod
+    from playwright.sync_api import expect
+    from deck_master import annotation_service
+    from deck_master.models import bump_revision
+    page,store,errors=icon_browser
+    url=page.url.split('#')[0];info_identity=re.search(r'project=([^&#]+)',page.url.split('#')[1]).group(1)
+    doc=store.load_document();entry=next(e for e in doc['pages'] if e['page_id']=='p01')
+    def note(scope,page_id,page_ref,**extra):
+        return {'schema_version':'annotation.v1','project_id':doc['project_id'],'base_revision':doc['revision_id'],
+                'scope':scope,'page_id':page_id,'page_ref':page_ref,'intent':'clarify','body':NOTE_BODIES[scope][page_id],'status':'open','location':{'kind':'whole'},**extra}
+    NOTE_BODIES={'page':{'p01':'整页意见正文样例。','p02':'其它页整页意见不入本页。'},'artifact':{'p01':'SVG 层意见样例。'}}
+    page_ref_p01=note('page','p01',entry['page']);page_ref_p02=note('page','p02',next(e['page'] for e in doc['pages'] if e['page_id']=='p02'))
+    artifact_ref_p01=note('artifact','p01',entry['page'],layer='svg',artifact_ref=entry['svg'])
+    annotation_service.save(store.project_root,input={'schema_version':'annotation_batch.v1','project_id':doc['project_id'],
+        'annotations':[page_ref_p01,page_ref_p02,artifact_ref_p01]},base_revision=doc['revision_id'],operation_id=str(uuid_mod.uuid4()))
+    # 推进一次修订但所有产物引用不变：意见不得因 base_revision 落后被判失效。
+    doc=store.load_document();bumped=bump_revision(copy_mod.deepcopy(doc),{'operation_id':str(uuid_mod.uuid4()),'kind':'task_update','description':'revision advance without content change','read_set':[]})
+    store.commit_change(base_revision=doc['revision_id'],document=bumped,operation_id=bumped['change']['operation_id'])
+    # 再实际重做 SVG 图层:p01 的 svg 引用变化,SVG 范围意见转为旧底稿。
+    doc=store.load_document();new=copy_mod.deepcopy(doc);svg_entry=next(e for e in new['pages'] if e['page_id']=='p01')
+    svg_doc=store.read_object_json(svg_entry['svg']);svg_doc['file']=store.put_blob(b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540"><rect width="960" height="540" fill="#eeeeee"/><text x="40" y="90">REGENERATED</text></svg>',ext='svg')
+    svg_entry['svg']=store.put_json_object(svg_doc)
+    bumped=bump_revision(new,{'operation_id':str(uuid_mod.uuid4()),'kind':'artifact_adoption','description':'regenerated svg','read_set':[]})
+    store.commit_change(base_revision=doc['revision_id'],document=bumped,operation_id=bumped['change']['operation_id'])
+    page.goto(url+'#'+urlencode({'project':info_identity,'surface':'page','page':'p01','layer':'svg','revision':store.current_revision_id()}))
+    workbench=page.locator('.icon-workbench');workbench.wait_for(timeout=15000)
+    page_box=workbench.locator('label').filter(has_text='整页意见正文样例')
+    expect(page_box).to_contain_text('整页文字定位')
+    expect(page_box).to_contain_text('与当前产物一致')
+    expect(workbench.locator('label').filter(has_text='SVG 层意见样例')).to_contain_text('旧底稿意见 · 需重新定位')
+    expect(workbench.get_by_role('status')).not_to_contain_text('已不在本页图标列表')
+    assert workbench.locator('label.icon-opinion').count()==2
+    page_box.locator('input[type=checkbox]').check()
+    page.evaluate("() => {window.iconCopy = null; Object.defineProperty(navigator, 'clipboard', {value: {writeText: async text => {window.iconCopy = text;}}});}")
+    workbench.get_by_role('button',name='复制给 Agent 的图标要求',exact=True).click()
+    expect(workbench.get_by_role('status')).to_contain_text('图标要求已复制。尚未启动任务')
+    payload=page.evaluate('JSON.parse(window.iconCopy)')
+    listing=page.request.get(url+'api/annotations').json()
+    page_record=next(r for r in listing['annotations'] if r['annotation']['scope']=='page' and r['annotation']['page_id']=='p01')
+    assert payload['annotation_refs']==[page_record['ref']]
+    assert payload['opinions'][0]['body']=='整页意见正文样例。'
+    assert 'layer' not in payload['opinions'][0] and 'artifact_ref' not in payload['opinions'][0]
