@@ -287,3 +287,29 @@ def test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone(st
     page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
     expect(page.locator('.source-card')).to_contain_text('提取：记录待核实')
     assert not page.locator('#modal').evaluate('(node) => node.open')
+
+
+def test_user_chosen_phase_survives_the_passive_recipe_read(style_content_browser):
+    """UAC16:阶段是用户的阅读选择;迟到的样式版本读取(auto showPhase)不抢回阶段。"""
+    from playwright.sync_api import expect
+    page, server, path, store = style_content_browser
+    phases = page.locator('.style-calibration > .style-phase')
+    # 挂起挂载时的样式读取,让「用户先选阶段、回包后到」的时序确定发生。
+    held = []
+    page.route('**/api/styles*', lambda route: held.append(route))
+    open_style(page, with_targets=True)
+    page.wait_for_timeout(300)
+    first_open = phases.first.evaluate('(node) => node.open')
+    phases.nth(2).locator('summary').first.click()
+    expect(phases.nth(2)).to_have_attribute('open', '')
+    assert held, 'the mount-time styles read must still be pending'
+    for route in held:
+        route.fulfill(response=route.fetch())
+    page.unroute('**/api/styles*')
+    page.wait_for_timeout(600)
+    # 用户已选阶段保持展开;auto 恢复(showPhase(2))没有打开阶段 2。
+    # 用户手动开阶段 3 不折叠阶段 1(details 独立展开是既有语义),阶段 1
+    # 的展开状态在被动读取前后不变。
+    expect(phases.nth(2)).to_have_attribute('open', '')
+    assert not phases.nth(1).evaluate('(node) => node.open')
+    assert phases.first.evaluate('(node) => node.open') == first_open
