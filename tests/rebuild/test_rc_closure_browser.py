@@ -9,6 +9,30 @@ from test_icon_quality import icon_store  # noqa: F401
 pytestmark = pytest.mark.browser
 
 
+
+
+def open_opinion_face(page):
+    """P02:回到意见面(与 open_note_face 对称)。"""
+    entry = page.get_by_role('button', name='工具', exact=True)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='意见', exact=True).click()
+
+
+def open_note_face(page):
+    """P02:个人笔记位于五工具容器的「笔记」面;先切面(窄屏先开工具面板)。"""
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    note_button = page.get_by_role('button', name='笔记', exact=True)
+    expect(note_button.first).to_be_visible(timeout=15000)
+    note_button.first.click()
+
+
+
 def saved_requirement(page, text, refs=None):
     for _ in range(100):
         records = page.request.get(page.url.split('#')[0] + 'api/drafts').json()['records']
@@ -23,6 +47,7 @@ def saved_requirement(page, text, refs=None):
 
 def opinion(page, text='缩短标题'):
     page.get_by_role('button', name='整页意见', exact=True).click()
+    open_opinion_face(page)
     page.get_by_label('意见正文', exact=True).fill(text)
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.locator('.field-error[data-success]')).to_be_visible()
@@ -36,6 +61,7 @@ def persisted_requirement(workbench):
     goto()
     expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', store.current_revision_id())
     page.get_by_label('选入意见 1', exact=True).check()
+    open_opinion_face(page)
     page.get_by_label('修改要求', exact=True).fill('原要求：保留数字')
     return saved_requirement(page, '原要求：保留数字')
 
@@ -166,9 +192,11 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
     try:
         other = fresh.new_page()
         other.goto(url + '#' + page.url.split('#')[1])
+        open_note_face(other)
         other.get_by_text('恢复、下载与版本详情', exact=True).click()
         other.get_by_label('恢复项目中的个人草稿').select_option(draft['draft_id'])
         other.get_by_role('button', name='对当前版本写新意见', exact=True).click()
+        open_note_face(other)
         other.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
         expect(other.get_by_role('button', name='保存个人草稿', exact=True)).to_be_enabled()
         other.get_by_role('button', name='保存个人草稿', exact=True).click()
@@ -194,6 +222,7 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
             assert new_url != url
             restored = fresh.new_page()
             restored.goto(new_url + '#' + fragment)
+            open_note_face(restored)
             restored.get_by_text('恢复、下载与版本详情', exact=True).click()
             restored.get_by_label('恢复项目中的个人草稿').select_option(copied['draft_id'])
             expect(restored.get_by_label('修改要求', exact=True)).to_have_value(state['text'])
@@ -238,11 +267,16 @@ def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, t
         for window in [a, b]:
             window.goto(url + '#' + page.url.split('#')[1])
             expect(window.get_by_label('意见正文', exact=True)).to_be_editable()
+            open_note_face(window)
             window.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
             expect(window.get_by_label('个人草稿', exact=True)).to_have_value(initial['content']['text'])
         labels = ['个人草稿', '意见正文', '修改要求']
         def edit(window, texts):
             for label, value in zip(labels, texts, strict=True):
+                if label in ('意见正文', '修改要求'):
+                    open_opinion_face(window)
+                elif label == '个人草稿':
+                    open_note_face(window)
                 if window.get_by_label(label, exact=True).input_value() != value:
                     window.get_by_label(label, exact=True).fill(value)
         edit(a, project_texts)
@@ -312,6 +346,7 @@ def test_requirement_survives_reload_and_deselect(workbench):
     expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', store.current_revision_id())
     page.get_by_label('选入意见 1', exact=True).check()
     text = '标题保持12字以内，保留原数字，禁止新增效果承诺'
+    open_opinion_face(page)
     page.get_by_label('修改要求', exact=True).fill(text)
     assert saved_requirement(page, text)['annotation_refs']
     page.reload()
@@ -337,6 +372,7 @@ def test_old_basis_copy_clears_scope_and_requirement_selection(workbench):
         'annotation_refs': [], 'basis': {'revision_id': old}}
     ui_journal.save(store.project_root, draft=draft, expected_etag=record['etag'])
     goto()
+    open_note_face(page)
     page.get_by_text('恢复、下载与版本详情', exact=True).click()
     choices = page.get_by_label('恢复项目中的个人草稿')
     choices.select_option(draft['draft_id'])
@@ -373,6 +409,7 @@ def test_requirement_recovers_on_a_new_port(workbench):
     expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', store.current_revision_id())
     page.get_by_label('选入意见 1', exact=True).check()
     text = '保留数字，标题12字以内'
+    open_opinion_face(page)
     page.get_by_label('修改要求', exact=True).fill(text)
     saved_requirement(page, text)
     server = WorkbenchServer(store.project_root)
@@ -401,6 +438,7 @@ def test_late_annotation_list_cannot_remove_a_saved_opinion(workbench, old_error
     page.route('**/api/annotations?*', delay_first)
     goto()
     page.get_by_role('button', name='整页意见', exact=True).click()
+    open_opinion_face(page)
     page.get_by_label('意见正文', exact=True).fill('意见 B')
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.locator('.saved-annotations')).to_contain_text('意见 B')
@@ -424,6 +462,7 @@ def test_commit_conflict_shows_frozen_requirement_and_later_draft(workbench):
     goto()
     opinion(page)
     original, later = '原请求 A：仅缩短标题', '后写草稿 B：保留原数字'
+    open_opinion_face(page)
     page.get_by_label('修改要求', exact=True).fill(original)
     saved_requirement(page, original)
     page.get_by_role('button', name='预览修改影响', exact=True).click()
@@ -441,6 +480,7 @@ def test_commit_conflict_shows_frozen_requirement_and_later_draft(workbench):
     pending = next(r['draft']['pending'] for r in drafts if r['draft']['pending'])
     assert pending['payload']['display_context']['instruction'] == original
     expect(page.get_by_label('修改要求', exact=True)).to_be_editable()
+    open_opinion_face(page)
     page.get_by_label('修改要求', exact=True).fill(later)
     old = store.load_document()
     moved = copy.deepcopy(old)
@@ -544,6 +584,7 @@ def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench)
     body = page.get_by_label('意见正文', exact=True)
     expect(body).to_be_editable()
     body.fill('已有浏览器缓冲')
+    open_note_face(page)
     page.get_by_text('私人笔记（不进入意见与制作）', exact=True).click()
     page.get_by_role('button', name='保存个人草稿', exact=True).click()
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
