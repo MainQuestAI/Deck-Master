@@ -31,9 +31,22 @@ export function runs(app, data) {
       el('details', {}, el('summary', {}, '记录身份与依据'), el('pre', {class: 'evidence-json'}, JSON.stringify(review, null, 2))));
   }
   const selected = data.runDetail?.task || data.tasks.find(task => task.task_id === app.route.task_id);
-  const node = el('div', {}, heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
-    selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null));
-  if (selected && app.returnTo && !app.returnTo.task_id) node.append(button('返回上次工作面', () => app.go(app.returnTo)));
+  // D15/UAC20：标题、任务专属动作与返回入口属于「正在进行」子区的当前任务上下文；
+  // 切到版本/文件后立即放下，离开详情的 URL 状态由 showSubarea persist 清除。
+  const titleNode = heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
+    selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null);
+  const headingNode = titleNode.querySelector('h1');
+  const handoffButton = titleNode.querySelector('.page-head button.primary');
+  const returnButton = selected && app.returnTo && !app.returnTo.task_id
+    ? button('返回上次工作面', () => app.go(app.returnTo)) : null;
+  const node = el('div', {}, titleNode);
+  if (returnButton) node.append(returnButton);
+  const syncTaskContext = key => {
+    const inTaskContext = key === 'tasks' && selected;
+    headingNode.textContent = inTaskContext ? '当前任务' : '任务与交付';
+    if (handoffButton) handoffButton.hidden = !inTaskContext;
+    if (returnButton) returnButton.hidden = !inTaskContext;
+  };
   const handoffs = app.health.ui_capabilities?.includes('changes.v1') ? changeHandoffs(app) : null;
   const batch = candidateBatch(app);
   const tasks = selected ? [selected] : data.tasks;
@@ -60,6 +73,7 @@ export function runs(app, data) {
   const showSubarea = (key, {focus = false, persist = false} = {}) => {
     for (const [area, , , section] of subareas) section.hidden = area !== key;
     for (const [area, control] of switchers) control.setAttribute('aria-pressed', String(area === key));
+    syncTaskContext(key);
     if (persist) {
       app.route.runs_area = key;
       // 子区不是 tasks 时任务详情会被隐藏：持久化这一选择就同时放下 task_id，

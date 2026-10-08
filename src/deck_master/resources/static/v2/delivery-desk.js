@@ -173,12 +173,15 @@ export function historyDesk(app, history) {
   function stateIdentity() {
     restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly);
     restore.title = selected.value !== revision ? '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。' : '';
+    // D15/UAC20：进入 replaceChildren 前构造真实节点数组；条件不满足就不放，
+    // false/空字符串不会变成 "false" 或空徽标文本节点。
     identity.replaceChildren(
       el('span', {class: 'state-chip'}, `选中：${nameFor(selected.value)}`),
       el('span', {class: 'state-chip'}, `已读：${nameFor(revision)}`),
       el('span', {class: 'state-chip'}, `当前版本：${nameFor(history.current)}`),
-      el('span', {class: 'state-chip'}, history.head && history.head !== history.current && history.head !== revision ? `读取锚点：${nameFor(history.head)}` : ''),
-      selected.value !== revision && el('span', {}, '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。'));
+      ...(history.head && history.head !== history.current && history.head !== revision
+        ? [el('span', {class: 'state-chip'}, `读取锚点：${nameFor(history.head)}`)] : []),
+      ...(selected.value !== revision ? [el('span', {}, '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。')] : []));
   }
   function append(records, reset = false) {
     const chosen = reset ? revision : selected.value;

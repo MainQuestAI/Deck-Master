@@ -234,3 +234,44 @@ def test_batch_blocking_reasons_sit_beside_the_field(ux05_browser):
     page.get_by_label('批量图像调用上限').fill('1')
     expect(page.get_by_label('批量图像调用上限')).to_have_attribute('aria-invalid', 'false')
     expect(page.get_by_role('button', name='预览所选页试作', exact=True)).to_be_enabled()
+
+
+def test_task_detail_leaves_subarea_clean_and_version_identity_has_no_value_noise(ux05_browser):
+    # D15/UAC20 前半：详情只在「正在进行」子区生效；切走后标题、交接与返回
+    # 立即收起且 URL 不再携带 task;版本区三身份不出现 false/空徽标。
+    from playwright.sync_api import expect
+    page, server, path, store = ux05_browser
+    add_task(store, 'tsk-context-compose', 'compose', 'awaiting_host', '整理首页图标与正文')
+    url = server.start();page.goto(url)
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
+
+    def goto(runs_area='tasks', task_id=None):
+        params = {'project': identity, 'surface': 'runs', 'area': runs_area}
+        if task_id: params['task'] = task_id
+        page.evaluate("args => {location.hash = new URLSearchParams(args)}", params)
+        page.get_by_role('heading', name='任务与交付', exact=True).or_(page.get_by_role('heading', name='当前任务', exact=True)).wait_for(timeout=15000)
+
+    goto(task_id='tsk-context-compose')
+    title = page.locator('#view-title')
+    expect(title).to_have_text('当前任务')
+    handoff = page.get_by_role('button', name='交接这项内容整理', exact=True)
+    expect(handoff).to_be_visible()
+    page.get_by_role('button', name='版本', exact=True).click()
+    expect(title).to_have_text('任务与交付')
+    expect(handoff).to_be_hidden()
+    assert 'task=' not in page.url.split('#', 1)[-1]
+    identity_row = page.locator('.history-identity')
+    expect(identity_row).to_contain_text('选中：')
+    expect(identity_row).to_contain_text('已读：')
+    expect(identity_row).to_contain_text('当前版本：')
+    assert page.evaluate('() => document.querySelector(".history-identity").textContent.includes("false")') is False
+    page.reload()
+    title = page.locator('#view-title')
+    expect(title).to_have_text('任务与交付')
+    expect(page.get_by_role('button', name='文件', exact=True)).to_be_visible()
+    expect(page.locator('.history-identity')).to_contain_text('当前版本：')
+    # 回到「正在进行」：详情不再自动带出,任务归列表可再次进入。
+    page.get_by_role('button', name='正在进行', exact=True).click()
+    expect(title).to_have_text('任务与交付')
+    expect(page.get_by_text('整理首页图标与正文', exact=False).first).to_be_visible()
