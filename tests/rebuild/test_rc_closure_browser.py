@@ -409,17 +409,18 @@ def test_whole_page_opinion_flows_to_requirement_handoff(workbench):
     page.get_by_label('选入意见 1', exact=True).check()
     requirement = '标题 12 字以内，保留原数字；数字与换行不变'
     page.get_by_label('修改要求', exact=True).fill(requirement)
-    page.get_by_role('button', name='预览修改影响', exact=True).click()
+    # 计划请求载荷必须携带修改要求原文(pending 会随回执核实正常退休,瞬态字段
+    # 不能做断言——孤立跑慢、全量跑快,两次全量门禁暴露了这个竞速)。
+    with page.expect_request(lambda request: '/api/changes/plan' in request.url and request.method == 'POST',
+                             timeout=30000) as planned:
+        page.get_by_role('button', name='预览修改影响', exact=True).click()
+    assert json.loads(planned.value.post_data)['input']['instruction'] == requirement
     confirm = page.get_by_role('button', name='确认计划并创建交接', exact=True)
     expect(confirm).to_be_visible(timeout=30000)
     with page.expect_response(lambda r: '/api/changes/commit' in r.url and r.request.method == 'POST',
                               timeout=20000) as commit:
         confirm.click()
     assert commit.value.status == 200
-    # 交接载荷携带正式意见身份与修改要求原文;确认后编辑不丢。
-    records = page.request.get(page.url.split('#')[0] + 'api/drafts').json()['records']
-    pending = [r['draft']['pending'] for r in records if r['draft']['pending']]
-    assert pending and pending[0]['payload']['display_context']['instruction'] == requirement
     # 交接后总结轮询会重渲染工作区:断言用值检查而非点击(焦点回归不抢面,动作面保持)。
     expect(page.get_by_label('修改要求', exact=True)).to_have_value(requirement, timeout=20000)
 

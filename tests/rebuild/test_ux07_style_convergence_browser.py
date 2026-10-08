@@ -116,3 +116,30 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
         assert_touch_targets(page, selector)
         # 证据文件名用 ASCII slug，避免非 ASCII 路径在其它环境/工具链上的兼容问题。
         page.screenshot(path=str(EVIDENCE / f'ux07-{width}-{slug}.png'), full_page=False)
+
+
+def test_representative_paths_survive_200_percent_text_zoom(ux07_browser):
+    """UAC23:总览矩阵/画廊/单页画面三条代表路径在 200% 文字放大下无页面级
+    横向溢出,主动作仍可聚焦。已知例外(不视为缺陷)记录在证据文档。"""
+    from playwright.sync_api import expect
+    page, server, path, store = ux07_browser
+    url = server.start()
+    def at_zoom_2():
+        page.evaluate('() => { document.documentElement.style.fontSize = "200%"; }')
+        page.wait_for_timeout(250)
+        overflow = page.evaluate('() => document.documentElement.scrollWidth > window.innerWidth + 1')
+        page.evaluate('() => { document.documentElement.style.fontSize = ""; }')
+        page.wait_for_timeout(100)
+        return overflow
+    page.goto(url)
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    assert not at_zoom_2(), 'overview matrix overflows at 200% text size'
+    expect(page.get_by_role('button', name='查看整稿', exact=True)).to_be_visible()
+    page.get_by_role('button', name='查看整稿', exact=True).click()
+    expect(page.get_by_label('整稿画廊阅读区')).to_be_visible(timeout=15000)
+    assert not at_zoom_2(), 'gallery overflows at 200% text size'
+    expect(page.locator('.slide-cover').first).to_be_visible()
+    page.locator('.slide-cover').first.click()
+    expect(page.locator('.page-tools')).to_be_visible(timeout=20000)
+    assert not at_zoom_2(), 'page surface overflows at 200% text size'
+    expect(page.get_by_role('button', name='工具', exact=True).or_(page.get_by_role('button', name='笔记', exact=True)).first).to_be_visible()
