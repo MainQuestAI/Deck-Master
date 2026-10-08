@@ -284,6 +284,10 @@ def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection)
             page.get_by_label('风格参考来源').select_option('screenshot')
             upload = page.get_by_label('导入参考截图', exact=True)
             expect(upload).to_be_enabled()
+            # Choosing the source writes a private draft independently of the
+            # upload receipt. A normal reload must not abort that save and turn
+            # this rejection-only case into an unknown-private-save case.
+            expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
             before = flow.store.current_revision_id()
             initial_references = len(flow.store.load_document().get('style_references', []))
             data = b'not an image'
@@ -308,6 +312,7 @@ def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection)
             screenshot(page, 'upload-rejected-'+rejection)
             expect(restart).to_be_enabled()
             expect(upload).to_be_disabled()
+            expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
             page.reload(); expect(restart).to_be_enabled()
             if rejection == 'basis':
                 def unavailable_current(route):

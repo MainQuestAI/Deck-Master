@@ -1,5 +1,5 @@
 {
-  "schema_version": "pr104_evidence_index.v1.1",
+  "schema_version": "pr104_evidence_index.v1.2",
   "date": "2026-10-08",
   "reviewed_head": "d64c8b0d7ba3a2981ebfa02e7cdfeb4d8a88c539",
   "base": "6996a29b1792e39199cf0ae968deaaaba381d9e1",
@@ -719,6 +719,30 @@
       {
         "name": "ci-push-failed.log",
         "sha256": "5ca0cd096440b7612bd9c6ec38abe288dca1d4489ef68dd3ce89acf8959991b7"
+      },
+      {
+        "name": "browser-ci-selector-final.log",
+        "sha256": "b331cefb404f13b74df4450e3fd9ba5b10fe1200b4df412c81cbfb77f8cc3748"
+      },
+      {
+        "name": "installed-ci-selector-final.log",
+        "sha256": "793af2f262e04654b1428cb9c36aa153eeb1af38cdfe95fd0a80e67d7a5289fa"
+      },
+      {
+        "name": "installed-ci-selector-final.json",
+        "sha256": "93bee66bd5a5b16a72975f271be843a2f03a81f528c27d59de40a6e6eabecc12"
+      },
+      {
+        "name": "ci-selector-push-failed.log",
+        "sha256": "d646c313d8add1162c9a99945c1499c55a5b402abaca1af8bb2cbcd6f2822ee4"
+      },
+      {
+        "name": "upload-private-receipt-fix.log",
+        "sha256": "bcb1d1b20e32361107957c9743b609cde34531b22f518ed24ad0a1ec7bb814e2"
+      },
+      {
+        "name": "review-suite-private-receipt-final.log",
+        "sha256": "128b79e9821a4eabd14dd12cce5b4183ef867077006cf4e6a24cc49cc92f2d1e"
       }
     ],
     "review_suite_after_ci_selector_fix": {
@@ -741,6 +765,48 @@
       },
       "wheel_and_installed": "skipped",
       "followup": "test locator corrected without production change; new exact SHA CI pending commit"
+    },
+    "followup_local_680c46c8": {
+      "sha": "680c46c887d59bb724c97064ad048b10a9c5bcdd",
+      "browser": {
+        "passed": 303,
+        "seconds": 574.7
+      },
+      "installed": {
+        "passed": 143,
+        "seconds": 267.28,
+        "module_count": 52,
+        "all_site_packages": true
+      }
+    },
+    "upload_private_receipt_ci_fix": {
+      "status": "pass",
+      "targeted_passed": 4,
+      "seconds": 9.43,
+      "review_suite_passed": 31,
+      "review_suite_seconds": 42.98,
+      "production_changed": false,
+      "full_browser_expected": 304,
+      "installed_expected": 144
+    },
+    "remote_680c46c8_at_capture": {
+      "sha": "680c46c887d59bb724c97064ad048b10a9c5bcdd",
+      "push_run": 37819605534,
+      "push_browser": {
+        "passed": 302,
+        "failed": 1,
+        "cause": "reload interrupted private draft receipt; new committed upload retained pending private verification"
+      },
+      "push_installed": "skipped",
+      "push_unit_matrix": "pass",
+      "push_render": "pass",
+      "pr_run": 37819613622,
+      "pr_unit_matrix": "pass",
+      "pr_source_browser": "pass",
+      "pr_wheel": "pass",
+      "pr_offline": "pass",
+      "pr_installed": "in_progress",
+      "pr_render": "in_progress_at_Install_renderer_toolchain"
     }
   },
   "baseline_counterexamples": {
@@ -782,11 +848,11 @@
   "test_snapshot": [
     {
       "path": "tests/rebuild/test_pr104_review_browser.py",
-      "sha256": "c1e7343b34450d71ce9d1f1e7d4fb932a5c330f0e6839c592dd3bf6c7404ee04"
+      "sha256": "16f08a1952fad98b66418f5b23fe6f8cb7b3f4b608c994bc21a2c685dde59778"
     },
     {
       "path": "tests/rebuild/test_pr103_repair_browser.py",
-      "sha256": "b02693f95e13f0785d4f5d24a7db60d927bdd5575bfd2271334e33f9b98db422"
+      "sha256": "a4fbd8c15a4d69b23402a0ec6493ae9cafc98ea3f0bbdbdfc1afe549ed642e45"
     },
     {
       "path": "tests/rebuild/test_pr103_complete_browser.py",

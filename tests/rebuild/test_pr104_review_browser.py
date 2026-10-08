@@ -310,6 +310,51 @@ def test_primary_style_target_survives_restore_confirm_refresh_and_first_plan(fl
         assert planned.value.post_data_json['input']['page_ids'] == ['p03']
 
 
+def test_rejected_upload_reload_with_lost_private_receipt_preserves_new_result(flow):
+    """An unknown private save must retain, and explicitly open, a committed upload."""
+    from playwright.sync_api import expect
+    from test_visual_styles import image_bytes
+    with browser_for(flow.project) as (page, _server):
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        lost = []
+        def lose_private_receipt(route):
+            response = route.fetch()
+            assert response.ok
+            lost.append(route.request.post_data_json)
+            route.abort()
+        page.route('**/api/drafts/save', lose_private_receipt)
+        page.get_by_label('风格参考来源').select_option('screenshot')
+        expect(page.locator('.draft-state')).to_contain_text('保存结果待核实')
+        assert lost
+        page.unroute('**/api/drafts/save', lose_private_receipt)
+        upload = page.get_by_label('导入参考截图', exact=True)
+        with page.expect_response('**/api/styles/references/import?*') as rejected:
+            upload.set_input_files({'name': 'invalid.png', 'mimeType': 'image/png', 'buffer': b'not an image'})
+        assert rejected.value.status == 422
+        restart = page.get_by_role('button', name='结束失败上传，重新选图', exact=True)
+        expect(restart).to_be_enabled()
+        page.reload()
+        expect(page.locator('.draft-state')).to_contain_text('保存结果待核实')
+        restart.click(); expect(upload).to_be_enabled()
+        uploads = []
+        page.on('request', lambda request: uploads.append(request.url)
+                if '/api/styles/references/import?' in request.url else None)
+        old_url = page.url
+        with page.expect_response('**/api/styles/references/import?*') as accepted:
+            upload.set_input_files({'name': 'valid.png', 'mimeType': 'image/png', 'buffer': image_bytes()})
+        assert accepted.value.ok
+        revision = accepted.value.json()['operation_result']['revision_id']
+        expect(page.locator('.visual-style > p[role="status"]')).to_contain_text('私人草稿仍待保存或核实')
+        assert page.url == old_url and len(flow.store.load_document()['style_references']) == 1
+        expect(page.get_by_role('button', name='打开已保存的结果', exact=True)).to_be_enabled()
+        page.get_by_role('button', name='打开已保存的结果', exact=True).click()
+        page.wait_for_function('revision => location.hash.includes(revision)', arg=revision)
+        expect(page.locator('.visual-reference-choice .pooled-image')).to_have_attribute('data-image-state', 'ready')
+        expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
+        expect(page.locator('.visual-upload-recovery')).to_be_empty()
+        assert len(uploads) == 1 and len(flow.store.load_document()['style_references']) == 1
+
+
 @pytest.mark.parametrize('area', ['版本', '文件'])
 def test_leaving_task_context_rebuilds_without_reload(flow, area):
     from playwright.sync_api import expect
