@@ -59,7 +59,7 @@ export class Annotations {
     // TA-03/§4.5：正常输入与维护设施分层——草稿操作与私人笔记属于本机维护，
     // 由页面把它们与「恢复、下载与版本详情」放在同一个维护区，意见面板只留
     // 写作、阅读与选入。异常发生时私人笔记就近展开（见 syncFromDraft）。
-    this.draftActions = el('details', {class: 'opinion-secondary'}, el('summary', {}, '草稿操作'),
+    this.draftActions = el('details', {class: 'opinion-secondary', open: true}, el('summary', {}, '草稿操作'),
       el('div', {class: 'stack'}, this.newButton, this.copyNoteButton));
     this.actions = el('div', {class: 'row wrap opinion-actions'}, this.saveButton);
     const annotationSettings = el('details', {class: 'annotation-settings'}, el('summary', {}, '范围与标注工具'),
@@ -68,7 +68,7 @@ export class Annotations {
         this.tools, this.geometry, this.regionList));
     this.startOpinion = button('整页意见', () => { this.chooseMode('whole'); this.bodyField.input.focus(); }, false,
       {class: 'opinion-start'});
-    this.noteEntry = el('details', {class: 'note-entry'},
+    this.noteEntry = el('details', {class: 'note-entry', open: true},
       el('summary', {}, '私人笔记（不进入意见与制作）'), draftSlot);
     this.maintenanceNodes = [this.noteEntry, this.draftActions];
     this.node.append(el('div', {class: 'panel-head'}, el('h2', {}, '标注与意见')),
@@ -483,6 +483,9 @@ export class Annotations {
     this.regions = []; this.newRefs = new Set(); this.savedSubmission = null;
     this.editor.draft.content.annotation_submission = {draft_key: crypto.randomUUID()};
     this.bodyField.input.value = ''; this.error.textContent = ''; delete this.error.dataset.success;
+    // 草稿操作住在笔记面:P02 五工具下这一步的目标是回到意见写作,通知工具容器
+    // 把意见面点亮(容器未必存在则忽略)。
+    this.node.dispatchEvent(new CustomEvent('activate-opinion-face', {bubbles: true}));
     this.changed(); this.bodyField.input.focus();
   }
   copyNote() {

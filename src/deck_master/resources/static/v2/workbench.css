@@ -46,7 +46,28 @@ textarea{font-size:14px;line-height:1.7}
 .image-frame{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;flex-direction:column;gap:6px}
 .image-frame img{width:100%;height:100%;object-fit:contain}.image-button{display:block;width:100%;padding:0;min-height:0;border:0;background:transparent}
 .slide-tile figcaption{padding:12px 0}.slide-tile strong{font-size:14px}.slide-tile figcaption p{font-size:12px;margin-top:5px}
-.page-columns{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}.page-reading{min-width:0}
+.page-columns{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:24px;align-items:start}.page-reading{min-width:0}
+
+/* §4.1/P02:五工具容器(桌面右栏;窄屏为全高面板)。对象摘要→异常摘要→切换→活动面。 */
+.page-tools{min-width:0}
+.tool-object-summary{font-size:13px}
+.page-tools-switcher{display:flex;flex-wrap:wrap;gap:8px;padding:0}
+.page-tools-switcher button{min-height:44px;padding:10px 14px;font-size:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.page-tools-switcher button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.page-tools-faces>*[hidden]{display:none}
+.page-tools-anomalies>button[hidden]{display:none}
+.tool-anomaly-chip{min-height:44px}
+/* 对既有宽组件的窄容器适配:图标比较列在 372px/面板宽度内纵向堆叠。 */
+.page-tools .icon-compare-grid{grid-template-columns:1fr;gap:16px}
+/* D4-A/D5-A:<1280px 画面旁「工具」入口 + 独立工具面板(不占 #modal)。 */
+.page-tools-entry{display:none}
+.page-tools-panel{border:0;padding:0;margin:0 auto;background:transparent;box-shadow:none;width:min(560px,100vw);height:100dvh}
+.page-tools-panel::backdrop{background:color-mix(in oklch, var(--fg) 35%, transparent)}
+.page-tools-panel .page-tools{height:100%;overflow:auto;padding:0 0 24px;background:var(--bg)}
+.page-tools-panel-head{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);z-index:2}
+.page-tools-panel-head button{min-height:44px}
+.page-tools-panel .page-tools>.stack{padding:0 20px}
+@media(max-width:1279px){.page-tools-entry{display:inline-flex}}
 .page-image-viewport{overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-warm);max-height:70vh;min-height:240px}
 .page-image{display:block;max-width:none;height:auto;object-fit:contain}.page-copy{font-size:16px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:28px;background:var(--bg);line-height:1.8}
 .page-copy p{white-space:pre-wrap}.page-copy h2{font-size:22px}.read-text{font:13px/1.7 var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere;padding:18px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-warm)}
@@ -60,7 +81,7 @@ textarea{font-size:14px;line-height:1.7}
 #modal{position:fixed;inset:0;margin:auto;width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 48px);padding:0;border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--elev-raised);background:var(--bg);color:var(--fg)}
 #modal::backdrop{background:color-mix(in oklch, var(--fg) 40%, transparent)}.modal-body{padding:28px;display:flex;flex-direction:column;gap:24px}.modal-body h2{font-size:22px}.modal-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:20px}.modal-body form{margin:0}.conflict-panes{display:grid;grid-template-columns:1fr 1fr;gap:16px}.conflict-panes textarea{min-height:230px}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);opacity:0;pointer-events:none;z-index:1000;background:var(--fg);color:var(--bg);max-width:calc(100vw - 32px);padding:12px 18px;border-radius:var(--radius-sm);font-size:13px;transition:opacity .15s}#toast.visible{opacity:1}
-@media(max-width:1279px){.shell{grid-template-columns:80px minmax(0,1fr)}.sidebar{width:80px;padding:24px 12px}.logo{margin:0 0 28px;justify-content:center}.brand-name,.nav-label,.side-project{display:none}.nav button{justify-content:center;padding:12px}.sidebar-footer{padding:16px 0;font-size:11px}.sidebar-footer p{display:none}.workspace{padding:24px}.topbar{padding:0 24px}.page-columns{grid-template-columns:minmax(0,1fr) 300px;gap:18px}.compact-note{display:block}.action-band{grid-template-columns:1fr 1fr}}
+@media(max-width:1279px){.shell{grid-template-columns:80px minmax(0,1fr)}.sidebar{width:80px;padding:24px 12px}.logo{margin:0 0 28px;justify-content:center}.brand-name,.nav-label,.side-project{display:none}.nav button{justify-content:center;padding:12px}.sidebar-footer{padding:16px 0;font-size:11px}.sidebar-footer p{display:none}.workspace{padding:24px}.topbar{padding:0 24px}.page-columns{grid-template-columns:1fr}.compact-note{display:block}.action-band{grid-template-columns:1fr 1fr}}
 @media(max-width:1023px){.page-columns{grid-template-columns:1fr}.page-columns .personal-draft{max-width:none}.topbar .version{display:none}.action-band{grid-template-columns:1fr}.action-main{border-right:0;border-bottom:1px solid var(--border)}}
 @media(max-width:767px){.shell{display:block;padding-top:62px}.sidebar{position:fixed;inset:0 0 auto;width:auto;height:62px;flex-direction:row;padding:8px 12px;border-right:0;border-bottom:1px solid var(--border);align-items:center;background:var(--bg)}.logo{margin:0 12px 0 0}.nav{flex-direction:row;flex:1;justify-content:space-between;gap:2px}.nav button{width:44px;height:44px;padding:8px}.sidebar-footer{display:none}.content{width:100%}.topbar{height:auto;min-height:64px;padding:10px 16px}.workspace{padding:20px 16px}.page-head{flex-direction:column;align-items:flex-start;gap:16px}.page-head h1{font-size:26px}.page-head>button{width:100%}.matrix{min-width:820px}.matrix-wrap{overflow:auto}.page-image-viewport{min-height:150px}.notice,.history-banner,.sample-banner{padding:12px 16px}.launcher{padding:24px 16px}.launcher-brand{font-size:12px;margin-bottom:28px;gap:12px}.project-card{flex-direction:column;align-items:stretch}.project-card>.row{justify-content:flex-start}.form-pair,.conflict-panes{grid-template-columns:1fr}.task-row{flex-wrap:wrap}.modal-body{padding:20px}.toolbar{flex-wrap:wrap}.toolbar select{width:100%}.page-copy{padding:20px}.facts{grid-template-columns:60px 1fr}.source-list{padding-left:16px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}

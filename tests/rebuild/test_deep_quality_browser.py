@@ -15,6 +15,20 @@ from test_icon_quality import icon_store, input_for, confirm, dispatch, start, a
 pytestmark=pytest.mark.browser
 
 
+def open_note_face(page):
+    """P02:个人笔记位于五工具容器的「笔记」面;先切面(窄屏先开工具面板)。"""
+    from playwright.sync_api import expect
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    note_button = page.get_by_role('button', name='笔记', exact=True)
+    expect(note_button.first).to_be_visible(timeout=15000)
+    note_button.first.click()
+
+
+
 @pytest.fixture
 def workbench(icon_store):
     server=WorkbenchServer(icon_store.project_root);url=server.start()
@@ -37,21 +51,21 @@ def workbench(icon_store):
 @pytest.mark.parametrize('width,height',[(1280,800),(1440,900),(390,844)])
 def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
     a,ctx,store,url,goto,_=workbench;a.set_viewport_size({'width':width,'height':height});link=goto()
-    a.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    open_note_face(a)
     field=a.get_by_role('textbox',name='个人草稿',exact=True);expect(field).to_be_editable()
     field.fill('共同初稿');a.get_by_role('button',name='保存个人草稿',exact=True).click()
     expect(a.locator('.draft-state')).to_contain_text('已保存到项目')
     with a.expect_popup() as popup:a.evaluate('(url)=>window.open(url,"_blank")',link)
-    b=popup.value;b.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    b=popup.value;open_note_face(b)
     expect(b.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('共同初稿')
     ctx.route('**/api/drafts/save',lambda r:r.abort('failed'))
     field.fill('窗口 A 独有的修改');b.get_by_role('textbox',name='个人草稿',exact=True).fill('窗口 B 独有的修改')
     expect(a.locator('.draft-state')).to_contain_text('保存结果待核实');expect(b.locator('.draft-state')).to_contain_text('保存结果待核实')
     # Refresh must recover this window's own buffer without claiming an ACK.
-    a.reload();a.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    a.reload();open_note_face(a)
     expect(a.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('窗口 A 独有的修改')
     a.close(run_before_unload=True);b.close(run_before_unload=True)
-    c=ctx.new_page();c.goto(link);c.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    c=ctx.new_page();c.goto(link);open_note_face(c)
     expect(c.get_by_role('textbox',name='个人草稿',exact=True)).to_be_editable()
     texts=c.evaluate('''()=>Object.entries(localStorage).filter(([k])=>k.includes(':draft:')).map(([k,v])=>JSON.parse(v).draft?.content?.text)''')
     assert '窗口 A 独有的修改' in texts and '窗口 B 独有的修改' in texts
@@ -88,11 +102,13 @@ def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     assert bodies.count('第一条意见的文字')==1 and bodies.count('第二条意见的文字')==1
     # The older text is recoverable, and copying it forward keeps the text only.
     page.goto(goto())
+    open_note_face(page)
     page.get_by_text('恢复、下载与版本详情',exact=True).click()
     choices=page.get_by_label('恢复项目中的个人草稿')
     expect(choices).to_be_visible()
     assert '第一条意见的文字' in choices.inner_text()
     choices.select_option(label=[o for o in choices.locator('option').all_inner_texts() if '第一条意见的文字' in o][0])
+    open_opinion_face(page)
     restored=page.get_by_role('textbox',name='意见正文',exact=True)
     expect(restored).to_have_value('第一条意见的文字')
     expect(page.locator('.annotation-notice')).to_contain_text('对当前版本写新意见')
@@ -103,13 +119,48 @@ def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     assert len(records)==2, 'copying text forward must not create or rewrite a record'
 
 
+
+
+
+
+def open_trials_face(page):
+    """P02:试作与候选面。"""
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='试作与候选', exact=True).click()
+
+
+def open_icon_face(page):
+    """P02:图标优化面。"""
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='图标优化', exact=True).click()
+
+
+def open_opinion_face(page):
+    """P02:回到意见面(与 open_note_face 对称)。"""
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='意见', exact=True).click()
+
+
 def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
-    page.get_by_text('私人笔记（不进入意见与制作）',exact=True).click()
+    open_note_face(page)
     note=page.get_by_role('textbox',name='个人草稿',exact=True)
     note.fill('这是我自己的备忘，不是给制作的意见。')
     page.get_by_role('button',name='保存个人草稿',exact=True).click()
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
+    open_opinion_face(page)
     body=page.get_by_role('textbox',name='意见正文',exact=True)
     # The note never becomes the opinion body: the opinion form starts empty and
     # refuses to save until the user writes or explicitly copies something.
@@ -121,11 +172,11 @@ def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
     page.get_by_role('button',name='保存意见',exact=True).click()
     expect(page.locator('.annotations-panel .field-error[role=status]')).to_contain_text('请填写意见正文')
     assert page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']==[]
-    if not page.get_by_role('button',name='从私人笔记复制',exact=True).is_visible():
-        page.get_by_text('草稿操作', exact=True).click()
+    open_note_face(page)
     page.get_by_role('button',name='从私人笔记复制',exact=True).click()
-    expect(body).to_have_value('这是我自己的备忘，不是给制作的意见。')
     expect(note).to_have_value('这是我自己的备忘，不是给制作的意见。')
+    open_opinion_face(page)
+    expect(body).to_have_value('这是我自己的备忘，不是给制作的意见。')
     page.get_by_role('button',name='保存意见',exact=True).click()
     expect(page.locator('.field-error[data-success]')).to_be_visible()
     expect(page.locator('.saved-opinion.is-new')).to_contain_text('本次新增')
@@ -157,8 +208,7 @@ def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
     body.fill('这一页要改标题')
     write_opinion('这一页要改标题')
     expect(page.get_by_role('heading',name='本页整页意见（1）',exact=True)).to_be_visible()
-    if not page.get_by_role('button',name='写新意见',exact=True).is_visible():
-        page.get_by_text('草稿操作', exact=True).click()
+    open_note_face(page)
     page.get_by_role('button',name='写新意见',exact=True).click()
     page.get_by_role('button',name='整页意见',exact=True).click()
     if not page.get_by_label('意见作用范围').is_visible():
@@ -167,8 +217,7 @@ def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
     body.fill('这张图稿的线宽要收一点')
     write_opinion('这张图稿的线宽要收一点')
     expect(page.get_by_role('heading',name='当前图稿意见 · SVG（1）',exact=True)).to_be_visible()
-    if not page.get_by_role('button',name='写新意见',exact=True).is_visible():
-        page.get_by_text('草稿操作', exact=True).click()
+    open_note_face(page)
     page.get_by_role('button',name='写新意见',exact=True).click()
     if not page.get_by_label('意见作用范围').is_visible():
         page.get_by_text('范围与标注工具', exact=True).click()
@@ -309,6 +358,7 @@ def test_near_field_entry_names_returned_candidates(workbench):
     goto()
     # The closed entry still says that something waits here, instead of hiding a
     # returned candidate behind a neutral label.
+    open_trials_face(page)
     summary=page.locator('.page-trial-entry > summary')
     expect(summary).to_contain_text('候选 1')
     expect(summary).to_contain_text('待比较 1')
@@ -378,6 +428,7 @@ def test_candidate_batch_names_the_page_and_layer(workbench):
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
     page,ctx,store,url,goto,_=workbench
     confirm(store,input_for(store));before=store.load_document()['tasks'];goto()
+    open_icon_face(page)
     box=page.get_by_label('选入图标页 p01');box.check();held=[]
     page.route('**/api/icons/plan',lambda route:held.append(route))
     page.get_by_role('button',name='预览选中页图标试作',exact=True).click()

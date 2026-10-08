@@ -110,8 +110,12 @@ def test_fixed_history_images_share_a_row_with_candidate_entry(workbench_page, t
     left.locator('canvas.page-image').wait_for()
     right.locator('canvas.page-image').wait_for()
     expect(page.locator('.page-trial-entry')).not_to_have_attribute('open', '')
-    rect = page.locator('.fixed-page-pair').evaluate('''node => {
-      const box = selector => node.querySelector(selector).getBoundingClientRect().toJSON();
+    # D4-A/§4.1:试作与候选进入五工具容器。本场景开着固定比较,≤1439px 按既有
+    # 规则折单列,此时入口在双方之下;断言保留:双方同排、画面完整、入口可见。
+    page.get_by_role('button', name='试作与候选', exact=True).click()
+    expect(page.locator('.page-trial-entry')).to_be_visible()
+    rect = page.evaluate('''() => {
+      const box = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
       return {entry:box('.page-trial-entry'), left:box('[aria-label="页面内容"]'), right:box('[aria-label="比较版本内容"]')};
     }''')
     assert abs(rect['left']['y'] - rect['right']['y']) < 1, rect
@@ -195,9 +199,13 @@ def test_page_opinion_editor_stays_with_artwork_before_trial_form(workbench_page
     page.goto(page.url.split('#')[0] + '#' + urlencode({'project': info['project_identity'], 'surface': 'page', 'page': 'p02', 'layer': 'svg', 'revision': revision}))
     image = page.locator('.page-reading canvas:visible').first
     image.wait_for()
+    # D4-A:390px 下意见在全高工具面板里,先通过画面旁「工具」入口打开(D5 独立容器)。
+    if width < 1280:
+        page.get_by_role('button', name='工具', exact=True).click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     editor = page.get_by_role('textbox', name='意见正文', exact=True)
     expect(editor).to_be_editable()
-    expect(page.locator('.page-trial-entry')).not_to_have_attribute('open', '')
+    expect(page.locator('.page-trial-entry')).to_be_hidden()
     assert page.get_by_role('textbox', name='本页试作短要求', exact=True).is_hidden()
     if width >= 1280:
         assert image.bounding_box()['y'] < height - 100
@@ -206,6 +214,7 @@ def test_page_opinion_editor_stays_with_artwork_before_trial_form(workbench_page
     editor.fill('保留正文，调整图标线宽。')
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.locator('.saved-annotations')).to_contain_text('保留正文，调整图标线宽。')
+    page.get_by_role('button', name='试作与候选', exact=True).click()
     page.get_by_text('本页候选与试作', exact=True).click()
     expect(page.get_by_role('button', name='刷新本页候选', exact=True)).to_be_visible()
     assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth')

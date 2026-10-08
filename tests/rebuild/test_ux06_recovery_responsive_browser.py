@@ -262,6 +262,9 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
     page.set_viewport_size({'width': 390, 'height': 844})
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: args[1], layer: args[2], revision: args[3]})}",
                   [identity, 'p01', 'original_image', store.current_revision_id()])
+    # D4-A:390px 工具在全高面板中,经由画面旁「工具」入口打开(D5-A 独立容器)。
+    page.get_by_role('button', name='工具', exact=True).click()
+    expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     page.locator('.annotations-panel').wait_for(timeout=15000)
     panel = page.locator('.annotations-panel')
 
@@ -287,6 +290,10 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
     # 意见可在面板选入，未选入时给出诚实下一步而不是静默复制。
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: args[1], layer: 'svg', revision: args[2]})}",
                   [identity, 'p01', store.current_revision_id()])
+    # 换层会重新挂载单页:面板回到关闭态,再次经「工具」入口打开图标面,
+    # 并显式切到「图标优化」面(五工具一次只显示一个活动面)。
+    page.get_by_role('button', name='工具', exact=True).click()
+    page.get_by_role('button', name='图标优化', exact=True).click()
     workbench = page.locator('.icon-workbench')
     workbench.wait_for(timeout=15000)
     expect(workbench.get_by_label('图标处理方式')).to_be_visible()

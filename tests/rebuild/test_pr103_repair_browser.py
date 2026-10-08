@@ -48,8 +48,15 @@ def test_saved_opinion_is_still_saved_after_reload(ux04_browser, next_opinion):
     expect(save).to_be_disabled()
     assert len(store.load_document()['annotations']) == 1
     if next_opinion == 'new':
-        page.locator('summary').filter(has_text='草稿操作').click()
+        # P02:草稿操作在「笔记」面;写新意见完成后自动回到意见面。
+        entry = page.get_by_role('button', name='工具', exact=True)
+        if entry.count() and entry.first.is_visible():
+            entry.click()
+            expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+        page.get_by_role('button', name='笔记', exact=True).click()
         page.get_by_role('button', name='写新意见', exact=True).click()
+        expect(page.locator('#view-title')).to_be_visible()
+        page.get_by_role('button', name='意见', exact=True).click()
         body.fill('PR103 同一草稿保存后刷新，不重复新增')
     else:
         page.locator('.annotation-settings > summary').click()
@@ -611,14 +618,30 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
             'page': 'p01', 'layer': 'original_image'}))
         page.reload()
 
+
+    def open_opinions():
+        entry = page.get_by_role('button', name='工具', exact=True)
+        if entry.count() and entry.first.is_visible():
+            entry.click()
+            expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+        page.get_by_role('button', name='意见', exact=True).click()
+
     def open_note():
-        details = page.locator('details.note-entry').first
-        if details.count():
-            if not details.evaluate('node => node.open'):
-                details.locator('summary').click()
+        # P02:笔记在五工具容器的「笔记」面;先切面(窄屏先开面板)。
+        entry = page.get_by_role('button', name='工具', exact=True)
+        if entry.count() and entry.first.is_visible():
+            entry.click()
+            expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+        page.get_by_role('button', name='笔记', exact=True).click()
         expect(page.get_by_role('textbox', name='个人草稿', exact=True)).to_be_visible()
 
     def save_pair(body, note):
+        entry = page.get_by_role('button', name='工具', exact=True)
+        if entry.count() and entry.first.is_visible():
+            entry.click()
+            expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+        page.get_by_role('button', name='意见', exact=True).click()
+        expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_be_visible()
         page.get_by_role('button', name='整页意见', exact=True).click()
         page.get_by_role('textbox', name='意见正文', exact=True).fill(body)
         save = page.get_by_role('button', name='保存意见', exact=True)
@@ -638,6 +661,7 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
 
     # 恢复列表同时列出两份；从真实 select 恢复甲（不得用合成事件）。
     goto_page()
+    open_note()
     recovery = page.locator('details.source-detail').filter(has_text='恢复、下载与版本详情').first
     recovery.locator('summary').click()
     select = page.get_by_role('combobox', name='恢复项目中的个人草稿')
@@ -646,13 +670,16 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
     editor = page.locator('#personal-draft')
     expect(page.locator('.personal-draft')).to_have_count(1)
     expect(editor).to_have_value('甲的私人备注')
+    open_opinions()
     expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_have_value('恢复来源意见正文甲')
     expect(page.locator('.draft-state').first).to_contain_text('已保存到项目')
 
     # 恢复区现在必须持有当前 editor 的入口：换回乙也走同一个恢复 select，而不是死节点。
     second_record = next(record for record in page.request.get(base + 'api/drafts').json()['records']
                          if record['draft']['content']['text'] == '乙的私人备注')
+    open_note()
     recovery.get_by_role('combobox', name='恢复项目中的个人草稿').select_option(value=second_record['draft']['draft_id'])
     expect(editor).to_have_value('乙的私人备注')
+    open_opinions()
     expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_have_value('恢复来源意见正文乙')
     screenshot(page, 'p07a-restore-replaces-editor')

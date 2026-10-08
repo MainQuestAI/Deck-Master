@@ -22,6 +22,8 @@ def icon_browser(icon_store):
         page.goto(url);page.get_by_role('heading',name='制作总览',exact=True).wait_for()
         info=page.request.get(url.rstrip('/')+'/api/project').json()
         page.goto(url.split('#')[0]+'#'+urlencode({'project':info['project_identity'],'surface':'page','page':'p01','layer':'svg','revision':icon_store.current_revision_id()}))
+        # P02:图标工作台在「图标优化」面内,默认意见面;显式切换后才是当前工作上下文。
+        page.get_by_role('button',name='图标优化',exact=True).click()
         page.get_by_role('heading',name='优化图标',exact=True).wait_for()
         try:yield page,icon_store,errors
         finally:browser.close();server.stop()
@@ -45,6 +47,8 @@ def test_icon_proposal_compare_confirm_keyboard_and_dispatch(icon_browser,tmp_pa
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         page.screenshot(path=str(tmp_path/f'icon-{width}.png'))
     page.keyboard.press('Escape');expect(dialog).not_to_be_visible()
+    # 视口循环止于 390(面板);后续确认/交接断言回桌面宽度继续(行内工具面)。
+    page.set_viewport_size({'width':1280,'height':800})
     page.get_by_role('button',name='确认这些图标范围和处理方式',exact=True).click()
     page.get_by_label('选入图标页 p01').wait_for()
     assert store.load_document()['pages']==before['pages']
@@ -189,6 +193,7 @@ def test_icon_opinion_scope_and_basis_rows(icon_browser):
     bumped=bump_revision(new,{'operation_id':str(uuid_mod.uuid4()),'kind':'artifact_adoption','description':'regenerated svg','read_set':[]})
     store.commit_change(base_revision=doc['revision_id'],document=bumped,operation_id=bumped['change']['operation_id'])
     page.goto(url+'#'+urlencode({'project':info_identity,'surface':'page','page':'p01','layer':'svg','revision':store.current_revision_id()}))
+    page.get_by_role('button',name='图标优化',exact=True).click()
     workbench=page.locator('.icon-workbench');workbench.wait_for(timeout=15000)
     page_box=workbench.locator('label').filter(has_text='整页意见正文样例')
     expect(page_box).to_contain_text('整页文字定位')
