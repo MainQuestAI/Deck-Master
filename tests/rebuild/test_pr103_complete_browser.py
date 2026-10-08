@@ -608,3 +608,46 @@ def test_uploaded_result_finishes_recovery_after_late_draft_verification(tmp_pat
         page.reload()
         expect(page.locator('.visual-reference-choice .pooled-image')).to_have_attribute('data-image-state', 'ready')
         assert len(uploaded) == 1
+
+
+def test_small_scale_pagination_counts_and_failed_page_retry_keeps_loaded_rows(tmp_path):
+    """UAC19:单页双向分页禁用但计数可读;第二页请求失败保留第一页,重试只重发该页读取。"""
+    from playwright.sync_api import expect
+    path = tmp_path / 'small-scale'
+    create_sample(path, page_count=2, readonly=False)
+    store = Store(path)
+    doc = store.load_document()
+    doc['tasks'] = []
+    for i in range(35):
+        task = tasks.new_task(task_id=f'small-{i:03}', operation_id=f'small-op-{i:03}',
+                              kind='compose', scope_pages=['p01'],
+                              instruction=f'小规模分页第 {i:03} 条要求', inputs=[], dependencies=[],
+                              dispatch_revision=doc['revision_id'], produced_against=content_identity(doc),
+                              status='completed')
+        doc['tasks'].append(store.put_json_object(task))
+    commit(store, doc, str(uuid.uuid4()))
+    with browser_for(path) as (page, _):
+        page.get_by_role('button', name='任务与交付', exact=True).click()
+        expect(page.locator('.run-notice')).to_contain_text('共 35 项')
+        expect(page.locator('.run-task')).to_have_count(30)
+        previous_first = page.locator('.run-task').first.get_attribute('data-task-id')
+        expect(page.get_by_role('button', name='上一页任务', exact=True)).to_be_disabled()
+        expect(page.get_by_role('button', name='下一页任务', exact=True)).to_be_enabled()
+        expect(page.locator('.run-pagination')).to_contain_text('第 1 页')
+        # 第二页读取失败:第一页的行、offset 与计数原样保留,错误给出明确重试。
+        page.route('**/api/tasks*offset=30*', lambda route: route.abort())
+        page.get_by_role('button', name='下一页任务', exact=True).click()
+        expect(page.get_by_role('button', name='重试读取', exact=True)).to_be_visible(timeout=20000)
+        expect(page.locator('.run-task')).to_have_count(30)
+        expect(page.locator('.run-task').first).to_have_attribute('data-task-id', previous_first)
+        expect(page.locator('.run-pagination')).to_contain_text('第 1 页')
+        # 重试只重发同一 offset 的读取,不重放任何业务写。
+        held = []
+        page.unroute('**/api/tasks*offset=30*')
+        page.route('**/api/tasks*offset=30*', lambda route: (held.append(route), route.fulfill(response=route.fetch())))
+        page.get_by_role('button', name='重试读取', exact=True).click()
+        expect(page.locator('.run-task')).to_have_count(5, timeout=20000)
+        expect(page.locator('.run-pagination')).to_contain_text('第 2 页')
+        expect(page.get_by_role('button', name='下一页任务', exact=True)).to_be_disabled()
+        expect(page.get_by_role('button', name='上一页任务', exact=True)).to_be_enabled()
+        assert held, 'retry must re-request the same offset'
