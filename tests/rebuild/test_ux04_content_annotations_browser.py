@@ -222,6 +222,10 @@ def test_icon_opinions_distinguish_same_text_layers_and_old_basis(ux04_browser, 
     url = server.start(); page.goto(url)
     identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
     goto_page(page, url, identity, 'p01', 'svg', store.current_revision_id())
+    # 图标清单在五工具容器的「图标优化」面:先切面(窄屏先开工具面板)。
+    tools_entry = page.get_by_role('button', name='工具', exact=True)
+    if tools_entry.is_visible(): tools_entry.click()
+    page.get_by_role('button', name='图标优化', exact=True).click()
     labels = page.locator('.icon-opinions label')
     expect(labels).to_have_count(3)
     stale = labels.filter(has_text='旧底稿意见 · 需重新定位')
@@ -239,3 +243,59 @@ def test_icon_opinions_distinguish_same_text_layers_and_old_basis(ux04_browser, 
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     assert all(label.bounding_box()['height'] >= 44 for label in labels.all())
     page.screenshot(path=str(output/f'same-text-three-bases-{width}.png'), full_page=True)
+
+
+def test_same_text_ranges_validate_per_node_and_feed_text_annotation(ux04_browser):
+    """UAC14/X05:同文两节点各自精确定位——同范围选段在两个对象上都校验通过,
+    但 ref/locator 各指各块;「文本意见」模式下选段进入意见区域。"""
+    from playwright.sync_api import expect
+    from deck_master import content_ops
+    from test_content_ops import commit as ops_commit, value as ops_value
+    page, server, path, store = ux04_browser
+    url = server.start()
+    doc = store.load_document()
+    entry = next(e for e in doc['pages'] if e['page_id'] == 'p01')
+    visible = copy.deepcopy(store.read_object_json(entry['page'])['customer_visible'])
+    visible['body_blocks'] = [
+        {'id': 'b1', 'type': 'paragraph', 'text': SAME_TEXT},
+        {'id': 'b2', 'type': 'bullets', 'heading': '发布检查单', 'items': [
+            {'id': 'i1', 'text': SAME_TEXT}, {'id': 'i2', 'text': '不同的另一句。'}]},
+    ]
+    inp = ops_value(store, ids=('p01',))
+    inp['customer_visible'] = visible
+    ops_commit(path, store, inp)
+    revision = store.current_revision_id()
+    page.goto(url)
+    identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
+    goto_page(page, url, identity, 'p01', 'content', revision)
+    page.get_by_text('正文原文与精确选段', exact=True).first.click()
+    select = page.get_by_label('选择原文文本对象')
+    expect(select).to_be_visible()
+    page.locator('.text-range-tools summary').first.click()
+    tools = page.locator('.text-range-tools').first
+    expect(page.get_by_role('button', name='校验原文选段', exact=True).first).to_be_enabled()
+    # 记录到达阅读区的校验结果:两个同文对象的 locator 必须不同。
+    page.evaluate("() => {window.__ranges = []; document.querySelector('[aria-label=\"页面内容\"]').addEventListener('text-range-validated', e => window.__ranges.push({ref: e.detail.selection.ref.sha256, locator: e.detail.selection.locator, start: e.detail.selection.start, end: e.detail.selection.end}));}")
+    # 文本意见模式先就位:标注工具在折叠区内,先展开再切换。
+    page.get_by_text('范围与标注工具', exact=True).click()
+    page.get_by_role('button', name='文本意见', exact=True).click()
+    # 文本源含标题等更短对象:按选项文本定位两个同文对象,而不是数组序号。
+    import json as json_mod
+    matching = select.locator('option').evaluate_all(
+        '(os) => os.map((o, i) => o.textContent.endsWith(' + json_mod.dumps(SAME_TEXT) + ') ? String(i) : null).filter(Boolean)')
+    assert len(matching) == 2, matching
+    for index in matching:
+        # 切换文本对象会重建选段工具(细节默认收起),每轮重新展开再填起止。
+        select.select_option(str(index))
+        page.locator('.text-range-tools summary').first.click()
+        page.get_by_label('选段起点', exact=True).fill('0')
+        page.get_by_label('选段终点', exact=True).fill(str(len(SAME_TEXT)))
+        page.get_by_role('button', name='校验原文选段', exact=True).first.click()
+        expect(page.locator('.text-range-tools p[role=status]').last).to_contain_text('选段已校验', timeout=20000)
+    ranges = page.evaluate('() => window.__ranges')
+    assert len(ranges) == 2 and ranges[0]['start'] == ranges[1]['start'] == 0, ranges
+    assert ranges[0]['end'] == ranges[1]['end'] == len(SAME_TEXT)
+    assert ranges[0]['locator'] != ranges[1]['locator'], 'same text in two nodes must keep distinct locators'
+    assert ranges[0]['ref'] == ranges[1]['ref'], 'both belong to the same fixed page artifact'
+    # 两次校验都已作为文本选段进入意见区域(区域按各自范围独立计数)。
+    expect(page.locator('.annotation-regions .annotation-region')).to_have_count(2)
