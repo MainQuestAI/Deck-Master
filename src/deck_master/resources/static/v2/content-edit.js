@@ -77,7 +77,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
     if (!currentBasis()) { versionChanged(); return; }
     pending = {action:'content.inputs', request:{input, base_revision:app.route.revision}, basis:{input}};
     impact.replaceChildren(el('strong', {}, '材料与任务要求变更'), el('p', {}, '确认后旧材料版本保留，输入进入待协调；原有未完任务会由新内容整理接续。只有制作工具判断并采用后才说明内容已对齐，不默认整套重制。'));
-    impact.append(el('ul', {}, differences.map(text=>el('li',{},text)))); impact.scrollIntoView({block:'center'});
+    impact.append(el('ul', {}, differences.map(text=>el('li',{},text))));
     submit.textContent = '确认输入并交接判断'; notice.textContent = ''; controls();
   }
   const reject = event => { if (event.detail.action.startsWith('content.')) { pending = null; controls(); } };
@@ -116,23 +116,90 @@ function textFields(value, path = [], out = []) {
   return out;
 }
 const at = (value, path) => path.reduce((v,k) => v[k], value);
+// F06/N04：字段标签必须表达作品位置，不能用全局序号——同文节点靠"块 + 块内
+// 位置"区分，块标题（相邻文本）一并给出。
+const leafNames = {title: '标题', subtitle: '副标题', heading: '小标题', label: '标签', text: '文字', display_text: '显示文字'};
+const blockKeyNames = {body_blocks: '正文块', sections: '章节', paragraphs: '段落组', items: '条目组'};
+const containerKeyNames = {items: '条目', rows: '行', columns: '列', cells: '单元格', children: '子条目'};
+function blockAt(path) { return path.findIndex((segment, i) => i > 0 && typeof segment === 'number'); }
+function blockHeading(value, path, arrayAt) {
+  if (arrayAt < 1) return null;
+  const container = at(value, path.slice(0, arrayAt + 1));
+  const anchor = container && typeof container === 'object' && !Array.isArray(container)
+    ? [container.title, container.heading, container.label].find(v => typeof v === 'string' && v.trim()) : null;
+  const key = path[arrayAt - 1];
+  const base = `${blockKeyNames[key] || key} ${path[arrayAt] + 1}`;
+  return anchor ? `${base} · ${anchor.trim().slice(0, 24)}` : base;
+}
+function leafLabel(path, arrayAt) {
+  const parts = [];
+  for (let i = arrayAt + 1; i < path.length; i++) {
+    const segment = path[i];
+    if (typeof segment === 'number') parts.push(`${containerKeyNames[path[i - 1]] || '条目'} ${segment + 1}`);
+    else if (i + 1 < path.length && typeof path[i + 1] === 'number') continue;
+    else parts.push(leafNames[segment] || segment);
+  }
+  return parts.join(' · ') || '文字';
+}
 export function pageContentEditor(app, data) {
   if (app.readonly || !data.page?.customer_visible) return null;
-  let value = structuredClone(data.page.customer_visible); const fields = el('div', {class:'stack'});
+  let value = structuredClone(data.page.customer_visible);
+  // R3（深度复审）：比较基准固定为所读正式页面内容——个人草稿恢复只改当前输入，
+  // 不能把未提交的草稿当成"原文"；正式提交并读取新版本后才会由新实例建立新基准。
+  const original = structuredClone(data.page.customer_visible);
+  const fields = el('div', {class:'stack'});
+  // UX-04b（对账 §5「具体文字差异」）：具体改动常驻显示「块位置：原文 → 改文」，
+  // 与影响预览同屏；用户不必在整页文本框之间自行回忆改了什么。
+  const changes = el('div', {class:'stack content-changes'});
+  // 2.3（深度复审）：核对状态把「具体差异 + 范围与下游影响 + 确认动作」放在同一块，
+  // 预览后滚动到这里就能同屏核对；逐项文本框仍保留在下方随时返回修改。
+  const check = el('div', {class:'stack content-check'});
   const reason = inputField('正文修改说明', '调整本页标题或正文', 2);
   let operation;
+  function leafLabelFor(path) {
+    if (path.length === 1) return ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字');
+    const arrayAt = blockAt(path);
+    return `${blockHeading(value, path, arrayAt) || '正文'} · ${leafLabel(path, arrayAt)}`;
+  }
+  function drawChanges() {
+    const rows = textFields(value).filter(path => at(original, path) !== at(value, path)).map(path => el('li', {},
+      el('span', {class:'content-change-label'}, leafLabelFor(path)),
+      el('span', {class:'content-change-before'}, at(original, path) || '（空）'),
+      el('span', {class:'content-change-arrow'}, ' → '),
+      el('span', {class:'content-change-after'}, at(value, path) || '（空）')));
+    changes.replaceChildren(el('h3', {}, `本次具体改动（${rows.length}）`),
+      rows.length ? el('ul', {class:'content-change-list'}, rows)
+        : el('p', {class:'muted'}, '尚未改动文字。这里逐条显示「原文 → 改文」，与下方影响预览同屏核对。'));
+  }
   function draw() {
     fields.replaceChildren();
     const rank = path => path.length === 1 && path[0] === 'title' ? 0 : path.length === 1 && path[0] === 'subtitle' ? 1 : 2;
-    for (const [index,path] of textFields(value).sort((a,b)=>rank(a)-rank(b)).entries()) {
-      const label = path.length === 1 ? ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字') : `正文文字 ${index + 1}`;
-      const item = inputField(label, at(value,path), path.length === 1 ? 2 : 4);
-      item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); });
+    let lastHeading = null;
+    for (const path of textFields(value).sort((a,b)=>rank(a)-rank(b))) {
+      if (path.length === 1) {
+        const label = ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字');
+        const item = inputField(label, at(value,path), 2);
+        item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); drawChanges(); });
+        fields.append(item.node);
+        lastHeading = null;
+        continue;
+      }
+      const arrayAt = blockAt(path);
+      const head = blockHeading(value, path, arrayAt);
+      if (head !== lastHeading) { fields.append(el('p', {class:'muted content-block-label'}, head || '正文')); lastHeading = head; }
+      const label = `${head || '正文'} · ${leafLabel(path, arrayAt)}`;
+      const item = inputField(label, at(value,path), 4);
+      item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); drawChanges(); });
       fields.append(item.node);
     }
+    drawChanges();
   }
   draw();
-  operation = contentOperation(app, 'page_edit', () => ({visible:value,reason:reason.input.value}), saved => { if (saved.visible) value = saved.visible; reason.input.value = saved.reason || ''; draw(); }, data.stages.content.ref,
+  operation = contentOperation(app, 'page_edit', () => ({visible:value,reason:reason.input.value}), saved => {
+    // 草稿恢复只更新当前输入；比较基准见上（R3）。
+    if (saved.visible) value = saved.visible;
+    reason.input.value = saved.reason || ''; draw();
+  }, data.stages.content.ref,
     result => app.go({revision:result.revision_id, layer:'content'}));
   reason.input.addEventListener('input', operation.changed);
   const preview = button('预览正文修改影响', () => operation.preview({content_plan_ref:data.content_plan?.ref || null, action:'edit', instruction:reason.input.value,
@@ -143,5 +210,7 @@ export function pageContentEditor(app, data) {
       ...result.records.map(r => button('查看来源页关系', () => modal('新页的来源', el('div', {class:'stack'},
         r.derivation.source_pages.map(p => button('打开来源页 '+p.page_id, () => { document.querySelector('#modal').close(); app.go({page_id:p.page_id,revision:r.derivation.source_revision,layer:'content'}); })))))));
   }).catch(error => derivations.append(el('p', {class:'field-error'}, readableError(error))));
-  return el('details', {class:'content-editor'}, el('summary', {}, '编辑本页标题与正文'), el('div', {class:'stack'}, derivations, operation.guard(el('div', {class:'stack'}, fields, reason.node, preview)), operation.node));
+  check.append(changes, operation.node);
+  return el('details', {class:'content-editor'}, el('summary', {}, '编辑本页标题与正文'),
+    el('div', {class:'stack'}, derivations, check, operation.guard(el('div', {class:'stack'}, fields, reason.node, preview))));
 }

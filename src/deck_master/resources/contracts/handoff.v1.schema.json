@@ -349,50 +349,95 @@
             "references": {
               "type": "array",
               "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "page_id": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 128
-                  },
-                  "revision_id": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 128
-                  },
-                  "artifact_ref": {
+                "oneOf": [
+                  {
                     "type": "object",
-                    "required": [
-                      "path",
-                      "sha256"
-                    ],
                     "additionalProperties": false,
                     "properties": {
-                      "path": {
+                      "page_id": {
                         "type": "string",
-                        "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                        "minLength": 1,
+                        "maxLength": 128
                       },
-                      "sha256": {
+                      "revision_id": {
                         "type": "string",
-                        "pattern": "^[a-f0-9]{64}$"
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "artifact_ref": {
+                        "type": "object",
+                        "required": [
+                          "path",
+                          "sha256"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                          },
+                          "sha256": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        }
+                      },
+                      "role": {
+                        "enum": [
+                          "reference",
+                          "edit_target",
+                          "supporting"
+                        ]
                       }
-                    }
+                    },
+                    "required": [
+                      "page_id",
+                      "revision_id",
+                      "artifact_ref",
+                      "role"
+                    ]
                   },
-                  "role": {
-                    "enum": [
-                      "reference",
-                      "edit_target",
-                      "supporting"
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "external"
+                      },
+                      "reference_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "artifact_ref": {
+                        "type": "object",
+                        "required": [
+                          "path",
+                          "sha256"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                          },
+                          "sha256": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        }
+                      },
+                      "role": {
+                        "const": "reference"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "reference_id",
+                      "artifact_ref",
+                      "role"
                     ]
                   }
-                },
-                "required": [
-                  "page_id",
-                  "revision_id",
-                  "artifact_ref",
-                  "role"
                 ]
               },
               "maxItems": 16

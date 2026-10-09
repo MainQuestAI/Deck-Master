@@ -20,6 +20,7 @@ from .models import canonical_json_bytes, sha256_bytes
 from . import __version__
 
 RELATIVE_PATHS = {
+    "visual-reference": "references/visual-reference.md",
     "source-reading": "references/source-reading.md",
     "content-methods": "references/content-methods.md",
     "content-examples": "references/content-examples.md",
@@ -63,6 +64,8 @@ def resolve_root() -> Path:
 
 
 def method_ids_for(kind: str, *, intent: str | None = None) -> tuple[str, ...]:
+    if kind == "style_analyze":
+        return ("visual-reference",)
     if kind == "compose":
         return _INPUT_REVISION_METHODS if intent == "input_revision" else _INITIAL_METHODS
     if kind in ("blueprint", "reconstruct"):

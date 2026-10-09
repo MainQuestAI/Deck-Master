@@ -224,6 +224,28 @@ def catalog(project=None):
     return {**value,'digest':digest(value)}
 
 
+def catalog_asset_bytes(asset_id, sha256):
+    """Packaged catalog icon bytes for the read-only <img> preview (web caller only).
+
+    校验顺序:manifest 许可证摘要 → 白名单内确切 id+sha256 → 读出后再对字节复核。
+    任何不合都是结构化 icon 错误;未通过校验的字节一个也不会被送出。
+    asset_id 限定为打包目录内 [a-z0-9-] 命名,不走对象库、不受项目 store 影响。
+    """
+    if not isinstance(asset_id, str) or not asset_id or len(asset_id) > 64 or not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', asset_id):
+        fail('asset_id', 'provide a packaged catalog icon id')
+    if not isinstance(sha256, str) or not re.fullmatch(r'[a-f0-9]{64}', sha256):
+        fail('sha256', 'provide the packaged asset sha256')
+    value=json.loads((CATALOG/'manifest.json').read_text())
+    if hashlib.sha256((CATALOG/value['license_file']).read_bytes()).hexdigest()!=value['license_sha256']:
+        fail('catalog','packaged license checksum mismatch')
+    entry=next((a for a in value['icons'] if a.get('id')==asset_id), None)
+    if entry is None or sha256!=entry.get('sha256'):
+        fail('asset_id','asset is not the packaged manifest entry with this sha256')
+    raw=(CATALOG/(asset_id+'.svg')).read_bytes()
+    if hashlib.sha256(raw).hexdigest()!=sha256: fail('asset_id','packaged icon bytes changed')
+    return raw
+
+
 def _owned(store, doc, recipe_id=None, ref=None):
     for current in doc.get('icon_recipes',[]):
         if ref is not None and current!=ref: continue

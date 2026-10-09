@@ -113,12 +113,42 @@ def save(project, *, input, base_revision, operation_id):
                                         operation_id=operation_id, kind='annotations.save', digest=digest, result=result)
 
 
+ANNOTATION_SCOPES = ('project', 'chapter', 'page', 'artifact')
+# Mirrors the annotation.v1 layer enum: a filter that accepted anything else
+# could never match a stored opinion.
+ANNOTATION_LAYERS = ('content', 'prepared_prompt', 'submitted_prompt', 'original_image', 'svg', 'ppt')
+
+
 @operations.public
-def list_annotations(project, *, revision=None):
+def list_annotations(project, *, revision=None, page_id=None, layer=None, scope=None):
+    """Read opinions from one fixed snapshot.
+
+    Two different questions live here and must not be conflated: which snapshot a
+    note was *recorded* in (this read's revision) and which artifact basis it was
+    *written against* (`base_revision`, `page_ref`, `artifact_ref`). The list is
+    never filtered by `base_revision == current`, otherwise an opinion saved a
+    moment ago would disappear from its own project.
+    """
     store = Store(project_path(project)); document = load_snapshot(store, revision)
+    if scope is not None and scope not in ANNOTATION_SCOPES:
+        raise operations.OperationError('invalid_input', 'scope', f'scope must be one of {"/".join(ANNOTATION_SCOPES)}')
+    if layer is not None and layer not in ANNOTATION_LAYERS:
+        raise operations.OperationError('invalid_input', 'layer', f'layer must be one of {"/".join(ANNOTATION_LAYERS)}')
+    if page_id is not None and page_id not in {entry['page_id'] for entry in document.get('pages', [])}:
+        raise operations.OperationError('invalid_input', 'page_id', 'page is not part of this project version')
     records = []
     for ref in document.get('annotations', []):
         note = store.read_object_json(ref)
         validate(store, document, note)
+        if scope is not None and note.get('scope') != scope:
+            continue
+        if page_id is not None and note.get('page_id') != page_id:
+            continue
+        if layer is not None and note.get('layer') != layer:
+            continue
         records.append({'ref': ref, 'annotation': note})
-    return {'project_id': document['project_id'], 'revision_id': document['revision_id'], 'annotations': records}
+    result = {'schema_version': 'annotation_list.v1', 'project_id': document['project_id'],
+              'revision_id': document['revision_id'], 'annotations': records,
+              'filters': {'page_id': page_id, 'layer': layer, 'scope': scope}}
+    validate_schema('annotation_list', result)
+    return result

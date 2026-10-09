@@ -24,6 +24,8 @@ export function content(app, data) {
   let chapters = structuredClone(plan?.chapters || []);
   const sourceList = el('div', {class:'stack'}), pageList = el('ol', {class:'content-order', 'aria-label':'调整逐页稿顺序'}), goalList = el('div', {class:'stack'});
   let operation, completedAction = null;
+  const materialEditor = el('div',{class:'stack'});
+  let editTrigger = null, editKind = 'task', editSourceId = null, editReturnScroll = null;
   function read() { return {brief:brief.input.value,audience:audience.input.value,decisions:decisions.input.value,reason:reason.input.value,additions:additions.input.value,sources:sourceRows,order,selected:[...selected],instruction:instruction.input.value,summary:summary.input.value,goals,chapters}; }
   function hydrate(s) {
     for (const [key,field] of Object.entries({brief,audience,decisions,reason,additions,instruction,summary})) if (key in s) field.input.value=s[key];
@@ -32,18 +34,19 @@ export function content(app, data) {
     selected=new Set((s.selected || []).filter(id=>pageMap.has(id)));
     if (s.goals) goals=s.goals; if (s.chapters) chapters=s.chapters;
     drawSources(); drawPages(); drawGoals();
+    if(adjustDetails&&!adjustDetails.hidden)openMaterialEditor(editKind,editSourceId,editTrigger);
   }
   operation=contentOperation(app,'content_sources',read,hydrate,ref,result=>{
     if (result.task_ids?.length || result.pending_tasks?.length) {
       const ids = result.task_ids || result.pending_tasks.map(task => task.task_id);
-      app.go({surface:'runs',revision:result.revision_id,task_id:ids.length === 1 ? ids[0] : null});
+      app.go({surface:'runs',revision:result.revision_id,task_id:ids.length === 1 ? ids[0] : null,runs_area:'tasks'});
     }
     else if (completedAction==='remove') {
       const first=order.findIndex(id=>selected.has(id)); const remaining=order.filter(id=>!selected.has(id));
       app.go({surface:'page',page_id:remaining[Math.min(first,remaining.length-1)],layer:'content',revision:result.revision_id});
     } else { app.contentFocusPage=app.contentFocusPage || order[0]; app.go({surface:'content',revision:result.revision_id}); }
   });
-  const changed=()=>operation.changed();
+  const changed=()=>{operation.changed();if(adjustDetails&&!adjustDetails.hidden){adjustDetails.dataset.step='edit';returnEdit.hidden=true;}};
   for (const field of [brief,audience,decisions,reason,additions,instruction,summary]) field.input.addEventListener('input',changed);
   function sourceState(source, node) {
     const fact = sourceFacts.get(source.source_id);
@@ -71,17 +74,11 @@ export function content(app, data) {
   function drawSources() {
     materialStatuses.clear();
     sourceList.replaceChildren(...sourceRows.map(source=>{
-      const action=el('select',{'aria-label':'材料操作 '+source.name},el('option',{value:'keep'},'保留材料'),el('option',{value:'replace'},'替换为新版本'),el('option',{value:'remove'},'从当前输入移除'));
-      action.value=source.action;
-      const note=inputField('材料用途 '+source.name,source.usage_note,2),path=inputField('替换路径 '+source.name,source.path,2);
-      path.node.hidden=source.action!=='replace';
-      action.addEventListener('change',()=>{source.action=action.value;path.node.hidden=source.action!=='replace';changed();});
-      note.input.addEventListener('input',()=>{source.usage_note=note.input.value;changed();});path.input.addEventListener('input',()=>{source.path=path.input.value;changed();});
       const status = el('div', {class:'stack', role:'status'}); materialStatuses.set(source.source_id, {source,node:status}); sourceState(source, status);
       const verify = button('核实提取状态 '+source.name, () => verifySource(source,status,verify));
       return el('article',{class:'source-card stack'},el('strong',{},source.name), status,
         el('div', {class:'row wrap'}, verify, button('读取材料原文 '+source.name,()=>sourceReader(app,{source_id:source.source_id,source_version:{extract:source.extract}},readingRevision),false,{class:'text-link'})),
-        app.readonly?el('p',{},source.usage_note):el('details',{},el('summary',{},'调整此材料'),el('div',{class:'stack'},action,note.node,path.node)));
+        app.readonly?el('p',{},source.usage_note):button('调整此材料 · '+source.name,event=>openMaterialEditor('source',source.source_id,event.currentTarget)));
     }));
   }
   function move(id, next) {
@@ -111,17 +108,25 @@ export function content(app, data) {
       const chapterPagesList = ids.map(id => pageMap.get(id)).filter(Boolean);
       if (!chapterPagesList.length) return null;
       const first = chapterPagesList[0], last = chapterPagesList[chapterPagesList.length - 1];
-      const links = [...new Set(goals.filter(goal => ids.includes(goal.page_id))
-        .flatMap(goal => goal.source_links.map(link => link.locator || '材料')))];
+      const chapterGoals = goals.filter(goal => ids.includes(goal.page_id));
+      const links = [...new Set(chapterGoals.flatMap(goal => goal.source_links.map(link => link.locator || '材料')))];
+      // UX-04b（对账 §5「章节指定页、就近来源」）：章节内明确指定要打开的页，
+      // 目标来源按钮也放在该块内，不再只能进入"首个匹配页"并到别处找来源。
+      const pageChoice = el('select', {'aria-label': `章节内页面 ${chapter.title}`},
+        chapterPagesList.map(page => el('option', {value: page.page_id}, `第 ${order.indexOf(page.page_id) + 1} 页 · ${page.title || '未命名页面'}`)));
+      const targets = chapterGoals.flatMap(goal => goal.source_links.map(link => ({goal, link})));
       return el('div', {class: 'outline-block'},
         el('span', {class: 'mono'}, String(index + 1).padStart(2, '0')),
         el('div', {},
           el('h3', {}, chapter.title),
-          el('p', {}, goals.find(goal => ids.includes(goal.page_id))?.purpose || ''),
+          el('p', {}, chapterGoals[0]?.purpose || ''),
           el('p', {class: 'small-text outline-source-note'},
             chapterPagesList.length > 1 ? `第 ${order.indexOf(first.page_id) + 1}–${order.indexOf(last.page_id) + 1} 页` : `第 ${order.indexOf(first.page_id) + 1} 页`,
             links.length ? ` · ${links.join('、')}` : ' · 未记录来源关联'),
-          app.summary.pages.some(p => ids.includes(p.page_id)) && button('看逐页稿', () => app.go({surface: 'page', page_id: first.page_id, layer: 'content'}), false, {class: 'quiet'})));
+          el('div', {class: 'row wrap outline-actions'}, pageChoice,
+            button('打开所选页', () => app.go({surface: 'page', page_id: pageChoice.value, layer: 'content'}), false, {class: 'quiet'}),
+            ...targets.slice(0, 4).map(({goal, link}) => button(`查看目标来源 · ${pageMap.get(goal.page_id)?.title || goal.page_id} · ${link.locator || '材料'}`,
+              () => sourceReader(app, link), false, {class: 'text-link'})))));
     }).filter(Boolean);
   }
   function chapterPages(chapter) {
@@ -149,15 +154,18 @@ export function content(app, data) {
       else if(source.usage_note!==(inputs.sources.find(s=>s.source_id===source.source_id)?.usage_note || ''))source_changes.metadata.push({source_id:source.source_id,usage_note:source.usage_note});
     }
     const differences=[];
-    if(brief.input.value!==inputs.task.brief)differences.push('用途：'+brief.input.value);
-    if(audience.input.value!==inputs.task.audience)differences.push('受众：'+audience.input.value);
-    if(decisions.input.value!==(inputs.task.existing_decisions || []).join('\n'))differences.push('既定决定：'+decisions.input.value);
-    for(const source of sourceRows)if(source.action!=='keep')differences.push((source.action==='remove'?'移除：':'替换：')+source.name);
-    if(source_changes.add.length)differences.push('新增 '+source_changes.add.length+' 份本机材料');
-    if(source_changes.metadata.length)differences.push('更新 '+source_changes.metadata.length+' 份材料用途');
+    if(brief.input.value!==inputs.task.brief)differences.push('用途：'+inputs.task.brief+' → '+brief.input.value);
+    if(audience.input.value!==inputs.task.audience)differences.push('受众：'+inputs.task.audience+' → '+audience.input.value);
+    if(decisions.input.value!==(inputs.task.existing_decisions || []).join('\n'))differences.push('既定决定：'+(inputs.task.existing_decisions || []).join('；')+' → '+decisions.input.value);
+    for(const source of sourceRows)if(source.action!=='keep')differences.push((source.action==='remove'?'移除：':'替换：')+source.name+(source.action==='replace'?' → '+source.path:''));
+    for(const source of source_changes.add)differences.push('新增材料：'+source.path);
+    for(const source of source_changes.metadata){const previous=inputs.sources.find(s=>s.source_id===source.source_id);differences.push('材料用途 · '+(previous?.name || source.source_id)+'：'+(previous?.usage_note || '未填写')+' → '+(source.usage_note || '未填写'));}
     completedAction='inputs';operation.previewInputs({reason:reason.input.value,task_patch:{brief:brief.input.value,audience:audience.input.value,existing_decisions:decisions.input.value.split('\n').filter(v=>v.trim())},source_changes},differences);
+    adjustDetails.dataset.step='review';
+    returnEdit.hidden=false;
   }
   function preview(action) {
+    closeMaterialEditor(false);
     completedAction=action;
     const targets=['reorder','outline'].includes(action)?[]:[...selected].map(id=>({page_id:id,page_ref:pageMap.get(id).stages.content.ref}));
     const value={content_plan_ref:ref,action,targets,instruction:instruction.input.value || ({reorder:'调整逐页稿顺序',remove:'移除明确选定的页面',outline:'调整内容计划中的章节和页面目标'}[action] || '')};
@@ -166,7 +174,7 @@ export function content(app, data) {
     operation.preview(value);
   }
   drawSources();drawPages();drawGoals();
-  const hostImpact=el('div',{class:'stack'});
+  const hostImpact=el('div',{class:'stack content-impact'});
   const resolved=inputs?.content_basis?.resolved_by_task_id;
   if(resolved) get('/api/tasks/'+encodeURIComponent(resolved)+revisionQuery(readingRevision), {signal:controller.signal}).then(async result=>{
     if(disposed || result.task.status!=='completed')return;
@@ -187,16 +195,56 @@ export function content(app, data) {
   // Registration, verified extraction, adopted impact and alignment have
   // independent evidence. A stored extract ref alone makes no reading claim.
   // 历史修订不加载当前输入的材料清单：不显示虚假的 0 份断言（评审 reading-P2）。
+  // 三类入口共用宽编辑区和固定请求机制；历史版本不呈现编辑入口。
+  const editorTitle=el('h2',{},'调整任务要求与材料');
+  const returnEdit=button('返回编辑',()=>{changed();adjustDetails.dataset.step='edit';returnEdit.hidden=true;materialEditor.querySelector('textarea,select')?.focus();},false,{hidden:true});
+  const operationHome=el('div',{class:'content-operation-home'},!app.readonly&&operation.node);
+  const inputImpact=el('div',{class:'material-input-impact stack'});
+  const inputFields=editable(el('div',{class:'material-input-fields stack'},materialEditor,reason.node,button('预览材料与任务变化',inputPreview)));
+  const adjustDetails = !app.readonly&&inputs ? el('details', {class:'panel materials-adjust-form',hidden:true,'data-step':'edit'},el('summary',{class:'panel-head'},'调整任务要求与材料'),
+    el('div',{class:'panel-body stack'},editorTitle,el('div',{class:'material-edit-context'},inputFields,inputImpact),el('div',{class:'row wrap'},returnEdit,button('关闭编辑并保留草稿',()=>closeMaterialEditor())))) : null;
+  function openMaterialEditor(kind,sourceId=null,trigger=document.activeElement) {
+    if(!adjustDetails)return;
+    if(adjustDetails.hidden)editReturnScroll={x:window.scrollX,y:window.scrollY};
+    editTrigger=trigger;editKind=kind;editSourceId=sourceId;
+    changed();returnEdit.hidden=true;adjustDetails.dataset.step='edit';
+    const source=sourceRows.find(s=>s.source_id===sourceId);
+    materialEditor.replaceChildren();
+    if(kind==='source'&&source){
+      editorTitle.textContent='调整材料 · '+source.name;
+      const action=el('select',{'aria-label':'材料操作 '+source.name},el('option',{value:'keep'},'保留材料'),el('option',{value:'replace'},'替换为新版本'),el('option',{value:'remove'},'从当前输入移除'));
+      action.value=source.action;
+      const note=inputField('材料用途 '+source.name,source.usage_note,2),path=inputField('替换路径 '+source.name,source.path,2);
+      path.node.hidden=source.action!=='replace';
+      action.addEventListener('change',()=>{source.action=action.value;path.node.hidden=source.action!=='replace';changed();});
+      note.input.addEventListener('input',()=>{source.usage_note=note.input.value;changed();});path.input.addEventListener('input',()=>{source.path=path.input.value;changed();});
+      materialEditor.append(action,note.node,path.node);
+    } else {
+      editorTitle.textContent=kind==='add'?'添加材料':'修改任务要求与材料';
+      materialEditor.append(brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),additions.node);
+    }
+    inputImpact.append(operation.node);adjustDetails.hidden=false;adjustDetails.open=true;
+    adjustDetails.scrollIntoView({block:'start'});(kind==='add'?additions.input:materialEditor.querySelector('textarea,select'))?.focus({preventScroll:true});
+  }
+  function closeMaterialEditor(focus=true) {
+    if(disposed||!adjustDetails||adjustDetails.hidden)return;
+    changed();operationHome.append(operation.node);adjustDetails.open=false;adjustDetails.hidden=true;returnEdit.hidden=true;
+    if(focus){
+      if(editTrigger?.isConnected){if(editReturnScroll)window.scrollTo(editReturnScroll.x,editReturnScroll.y);editTrigger.focus({preventScroll:true});}
+      else node.querySelector('#view-title')?.focus();
+    }
+  }
+  if(adjustDetails)adjustDetails.addEventListener('toggle',()=>{if(!adjustDetails.open&&!adjustDetails.hidden)closeMaterialEditor();});
+  const openAdjustForm = event => openMaterialEditor('add',null,event?.currentTarget);
   const materialAside=el('aside',{class:'panel materials-aside','aria-label':'使用中的材料'},
     el('div',{class:'panel-head'},el('h2',{},'使用中的材料'),el('span',{class:'status'},inputs?(inputs.sources.length+' 份'):'历史版本')),
     el('div',{class:'panel-body stack'},inputs?sourceList:el('p',{class:'muted'},'材料清单按当前输入读取；正在看历史版本，未加载材料列表。'),
       el('p',{class:'muted'},aligned?'当前输入已由内容结果对齐；这不是独立事实核验。':'输入待协调：制作工具尚需按最新材料判断影响。'),
-      !app.readonly&&inputs&&el('details',{},el('summary',{},'调整任务要求与材料'),editable(el('div',{class:'stack'},brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),
-        additions.node,reason.node,button('预览材料与任务变化',inputPreview)))),
       el('p',{class:'footer-note muted'},'更新材料后，先确认受影响的页面，再比较修改结果。')));
-  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&button('添加材料或调整要求',()=>{const details=node.querySelector('.materials-aside details');details.open=true;details.querySelector('textarea,input,select')?.focus();},!app.readonly)),
+  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&el('div',{class:'row wrap'},button('添加材料或调整要求',openAdjustForm,false,{disabled:!inputs}),button('修改任务要求',event=>openMaterialEditor('task',null,event.currentTarget),false,{disabled:!inputs}))),
     el('div',{class:aligned?'notice':'history-banner'},el('strong',{},aligned?'当前输入已由内容结果对齐':'输入待协调'),el('p',{},aligned?'已有内容结果采用了这一版输入；这不是独立事实核验。':'已保存的稿件仍可阅读。制作工具尚需按最新材料、受众和用途判断影响。')),
     hostImpact,
+    adjustDetails,
     el('div',{class:'content-layout'},
       el('section',{class:'stack'},
         panel('内容整合', el('p', {}, plan?.input_summary || '尚未记录整合结论，已保存的逐页稿仍可阅读。'),
@@ -207,7 +255,7 @@ export function content(app, data) {
         ref?panel('内容计划与依据',el('details',{},el('summary',{},'查看完整页面目标与原始依据'),el('ol',{},goals.map(g=>el('li',{},g.purpose))),el('pre',{class:'evidence-json'},JSON.stringify({chapters:plan.chapters,unresolved_facts:plan.unresolved_facts},null,2))),el('details',{},el('summary',{},'编辑内容计划'),editable(el('div',{class:'stack'},el('p',{class:'muted'},'这里编辑章节、目标与待确认事实；正文请进入对应页面修改。'),summary.node,goalList,!app.readonly&&button('预览内容计划变更',()=>preview('outline')))))):panel('内容计划',el('p',{},'尚未记录完整内容计划。')),
         inputs?null:panel('历史材料',el('p',{},'此处只读固定版本的内容目标与来源，不混入当前任务要求。'))),
       materialAside),
-    !app.readonly&&operation.node,draftNode);
+    operationHome,draftNode);
   if(app.readonly) for(const item of node.querySelectorAll('textarea'))item.readOnly=true;
   if(app.contentFocusPage){const focus=app.contentFocusPage;delete app.contentFocusPage;requestAnimationFrame(()=>pageList.querySelector('[data-page-id="'+CSS.escape(focus)+'"] .order-handle')?.focus());}
   return node;

@@ -1,0 +1,221 @@
+{
+  "schema_version": "pr104-supplemental-evidence.v1",
+  "scope": "five_supplemental_review_repairs_with_related_pressure_path_repairs",
+  "baseline_commit": "560c580460654e69378194a4e2180cbce0cce83e",
+  "review_state": "awaiting_original_re_review",
+  "professional_evidence": "not_evaluated",
+  "model_invocations": 0,
+  "real_host_f09": "historical_evidence_not_rerun",
+  "frozen_code_and_test_sha256": {
+    "src/deck_master/service.py": "e8a8742742bb5f244d593d6ed3e3c93e56041658308b567759e8080bbd0ef0ad",
+    "src/deck_master/resources/static/v2/annotations.js": "b773d1db6412661e995b60945fae87848736dea40ec94870dc216cbc74d034a7",
+    "src/deck_master/resources/static/v2/page-workbench.js": "b0c6f7b24268f9ff9201070e7c81936879615c8340210e0e04b07b6cc9e7e889",
+    "src/deck_master/resources/static/v2/visual-style.js": "0743da74341e444c9908d09968acee18473488b646f6cc0347a4406bc50d5e09",
+    "examples/workbench/w10_pressure.py": "f006ecd51f4eae82b857cab8643eb8593fe8a77d51be5b511c50b7dd25d053aa",
+    "examples/workbench/w12_installed_regressions.py": "0d8e9af99c6f373d2cb13c27f3827fd541e699e19d6097b9d63055d766cb2d82",
+    "tests/rebuild/test_visual_styles.py": "17fd51265e2e800b6cf6e90c335ebd211646f7f54e5d0c1b7cda188710298f47",
+    "tests/rebuild/test_pr104_supplemental_browser.py": "5ee313032d87025fc0c595e88b3ac059e834e171240a75101150394715529e26"
+  },
+  "local_validation": {
+    "targeted": {
+      "status": "passed",
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 103.63,
+      "log": "target-frozen.log"
+    },
+    "unit": {
+      "status": "passed",
+      "passed": 1253,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 170.3,
+      "log": "unit-frozen.log"
+    },
+    "render": {
+      "status": "passed",
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 284.74,
+      "log": "render-frozen.log",
+      "warnings": 22
+    },
+    "source_browser": {
+      "status": "passed",
+      "passed": 317,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 758.88,
+      "log": "browser-frozen.log"
+    },
+    "installed": {
+      "status": "passed",
+      "passed": 157,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 384.93,
+      "log": "installed-frozen.log",
+      "module_count": 52,
+      "all_modules_site_packages": true
+    },
+    "offline_installed": {
+      "status": "verified",
+      "checks": {
+        "viewport_1440_900_focus_and_overflow": true,
+        "viewport_1280_800_focus_and_overflow": true,
+        "three_fixed_offline_downloads_hash_verified": true,
+        "every_v2_asset_served_from_installed_package": true,
+        "current_entries_and_retired_routes_without_write": true,
+        "installed_brand_license_and_esm_metadata": true,
+        "no_cdn_external_font_or_runtime_request": true
+      },
+      "page_errors": 0,
+      "external_requests": 0
+    },
+    "wheel": {
+      "schema_version": "pr104-wheel-audit.v1",
+      "wheel_sha256": "8cfa0a3a34c02ca8e511dea604f24e2e0f37310ca61855977ddd4e7b3f068fa1",
+      "package_files": 209,
+      "static_files": 55,
+      "catalog_svg_files": 24,
+      "all_source_wheel_installed_bytes_equal": true,
+      "generated_skill_source": "skills/deck-master"
+    },
+    "w10_usability": {
+      "status": "passed",
+      "qualifying": true,
+      "elapsed_s": 1200.0026323749917,
+      "fixture": {
+        "factory": "w01-pressure.v1",
+        "page_count": 300,
+        "candidate_count": 1500,
+        "attempt_count": 4500
+      },
+      "usability_paths": {
+        "shared_comparison_zoom_pan": 10,
+        "history_paging": 10,
+        "screenshot_analysis_reading": 10,
+        "breakdown_reading": 10
+      },
+      "middle_samples": 30,
+      "last_samples": 30,
+      "middle_window_s": [
+        300,
+        600
+      ],
+      "last_window_s": [
+        900,
+        1200
+      ],
+      "middle_median_bytes": 22870980.0,
+      "last_median_bytes": 23091716.0,
+      "growth": 0.009651357309568676,
+      "memory_pass": true,
+      "image_bounds_pass": true,
+      "browser_errors": 0,
+      "warm_summary_samples": 100,
+      "warm_summary_p95_ms": 96.02229105075821,
+      "warm_summary_threshold_ms": 250,
+      "background_updates": 60,
+      "post_paths": [
+        "gallery",
+        "ui-state"
+      ],
+      "sampling": "Chromium Performance.getMetrics JSHeapUsedSize after each ten-second interaction slot; no forced GC",
+      "source_head_field": "560c580460654e69378194a4e2180cbce0cce83e",
+      "source_binding": "precommit_frozen_files_above; verify_against_pushed_commit",
+      "concurrent_regressions": true,
+      "server_stderr_broken_pipe_count": 25,
+      "server_stderr_note": "Navigation cancellation traces are preserved; browser errors and gate assertions are separate."
+    }
+  },
+  "baseline_counterexamples": {
+    "stale_claims_not_rejected": 4,
+    "restored_task_already_superseded": true,
+    "direct_before_snapshot_and_cross_layer_ui_failures": 5,
+    "readonly_and_historical_full_breakdown_failures": 2,
+    "failed_full_pressure_attempts": 2,
+    "failed_attempts_qualify": false
+  },
+  "postcommit_ci": "record_exact_sha_pr_and_push_runs_in_pr_body",
+  "raw_evidence": [
+    {
+      "name": "baseline-claim.log",
+      "sha256": "59316388994b5056b22cb9c1db9eeb227872b86f8cba1962464e266cfa7052e5"
+    },
+    {
+      "name": "baseline-browser.log",
+      "sha256": "8ac9197892edbd4de74ef10a8d8a0a9639a8846729b67f2e82399f891ebc509f"
+    },
+    {
+      "name": "baseline-readonly-breakdown.log",
+      "sha256": "9403b0bc354411276cd25207344bb028ba1d21934daa08eb4ab273fd2e3a5e5d"
+    },
+    {
+      "name": "target-frozen.log",
+      "sha256": "bade6b8dbc39081abad3f4eb875590f5c5ec73dc998040aa7d16033d31bd7e99"
+    },
+    {
+      "name": "unit-frozen.log",
+      "sha256": "baeb290e298b5d465e0702dcdd4c25cf7fd8e643277dd65a24603c33707b9539"
+    },
+    {
+      "name": "render-frozen.log",
+      "sha256": "cc99cb5c1061750bbc80d51be786aa29bea30b573604c1a290fa58de75eb36c1"
+    },
+    {
+      "name": "browser-frozen.log",
+      "sha256": "3fd62e30dbace925a30c6e61a7ea3015a8cf849efcfc3abc322679ced5369e77"
+    },
+    {
+      "name": "installed-frozen.log",
+      "sha256": "1a21492163253e4c40a6afaaa7dc75a8bde1442e7a9594d8acf444396dc94f94"
+    },
+    {
+      "name": "installed-frozen.json",
+      "sha256": "f878a548c3b43c8cd442394e6fc2084a0e5cf1aed217ce34dc109975b79f1dea"
+    },
+    {
+      "name": "offline-frozen.log",
+      "sha256": "8b448f642781390f8bf5c840f7503ebd4e4721b46a07ffb713b02ea1561486d2"
+    },
+    {
+      "name": "offline-frozen/checks.json",
+      "sha256": "414ffa44aa8e08d357da3924be1b866a78e86ab89756f94dc562f2642de3c9d9"
+    },
+    {
+      "name": "wheel-build-final.log",
+      "sha256": "5664ccbf5a71033c3956e756ed8f24bf8f20adf997f1cf8941152e083ea4b7ce"
+    },
+    {
+      "name": "wheel-install-final.log",
+      "sha256": "681bc2d4e0401816dfb9fb0e5c722c6be5fab37b1fab119a410eb8c9052c0fa8"
+    },
+    {
+      "name": "wheel-audit-frozen.json",
+      "sha256": "7f65b3c0a01212df76c273e30fecb27b3ab6bf4c6337914f969261d727ccf4ce"
+    },
+    {
+      "name": "pressure-full/failure.json",
+      "sha256": "a1618f8c6d3f822f7defdbf01f38bee9badf7c9e0cd2ad8bc48a6271c8725529"
+    },
+    {
+      "name": "pressure-full-r2/failure.json",
+      "sha256": "c2061d90ef164f7eb3992399ed568c00ebb84e1a252e398f07c27c538f98255e"
+    },
+    {
+      "name": "pressure-full-final/checks.json",
+      "sha256": "9152ea388b246bbbbb47332faacfea64823520d0c092eeb388f385a4ec176bce"
+    },
+    {
+      "name": "pressure-full-final/samples.jsonl",
+      "sha256": "f701407574e2426bbd55c2df51c351ef799fbdb88f57fe9e7c8034a6dc079b48"
+    },
+    {
+      "name": "pressure-final.log",
+      "sha256": "e1e467dac796e2347c24fa5d3df1af15a413c5acfd8b2b2c8724d6bd7535d746"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/deck_master/resources/static/v2/workbench.css"
+        ],
+        "createdAt": "2026-10-07T07:44:32.959Z",
+        "reason": "Agent: L92 range-excerpt is a real validated-text blockquote in text-selection.js; L129 candidate-state is a factual role=status region in candidate-desk.js and index.html loads studio.css last, overriding its border to neutral studio-ink #20262e. Both predate this repair (36deca62); preserve these semantic quote/status markers, not decorative card accents."
+      }
+    ]
+  }
+}

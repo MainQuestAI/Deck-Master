@@ -1,0 +1,48 @@
+{
+  "steps": [
+    {
+      "step": "version-identities",
+      "screenshot": "delivery-01-version-identities.png"
+    },
+    {
+      "step": "file-purposes",
+      "screenshot": "delivery-02-file-purposes.png"
+    },
+    {
+      "step": "review-package-generated",
+      "screenshot": "delivery-03-review-package-generated.png"
+    },
+    {
+      "step": "delivery-blocked-with-gaps",
+      "screenshot": "delivery-04-delivery-blocked-with-gaps.png"
+    }
+  ],
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/exports",
+      "payload": {
+        "purpose": "review",
+        "revision": "e98ba488641145f5942f18f00436abb7",
+        "export_id": "export-db4e0388-8038-4a2a-b977-7ee4a405ff79"
+      },
+      "status": 200,
+      "receipt": {
+        "revision_id": "e98ba488641145f5942f18f00436abb7",
+        "export_id": "export-db4e0388-8038-4a2a-b977-7ee4a405ff79",
+        "status": "exported"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/exports",
+      "payload": {
+        "purpose": "delivery",
+        "revision": "e98ba488641145f5942f18f00436abb7",
+        "export_id": "export-a14e46ea-1fee-4f85-a3bc-ce2ade1bd255"
+      },
+      "status": 409,
+      "receipt": null
+    }
+  ]
+}

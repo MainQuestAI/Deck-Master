@@ -25,6 +25,11 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
 
 SCHEMA_FILES = {
+    "style_reference": "style-reference.v1.schema.json",
+    "visual_style_spec": "visual-style-spec.v1.schema.json",
+    "style_input_v2": "style-input.v2.schema.json",
+    "style_proposal_v2": "style-proposal.v2.schema.json",
+    "style_recipe_v2": "style-recipe.v2.schema.json",
     "icon_input": "icon-input.v1.schema.json",
     "icon_recipe": "icon-recipe.v1.schema.json",
     "action_targets": "action-targets.v1.schema.json",
@@ -46,6 +51,7 @@ SCHEMA_FILES = {
     "change_set": "change-set.v1.schema.json",
     "annotation": "annotation.v1.schema.json",
     "annotation_batch": "annotation-batch.v1.schema.json",
+    "annotation_list": "annotation-list.v1.schema.json",
     "operation_commit": "operation-commit.v1.schema.json",
     "document": "document.v1.schema.json",
     "page": "page.v2.schema.json",
@@ -131,6 +137,8 @@ def _validator(kind: str) -> Draft202012Validator:
 
 def validate_schema(kind: str, obj: Any) -> None:
     """Schema-format validation; errors carry the failing JSON path."""
+    if kind in ("style_input", "style_proposal", "style_recipe") and isinstance(obj, dict) and obj.get("schema_version") == kind + ".v2":
+        kind += "_v2"
     errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
     worst = best_match(errors) if errors else None
     if worst is None:
@@ -253,7 +261,7 @@ def validate_review_semantics(review: dict[str, Any]) -> None:
 
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
-               "content-candidates.v1": 8, "icon-quality.v1": 9}
+               "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10}
 
 
 def require_writer(document, minimum):
@@ -270,30 +278,35 @@ def validate_document_structure(document: dict[str, Any]) -> None:
     validate_schema("document", document)
     if document.get("content_plan"):
         validate_ref(document["content_plan"], where="document/content_plan")
-        if document.get("compatibility", {}).get("minimum_writer") not in ("content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1"):
+        if document.get("compatibility", {}).get("minimum_writer") not in ("content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1", "workbench-quality.v1"):
             raise ModelError("document/compatibility", "content plans require the content-plan.v1 writer boundary")
     receipt = (document.get("change") or {}).get("operation_receipt")
     if receipt is not None and receipt["response"]["revision_id"] != document["revision_id"]:
         raise ModelError("document/change/operation_receipt/response/revision_id",
                          "operation receipt must name its own Document revision")
     if (document.get("annotations") or document.get("changes") or document.get("change", {}).get("operation_commit")):
-        if document.get("compatibility", {}).get("minimum_writer") not in ("changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1"):
+        if document.get("compatibility", {}).get("minimum_writer") not in ("changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1", "workbench-quality.v1"):
             raise ModelError("document/compatibility", "change records require the changes.v1 writer boundary")
     if document.get('candidates') or document.get('candidate_adoptions'):
-        if document.get('compatibility', {}).get('minimum_writer') not in ('candidates.v1', 'run-desk.v1', 'style-recipes.v1', 'content-ops.v1', 'content-candidates.v1', 'icon-quality.v1'):
+        if document.get('compatibility', {}).get('minimum_writer') not in ('candidates.v1', 'run-desk.v1', 'style-recipes.v1', 'content-ops.v1', 'content-candidates.v1', 'icon-quality.v1', 'workbench-quality.v1'):
             raise ModelError('document/compatibility', 'candidate records require the candidates.v1 writer boundary')
 
-    if document.get("style_recipes") and document.get("compatibility", {}).get("minimum_writer") not in ("style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1"):
+    if document.get("style_recipes") and document.get("compatibility", {}).get("minimum_writer") not in ("style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1", "workbench-quality.v1"):
         raise ModelError("document/compatibility", "style recipes require the style-recipes.v1 writer boundary")
     if document.get("page_derivations"):
-        if document.get("compatibility", {}).get("minimum_writer") not in ("content-ops.v1", "content-candidates.v1", "icon-quality.v1"):
+        if document.get("compatibility", {}).get("minimum_writer") not in ("content-ops.v1", "content-candidates.v1", "icon-quality.v1", "workbench-quality.v1"):
             raise ModelError("document/compatibility", "page derivations require content-ops.v1")
         for ref in document["page_derivations"]:
             validate_ref(ref, where="document/page_derivations")
     if document.get("icon_recipes"):
-        if document.get("compatibility", {}).get("minimum_writer") != "icon-quality.v1":
+        if WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1) < WRITER_RANK["icon-quality.v1"]:
             raise ModelError("document/compatibility", "icon recipes require icon-quality.v1")
         for ref in document["icon_recipes"]: validate_ref(ref, where="document/icon_recipes")
+    if document.get("style_references") or document.get("committed_at"):
+        if document.get("compatibility", {}).get("project_format") == "workbench.v3" and WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1) < WRITER_RANK["workbench-quality.v1"]:
+            raise ModelError("document/compatibility", "new workbench facts require workbench-quality.v1")
+        for ref in document.get("style_references", []):
+            validate_ref(ref, where="document/style_references")
     pages = document.get("pages") or []
     page_ids = [entry.get("page_id") for entry in pages]
     if len(page_ids) != len(set(page_ids)):
@@ -480,12 +493,18 @@ def _minimal_document_shell() -> dict[str, Any]:
 
 def bump_revision(document: dict[str, Any], change: dict[str, Any]) -> dict[str, Any]:
     """Advance to a new immutable revision: new id, parent link, and change record."""
-    return {
+    updated = {
         **document,
         "revision_id": uuid.uuid4().hex,
         "parent_revision_id": document["revision_id"],
         "change": change,
     }
+    if document.get("compatibility", {}).get("project_format") == "workbench.v3":
+        from datetime import datetime, timezone
+        updated["committed_at"] = datetime.now(timezone.utc).isoformat()
+        require_writer(updated, "workbench-quality.v1")
+    return updated
+
 
 
 CONTENT_KEYS = ("project_id", "task", "sources", "pages", "design_context", "policy", "outputs")

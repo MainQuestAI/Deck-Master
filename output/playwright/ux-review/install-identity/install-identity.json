@@ -1,0 +1,63 @@
+{
+  "git_head": "c8d5311aeef544d3e5d1313566d88dbaeb7c9051",
+  "install_method": "python -m venv + pip install -e <copy of worktree>（依赖从索引安装，未复用主仓库 venv）",
+  "cli_version": {
+    "exit": 0,
+    "stdout": "deck-master 1.0.0.dev2",
+    "stderr": ""
+  },
+  "doctor_view": {
+    "exit": 0,
+    "stdout": "{\n \"status\": \"ready\",\n \"step\": \"view\",\n \"package_version\": \"1.0.0.dev2\",\n \"release\": null,\n \"module_path\": \"/private/tmp/dm-install-verify/src/deck_master\",\n \"checks\": [\n  {\n   \"name\": \"python\",\n   \"status\": \"ready\",\n   \"detail\": {\n    \"executable\": \"/tmp/dm-install-verify/venv/bin/python\",\n    \"version\": \"3.12.12\"\n   },\n   \"required\": true\n  },\n  {\n   \"name\": \"resources/contracts/document.v1.sche",
+    "stderr": ""
+  },
+  "python": {
+    "exit": 0,
+    "stdout": "3.12.12",
+    "stderr": ""
+  },
+  "installed_packages": {
+    "exit": 0,
+    "stdout": "attrs==26.1.0\nblinker==1.9.0\nclick==8.4.2\ndeck-master==1.0.0.dev2\nFlask==3.1.3\nitsdangerous==2.2.0\nJinja2==3.1.6\njsonschema==4.26.0\njsonschema-specifications==2025.9.1\nlxml==6.1.3\nMarkupSafe==3.0.3\nnumpy==2.5.3\npillow==12.3.0\npip==25.0.1\npython-pptx==1.0.2\nreferencing==0.37.0\nrpds-py==2026.9.1\ntyping_extensions==4.16.0\nWerkzeug==3.1.8\nxlsxwriter==3.2.9",
+    "stderr": ""
+  },
+  "resources": [
+    {
+      "resource": "resources/static/v2/views.js",
+      "worktree_sha256": "343d0eab7dd9262178c2453e95954252b58c5e1b558afbd485b33b06b9dd3c03",
+      "installed_sha256": "343d0eab7dd9262178c2453e95954252b58c5e1b558afbd485b33b06b9dd3c03",
+      "match": true
+    },
+    {
+      "resource": "resources/static/v2/workbench.css",
+      "worktree_sha256": "427e7df3c22f263bba395b43c559819f831f4822fea6405158f0cfc00edf6b20",
+      "installed_sha256": "427e7df3c22f263bba395b43c559819f831f4822fea6405158f0cfc00edf6b20",
+      "match": true
+    },
+    {
+      "resource": "resources/static/v2/tokens.css",
+      "worktree_sha256": "3e0bc8d70cfbd0d4fd158f80e5ae001a2275427a5beb02e4ce406a3b70b8bce6",
+      "installed_sha256": "3e0bc8d70cfbd0d4fd158f80e5ae001a2275427a5beb02e4ce406a3b70b8bce6",
+      "match": true
+    },
+    {
+      "resource": "resources/static/v2/style-calibration.js",
+      "worktree_sha256": "b934b5d079b0d3177aaddd43d02818aa61a22372edb5ae9574206f750cbd252c",
+      "installed_sha256": "b934b5d079b0d3177aaddd43d02818aa61a22372edb5ae9574206f750cbd252c",
+      "match": true
+    },
+    {
+      "resource": "resources/static/v2/annotations.js",
+      "worktree_sha256": "65b60ccc1b849048ebe6b851b868d01e134e8c0245fc4dd9398d3baafeae88ac",
+      "installed_sha256": "65b60ccc1b849048ebe6b851b868d01e134e8c0245fc4dd9398d3baafeae88ac",
+      "match": true
+    },
+    {
+      "resource": "resources/contracts/ui-overview.v1.schema.json",
+      "worktree_sha256": "b9d5c371cb96a24658bba1e3fe5f12d374135f45d86da5bb118113e44bddab6b",
+      "installed_sha256": "b9d5c371cb96a24658bba1e3fe5f12d374135f45d86da5bb118113e44bddab6b",
+      "match": true
+    }
+  ],
+  "all_resources_match": true
+}

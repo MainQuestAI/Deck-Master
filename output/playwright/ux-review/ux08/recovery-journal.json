@@ -1,0 +1,17 @@
+{
+  "steps": [
+    {
+      "step": "real-409-conflict",
+      "screenshot": "recovery-01-real-409-conflict.png"
+    },
+    {
+      "step": "conflict-panel-real-differences",
+      "screenshot": "recovery-02-conflict-panel-real-differences.png"
+    },
+    {
+      "step": "recovered-by-adopting-saved-side",
+      "screenshot": "recovery-03-recovered-by-adopting-saved-side.png"
+    }
+  ],
+  "calls": []
+}

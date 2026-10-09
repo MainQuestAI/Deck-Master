@@ -1,0 +1,208 @@
+{
+  "steps": [
+    {
+      "step": "empty-selection",
+      "screenshot": "batch-01-empty-selection.png"
+    },
+    {
+      "step": "selected-2-and-28-with-sticky-summary",
+      "screenshot": "batch-02-selected-2-and-28-with-sticky-summary.png"
+    },
+    {
+      "step": "plan-request-lost-input-kept",
+      "screenshot": "batch-03-plan-request-lost-input-kept.png"
+    },
+    {
+      "step": "plan-reviewed-handoff-visible",
+      "screenshot": "batch-04-plan-reviewed-handoff-visible.png"
+    },
+    {
+      "step": "handoff-saved",
+      "screenshot": "batch-05-handoff-saved.png"
+    }
+  ],
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/changes/plan",
+      "payload": {
+        "input": {
+          "schema_version": "change_intent.v1",
+          "project_id": "ux08-project",
+          "base_revision": "f54cc7afaff84b01b45a6ef2b07a9cf6",
+          "mode": "trial",
+          "intent": "reference_correction",
+          "instruction": "统一标题层级，保留正文事实与图标。",
+          "annotation_refs": [],
+          "max_calls": 2,
+          "targets": [
+            {
+              "page_id": "p02",
+              "page_ref": {
+                "path": ".deckmaster/objects/14/144c0d10eb1a5df4abeb9709a8b6b6a7ddeb00edf29cb8a385d77bb5a52a14e8.json",
+                "sha256": "144c0d10eb1a5df4abeb9709a8b6b6a7ddeb00edf29cb8a385d77bb5a52a14e8"
+              },
+              "layer": "original_image",
+              "stage": "blueprint",
+              "artifact_ref": {
+                "path": ".deckmaster/objects/c0/c0925bd4d93fc67d1c6247dd15a73fd5939b0af97bc3b14bb0edd896d8efb7f0.json",
+                "sha256": "c0925bd4d93fc67d1c6247dd15a73fd5939b0af97bc3b14bb0edd896d8efb7f0"
+              }
+            },
+            {
+              "page_id": "p28",
+              "page_ref": {
+                "path": ".deckmaster/objects/bd/bdb2bfb9556c0abb95f0809aa2dc379ff1e4bee37d3b8b9314b310fba33fb5c8.json",
+                "sha256": "bdb2bfb9556c0abb95f0809aa2dc379ff1e4bee37d3b8b9314b310fba33fb5c8"
+              },
+              "layer": "original_image",
+              "stage": "blueprint",
+              "artifact_ref": {
+                "path": ".deckmaster/objects/5c/5c4382b77b10b6aec4a5dfecca4b3d33eba83f1ac75d98c5ac7dc7b8969945dc.json",
+                "sha256": "5c4382b77b10b6aec4a5dfecca4b3d33eba83f1ac75d98c5ac7dc7b8969945dc"
+              }
+            }
+          ],
+          "references": []
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/changes/plan",
+      "payload": {
+        "input": {
+          "schema_version": "change_intent.v1",
+          "project_id": "ux08-project",
+          "base_revision": "f54cc7afaff84b01b45a6ef2b07a9cf6",
+          "mode": "trial",
+          "intent": "reference_correction",
+          "instruction": "统一标题层级，保留正文事实与图标。",
+          "annotation_refs": [],
+          "max_calls": 2,
+          "targets": [
+            {
+              "page_id": "p02",
+              "page_ref": {
+                "path": ".deckmaster/objects/14/144c0d10eb1a5df4abeb9709a8b6b6a7ddeb00edf29cb8a385d77bb5a52a14e8.json",
+                "sha256": "144c0d10eb1a5df4abeb9709a8b6b6a7ddeb00edf29cb8a385d77bb5a52a14e8"
+              },
+              "layer": "original_image",
+              "stage": "blueprint",
+              "artifact_ref": {
+                "path": ".deckmaster/objects/c0/c0925bd4d93fc67d1c6247dd15a73fd5939b0af97bc3b14bb0edd896d8efb7f0.json",
+                "sha256": "c0925bd4d93fc67d1c6247dd15a73fd5939b0af97bc3b14bb0edd896d8efb7f0"
+              }
+            },
+            {
+              "page_id": "p28",
+              "page_ref": {
+                "path": ".deckmaster/objects/bd/bdb2bfb9556c0abb95f0809aa2dc379ff1e4bee37d3b8b9314b310fba33fb5c8.json",
+                "sha256": "bdb2bfb9556c0abb95f0809aa2dc379ff1e4bee37d3b8b9314b310fba33fb5c8"
+              },
+              "layer": "original_image",
+              "stage": "blueprint",
+              "artifact_ref": {
+                "path": ".deckmaster/objects/5c/5c4382b77b10b6aec4a5dfecca4b3d33eba83f1ac75d98c5ac7dc7b8969945dc.json",
+                "sha256": "5c4382b77b10b6aec4a5dfecca4b3d33eba83f1ac75d98c5ac7dc7b8969945dc"
+              }
+            }
+          ],
+          "references": []
+        }
+      },
+      "status": 200,
+      "receipt": {
+        "plan_id": "plan-e619c23141ac939f74a1e3b26a2a79a05077b67e373e3755dba7df59f0c02342",
+        "status": "planned"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/drafts/save",
+      "payload": {
+        "draft": {
+          "schema_version": "ui_draft.v1",
+          "project_id": "ux08-project",
+          "project_identity": "8bd6cfc7a786ec958361af573b363795775dcad0b5b59ed0117f9598e3a6808c",
+          "draft_id": "draft-5d07fad6-0902-4054-ae36-af6e39ba4bb8",
+          "target": {
+            "scope": "project",
+            "page_id": null,
+            "layer": "notes"
+          },
+          "base_revision": "f54cc7afaff84b01b45a6ef2b07a9cf6",
+          "base_ref": null,
+          "content": {
+            "text": ""
+          },
+          "pending": {
+            "operation_id": "24fcc0f2-3d19-4fe4-a590-c663732f0cf3",
+            "payload": {
+              "action": "changes.commit",
+              "request": {
+                "plan_id": "plan-e619c23141ac939f74a1e3b26a2a79a05077b67e373e3755dba7df59f0c02342",
+                "base_revision": "f54cc7afaff84b01b45a6ef2b07a9cf6",
+                "operation_id": "24fcc0f2-3d19-4fe4-a590-c663732f0cf3"
+              },
+              "request_digest": "e331114f46c7ecb3f85002c1bfd2b71fed25c1c84a3bd743bf259a0af7cc4d9b"
+            },
+            "payload_digest": "8491df6a14c27cbdc4dc5e64a4daea240e193f662cbf01ca5009b0b9795ee64d"
+          }
+        },
+        "expected_etag": null
+      },
+      "status": 200,
+      "receipt": {
+        "status": "saved"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/changes/commit",
+      "payload": {
+        "plan_id": "plan-e619c23141ac939f74a1e3b26a2a79a05077b67e373e3755dba7df59f0c02342",
+        "base_revision": "f54cc7afaff84b01b45a6ef2b07a9cf6",
+        "operation_id": "24fcc0f2-3d19-4fe4-a590-c663732f0cf3"
+      },
+      "status": 200,
+      "receipt": {
+        "operation_id": "24fcc0f2-3d19-4fe4-a590-c663732f0cf3",
+        "status": "committed",
+        "result.revision_id": "18116977a59f4ba8b1c1c23a9366a25c",
+        "result.task_ids": [
+          "task-d6c6f0bc596549d9ab2970c267b208cc",
+          "task-6bf2e85a8af545be9762b8349d3f6dfa"
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/drafts/save",
+      "payload": {
+        "draft": {
+          "schema_version": "ui_draft.v1",
+          "project_id": "ux08-project",
+          "project_identity": "8bd6cfc7a786ec958361af573b363795775dcad0b5b59ed0117f9598e3a6808c",
+          "draft_id": "draft-5d07fad6-0902-4054-ae36-af6e39ba4bb8",
+          "target": {
+            "scope": "project",
+            "page_id": null,
+            "layer": "notes"
+          },
+          "base_revision": "f54cc7afaff84b01b45a6ef2b07a9cf6",
+          "base_ref": null,
+          "content": {
+            "text": ""
+          },
+          "pending": null
+        },
+        "expected_etag": "05b4c92cfc40e358ae40f53542a10986d0051fb7699db1fb3c3c1a0deb29ebcc"
+      },
+      "status": 200,
+      "receipt": {
+        "status": "saved"
+      }
+    }
+  ]
+}

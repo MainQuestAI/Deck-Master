@@ -120,11 +120,17 @@ def test_dispatch_unknown_explains_preservation_without_redispatch(icon_browser)
     query = dict(part.split('=', 1) for part in page.url.split('#')[1].split('&'))
     query['revision'] = store.current_revision_id()
     page.goto(page.url.split('#')[0] + '#' + urlencode(query))
+    # P02a:按新修订进入会重建工作区,活动面重置为意见;派发状态在「图标优化」面。
+    tools_entry = page.get_by_role('button', name='工具', exact=True)
+    if tools_entry.is_visible():
+        tools_entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='图标优化', exact=True).click()
     warning = page.get_by_text('派发状态待核实；原记录与已确认范围保留，请先核实原任务，未确认前不要重复派发。', exact=True)
-    expect(warning).to_be_visible()
+    expect(warning).to_be_visible(timeout=30000)
     expect(page.get_by_role('button', name='确认这些图标范围和处理方式', exact=True)).to_be_disabled()
     page.get_by_role('button', name='刷新图标方案', exact=True).click()
-    expect(warning).to_be_visible()
+    expect(warning).to_be_visible(timeout=30000)
     assert icons.listing(store.project_root, include_stale=True)['proposals'][0]['status'] == 'dispatch_unknown'
     assert store.load_document() == before and damaged.read_bytes() == b'{broken task'
     assert requests == []
@@ -311,6 +317,8 @@ def test_pagination_draft_restores_only_a_verified_reading_snapshot(action_brows
     _open_attention(page, server.start())
     page.get_by_role('button', name='下一页任务', exact=True).click()
     expect(page.locator('.run-task')).to_have_count(5)
+    # 候选批次与个人草稿在「待决定」子区；分页状态由运行记录持有，切换不会复位。
+    page.get_by_role('button', name='待决定', exact=True).click()
     page.get_by_text('个人记录与操作恢复', exact=True).click()
     page.get_by_role('button', name='保存个人草稿', exact=True).click()
     expect(page.locator('.candidate-recovery .draft-state')).to_contain_text('已保存到项目')
@@ -328,6 +336,9 @@ def test_pagination_draft_restores_only_a_verified_reading_snapshot(action_brows
     previous = page
     page = previous.context.browser.new_page()
     page.goto(previous.url)
+    page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
+    # 子区上下文随链接保留：断点前在「待决定」，重开先回到运行记录再核对分页。
+    page.get_by_role('button', name='正在进行', exact=True).click()
     page.get_by_role('heading', name='运行记录', exact=True).wait_for()
     if binding == 'same':
         expect(page.locator('.run-task')).to_have_count(5)
@@ -381,6 +392,7 @@ def test_explicit_reading_write_restarts_pagination_from_first_page(action_brows
         page.get_by_role('button', name='查看全部任务', exact=True).click()
     else:
         target = tasks[-1]
+        page.get_by_role('button', name='待决定', exact=True).click()
         page.get_by_text('个人记录与操作恢复', exact=True).click()
         page.get_by_role('button', name='保存个人草稿', exact=True).click()
         expect(page.locator('.candidate-recovery .draft-state')).to_contain_text('已保存到项目')
@@ -392,6 +404,7 @@ def test_explicit_reading_write_restarts_pagination_from_first_page(action_brows
         previous = page
         page = previous.context.browser.new_page()
         page.goto(previous.url)
+        page.get_by_role('button', name='正在进行', exact=True).click()
         expect(page.locator('.run-task')).to_have_count(5)
         page.get_by_role('button', name='核实并导入旧草稿的已读记录', exact=True).click()
         expect(page.get_by_text('已核实导入 1 项旧记录，原草稿保留。', exact=True)).to_be_visible()

@@ -1,0 +1,198 @@
+{
+  "steps": [
+    {
+      "step": "edited-with-live-change-list",
+      "screenshot": "content-01-edited-with-live-change-list.png"
+    },
+    {
+      "step": "draft-restored-against-formal-baseline",
+      "screenshot": "content-02-draft-restored-against-formal-baseline.png"
+    },
+    {
+      "step": "impact-with-change-list",
+      "screenshot": "content-03-impact-with-change-list.png"
+    },
+    {
+      "step": "confirmed-and-advanced",
+      "screenshot": "content-04-confirmed-and-advanced.png"
+    }
+  ],
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/drafts/save",
+      "payload": {
+        "draft": {
+          "schema_version": "ui_draft.v1",
+          "project_id": "ux08-project",
+          "project_identity": "a30d6f9001b26e1cd634e92e019e1da3e3094a17ed996c34ae6a0487c4398b23",
+          "draft_id": "draft-939429e8-fcbe-48a8-ac36-c22b8b2c302d",
+          "target": {
+            "scope": "page",
+            "page_id": "p01",
+            "layer": "content"
+          },
+          "base_revision": "0511bcc8c3a642f084484d6484cb67ce",
+          "base_ref": {
+            "path": ".deckmaster/objects/6e/6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0.json",
+            "sha256": "6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0"
+          },
+          "content": {
+            "text": "",
+            "page_edit": {
+              "visible": {
+                "body_blocks": [],
+                "title": "项目目标与阅读顺序（走查核对）"
+              },
+              "reason": "调整本页标题或正文"
+            }
+          },
+          "pending": null
+        },
+        "expected_etag": null
+      },
+      "status": 200,
+      "receipt": {
+        "status": "saved"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/plan",
+      "payload": {
+        "input": {
+          "schema_version": "content_operation_input.v1",
+          "project_id": "ux08-project",
+          "base_revision": "0511bcc8c3a642f084484d6484cb67ce",
+          "content_plan_ref": {
+            "path": ".deckmaster/objects/a4/a4f511eacaf790c1d8149f4556d0167cbbb971dfef1f5865afe3348397eb65a1.json",
+            "sha256": "a4f511eacaf790c1d8149f4556d0167cbbb971dfef1f5865afe3348397eb65a1"
+          },
+          "action": "edit",
+          "instruction": "调整本页标题或正文",
+          "targets": [
+            {
+              "page_id": "p01",
+              "page_ref": {
+                "path": ".deckmaster/objects/6e/6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0.json",
+                "sha256": "6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0"
+              }
+            }
+          ],
+          "customer_visible": {
+            "body_blocks": [],
+            "title": "项目目标与阅读顺序（走查核对）"
+          }
+        }
+      },
+      "status": 200,
+      "receipt": {
+        "plan_id": "content-plan-da132c828415620754ac1872f3b8a708b61764076b9eea4054e19cbcff5d54af"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/drafts/save",
+      "payload": {
+        "draft": {
+          "schema_version": "ui_draft.v1",
+          "project_id": "ux08-project",
+          "project_identity": "a30d6f9001b26e1cd634e92e019e1da3e3094a17ed996c34ae6a0487c4398b23",
+          "draft_id": "draft-939429e8-fcbe-48a8-ac36-c22b8b2c302d",
+          "target": {
+            "scope": "page",
+            "page_id": "p01",
+            "layer": "content"
+          },
+          "base_revision": "0511bcc8c3a642f084484d6484cb67ce",
+          "base_ref": {
+            "path": ".deckmaster/objects/6e/6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0.json",
+            "sha256": "6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0"
+          },
+          "content": {
+            "text": "",
+            "page_edit": {
+              "visible": {
+                "body_blocks": [],
+                "title": "项目目标与阅读顺序（走查核对）"
+              },
+              "reason": "调整本页标题或正文"
+            }
+          },
+          "pending": {
+            "operation_id": "09faa70b-8b52-4208-9883-4c12f7099d44",
+            "payload": {
+              "action": "content.commit",
+              "request": {
+                "plan_id": "content-plan-da132c828415620754ac1872f3b8a708b61764076b9eea4054e19cbcff5d54af",
+                "base_revision": "0511bcc8c3a642f084484d6484cb67ce",
+                "operation_id": "09faa70b-8b52-4208-9883-4c12f7099d44"
+              },
+              "request_digest": "01e6d2059d1a748f88477e64d6ff035ecf9e0bfefc8bc4adc64c50545114355c"
+            },
+            "payload_digest": "52216af795518993c1ce2d06783b0aae125d4a836ce907ef94297cb53faaec75"
+          }
+        },
+        "expected_etag": "c92c293c4d1dfee91ec1f1538cf649422ab17c76cd43b3f9bb76739288784aa3"
+      },
+      "status": 200,
+      "receipt": {
+        "status": "saved"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/content/commit",
+      "payload": {
+        "plan_id": "content-plan-da132c828415620754ac1872f3b8a708b61764076b9eea4054e19cbcff5d54af",
+        "base_revision": "0511bcc8c3a642f084484d6484cb67ce",
+        "operation_id": "09faa70b-8b52-4208-9883-4c12f7099d44"
+      },
+      "status": 200,
+      "receipt": {
+        "operation_id": "09faa70b-8b52-4208-9883-4c12f7099d44",
+        "status": "committed",
+        "result.revision_id": "4a55881102fa4f178a4656e328569434",
+        "result.task_ids": []
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/drafts/save",
+      "payload": {
+        "draft": {
+          "schema_version": "ui_draft.v1",
+          "project_id": "ux08-project",
+          "project_identity": "a30d6f9001b26e1cd634e92e019e1da3e3094a17ed996c34ae6a0487c4398b23",
+          "draft_id": "draft-939429e8-fcbe-48a8-ac36-c22b8b2c302d",
+          "target": {
+            "scope": "page",
+            "page_id": "p01",
+            "layer": "content"
+          },
+          "base_revision": "0511bcc8c3a642f084484d6484cb67ce",
+          "base_ref": {
+            "path": ".deckmaster/objects/6e/6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0.json",
+            "sha256": "6e6959a77065cd2c2467987570cbb64c810b61db77de88a9dd3f04b093a590b0"
+          },
+          "content": {
+            "text": "",
+            "page_edit": {
+              "visible": {
+                "body_blocks": [],
+                "title": "项目目标与阅读顺序（走查核对）"
+              },
+              "reason": "调整本页标题或正文"
+            }
+          },
+          "pending": null
+        },
+        "expected_etag": "3473c1af8babbc4db1369017b7be0961f1acf8642392cf81d148dd4db7e0872e"
+      },
+      "status": 200,
+      "receipt": {
+        "status": "saved"
+      }
+    }
+  ]
+}

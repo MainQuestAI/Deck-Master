@@ -60,7 +60,7 @@ def get(url):
 def test_effective_actions_modern_project(modern):
     info = ui_journal.project_info(modern, server_capabilities=UI_CAPABILITIES)
     assert info["project_format"] == "workbench.v3"
-    assert info["minimum_writer"] == "content-plan.v1"
+    assert info["minimum_writer"] == 'workbench-quality.v1'
     assert info["core_writers"] == list(SUPPORTED_WRITERS)
     actions = actions_by_name(info)
     assert set(actions) == {"drafts", "annotations", "changes", "candidates", "content", "inputs",

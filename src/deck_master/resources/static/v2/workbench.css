@@ -46,7 +46,28 @@ textarea{font-size:14px;line-height:1.7}
 .image-frame{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;flex-direction:column;gap:6px}
 .image-frame img{width:100%;height:100%;object-fit:contain}.image-button{display:block;width:100%;padding:0;min-height:0;border:0;background:transparent}
 .slide-tile figcaption{padding:12px 0}.slide-tile strong{font-size:14px}.slide-tile figcaption p{font-size:12px;margin-top:5px}
-.page-columns{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}.page-reading{min-width:0}
+.page-columns{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:24px;align-items:start}.page-reading{min-width:0}
+
+/* §4.1/P02:五工具容器(桌面右栏;窄屏为全高面板)。对象摘要→异常摘要→切换→活动面。 */
+.page-tools{min-width:0}
+.tool-object-summary{font-size:13px}
+.page-tools-switcher{display:flex;flex-wrap:wrap;gap:8px;padding:0}
+.page-tools-switcher button{min-height:44px;padding:10px 14px;font-size:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.page-tools-switcher button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.page-tools-faces>*[hidden]{display:none}
+.page-tools-anomalies>button[hidden]{display:none}
+.tool-anomaly-chip{min-height:44px}
+/* 对既有宽组件的窄容器适配:图标比较列在 372px/面板宽度内纵向堆叠。 */
+.page-tools .icon-compare-grid{grid-template-columns:1fr;gap:16px}
+/* D4-A/D5-A:<1280px 画面旁「工具」入口 + 独立工具面板(不占 #modal)。 */
+.page-tools-entry{display:none}
+.page-tools-panel{border:0;padding:0;margin:0 auto;background:transparent;box-shadow:none;width:min(560px,100vw);height:100dvh}
+.page-tools-panel::backdrop{background:color-mix(in oklch, var(--fg) 35%, transparent)}
+.page-tools-panel .page-tools{height:100%;overflow:auto;padding:0 0 24px;background:var(--bg)}
+.page-tools-panel-head{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);z-index:2}
+.page-tools-panel-head button{min-height:44px}
+.page-tools-panel .page-tools>.stack{padding:0 20px}
+@media(max-width:1279px){.page-tools-entry{display:inline-flex}}
 .page-image-viewport{overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-warm);max-height:70vh;min-height:240px}
 .page-image{display:block;max-width:none;height:auto;object-fit:contain}.page-copy{font-size:16px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:28px;background:var(--bg);line-height:1.8}
 .page-copy p{white-space:pre-wrap}.page-copy h2{font-size:22px}.read-text{font:13px/1.7 var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere;padding:18px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-warm)}
@@ -60,7 +81,7 @@ textarea{font-size:14px;line-height:1.7}
 #modal{position:fixed;inset:0;margin:auto;width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 48px);padding:0;border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--elev-raised);background:var(--bg);color:var(--fg)}
 #modal::backdrop{background:color-mix(in oklch, var(--fg) 40%, transparent)}.modal-body{padding:28px;display:flex;flex-direction:column;gap:24px}.modal-body h2{font-size:22px}.modal-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:20px}.modal-body form{margin:0}.conflict-panes{display:grid;grid-template-columns:1fr 1fr;gap:16px}.conflict-panes textarea{min-height:230px}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);opacity:0;pointer-events:none;z-index:1000;background:var(--fg);color:var(--bg);max-width:calc(100vw - 32px);padding:12px 18px;border-radius:var(--radius-sm);font-size:13px;transition:opacity .15s}#toast.visible{opacity:1}
-@media(max-width:1279px){.shell{grid-template-columns:80px minmax(0,1fr)}.sidebar{width:80px;padding:24px 12px}.logo{margin:0 0 28px;justify-content:center}.brand-name,.nav-label,.side-project{display:none}.nav button{justify-content:center;padding:12px}.sidebar-footer{padding:16px 0;font-size:11px}.sidebar-footer p{display:none}.workspace{padding:24px}.topbar{padding:0 24px}.page-columns{grid-template-columns:minmax(0,1fr) 300px;gap:18px}.compact-note{display:block}.action-band{grid-template-columns:1fr 1fr}}
+@media(max-width:1279px){.shell{grid-template-columns:80px minmax(0,1fr)}.sidebar{width:80px;padding:24px 12px}.logo{margin:0 0 28px;justify-content:center}.brand-name,.nav-label,.side-project{display:none}.nav button{justify-content:center;padding:12px}.sidebar-footer{padding:16px 0;font-size:11px}.sidebar-footer p{display:none}.workspace{padding:24px}.topbar{padding:0 24px}.page-columns{grid-template-columns:1fr}.compact-note{display:block}.action-band{grid-template-columns:1fr 1fr}}
 @media(max-width:1023px){.page-columns{grid-template-columns:1fr}.page-columns .personal-draft{max-width:none}.topbar .version{display:none}.action-band{grid-template-columns:1fr}.action-main{border-right:0;border-bottom:1px solid var(--border)}}
 @media(max-width:767px){.shell{display:block;padding-top:62px}.sidebar{position:fixed;inset:0 0 auto;width:auto;height:62px;flex-direction:row;padding:8px 12px;border-right:0;border-bottom:1px solid var(--border);align-items:center;background:var(--bg)}.logo{margin:0 12px 0 0}.nav{flex-direction:row;flex:1;justify-content:space-between;gap:2px}.nav button{width:44px;height:44px;padding:8px}.sidebar-footer{display:none}.content{width:100%}.topbar{height:auto;min-height:64px;padding:10px 16px}.workspace{padding:20px 16px}.page-head{flex-direction:column;align-items:flex-start;gap:16px}.page-head h1{font-size:26px}.page-head>button{width:100%}.matrix{min-width:820px}.matrix-wrap{overflow:auto}.page-image-viewport{min-height:150px}.notice,.history-banner,.sample-banner{padding:12px 16px}.launcher{padding:24px 16px}.launcher-brand{font-size:12px;margin-bottom:28px;gap:12px}.project-card{flex-direction:column;align-items:stretch}.project-card>.row{justify-content:flex-start}.form-pair,.conflict-panes{grid-template-columns:1fr}.task-row{flex-wrap:wrap}.modal-body{padding:20px}.toolbar{flex-wrap:wrap}.toolbar select{width:100%}.page-copy{padding:20px}.facts{grid-template-columns:60px 1fr}.source-list{padding-left:16px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
@@ -96,9 +117,26 @@ textarea{font-size:14px;line-height:1.7}
 @media(max-width:1279px){.page-columns{grid-template-columns:minmax(0,1fr)}.page-context{max-width:none}.with-fixed-compare>.page-context{grid-template-columns:1fr}.compare-side{border-left:0;padding-left:0}.fixed-page-pair.is-comparing{display:block}.fixed-compare-controls select{max-width:100%}}
 @media(max-width:767px){.range-fields{grid-template-columns:1fr}.page-workbench .toolbar>button{flex:1}.page-workbench .toolbar>select{max-width:none}.production-facts{grid-template-columns:95px minmax(0,1fr)}.read-text{padding:12px}.page-workbench .chain{flex-wrap:wrap}.page-workbench .chain button{min-width:110px}.chain .chain-state{display:inline}}
 .fixed-side-label{font-size:16px}.fixed-compare-controls>p:empty{display:none}.fixed-page-pair.is-comparing>.page-reading{padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg)}.is-comparing .page-image-viewport{height:max(160px,calc(100vh - 600px));min-height:0;display:block}.is-comparing .page-image-viewport>.pooled-image{min-height:0}.is-comparing .page-image-viewport canvas.page-image{width:100%;height:100%;object-fit:contain}
+.fixed-page-pair.is-comparing>.page-trial-entry{grid-column:1/-1}
 /* W06: saved opinions and durable execution facts share the existing panels. */
-.business-pending{padding:16px 24px;background:var(--surface-warm);border-bottom:1px solid var(--border-soft)}.pending-operation{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg)}.annotations-panel h3{font-size:16px}.annotation-tools button[aria-pressed=true]{background:var(--surface);border-color:var(--muted);color:var(--fg);font-weight:600}.annotation-tools button{min-height:44px}.annotation-region,.saved-opinion,.handoff-task{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow-wrap:anywhere}.annotation-region p,.saved-opinion p{white-space:pre-wrap;font-size:14px}.saved-opinion label{display:flex;gap:10px;align-items:center}.saved-opinion input{width:20px;height:20px}.change-plan-preview:empty{display:none}.change-plan-preview{border-top:1px solid var(--border);padding-top:16px}.page-image-viewport>.pooled-image{position:relative}.annotation-overlay{position:absolute;touch-action:none;overflow:visible}.annotation-mark{position:absolute;pointer-events:none;border:2px solid var(--accent);color:var(--accent-on);background:var(--accent);font-size:12px;line-height:20px;min-width:22px;text-align:center}.annotation-mark.point{border-radius:50%;transform:translate(-50%,-50%)}.annotation-mark.rect{background:color-mix(in oklch,var(--accent) 9%,transparent);color:var(--accent-hover);text-align:left;min-width:0}.annotation-mark.saved{border-style:dashed}.annotating .page-image-viewport{overscroll-behavior:contain}.change-handoffs{margin-bottom:24px}.handoff-detail textarea{width:100%;font-size:14px}.geometry-fields .range-fields{grid-template-columns:1fr 1fr}.annotation-regions:empty{display:none}@media(max-width:767px){.annotation-tools button[data-mode=point],.annotation-tools button[data-mode=rect],.geometry-fields{display:none}.business-pending{padding:12px 16px}}
+.business-pending{padding:16px 24px;background:var(--surface-warm);border-bottom:1px solid var(--border-soft)}.pending-operation{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg)}.annotations-panel h3{font-size:16px}.annotation-tools button[aria-pressed=true]{background:var(--surface);border-color:var(--muted);color:var(--fg);font-weight:600}.annotation-tools button{min-height:44px}.annotation-region,.saved-opinion,.handoff-task{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow-wrap:anywhere}.annotation-region p,.saved-opinion p{white-space:pre-wrap;font-size:14px}.saved-opinion label{display:flex;gap:10px;align-items:center}.saved-opinion input{width:20px;height:20px}.change-plan-preview:empty{display:none}.change-plan-preview{border-top:1px solid var(--border);padding-top:16px}.opinion-meta>label{display:flex;align-items:center;gap:6px;min-width:0}.opinion-meta>label:first-child{flex:0 0 auto}.opinion-meta>.field{flex:1 1 120px;min-width:110px;margin:0}.opinion-meta .field>label{display:block}.opinion-meta select{width:auto;max-width:140px}.opinion-meta input{width:100%;min-width:0}.page-image-viewport>.pooled-image{position:relative}.annotation-overlay{position:absolute;touch-action:none;overflow:visible}.annotation-mark{position:absolute;pointer-events:none;border:2px solid var(--accent);color:var(--accent-on);background:var(--accent);font-size:12px;line-height:20px;min-width:22px;text-align:center}.annotation-mark.point{border-radius:50%;transform:translate(-50%,-50%)}.annotation-mark.rect{background:color-mix(in oklch,var(--accent) 9%,transparent);color:var(--accent-hover);text-align:left;min-width:0}.annotation-mark.saved{border-style:dashed}.annotating .page-image-viewport{overscroll-behavior:contain}.change-handoffs{margin-bottom:24px}.handoff-detail textarea{width:100%;font-size:14px}.geometry-fields .range-fields{grid-template-columns:1fr 1fr}/* D4/N03：窄屏隐藏拖拽式标注与百分比定位（精确框选属于桌面入口），
+   整页意见与文字路径保持可用；下方注释行仅在窄屏显示，告知桌面入口。 */
+.annotation-regions:empty{display:none}@media(max-width:767px){.annotation-tools button[data-mode=point],.annotation-tools button[data-mode=rect],.geometry-fields{display:none}.business-pending{padding:12px 16px}}
+@media(min-width:768px){.annotation-mobile-note{display:none}}
 .with-fixed-compare>.page-context{align-items:start}.annotations-panel .field-error[data-success=true]{color:var(--accent-hover)}.annotations-panel .personal-draft{margin:0}.annotations-panel .personal-draft .panel-head{padding:12px}.annotations-panel .personal-draft .panel-body{padding:12px}.annotations-panel .personal-draft h2{font-size:15px}
+/* Keep the first screen for the artwork and the save row: the header chain is
+   compressed instead of shrinking type or spacing inside the work areas. */
+.page-workbench .page-head{margin-bottom:20px}
+.page-workbench .chain{margin:6px 0 12px}
+.page-workbench .chain button{padding:10px 8px}
+.page-workbench .chain .chain-number{display:inline;margin:0 6px 0 0}
+.page-workbench .chain .chain-state{display:inline;margin:0 0 0 6px}
+.page-workbench .toolbar{margin:12px 0}
+/* A version-change notice stays on one line so it costs as little artwork as
+   the statement needs. */
+.page-workbench .notice{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+.page-workbench .change-requirement{margin-top:8px}
+.trial-counts{margin-left:8px;font-weight:400}
 
 /* W07: keep the decision between current and candidate, reference as context. */
 .candidate-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
@@ -114,6 +152,27 @@ textarea{font-size:14px;line-height:1.7}
 .candidate-batch-row label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .candidate-batch-row input { width: 20px; height: 20px; flex: none; }
 .candidate-batch-row p { margin: 0; }
+.candidate-page-group > h3 { margin: 8px 0; font-size: 16px; }
+.candidate-card.candidate-batch-row { grid-template-columns: minmax(140px, 180px) minmax(0, 1fr); border: 1px solid var(--border); border-radius: 8px; padding: 16px; align-items: start; }
+.candidate-card > label { grid-column: 1 / -1; grid-row: 1; }
+.candidate-card > h4 { grid-column: 2; grid-row: 2; margin: 0; }
+.candidate-card > .candidate-card-preview { grid-column: 1; grid-row: 2 / span 3; min-width: 0; }
+.candidate-card.candidate-batch-row > p { grid-column: 2; grid-row: 3; }
+.candidate-card > .row { grid-column: 2; grid-row: 4; }
+.candidate-card-preview .pooled-image canvas { width: 100%; height: auto; display: block; }
+.candidate-text-summary { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 200px; overflow: auto; font-size: 14px; }
+.materials-adjust-form { scroll-margin-top: 20px; }
+.material-edit-context { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.material-edit-context fieldset { min-width: 0; }
+.material-input-impact { position: sticky; top: 16px; }
+@media (max-width: 700px) {
+  .candidate-card.candidate-batch-row { grid-template-columns: 1fr; }
+  .candidate-card > label, .candidate-card > h4, .candidate-card > .candidate-card-preview, .candidate-card.candidate-batch-row > p, .candidate-card > .row { grid-column: 1; grid-row: auto; }
+  .candidate-card-preview { max-width: 320px; }
+  .material-edit-context { grid-template-columns: 1fr; gap: 16px; }
+  .material-input-impact { position: static; }
+  .materials-adjust-form[data-step="review"] .material-input-fields { display: none; }
+}
 .candidate-impact:not(:empty) { padding: 14px; border: 1px solid var(--line, var(--border)); border-radius: var(--radius-sm); }
 .candidate-basis pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .candidate-recovery > summary, .trial-form > summary { padding: 16px 20px; cursor: pointer; font-weight: 600; }
@@ -131,6 +190,8 @@ textarea{font-size:14px;line-height:1.7}
 
 /* The runtime lane can advance without replacing a fixed page comparison. */
 .runtime-sync-row:not([hidden]) { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 0; }
+.draft-conflict-pane { min-width: 0; }
+.draft-conflict-panes textarea { min-height: 96px; }
 .run-task { border-bottom: 1px solid var(--line, var(--border)); padding: 16px 0; }
 .run-task p, .runtime-sync { margin: 0; }
 .run-filters select { max-width: 320px; min-height: 44px; }
@@ -142,6 +203,29 @@ textarea{font-size:14px;line-height:1.7}
 .run-pagination, .candidate-pagination { justify-content: space-between; }
 
 .run-rows:not([hidden]), .candidate-batch-rows { max-height: 480px; overflow: auto; overscroll-behavior: contain; }
+/* F16/AC23 剩余：`.stack` 是共同行为里使用最广的类（41 个模块都在用），
+   但当前 CSS 没有任何基础规则——`<label class="stack">` 会退化成 inline 行框压住
+   相邻内容（UX-03b 记录过一次），`hidden` 在 `.stack` 上也会被任何作者规则盖掉。
+   这里补一条最小基础规则：垂直块级流 + hidden 守卫，不改变现有块级布局计算。 */
+.stack { display: block; }
+.stack[hidden] { display: none; }
+/* 早于本文件加载的同类组合（style.css 的横幅族）此前由自身 display 生效——
+   基础规则不得顺带改掉它们的布局。 */
+.notice.stack, .history-banner.stack, .sample-banner.stack { display: flex; }
+
+/* AC06/§2.1：长列表选页时摘要与配置入口吸附在顶部，滚到第 28 页也够得着。 */
+.overview-selection-bar[hidden] { display: none; }
+.overview-selection-bar { position: sticky; top: 0; z-index: 3; align-items: center; gap: 12px;
+  padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-warm); }
+.overview-selection-summary { font-weight: 600; }
+/* UX-05b: one runs subarea at a time; .stack would otherwise beat [hidden]. */
+.runs-subarea[hidden] { display: none; }
+.runs-subareas { gap: 8px; padding: 4px 0 12px; border-bottom: 1px solid var(--border-soft); margin-bottom: 16px; }
+/* Selected state changes foreground and background together; a background-only
+   transition briefly leaves white text on the previous white surface. */
+.runs-subareas button { min-height: 44px; transition: none; }
+.runs-subareas button[aria-pressed=true] { background: var(--fg); border-color: var(--fg); color: var(--bg); font-weight: 600; }
+.run-requirement { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .change-list select { max-width: 100%; }
 .run-desk .run-task { padding: 12px; }
 .run-filters { align-items: center; }
@@ -151,6 +235,9 @@ textarea{font-size:14px;line-height:1.7}
 .style-reference .pooled-image { aspect-ratio: 16 / 9; }
 .style-targets { display: flex; flex-wrap: wrap; gap: 12px 24px; max-height: 240px; overflow: auto; }
 .style-calibration details > .stack { padding-top: 16px; }
+/* F16/N04：.stack 无基础 display 规则（CSS 漂移），样式面里的 label.stack 退化为
+   inline，行框会压进上方 .style-working-pair 网格并遮挡参考缩略图选择框。
+   最小作用域修复：样式面内的堆叠标签恢复块级。 */
 .style-calibration .evidence-json { max-height: 320px; overflow: auto; }
 .style-calibration .row > input:not([type=checkbox]) { flex: 1; min-width: 180px; }
 
@@ -164,6 +251,18 @@ textarea{font-size:14px;line-height:1.7}
 .content-editor>summary{font-weight:650;cursor:pointer;margin-bottom:16px}
 .content-operation{padding:16px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
 .content-operation-note:empty{display:none}
+/* UX-04b: the concrete change list sits with the impact preview, not in another surface. */
+.content-changes{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-warm)}
+.content-changes h3{margin:0;font-size:14px}
+/* 2.3：差异清单再长也不把影响与确认挤出同屏——清单自身滚动。 */
+.content-change-list{list-style:none;padding:0;margin:0;display:grid;gap:8px;max-height:32vh;overflow:auto;overscroll-behavior:contain}
+.content-check{display:flex;flex-direction:column;gap:12px}
+.content-change-list li{font-size:13px;overflow-wrap:anywhere}
+.content-change-label{font-weight:600;margin-right:6px}
+.content-change-before{color:var(--muted)}
+.content-change-arrow{color:var(--muted)}
+.outline-actions{margin-top:10px;align-items:center}
+.outline-actions select{max-width:280px;min-height:44px}
 
 .content-form-fields{border:0;padding:0;margin:0;min-width:0}
 
@@ -177,6 +276,14 @@ textarea{font-size:14px;line-height:1.7}
 .export-file-list{list-style:none;padding:0;display:grid;gap:12px}.export-file-list a{overflow-wrap:anywhere}
 .gap-list{padding-left:20px;display:grid;gap:10px}.gap-list li>span{margin-right:12px}.gap-list button{font-size:12px;padding:5px 10px}
 .export-facts>summary{cursor:pointer;padding:12px 0;font-weight:600}.export-purpose h3,.export-result h3{margin:0}
+/* UX-05b: version → purpose → result; official purposes first, recovery secondary. */
+.export-group-title{margin:0;font-size:13px;letter-spacing:0;color:var(--muted);text-transform:none}
+.export-recovery{border-top:1px solid var(--border-soft);padding-top:12px}
+.export-recovery>summary{cursor:pointer;padding:12px 0;font-weight:600}
+.export-recovery .export-purpose{margin-top:12px;background:var(--surface-warm)}
+.history-identity{gap:8px;margin:0}
+.history-identity .state-chip{padding:4px 10px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:12px}
+.history-identity .state-chip:first-child{background:var(--surface-warm);font-weight:600}
 .restore-impact .conflict-panes section{padding:16px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 @media(max-width:1200px){.export-purpose-grid{grid-template-columns:1fr}.export-purpose{display:grid;grid-template-columns:140px 1fr auto;align-items:center}.export-purpose p{margin:0}}
 @media(max-width:760px){.export-purpose{display:flex}}
@@ -239,7 +346,10 @@ textarea{font-size:14px;line-height:1.7}
 .style-target-card{min-width:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg)}
 .style-target-card .inline-control{padding:12px;line-height:1.5}.style-target-thumb,.style-missing-thumb{aspect-ratio:16/9;display:grid;place-items:center;background:var(--surface);overflow:auto;font-size:12px}
 .style-target-thumb>.pooled-image{height:100%;min-height:0}.style-target-thumb canvas{height:100%;object-fit:contain}.style-target-thumb .pooled-image[data-image-state=failed]{min-height:0;padding:8px;font-size:12px}
-.style-target-thumb button{min-height:44px}.style-plan:has(.stack:empty){display:none}
+.style-target-thumb button{min-height:44px}
+/* UX-07b 收敛：删去 `.style-plan:has(.stack:empty){display:none}`——它把内部空的影响
+   预览节点当成"整块为空"，在没有计划时连交接动作一起隐藏；显隐改由代码按 plan 状态
+   明确设置（含截图路线）。 */
 .content-order-scroll{max-height:520px;overflow:auto;padding:4px}.material-state{font-size:12px}.source-card .status{align-self:flex-start}
 @media(max-width:767px){.style-phase>summary{align-items:flex-start}.style-phase-state{text-align:left;margin-left:0}.style-calibration .style-targets{grid-template-columns:1fr;max-height:460px}.style-phase input[type=search]{width:100%}.content-order-scroll{max-height:520px}}
 @media(max-width:767px){.matrix-search,.matrix-search input{width:100%}.style-targets{grid-template-columns:1fr}}
@@ -255,5 +365,47 @@ textarea{font-size:14px;line-height:1.7}
 .icon-crop-scroll canvas { display:block; max-width:none; }
 .icon-proposal,.icon-recipe { border:1px solid var(--border,#dedede); padding:16px; }
 .candidate-icon-review { padding:16px; }
-.icon-opinions label { display:flex; align-items:flex-start; gap:8px; }
+.icon-opinions label { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:4px 8px; min-height:44px; }
+.icon-opinions label input { grid-row:1 / 3; }
+.icon-opinions label span { grid-column:2; overflow-wrap:anywhere; }
 @media(max-width:800px) { .icon-compare-grid { grid-template-columns:1fr; } .icon-crop-scroll { max-height:320px; } }
+/* WQ: the work leads; evidence follows. */
+.comparison-canvas {min-width:0;width:100%}
+.candidate-columns:has(.comparison-canvas) {display:block}
+.comparison-pair {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4,16px)}
+.comparison-viewport {height:clamp(240px,calc(100vh - 340px),560px);overflow:auto;background:var(--surface-muted,#f4f4f4);cursor:grab;outline-offset:3px}
+.comparison-viewport .pooled-image {width:max-content;min-width:100%;height:auto;aspect-ratio:auto;display:flex;justify-content:center;align-items:center}
+.comparison-viewport canvas {flex:none;object-fit:contain;max-height:none}
+.canvas-tools output {min-width:6ch;font-variant-numeric:tabular-nums}
+.candidate-decisions {position:sticky;bottom:0;padding:12px 0;background:var(--surface,#fff);z-index:2}
+.candidate-desk:fullscreen {background:#fff;overflow:auto;padding:24px}
+:fullscreen .comparison-viewport {height:calc(100vh - 250px)}
+.candidate-reference-row {padding:12px 0}
+@media(min-width:1024px){
+ .page-columns:not(.with-fixed-compare) {grid-template-columns:minmax(0,1fr) minmax(320px,380px);align-items:start}
+ .page-columns>.fixed-page-pair {position:sticky;top:24px;align-self:start;max-height:calc(100vh - 160px);overflow:auto}
+}
+@media(max-width:767px){
+ .comparison-pair {grid-template-columns:1fr}
+ .comparison-viewport {height:300px}
+ .page-columns>.fixed-page-pair {position:static;max-height:none;overflow:visible}
+ .canvas-tools {gap:8px}
+ .candidate-decisions {position:static}
+ .gallery-controls details {width:100%}
+ .gallery-viewport {height:calc(100vh - 230px)}
+}
+.style-working-pair {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.style-reference .pooled-image,.style-primary-target .pooled-image {height:180px;max-height:180px;aspect-ratio:auto}
+.style-reference canvas,.style-primary-target canvas {max-height:180px;width:100%;object-fit:contain}
+.visual-reference-list {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-height:240px;overflow:auto}
+.visual-reference-choice {min-width:0;display:flex;flex-direction:column;gap:8px}
+.visual-reference-choice .pooled-image {height:90px;aspect-ratio:auto}
+.visual-reference-choice canvas {max-height:90px;object-fit:contain}
+.visual-rule {display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--border,#e5e5e5)}
+.visual-rule details {grid-column:2}
+.visual-breakdown .pooled-image {height:min(320px,40vh);max-height:320px;aspect-ratio:auto}
+.visual-breakdown canvas {height:100%;max-height:320px;width:100%;object-fit:contain}
+.visual-breakdown-full {max-height:65vh;overflow:auto}
+.visual-breakdown-full .pooled-image {aspect-ratio:auto}
+.visual-breakdown-full canvas {width:auto;max-width:none;height:auto;max-height:none}
+@media(max-width:767px){.style-working-pair{grid-template-columns:1fr}.visual-reference-list{grid-template-columns:repeat(2,minmax(0,1fr))}.visual-rule{grid-template-columns:1fr}.visual-rule details{grid-column:1}}

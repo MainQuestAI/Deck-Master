@@ -58,7 +58,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
-                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1")
+                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1")
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
@@ -143,6 +143,20 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if not self._authorized_write():
             return
         try:
+            if urlparse(self.path).path == '/api/styles/references/import':
+                from . import visual_styles
+                from .samples import sample_info
+                if (sample_info(self.store.project_root) or {}).get('readonly'):
+                    self._send_json({'error': {'code':'sample_readonly','message':'example is read-only'}},403);return
+                fields = parse_qs(urlparse(self.path).query,keep_blank_values=True)
+                if set(fields) != {'base_revision','operation_id'} or any(len(v)!=1 or not v[0] for v in fields.values()):
+                    visual_styles.fail('query','use one base_revision and operation_id')
+                lengths = self.headers.get_all('Content-Length',[])
+                if self.headers.get('Transfer-Encoding') or len(lengths) != 1 or not 0 < int(lengths[0]) <= visual_styles.MAX_BYTES:
+                    visual_styles.fail('body','one Content-Length of at most 64 MiB is required')
+                length=int(lengths[0]); data=self.rfile.read(length)
+                if len(data) != length: visual_styles.fail('body','incomplete image upload')
+                self._send_json(visual_styles.import_reference(self.store.project_root,data=data,**{key:v[0] for key,v in fields.items()}));return
             data=self._read_json_body()
             from .samples import sample_info
             sample = sample_info(self.store.project_root)
@@ -181,14 +195,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path == '/api/overview':
                 from .overview_state import save
                 result = save(self.store.project_root, **data)
-            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
-                from . import annotation_service, changes, candidates, stages, styles, content_ops
+            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/styles/analyze', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
+                from . import annotation_service, changes, candidates, stages, styles, content_ops, visual_styles
                 action = {'/api/content/plan': content_ops.plan, '/api/content/commit': content_ops.commit, '/api/content/inputs': content_ops.inputs, '/api/annotations/batch': annotation_service.save,
                           '/api/changes/plan': changes.plan, '/api/changes/commit': changes.commit,
                           '/api/candidates/plan': candidates.plan, '/api/candidates/adopt': candidates.adopt,
                           '/api/candidates/decision': candidates.decide,
                           '/api/stages/assemble': stages.assemble,
-                          '/api/styles/propose': styles.propose, '/api/styles/confirm': styles.confirm, '/api/styles/plan': styles.plan}[self.path]
+                          '/api/styles/analyze': visual_styles.analyze, '/api/styles/propose': styles.propose, '/api/styles/confirm': styles.confirm, '/api/styles/plan': styles.plan}[self.path]
                 result = action(self.store.project_root, **data)
             elif self.path in ('/api/icons/propose', '/api/icons/confirm', '/api/icons/plan', '/api/icons/preview', '/api/candidate-preview/request'):
                 from . import icons, candidate_preview
@@ -292,6 +306,15 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_error(exc)
             return
+        if parsed.path == '/api/styles/references' or parsed.path.startswith('/api/styles/references/'):
+            try:
+                from . import visual_styles
+                query=parse_qs(parsed.query,keep_blank_values=True)
+                if set(query)-{'revision'} or any(len(v)!=1 or not v[0] for v in query.values()): visual_styles.fail('query','use one optional revision')
+                rid=parsed.path.removeprefix('/api/styles/references/') if parsed.path != '/api/styles/references' else None
+                self._send_json(visual_styles.listing(self.store.project_root,reference_id=rid,**{k:v[0] for k,v in query.items()}))
+            except Exception as exc: self._send_error(exc)
+            return
         if parsed.path == '/api/styles' or parsed.path.startswith('/api/styles/'):
             try:
                 from . import styles, operations
@@ -305,7 +328,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send_error(exc)
             return
-        if parsed.path in ('/api/icons/inspect', '/api/icons/catalog', '/api/icons/list', '/api/candidate-preview/status', '/api/candidate-preview/file'):
+        if parsed.path in ('/api/icons/inspect', '/api/icons/catalog', '/api/icons/list', '/api/icons/catalog/file', '/api/candidate-preview/status', '/api/candidate-preview/file'):
             try:
                 from . import icons, candidate_preview
                 query = parse_qs(parsed.query)
@@ -314,6 +337,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 if parsed.path == '/api/candidate-preview/file':
                     data, media = candidate_preview.file_bytes(self.store.project_root, **fields)
                     self._send_bytes(data, media)
+                elif parsed.path == '/api/icons/catalog/file':
+                    self._send_bytes(icons.catalog_asset_bytes(fields.get('asset_id'), fields.get('sha256')), 'image/svg+xml', immutable=True)
                 else:
                     action = {'/api/icons/inspect':icons.inspect, '/api/icons/catalog':icons.catalog, '/api/icons/list':icons.listing, '/api/candidate-preview/status':candidate_preview.status}[parsed.path]
                     self._send_json(action(self.store.project_root, **fields))
@@ -338,12 +363,18 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if parsed.path in ('/api/annotations', '/api/changes') or parsed.path.startswith(('/api/operations/', '/api/changes/')):
             try:
                 from . import annotation_service, changes, operations
+                if parsed.path == '/api/annotations':
+                    query = parse_qs(parsed.query, keep_blank_values=True)
+                    allowed = {'revision', 'page_id', 'layer', 'scope'}
+                    if set(query) - allowed or any(len(value) != 1 or not value[0] for value in query.values()):
+                        raise operations.OperationError('invalid_input', 'query', 'use one nonempty value for each supported query field')
+                    self._send_json(annotation_service.list_annotations(self.store.project_root,
+                                                                        **{key: value[0] for key, value in query.items()}))
+                    return
                 if parsed.query:
                     raise operations.OperationError('invalid_input', 'query', 'this read takes no query parameters')
                 if parsed.path == '/api/changes':
                     result = changes.list_changes(self.store.project_root)
-                elif parsed.path == '/api/annotations':
-                    result = annotation_service.list_annotations(self.store.project_root)
                 elif parsed.path.startswith('/api/operations/'):
                     result = operations.show(self.store.project_root, operation_id=parsed.path.removeprefix('/api/operations/'))
                 elif parsed.path.endswith('/handoff'):
@@ -419,7 +450,22 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({'token':self.write_token});return
         if parsed.path=='/api/history':
             from .editing import history
-            self._send_json(history(self.store.project_root));return
+            try:
+                params = parse_qs(parsed.query, keep_blank_values=True)
+                if set(params) - {'revision', 'page_id', 'layer', 'limit', 'cursor', 'related_only'} or any(len(values) != 1 or not values[0] for values in params.values()):
+                    raise ValueError('use one nonempty value per supported history parameter')
+                if params.get('related_only', ['1'])[0] not in ('0', '1'):
+                    raise ValueError('related_only must be 0 or 1')
+                from .operations import OperationError
+                limit_value = params.get('limit', [None])[0]
+                try:
+                    limit = int(limit_value) if limit_value is not None else None
+                except ValueError:
+                    raise OperationError('invalid_input', 'limit', 'limit must be an integer') from None
+                self._send_json(history(self.store.project_root, revision=params.get('revision', [None])[0], page_id=params.get('page_id', [None])[0], layer=params.get('layer', [None])[0], limit=limit, cursor=params.get('cursor', [None])[0], related_only=params.get('related_only', ['1'])[0] != '0'))
+            except Exception as exc:
+                self._send_error(exc)
+            return
         if parsed.path in ("/", "/index.html"):
             # the v2 entry content is safe to serve on any path: its assets
             # use absolute /v2/ URLs

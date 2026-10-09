@@ -7,10 +7,37 @@ from .snapshots import load_snapshot
 from .ui_journal import context
 
 MAX_READINGS = 12
+# The reader refuses records beyond this size; the writer must never produce one,
+# or normal large selections permanently wedge the preference file (review F1).
+MAX_RECORD_BYTES = 32_000
 
 
 def _file(store):
     return safe_path(store.deck_root, 'workbench', 'overview.json')
+
+
+def _fit(current, identity, states, previous=None):
+    """Drop the oldest readings until the record fits the reader's budget.
+
+    A single state that cannot fit on its own is refused loudly instead of
+    being written as an unreadable record: the UI keeps its input and shows
+    the save as unconfirmed (existing error handling), instead of a
+    permanently damaged preference file.
+    """
+    next_sequence = (previous['sequence'] + 1) if previous else 1
+    while True:
+        # Probe the exact final shape: same serializer as _write, the real
+        # sequence, and an etag placeholder of the true 64-hex length. The
+        # first probe omitted the etag (~74 bytes) and could let a record slip
+        # through at 31.9–32 KB, then be permanently unreadable by _read (F1).
+        probe = {'schema_version': 'ui_overview_record.v1', 'project_id': current['project_id'],
+                 'project_identity': identity, 'states': states, 'sequence': next_sequence,
+                 'etag': 'd' * 64}
+        if len(canonical_json_bytes(probe)) <= MAX_RECORD_BYTES:
+            return states
+        if len(states) == 1:
+            raise LocalStateError('states', 'overview record exceeds the supported size; clear the page selection before saving')
+        states = states[1:]
 
 
 def _etag(record):
@@ -24,7 +51,7 @@ def _validate(current, identity, state):
 
 
 def _read(store, current, identity):
-    record = read_json(_file(store), max_bytes=32_000)
+    record = read_json(_file(store), max_bytes=MAX_RECORD_BYTES)
     if record is None:
         return None
     if set(record) != {'schema_version', 'project_id', 'project_identity', 'states', 'sequence', 'etag'} or record['schema_version'] != 'ui_overview_record.v1':
@@ -80,7 +107,8 @@ def save(project, *, state, expected_etag=None):
         if expected_etag != (previous['etag'] if previous else None):
             raise LocalStateConflict('expected_etag', 'overview preferences changed or were cleared; current input is retained')
         states = [value for value in (previous['states'] if previous else []) if value['revision_id'] != state['revision_id']]
-        record = _write(store, current, identity, [*states, state][-MAX_READINGS:], previous)
+        states = _fit(current, identity, [*states, state][-MAX_READINGS:], previous)
+        record = _write(store, current, identity, states, previous)
     return {'status': 'saved', 'record': {'state': state, 'etag': record['etag']}, 'replayed': False}
 
 

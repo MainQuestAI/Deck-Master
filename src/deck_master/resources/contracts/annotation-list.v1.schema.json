@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "annotation_list.v1",
+  "description": "Fixed-snapshot read of recorded opinions. `revision_id` is the snapshot the list was read from; each annotation keeps its own `base_revision`, page and artifact references.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "annotation_list.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "revision_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "annotation": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "ref",
+          "annotation"
+        ]
+      }
+    },
+    "filters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "page_id",
+        "layer",
+        "scope"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "revision_id",
+    "annotations",
+    "filters"
+  ]
+}

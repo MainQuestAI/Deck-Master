@@ -100,6 +100,8 @@ def test_explicit_budget_exact_plan_and_duplicate_click_create_one_batch(batch_b
     assert store.load_document() == before
     page.get_by_role('button', name='保存并交接所选试作', exact=True).evaluate('(button) => {button.click(); button.click();}')
     expect(page.locator('.batch-impact')).to_contain_text('已保存 2 项待交接任务，尚未开始制作')
+    # D1（评审裁决）：交接成功后制作要求清空，不再预填下一批。
+    assert page.get_by_role('textbox', name='所选页的制作要求').input_value() == ''
     assert len(commits) == 1
     doc = store.load_document()
     tasks = [store.read_object_json(ref) for ref in doc['tasks'] if ref not in before['tasks']]
@@ -108,8 +110,13 @@ def test_explicit_budget_exact_plan_and_duplicate_click_create_one_batch(batch_b
     assert doc['pages'] == before['pages']
     assert all(not task.get('generation_attempts') for task in tasks)
     page.get_by_role('button', name='查看本次交接', exact=True).click()
-    page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
-    assert 'task=' not in page.url
+    page.get_by_role('heading', name='当前任务', exact=True).wait_for()
+    assert f"task={tasks[0]['task_id']}" in page.url
+    expect(page.locator('.task-handoff')).to_contain_text('本次交接包含 2 项任务')
+    expect(page.get_by_role('button', name='复制交接说明', exact=True)).to_be_enabled()
+    page.get_by_text('完整交接说明与涉及页面', exact=True).click()
+    for task in tasks:
+        assert task['task_id'] in page.get_by_label('本任务完整交接说明').input_value()
 
 
 def test_lost_commit_response_verify_original_receipt_reload_never_redispatches(batch_browser):
@@ -131,8 +138,11 @@ def test_lost_commit_response_verify_original_receipt_reload_never_redispatches(
     page.reload()
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     expect(page.locator('.business-pending')).to_be_visible()
-    assert page.get_by_role('checkbox', name='选择第 01 页', exact=True).is_checked() is False
-    assert page.get_by_role('textbox', name='所选页的制作要求').input_value() == ''
+    # D1 keeps the selection across reload; the working requirement is restored
+    # with it (AC08). The lost commit must still wait for explicit verification
+    # instead of being replayed or silently applied.
+    expect(page.get_by_role('checkbox', name='选择第 01 页', exact=True)).to_be_checked()
+    assert page.get_by_role('textbox', name='所选页的制作要求').input_value() == '保留事实与数字，统一标题层级。'
     page.get_by_role('button', name='核实保存结果', exact=True).click()
     expect(page.locator('.business-pending')).to_be_hidden()
     assert len(requests) == 1 and len(store.load_document()['tasks']) == len(before_tasks) + 2
@@ -146,7 +156,7 @@ def test_changes_to_range_inputs_filter_version_and_late_preview_invalidate_plan
     select(page, 1, 2)
     preview(page)
     page.get_by_role('textbox', name='所选页的制作要求').fill('新的明确要求。')
-    assert page.get_by_role('button', name='保存并交接所选试作', exact=True).is_disabled()
+    expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_hidden()
     pending = []
     def delay(route):
         pending.append((route, route.fetch()))
@@ -165,7 +175,7 @@ def test_changes_to_range_inputs_filter_version_and_late_preview_invalidate_plan
     page.unroute('**/api/changes/plan', delay)
     preview(page)
     page.get_by_role('button', name='只看需要处理 3 页', exact=True).click()
-    assert page.get_by_role('button', name='保存并交接所选试作', exact=True).is_disabled()
+    expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_hidden()
     select(page, 1)
     preview(page)
     doc = copy.deepcopy(store.load_document())
@@ -174,7 +184,7 @@ def test_changes_to_range_inputs_filter_version_and_late_preview_invalidate_plan
     # Trigger the actual summary poll's focus handler, without changing the URL.
     page.evaluate("() => window.dispatchEvent(new Event('focus'))")
     expect(page.locator('.batch-actions')).to_contain_text('项目已有新版本')
-    assert page.get_by_role('button', name='保存并交接所选试作', exact=True).is_disabled()
+    expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_hidden()
     assert store.load_document()['tasks'] == before_tasks
 
 
@@ -192,10 +202,11 @@ def test_style_transfer_preserves_exact_context_and_reference_target_conflict(ba
     page.get_by_role('button', name='带所选页进入风格校准', exact=True).click()
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
     expect(page.get_by_role('textbox', name='风格短要求', exact=True)).to_have_value('仅借用配色，保留构图。')
-    expect(page.get_by_role('checkbox', name='风格目标 第 3 页 · 每页保留原图与来源', exact=True)).to_be_checked()
+    expect(page.get_by_role('combobox', name='当前风格试作目标', exact=True)).to_have_value('p03')
+    page.get_by_text('其它目标页', exact=True).click()
     assert not page.get_by_role('checkbox', name='风格目标 第 1 页 · 项目目标与阅读顺序', exact=True).is_checked()
     page.get_by_role('combobox', name='风格参考原图', exact=True).select_option('p03')
     expect(page.locator('.style-calibration')).to_contain_text('目标未被自动移除')
-    assert page.get_by_role('checkbox', name='风格目标 第 3 页 · 每页保留原图与来源', exact=True).is_checked()
+    expect(page.get_by_role('combobox', name='当前风格试作目标', exact=True)).to_have_value('p03')
     assert page.get_by_role('button', name='检查风格要求', exact=True).is_disabled()
     assert store.read_current() == before

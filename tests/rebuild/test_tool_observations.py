@@ -139,3 +139,31 @@ def test_fixed_reference_paths_prove_only_preexisting_same_project_bytes(native,
     record = observations.collect_codex_image(native['selector'], reference_store=None if failure == 'no_store' else store).metadata
     assert record['submitted']['references'] == ([{'file': ref, 'role': 'reference'}] if failure is None else None)
     assert str(store.project_root) not in json.dumps(record)
+
+
+def test_native_completion_in_codex_branched_rollout_is_resolved_by_identity(native):
+    """Current Codex keeps the same thread metadata in UUID-suffixed rollouts."""
+    branched = native['session'].with_name(native['session'].stem + '_' + TURN + '.jsonl')
+    branched.write_bytes(native['session'].read_bytes())
+    native['session'].write_text(json.dumps(native['meta']) + '\n')
+    observed = observations.collect_codex_image(native['selector'], minimum_started_at_ms=900)
+    assert observed.output_bytes == native['output']
+    assert observed.metadata['source']['thread_id'] == THREAD
+    assert observed.metadata['source']['turn_id'] == TURN
+
+
+@pytest.mark.parametrize('fault', ['duplicate', 'header', 'turn', 'symlink'])
+def test_branched_runtime_keeps_duplicate_and_identity_rejections(native, fault):
+    branched = native['session'].with_name(native['session'].stem + '_' + TURN + '.jsonl')
+    branched.write_bytes(native['session'].read_bytes())
+    if fault != 'duplicate':
+        native['session'].write_text(json.dumps(native['meta']) + '\n')
+    if fault in ('header', 'turn'):
+        header = copy.deepcopy(native['meta']); event = copy.deepcopy(native['event'])
+        if fault == 'header': header['payload']['id'] = TURN
+        else: event['payload']['turn_id'] = THREAD
+        branched.write_text(json.dumps(header) + '\n' + json.dumps(event) + '\n')
+    if fault == 'symlink':
+        real = branched.with_suffix('.original'); branched.rename(real); branched.symlink_to(real)
+    with pytest.raises(ObservationUnavailable):
+        observations.collect_codex_image(native['selector'])

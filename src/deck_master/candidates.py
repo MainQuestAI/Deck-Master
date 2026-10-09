@@ -37,7 +37,7 @@ def result_kind(candidate):
     return candidate.get('result_kind', 'artifact')
 
 
-def generation_basis(store, document, page_id, stage):
+def generation_basis(store, document, page_id, stage, *, preserve_blueprint=False):
     from .production import resolve_design
     entry = next((e for e in document['pages'] if e['page_id'] == page_id), None)
     if entry is None:
@@ -51,10 +51,17 @@ def generation_basis(store, document, page_id, stage):
                 'design_digest': sha256_bytes(canonical_json_bytes(design)), 'blueprint_ref': None}
     return {'page_ref': entry['page'], 'input_digest': compute_input_digest(document),
             'design_digest': sha256_bytes(canonical_json_bytes(design)),
-            'blueprint_ref': entry.get('blueprint') if stage == 'svg' else None}
+            'blueprint_ref': entry.get('blueprint') if stage == 'svg' or preserve_blueprint else None}
 
 
 def inputs_current(store, document, task):
+    target_reference = task.get('stage_request', {}).get('target_reference_ref')
+    if target_reference:
+        if len(task['scope_pages']) != 1:
+            return False
+        current = next((entry for entry in document['pages'] if entry['page_id'] == task['scope_pages'][0]), None)
+        if current is None or current.get('blueprint') != target_reference:
+            return False
     # Same freshness short-circuit as the generic task path: an identical
     # content identity means pages, sources and task facts are unchanged, so
     # the per-page basis comparison would be a no-op (and inputs_update may
@@ -160,7 +167,7 @@ def _lookup(records, candidate_id):
     return records[candidate_id]
 
 
-def _state(store, document, candidate):
+def _state(store, document, candidate, task=None):
     adoptions = [r['revision_id'] for r in document.get('candidate_adoptions', []) if r['candidate_id'] == candidate['candidate_id']]
     kind = result_kind(candidate)
     if kind == 'content_update':
@@ -179,8 +186,20 @@ def _state(store, document, candidate):
         target = entry['page'] if entry else None
     else:
         target = entry.get(candidate['stage']) if entry else None
-        basis = generation_basis(store, document, candidate['page_id'], candidate['stage'])
-        changed = ['page_membership'] if basis is None else [key for key in basis if basis[key] != candidate['generation_basis'][key]]
+        target_reference = (task or {}).get('stage_request', {}).get('target_reference_ref')
+        preserve_blueprint = candidate['stage'] == 'blueprint' and bool(target_reference)
+        basis = generation_basis(store, document, candidate['page_id'], candidate['stage'], preserve_blueprint=preserve_blueprint)
+        expected = candidate['generation_basis']
+        if preserve_blueprint:
+            # Earlier v2 candidates stored a null blueprint basis. Their exact
+            # immutable task already records the preservation reference; derive
+            # it without rewriting historical candidate objects.
+            expected = {**expected, 'blueprint_ref':target_reference}
+            if basis and adoptions and target == candidate['result_ref']:
+                # Its own explicit adoption is an allowed transition, so the
+                # adopted sample remains usable for further style expansion.
+                basis = {**basis, 'blueprint_ref':target_reference}
+        changed = ['page_membership'] if basis is None else [key for key in basis if basis[key] != expected[key]]
     return {'generation_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
             'adoption_target': {'status': 'missing_page' if entry is None else 'unchanged' if target == candidate['target_ref'] else 'changed',
                                 'original_ref': candidate['target_ref'], 'current_ref': target},
@@ -285,7 +304,8 @@ def record_result(store, *, document, task, updated_task, artifacts, artifact_re
                  'project_id': document['project_id'], 'task_id': task['task_id'],
                  'created_at': tasks._utc_now_iso(), 'page_id': page_id, 'stage': stage,
                  'base_revision': task['dispatch_revision'],
-                 'generation_basis': generation_basis(store, dispatched, page_id, stage),
+                 'generation_basis': generation_basis(store, dispatched, page_id, stage,
+                     preserve_blueprint=bool(task.get('stage_request', {}).get('target_reference_ref'))),
                  'request_ref': generation_binding['request_ref'] if generation_binding else None,
                  'attempt_ref': generation_binding['attempt_ref'] if generation_binding else None,
                  'target_ref': entry.get(stage), 'result_ref': artifact_refs[0], 'status': 'available'}
@@ -406,7 +426,7 @@ def show(project, *, candidate_id, revision=None):
     result = {'project_id': document['project_id'], 'revision_id': document['revision_id'],
               'candidate_id': candidate_id, 'candidate_ref': ref, 'candidate': candidate,
               'result_kind': kind, 'task_id': task['task_id'],
-              **_state(store, document, candidate)}
+              **_state(store, document, candidate, task)}
     if kind == 'artifact':
         artifact = store.read_object_json(candidate['result_ref']); validate_schema('artifact', artifact)
         if artifact['page_id'] != candidate['page_id'] or artifact['role'] != candidate['stage']:
@@ -423,7 +443,15 @@ def show(project, *, candidate_id, revision=None):
             change_plan = store.read_object_json(change['plan_ref']); validate_schema('change_plan', change_plan)
             sources = change_plan['input'].get('references', [])
             files = _reference_files(store, document, sources)
-            if files != task['stage_request']['references']:
+            target_ref = task['stage_request'].get('target_reference_ref')
+            expected_files = files
+            if target_ref:
+                dispatched = load_snapshot(store, task['dispatch_revision'])
+                target = next(entry for entry in dispatched['pages'] if entry['page_id'] == candidate['page_id'])
+                if target['blueprint'] != target_ref:
+                    raise operations.OperationError('candidate_invalid', 'references', 'target reference differs from dispatched image')
+                expected_files = [{'file':store.read_object_json(target_ref)['file'], 'role':'reference'}, *files]
+            if expected_files != task['stage_request']['references']:
                 raise operations.OperationError('candidate_invalid', 'references', 'fixed reference sources differ from the committed task')
             reference_sources = [{**source, 'file': file['file']} for source, file in zip(sources, files, strict=True)]
         result['reference_sources'] = reference_sources
@@ -444,7 +472,8 @@ def listing(project, *, page_id=None, revision=None):
     store = Store(project_path(project)); document = load_snapshot(store, revision)
     return {'project_id': document['project_id'], 'revision_id': document['revision_id'], 'candidates': [
         {'candidate': candidate, 'ref': ref, 'result_kind': result_kind(candidate),
-         **_state(store, document, candidate)}
+         'style_recipe_ref':task.get('stage_request', {}).get('style_recipe_ref'),
+         **_state(store, document, candidate, task)}
         for candidate, ref, task in _records(store, document).values() if page_id is None or candidate.get('page_id') == page_id]}
 
 
@@ -473,7 +502,7 @@ def _plan(store, document, candidate_ids):
                                         'a whole changeset is adopted atomically; it cannot be mixed with slot candidates')
     selections = []; failures = []; pages = set()
     for (candidate, ref, task), kind in zip(selected, kinds):
-        state = _state(store, document, candidate)
+        state = _state(store, document, candidate, task)
         if kind == 'content_update':
             if state['content_basis']['status'] != 'current':
                 failures.append({'candidate_id': candidate['candidate_id'], 'cause': 'content_basis_changed',

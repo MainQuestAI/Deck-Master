@@ -128,9 +128,9 @@ export function overview(app, data = {}) {
   }
   const blueprintCount = pages.filter(page => page.stages.blueprint?.existence === 'recorded').length;
   root.append(heading('制作总览',
-    `${pages.length} 页内容 · ${blueprintCount} 页已有原图 · ${version(app.summary.revision_id)}。可看状态不代表质量检查通过。`,
+    `${pages.length} 页内容 · ${blueprintCount} 页已有原图`,
     button('查看整稿', () => app.go({surface: 'gallery'}), true)));
-  root.append(el('p',{class:'muted'},'候选待决定、结果未读与产物依据分开记录。依据已变化表示上游版本不同；依据待核实表示缺少历史绑定，不等于必须重做。点击对应层查看已有产物与生成依据，再选择重新检查或试作。'));
+  root.append(el('details', {class: 'overview-state-help'}, el('summary', {}, '如何理解制作状态'), el('p', {}, '依据已变化表示上游内容更新；可先查看已有作品，再决定检查或修改。候选返回后需要比较采用；工程检查和人工认可分别记录。')));
   const todo=todoPanel(app);root.append(todo);
   const sync=event=>{const next=event.detail;if(next.revision_id===app.summary.revision_id&&next.reading_etag!==app.summary.reading_etag){app.summary=next;const updated=todoPanel(app);root.querySelector('.overview-todos')?.replaceWith(updated);}};app.root.addEventListener('summary-refreshed',sync);app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',sync));
   root.append(matrixPanel(app, data.overview));
@@ -145,17 +145,34 @@ function matrixPanel(app, saved) {
   let chapterTitleOf = () => null;
   const memory = new OverviewMemory(app, saved);
   let filter = memory.state.filter, search = memory.state.search, ascending = memory.state.sort === 'ascending', disposed = false, tableState = null;
-  const selected = new Set();
+  // D1：选择随个人阅读状态持久化。改变筛选只改变可见范围，不再清空选择；
+  // 筛选外选择始终有计数，只有「清除选择」或移除受限页才改变选择集合。
+  // localStorage（项目键）是跨刷新/版本前进的连续事实源：键存在且合法时以它
+  // 为准（清除后立即刷新不会从服务端旧记录复活）；键缺失或损坏时才回退到
+  // ui_overview 按版本记录的选择。恢复选择不恢复可提交计划。
+  const pageIdSet = new Set(pages.map(page => page.page_id));
+  const selectionKey = 'deck-master:overview-selection:' + app.info.project_identity;
+  let storedSelection = null;
+  try {
+    const parsed = JSON.parse(localStorage.getItem(selectionKey) ?? 'null');
+    if (Array.isArray(parsed)) storedSelection = parsed.filter(id => typeof id === 'string');
+  } catch { /* 选择是阅读辅助，读不到就从服务端记录恢复 */ }
+  const selected = new Set((storedSelection !== null ? storedSelection : (memory.state.selected_page_ids || [])).filter(id => pageIdSet.has(id)));
   const count = el('span', {class: 'muted', role: 'status'});
   const selectionNote = el('span', {class: 'muted', role: 'status'});
-  const clearButton = button('清除选择', () => { selected.clear(); batch.invalidate(); render(); });
+  // AC06/§2.1：常驻选择条——选页后在长列表任意位置都能看到范围摘要并进入配置。
+  const selectionBarSummary = el('strong', {class: 'overview-selection-summary'});
+  const selectionBar = el('div', {class: 'row wrap overview-selection-bar', hidden: true},
+    selectionBarSummary,
+    button('配置要求', () => batch.openConfig(), false, {class: 'quiet'}));
+  const clearButton = button('清除选择', () => { selected.clear(); batch.invalidate(); saveSelection(); render(); });
   const searchInput = el('input', {type: 'search', value:search, maxLength:200, placeholder: '搜索页码或标题', 'aria-label': '搜索页码或标题', autocomplete: 'off'});
   const filterAll = button('', () => setFilter('all'), false, {'aria-pressed': 'true'});
   const filterTodo = button('只看需要处理', () => setFilter('todo'), false, {'aria-pressed': 'false'});
   const allCheckbox = el('input', {type: 'checkbox', 'aria-label': '选择当前筛选内所有可操作页面'});
   const table = el('table', {class: 'matrix', 'aria-label': '逐页制作进展'});
   let batch;
-  batch = batchActions(app, selected, () => { if (batch) render(); });
+  batch = batchActions(app, selected, ({selectionChanged = false} = {}) => { if (batch && !disposed) { if (selectionChanged) saveSelection(); render(); } });
   const preferenceStatus = el('p', {role:'status', class:'muted overview-preference-status'});
   const compareButton = button('核实总览偏好', async () => {
     compareButton.disabled = true;
@@ -168,20 +185,32 @@ function matrixPanel(app, saved) {
         el('h3', {}, '此窗口'), description(memory.state),
         el('h3', {}, '项目保存的偏好'), description(stored.record?.state),
         el('details', {}, el('summary', {}, '固定版本与恢复详情'), el('pre', {class:'evidence-json'}, JSON.stringify({window:memory.state, saved:stored.record}, null, 2)))),
-        [button('读取项目保存的偏好', () => { document.querySelector('#modal').close(); memory.useSaved(stored); reflectURL(); }),
-          button('明确保存此窗口偏好', () => { document.querySelector('#modal').close(); memory.useWindow(stored); })]);
+        [button('读取项目保存的偏好', () => { document.querySelector('#modal').close(); memory.useSaved(stored); applyMemorySelection(); reflectURL(); }),
+          button('明确保存此窗口偏好', () => { document.querySelector('#modal').close(); memory.useWindow(stored); saveSelection({quiet: false}); })]);
     } catch { if (!disposed) preferenceStatus.textContent = '总览偏好核实未完成，当前输入保留；连接恢复后重试。'; }
     finally { compareButton.disabled = false; }
   });
   const downloadButton = button('下载总览偏好副本', () => downloadJSON(memory.state, 'deck-master-overview-preferences.json'));
-  function reflectURL() { app.route.overview_preferences = {search,filter,sort:ascending ? 'ascending' : 'descending'}; history.replaceState(null, '', routeHash(app.info, app.route)); }
-  function saveReading() { memory.update({search,filter,sort:ascending ? 'ascending' : 'descending'}); reflectURL(); }
+  function reflectURL() { if (disposed || app.navigationPending) return; app.route.overview_preferences = {search,filter,sort:ascending ? 'ascending' : 'descending'}; history.replaceState(null, '', routeHash(app.info, app.route)); }
+  function saveSelection({quiet = true} = {}) {
+    if (disposed || app.navigationPending) return;
+    try { localStorage.setItem(selectionKey, JSON.stringify([...selected])); } catch { /* 选择保留在本页，未写入本机 */ }
+    memory.update({search,filter,sort:ascending ? 'ascending' : 'descending',selected_page_ids:[...selected]}, {quiet});
+    reflectURL();
+  }
+  // 读取项目保存的偏好后，勾选集合必须跟着替换，否则界面仍显示本窗口的选择，
+  // 下一次输入会用旧选择把刚读取的记录覆盖回去（两套事实源打架）。
+  function applyMemorySelection() {
+    selected.clear();
+    for (const id of memory.state.selected_page_ids || []) if (pageIdSet.has(id)) selected.add(id);
+    saveSelection();
+  }
+  function saveReading() { saveSelection({quiet: false}); }
 
   function setFilter(value) {
     if (filter === value) return;
     filter = value;
-    selected.clear();
-    batch.invalidate();
+    batch.invalidate({keepErrors: true});
     saveReading();
     render();
   }
@@ -222,10 +251,17 @@ function matrixPanel(app, saved) {
     filterAll.setAttribute('aria-pressed', String(filter === 'all'));
     filterTodo.classList.toggle('active', filter === 'todo');
     filterTodo.setAttribute('aria-pressed', String(filter === 'todo'));
-    selectionNote.textContent = selected.size ? `已选择 ${selected.size} 页` : '未选择页面';
+    const hiddenSelected = selected.size ? [...selected].filter(id => !list.some(page => page.page_id === id)).length : 0;
+    selectionNote.textContent = selected.size
+      ? `已选择 ${selected.size} 页${hiddenSelected ? `，当前筛选外 ${hiddenSelected} 页` : ''}`
+      : '未选择页面';
     clearButton.disabled = !selected.size;
     clearButton.hidden = !selected.size;
     selectionNote.hidden = !selected.size;
+    // AC06/§2.1（深度复审）：30 页末尾选完页后，选择摘要与配置入口仍要在视口内
+    // ——常驻选择条随滚动吸附在顶部，点击「配置要求」回到配置区并聚焦要求。
+    selectionBar.hidden = !selected.size;
+    selectionBarSummary.textContent = batch.selectionSummary(hiddenSelected);
     allCheckbox.checked = operable.length > 0 && operable.every(page => selected.has(page.page_id));
     allCheckbox.indeterminate = operable.some(page => selected.has(page.page_id)) && !allCheckbox.checked;
     allCheckbox.disabled = !operable.length;
@@ -248,8 +284,8 @@ function matrixPanel(app, saved) {
     const body = el('tbody');
     if (!list.length) {
       body.append(el('tr', {}, el('td', {colspan: 8}, el('div', {class: 'matrix-empty stack'},
-        el('h3', {}, '没有符合条件的页面'), el('p', {}, '尝试其他页码或标题，或清除筛选查看全部页面。'),
-        button('清除筛选', () => { search = ''; searchInput.value = ''; filter = 'all'; selected.clear(); batch.invalidate(); saveReading(); render(); })))));
+        el('h3', {}, '没有符合条件的页面'), el('p', {}, '尝试其他页码或标题，或清除筛选查看全部页面。已选页面不受筛选影响。'),
+        button('清除筛选', () => { search = ''; searchInput.value = ''; filter = 'all'; batch.invalidate(); saveReading(); render(); })))));
     }
     let lastChapter = Symbol();
     for (const page of list) {
@@ -276,7 +312,7 @@ function matrixPanel(app, saved) {
           checked: selected.has(page.page_id), disabled: !batch.eligible(page) && !selected.has(page.page_id),
           'aria-label': `选择第 ${number} 页`, onchange: event => {
             if (event.target.checked) selected.add(page.page_id); else selected.delete(page.page_id);
-            batch.invalidate(); render();
+            batch.invalidate(); saveSelection(); render();
           }}))),
         el('th', {scope: 'row'}, button([thumb, el('span', {class: 'mono faint'}, number), el('span', {}, page.title || '未命名页面')],
           () => app.go({surface: 'page', page_id: page.page_id, layer: 'original_image'}),
@@ -295,18 +331,18 @@ function matrixPanel(app, saved) {
       : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
     if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
   }
-  searchInput.addEventListener('input', () => { search = searchInput.value; selected.clear(); batch.invalidate(); saveReading(); render(); });
+  searchInput.addEventListener('input', () => { search = searchInput.value; batch.invalidate({keepErrors: true}); saveReading(); render(); });
   allCheckbox.addEventListener('change', () => {
     for (const page of visiblePages().filter(batch.eligible)) {
       if (allCheckbox.checked) selected.add(page.page_id); else selected.delete(page.page_id);
     }
-    batch.invalidate(); render();
+    batch.invalidate(); saveSelection(); render();
   });
 
   // 章节行来自 content plan 的固定投影；读取失败或没有计划时矩阵仍完整，只是没有章节分组。
   const unsubscribe = memory.subscribe(() => {
     if (filter !== memory.state.filter || search !== memory.state.search || ascending !== (memory.state.sort === 'ascending')) {
-      filter = memory.state.filter; search = memory.state.search; searchInput.value = search; ascending = memory.state.sort === 'ascending'; selected.clear(); batch.invalidate();
+      filter = memory.state.filter; search = memory.state.search; searchInput.value = search; ascending = memory.state.sort === 'ascending'; batch.invalidate();
     }
     render();
   });
@@ -329,13 +365,23 @@ function matrixPanel(app, saved) {
 
   const node = el('section', {class: 'stack', 'aria-label': '逐页制作进展'},
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
-    el('div', {class: 'toolbar'}, el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo),
-      el('div', {class: 'row wrap matrix-search'}, searchInput, batch.toolbar, selectionNote, clearButton)),
+    // UAC12:阅读筛选(范围+搜索)与批量选页动作分两行、各自成组;选择摘要条
+    // 与配置区独立演进,空选只给短提示(UX-02b),异常恢复不被筛选空态收起。
+    el('div', {class: 'row wrap toolbar overview-reading-tools', role: 'group', 'aria-label': '阅读筛选'},
+      el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput),
+    el('div', {class: 'row wrap matrix-search', role: 'group', 'aria-label': '批量选页动作'},
+      batch.toolbar, selectionNote, clearButton),
+    // F05/§4.1：配置区紧邻选页工具条（不再隔着整张矩阵），三态在同一处
+    // 演进：未选=引导；选后=配置（目标摘要—要求—参考—影响—预览）；
+    // 核对通过后=交接主动作出现。
+    batch.node,
+    // 选择摘要条紧贴列表：向下滚动选页时它吸附在顶部，配置入口始终够得着。
+    selectionBar,
     el('div', {class:'row wrap overview-preferences'}, preferenceStatus, compareButton, downloadButton),
     el('div', {class: 'matrix-wrap'}, table),
     el('div', {class: 'matrix-caption'},
       el('span', {}, icon('check'), ' 可查看　', icon('attention'), ' 需要处理　', icon('minus'), ' 尚未生成'),
-      el('span', {}, '按 Tab 访问产物与操作；窄屏可横向滚动查看完整进度。')), batch.node);
+      el('span', {}, '按 Tab 访问产物与操作；窄屏可横向滚动查看完整进度。')));
   render();
   return node;
 }
