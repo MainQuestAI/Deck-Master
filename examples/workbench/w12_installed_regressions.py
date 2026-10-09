@@ -27,6 +27,7 @@ def main():
                          str(repo / 'tests/rebuild/test_ux04_content_annotations_browser.py'),
                          str(repo / 'tests/rebuild/test_ux03_style_candidate_browser.py'),
                          str(repo / 'tests/rebuild/test_pr104_review_browser.py'),
+                         str(repo / 'tests/rebuild/test_pr104_supplemental_browser.py'),
                          str(repo / 'tests/rebuild/test_ui_design_browser.py') + '::test_modal_falls_back_to_the_caller_provided_focus_when_trigger_gone',
                          str(repo / 'tests/rebuild/test_navigation_usability_browser.py') + '::test_artwork_and_save_row_share_the_first_screen',
                          str(repo / 'tests/rebuild/test_ux08_task_walkthrough_browser.py'), '--require-browser'])

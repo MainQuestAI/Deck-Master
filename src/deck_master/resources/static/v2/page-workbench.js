@@ -376,7 +376,19 @@ export function pageDetail(app, data) {
       if (disposed || serial !== historySerial) return;
       if (reset) revisionSelect.replaceChildren(el('option', {value: ''}, '选择这页的修改'));
       const existing = new Set([...revisionSelect.options].map(option => option.value));
-      value.revisions.filter(row => row.revision_id !== fixed && !existing.has(row.revision_id)).forEach(row => revisionSelect.append(el('option', {value: row.revision_id}, historyLabel(row, pageLabels))));
+      const appendRevision = (revision, label) => {
+        if (!revision || revision === fixed || existing.has(revision)) return;
+        existing.add(revision); revisionSelect.append(el('option', {value: revision}, label));
+      };
+      for (const row of value.revisions) {
+        const label = historyLabel(row, pageLabels);
+        appendRevision(row.revision_id, label);
+        // The relevant change can be the fixed head itself. Its direct before
+        // snapshot may have changed another page and therefore be filtered out.
+        // Membership changes do not guarantee this page existed on both sides.
+        if (row.changed_pages?.some(item => item.page_id === data.page_id && !item.layers.includes('membership')))
+          appendRevision(row.parent_revision_id, '修改前 · ' + label);
+      }
       historyCursor = value.pagination?.next_cursor || null; historyLoaded = true; historyShowingAll = all;
       error.textContent = revisionSelect.options.length === 1 ? (historyCursor ? '当前范围尚无这页的其它修改，可继续加载更早记录。' : '此范围没有这页的其它修改。') : '';
     } catch (failure) { if (!disposed && serial === historySerial) { allHistory.checked = historyShowingAll; error.textContent = readableError(failure) + ' 已固定的比较仍保留。'; } }

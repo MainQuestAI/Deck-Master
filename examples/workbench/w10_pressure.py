@@ -68,16 +68,50 @@ def prepare_usability_fixture(project, *, history_count=45):
         'history_count':history_count, 'revision_id':store.current_revision_id()}
 
 
-def wait_dom(page, selector):
+def wait_dom(page, selector, *, visible=False):
     # Chromium 149 / Playwright locator.wait_for retains target DOM handles in
     # DevTools Global handles. A boolean predicate avoids measuring the driver.
     # No console clearing, explicit GC, page reload, or cache purge is used.
     deadline = time.monotonic() + 60
     while time.monotonic() < deadline:
-        if page.evaluate('(selector) => Boolean(document.querySelector(selector))', selector):
+        if page.evaluate('([selector, visible]) => {const node=document.querySelector(selector); return Boolean(node && (!visible || node.getClientRects().length));}', [selector, visible]):
             return
         page.wait_for_timeout(50)
     raise AssertionError('DOM did not become ready: ' + selector)
+
+
+def read_history_phase(page, path_counts):
+    page.get_by_role('button', name='任务与交付', exact=True).click()
+    page.get_by_role('button', name='版本', exact=True).click()
+    wait_dom(page, '[aria-label="阅读历史版本"]', visible=True)
+    older = page.get_by_role('button', name='更早的修改', exact=True)
+    if older.is_enabled():
+        count = page.get_by_role('combobox', name='阅读历史版本').locator('option').count()
+        older.click()
+        expect(page.get_by_role('combobox', name='阅读历史版本').locator('option')).not_to_have_count(count)
+    page.get_by_role('checkbox', name='显示全部历史记录', exact=True).check()
+    page.get_by_role('checkbox', name='显示全部历史记录', exact=True).uncheck()
+    path_counts['history_paging'] = path_counts.get('history_paging', 0) + 1
+
+
+def read_candidate_phase(page):
+    page.get_by_role('button', name='任务与交付', exact=True).click()
+    page.get_by_role('button', name='待决定', exact=True).click()
+    wait_dom(page, '.candidate-batch-row', visible=True)
+    page.locator('.candidate-batch-row').first.get_by_role('button', name='比较这个候选', exact=True).click()
+    wait_dom(page, '.candidate-desk')
+    wait_dom(page, '.candidate-column [data-image-state=ready]')
+
+
+def read_breakdown_phase(page, path_counts):
+    page.locator('.visual-style').get_by_role('button', name='查看完整拆解图', exact=True).click()
+    wait_dom(page, '#modal .visual-breakdown-full [data-image-state=ready]', visible=True)
+    page.get_by_role('dialog').get_by_role('button', name='关闭', exact=True).click()
+    # Observe the close event: it also releases the full-size image lease and
+    # restores focus before the next navigation phase.
+    wait_dom(page, '#modal:not([open])')
+    wait_dom(page, '.visual-breakdown button:focus', visible=True)
+    path_counts['breakdown_reading'] = path_counts.get('breakdown_reading', 0) + 1
 
 
 def sample_warm_summary(url, *, samples=100):
@@ -182,9 +216,7 @@ def main():
                         gallery(); page.get_by_role('group', name='画廊图层').get_by_role('button', name=re.compile(r'^原图 ')).click()
                         expect(page.get_by_role('group', name='画廊图层').get_by_role('button', name=re.compile(r'^原图 '))).to_have_attribute('aria-pressed', 'true')
                     elif phase == 4:
-                        page.get_by_role('button', name='任务与交付', exact=True).click()
-                        wait_dom(page, '.candidate-batch-row'); page.locator('.candidate-batch-row').first.get_by_role('button', name='比较这个候选').click()
-                        wait_dom(page, '.candidate-desk'); wait_dom(page, '.candidate-column [data-image-state=ready]')
+                        read_candidate_phase(page)
                     elif phase == 5:
                         if usability:
                             canvas=page.get_by_role('region',name='图稿比较画布')
@@ -209,16 +241,7 @@ def main():
                     elif phase == base_phases - 1:
                         page.get_by_role('button',name='下一页对象',exact=True).click();wait_dom(page,'.action-target');gallery()
                     elif phase == base_phases:
-                        page.get_by_role('button',name='任务与交付',exact=True).click()
-                        wait_dom(page,'[aria-label="阅读历史版本"]')
-                        older=page.get_by_role('button',name='更早的修改',exact=True)
-                        if older.is_enabled():
-                            count=page.get_by_role('combobox',name='阅读历史版本').locator('option').count()
-                            older.click()
-                            expect(page.get_by_role('combobox',name='阅读历史版本').locator('option')).not_to_have_count(count)
-                        page.get_by_role('checkbox',name='显示全部历史记录',exact=True).check()
-                        page.get_by_role('checkbox',name='显示全部历史记录',exact=True).uncheck()
-                        path_counts['history_paging']=path_counts.get('history_paging',0)+1
+                        read_history_phase(page, path_counts)
                     elif phase == base_phases + 1:
                         page.get_by_role('button',name='风格校准',exact=True).click()
                         page.get_by_role('combobox',name='风格参考来源').select_option('screenshot')
@@ -226,9 +249,7 @@ def main():
                         wait_dom(page,'.visual-reference-choice [data-image-state=ready]')
                         path_counts['screenshot_analysis_reading']=path_counts.get('screenshot_analysis_reading',0)+1
                     elif phase == base_phases + 2:
-                        page.locator('.visual-style').get_by_text('查看视觉拆解图',exact=True).click()
-                        wait_dom(page,'.visual-rules [data-image-state=ready]')
-                        path_counts['breakdown_reading']=path_counts.get('breakdown_reading',0)+1
+                        read_breakdown_phase(page, path_counts)
                     else:
                         gallery()
                     if step % 2 == 0:

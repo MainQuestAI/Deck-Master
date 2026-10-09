@@ -160,7 +160,7 @@ export function visualStyle(app){
   openPhase(1);
   function controls(){const blocked=!loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size);
     input.disabled=blocked||Boolean(pending&&pending.state!=='not_found');savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
-    for(const control of [...rules.querySelectorAll('input,textarea,select,button'),...images.querySelectorAll('input'),...futureTargets.querySelectorAll('input')])control.disabled=blocked;
+    for(const control of [...rules.querySelectorAll('input,textarea,select,button:not([data-visual-read])'),...images.querySelectorAll('input'),...futureTargets.querySelectorAll('input')])control.disabled=blocked;
     uploadRecovery.replaceChildren();
     if(continuation)uploadRecovery.append(el('p',{},continuation.label+'；结果已保留。'),button('打开已保存的结果',()=>continueCompletion({preserveLocal:true}),false,{disabled:busy||continuing||!loaded}));
     if(pending?.state==='rejected')uploadRecovery.append(el('p',{},pending.rejection?.code==='visual_reference_conflict'?'本次上传因版本变化已明确拒绝，未提交。先读取当前版本，再重新选择截图上传。':'本次截图上传已明确拒绝，未提交。请结束这次失败上传后重新选择合法截图。'),button(pending.rejection?.code==='visual_reference_conflict'?'读取当前版本并重新上传':'结束失败上传，重新选图',restartRejectedUpload,false,{disabled:!loaded||busy||disposed||Boolean(app.business.entries.size)}));
@@ -254,7 +254,7 @@ export function visualStyle(app){
       const image=imageView(app,{file:spec.breakdown},'完整截图拆解图',{kind:'large'});
       const dialog=modal('完整截图拆解图',el('div',{class:'visual-breakdown-full',tabindex:0},image.node));
       dialog.addEventListener('close',()=>image.dispose(),{once:true});app.disposables.push(()=>image.dispose());
-    });
+    },false,{'data-visual-read':true});
     rules.append(el('div',{class:'visual-breakdown'},el('div',{class:'row wrap'},el('h3',{},'截图拆解图'),full),view.node));
     // 规范先显示借用/保留摘要；点击"调整借用维度"才出现对应编辑器。
     const borrowed=()=>state.spec_edits?.ref===spec.ref.sha256 ? Object.keys(state.spec_edits.dimensions) : ['palette','typography'];

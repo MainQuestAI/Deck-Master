@@ -1730,6 +1730,8 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
     if task.get("protocol_version"):
         from .generation import check_host
         check_host(task, declaration)
+    if task.get('kind') == 'style_analyze' and not tasks_mod.task_inputs_current(store, document, task):
+        raise tasks_mod.StaleInputContext('(task)', 'visual analysis inputs changed; create a new analysis before claiming')
     if task.get('stage_request', {}).get('target_reference_ref') and not tasks_mod.task_inputs_current(store, document, task):
         raise tasks_mod.StaleInputContext('(task)', 'target original image changed; preview a new style trial before claiming')
     if task.get("status") == "running" and task.get("execution_ref") != execution_ref:

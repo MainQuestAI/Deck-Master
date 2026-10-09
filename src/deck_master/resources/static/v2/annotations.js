@@ -172,8 +172,17 @@ export class Annotations {
   }
   applicable(record) {
     const note = record.annotation;
-    return note.page_id === this.data.page_id && canonical(note.page_ref) === canonical(this.data.stages.content.ref) &&
-      (note.scope === 'page' || note.scope === 'artifact' && note.layer === this.layer && canonical(note.artifact_ref) === canonical(this.ref));
+    if (note.page_id !== this.data.page_id || canonical(note.page_ref) !== canonical(this.data.stages.content.ref)) return false;
+    if (note.scope === 'page') return true;
+    if (note.scope !== 'artifact' || !note.artifact_ref) return false;
+    // A requirement may use another layer of this page. Validate against that
+    // opinion's own fixed layer, matching the core's accepted base references.
+    const slot = {content: 'content', original_image: 'blueprint', svg: 'svg', ppt: 'ppt_preview'}[note.layer];
+    const stage = this.data.stages[slot];
+    let refs = stage?.existence === 'recorded' ? [stage.ref, stage.file] : [];
+    if (note.layer === 'prepared_prompt') refs = [...this.data.prompts.prepared, ...(this.data.generation?.requests || [])].map(row => row.ref);
+    if (note.layer === 'submitted_prompt') refs = this.data.prompts.submitted.state === 'recorded' ? [this.data.prompts.submitted.ref] : [];
+    return refs.some(ref => ref && canonical(note.artifact_ref) === canonical(ref));
   }
   listReady() { return this.listState === 'ready' && this.loadedListRevision === this.listRevisionId(); }
   renderListState() {

@@ -6,8 +6,8 @@ import uuid
 import pytest
 from PIL import Image
 from test_styles import flow, dispatch, mutate  # noqa: F401
-from deck_master import service, styles, tasks, visual_styles, generation
-from deck_master.models import content_identity
+from deck_master import editing, service, styles, tasks, visual_styles, generation
+from deck_master.models import bump_revision, content_identity
 from deck_master.operations import OperationError
 
 
@@ -111,6 +111,64 @@ def test_cancelled_analysis_rejects_first_and_duplicate_late_results(flow):
         with pytest.raises(tasks.TaskConflict,match='(cancellation|cancelled output)'):
             tasks.accept_result(flow.store,task_id=task['task_id'],operation_id=task['operation_id'],produced_against=task['produced_against'],envelope_raw=result(row['reference_id']))
     assert flow.task(task['task_id'])['result_refs']==[]
+
+
+@pytest.mark.parametrize('running', [False, True])
+@pytest.mark.parametrize('change', ['reference_removed', 'fonts_changed'])
+def test_analysis_claim_rejects_changed_inputs_without_writes_or_calls(flow, running, change):
+    row, _, _ = imported(flow); task = analysis(flow, [row['reference_id']])
+    if running:
+        flow.start(task)
+    doc = flow.store.load_document()
+    if change == 'fonts_changed':
+        design = copy.deepcopy(doc['design_context'])
+        extra = copy.deepcopy(design['fonts'][0]); extra['font_id'] = 'additional-synthetic-font'
+        design['fonts'].append(extra)
+        service.update_design(flow.project, design_context=design, base_revision=doc['revision_id'])
+    else:
+        # A controlled reference-removal snapshot, not a new public delete API.
+        updated = bump_revision(copy.deepcopy(doc), {'operation_id': str(uuid.uuid4()), 'kind': 'task_update',
+            'description': 'Synthetic reference removal', 'read_set': []})
+        updated['style_references'] = []
+        flow.store.commit_change(base_revision=doc['revision_id'], document=updated,
+                                 operation_id=updated['change']['operation_id'])
+    before = flow.store.read_current(); before_task = flow.task(task['task_id'])
+    assert not tasks.task_inputs_current(flow.store, flow.store.load_document(), before_task)
+    with pytest.raises(tasks.StaleInputContext, match='visual analysis inputs changed'):
+        flow.start(task)
+    assert flow.store.read_current() == before
+    assert flow.task(task['task_id']) == before_task
+    assert before_task['call_allowances'] == [] and before_task['result_refs'] == []
+    with pytest.raises(tasks.StaleInputContext):
+        tasks.accept_result(flow.store, task_id=task['task_id'], operation_id=task['operation_id'],
+                            produced_against=task['produced_against'], envelope_raw=result(row['reference_id']))
+    assert flow.store.read_current() == before
+
+
+def test_restored_fonts_reject_analysis_claim_and_preserve_supersession(flow):
+    row, _, _ = imported(flow); original = flow.store.current_revision_id()
+    design = copy.deepcopy(flow.store.load_document()['design_context'])
+    extra = copy.deepcopy(design['fonts'][0]); extra['font_id'] = 'additional-synthetic-font'
+    design['fonts'].append(extra)
+    service.update_design(flow.project, design_context=design)
+    task = analysis(flow, [row['reference_id']])
+    editing.restore(flow.project, revision_id=original, base_revision=flow.store.current_revision_id(),
+                    operation_id=str(uuid.uuid4()))
+    before = flow.store.read_current()
+    assert flow.task(task['task_id'])['status'] == 'superseded'
+    with pytest.raises(tasks.StaleInputContext, match='visual analysis inputs changed'):
+        flow.start(task)
+    assert flow.store.read_current() == before
+    assert flow.task(task['task_id'])['status'] == 'superseded'
+
+
+def test_current_analysis_claim_survives_unrelated_page_edit_and_is_idempotent(flow):
+    row, _, _ = imported(flow); task = analysis(flow, [row['reference_id']])
+    mutate(flow, 'p03')
+    flow.start(task); before = flow.store.read_current()
+    flow.start(task)
+    assert flow.store.read_current() == before
+    assert flow.task(task['task_id'])['status'] == 'running'
 
 
 def test_edited_rules_are_authoritative_and_support_all_seven_dimensions(flow):
