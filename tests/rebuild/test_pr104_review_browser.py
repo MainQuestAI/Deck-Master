@@ -87,6 +87,162 @@ def opinions(store):
     return annotation_service.list_annotations(store.project_root)['annotations']
 
 
+def icon_samples():
+    # Explicit listing substitute: these identities do not claim real adoption.
+    return [{'sample_candidate_id': 'synthetic-' + name, 'sample_icon_index': 0,
+             'page_id': 'p02', 'label': '合成样例 ' + name, 'semantic_key': 'cross', 'style': {}}
+            for name in ('A', 'B')]
+
+
+def assert_icon_saved(page, store, name, expected):
+    from playwright.sync_api import expect
+    expect(page.locator('.personal-draft .draft-state')).to_contain_text('已保存到项目')
+    actual = ui_journal.get(store.project_root, name)['record']['draft']['content']['icon_ui']
+    assert actual == expected
+
+
+@pytest.mark.parametrize('entry', ['first', 'replacement', 'retry'])
+@pytest.mark.parametrize('configuration', ['method', 'asset', 'sample'])
+def test_icon_configuration_preserves_opinions_before_notes_are_ready(icon_store, entry, configuration):
+    from playwright.sync_api import expect
+    rows = opinions(icon_store); samples = icon_samples()
+    original = {'method': 'reuse' if configuration == 'sample' else 'standard', 'asset': 'workflow', 'sample_identity': samples[0],
+                'annotation_refs': [rows[1]['ref']]}
+    save_ui(icon_store, 'draft-B', {'icon_ui': original})
+    if entry == 'replacement':
+        save_ui(icon_store, 'draft-A', {'icon_ui': {**original, 'annotation_refs': [rows[0]['ref']]}})
+    with browser_for(icon_store.project_root) as (page, server):
+        page.route('**/api/icons/list?*', lambda route: route.fulfill(json={'proposals': [], 'recipes': [], 'samples': samples}))
+        held = []
+        def hold_notes(route):
+            held.append((route, route.fetch()))
+            page.evaluate('(count) => window.iconNotesHeld = count', len(held))
+        def fail_notes(route):
+            route.abort()
+        if entry == 'first': page.route('**/api/annotations', hold_notes)
+        if entry == 'retry': page.route('**/api/annotations', fail_notes)
+        open_page(page, server, icon_store)
+        if entry == 'replacement':
+            restore(page, 'draft-A')
+        page.get_by_role('button', name='图标优化', exact=True).click()
+        boxes = page.locator('.icon-opinions input')
+        if entry == 'replacement':
+            expect(boxes.nth(0)).to_be_checked()
+            page.route('**/api/annotations', hold_notes)
+            page.get_by_role('button', name='刷新图标方案', exact=True).click()
+            page.wait_for_function('() => window.iconNotesHeld >= 1')
+            restore(page, 'draft-B')
+            page.get_by_role('button', name='图标优化', exact=True).click()
+            page.wait_for_function('() => window.iconNotesHeld >= 2')
+        elif entry == 'first':
+            page.wait_for_function('() => window.iconNotesHeld >= 1')
+        else:
+            expect(page.get_by_role('button', name='重新读取已保存意见', exact=True)).to_be_visible()
+        expect(page.get_by_label('图标处理方式')).to_have_value(original['method'])
+        expect(page.get_by_label('建议的标准图标')).to_have_value('workflow')
+        expect(page.get_by_label('已采用图标样例').locator('option')).to_have_count(3)
+        expect(boxes).to_have_count(0)
+        expected = copy.deepcopy(original)
+        with page.expect_response(lambda response: response.request.method == 'POST'
+                                 and response.url.endswith('/api/drafts/save')
+                                 and response.request.post_data_json['draft']['draft_id'] == 'draft-B') as receipt:
+            if configuration == 'method':
+                page.get_by_label('图标处理方式').select_option('redraw'); expected['method'] = 'redraw'
+            elif configuration == 'asset':
+                page.get_by_label('建议的标准图标').select_option('file-text'); expected['asset'] = 'file-text'
+            else:
+                page.get_by_label('已采用图标样例').select_option(index=2); expected['sample_identity'] = samples[1]
+        assert receipt.value.json()['record']['draft']['content']['icon_ui'] == expected
+        assert_icon_saved(page, icon_store, 'draft-B', expected)
+        page.evaluate("() => Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>window.iconCopy=text}})")
+        page.get_by_role('button', name='复制给 Agent 的图标要求', exact=True).click()
+        expect(page.locator('.icon-workbench [role=status]')).to_contain_text('请先核实当前草稿与本页意见')
+        assert page.evaluate('window.iconCopy === undefined')
+        if entry == 'retry':
+            page.unroute('**/api/annotations', fail_notes)
+            page.route('**/api/annotations', hold_notes)
+            page.get_by_role('button', name='重新读取已保存意见', exact=True).click()
+            page.wait_for_function('() => window.iconNotesHeld >= 1')
+        # B returns first; the prior editor's A response must not change it.
+        held[-1][0].fulfill(response=held[-1][1])
+        expect(boxes).to_have_count(2); expect(boxes.nth(1)).to_be_checked()
+        for route, response in held[:-1]: route.fulfill(response=response)
+        page.unroute('**/api/annotations', hold_notes)
+        expect(boxes.nth(0)).not_to_be_checked()
+        page.get_by_role('button', name='复制给 Agent 的图标要求', exact=True).click()
+        page.wait_for_function('() => Boolean(window.iconCopy)')
+        payload = page.evaluate('JSON.parse(window.iconCopy)')
+        assert payload['annotation_refs'] == expected['annotation_refs'] and payload['opinions'] == [rows[1]['annotation']]
+        assert payload['requested_method'] == expected['method']
+        assert payload['suggested_asset_id'] == (expected['asset'] if expected['method'] == 'standard' else None)
+        assert payload['adopted_sample'] == (expected['sample_identity'] if expected['method'] == 'reuse' else None)
+        assert_icon_saved(page, icon_store, 'draft-B', expected)
+        page.reload(); page.locator('.page-tools').wait_for()
+        if entry == 'replacement': restore(page, 'draft-B')
+        page.get_by_role('button', name='图标优化', exact=True).click()
+        expect(boxes.nth(1)).to_be_checked(); expect(boxes.nth(0)).not_to_be_checked()
+        expect(page.get_by_label('图标处理方式')).to_have_value(expected['method'])
+        expect(page.get_by_label('建议的标准图标')).to_have_value(expected['asset'])
+        expect(page.get_by_label('已采用图标样例')).to_have_value(
+            page.get_by_label('已采用图标样例').locator('option').nth(2 if configuration == 'sample' else 1).get_attribute('value'))
+        assert_icon_saved(page, icon_store, 'draft-B', expected)
+
+
+@pytest.mark.parametrize('selection', ['B', 'none'])
+def test_icon_selection_during_refresh_is_saved_and_not_revived(icon_store, selection):
+    from playwright.sync_api import expect
+    rows = opinions(icon_store)
+    save_ui(icon_store, 'draft-refresh', {'icon_ui': {'method': 'redraw', 'asset': '',
+        'sample_identity': None, 'annotation_refs': [rows[0]['ref']]}})
+    with browser_for(icon_store.project_root) as (page, server):
+        open_page(page, server, icon_store)
+        page.get_by_role('button', name='图标优化', exact=True).click()
+        boxes = page.locator('.icon-opinions input'); expect(boxes.nth(0)).to_be_checked()
+        page.get_by_role('button', name='笔记', exact=True).click()
+        detail = page.locator('details.source-detail').filter(has_text='恢复、下载与版本详情')
+        if not detail.evaluate('n => n.open'): detail.locator(':scope > summary').click()
+        page.get_by_role('button', name='图标优化', exact=True).click()
+        page.evaluate('() => window.beforeIconRead = document.querySelector(".icon-opinions input")')
+        held = []
+        def hold_notes(route):
+            held.append((route, route.fetch())); page.evaluate('() => window.iconRefreshHeld = true')
+        page.route('**/api/annotations', hold_notes)
+        page.get_by_role('button', name='刷新图标方案', exact=True).click()
+        page.wait_for_function('() => window.iconRefreshHeld === true')
+        expected = {'method': 'redraw', 'asset': '', 'sample_identity': None,
+                    'annotation_refs': [rows[1]['ref']] if selection == 'B' else []}
+        with page.expect_response(lambda response: response.request.method == 'POST' and response.url.endswith('/api/drafts/save')) as receipt:
+            boxes.nth(0).uncheck()
+            if selection == 'B': boxes.nth(1).check()
+            # Explicit saving must capture the latest selection before the read finishes.
+            page.get_by_role('button', name='笔记', exact=True).click()
+            page.get_by_role('button', name='保存个人草稿', exact=True).click()
+        assert receipt.value.json()['record']['draft']['content']['icon_ui'] == expected
+        assert_icon_saved(page, icon_store, 'draft-refresh', expected)
+        for route, response in held: route.fulfill(response=response)
+        page.unroute('**/api/annotations', hold_notes)
+        page.wait_for_function('() => !window.beforeIconRead.isConnected')
+        page.get_by_role('button', name='图标优化', exact=True).click()
+        expect(boxes.nth(0)).not_to_be_checked()
+        if selection == 'B': expect(boxes.nth(1)).to_be_checked()
+        else: expect(boxes.nth(1)).not_to_be_checked()
+        page.evaluate("() => Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>window.iconCopy=text}})")
+        page.get_by_role('button', name='复制给 Agent 的图标要求', exact=True).click()
+        if selection == 'B':
+            page.wait_for_function('() => Boolean(window.iconCopy)')
+            payload = page.evaluate('JSON.parse(window.iconCopy)')
+            assert payload['annotation_refs'] == expected['annotation_refs'] and payload['opinions'] == [rows[1]['annotation']]
+        else:
+            expect(page.locator('.icon-workbench [role=status]')).to_contain_text('请先框选、保存意见并在这里选入')
+            assert page.evaluate('window.iconCopy === undefined')
+        assert_icon_saved(page, icon_store, 'draft-refresh', expected)
+        page.reload(); page.locator('.page-tools').wait_for()
+        page.get_by_role('button', name='图标优化', exact=True).click()
+        expect(boxes.nth(0)).not_to_be_checked()
+        if selection == 'B': expect(boxes.nth(1)).to_be_checked()
+        else: expect(boxes.nth(1)).not_to_be_checked()
+
+
 @pytest.mark.parametrize('replacement', ['B', 'empty', 'absent'])
 def test_icon_editor_replacement_rebuilds_selection_and_rejects_late_reads(icon_store, replacement):
     from playwright.sync_api import expect

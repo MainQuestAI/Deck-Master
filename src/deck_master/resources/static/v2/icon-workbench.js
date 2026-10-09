@@ -98,7 +98,8 @@ export function iconWorkbench(app,data){
     el('label',{},'跨页复用样例',sample),
     button('复制给 Agent 的图标要求',handoff));
   body.append(listingState,listingRetry,status,proposals,recipes);
-  function persist(){const e=app.editor;if(!e||e!==boundEditor||e.readonly||disposed)return;selectionRefs=[...selected.values()].map(n=>n.ref);e.draft.content.icon_ui={method:method.value,asset:assetChoice,sample_identity:sampleChoice,annotation_refs:selectionRefs};e.changed();}
+  // Configuration edits preserve restored refs even while their opinion records are unread.
+  function persist(){const e=app.editor;if(!e||e!==boundEditor||e.readonly||disposed)return;e.draft.content.icon_ui={method:method.value,asset:assetChoice,sample_identity:sampleChoice,annotation_refs:selectionRefs};e.changed();}
   method.addEventListener('change',persist);sample.addEventListener('change',()=>{sampleChoice=samples.find(v=>sampleKey(v)===sample.value)||null;persist();});
   asset.addEventListener('change',()=>{assetChoice=asset.value;persist();drawAssetPreview();});
   function blocked(){return disposed||busy||app.readonly||app.historical||app.editor?.readonly||!app.editor||app.business.entries.size||app.business.loadWarning;}
@@ -156,7 +157,7 @@ export function iconWorkbench(app,data){
         const pageMatches=canonical(note.page_ref)===canonical(layerRefs.content);
         const basisSame=scope==='page'?pageMatches:pageMatches&&canonical(note.artifact_ref)===canonical(layerRefs[stage]);
         const checked=selected.has(n.ref.sha256)||wanted.some(r=>canonical(r)===canonical(n.ref));if(checked)selected.set(n.ref.sha256,n);
-        const box=el('input',{type:'checkbox',checked});box.addEventListener('change',()=>{if(box.checked)selected.set(n.ref.sha256,n);else selected.delete(n.ref.sha256);persist();});
+        const box=el('input',{type:'checkbox',checked});box.addEventListener('change',()=>{if(box.checked)selected.set(n.ref.sha256,n);else selected.delete(n.ref.sha256);selectionRefs=[...selected.values()].map(n=>n.ref);persist();});
         const loc=note.location, pct=value=>Math.round(value*100)+'%';
         const position=scope==='page'?'整页文字定位':loc.kind==='point'?`点位 ${pct(loc.x)} / ${pct(loc.y)}`:loc.kind==='rect'?`框选 ${pct(loc.x)} / ${pct(loc.y)} · ${pct(loc.width)} × ${pct(loc.height)}`:'整图文字定位';
         const scopeLabel=scope==='page'?'整页':({original_image:'原图',svg:'SVG',ppt:'PPT'})[note.layer];
