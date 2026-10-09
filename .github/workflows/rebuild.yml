@@ -95,7 +95,7 @@ jobs:
         run: python examples/workbench/w12_installed_regressions.py --out /tmp/workbench-browser/installed-regressions.json
       - name: Preserve installed UI evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: workbench-browser
           path: /tmp/workbench-browser
