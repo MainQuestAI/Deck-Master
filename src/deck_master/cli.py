@@ -232,10 +232,11 @@ def build_parser() -> argparse.ArgumentParser:
         "content": {"plan": ("input",), "commit": ("plan-id", "base-revision", "operation-id"), "inputs": ("input", "base-revision", "operation-id"), "source": ("source-id",), "lineage": ("page-id",)},
         "icons": {"inspect": ("page-id",), "catalog": (), "list": (), "propose": ("input",), "confirm": ("proposal-id", "base-revision", "operation-id"), "plan": ("input",), "draft": ("recipe-id", "page-id")},
         "candidate-preview": {"request": ("candidate-id",), "status": ("candidate-id",)},
-        "styles": {"list": (), "show": ("recipe-id",), "propose": ("input",), "confirm": ("proposal-id", "base-revision", "operation-id"), "plan": ("input",)},
+        "styles": {"analyze": ("input", "base-revision", "operation-id"), "list": (), "show": ("recipe-id",), "propose": ("input",), "confirm": ("proposal-id", "base-revision", "operation-id"), "plan": ("input",)},
     }.items():
         group = sub.add_parser(name)
         commands_parser = group.add_subparsers(dest="workbench_command", required=True)
+        if name == "styles": style_commands = commands_parser
         for command, flags in commands.items():
             command_parser = commands_parser.add_parser(command)
             command_parser.add_argument("--project", required=True)
@@ -258,6 +259,16 @@ def build_parser() -> argparse.ArgumentParser:
                 command_parser.add_argument("--revision")
                 if command == "list":
                     command_parser.add_argument("--page-id")
+
+    refs_parser = style_commands.add_parser('references')
+    refs_commands = refs_parser.add_subparsers(dest='reference_command', required=True)
+    for command in ('import', 'list', 'show'):
+        leaf = refs_commands.add_parser(command); leaf.add_argument('--project', required=True)
+        if command == 'import':
+            for flag in ('file', 'base-revision', 'operation-id'): leaf.add_argument('--' + flag, required=True)
+        else:
+            leaf.add_argument('--revision')
+            if command == 'show': leaf.add_argument('--reference-id', required=True)
 
     requests = sub.add_parser("requests", help="freeze or read an immutable generation input")
     requests_sub = requests.add_subparsers(dest="requests_command", required=True)
@@ -496,9 +507,14 @@ def main(argv: list[str] | None = None) -> int:
                     external_use=options.external_use,
                 )
             )
+        if options.command == 'styles' and options.workbench_command == 'references':
+            from . import visual_styles
+            if options.reference_command == 'import':
+                return _emit(visual_styles.import_reference(options.project, file=options.file, base_revision=options.base_revision, operation_id=options.operation_id))
+            return _emit(visual_styles.listing(options.project, revision=options.revision, reference_id=getattr(options,'reference_id',None)))
         if options.command in ("annotations", "changes", "operations", "candidates", "stages", "styles", "content", "ui", "icons", "candidate-preview"):
             from . import annotation_service, changes, operations, candidates, stages, styles, content_ops, ui_journal
-            from . import icons, candidate_preview
+            from . import icons, candidate_preview, visual_styles
             actions = {**{("icons", k): v for k,v in {"inspect":icons.inspect,"catalog":icons.catalog,"list":icons.listing,"propose":icons.propose,"confirm":icons.confirm,"plan":icons.plan,"draft":icons.draft}.items()},
                        ("candidate-preview", "request"):candidate_preview.request, ("candidate-preview", "status"):candidate_preview.status,
                        ("content", "plan"): content_ops.plan, ("content", "commit"): content_ops.commit, ("content", "inputs"): content_ops.inputs, ("content", "source"): content_ops.source, ("content", "lineage"): content_ops.lineage,
@@ -511,7 +527,7 @@ def main(argv: list[str] | None = None) -> int:
                        ("candidates", "decision"): candidates.decide,
                        ("ui", "plan-clear"): ui_journal.plan_clear, ("ui", "commit-clear"): ui_journal.commit_clear,
                        ("stages", "assemble"): stages.assemble,
-                       ("styles", "list"): styles.listing, ("styles", "show"): styles.show,
+                       ("styles", "analyze"): visual_styles.analyze, ("styles", "list"): styles.listing, ("styles", "show"): styles.show,
                        ("styles", "propose"): styles.propose, ("styles", "confirm"): styles.confirm, ("styles", "plan"): styles.plan}
             fields = {key: getattr(options, key) for key in
                       ("base_revision", "operation_id", "plan_id", "manifest_digest", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id", "source_id", "locator", "extract_sha256", "retry", "include_stale") if hasattr(options, key)}

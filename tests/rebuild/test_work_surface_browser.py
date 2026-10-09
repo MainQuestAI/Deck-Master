@@ -52,7 +52,7 @@ def test_seven_surfaces_at_all_acceptance_sizes(workbench_page, tmp_path):
             if surface not in ('launcher', 'overview'):
                 expect(page.locator('#view-title')).to_be_focused()
             if surface in ('gallery', 'page'):
-                page.locator('[data-image-state="ready"] canvas').first.wait_for()
+                page.locator('[data-image-state="ready"] canvas:visible').first.wait_for()
             for width, height in [(1280, 800), (1440, 900), (390, 844)]:
                 page.set_viewport_size({'width': width, 'height': height})
                 page.evaluate('() => scrollTo(0,0)')

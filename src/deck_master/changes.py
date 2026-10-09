@@ -29,6 +29,15 @@ def fail(field, message, *, conflict=False):
 def _reference_files(store, document, references):
     files = []
     for reference in references:
+        if reference.get('kind') == 'external':
+            from .visual_styles import owned
+            record, _ = owned(store, document, reference['reference_id'])
+            if record['artifact_ref'] != reference['artifact_ref'] or reference['role'] != 'reference':
+                fail('references', 'external reference bytes differ from the imported version')
+            artifact = store.read_object_json(record['preview_ref'])
+            store.read_object_bytes(artifact['file'])
+            files.append({'file': artifact['file'], 'role': 'reference'})
+            continue
         snapshot = load_snapshot(store, reference['revision_id'])
         entry = next((e for e in snapshot['pages'] if e['page_id'] == reference['page_id']), None)
         if snapshot['project_id'] != document['project_id'] or not entry or entry.get('blueprint') != reference['artifact_ref']:
@@ -226,6 +235,12 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
             task['stage_request']['style_recipe_ref'] = plan['input']['style_recipe_ref']
             task['inputs'].append(plan['input']['style_recipe_ref'])
             task['required_capabilities'].append('style_recipe')
+            if store.read_object_json(plan['input']['style_recipe_ref'])['schema_version'] == 'style_recipe.v2':
+                task['required_capabilities'].append('visual_reference')
+                # The target image anchors all explicitly preserved dimensions.
+                original = store.read_object_json(entry['blueprint'])
+                task['stage_request']['references'].insert(0, {'file': original['file'], 'role': 'reference'})
+                task['stage_request']['target_reference_ref'] = entry['blueprint']
         if plan['input'].get('icon_recipe_ref'):
             task['stage_request']['icon_recipe_ref'] = plan['input']['icon_recipe_ref']
             task['inputs'].append(plan['input']['icon_recipe_ref'])

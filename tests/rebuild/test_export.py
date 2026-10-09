@@ -139,6 +139,41 @@ def test_review_and_delivery_of_passing_current_deck(tmp_path):
     assert Store(tmp_path/'internal'/'project').load_document()==store.load_document()
 
 
+def test_adopting_an_existing_svg_candidate_invalidates_delivery_with_named_gaps(tmp_path):
+    """The audit's before/after pair: a passing deck exports, then adoption refuses."""
+    import uuid as uuid_mod
+    from deck_master import candidates as candidates_mod, exports
+    from test_candidates import accept, dispatch, plan as plan_adoption, start
+    project, store = _passing_deck(tmp_path)
+    # The candidate/changes machinery works on explicit workbench.v3 projects, and
+    # an SVG trial needs the current original image to exist.
+    from PIL import Image
+    from deck_master.pipeline import artifact as adopt_artifact
+    document = store.load_document()
+    work = store.staging_dir / 'workbench-basis'; work.mkdir(parents=True, exist_ok=True)
+    image_file = work / 'page.png'; Image.new('RGB', (960, 540), 'white').save(image_file)
+    bumped = bump_revision(document, {'operation_id': 'workbench-basis', 'kind': 'task_update',
+                                      'description': 'workbench basis', 'read_set': []})
+    bumped['compatibility'] = {'project_format': 'workbench.v3', 'minimum_writer': 'workbench-quality.v1'}
+    bumped['pages'][0]['blueprint'] = adopt_artifact(store, image_file, 'blueprint', page_id='p1')
+    store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id='workbench-basis')
+    assert exports.create(project, purpose='delivery')['export_id']
+    task = dispatch(store, 'p1'); start(store, task)
+    candidate_id = accept(store, task)['candidate_ids'][0]
+    value = plan_adoption(store, [candidate_id])
+    candidates_mod.adopt(store.project_root, input=value, base_revision=value['base_revision'],
+                         operation_id=str(uuid_mod.uuid4()))
+    adopted = store.load_document()
+    assert adopted['pages'][0]['svg'] == value['selections'][0]['result_ref'], 'adoption replaces the page SVG'
+    with pytest.raises(exports.ExportError) as failure:
+        exports.create(project, purpose='delivery')
+    gaps = failure.value.payload()['error']['gaps']
+    reasons = {(gap['layer'], gap['reason']) for gap in gaps}
+    assert any(layer in ('deck_outputs', 'ppt', 'pptx') for layer, _ in reasons), reasons
+    assert any(reason in ('not_recorded', 'basis_changed') for _, reason in reasons), reasons
+    assert exports.create(project, purpose='review')['export_id'], 'a review copy stays available'
+
+
 def test_missing_human_reviews_reported_not_evaluated(tmp_path):
     # Six required checks pass but no human/professional review exists: the
     # export must say not_evaluated, never a fabricated human pass.

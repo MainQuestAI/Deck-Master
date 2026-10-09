@@ -49,7 +49,7 @@ def test_fixed_revision_states_cas_replay_and_business_immutability(project):
     assert saved2['record']['etag'] != saved['record']['etag']
 
 
-@pytest.mark.parametrize('patch', [{'selected_page_ids': ['p01']}, {'plan_id': 'plan'}, {'operation_id': 'op'}, {'search': 'x' * 201}, {'filter': 'ready'}, {'sort': 'reverse'}, {'project_identity': '0' * 64}, {'revision_id': 'not-in-this-project'}])
+@pytest.mark.parametrize('patch', [{'selected_page_ids': ['p01', 42]}, {'selected_page_ids': 'p01'}, {'selected_page_ids': ['p0' + '1' * 200]}, {'plan_id': 'plan'}, {'operation_id': 'op'}, {'search': 'x' * 201}, {'filter': 'ready'}, {'sort': 'reverse'}, {'project_identity': '0' * 64}, {'revision_id': 'not-in-this-project'}])
 def test_invalid_or_business_fields_never_overwrite_personal_record(project, patch):
     value = state(project)
     saved = overview_state.save(project, state=value)
@@ -57,6 +57,16 @@ def test_invalid_or_business_fields_never_overwrite_personal_record(project, pat
     with pytest.raises((RuntimeError, ValueError)):
         overview_state.save(project, state={**value, **patch}, expected_etag=saved['record']['etag'])
     assert overview_state._file(Store(project)).read_bytes() == before
+
+
+def test_selected_page_ids_is_a_persisted_reading_field_and_never_business(project):
+    """D1：选择是 ui_overview 的阅读状态字段；合法值可保存，业务事实不受影响。"""
+    store = Store(project)
+    value = state(project, selected_page_ids=['p01', 'p02'])
+    before = business(project)
+    saved = overview_state.save(project, state=value)
+    assert overview_state.get(project, revision=value['revision_id'])['record']['state']['selected_page_ids'] == ['p01', 'p02']
+    assert business(project) == before
 
 
 def test_retention_is_bounded_reads_do_not_add_history_and_versions_do_not_inherit(project):
@@ -170,3 +180,64 @@ def test_http_requires_fixed_query_allows_personal_readonly_preferences_and_chan
         assert business(project) == before
     finally:
         server.stop()
+
+
+def test_oversized_selection_record_is_trimmed_or_refused_never_written_unreadable(project):
+    """评审 F1：写入永不产生读不回的记录——超预算先丢最旧，单份也放不下就拒绝。"""
+    import pytest as _pytest
+    from deck_master.local_state import LocalStateError
+    store = Store(project)
+    long_ids = [f'page-{index:05d}-' + 'a' * 16 for index in range(500)]
+    # 三份各自可放下、合计超预算的状态：保存第三份时最旧的一份被丢弃。
+    revisions, saved = [], None
+    for index in range(3):
+        commit(store, copy.deepcopy(store.load_document()), str(uuid.uuid4()))
+        revisions.append(store.current_revision_id())
+        value = state(project, selected_page_ids=long_ids)
+        saved = overview_state.save(project, state=value, expected_etag=saved['record']['etag'] if saved else None)
+    assert overview_state.get(project, revision=revisions[0])['record'] is None
+    assert overview_state.get(project, revision=revisions[-1])['record']['state']['selected_page_ids'] == long_ids
+    assert overview_state._file(Store(project)).stat().st_size <= 32_000
+    # 单份也放不下（合法 schema 的超长选择）：明确拒绝，文件保持可读。
+    huge = ['x' * 128 for _ in range(500)]
+    with _pytest.raises(LocalStateError):
+        overview_state.save(project, state=state(project, selected_page_ids=huge),
+                            expected_etag=saved['record']['etag'])
+    assert overview_state.get(project, revision=revisions[-1])['record'] is not None
+
+
+def test_fit_probe_is_byte_exact_at_the_reader_boundary(project):
+    """复审 P1-1：探针省掉 etag/真实 sequence 会漏掉 31.9–32 KB 边界带，
+    写出读取端拒收的文件（F1 永久卡死）。边界构造必须能写且能读回。"""
+    from deck_master import overview_state as module
+    from deck_master.local_state import read_json
+    from deck_master.ui_journal import context
+
+    store, document, identity = context(project)
+    revision = document['revision_id']
+
+    def state_with_selection(page_count):
+        return {'schema_version': 'ui_overview.v1', 'revision_id': revision,
+                'search': '', 'filter': 'all', 'sort': 'ascending',
+                'selected_page_ids': [f'p{n:03}' for n in range(1, page_count + 1)]}
+
+    # 找到恰好落在预算边界内层的规模：先粗放放大到被裁剪，再二分回可用规模。
+    low, high = 1, 300
+    while low < high:
+        mid = (low + high + 1) // 2
+        try:
+            module._fit(current=document, identity=identity,
+                        states=[state_with_selection(mid)] * module.MAX_READINGS, previous=None)
+            low = mid
+        except module.LocalStateError:
+            high = mid - 1
+    boundary = state_with_selection(low)
+
+    # 用 _fit 的最终结果直接写出（探针判 OK 的规模必须真的可写可读）。
+    states = [boundary] * module.MAX_READINGS
+    fitted = module._fit(current=document, identity=identity, states=states, previous=None)
+    record = module._write(store, document, identity, fitted, None)
+    path = module._file(store)
+    assert path.stat().st_size <= module.MAX_RECORD_BYTES, path.stat().st_size
+    assert read_json(path, max_bytes=module.MAX_RECORD_BYTES) is not None
+    assert len(fitted) == module.MAX_READINGS or record['etag']

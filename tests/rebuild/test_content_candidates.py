@@ -142,7 +142,7 @@ def test_single_page_content_trial_records_candidate_without_touching_current(pr
     assert after['pages'] == before['pages'] and after['content_plan'] == before['content_plan']
     assert after['outputs'] == before['outputs']
     assert len(after['candidates']) == 1
-    assert after['compatibility']['minimum_writer'] == 'content-candidates.v1'
+    assert after['compatibility']['minimum_writer'] == 'workbench-quality.v1'
     candidate = store.read_object_json(after['candidates'][0])
     assert candidate['result_kind'] == 'page' and candidate['stage'] == 'content'
     assert candidate['page_id'] == 'p01' and candidate['target_ref'] == before['pages'][0]['page']
@@ -222,7 +222,7 @@ def test_content_writer_floor_locks_out_older_cores(project, monkeypatch):
     task = dispatch_content_trial(path, store)
     start_task(path, task)
     accept(path, task, page_envelope(store, task))
-    assert store.load_document()['compatibility']['minimum_writer'] == 'content-candidates.v1'
+    assert store.load_document()['compatibility']['minimum_writer'] == 'workbench-quality.v1'
     monkeypatch.setattr('deck_master.store.SUPPORTED_WRITERS',
                         ('generation.v1', 'content-plan.v1', 'changes.v1', 'candidates.v1',
                          'run-desk.v1', 'style-recipes.v1', 'content-ops.v1'))

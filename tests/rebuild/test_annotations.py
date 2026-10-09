@@ -37,6 +37,34 @@ def test_save_only_opinions_replays_and_keeps_production_identity(sample):
     assert len(records) == 1 and records[0]['annotation']['base_revision'] == doc['revision_id']
 
 
+def test_list_filters_scopes_and_immutable_snapshots(sample):
+    store, doc, page = sample
+    project = {k: v for k, v in page.items() if k not in ('page_id', 'page_ref')}; project['scope'] = 'project'
+    chapter = {'schema_version': 'annotation.v1', 'project_id': doc['project_id'], 'base_revision': doc['revision_id'],
+               'scope': 'chapter', 'chapter_id': 'example', 'content_plan_ref': doc['content_plan'],
+               'intent': 'note', 'body': 'chapter note', 'status': 'open', 'location': {'kind': 'whole'}}
+    artwork = {**page, 'scope': 'artifact', 'layer': 'original_image', 'artifact_ref': doc['pages'][0]['blueprint'],
+               'body': 'artwork note'}
+    assert len(save(store, doc, [page, project, chapter, artwork])['operation_result']['annotations']) == 4
+    recorded_at = store.current_revision_id()
+    save(store, store.load_document(), [{**page, 'body': 'saved after the first opinion'}])
+    # An opinion written against an older basis is still part of the project: the
+    # list may never filter on `base_revision == current`, or it would vanish.
+    assert len(annotations.list_annotations(store.project_root)['annotations']) == 5
+    assert [row['annotation']['scope'] for row in annotations.list_annotations(store.project_root, scope='page')['annotations']] == ['page', 'page']
+    assert len(annotations.list_annotations(store.project_root, scope='chapter')['annotations']) == 1
+    assert len(annotations.list_annotations(store.project_root, page_id='p01', layer='original_image')['annotations']) == 1
+    assert annotations.list_annotations(store.project_root, page_id='p02')['annotations'] == []
+    # A fixed older snapshot shows only what was recorded by then.
+    earlier = annotations.list_annotations(store.project_root, revision=recorded_at)['annotations']
+    assert len(earlier) == 4 and all(row['annotation']['body'] != 'saved after the first opinion' for row in earlier)
+    assert annotations.list_annotations(store.project_root, revision=recorded_at)['filters'] == {'page_id': None, 'layer': None, 'scope': None}
+    for bad in ({'scope': 'deck'}, {'layer': 'blueprint'}, {'page_id': 'p99'}):
+        with pytest.raises(OperationError) as failure:
+            annotations.list_annotations(store.project_root, **bad)
+        assert failure.value.error_code == 'invalid_input' and failure.value.path in bad
+
+
 @pytest.mark.parametrize('bad', ['page_ref', 'scope', 'project', 'extra', 'text_on_image', 'rect_bounds', 'dimensions'])
 def test_batch_failure_has_zero_commit(sample, bad):
     store, doc, note = sample; invalid = copy.deepcopy(note)

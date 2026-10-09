@@ -1,5 +1,6 @@
+import {historyLabel} from './history-labels.js';
 import {get, post, revisionQuery, readableError} from './api.js';
-import {el, button, modal, version} from './dom.js';
+import {el, button, modal, version, actionGroup} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {productionView} from './production-view.js';
 
@@ -14,14 +15,40 @@ const layerNames = {content: '逐页稿', page: '逐页稿', blueprint: '原图'
 const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
 const exportURL = (record, name) => '/api/exports/' + encodeURIComponent(record.export_id) + '/files/' + name.split('/').map(encodeURIComponent).join('/');
 
+// Each gap names the rule it actually broke and the honest next step. A locate
+// action is never renamed into a repair, toolchain steps say they happen outside
+// the page, and a reason this app cannot classify keeps its raw detail instead of
+// being flattened into "待检查".
+const gapRules = {
+  not_recorded: {label: '对应产物未记录', next: '先更新对应预览或编译整稿，再重新检查'},
+  input_reconciliation_pending: {label: '输入待协调', next: '进入输入协调流程；导出用途与固定版本保持不变'},
+  needs_reconciliation: {label: '输入待协调', next: '进入输入协调流程；导出用途与固定版本保持不变'},
+  basis_changed: {label: '制作或检查依据已变化', next: '定位受影响对象，重新计划对应更新或检查'},
+  not_evaluated: {label: '此维度尚未评估', next: '完成对应质量检查；未评估不能当作通过'},
+  unresolved: {label: '仍有未解决问题', next: '查看具体问题，处理后重新检查'},
+  page_limit_violation: {label: '不符合页数规则', next: '按该规则调整页数或提供对应证据'},
+};
+const toolchainLayers = new Set(['ppt', 'ppt_preview', 'deck_outputs', 'render_report', 'conversion']);
+const locateLayer = layer => layer === 'blueprint' || String(layer).startsWith('blueprint_') ? 'original_image'
+  : String(layer).startsWith('svg') ? 'svg' : String(layer).startsWith('ppt') || layer === 'conversion' ? 'ppt' : 'content';
+
 function gapsView(app, gaps, revision) {
   if (!gaps?.length) return el('p', {class: 'muted'}, '未列出缺项；正式交付仍由服务核对所选快照。');
   const pageMap = new Map(app.summary.pages.map((p, i) => [p.page_id, `${i + 1}. ${p.title || p.page_id}`]));
   const node = el('div', {class: 'stack export-gaps'}); let count = 20;
   function render() {
-    node.replaceChildren(el('ul', {class: 'gap-list'}, gaps.slice(0, count).map(gap => el('li', {},
-      el('span', {}, `${pageMap.get(gap.page_id) || gap.page_id || '整稿'} · ${layerNames[gap.layer] || gap.layer} · ${gap.reason === 'basis_changed' ? '制作依据已变化' : gap.reason === 'needs_reconciliation' ? '输入待协调' : gap.reason === 'unresolved' ? '仍有未解决项' : '待检查或补齐'}`),
-      gap.page_id && button('定位此页', () => app.go({surface: 'page', page_id: gap.page_id, revision, layer: gap.layer === 'blueprint' || gap.layer.startsWith('blueprint_') ? 'original_image' : gap.layer.startsWith('svg') ? 'svg' : gap.layer.startsWith('ppt') || gap.layer === 'conversion' ? 'ppt' : 'content'}))))));
+    node.replaceChildren(el('ul', {class: 'gap-list'}, gaps.slice(0, count).map(gap => {
+      const rule = gapRules[gap.reason];
+      const actions = el('div', {class: 'row wrap'});
+      if (gap.page_id) actions.append(button('定位此页', () => app.go({surface: 'page', page_id: gap.page_id, revision, layer: locateLayer(gap.layer)})));
+      actions.append(button('查看任务与交付', () => app.go({surface: 'runs', revision})));
+      return el('li', {},
+        el('p', {}, `${pageMap.get(gap.page_id) || gap.page_id || '整稿'} · ${layerNames[gap.layer] || gap.layer || '整稿'} · ${rule ? rule.label : '暂无法自动处理'}`),
+        el('p', {class: 'muted'}, rule ? rule.next : '保留原始原因与范围，查看证据或交给制作工具核查后处理；这里不猜测修复动作。'),
+        !rule && el('p', {class: 'muted'}, `原始原因：${gap.reason || '未记录'}${gap.dimension ? ` · ${gap.dimension}` : ''}`),
+        toolchainLayers.has(gap.layer) ? el('p', {class: 'muted'}, '这一步由制作工具链完成（编译与渲染），网页不会代替执行；缺工具时按任务与交付里的工具说明恢复环境后重新编译。') : null,
+        actions, !rule && el('details', {}, el('summary', {}, '原始缺项记录'), el('code', {}, JSON.stringify(gap))));
+    })));
     if (gaps.length > count) node.append(button(`继续查看缺项（还有 ${gaps.length - count} 项）`, () => { count += 30; render(); }));
   }
   render(); return node;
@@ -48,10 +75,18 @@ export function deliveryDesk(app) {
   const revision = app.route.revision, key = `deck-master:v3:exports:${app.info.project_identity}`;
   const status = el('p', {role: 'status'}), results = el('div', {class: 'stack export-results'}), facts = el('div', {class: 'stack'});
   let disposed = false; app.disposables.push(() => { disposed = true; });
+  // UX-05b：文件区按「版本—用途—结果」组织：版本先固定，正式用途（交付/审阅）
+  // 在先，工程恢复包退到辅助位置；生成结果按同一用途与版本列出。
+  const purposeCard = (purpose, primary) => el('article', {class: 'export-purpose stack'},
+    el('h3', {}, names[purpose]), el('p', {}, descriptions[purpose]),
+    button('生成' + names[purpose], event => create(purpose, event.currentTarget), primary, {disabled: Boolean(app.info.sample?.readonly)}));
   const node = panel('版本与文件', el('p', {class: 'export-version'}, `本次文件固定为 ${version(revision)}。后台新结果不会改变已经生成的包。`),
-    el('div', {class: 'export-purpose-grid'}, Object.entries(names).map(([purpose, name]) => el('article', {class: 'export-purpose stack'},
-      el('h3', {}, name), el('p', {}, descriptions[purpose]), button('生成' + name, event => create(purpose, event.currentTarget), purpose === 'review', {disabled: Boolean(app.info.sample?.readonly)})))),
-    app.info.sample?.readonly && el('p', {class: 'muted'}, '只读示例不生成文件包。请在自己的项目操作。'), status, results);
+    el('section', {class: 'export-group stack'}, el('h3', {class: 'export-group-title'}, '正式用途（按此版本生成）'),
+      el('div', {class: 'export-purpose-grid'}, purposeCard('delivery', true), purposeCard('review', false))),
+    el('details', {class: 'export-group export-recovery'}, el('summary', {}, '工程恢复包（辅助，仅在需要恢复或交付内部材料时使用）'),
+      el('div', {class: 'stack'}, purposeCard('engineering', false))),
+    app.info.sample?.readonly && el('p', {class: 'muted'}, '只读示例不生成文件包。请在自己的项目操作。'), status,
+    el('h3', {class: 'export-group-title'}, '生成结果'), results);
   node.id = 'delivery-desk'; node.querySelector('h2').tabIndex = -1;
   function read() {
     const value = JSON.parse(localStorage.getItem(key) || '[]');
@@ -119,15 +154,75 @@ export function deliveryDesk(app) {
 
 export function historyDesk(app, history) {
   const revision = app.route.revision;
-  const selected = el('select', {'aria-label': '阅读历史版本'}, history.revisions.map(item => el('option', {value: item.revision_id},
-    `${version(item.revision_id)} · ${item.page_count} 页${item.revision_id === history.current ? ' · 当前' : ''}`)));
-  selected.value = revision;
+  const pageLabels = new Map(app.summary.pages.map((page, index) => [page.page_id, `第 ${index + 1} 页`]));
+  const selected = el('select', {'aria-label': '阅读历史版本'});
+  const allRecords = el('input', {type: 'checkbox', 'aria-label': '显示全部历史记录'});
+  const notice = el('p', {role: 'status'});
+  let cursor = history.pagination?.next_cursor || null, disposed = false, serial = 0, busy = false, showingAll = false;
+  const rows = new Map();
   const restore = button('预览恢复此版本', preview, false, {disabled: !app.historical || Boolean(app.info.sample?.readonly)});
-  selected.addEventListener('change', () => { restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly); });
-  const node = panel('版本记录', el('div', {class: 'row wrap'}, selected,
-    button('读取所选版本', () => app.go({revision: selected.value, task_id: null})),
-    app.summary.pages.length > 0 && button('逐页查看与固定比较', () => app.go({surface: 'page', page_id: app.summary.pages[0].page_id, layer: 'content', revision})), restore),
+  const more = button('更早的修改', () => load(false), false, {disabled: !cursor});
+  // UX-05b：版本区把三个身份分开说清（对账 AC17 的选 A/读 B/当前 C）：
+  // 选中＝下一步操作的目标，已读＝正在查看的版本，当前版本＝项目最新记录。
+  const identity = el('p', {class: 'row wrap history-identity'});
+  const nameFor = rev => {
+    const record = rows.get(rev);
+    if (record) return historyLabel(record, pageLabels);
+    return rev === revision ? (app.historical ? '正在阅读的历史版本' : '当前项目版本') : version(rev);
+  };
+  function stateIdentity() {
+    restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly);
+    restore.title = selected.value !== revision ? '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。' : '';
+    // D15/UAC20：进入 replaceChildren 前构造真实节点数组；条件不满足就不放，
+    // false/空字符串不会变成 "false" 或空徽标文本节点。
+    identity.replaceChildren(
+      el('span', {class: 'state-chip'}, `选中：${nameFor(selected.value)}`),
+      el('span', {class: 'state-chip'}, `已读：${nameFor(revision)}`),
+      el('span', {class: 'state-chip'}, `当前版本：${nameFor(history.current)}`),
+      ...(history.head && history.head !== history.current && history.head !== revision
+        ? [el('span', {class: 'state-chip'}, `读取锚点：${nameFor(history.head)}`)] : []),
+      ...(selected.value !== revision ? [el('span', {}, '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。')] : []));
+  }
+  function append(records, reset = false) {
+    const chosen = reset ? revision : selected.value;
+    if (reset) rows.clear();
+    records.forEach(item => rows.set(item.revision_id, item));
+    // `current` 是项目最新版本；"当前阅读版本"是本次读取的锚点（history.head）。
+    const options = [...rows.values()].map(item => el('option', {value: item.revision_id}, historyLabel(item, pageLabels)
+      + (item.revision_id === revision ? ' · 当前阅读版本' : item.revision_id === history.current ? ' · 项目最新版本' : '')));
+    if (!rows.has(revision)) options.unshift(el('option', {value: revision}, app.historical ? '正在阅读的历史版本' : '当前项目版本'));
+    selected.replaceChildren(...options); selected.value = chosen;
+    if (!selected.value) selected.value = revision;
+    restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly);
+    stateIdentity();
+  }
+  selected.addEventListener('change', () => { restore.disabled = selected.value !== revision || !app.historical || Boolean(app.info.sample?.readonly); stateIdentity(); });
+  allRecords.addEventListener('change', () => load(true));
+  async function load(reset) {
+    if (busy || disposed) { allRecords.checked = showingAll; return; }
+    const requestedAll = allRecords.checked, token = ++serial;
+    const query = new URLSearchParams({revision, limit: 20, related_only: requestedAll ? '0' : '1'});
+    if (!reset && cursor) query.set('cursor', cursor);
+    busy = true; more.disabled = true; allRecords.disabled = true;
+    notice.textContent = '正在读取版本记录；已有选择与比较保持固定。';
+    try {
+      const value = await get('/api/history?' + query);
+      if (disposed || token !== serial) return;
+      append(value.revisions, reset); cursor = value.pagination?.next_cursor || null; showingAll = requestedAll;
+      notice.textContent = showingAll ? '已显示全部类型的记录；任务和个人状态记录也会列出。' : '优先显示正文、产物和页面顺序的修改。';
+    } catch (error) {
+      if (!disposed && token === serial) { allRecords.checked = showingAll; notice.textContent = readableError(error) + ' 已加载的版本仍保留。'; }
+    } finally { if (!disposed && token === serial) { busy = false; more.disabled = !cursor; allRecords.disabled = false; } }
+  }
+  append(history.revisions, true);
+  const versionControls = actionGroup(selected,
+    button('读取所选版本', () => app.go({revision: selected.value, task_id: null})), more,
+    app.summary.pages.length > 0 && button('逐页查看与固定比较', () => app.go({surface: 'page', page_id: app.summary.pages[0].page_id, layer: 'content', revision})), restore);
+  versionControls.classList.add('history-reading-controls');
+  const node = panel('版本记录', identity, versionControls,
+    el('label', {class: 'inline-control'}, allRecords, '全部记录（包括执行与个人状态）'), notice,
     el('p', {class: 'muted'}, '先读取历史版本并查看差异，再预览恢复影响。恢复会创建新版本，当前执行与调用记录不会回滚。'));
+  app.disposables.push(() => { disposed = true; serial++; });
   async function preview() {
     restore.disabled = true;
     try {
@@ -155,7 +250,7 @@ export function historyDesk(app, history) {
           if (!editor.input.value) editor.input.value = `将 ${version(revision)} 的内容恢复到 ${version(current.revision_id)} 之后的新版本；保留执行与停止事实。`; editor.changed();
           await app.business.submit(editor, 'history.restore', {plan_id: planned.plan_id, base_revision: current.revision_id}, {plan_id: planned.plan_id, plan: planned.plan}, result => {
             dialog.close(); app.go({surface: 'runs', revision: result.revision_id, task_id: null});
-          });
+          }, {instruction: `把已阅读的 ${version(revision)} 恢复为 ${version(current.revision_id)} 之后的新版本；恢复 ${impact.changed_pages.length} 页，保留执行与停止记录。`});
           status.textContent = app.business.entries.size ? '结果待核实；原请求已保留，可关闭后在顶部核实。' : '请求已处理；若基准变化，请先比较后重新预览。';
         } catch (error) { status.textContent = readableError(error); }
         finally { confirm.disabled = false; }
@@ -163,7 +258,7 @@ export function historyDesk(app, history) {
       const dialog = modal('确认历史恢复影响', body, [button('取消恢复', () => dialog.close()), confirm]);
       dialog.addEventListener('close', () => editor.dispose(), {once: true}); app.disposables.push(() => editor.dispose());
     } catch (error) { modal('暂不能预览恢复', el('p', {class: 'field-error'}, readableError(error))); }
-    finally { restore.disabled = !app.historical || Boolean(app.info.sample?.readonly); }
+    finally { stateIdentity(); }
   }
   return node;
 }

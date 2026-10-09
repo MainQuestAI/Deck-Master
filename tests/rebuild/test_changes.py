@@ -35,6 +35,23 @@ def start(store, task_id):
                               capabilities=['change_plan', 'generation_request_freeze', 'attempt_binding', 'native_tool_observation'])
 
 
+def test_content_trial_records_the_protocol_stage_and_leaves_the_page_alone(sample):
+    store, doc, value = sample
+    page_ref = doc['pages'][0]['page']
+    # A page-slot trial is only defined for the protocol intent `content`.
+    with pytest.raises(OperationError, match='content trials require intent'):
+        changes.plan(store.project_root, input={**value, 'mode': 'trial', 'intent': 'clarify'})
+    plan, result = commit(store, {**value, 'mode': 'trial', 'intent': 'content', 'instruction': 'Rewrite the page body.'})
+    task_id = result['operation_result']['task_ids'][0]
+    task = next(store.read_object_json(ref) for ref in store.load_document()['tasks']
+                if store.read_object_json(ref)['task_id'] == task_id)
+    assert task['stage_request']['mode'] == 'trial' and task['stage_request']['stage'] == 'content'
+    assert {'candidate_result', 'content_candidate'} <= set(task['required_capabilities'])
+    assert plan['plan']['effects'].startswith('Trial results are immutable candidates')
+    # Planning and committing only record the work: the page moves on adoption only.
+    assert store.load_document()['pages'][0]['page'] == page_ref
+
+
 def test_plan_is_readonly_commit_replay_and_real_status_transitions(sample):
     store, doc, value = sample; before = store.read_current(); identity = content_identity(doc)
     plan = changes.plan(store.project_root, input=value)

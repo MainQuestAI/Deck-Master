@@ -57,6 +57,10 @@ small,.small-text{font-size:12px}
 .row{display:flex;align-items:center;gap:12px}
 .wrap{flex-wrap:wrap}
 .between{justify-content:space-between}
+/* §6/P01：独立动作组——组内独立按钮间距 ≥8px（.row 已有 12px）、触点目标 44px；
+   分段共享边缘控件（.segmented 等）属于各自的局部容器，不在本规则内。 */
+.action-group{align-items:center;gap:8px}
+.action-group>button{min-height:44px}
 
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:20px 0}
 .segmented{display:flex;padding:3px}
@@ -463,4 +467,6 @@ button .ui-icon{vertical-align:-4px}
 /* User-supplied horizontal logo; preserve the original 365:96 ratio. */
 .logo .brand-logo{display:block;width:100%;max-width:176px;height:auto;object-fit:contain}
 
-.batch-actions{margin-top:24px;min-width:0}.batch-actions textarea,.batch-actions select{max-width:100%;width:100%}.batch-impact{overflow-wrap:anywhere}.batch-reference{max-width:240px}.batch-reference img{max-width:100%;height:auto}.matrix-search label{flex-wrap:wrap}.matrix-search select{max-width:100%}
+/* UX-07b 收敛：批量配置已紧邻选页工具条（同一 .stack 间隔），删去旧的 24px
+   上边距覆盖——它属于配置区排在整张矩阵之后的旧布局。 */
+.batch-actions{min-width:0}.batch-actions textarea,.batch-actions select{max-width:100%;width:100%}.batch-impact{overflow-wrap:anywhere}.batch-reference{max-width:240px}.batch-reference img{max-width:100%;height:auto}.matrix-search label{flex-wrap:wrap}.matrix-search select{max-width:100%}

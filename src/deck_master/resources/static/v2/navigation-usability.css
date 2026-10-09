@@ -1,0 +1,45 @@
+/* Navigation and reading fixes; load after workbench.css. */
+.history-reading-controls select { min-width: 240px; max-width: 100%; flex: 1 1 400px; }
+.gallery-filter-disclosure > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.gallery-filter-fields { padding-top: 10px; }
+.overview-state-help { margin: 0 0 16px; }
+.overview-state-help > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.page-context > .source-detail { width: 100%; }
+/* Keep the work itself and its opinion editor ahead of secondary trial forms. */
+.page-trial-entry { margin-bottom: 12px; }
+.page-trial-entry > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+.page-trial-entry > .trial-actions { margin-top: 8px; }
+.annotations-panel > .panel-body { gap: 10px; padding: 12px; }
+.annotations-panel .personal-draft .panel-head { padding-block: 8px; }
+.annotations-panel .personal-draft textarea { min-height: 88px; }
+.annotations-panel .panel-body > .field-error:empty { display: none; }
+.style-primary-phase .panel-body { gap: 12px; }
+.style-primary-phase .style-reference .pooled-image,
+.style-primary-phase .style-primary-target .pooled-image { height: 144px; max-height: 144px; }
+.style-primary-phase .style-reference canvas,
+.style-primary-phase .style-primary-target canvas { max-height: 144px; }
+.style-primary-phase .style-reference > p { font-size: 12px; line-height: 1.4; margin: 4px 0 0; }
+.style-primary-phase [role=status]:empty, .style-primary-phase .stack:empty { display: none; }
+@media (min-width: 768px) {
+  .matrix-wrap { isolation: isolate; }
+  .matrix th:nth-child(2), .matrix td:nth-child(2) { position: sticky; left: 44px; z-index: 1; background: var(--bg, #fff); }
+  .matrix th:first-child, .matrix td:first-child { position: sticky; left: 0; z-index: 2; background: var(--bg, #fff); }
+  .matrix th:last-child, .matrix td:last-child { position: sticky; right: 0; z-index: 2; background: var(--bg, #fff); }
+  .matrix thead th { z-index: 3; }
+}
+@media (max-width: 767px) {
+  .gallery-view > .page-head { margin-bottom: 12px; }
+  .gallery-controls { gap: 8px; margin-bottom: 8px; }
+  .gallery-controls > .segmented { width: 100%; }
+  .gallery-controls > .segmented button { flex: 1; padding-inline: 8px; }
+  .gallery-filter-fields > select, .gallery-filter-fields .gallery-search { width: 100%; }
+  .gallery-legend { padding: 8px 0; gap: 6px; font-size: 13px; }
+  .gallery-legend span:last-child { width: 100%; }
+  .gallery-save:empty { display: none; }
+  .gallery-save { font-size: 12px; margin: 0; }
+  .gallery-viewport { height: auto !important; min-height: 0; overflow: visible; overscroll-behavior: auto; scrollbar-gutter: auto; padding: 0; border: 0; background: transparent; }
+  .gallery.continuous { padding: 0; gap: 24px; }
+  .gallery-view > .matrix-caption { display: none; }
+  .history-reading-controls select { min-width: 0; width: 100%; }
+  .fixed-compare-controls .row > select { max-width: 100%; }
+}

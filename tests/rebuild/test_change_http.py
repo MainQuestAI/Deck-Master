@@ -20,6 +20,27 @@ def running(tmp_path):
     finally: server.stop()
 
 
+def test_annotation_list_http_query_contract(running):
+    project, store, url, token = running; doc = store.load_document(); entry = doc['pages'][0]
+    note = {'schema_version': 'annotation.v1', 'project_id': doc['project_id'], 'base_revision': doc['revision_id'],
+            'scope': 'page', 'page_id': entry['page_id'], 'page_ref': entry['page'],
+            'intent': 'clarify', 'body': 'query contract', 'status': 'open', 'location': {'kind': 'whole'}}
+    payload = {'input': {'schema_version': 'annotation_batch.v1', 'project_id': doc['project_id'], 'annotations': [note]},
+               'base_revision': doc['revision_id'], 'operation_id': str(uuid.uuid4())}
+    assert _post_json(url + '/api/annotations/batch', payload, token, url)[0] == 200
+    revision = store.current_revision_id()
+    code, _headers, result = _get_json(f'{url}/api/annotations?revision={revision}&page_id={entry["page_id"]}&scope=page')
+    assert code == 200 and len(result['annotations']) == 1
+    assert result['revision_id'] == revision and result['schema_version'] == 'annotation_list.v1'
+    assert result['filters'] == {'page_id': entry['page_id'], 'layer': None, 'scope': 'page'}
+    assert _get_json(f'{url}/api/annotations?layer=svg')[2]['annotations'] == []
+    # Unsupported, repeated, blank and unknown query fields are refused, and an
+    # uncommitted revision is not silently replaced by the current one.
+    for query in ('scope=deck', 'layer=blueprint', 'page_id=p99', 'revision=missing',
+                  'scope=page&scope=page', 'unknown=1', 'scope='):
+        assert _get_json(url + '/api/annotations?' + query)[0] != 200
+
+
 def test_annotation_plan_commit_query_handoff_cli_http_parity(running, tmp_path, capsys):
     project, store, url, token = running; doc = store.load_document(); entry = doc['pages'][0]
     note = {'schema_version': 'annotation.v1', 'project_id': doc['project_id'], 'base_revision': doc['revision_id'],

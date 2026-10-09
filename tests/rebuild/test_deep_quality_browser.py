@@ -15,6 +15,20 @@ from test_icon_quality import icon_store, input_for, confirm, dispatch, start, a
 pytestmark=pytest.mark.browser
 
 
+def open_note_face(page):
+    """P02:个人笔记位于五工具容器的「笔记」面;先切面(窄屏先开工具面板)。"""
+    from playwright.sync_api import expect
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    note_button = page.get_by_role('button', name='笔记', exact=True)
+    expect(note_button.first).to_be_visible(timeout=15000)
+    note_button.first.click()
+
+
+
 @pytest.fixture
 def workbench(icon_store):
     server=WorkbenchServer(icon_store.project_root);url=server.start()
@@ -28,6 +42,7 @@ def workbench(icon_store):
             link=url+'#'+urlencode({'project':info['project_identity'],'surface':surface,'page':'p01','layer':'svg','revision':revision or icon_store.current_revision_id()})
             page.goto(link)
             return link
+        goto.stop_server = server.stop
         try:yield page,ctx,icon_store,url,goto,errors
         finally:ctx.close();browser.close();server.stop()
         assert errors==[]
@@ -36,29 +51,386 @@ def workbench(icon_store):
 @pytest.mark.parametrize('width,height',[(1280,800),(1440,900),(390,844)])
 def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
     a,ctx,store,url,goto,_=workbench;a.set_viewport_size({'width':width,'height':height});link=goto()
+    open_note_face(a)
     field=a.get_by_role('textbox',name='个人草稿',exact=True);expect(field).to_be_editable()
     field.fill('共同初稿');a.get_by_role('button',name='保存个人草稿',exact=True).click()
     expect(a.locator('.draft-state')).to_contain_text('已保存到项目')
     with a.expect_popup() as popup:a.evaluate('(url)=>window.open(url,"_blank")',link)
-    b=popup.value;expect(b.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('共同初稿')
+    b=popup.value;open_note_face(b)
+    expect(b.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('共同初稿')
     ctx.route('**/api/drafts/save',lambda r:r.abort('failed'))
     field.fill('窗口 A 独有的修改');b.get_by_role('textbox',name='个人草稿',exact=True).fill('窗口 B 独有的修改')
     expect(a.locator('.draft-state')).to_contain_text('保存结果待核实');expect(b.locator('.draft-state')).to_contain_text('保存结果待核实')
     # Refresh must recover this window's own buffer without claiming an ACK.
-    a.reload();expect(a.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('窗口 A 独有的修改')
+    a.reload();open_note_face(a)
+    expect(a.get_by_role('textbox',name='个人草稿',exact=True)).to_have_value('窗口 A 独有的修改')
     a.close(run_before_unload=True);b.close(run_before_unload=True)
-    c=ctx.new_page();c.goto(link);expect(c.get_by_role('textbox',name='个人草稿',exact=True)).to_be_editable()
+    c=ctx.new_page();c.goto(link);open_note_face(c)
+    expect(c.get_by_role('textbox',name='个人草稿',exact=True)).to_be_editable()
     texts=c.evaluate('''()=>Object.entries(localStorage).filter(([k])=>k.includes(':draft:')).map(([k,v])=>JSON.parse(v).draft?.content?.text)''')
     assert '窗口 A 独有的修改' in texts and '窗口 B 独有的修改' in texts
+    c.get_by_text('恢复、下载与版本详情',exact=True).click()
     choices=c.get_by_label('恢复本机保留的草稿副本')
     expect(choices).to_be_visible()
     assert '窗口 A 独有的修改' in choices.inner_text()
     assert '窗口 B 独有的修改' in choices.inner_text()
 
 
+def test_old_revision_draft_never_locks_a_new_opinion(workbench):
+    page,ctx,store,url,goto,_=workbench
+    goto()
+    body=page.get_by_role('textbox',name='意见正文',exact=True)
+    body.fill('第一条意见的文字')
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    # Saving the opinion advanced the revision. Returning to the current one must
+    # not adopt the older draft (which would bind this editor to a stale basis and
+    # refuse the next save); the older text stays recoverable and is named on screen.
+    page.goto(goto())
+    fresh=page.get_by_role('textbox',name='意见正文',exact=True)
+    expect(fresh).to_have_value('')
+    expect(page.locator('.annotation-notice')).to_contain_text('旧版本草稿可从下方恢复')
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    fresh.fill('第二条意见的文字')
+    # A stale basis would keep this disabled no matter what the user types.
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    # Both opinions are independent records of this project, and both drafts kept.
+    bodies=[note['annotation']['body'] for note in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']]
+    assert bodies.count('第一条意见的文字')==1 and bodies.count('第二条意见的文字')==1
+    # The older text is recoverable, and copying it forward keeps the text only.
+    page.goto(goto())
+    open_note_face(page)
+    page.get_by_text('恢复、下载与版本详情',exact=True).click()
+    choices=page.get_by_label('恢复项目中的个人草稿')
+    expect(choices).to_be_visible()
+    assert '第一条意见的文字' in choices.inner_text()
+    choices.select_option(label=[o for o in choices.locator('option').all_inner_texts() if '第一条意见的文字' in o][0])
+    open_opinion_face(page)
+    restored=page.get_by_role('textbox',name='意见正文',exact=True)
+    expect(restored).to_have_value('第一条意见的文字')
+    expect(page.locator('.annotation-notice')).to_contain_text('对当前版本写新意见')
+    page.get_by_role('button',name='对当前版本写新意见',exact=True).click()
+    expect(page.get_by_role('textbox',name='意见正文',exact=True)).to_have_value('第一条意见的文字')
+    expect(page.locator('.annotation-notice')).to_be_hidden()
+    records=page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']
+    assert len(records)==2, 'copying text forward must not create or rewrite a record'
+
+
+
+
+
+
+def open_trials_face(page):
+    """P02:试作与候选面。"""
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='试作与候选', exact=True).click()
+
+
+def open_icon_face(page):
+    """P02:图标优化面。"""
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='图标优化', exact=True).click()
+
+
+def open_opinion_face(page):
+    """P02:回到意见面(与 open_note_face 对称)。"""
+    entry = page.get_by_role('button', name='工具', exact=True)
+    page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
+    if entry.count() and entry.first.is_visible():
+        entry.click()
+        expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.get_by_role('button', name='意见', exact=True).click()
+
+
+def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
+    page,ctx,store,url,goto,_=workbench;goto()
+    open_note_face(page)
+    note=page.get_by_role('textbox',name='个人草稿',exact=True)
+    note.fill('这是我自己的备忘，不是给制作的意见。')
+    page.get_by_role('button',name='保存个人草稿',exact=True).click()
+    expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
+    open_opinion_face(page)
+    body=page.get_by_role('textbox',name='意见正文',exact=True)
+    # The note never becomes the opinion body: the opinion form starts empty and
+    # refuses to save until the user writes or explicitly copies something.
+    expect(body).to_have_value('')
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    # An empty body is refused with a Chinese reason on click, not with a dead
+    # button that explains nothing.
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.annotations-panel .field-error[role=status]')).to_contain_text('请填写意见正文')
+    assert page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']==[]
+    open_note_face(page)
+    page.get_by_role('button',name='从私人笔记复制',exact=True).click()
+    # Copying now activates the opinion face, so inspect the preserved private
+    # field explicitly even though its face has become hidden.
+    expect(page.get_by_role('textbox',name='个人草稿',exact=True,include_hidden=True)).to_have_value('这是我自己的备忘，不是给制作的意见。')
+    open_opinion_face(page)
+    expect(body).to_have_value('这是我自己的备忘，不是给制作的意见。')
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    expect(page.locator('.saved-opinion.is-new')).to_contain_text('本次新增')
+    bodies=[item['annotation']['body'] for item in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']]
+    assert bodies==['这是我自己的备忘，不是给制作的意见。']
+    # Unchanged content cannot be saved twice, but the same text on a different
+    # legal scope is a new opinion. 「整页意见」saves the page scope, so the
+    # second save uses the artwork scope.
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_disabled()
+    expect(page.locator('.field-error[data-success]')).to_contain_text('不会重复新增')
+    if not page.get_by_label('意见作用范围').is_visible():
+        page.get_by_text('范围与标注工具', exact=True).click()
+    page.get_by_label('意见作用范围').select_option('artifact')
+    expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    saved=page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']
+    assert [item['annotation']['scope'] for item in saved]==['page','artifact']
+
+
+def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
+    page,ctx,store,url,goto,_=workbench;goto()
+    body=page.get_by_role('textbox',name='意见正文',exact=True)
+    def write_opinion(text):
+        page.get_by_role('button',name='保存意见',exact=True).click()
+        expect(page.locator('.field-error[data-success]')).to_be_visible()
+        assert text in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations'][-1]['annotation']['body']
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    body.fill('这一页要改标题')
+    write_opinion('这一页要改标题')
+    expect(page.get_by_role('heading',name='本页整页意见（1）',exact=True)).to_be_visible()
+    open_note_face(page)
+    page.get_by_role('button',name='写新意见',exact=True).click()
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    if not page.get_by_label('意见作用范围').is_visible():
+        page.get_by_text('范围与标注工具', exact=True).click()
+    page.get_by_label('意见作用范围').select_option('artifact')
+    body.fill('这张图稿的线宽要收一点')
+    write_opinion('这张图稿的线宽要收一点')
+    expect(page.get_by_role('heading',name='当前图稿意见 · SVG（1）',exact=True)).to_be_visible()
+    open_note_face(page)
+    page.get_by_role('button',name='写新意见',exact=True).click()
+    if not page.get_by_label('意见作用范围').is_visible():
+        page.get_by_text('范围与标注工具', exact=True).click()
+    page.get_by_label('意见作用范围').select_option('project')
+    body.fill('整稿方向已认可')
+    write_opinion('整稿方向已认可')
+    # 整稿意见 is a review record, not a page requirement: it stays in its own
+    # collapsed group and cannot be selected into this page's change plan. The
+    # label states scope only — approval comes from an explicit decision (F04).
+    deck=page.locator('details.saved-group').filter(has_text='整稿意见与章节意见')
+    expect(deck.locator('summary')).to_contain_text('（1）')
+    deck.locator('summary').click()
+    expect(deck).to_contain_text('整稿方向已认可')
+    expect(deck).to_contain_text('也不是本页的修改要求')
+    expect(deck.get_by_label('选入意见 3')).to_be_disabled()
+    # Another page at the current version must not inherit these opinions: they are
+    # counted, collapsed and not selectable, with the reason shown. (Saving bumped
+    # the revision, so the pinned page is historical until the user returns.)
+    link=url+'#'+urlencode({'project':page.request.get(url.rstrip('/')+'/api/project').json()['project_identity'],
+                            'surface':'page','page':'p02','layer':'svg','revision':store.current_revision_id()})
+    page.goto(link)
+    expect(page.get_by_role('heading',name='本页整页意见（0）',exact=True)).to_be_visible()
+    other=page.locator('details.saved-group').filter(has_text='其它页面的局部意见')
+    expect(other.locator('summary')).to_contain_text('（2）')
+    other.locator('summary').click()
+    expect(other).to_contain_text('这一页要改标题')
+    expect(other).to_contain_text('不能选入本页的修改计划')
+    expect(other.get_by_label('选入意见 1')).to_be_disabled()
+
+
+def test_requirement_is_explicit_and_plans_default_to_trial(workbench):
+    import json
+    page,ctx,store,url,goto,_=workbench;goto()
+    page.get_by_role('button',name='整页意见',exact=True).click()
+    page.get_by_role('textbox',name='意见正文',exact=True).fill('标题要更短')
+    page.get_by_role('button',name='保存意见',exact=True).click()
+    expect(page.locator('.field-error[data-success]')).to_be_visible()
+    # Selecting an opinion opens its own requirement area, filled from the opinion
+    # text instead of reusing a hidden drafting box.
+    page.get_by_label('选入意见 1').check()
+    requirement=page.get_by_label('修改要求')
+    expect(requirement).to_be_visible(); expect(requirement).to_have_value('标题要更短')
+    expect(page.locator('.change-requirement')).to_contain_text('本页整页')
+    expect(page.locator('.change-requirement')).to_contain_text('候选')
+    # An empty requirement is refused in Chinese before anything is sent.
+    requirement.fill('')
+    page.get_by_role('button',name='预览修改影响',exact=True).click()
+    expect(page.locator('.annotations-panel .field-error[role=status]')).to_contain_text('请先写明修改要求')
+    assert page.request.get(url.rstrip('/')+'/api/changes').json()['changes']==[]
+    # A written requirement previews as a trial: candidates first, adoption later.
+    requirement.fill('把标题缩短到 12 个字，保留正文与图标。')
+    with page.expect_request('**/api/changes/plan') as captured:
+        page.get_by_role('button',name='预览修改影响',exact=True).click()
+    sent=json.loads(captured.value.post_data)['input']
+    assert sent['mode']=='trial' and sent['instruction']=='把标题缩短到 12 个字，保留正文与图标。'
+    expect(page.locator('.change-plan-preview')).to_contain_text('结果先作为候选返回')
+    expect(page.locator('.change-plan-preview')).to_contain_text('未列出的图层与已有记录保持不变')
+    expect(page.locator('.change-plan-preview')).to_contain_text('将修改')
+    assert page.request.get(url.rstrip('/')+'/api/changes').json()['changes']==[]
+
+
+def test_page_candidate_compares_its_own_basis_not_the_current_revision(workbench):
+    import uuid as _uuid
+    from deck_master import changes as changes_mod, service as service_mod
+    from test_content_candidates import content_intent, start_task, page_envelope, accept
+    page,ctx,store,url,goto,_=workbench
+    path=store.project_root
+    basis_revision=store.current_revision_id()
+    plan=changes_mod.plan(path, input=content_intent(store, 'p01'))
+    task_ids=changes_mod.commit(path, plan_id=plan['plan_id'], base_revision=store.current_revision_id(),
+                                operation_id=str(_uuid.uuid4()))['operation_result']['task_ids']
+    task=next(t for t in (store.read_object_json(r) for r in store.load_document()['tasks']) if t['task_id']==task_ids[0])
+    start_task(path, task); accept(path, task, page_envelope(store, task))
+    candidate_id=store.load_document()['candidates'][0]
+    candidate=store.read_object_json(candidate_id)
+    assert candidate['result_kind']=='page' and candidate['base_revision']==basis_revision
+    # Move the page on: the comparison must keep showing the candidate's own basis.
+    doc=store.load_document(); moved=copy.deepcopy(doc); entry=moved['pages'][0]
+    body=store.read_object_json(entry['page']); body['customer_visible']['title']='后来的标题'
+    moved['pages'][0]['page']=store.put_json_object(body)
+    moved=bump_revision(moved,{'operation_id':str(_uuid.uuid4()),'kind':'content_update','description':'later page move','read_set':[]})
+    store.commit_change(base_revision=doc['revision_id'],document=moved,operation_id=moved['change']['operation_id'])
+    link=url+'#'+urlencode({'project':page.request.get(url.rstrip('/')+'/api/project').json()['project_identity'],
+                            'surface':'page','page':'p01','layer':'content','revision':store.current_revision_id(),
+                            'candidate':candidate['candidate_id']})
+    page.goto(link)
+    desk=page.locator('.candidate-desk')
+    desk.wait_for()
+    # Both sides come from the candidate's own record: the basis it was written
+    # against and its result. The later page never leaks into the comparison.
+    expect(desk).to_contain_text('当前正文 → 候选正文')
+    expect(desk).to_contain_text('(rewritten)')
+    assert '后来的标题' not in desk.inner_text(), desk.inner_text()[:400]
+
+
+def test_escape_ends_the_open_comparison_before_leaving_the_page(workbench):
+    page,ctx,store,url,goto,_=workbench;goto()
+    if not page.get_by_role('button',name='比较此页版本',exact=True).is_visible():
+        page.get_by_text('页面操作', exact=True).click()
+    page.get_by_role('button',name='比较此页版本',exact=True).click()
+    select=page.get_by_label('选择同页比较版本')
+    expect(select).to_be_visible()
+    # The page's other revisions load asynchronously; wait for one to exist.
+    expect(select.locator('option').nth(1)).to_be_attached()
+    select.select_option(index=1)
+    page.get_by_role('button',name='固定比较这个版本',exact=True).click()
+    expect(page.locator('.page-columns.with-fixed-compare')).to_be_visible()
+    page.keyboard.press('Escape')
+    # One keypress closes the topmost layer only: the comparison ends and the work
+    # surface stays where it was, with focus back on the entry that opened it.
+    expect(page.locator('.page-columns.with-fixed-compare')).to_have_count(0)
+    assert 'surface=page' in page.url, page.url
+    expect(page.locator('.page-actions > summary')).to_be_focused()
+    assert page.locator('.fixed-compare-controls').is_hidden()
+
+
+def test_escape_inside_fullscreen_does_not_navigate_the_surface(workbench):
+    page,ctx,store,url,goto,_=workbench;goto()
+    if not page.get_by_role('button',name='比较此页版本',exact=True).is_visible():
+        page.get_by_text('页面操作', exact=True).click()
+    page.get_by_role('button',name='比较此页版本',exact=True).click()   # user activation for fullscreen
+    assert page.evaluate('''async () => { try { await document.querySelector('.page-columns').requestFullscreen(); return true; } catch { return false; } }''')
+    expect(page.locator('.page-columns')).to_be_visible()
+    assert page.evaluate('() => document.fullscreenElement !== null')
+    page.keyboard.press('Escape'); page.wait_for_timeout(200)
+    # Leaving fullscreen is the browser's own job. The work surface must not also
+    # navigate away on the same keypress. Headless Chromium keeps the element
+    # fullscreen (no native UI), so this checks the app-level regression only; the
+    # visible exit still needs a headed run.
+    assert 'surface=page' in page.url, page.url
+    page.evaluate('() => document.exitFullscreen()')
+
+
+def test_near_field_entry_names_returned_candidates(workbench):
+    from test_candidates import dispatch as dispatch_candidate, start as start_candidate, accept as accept_candidate
+    page,ctx,store,url,goto,_=workbench
+    task=dispatch_candidate(store,'p01',layer='svg'); start_candidate(store,task); accept_candidate(store,task)
+    goto()
+    # The closed entry still says that something waits here, instead of hiding a
+    # returned candidate behind a neutral label.
+    open_trials_face(page)
+    summary=page.locator('.page-trial-entry > summary')
+    expect(summary).to_contain_text('候选 1')
+    expect(summary).to_contain_text('待比较 1')
+    expect(page.get_by_text('本页候选与试作',exact=True)).to_be_visible()
+
+
+def test_many_opinions_do_not_push_the_artwork_out_of_view(workbench):
+    from deck_master import annotation_service as annotations
+    page,ctx,store,url,goto,_=workbench
+    entry=store.load_document()['pages'][0]
+    for index in range(30):
+        current=store.load_document()
+        note={'schema_version':'annotation.v1','project_id':current['project_id'],'base_revision':current['revision_id'],
+              'scope':'page','page_id':entry['page_id'],'page_ref':entry['page'],'intent':'note','body':f'第 {index+1} 条意见',
+              'status':'open','location':{'kind':'whole'}}
+        annotations.save(store.project_root, input={'schema_version':'annotation_batch.v1','project_id':current['project_id'],'annotations':[note]},
+                         base_revision=current['revision_id'], operation_id=str(uuid.uuid4()))
+    goto()
+    image=page.locator('.page-reading canvas:visible').first
+    image.wait_for()
+    expect(page.locator('.saved-opinion')).to_have_count(30)
+    artwork=image.bounding_box()
+    # A long opinion list may scroll, but it must not resize or push the artwork.
+    assert artwork['y']>=0 and artwork['y']+artwork['height']<=900, artwork
+    assert artwork['width']>600, artwork
+
+
+def test_delivery_gaps_name_rules_and_keep_unknown_reasons_blocked(workbench):
+    """Labelled contract/UI fixture: proves the branches, not that real business hit them."""
+    import json as json_mod
+    page,ctx,store,url,goto,_=workbench;goto('runs')
+    # 文件子区是分段上下文：先进入「文件」，正式交付用途在生成结果之前。
+    page.get_by_role('button',name='文件',exact=True).click()
+    page.route('**/api/exports',lambda route:route.fulfill(status=409,content_type='application/json',body=json_mod.dumps(
+      {'error':{'code':'delivery_blocked','message':'交付被拒绝：存在未解决项。','revision_id':store.current_revision_id(),'gaps':[
+        {'layer':'ppt','reason':'page_limit_violation','page_id':None,'scope':'deck'},
+        {'layer':'ppt','reason':'needs_a_later_rule','dimension':'privacy','page_id':'p01'}]}})))
+    page.get_by_role('button',name='生成正式交付包',exact=True).click()
+    gaps=page.locator('.export-gaps')
+    gaps.wait_for()
+    # A known rule states the rule and the matching action, and stays blocked.
+    expect(gaps).to_contain_text('不符合页数规则')
+    expect(gaps).to_contain_text('按该规则调整页数或提供对应证据')
+    expect(gaps).to_contain_text('这一步由制作工具链完成')
+    # An unclassified reason says so, keeps the raw reason readable and never
+    # invents a repair action.
+    expect(gaps).to_contain_text('暂无法自动处理')
+    expect(gaps).to_contain_text('原始原因：needs_a_later_rule · privacy')
+    expect(gaps.locator('summary',has_text='原始缺项记录')).to_be_visible()
+    # Real targets only: a locator and the run surface, never a fake repair.
+    expect(gaps.get_by_role('button',name='定位此页',exact=True)).to_have_count(1)
+    assert gaps.get_by_role('button',name='查看任务与交付',exact=True).count()==2
+    assert page.locator('.export-result .download-link').count()==0
+
+
+def test_candidate_batch_names_the_page_and_layer(workbench):
+    from test_candidates import dispatch as dispatch_candidate, start as start_candidate, accept as accept_candidate
+    page,ctx,store,url,goto,_=workbench
+    task=dispatch_candidate(store,'p01',layer='svg'); start_candidate(store,task); accept_candidate(store,task)
+    goto('runs')
+    row=page.locator('.candidate-batch-row').first
+    expect(row).to_contain_text('第 1 页')
+    expect(row).to_contain_text('SVG')
+    assert 'p01' not in row.inner_text(), 'candidate rows must not lead with an internal page id'
+
+
 def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
     page,ctx,store,url,goto,_=workbench
     confirm(store,input_for(store));before=store.load_document()['tasks'];goto()
+    open_icon_face(page)
     box=page.get_by_label('选入图标页 p01');box.check();held=[]
     page.route('**/api/icons/plan',lambda route:held.append(route))
     page.get_by_role('button',name='预览选中页图标试作',exact=True).click()
@@ -81,6 +453,8 @@ def test_unselected_icon_page_cannot_be_dispatched_by_late_plan(workbench):
 def test_handoff_navigation_opens_current_task(workbench):
     page,ctx,store,url,goto,_=workbench
     task=dispatch(store,confirm(store,input_for(store)))[0];goto('runs');bad=[]
+    # 交接导航从任务区的辅助入口开始。
+    page.get_by_text('其它修改组的交接',exact=True).click()
     page.on('response',lambda r:bad.append(r.url) if 'revision=null' in r.url else None)
     page.get_by_role('button',name='查看任务与调用记录',exact=True).first.click()
     expect(page.locator('.run-detail')).to_be_visible()
@@ -97,24 +471,28 @@ def test_historical_candidate_list_never_acquires_future_candidate(workbench):
     accept(store,task,icons.draft(store.project_root,recipe_id=rec['recipe_id'],page_id='p01')['svg'].encode())
     goto('runs',old)
     expect(page.locator('.history-banner')).to_contain_text('历史版本')
-    expect(page.get_by_text('还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务仍在下方交接面板。',exact=True)).to_be_visible()
+    # 候选与试作归「待决定」子区；先切入该子区再核对历史/最新两份记录。
+    page.get_by_role('button',name='待决定',exact=True).click()
+    expect(page.get_by_text('还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务可到“正在进行”继续处理。',exact=True)).to_be_visible()
     expect(page.locator('.candidate-batch-row')).to_have_count(0)
-    goto('runs');expect(page.locator('.candidate-batch-row')).to_have_count(1)
+    goto('runs');page.get_by_role('button',name='待决定',exact=True).click()
+    expect(page.locator('.candidate-batch-row')).to_have_count(1)
 
 
 def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
     page.get_by_role('button',name='整页意见',exact=True).click()
-    text='修正图标间距，保持其它对象。';page.get_by_role('textbox',name='个人草稿',exact=True).fill(text)
+    text='修正图标间距，保持其它对象。';page.get_by_role('textbox',name='意见正文',exact=True).fill(text)
     page.get_by_role('button',name='保存意见',exact=True).click();page.get_by_label('选入意见 1').check()
+    page.get_by_label('修改要求').fill(text)
     doc=store.load_document();new=copy.deepcopy(doc);art=store.read_object_json(new['pages'][0]['svg']);art['limitations']=['concurrent edit']
     new['pages'][0]['svg']=store.put_json_object(art)
     new=bump_revision(new,{'operation_id':str(uuid.uuid4()),'kind':'artifact_adoption','description':'synthetic concurrent writer','read_set':[]})
     store.commit_change(base_revision=doc['revision_id'],document=new,operation_id=new['change']['operation_id'])
-    with page.expect_response('**/api/changes/plan') as response:page.get_by_role('button',name='加入修改计划',exact=True).click()
+    with page.expect_response('**/api/changes/plan') as response:page.get_by_role('button',name='预览修改影响',exact=True).click()
     assert response.value.status==409
     expect(page.get_by_role('dialog')).to_be_visible()
-    expect(page.get_by_label('未提交的本机草稿')).to_have_value(text)
+    expect(page.get_by_label('当前草稿')).to_have_value(text)
     expect(page.get_by_role('dialog').get_by_role('button',name='查看新的当前版本',exact=True)).to_be_enabled()
 
 

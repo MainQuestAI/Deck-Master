@@ -231,7 +231,7 @@ def test_explicit_imported_plan_is_adopted_and_restore_does_not_keep_the_wrong_p
     assert store.read_object_json(first["content_plan"])["origin"] == "user_imported"
     editing.restore(project, revision_id=empty_revision, base_revision=first["revision_id"], operation_id="restore-empty")
     assert "content_plan" not in store.load_document()
-    assert json.loads((store.deck_root / "current.json").read_text())["minimum_writer"] == "content-plan.v1"
+    assert json.loads((store.deck_root / "current.json").read_text())["minimum_writer"] == 'workbench-quality.v1'
     assert content_plan.show(project, revision=first["revision_id"])["content_plan"]["status"] == "recorded"
 
 

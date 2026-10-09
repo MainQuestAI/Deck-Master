@@ -38,9 +38,11 @@ def test_refresh_cross_surface_and_explicit_url_restore_only_reading_preferences
     page.get_by_role('button', name='制作总览', exact=True).click()
     expect(page.get_by_role('searchbox', name='搜索页码或标题')).to_have_value('p03')
     expect(page.locator('.matrix th[aria-sort]')).to_have_attribute('aria-sort', 'descending')
-    assert not page.get_by_role('checkbox', name='选择第 03 页', exact=True).is_checked()
+    # D1：选择随个人阅读状态保留，跨工作面切换与刷新都不清空。
+    expect(page.get_by_role('checkbox', name='选择第 03 页', exact=True)).to_be_checked()
     page.reload()
     expect(page.get_by_role('searchbox', name='搜索页码或标题')).to_have_value('p03')
+    expect(page.get_by_role('checkbox', name='选择第 03 页', exact=True)).to_be_checked()
     old = overview_state.get(project, revision=before['revision_id'])
     page.goto(fixed_url(page, project, before['revision_id'], q='p01', filter='all', sort='ascending'))
     expect(page.get_by_role('searchbox', name='搜索页码或标题')).to_have_value('p01')

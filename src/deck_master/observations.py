@@ -126,6 +126,54 @@ class CollectedObservation:
     output_bytes: bytes
 
 
+def _read_native_session(path, root, selector):
+    """Read one owned rollout without combining calls or identities across files."""
+    found, session = None, None
+    active_call, matched_call, literal_proof = None, None, None
+    with _owned_file(path, root) as handle:
+        limit = os.fstat(handle.fileno()).st_size
+        line_number = 0
+        while handle.tell() < limit:
+            offset = handle.tell()
+            raw = handle.readline(min(MAX_RECORD_BYTES + 1, limit - offset))
+            line_number += 1
+            if len(raw) > MAX_RECORD_BYTES:
+                raise _unavailable("runtime event exceeds the supported record size")
+            if not raw.endswith(b"\n"):
+                break  # appending a completion is not a completed record
+            record = json.loads(raw)
+            payload = record.get("payload", {})
+            if record.get("type") == "response_item" and payload.get("type") == "custom_tool_call":
+                literal = _literal_image_call(payload.get("input")) if payload.get("name") == "exec" else None
+                active_call = {"arguments": literal, "call_id": payload.get("call_id"), "record_sha256": sha256_bytes(raw)} if literal else None
+            if (matched_call and record.get("type") == "response_item" and payload.get("type") == "custom_tool_call_output"
+                    and payload.get("call_id") == matched_call["call_id"] and isinstance(payload.get("output"), list)):
+                images = [part.get("image_url", "") for part in payload["output"] if isinstance(part, dict) and part.get("type") == "input_image"]
+                if len(images) == 1 and images[0].startswith("data:image/png;base64,"):
+                    returned = base64.b64decode(images[0].partition(",")[2], validate=True)
+                    literal_proof = {**matched_call, "output_record_sha256": sha256_bytes(raw), "output_sha256": sha256_bytes(returned)}
+            if record.get("type") == "session_meta":
+                if session is not None or payload.get("id") != selector["thread_id"]:
+                    raise _unavailable("runtime session identity does not match")
+                session = payload
+                continue
+            if record.get("type") != "event_msg" or payload.get("type") != "item_completed":
+                continue
+            item = payload.get("item")
+            if not isinstance(item, dict) or item.get("id") != selector["item_id"]:
+                continue
+            if (payload.get("thread_id") != selector["thread_id"] or payload.get("turn_id") != selector["turn_id"]
+                    or item.get("type") != "Extension" or item.get("kind") != "image_gen.generation"):
+                raise _unavailable("identity is not the selected native image completion")
+            if found is not None:
+                raise _unavailable("ambiguous duplicate native completion")
+            found = (payload, item, sha256_bytes(raw), line_number, offset)
+            matched_call = active_call
+    if not session:
+        raise _unavailable("runtime session identity is missing")
+    return found, session, literal_proof
+
+
 def collect_codex_image(selector, *, minimum_started_at_ms=None, reference_store=None):
     """Resolve identities in Codex's runtime store; no arbitrary JSON path input.
 
@@ -143,50 +191,21 @@ def collect_codex_image(selector, *, minimum_started_at_ms=None, reference_store
         raise _unavailable("invalid runtime event identity")
     root = _session_root()
     try:
-        candidates = list(root.glob(f"*/*/*/rollout-*-{selector['thread_id']}.jsonl"))
-        if len(candidates) != 1:
+        thread = re.escape(selector['thread_id'])
+        suffix = r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
+        name = re.compile(rf"rollout-.*-{thread}(?:_{suffix})?\.jsonl\Z")
+        candidates = sorted(path for path in root.glob(f"*/*/*/rollout-*-{selector['thread_id']}*.jsonl")
+                            if name.fullmatch(path.name))
+        if not candidates:
             raise _unavailable("one matching local runtime session is required")
-        found, session = None, None
-        active_call, matched_call, literal_proof = None, None, None
-        with _owned_file(candidates[0], root) as handle:
-            limit = os.fstat(handle.fileno()).st_size
-            line_number = 0
-            while handle.tell() < limit:
-                offset = handle.tell()
-                raw = handle.readline(min(MAX_RECORD_BYTES + 1, limit - offset))
-                line_number += 1
-                if len(raw) > MAX_RECORD_BYTES:
-                    raise _unavailable("runtime event exceeds the supported record size")
-                if not raw.endswith(b"\n"):
-                    break  # appending a completion is not a completed record
-                record = json.loads(raw)
-                payload = record.get("payload", {})
-                if record.get("type") == "response_item" and payload.get("type") == "custom_tool_call":
-                    literal = _literal_image_call(payload.get("input")) if payload.get("name") == "exec" else None
-                    active_call = {"arguments": literal, "call_id": payload.get("call_id"), "record_sha256": sha256_bytes(raw)} if literal else None
-                if (matched_call and record.get("type") == "response_item" and payload.get("type") == "custom_tool_call_output"
-                        and payload.get("call_id") == matched_call["call_id"] and isinstance(payload.get("output"), list)):
-                    images = [part.get("image_url", "") for part in payload["output"] if isinstance(part, dict) and part.get("type") == "input_image"]
-                    if len(images) == 1 and images[0].startswith("data:image/png;base64,"):
-                        returned = base64.b64decode(images[0].partition(",")[2], validate=True)
-                        literal_proof = {**matched_call, "output_record_sha256": sha256_bytes(raw), "output_sha256": sha256_bytes(returned)}
-                if record.get("type") == "session_meta":
-                    if session is not None or payload.get("id") != selector["thread_id"]:
-                        raise _unavailable("runtime session identity does not match")
-                    session = payload
-                    continue
-                if record.get("type") != "event_msg" or payload.get("type") != "item_completed":
-                    continue
-                item = payload.get("item")
-                if not isinstance(item, dict) or item.get("id") != selector["item_id"]:
-                    continue
-                if (payload.get("thread_id") != selector["thread_id"] or payload.get("turn_id") != selector["turn_id"]
-                        or item.get("type") != "Extension" or item.get("kind") != "image_gen.generation"):
-                    raise _unavailable("identity is not the selected native image completion")
-                if found is not None:
-                    raise _unavailable("ambiguous duplicate native completion")
-                found = (payload, item, sha256_bytes(raw), line_number, offset)
-                matched_call = active_call
+        matches = []
+        for path in candidates:
+            record = _read_native_session(path, root, selector)
+            if record[0] is not None:
+                matches.append(record)
+        if len(matches) > 1:
+            raise _unavailable("ambiguous duplicate native completion across runtime sessions")
+        found, session, literal_proof = matches[0] if matches else (None, None, None)
         if not session or not found:
             raise _unavailable("native image completion is not yet available in this session")
         payload, item, record_hash, line_number, offset = found

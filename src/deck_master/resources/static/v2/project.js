@@ -1,6 +1,6 @@
 import {SummaryPoll} from './summary-poll.js';
 import {get, post, revisionQuery, readableError} from './api.js';
-import {el, button, heading, empty, icon, version, announce, modal, copyText} from './dom.js';
+import {el, button, heading, empty, icon, version, announce, modal} from './dom.js';
 import {localURL} from './launcher-ui.js';
 import {readRoute, routeHash, position, surfaces, layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
@@ -42,7 +42,7 @@ export class Project {
       if (event.detail.action !== 'history.restore') return;
       const revision = event.detail.result.revision_id;
       this.setNotice(`历史恢复已确认，已创建 ${version(revision)}。当前阅读位置保持不变。`);
-      this.notice?.append(button('查看恢复后的版本', () => this.go({surface: 'runs', revision, task_id: null})));
+      this.notice?.append(button('查看恢复后的版本', () => this.go({surface: 'runs', revision, task_id: null, runs_area: 'versions'})));
     });
     addEventListener('beforeunload', () => this.editor?.persist());
     addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。'));
@@ -67,10 +67,12 @@ export class Project {
   }
   async loadRoute(initial = null, focus = true) {
     const serial = ++this.generation;
+    const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
+    this.navigationPending = true;
     try {
       const [info, latest] = await Promise.all([get('/api/project'), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
-      const route = initial || readRoute(this.info, null, latest);
+      const route = requestedRoute || readRoute(this.info, null, latest, requestedHash);
       route.revision ||= latest.revision_id;
       const summary = route.revision === latest.revision_id ? latest : await get(this.summaryURL(route.revision));
       if (summary.project_id !== this.info.project_id) throw new Error('服务中的项目与当前窗口不一致，未替换已读内容。');
@@ -99,7 +101,7 @@ export class Project {
         }
       } else if (route.surface === 'runs') {
         const modern = this.health.ui_capabilities?.includes('run_desk.v1');
-        const [tasks, history, detail] = await Promise.all([get('/api/tasks' + q + (modern ? '&limit=30'+this.readingQuery(summary) : '')), get('/api/history'),
+        const [tasks, history, detail] = await Promise.all([get('/api/tasks' + q + (modern ? '&limit=30'+this.readingQuery(summary) : '')), get('/api/history?' + new URLSearchParams({revision:summary.revision_id,limit:20})),
           modern && route.task_id ? get('/api/tasks/' + encodeURIComponent(route.task_id) + q) : Promise.resolve(null)]);
         data = {tasks: tasks.tasks, runPage: modern ? tasks : null, runDetail: detail, history};
         if (route.task_id && !(detail || tasks.tasks.some(task => task.task_id === route.task_id))) throw new Error('此版本没有链接中的任务。请检查任务与版本，未跳到其它任务。');
@@ -119,11 +121,7 @@ export class Project {
       this.render(data);
       if(summary.reading_unavailable)this.setNotice('个人已读记录暂不可用，已显示未过滤的业务记录；损伤文件保留，请先核实恢复资料。',true);
       this.savePosition();
-      if (focus) {
-        const title = route.surface === 'runs' && route.layer === 'ppt' && !route.task_id && !route.review_id
-          ? document.querySelector('#delivery-desk h2') || document.querySelector('#view-title') : document.querySelector('#view-title');
-        title?.focus();
-      }
+      if (focus) document.querySelector('#view-title')?.focus();
       announce(`${route.surface === 'page' ? '单页 · ' + layers[route.layer] : surfaces[route.surface]}，${version(route.revision)}`);
     } catch (error) {
       if (serial !== this.generation) return;
@@ -132,16 +130,23 @@ export class Project {
         this.root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('无法读取这个位置', readableError(error),
           button('打开项目当前版本', () => { history.replaceState(null, '', location.pathname + location.search); this.loadRoute({...this.route, surface: 'overview', page_id: null, task_id: null, revision: null}); }))));
       }
-    }
+    } finally { if (serial === this.generation) this.navigationPending = false; }
   }
   go(patch) {
     const route = {...this.route, ...patch};
     if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== this.route.revision) route.overview_preferences = null;
-    if (patch.surface && patch.surface !== 'runs') route.task_id = null;
+    // A plain surface switch starts that surface on its own first screen: no task
+    // detail from an earlier visit, and no page layer that another surface could
+    // mistake for "the user asked for delivery".
+    if (patch.surface && (!('task_id' in patch) || patch.surface !== 'runs')) route.task_id = null;
+    if (patch.surface && patch.surface !== 'page' && !('layer' in patch)) route.layer = 'original_image';
     if (!('action_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.action_id = null;
     if (!('review_id' in patch) && (patch.surface || patch.page_id || patch.layer || patch.task_id)) route.review_id = null;
     if (!('candidate_id' in patch) && (patch.surface || patch.page_id || patch.layer)) route.candidate_id = null;
     if (patch.surface && patch.surface !== 'page' && !('page_id' in patch)) route.page_id = null;
+    // R4（深度复审）：显式打开某一项任务时落到「正在进行」；读取版本、面返回等
+    // 只带 task_id: null 的导航保留记住的子区（链接里的 area）。
+    if (patch.task_id && !('runs_area' in patch)) route.runs_area = 'tasks';
     const hash = routeHash(this.info, route);
     if (location.hash === hash) this.loadRoute(route); else location.hash = hash;
   }
@@ -216,9 +221,8 @@ export class Project {
     this.syncRow = el('div', {class: 'runtime-sync-row', hidden: true}, this.syncNotice, button('读取项目最新状态', () => this.current()));
     if (this.health.ui_capabilities?.includes('run_desk.v1')) banners.append(this.syncRow);
     if (this.historical) banners.append(el('div', {class: 'history-banner'}, el('strong', {}, '历史版本 · 只读'),
-      el('span', {}, `正在看 ${version(this.route.revision)}，当前为 ${version(this.latest.revision_id)}。阅读位置与个人草稿仍绑定原基准。`), button('查看当前版本', () => this.current())));
+      el('span', {}, '你正在阅读过去保存的稿件；内容与比较保持固定。'), button('查看当前版本', () => this.current()), el('details', {}, el('summary', {}, '版本身份'), el('p', {}, `阅读 ${version(this.route.revision)} · 当前 ${version(this.latest.revision_id)}`))));
     if (this.info.sample) banners.append(el('div', {class: 'sample-banner'}, this.info.sample.readonly ? '这是合成的只读示例，未调用模型，也未进行专业质量验收。' : '这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。'));
-    banners.append(el('p', {class: 'compact-note'}, '此宽度保留阅读与个人意见；多页比较和精细编辑请使用更宽的窗口。'));
     this.main = el('main', {id: 'main', class: 'workspace', tabindex: '-1'});
     const view = this.route.action_id ? actionTargets : this.route.surface === 'content' && this.route.candidate_id ? changesetDesk :
       {overview, content, gallery, page: pageDetail, runs, style}[this.route.surface];
@@ -226,7 +230,9 @@ export class Project {
     if (this.route.surface === 'page') this.main.addEventListener('keydown', event => {
       const typing = event.target.closest('textarea,input,select,button,a,summary,[contenteditable]');
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
-      if (event.key === 'Escape' && !typing) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
+      // An element in fullscreen consumes Escape to leave fullscreen: the same
+      // keypress must not also navigate the work surface away.
+      if (event.key === 'Escape' && !typing && !document.fullscreenElement) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
       // ←/→ 切换页（输入与可滚动阅读区除外），与单页制作链的上一页/下一页一致。
       if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing && !event.target.closest('.page-image-viewport,.icon-crop-scroll,.selectable-text,.evidence-json,.diff-lines')) {
         const index = this.summary.pages.findIndex(p => p.page_id === this.route.page_id);
@@ -235,8 +241,9 @@ export class Project {
       }
     });
     const pending = this.summary.task_counts.awaiting_host || 0;
-    this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null}), false, {'aria-label': `查看待交接任务，${pending} 项`});
-    const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version'}, version(this.route.revision))),
+    // 顶栏入口承诺的是"查看待交接任务"：显式落到「正在进行」，不被记住的子区劫持。
+    this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
+    const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿')),
       this.pendingButton);
     this.root.className = 'shell';
     this.root.replaceChildren(aside, el('div', {class: 'content'}, top, banners, this.main));
@@ -253,8 +260,12 @@ export class Project {
       }
       const status = handoff.status === 'running' ? '制作工具已记录处理中，请先核实原任务，避免重复执行。' : '待交接 · 尚未开始。将下面的说明复制到 Codex 后发送。';
       const text = el('textarea', {'aria-label': '交接说明', readOnly: true, value: handoff.handoff, rows: 7});
-      modal('交接内容整理', el('div', {class: 'stack'}, el('p', {}, status), el('p', {class: 'muted'}, `任务 ${handoff.task_id} · ${version(handoff.revision_id)}`), text),
-        [button('复制交接说明', () => copyText(handoff.handoff), true)]);
+      const note = el('p', {role: 'status'}, status);
+      modal('交给 Deck Master Agent', el('div', {class: 'stack'}, note, el('details', {}, el('summary', {}, '完整交接说明与任务身份'), el('p', {class: 'muted'}, `任务 ${handoff.task_id} · ${version(handoff.revision_id)}`), text)),
+        [button('复制给 Deck Master Agent', async () => {
+          try { await navigator.clipboard.writeText(handoff.handoff); note.textContent = '交接说明已复制 · 待接手。请在 Codex 中发送；复制不会开始制作。'; }
+          catch { note.textContent = '自动复制未完成；请打开完整交接说明后选中复制。任务仍待接手。'; text.closest('details').open = true; text.focus(); text.select(); }
+        }, true)]);
     } catch (error) { this.setNotice(readableError(error)); }
   }
 }

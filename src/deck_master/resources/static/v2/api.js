@@ -11,6 +11,10 @@ export async function post(path, value, {signal} = {}) {
   if (!token) token = (await get('/api/session')).token;
   return request(path, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Deck-Token': token}, body, signal});
 }
+export async function postBinary(path, file) {
+  if(!token)token=(await get('/api/session')).token;
+  return request(path,{method:'POST',headers:{'Content-Type':file.type || 'application/octet-stream','X-Deck-Token':token},body:file});
+}
 async function request(path, options) {
   let response;
   try { response = await fetch(path, {cache: 'no-store', credentials: 'same-origin', ...options}); }
@@ -29,6 +33,8 @@ async function request(path, options) {
 }
 export function readableError(error) {
   const labels = {
+    visual_reference_conflict: '参考或项目已更新，要求仍保留，请回当前版本核实后重新分析。',
+    visual_reference_invalid: '截图或分析结果不满足要求，请检查格式、范围和参考冲突。',
     icon_basis_changed:'图标对象或页面版本已变化。范围和意见保留，请重新定位并确认。',
     icon_invalid:'图标要求超出可验证范围，请核对对象、区域和处理方式。',
     icon_preview_required:'此图标候选需先通过实际 PPT 检查，再预览采用。',

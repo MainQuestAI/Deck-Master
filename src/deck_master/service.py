@@ -422,6 +422,7 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
             dispatch_documents[revision] = _dispatch_snapshot(store, document, task)
         dispatched = dispatch_documents[revision]
     methods = method_resources(task.get("kind") or "", intent=task.get("intent"))
+    from . import visual_styles
     summary = {
         "task_id": task["task_id"],
         "operation_id": task["operation_id"],
@@ -439,6 +440,7 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         "sources": dispatched.get("sources") or [],
         "resolved_design_context": dispatched.get("design_context") or {},
         "method_resources": methods,
+        **({"visual_analysis": visual_styles.work_order(store, document, task)} if task["kind"] == "style_analyze" else {}),
         "project_context": _project_context(store, document, task, dispatched),
         "staging_dir": str(store.staging_dir / task['operation_id']),
     }
@@ -1728,6 +1730,10 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
     if task.get("protocol_version"):
         from .generation import check_host
         check_host(task, declaration)
+    if task.get('kind') == 'style_analyze' and not tasks_mod.task_inputs_current(store, document, task):
+        raise tasks_mod.StaleInputContext('(task)', 'visual analysis inputs changed; create a new analysis before claiming')
+    if task.get('stage_request', {}).get('target_reference_ref') and not tasks_mod.task_inputs_current(store, document, task):
+        raise tasks_mod.StaleInputContext('(task)', 'target original image changed; preview a new style trial before claiming')
     if task.get("status") == "running" and task.get("execution_ref") != execution_ref:
         raise tasks_mod.TaskConflict(
             f"(task {task_id})", "another execution already claimed this task"

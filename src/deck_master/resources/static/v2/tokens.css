@@ -17,8 +17,8 @@
   --warn:    #f5a623;
   --danger:  #ef4146;
   --font-display: "Signifier", "Source Serif Pro", Georgia, ui-serif, serif;
-  --font-body:    "Söhne", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono:    "Söhne Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-body:    "Söhne", "Inter", system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-mono:    "Söhne Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", monospace;
   --text-xs:   12px;
   --text-sm:   13px;
   --text-base: 16px;

@@ -44,15 +44,26 @@ def style_content_browser(tmp_path):
             server.stop()
 
 
-def open_style(page):
+def open_style(page, with_targets=False):
     page.get_by_role('button', name='风格校准', exact=True).click()
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
+    if with_targets:
+        page.get_by_text('其它目标页', exact=True).click()
+        page.get_by_text('查找其它参考页', exact=True).click()
 
 
 def toggle_phase(page, number):
-    phase = page.locator('.style-phase').nth(number-1)
-    if not phase.evaluate('(node) => node.open'):
+    from playwright.sync_api import expect
+    phase = page.locator('.style-calibration > .style-phase').nth(number-1)
+    for _ in range(3):
+        if phase.evaluate('(node) => node.open'):
+            return phase
         phase.locator('summary').first.click()
+        try:
+            expect(phase).to_have_attribute('open', '', timeout=2000)
+            return phase
+        except AssertionError:
+            continue
     return phase
 
 
@@ -70,15 +81,15 @@ def test_thirty_page_mobile_search_counts_missing_images_and_release(style_conte
     from playwright.sync_api import expect
     page, server, path, store = style_content_browser
     before = store.read_current()
-    open_style(page)
+    open_style(page, with_targets=True)
     page.set_viewport_size({'width':390,'height':844})
     target = page.get_by_role('searchbox', name='搜索风格目标')
-    expect(page.locator('.style-phase').first).to_have_attribute('open', '')
-    assert not page.locator('.style-phase').nth(1).evaluate('(node) => node.open')
+    expect(page.locator('.style-calibration > .style-phase').first).to_have_attribute('open', '')
+    assert not page.locator('.style-calibration > .style-phase').nth(1).evaluate('(node) => node.open')
     target.fill('p30')
     expect(page.locator('.style-target-card')).to_have_count(1)
     page.get_by_role('checkbox', name='风格目标 第 30 页 · 交付前查看缺口', exact=True).check()
-    expect(page.locator('.style-phase').first).to_contain_text('已选 1 页')
+    expect(page.locator('.style-calibration > .style-phase').first).to_contain_text('已选 1 页')
     target.fill('p03')
     expect(page.locator('.style-target-card')).to_contain_text('未记录原图')
     target.fill('没有这页')
@@ -102,13 +113,14 @@ def test_empty_requirements_dimensions_refresh_and_fixed_reference(style_content
     from playwright.sync_api import expect
     page, server, path, store = style_content_browser
     before = store.read_current()
-    open_style(page)
+    open_style(page, with_targets=True)
     page.get_by_role('combobox', name='风格参考原图').select_option('p01')
     page.get_by_role('checkbox', name='风格目标 第 2 页 · 材料如何成为内容', exact=True).check()
     page.get_by_role('textbox', name='风格短要求', exact=True).fill('')
     page.get_by_text('高级：借用维度、原文选段与建议', exact=True).click()
     page.get_by_role('checkbox', name='借用文字层级', exact=True).uncheck()
     assert not page.get_by_role('checkbox', name='借用构图', exact=True).is_checked()
+    page.get_by_text('个人草稿与恢复', exact=True).click()
     page.get_by_role('button', name='保存个人草稿', exact=True).click()
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
     page.reload()
@@ -123,32 +135,41 @@ def test_empty_requirements_dimensions_refresh_and_fixed_reference(style_content
 def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_content_browser):
     from playwright.sync_api import expect
     page, server, path, store = style_content_browser
-    open_style(page)
+    open_style(page, with_targets=True)
     page.get_by_role('combobox', name='风格参考原图').select_option('p01')
     page.get_by_role('checkbox', name='风格目标 第 2 页 · 材料如何成为内容', exact=True).check()
     page.get_by_role('button', name='检查风格要求', exact=True).click()
-    expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled()
+    expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled(timeout=20000)
     before_tasks = copy.deepcopy(store.load_document()['tasks'])
     page.get_by_role('button', name='确认这版风格要求', exact=True).click()
-    expect(page.locator('.style-phase').nth(1)).to_have_attribute('open','')
-    expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled()
+    # 确认落到新版本并重新定位到「确认规范」；等规范版本读取完成（阶段摘要出现 V…）
+    # 再切换阶段，避免重挂载与阶段展开互相抢状态。
+    expect(page.locator('.style-calibration > .style-phase').nth(1)).to_have_attribute('open','')
+    expect(page.locator('.style-calibration > .style-phase').nth(1)).to_contain_text(re.compile(r'V\d'), timeout=20000)
+    toggle_phase(page, 3)
+    expect(page.locator('.style-calibration > .style-phase').nth(2)).to_have_attribute('open','')
+    # 确认包含草稿保存、业务提交与新版本重载三步；就绪等待按真实到达放宽，状态本身不放松。
+    expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=20000)
     assert store.load_document()['tasks'] == before_tasks
     page.get_by_role('button', name='预览单页试作', exact=True).click()
-    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled()
+    # 计划请求跟在草稿保存之后：两次本机往返，给足以真实到达为准的等待。
+    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled(timeout=20000)
     toggle_phase(page, 1)
     page.get_by_role('textbox', name='风格短要求').fill('保留事实，新的明确要求。')
     expect(page.get_by_role('button', name='保存并交接风格试作', exact=True, include_hidden=True)).to_be_disabled()
     expect(page.locator('.style-plan')).to_be_hidden()
-    toggle_phase(page, 2)
+    toggle_phase(page, 3)
     page.get_by_role('button', name='预览单页试作', exact=True).click()
-    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled()
+    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True)).to_be_enabled(timeout=20000)
     doc = copy.deepcopy(store.load_document()); doc['policy']['user_stop'] = True
     commit(store, doc, str(uuid.uuid4()))
     page.evaluate("() => window.dispatchEvent(new Event('focus'))")
-    expect(page.get_by_role('button', name='保存并交接风格试作', exact=True, include_hidden=True)).to_be_disabled()
+    # 版本前进使计划失效：交接动作按真实计划出现——没有计划就不出现。
+    expect(page.locator('.style-plan button').filter(has_text='保存并交接风格试作')).to_be_hidden()
     toggle_phase(page, 1)
     expect(page.get_by_role('textbox', name='风格短要求')).to_have_value('保留事实，新的明确要求。')
-    expect(page.locator('.style-phase').first).to_contain_text('项目已有新版本')
+    # 状态与错误常驻阶段之外：版本前进的提示不再随阶段折叠被隐藏。
+    expect(page.locator('.style-calibration > [role="status"]')).to_contain_text('当前项目已有更新')
     assert store.load_document()['tasks'] == before_tasks
 
 
@@ -163,6 +184,7 @@ def test_late_style_plan_leaving_face_cannot_restore_controls(style_content_brow
     open_style(page)
     toggle_phase(page, 2)
     page.get_by_role('combobox', name='已确认的风格版本').select_option(index=1)
+    toggle_phase(page, 3)
     held = []
     def delay(route):
         held.append((route,route.fetch()))
@@ -265,3 +287,29 @@ def test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone(st
     page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
     expect(page.locator('.source-card')).to_contain_text('提取：记录待核实')
     assert not page.locator('#modal').evaluate('(node) => node.open')
+
+
+def test_user_chosen_phase_survives_the_passive_recipe_read(style_content_browser):
+    """UAC16:阶段是用户的阅读选择;迟到的样式版本读取(auto showPhase)不抢回阶段。"""
+    from playwright.sync_api import expect
+    page, server, path, store = style_content_browser
+    phases = page.locator('.style-calibration > .style-phase')
+    # 挂起挂载时的样式读取,让「用户先选阶段、回包后到」的时序确定发生。
+    held = []
+    page.route('**/api/styles*', lambda route: held.append(route))
+    open_style(page, with_targets=True)
+    page.wait_for_timeout(300)
+    first_open = phases.first.evaluate('(node) => node.open')
+    phases.nth(2).locator('summary').first.click()
+    expect(phases.nth(2)).to_have_attribute('open', '')
+    assert held, 'the mount-time styles read must still be pending'
+    for route in held:
+        route.fulfill(response=route.fetch())
+    page.unroute('**/api/styles*')
+    page.wait_for_timeout(600)
+    # 用户已选阶段保持展开;auto 恢复(showPhase(2))没有打开阶段 2。
+    # 用户手动开阶段 3 不折叠阶段 1(details 独立展开是既有语义),阶段 1
+    # 的展开状态在被动读取前后不变。
+    expect(phases.nth(2)).to_have_attribute('open', '')
+    assert not phases.nth(1).evaluate('(node) => node.open')
+    assert phases.first.evaluate('(node) => node.open') == first_open

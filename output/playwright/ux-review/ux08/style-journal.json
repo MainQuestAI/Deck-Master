@@ -1,0 +1,250 @@
+{
+  "steps": [
+    {
+      "step": "conflict-choice-in-confirm-phase",
+      "screenshot": "style-01-conflict-choice-in-confirm-phase.png"
+    },
+    {
+      "step": "conflict-resolved-confirm-enabled",
+      "screenshot": "style-02-conflict-resolved-confirm-enabled.png"
+    },
+    {
+      "step": "trial-plan-ready-handoff-visible",
+      "screenshot": "style-03-trial-plan-ready-handoff-visible.png"
+    },
+    {
+      "step": "extension-without-pages-error-visible",
+      "screenshot": "style-04-extension-without-pages-error-visible.png"
+    }
+  ],
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/styles/propose",
+      "payload": {
+        "input": {
+          "schema_version": "style_input.v1",
+          "project_id": "ux08-project",
+          "base_revision": "789678d2b78548f28d872ed521f9010e",
+          "reference": {
+            "page_id": "p01",
+            "revision_id": "789678d2b78548f28d872ed521f9010e",
+            "artifact_ref": {
+              "path": ".deckmaster/objects/8e/8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787.json",
+              "sha256": "8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787"
+            },
+            "role": "reference"
+          },
+          "target_page_ids": [
+            "p02"
+          ],
+          "instruction": "按极简留白处理，但页面本身是高密度信息，保留全部事实。",
+          "dimensions": {
+            "palette": "借用参考页配色",
+            "typography": "借用参考页文字层级"
+          },
+          "resolutions": {}
+        }
+      },
+      "status": 200,
+      "receipt": {
+        "status": "suggestion"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/styles/propose",
+      "payload": {
+        "input": {
+          "schema_version": "style_input.v1",
+          "project_id": "ux08-project",
+          "base_revision": "789678d2b78548f28d872ed521f9010e",
+          "reference": {
+            "page_id": "p01",
+            "revision_id": "789678d2b78548f28d872ed521f9010e",
+            "artifact_ref": {
+              "path": ".deckmaster/objects/8e/8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787.json",
+              "sha256": "8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787"
+            },
+            "role": "reference"
+          },
+          "target_page_ids": [
+            "p02"
+          ],
+          "instruction": "按极简留白处理，但页面本身是高密度信息，保留全部事实。",
+          "dimensions": {
+            "palette": "借用参考页配色",
+            "typography": "借用参考页文字层级"
+          },
+          "resolutions": {
+            "p02:density": "keep_target"
+          }
+        }
+      },
+      "status": 200,
+      "receipt": {
+        "status": "suggestion"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/drafts/save",
+      "payload": {
+        "draft": {
+          "schema_version": "ui_draft.v1",
+          "project_id": "ux08-project",
+          "project_identity": "93428dd6ba9842c734d78ccb9449a6de933efb1e0b3f8c450954c9bc286d666d",
+          "draft_id": "draft-5150bde5-1af0-4075-8f47-66205dd0e55c",
+          "target": {
+            "scope": "project",
+            "page_id": null,
+            "layer": "notes"
+          },
+          "base_revision": "789678d2b78548f28d872ed521f9010e",
+          "base_ref": null,
+          "content": {
+            "text": "",
+            "style_calibration": {
+              "reference": {
+                "page_id": "p01",
+                "revision_id": "789678d2b78548f28d872ed521f9010e",
+                "artifact_ref": {
+                  "path": ".deckmaster/objects/8e/8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787.json",
+                  "sha256": "8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787"
+                },
+                "file": {
+                  "path": ".deckmaster/objects/81/81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png",
+                  "sha256": "81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29"
+                },
+                "role": "reference"
+              },
+              "targets": [
+                "p02"
+              ],
+              "instruction": "按极简留白处理，但页面本身是高密度信息，保留全部事实。",
+              "dimensions": {
+                "palette": "借用参考页配色",
+                "typography": "借用参考页文字层级"
+              },
+              "host_suggestion": "",
+              "prompt_selection": null,
+              "resolutions": {
+                "p02:density": "keep_target"
+              },
+              "parent_recipe_id": null
+            }
+          },
+          "pending": {
+            "operation_id": "0a8a8953-7f35-45f3-bee7-b94ecc10e37b",
+            "payload": {
+              "action": "styles.confirm",
+              "request": {
+                "proposal_id": "style-proposal-b2062766fa69527f67a0b932c10cad221f8a8c026f2a1944f767e1f28e3599ce",
+                "base_revision": "789678d2b78548f28d872ed521f9010e",
+                "operation_id": "0a8a8953-7f35-45f3-bee7-b94ecc10e37b"
+              },
+              "request_digest": "d80b55832a921f4b106ebc43aa3d9c6b06dd1f544764c8a6c6ea1da85dbbb469"
+            },
+            "payload_digest": "7d8504efcfb9faefeeb5063b55071407b97eeeeef34e31f0d062bfd32ca00270"
+          }
+        },
+        "expected_etag": null
+      },
+      "status": 200,
+      "receipt": {
+        "status": "saved"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/styles/confirm",
+      "payload": {
+        "proposal_id": "style-proposal-b2062766fa69527f67a0b932c10cad221f8a8c026f2a1944f767e1f28e3599ce",
+        "base_revision": "789678d2b78548f28d872ed521f9010e",
+        "operation_id": "0a8a8953-7f35-45f3-bee7-b94ecc10e37b"
+      },
+      "status": 200,
+      "receipt": {
+        "operation_id": "0a8a8953-7f35-45f3-bee7-b94ecc10e37b",
+        "status": "committed",
+        "result.revision_id": "a36ba7ddace2464cb3f4f646487f0295",
+        "result.recipe_id": "recipe-40713ac681f246899c1704be7abac35a"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/drafts/save",
+      "payload": {
+        "draft": {
+          "schema_version": "ui_draft.v1",
+          "project_id": "ux08-project",
+          "project_identity": "93428dd6ba9842c734d78ccb9449a6de933efb1e0b3f8c450954c9bc286d666d",
+          "draft_id": "draft-5150bde5-1af0-4075-8f47-66205dd0e55c",
+          "target": {
+            "scope": "project",
+            "page_id": null,
+            "layer": "notes"
+          },
+          "base_revision": "789678d2b78548f28d872ed521f9010e",
+          "base_ref": null,
+          "content": {
+            "text": "",
+            "style_calibration": {
+              "reference": {
+                "page_id": "p01",
+                "revision_id": "789678d2b78548f28d872ed521f9010e",
+                "artifact_ref": {
+                  "path": ".deckmaster/objects/8e/8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787.json",
+                  "sha256": "8e585251529463a482f23455bbdc013ffb4d128d4a1856d701ac71ffc6640787"
+                },
+                "file": {
+                  "path": ".deckmaster/objects/81/81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29.png",
+                  "sha256": "81f5a16c02835adb8b45b6a99f682e28f0c380d3c7002707a191abe9088a1e29"
+                },
+                "role": "reference"
+              },
+              "targets": [
+                "p02"
+              ],
+              "instruction": "按极简留白处理，但页面本身是高密度信息，保留全部事实。",
+              "dimensions": {
+                "palette": "借用参考页配色",
+                "typography": "借用参考页文字层级"
+              },
+              "host_suggestion": "",
+              "prompt_selection": null,
+              "resolutions": {
+                "p02:density": "keep_target"
+              },
+              "parent_recipe_id": null
+            }
+          },
+          "pending": null
+        },
+        "expected_etag": "3a8efce342f18ac79732c1b184f1067953b059d2e1d25cba709aac2e1f374929"
+      },
+      "status": 200,
+      "receipt": {
+        "status": "saved"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/styles/plan",
+      "payload": {
+        "input": {
+          "recipe_id": "recipe-40713ac681f246899c1704be7abac35a",
+          "page_ids": [
+            "p02"
+          ],
+          "max_calls": 1
+        }
+      },
+      "status": 200,
+      "receipt": {
+        "plan_id": "plan-392acb3d3517565f4b4359917044c7e740ca126716f8ce065d7c9137cf3e2472",
+        "status": "planned"
+      }
+    }
+  ]
+}
