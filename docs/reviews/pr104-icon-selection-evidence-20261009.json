@@ -9,7 +9,7 @@
   "final_sha_and_gates_recorded_in": "PR104 body and Actions",
   "frozen_files": {
     "src/deck_master/resources/static/v2/icon-workbench.js": "a2c55feedecf2437ecaf3a23555e431bb8b68e449df79fe866a04dc3ca51c740",
-    "tests/rebuild/test_pr104_review_browser.py": "7e8bc74ed04700cae161ab179425185c6cdd1039e3fb994d8eab9d9dd417cf04"
+    "tests/rebuild/test_pr104_review_browser.py": "4c5d4c9c1620d48f9b483e8a1bbff06d5acfc2e3f842b397ab2b89c96a251e0b"
   },
   "wheel": {
     "sha256": "c2dadc9c0970fec18166233b8aa50c840417c1a7715abf38b1d245bcb7cf2608",
@@ -45,6 +45,20 @@
     },
     "installed_upload_control": {
       "passed": 1
+    },
+    "installed_recovery_second_completed": {
+      "passed": 167,
+      "failed": 1,
+      "failing_test": "test_private_autosave_does_not_retire_a_held_business_receipt",
+      "new_counterexamples_passed": 11
+    },
+    "installed_private_control": {
+      "passed": 1
+    },
+    "installed_targeted_after_sync_repair": {
+      "passed": 65,
+      "failed": 0,
+      "skipped": 0
     }
   },
   "raw_evidence_policy": "Original logs, HAR, synthetic runs and environments remain local; only file names and hashes are committed.",
@@ -75,6 +89,15 @@
     },
     "installed-upload-control.log": {
       "sha256": "4f27214b479bf9f0f6cd41991b24cd32e9d7b599bf11cc218afd0bb5b50eefd0"
+    },
+    "installed-regressions-clean.log": {
+      "sha256": "4cfafc9cdaefc3fac1d20b38319b81a1af91e52cba55e7cef37e552fcc217367"
+    },
+    "installed-private-control.log": {
+      "sha256": "06365fe88aaba618244450b6a8d02e6c4c0d240372ca70ffb4226158a3071502"
+    },
+    "installed-targeted-final.log": {
+      "sha256": "7c47706785777be2f73e31be09971d007baa7fda67f8897a3e53bf06694966c9"
     }
   },
   "workspace_preservation": {
@@ -83,5 +106,18 @@
     "existing_untracked_snapshot_files_verified": 215,
     "original_dirty_file_hashes_match": true,
     "final_test_outputs": "separate temporary cwd and explicit UX08 evidence directory"
+  },
+  "historical_frozen_files": {
+    "src/deck_master/resources/static/v2/icon-workbench.js": "a2c55feedecf2437ecaf3a23555e431bb8b68e449df79fe866a04dc3ca51c740",
+    "tests/rebuild/test_pr104_review_browser.py": "7e8bc74ed04700cae161ab179425185c6cdd1039e3fb994d8eab9d9dd417cf04"
+  },
+  "validation_sync_repair": {
+    "file": "tests/rebuild/test_pr104_review_browser.py",
+    "behavior": "Use a boolean wait_for_function predicate and serialized real draft readback; original server, UI and repeat-submit assertions retained.",
+    "async_false_predicate_probe": {
+      "outcome": "returned",
+      "elapsed_ms": 214,
+      "intended_timeout_ms": 1000
+    }
   }
 }

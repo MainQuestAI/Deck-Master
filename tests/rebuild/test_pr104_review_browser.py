@@ -618,15 +618,23 @@ def test_private_autosave_does_not_retire_a_held_business_receipt(page_fixture):
     expect(page.get_by_role('button', name='保存意见', exact=True)).to_be_disabled()
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
     held[0][0].fulfill(response=held[0][1]); page.unroute('**/api/annotations/batch')
-    page.wait_for_function('''async id => {
-      const data = await (await fetch('/api/drafts')).json();
-      return data.records.some(r => r.draft.draft_id === id && r.draft.pending === null);
+    # A Promise is truthy to wait_for_function even when it resolves to false.
+    # Poll a boolean, and keep each real read in flight until it completes.
+    page.wait_for_function('''id => {
+      const state = window.pendingDraftReadback ||= {reading: false, cleared: false};
+      if (state.error) throw new Error(state.error);
+      if (!state.reading && !state.cleared) {
+        state.reading = true;
+        fetch('/api/drafts/' + encodeURIComponent(id)).then(response => {
+          if (!response.ok) throw new Error('Draft readback failed: ' + response.status);
+          return response.json();
+        }).then(data => {state.cleared = Boolean(data.record && data.record.draft.pending === null);})
+          .catch(error => {state.error = error.message;}).finally(() => {state.reading = false;});
+      }
+      return state.cleared;
     }''', arg=draft['draft_id'])
     expect(page.locator('.business-pending')).to_be_hidden()
-    page.wait_for_function('''async id => {
-      const rows = (await (await fetch('/api/drafts')).json()).records;
-      return rows.some(r => r.draft.draft_id===id && !r.draft.pending);
-    }''', arg=draft['draft_id'])
+    assert ui_journal.get(store.project_root, draft['draft_id'])['record']['draft']['pending'] is None
     expect(page.get_by_role('button', name='保存意见', exact=True)).to_be_enabled()
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.locator('.saved-annotations')).to_contain_text('正式意见乙')
