@@ -227,6 +227,25 @@ def test_task_commands_reject_legacy_project(tmp_path, capsys):
     assert payload["error"]["code"] == "legacy_run_format"
 
 
+# Regression: ISSUE-001 — inputs update --patch takes a JSON file path; inline
+# JSON must get a declared error naming the file requirement, not a raw
+# FileNotFoundError that says "check the path".
+# Found by /qa on 2026-10-10
+# Report: .gstack/qa-reports/run-20261010T025115Z/
+def test_inputs_update_rejects_inline_json_patch_with_declared_error(tmp_path, capsys):
+    code, project, _ = _create(tmp_path, capsys)
+    assert code == 0
+    capsys.readouterr()
+    code = cli.main(["inputs", "update", "--project", str(project),
+                     "--patch", '{"task_patch": {"title": "内联 JSON"}}',
+                     "--base-revision", "any", "--operation-id", "qa-inline-1"])
+    assert code == 2
+    payload = json.loads(capsys.readouterr().err)
+    assert payload["error"]["code"] == "invalid_input"
+    assert "--patch" in payload["error"]["message"]
+    assert "file" in payload["error"]["message"]
+
+
 # ---------------------------------------------------------------------------
 # One entry everywhere: module, __main__ and console entry share cli.main.
 
