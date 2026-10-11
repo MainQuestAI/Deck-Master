@@ -599,8 +599,13 @@ def test_private_autosave_does_not_retire_a_held_business_receipt(page_fixture, 
     page, server, _path, store = page_fixture
     page.goto(server.start()); page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     open_page(page, server, store, layer='original_image')
+    # Keep handlers installed for the test lifetime: releasing a response may
+    # immediately issue another save, so unroute must not race that dispatch.
     held = []
     def hold(route):
+        if held:
+            route.continue_()
+            return
         held.append((route, route.fetch())); page.evaluate('() => window.opinionHeld=true')
     page.route('**/api/annotations/batch', hold)
     page.get_by_role('button', name='整页意见', exact=True).click()
@@ -639,27 +644,33 @@ def test_private_autosave_does_not_retire_a_held_business_receipt(page_fixture, 
         page.wait_for_function('() => window.autosaveHeld===true')
     else:
         expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
-    held[0][0].fulfill(response=held[0][1]); page.unroute('**/api/annotations/batch')
+    held[0][0].fulfill(response=held[0][1])
     if receipt_during_autosave:
         # Let the receipt handler execute while the private save response is held.
         page.wait_for_function('() => window.annotationReceiptEntered === true')
         autosaves[0][0].fulfill(response=autosaves[0][1])
-        page.unroute('**/api/drafts/save')
     # A Promise is truthy to wait_for_function even when it resolves to false.
     # Poll a boolean, and keep each real read in flight until it completes.
-    page.wait_for_function('''id => {
-      const state = window.pendingDraftReadback ||= {reading: false, cleared: false};
-      if (state.error) throw new Error(state.error);
-      if (!state.reading && !state.cleared) {
-        state.reading = true;
-        fetch('/api/drafts/' + encodeURIComponent(id)).then(response => {
-          if (!response.ok) throw new Error('Draft readback failed: ' + response.status);
-          return response.json();
-        }).then(data => {state.cleared = Boolean(data.record && data.record.draft.pending === null);})
-          .catch(error => {state.error = error.message;}).finally(() => {state.reading = false;});
-      }
-      return state.cleared;
-    }''', arg=draft['draft_id'])
+    try:
+        page.wait_for_function('''id => {
+          const state = window.pendingDraftReadback ||= {reading: false, cleared: false};
+          if (state.error) throw new Error(state.error);
+          if (!state.reading && !state.cleared) {
+            state.reading = true;
+            fetch('/api/drafts/' + encodeURIComponent(id)).then(response => {
+              if (!response.ok) throw new Error('Draft readback failed: ' + response.status);
+              return response.json();
+            }).then(data => {state.cleared = Boolean(data.record && data.record.draft.pending === null);})
+              .catch(error => {state.error = error.message;}).finally(() => {state.reading = false;});
+          }
+          return state.cleared;
+        }''', arg=draft['draft_id'])
+    except Exception:
+        print('RECEIPT_UI', page.locator('.business-pending').inner_text())
+        print('DRAFT_UI', page.locator('.draft-state').inner_text())
+        print('DRAFT_RECORD', ui_journal.get(store.project_root, draft['draft_id']))
+        print('LOCAL_BUFFERS', page.evaluate('() => Object.fromEntries(Object.entries(localStorage).filter(([k])=>k.includes("draft")||k.includes("business")))'))
+        raise
     expect(page.locator('.business-pending')).to_be_hidden()
     assert ui_journal.get(store.project_root, draft['draft_id'])['record']['draft']['pending'] is None
     expect(page.get_by_role('button', name='保存意见', exact=True)).to_be_enabled()
