@@ -132,6 +132,11 @@ export class DraftEditor {
       if (!record) return;
       const copy = {draft: record.draft, etag: record.etag, status: 'saved', pendingSave: null};
       if (['dirty', 'unknown', 'conflict', 'saving'].includes(this.status)) {
+        if (!this.node.closest('#modal')) {
+          const dialog = modal('保留当前输入再恢复', el('p', {}, '当前稿和待核实保存请求将保留在本机副本中。'),
+            [button('下载当前稿', () => this.download()), button('打开所选草稿', () => { if (this.restoreCopy(copy)) dialog.close(); })]);
+          return;
+        }
         this.restoreConfirm?.remove();
         this.restoreConfirm = el('div', {class:'draft-restore-confirm stack', role:'group', 'aria-label':'保留当前输入再恢复'},
           el('p', {}, '当前稿和待核实保存请求会保留在本机副本中，再打开所选草稿。'),
@@ -146,7 +151,7 @@ export class DraftEditor {
   restoreCopy(copy) {
     if (this.disposed) return;
     if (!this.onRestore) { this.note = '当前编辑器无法恢复，请保留原稿并重新打开工作面。'; this.updateStatus(); return; }
-    this.onRestore(copy);
+    return this.onRestore(copy);
   }
   notifyState() {
     if (this.onStateChanged) this.onStateChanged();
