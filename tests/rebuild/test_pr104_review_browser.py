@@ -593,7 +593,8 @@ def test_closing_narrow_tools_keeps_intentional_canvas_annotation(page_fixture, 
     assert overlay.evaluate('n => getComputedStyle(n).pointerEvents') == 'none'
 
 
-def test_private_autosave_does_not_retire_a_held_business_receipt(page_fixture):
+@pytest.mark.parametrize('receipt_during_autosave', [False, True])
+def test_private_autosave_does_not_retire_a_held_business_receipt(page_fixture, receipt_during_autosave):
     from playwright.sync_api import expect
     page, server, _path, store = page_fixture
     page.goto(server.start()); page.get_by_role('heading', name='制作总览', exact=True).wait_for()
@@ -615,10 +616,35 @@ def test_private_autosave_does_not_retire_a_held_business_receipt(page_fixture):
     assert draft['pending'] is not None and len(store.load_document()['annotations']) == 1
     page.get_by_role('button', name='写新意见', exact=True).click()
     page.get_by_role('button', name='整页意见', exact=True).click()
+    autosaves = []
+    if receipt_during_autosave:
+        page.evaluate('''async () => {
+          const {BusinessOperations} = await import('/v2/business-operations.js');
+          const finish = BusinessOperations.prototype.finishAnnotation;
+          BusinessOperations.prototype.finishAnnotation = function(...args) {
+            window.annotationReceiptEntered = true;
+            return finish.apply(this, args);
+          };
+        }''')
+        def hold_autosave(route):
+            if autosaves:
+                route.continue_()
+                return
+            autosaves.append((route, route.fetch()))
+            page.evaluate('() => window.autosaveHeld=true')
+        page.route('**/api/drafts/save', hold_autosave)
     page.get_by_label('意见正文', exact=True).fill('正式意见乙')
     expect(page.get_by_role('button', name='保存意见', exact=True)).to_be_disabled()
-    expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
+    if receipt_during_autosave:
+        page.wait_for_function('() => window.autosaveHeld===true')
+    else:
+        expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
     held[0][0].fulfill(response=held[0][1]); page.unroute('**/api/annotations/batch')
+    if receipt_during_autosave:
+        # Let the receipt handler execute while the private save response is held.
+        page.wait_for_function('() => window.annotationReceiptEntered === true')
+        autosaves[0][0].fulfill(response=autosaves[0][1])
+        page.unroute('**/api/drafts/save')
     # A Promise is truthy to wait_for_function even when it resolves to false.
     # Poll a boolean, and keep each real read in flight until it completes.
     page.wait_for_function('''id => {

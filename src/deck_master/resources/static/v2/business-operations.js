@@ -164,6 +164,10 @@ export class BusinessOperations {
   }
   async finishAnnotation(entry, result) {
     const editor = entry.editor;
+    // A private autosave may still contain the pending business pointer. Let
+    // that exact write settle before saving the verified receipt, so save()
+    // cannot coalesce this new state into the older in-flight request.
+    await editor?.pendingWrite;
     if (editor && !editor.disposed && !editor.readonly && editor.draft.pending?.operation_id === entry.pending.operation_id) {
       rememberAnnotation(editor.draft, entry.pending, result);
       editor.draft.pending = null;
