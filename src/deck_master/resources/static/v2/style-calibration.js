@@ -109,7 +109,7 @@ export function style(app) {
   const firstButton = button('预览单页试作', () => planTrial(false));
   const expandButton = button('预览明确选页的扩展', () => planTrial(true));
   const dispatchButton = button('保存并交接风格试作', dispatch, true, {disabled: true});
-  const impact = el('div', {class: 'stack'}), candidateRows = el('div', {class: 'stack'});
+  const impact = el('div', {class: 'stack'}), candidateRows = el('div', {class: 'stack style-candidate-list'});
   const cards = candidateCards(app); app.disposables.push(() => cards.dispose());
   const primaryTarget=el('select',{'aria-label':'当前风格试作目标'},el('option',{value:''},'选择先试的一页'),pages.map(p=>el('option',{value:p.page_id},label(p.page_id))));
   const primaryPreview=el('div',{class:'style-primary-target'});let primaryView;

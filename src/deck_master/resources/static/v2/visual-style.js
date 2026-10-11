@@ -74,7 +74,7 @@ export function visualStyle(app){
   const analyze=button('分析截图',()=>startAnalysis(),true),refresh=button('查看分析结果',()=>readAnalysis(true)),handoff=button('交给 Deck Master Agent',()=>copyText(state.handoff||`请接续 Deck Master 截图分析任务 ${state.task_id}，读取固定工作单后返回视觉规范。`));
   const confirm=button('检查并确认视觉规范',confirmSpec,true),trial=button('预览单页试作',()=>planTrial(false),true),dispatch=button('保存并交接试作',commitTrial,true);
   const planBox=el('div',{class:'stack'}),choices=new Map();let plan=null;
-  const futureTargets=el('div',{class:'row wrap'}), expansionTargets=el('div',{class:'row wrap'}), candidateRows=el('div',{class:'stack'});
+  const futureTargets=el('div',{class:'row wrap'}), expansionTargets=el('div',{class:'row wrap'}), candidateRows=el('div',{class:'stack style-candidate-list'});
   const cards=candidateCards(app);app.disposables.push(()=>cards.dispose());
   const sample=el('select',{'aria-label':'已采用的截图风格样例'},el('option',{value:''},'先采用一页满意的试作'));
   const expansion=new Set(),expand=button('预览所选页扩展',()=>planTrial(true),true);

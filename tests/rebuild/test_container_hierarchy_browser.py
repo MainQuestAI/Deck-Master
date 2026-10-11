@@ -42,6 +42,9 @@ def test_layout_sections_and_style_routes(workbench_page, tmp_path, width, heigh
                     phase=host.locator(':scope > section.style-phase:visible')
                     assert phase.count()==1
                     assert phase.evaluate('n=>getComputedStyle(n).borderTopWidth')=='0px'
+                    assert phase.evaluate('n=>parseFloat(getComputedStyle(n).paddingLeft)')==0
+                    for select in phase.locator('select:visible').all():
+                        assert select.bounding_box()['width']<=480.01
                     if i==0:
                         cols=phase.locator('.studio-style-columns')
                         dims=cols.evaluate('n=>({width:n.getBoundingClientRect().width,children:[...n.children].map(c=>({x:c.getBoundingClientRect().x,y:c.getBoundingClientRect().y,width:c.getBoundingClientRect().width}))})')
