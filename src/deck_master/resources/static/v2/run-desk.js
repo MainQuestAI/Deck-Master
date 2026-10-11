@@ -69,7 +69,8 @@ export function runDesk(app, data) {
     Object.entries(statuses).map(([key, label]) => el('option', {value: key}, label)));
   const attention = el('input', {type: 'checkbox', 'aria-label': '只看需我处理'});
   const search = el('input', {type:'search', maxlength:200, 'aria-label':'搜索全部任务', placeholder:'搜索任务、页码或制作要求'});
-  const searchButton = button('查询任务', () => { choiceMade=true; read({state:{search:search.value.trim(),offset:0},refreshReading:true,persist:true}); });
+  const submitSearch = () => { choiceMade=true; read({state:{search:search.value.trim(),offset:0},refreshReading:true,persist:true}); };
+  const searchButton = button('查询任务', submitSearch);
   const tableHead = el('div',{class:'studio-task-table-head','aria-hidden':'true'},el('span',{},'任务与范围'),el('span',{},'当前状态'),el('span',{},'操作'));
   let page = data.runPage, selected = data.runDetail, disposed = false, serial = 0, busy = false, loaded = false;
   let state = {offset: 0, group: '', status: '', attention: false, search:''};
@@ -133,7 +134,8 @@ export function runDesk(app, data) {
       task.task_id ? button('查看这项任务',()=>app.go({task_id:task.task_id,revision:page.revision_id}),false,{class:'run-task-open'}) : el('span',{class:'field-error'},'记录无法读取'));
   }
   function controls() {
-    for(const input of [group,status,attention,refreshButton])input.disabled=busy;
+    for(const input of [group,status,attention,refreshButton,searchButton])input.disabled=busy;
+    searchButton.disabled=busy||!loaded;
     const buttons=pager.querySelectorAll('button');
     if(buttons[0])buttons[0].disabled=!loaded||busy||readingBlocked||state.offset===0;
     if(buttons[1])buttons[1].disabled=!loaded||busy||readingBlocked||page.pagination.next_offset===null;
@@ -245,7 +247,7 @@ export function runDesk(app, data) {
   for (const input of [group, status, attention]) input.addEventListener('change', () => {
     choiceMade = true;read({state:{group:group.value,status:status.value,attention:attention.checked,offset:0},refreshReading:true,persist:true});
   });
-  search.addEventListener('keydown',event=>{if(event.key==='Enter')searchButton.click();});
+  search.addEventListener('keydown',event=>{if(event.key==='Enter')submitSearch();});
   search.addEventListener('input',()=>{choiceMade=true;});
   const sync = () => { if (live && !document.hidden) read(); };
   app.root.addEventListener('summary-refreshed', sync);
