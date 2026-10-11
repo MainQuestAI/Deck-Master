@@ -229,7 +229,7 @@ def test_pending_style_analysis_shows_business_name_and_verify(ux06_browser):
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='风格校准', exact=True).click()
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
-    page.get_by_label('风格参考来源').select_option('screenshot')
+    page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
     page.get_by_label('选用参考截图 1').check()
     page.get_by_label('截图风格要求').fill('分析这张截图的配色与文字层级。')
     page.route('**/api/styles/analyze', lambda route: route.abort())
@@ -263,7 +263,7 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: args[1], layer: args[2], revision: args[3]})}",
                   [identity, 'p01', 'original_image', store.current_revision_id()])
     # D4-A:390px 工具在全高面板中,经由画面旁「工具」入口打开(D5-A 独立容器)。
-    page.get_by_role('button', name='工具', exact=True).click()
+    page.get_by_role('button', name='意见', exact=True).click()
     expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     page.locator('.annotations-panel').wait_for(timeout=15000)
     panel = page.locator('.annotations-panel')
@@ -292,12 +292,14 @@ def test_narrow_screen_icon_requirement_path_is_visible_and_completable(ux06_bro
                   [identity, 'p01', store.current_revision_id()])
     # 换层会重新挂载单页:面板回到关闭态,再次经「工具」入口打开图标面,
     # 并显式切到「图标优化」面(五工具一次只显示一个活动面)。
-    page.get_by_role('button', name='工具', exact=True).click()
     page.get_by_role('button', name='图标优化', exact=True).click()
     workbench = page.locator('.icon-workbench')
     workbench.wait_for(timeout=15000)
-    expect(workbench.get_by_label('图标处理方式')).to_be_visible()
-    expect(workbench.get_by_label('建议的标准图标')).to_be_visible()
+    expect(workbench.get_by_role('group', name='图标处理方式')).to_be_visible()
+    expect(workbench.get_by_role('button', name=re.compile('^忠实重绘'))).to_be_visible()
+    workbench.get_by_role('button', name=re.compile('^标准替换')).click()
+    expect(workbench.get_by_role('group', name='标准图标目录')).to_be_visible()
+    workbench.get_by_role('button', name=re.compile('^忠实重绘')).click()
     handoff = workbench.get_by_role('button', name='复制给 Agent 的图标要求', exact=True)
     handoff.click()
     expect(workbench.get_by_role('status')).to_contain_text('请先框选、保存意见并在这里选入。')
@@ -366,8 +368,8 @@ def test_complete_draft_restore_reaches_icon_consumer_through_real_entry(ux06_br
     page.get_by_label('修改要求', exact=True).fill('完整恢复的要求：保留数字')
     # ② 图标面:标准方式 + 明确选一个标准图标 + 在图标面勾选意见(icon_ui 入草稿)。
     face('图标优化')
-    page.get_by_label('图标处理方式').select_option('standard')
-    page.get_by_label('建议的标准图标').select_option(index=1)
+    page.get_by_role('button', name=re.compile('^标准替换')).click()
+    page.get_by_role('group', name='标准图标目录').get_by_role('button').first.click()
     page.locator('.icon-opinions input[type=checkbox]').first.check()
     # ③ 试作面:两层折叠(本页候选与试作 → 试作表单);要求框为「本页试作短要求」。
     face('试作与候选')
@@ -386,7 +388,7 @@ def test_complete_draft_restore_reaches_icon_consumer_through_real_entry(ux06_br
     # saved 状态直接恢复,不弹保留输入弹窗。
     page.reload()
     face('笔记')
-    page.get_by_text('恢复、下载与版本详情', exact=True).click()
+    page.get_by_role('button', name='备份与恢复', exact=True).click()
     page.get_by_label('恢复项目中的个人草稿').select_option(v1['draft_id'])
     expect(page.get_by_label('意见正文', exact=True)).to_have_value('恢复完整草稿的原始意见', timeout=20000)
     expect(page.get_by_label('修改要求', exact=True)).to_have_value('完整恢复的要求：保留数字')

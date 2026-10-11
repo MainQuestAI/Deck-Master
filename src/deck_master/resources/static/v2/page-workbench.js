@@ -440,7 +440,7 @@ export function pageDetail(app, data) {
   const closeCompare = button('结束固定比较', () => {
     compareSerial++; compareData = null; compareReleases.splice(0).forEach(fn => fn()); comparison.replaceChildren(); comparison.hidden = true; original.hidden = false;
     compareControls.hidden = true; fixedLabel.hidden = true; reading.classList.remove('is-comparing'); layout.classList.remove('with-fixed-compare'); compareButton.disabled = false;
-    (studio?openCompare:pageActions.querySelector('summary')).focus();
+    (studio?(innerWidth<=767?readingMenu:openCompare):pageActions.querySelector('summary')).focus();
   }); compareControls.querySelector('.row').append(closeCompare);
   // Escape handles the topmost layer: an open dialog or a fullscreen element wins,
   // then an open fixed comparison ends without the same keypress also leaving the
@@ -458,10 +458,35 @@ export function pageDetail(app, data) {
   pageActions.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || !pageActions.open) return;
     event.preventDefault(); event.stopPropagation(); pageActions.open = false;
-    (studio?openCompare:pageActions.querySelector('summary')).focus();
+    (studio?(innerWidth<=767?readingMenu:openCompare):pageActions.querySelector('summary')).focus();
   });
-  const toolbar = el('div', {class: 'toolbar reading-toolbar'},
-    button('回到整稿画廊', () => app.go({surface: 'gallery'}), false, {class: 'quiet'}), layerSelect, pageActions);
+  const backToGallery = button('回到整稿画廊', () => app.go({surface: 'gallery'}), false, {class: 'quiet studio-reading-return'});
+  let readingMenuBody = null;
+  const restoreReadingActions = () => {
+    toolbar.prepend(backToGallery);
+    toolbar.insertBefore(pageActions, readingMenu);
+  };
+  const readingMenu = button('阅读设置', () => {
+    readingMenuBody = el('div', {class:'studio-reading-menu-body stack'}, backToGallery, pageActions);
+    let activated = false;
+    const dialog = modal('阅读设置', readingMenuBody);
+    // Return the same buttons before their own action runs. Fixed comparison and
+    // navigation keep their normal identity, focus, and disposal behavior.
+    readingMenuBody.addEventListener('click', event => {
+      if (!event.target.closest('button')) return;
+      activated = true; dialog.close(); restoreReadingActions();
+    }, {capture:true});
+    dialog.onclose = () => {
+      restoreReadingActions();readingMenuBody = null;
+      if (!activated && !disposed) (matchMedia('(max-width:767px)').matches?readingMenu:backToGallery).focus({preventScroll:true});
+    };
+  }, false, {class:'studio-reading-menu', 'aria-haspopup':'dialog'});
+  const toolbar = el('div', {class: 'toolbar reading-toolbar'}, backToGallery, layerSelect, pageActions, studio?readingMenu:null);
+  if(studio) {
+    const menuResize = () => { if (innerWidth > 767 && readingMenuBody?.isConnected) readingMenuBody.closest('dialog')?.close(); };
+    addEventListener('resize',menuResize);
+    app.disposables.push(() => {removeEventListener('resize',menuResize);if(readingMenuBody?.isConnected)readingMenuBody.closest('dialog')?.close();});
+  }
   if (!studio && ['original_image', 'svg', 'ppt'].includes(layer)) {
     const zoom = el('select', {'aria-label': '阅读缩放'}, [.5, .75, 1, 1.25, 1.5, 2, 3].map(value => el('option', {value}, `${value * 100}%`)));
     zoom.value = String(app.route.zoom || 1); zoom.addEventListener('change', () => {

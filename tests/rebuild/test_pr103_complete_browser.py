@@ -67,7 +67,7 @@ def test_saved_task_failure_retries_the_same_group(tmp_path):
     commit(store, doc, str(uuid.uuid4()))
     with browser_for(path) as (page, _):
         page.get_by_role('button', name='风格校准', exact=True).click()
-        page.get_by_label('风格参考来源').select_option('screenshot')
+        page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
         page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
         next_button = page.get_by_role('button', name='下一组保存任务', exact=True)
         expect(next_button).to_be_enabled()
@@ -96,7 +96,7 @@ def test_committed_upload_survives_private_note_afterwrite(tmp_path):
     flow = Flow(tmp_path)
     with browser_for(flow.project) as (page, _):
         page.get_by_role('button', name='风格校准', exact=True).click()
-        page.get_by_label('风格参考来源').select_option('screenshot')
+        page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
         expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
         page.get_by_text('个人草稿与恢复', exact=True).click()
         held = []
@@ -178,9 +178,8 @@ def test_style_ui_trial_adoption_and_successful_expansion(tmp_path, source):
         page.route('**/api/drafts/save', afterwrite_save)
         page.get_by_role('button', name='风格校准', exact=True).click()
         if source == 'screenshot':
-            page.get_by_label('风格参考来源').select_option('screenshot')
+            page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
             page.get_by_label('截图风格试作目标').select_option('p02')
-            page.get_by_text('预先允许后续扩展的页面（默认不选）', exact=True).click()
             page.get_by_label('允许后续风格扩展到 '+third_title, exact=True).check()
             page.get_by_label('导入参考截图', exact=True).set_input_files(
                 {'name': 'synthetic.png', 'mimeType': 'image/png', 'buffer': image_bytes()})
@@ -207,12 +206,11 @@ def test_style_ui_trial_adoption_and_successful_expansion(tmp_path, source):
         else:
             page.get_by_label('风格参考原图', exact=True).select_option('p01')
             page.get_by_label('当前风格试作目标', exact=True).select_option('p02')
-            page.get_by_text('其它目标页', exact=True).click()
             page.get_by_label(re.compile(r'^风格目标 第 3 页')).check()
             page.get_by_role('button', name='检查风格要求', exact=True).click()
             page.get_by_role('button', name='确认这版风格要求', exact=True).click()
-            expect(page.get_by_label('已确认的风格版本').locator('option')).to_have_count(2)
-            recipe_id = page.get_by_label('已确认的风格版本').locator('option').nth(1).get_attribute('value')
+            expect(page.locator('.studio-recipe-card')).to_have_count(1)
+            recipe_id = page.locator('.studio-recipe-card').get_attribute('data-recipe-id')
             toggle_phase(page, 3)
             dispatch_label = '保存并交接风格试作'
         page.get_by_role('button', name='预览单页试作', exact=True).click()
@@ -238,7 +236,7 @@ def test_style_ui_trial_adoption_and_successful_expansion(tmp_path, source):
         expect(page.get_by_role('heading', name='任务与交付', exact=True)).to_be_visible()
         page.get_by_role('button', name='风格校准', exact=True).click()
         if source == 'screenshot':
-            page.get_by_label('风格参考来源').select_option('screenshot')
+            page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
             page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
             page.get_by_label('已确认的截图规范').select_option(recipe_id)
             expect(page.locator('.visual-style > [role=status]')).to_contain_text('已打开所选确认规范')
@@ -248,7 +246,7 @@ def test_style_ui_trial_adoption_and_successful_expansion(tmp_path, source):
             page.get_by_role('button', name='预览所选页扩展', exact=True).click()
         else:
             toggle_phase(page, 2)
-            page.get_by_label('已确认的风格版本').select_option(recipe_id)
+            page.locator('.studio-recipe-card[data-recipe-id="'+recipe_id+'"]').get_by_role('button', name='使用这版规范', exact=True).click()
             toggle_phase(page, 3)
             page.get_by_role('button', name='从此候选扩展', exact=True).click()
             page.get_by_label(re.compile(r'^扩展到 第 3 页')).check()
@@ -285,7 +283,7 @@ def test_partial_upload_keeps_successful_files_and_retries_only_failed_file(tmp_
     flow = Flow(tmp_path)
     with browser_for(flow.project) as (page, _):
         page.get_by_role('button', name='风格校准', exact=True).click()
-        page.get_by_label('风格参考来源').select_option('screenshot')
+        page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
         expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
         requests = []
         page.on('request', lambda r: requests.append(r.url) if '/api/styles/references/import?' in r.url else None)
@@ -329,7 +327,7 @@ def test_upload_success_has_visible_recovery_when_private_save_fails(tmp_path):
     flow = Flow(tmp_path)
     with browser_for(flow.project) as (page, _):
         page.get_by_role('button', name='风格校准', exact=True).click()
-        page.get_by_label('风格参考来源').select_option('screenshot')
+        page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
         expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
         def reject(route):
             route.fulfill(status=503, json={'error': {'code': 'operation_unavailable', 'message': '草稿服务暂不可用'}})
@@ -577,6 +575,12 @@ def test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct
         viewport=page.locator('.candidate-column[data-side=candidate] .comparison-viewport')
         footer=page.locator('.candidate-decisions')
         assert viewport.bounding_box()['y']+viewport.bounding_box()['height'] <= footer.bounding_box()['y']+1
+        # The real comparison and its decision actions fit together; auxiliary
+        # references must not push the primary decisions below the viewport.
+        for action in footer.get_by_role('button').all():
+            if action.is_visible():
+                box = action.bounding_box()
+                assert box['height'] >= 44 and box['y'] + box['height'] <= height + 1, box
         page.screenshot(path=str(page.evidence/'fit-above-actions.png'),full_page=True)
         page.get_by_role('button', name='预览采用这个候选', exact=True).click()
         page.get_by_role('button', name='采用这个候选', exact=True).click()
@@ -591,7 +595,7 @@ def test_uploaded_result_finishes_recovery_after_late_draft_verification(tmp_pat
     flow = Flow(tmp_path)
     with browser_for(flow.project) as (page, _):
         page.get_by_role('button', name='风格校准', exact=True).click()
-        page.get_by_label('风格参考来源').select_option('screenshot')
+        page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
         expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
         uploaded = []; lost = []
         def import_image(route):

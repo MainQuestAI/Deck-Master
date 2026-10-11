@@ -89,7 +89,7 @@ def test_style_conflict_choices_live_with_the_confirm_action(style_browser):
     conflict = page.get_by_role('combobox', name='第 2 页 · 材料如何成为内容 密度取舍', exact=True)
     confirm_phase = phases.nth(1)
     # 确认阶段自动打开；冲突取舍与确认动作在同一个上下文里（此前藏在阶段 1）。
-    expect(confirm_phase).to_have_attribute('open', '')
+    expect(confirm_phase).to_be_visible()
     expect(confirm).to_be_visible()
     expect(conflict).to_be_visible()
     assert confirm_phase.locator('[aria-label="第 2 页 · 材料如何成为内容 密度取舍"]').count() == 1, '冲突选择必须与确认动作同阶段'
@@ -101,11 +101,11 @@ def test_style_conflict_choices_live_with_the_confirm_action(style_browser):
 
     # 明确取舍后在同一阶段内重新检查（复审 P1：不得回到阶段 1 才能解锁确认），
     # 确认动作随后可用；阶段 1 全程保持关闭。
-    expect(page.locator('.style-calibration > .style-phase').first).not_to_have_attribute('open', '')
+    expect(page.locator('.style-calibration > .style-phase').first).to_be_hidden()
     conflict.select_option('keep_target')
     page.get_by_role('button', name='按此取舍重新检查要求', exact=True).click()
     expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled(timeout=15000)
-    expect(page.locator('.style-calibration > .style-phase').first).not_to_have_attribute('open', '')
+    expect(page.locator('.style-calibration > .style-phase').first).to_be_hidden()
 
 
 # --------------------------------------------------------------------------- R2
@@ -124,9 +124,9 @@ def test_style_plan_failure_stays_visible_without_a_plan(style_browser):
     expect(page).to_have_url(re.compile('revision=' + store.current_revision_id()))
     open_style(page)
     toggle_phase(page, 2)
-    versions = page.get_by_role('combobox', name='已确认的风格版本')
-    expect(versions.locator('option')).to_have_count(2, timeout=20000)
-    versions.select_option(index=1)
+    versions = page.locator('.studio-recipe-card')
+    expect(versions).to_have_count(1, timeout=20000)
+    versions.get_by_role('button', name='使用这版规范', exact=True).click()
 
     # 扩展阶段：不勾选页面直接预览 → 错误必须真的看得见（此前随"没有计划"一起隐藏）。
     toggle_phase(page, 4)
@@ -159,7 +159,7 @@ def test_content_change_list_keeps_the_formal_baseline_after_draft_restore(pages
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: 'p01', layer: 'content', revision: args[1]})}",
                   [identity, before])
     page.locator('.content-editor summary').click()
-    page.get_by_label('页面标题').fill('未提交的草稿标题')
+    page.get_by_role('textbox', name='页面标题', exact=True).fill('未提交的草稿标题')
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目', timeout=15000)
 
     # 刷新后恢复的是草稿；比较基准仍是所读正式原文（R3）。
@@ -225,7 +225,8 @@ def test_long_list_keeps_selection_summary_and_config_entry_in_view(style_browse
     page.get_by_role('checkbox', name='选择第 02 页', exact=True).check()
     bar = page.locator('.overview-selection-bar')
     expect(bar).to_be_visible()
-    # 滚到第 28 页选页（Playwright 会滚动到元素），不再额外回到顶部。
+    # Studio 分页仍保留第 2 页，翻到下一组后选择第 28 页，不再额外回顶部。
+    page.get_by_role('button', name='下一组页面', exact=True).click()
     page.get_by_role('checkbox', name='选择第 28 页', exact=True).check()
     expect(page.locator('.matrix')).to_be_in_viewport()
     expect(bar).to_be_visible()
@@ -250,7 +251,7 @@ def test_screenshot_route_actions_follow_stage_and_plan(style_browser):
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     open_style(page)
-    page.get_by_label('风格参考来源').select_option('screenshot')
+    page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
     visual = page.locator('.visual-style')
     expect(visual).to_be_visible()
 
@@ -258,7 +259,7 @@ def test_screenshot_route_actions_follow_stage_and_plan(style_browser):
     phases = visual.locator('.style-phase')
     trial = phases.nth(2).get_by_role('button', name='预览单页试作', exact=True)
     assert phases.nth(2).locator('button', has_text='预览单页试作').count() == 1, '试作动作必须属于阶段 3'
-    expect(phases.nth(2)).not_to_have_attribute('open', '')
+    expect(phases.nth(2)).to_be_hidden()
     assert not trial.is_visible(), '阶段 3 未打开时不应看到后续动作'
     assert visual.locator('button', has_text='保存并交接试作').count() == 1
     assert not visual.locator('button', has_text='保存并交接试作').is_visible(), '没有计划时交接动作不出现'
@@ -315,7 +316,6 @@ def test_gallery_conflict_reports_filter_anchor_and_zoom_differences(gallery_pai
     second = open_gallery(context, url, 'second')
     expect(second.locator('.slide-tile').first).to_be_visible()
     second.get_by_label('筛选页面状态').select_option('missing')
-    second.get_by_text('阅读设置', exact=True).click()
     second.get_by_role('button', name='2 列', exact=True).click()
     second.wait_for_timeout(400)
     expect(second.locator('.gallery-save')).to_contain_text('画廊选择已保存', timeout=15000)

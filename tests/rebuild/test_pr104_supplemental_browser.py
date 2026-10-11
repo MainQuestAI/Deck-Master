@@ -50,7 +50,6 @@ def test_page_history_offers_the_direct_before_snapshot_and_deduplicates_paging(
     assert rows[0]['revision_id'] == fixed and rows[0]['parent_revision_id'] == before
     assert before not in [row['revision_id'] for row in rows]
     open_page(page, server, store)
-    page.get_by_text('页面操作', exact=True).click()
     page.get_by_role('button', name='比较此页版本', exact=True).click()
     select = page.get_by_role('combobox', name='选择同页比较版本', exact=True)
     expect(select.locator(f'option[value="{before}"]')).to_contain_text('修改前')
@@ -168,11 +167,11 @@ def test_pressure_history_and_full_breakdown_use_visible_production_controls(flo
         page.evaluate('(args)=>localStorage.setItem(args[0],JSON.stringify(args[1]))',
                       ['deck-master:visual-style:' + info['project_identity'], state])
         page.get_by_role('button', name='风格校准', exact=True).click()
-        page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+        page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
         if reading == 'historical':
             page.goto(page.url.split('#')[0] + '#' + urlencode({'project': info['project_identity'],
                 'surface': 'style', 'revision': fixed}))
-            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+            page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
         expect(page.get_by_role('button', name='查看完整拆解图', exact=True)).to_be_visible()
         expect(page.get_by_role('button', name='查看完整拆解图', exact=True)).to_be_enabled()
         if reading != 'current':

@@ -40,21 +40,34 @@ def handoff_action(page):
 
 
 def open_visual_phase(page, index):
-    """四阶段组织（UX-03b）：控件在阶段折叠内，核对前先展开该阶段。
-
-    展开动作与真实用户一致（点击阶段摘要）；自动定位仍由产品负责（有规范即
-    打开"确认规范"），这里只补"回看阶段一"这一步。
-    """
-    phase = page.locator('.visual-style .style-phase').nth(index)
+    """回看实际阶段入口；自动恢复仍由产品完成，索引保留 0-based。"""
+    from playwright.sync_api import expect
+    phase = page.locator('.visual-style > .style-phase').nth(index)
+    if page.locator('html').get_attribute('data-workbench-ui') == 'studio':
+        action=page.locator('.visual-style > .studio-style-stages button').nth(index)
+        action.click()
+        expect(action).to_have_attribute('aria-pressed','true')
+        expect(phase).to_be_visible()
+        expect(page.locator('.visual-style > .style-phase:visible')).to_have_count(1)
+        return phase
     # Read after the first real click has registered the user's choice. Reading
     # before that click races passive hydration and can double-toggle to closed.
     summary = phase.locator(':scope > summary')
     summary.click()
     if not phase.evaluate('node => node.open'):
         summary.click()
-    from playwright.sync_api import expect
     expect(phase).to_have_attribute('open', '')
     return phase
+
+
+def edit_visual_rule(page, label='配色'):
+    """Open the rule's real edit button, preserving the read-first Studio design."""
+    from playwright.sync_api import expect
+    editor=page.get_by_role('textbox',name=label+'规范',exact=True)
+    if not editor.is_visible():
+        page.get_by_role('button',name='编辑'+label,exact=True).click()
+    expect(editor).to_be_visible()
+    return editor
 
 
 def test_screenshot_ui_upload_reasoning_confirmation_dispatch_and_restore(flow):
@@ -66,7 +79,7 @@ def test_screenshot_ui_upload_reasoning_confirmation_dispatch_and_restore(flow):
         try:
             page.goto(server.start());page.get_by_role('heading',name='制作总览',exact=True).wait_for()
             page.get_by_role('button',name='风格校准',exact=True).click()
-            page.get_by_role('combobox',name='风格参考来源').select_option('screenshot')
+            page.get_by_role('button',name='外部图片',exact=True).click()
             before=flow.store.load_document()['pages']
             page.get_by_role('textbox',name='截图风格要求').fill('Use palette and hierarchy from this screenshot')
             page.get_by_role('combobox',name='截图风格试作目标').select_option('p02')
@@ -77,7 +90,7 @@ def test_screenshot_ui_upload_reasoning_confirmation_dispatch_and_restore(flow):
             doc=flow.store.load_document();task=next(flow.store.read_object_json(ref) for ref in reversed(doc['tasks']) if flow.store.read_object_json(ref)['kind']=='style_analyze')
             row=flow.store.read_object_json(doc['style_references'][0]);flow.start(task)
             tasks.accept_result(flow.store,task_id=task['task_id'],operation_id=task['operation_id'],produced_against=task['produced_against'],envelope_raw=result(row['reference_id']))
-            page.reload();page.get_by_role('button',name='查看分析结果',exact=True).click();page.get_by_text('调整借用维度',exact=True).click();page.get_by_role('textbox',name='配色规范').wait_for()
+            page.reload();page.get_by_role('button',name='查看分析结果',exact=True).click();edit_visual_rule(page);page.get_by_role('textbox',name='配色规范').wait_for()
             page.get_by_role('textbox',name='配色规范').fill('Use blue #225588 and white')
             confirm_visual_spec(page)
             # 确认后自动恢复规范并停在"确认规范"；试作动作属于「试作与采用」阶段，
@@ -108,7 +121,7 @@ def test_large_reference_catalog_releases_images_and_preserves_selection(flow):
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1280,'height':800})
         try:
-            page.goto(server.start());page.get_by_role('heading',name='制作总览',exact=True).wait_for();page.get_by_role('button',name='风格校准',exact=True).click();page.get_by_role('combobox',name='风格参考来源').select_option('screenshot')
+            page.goto(server.start());page.get_by_role('heading',name='制作总览',exact=True).wait_for();page.get_by_role('button',name='风格校准',exact=True).click();page.get_by_role('button',name='外部图片',exact=True).click()
             page.get_by_role('checkbox',name='选用参考截图 1',exact=True).check()
             for _ in range(5):page.get_by_role('button',name='下一组参考',exact=True).click()
             expect(page.get_by_role('checkbox',name='选用参考截图 65',exact=True)).to_be_visible()
@@ -177,7 +190,7 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             first = WorkbenchServer(flow.project); servers.append(first)
             first_url = first.start()
             page.goto(first_url); page.get_by_role('button', name='风格校准', exact=True).click()
-            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+            page.get_by_role('button', name='外部图片', exact=True).click()
             page.get_by_role('textbox', name='截图风格要求').fill('Cross-origin recovery: preserve complete body')
             page.get_by_role('combobox', name='截图风格试作目标').select_option('p02')
             page.get_by_label('导入参考截图', exact=True).set_input_files(
@@ -194,7 +207,7 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             tasks.accept_result(flow.store, task_id=task['task_id'], operation_id=task['operation_id'],
                 produced_against=task['produced_against'], envelope_raw=result(row['reference_id']))
             page.get_by_role('button', name='查看分析结果', exact=True).click()
-            page.get_by_text('调整借用维度', exact=True).click()
+            edit_visual_rule(page)
             page.get_by_role('textbox', name='配色规范', exact=True).fill('Keep edited blue #225588 rules')
             confirm_visual_spec(page)
             # 确认后自动恢复规范；试作动作属于「试作与采用」阶段，确认会重挂载界面。
@@ -207,7 +220,7 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             assert state['task_id'] == task['task_id'] and state['targets'] == ['p02']
             assert state['spec_edits']['dimensions']['palette'] == 'Keep edited blue #225588 rules'
             recipe_id = state['recipe']
-            page.locator('summary').filter(has_text='个人草稿与恢复').click()
+            page.get_by_role('button', name='个人草稿与恢复', exact=True).click()
             page.get_by_role('textbox', name='个人草稿', exact=True).fill('Saved recovery note')
             expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
             browser.close(); first.stop()
@@ -217,7 +230,7 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             browser = runtime.chromium.launch(args=['--no-sandbox'])
             page = browser.new_page(viewport={'width': 1280, 'height': 800})
             page.goto(second_url); page.get_by_role('button', name='风格校准', exact=True).click()
-            expect(page.get_by_role('combobox', name='风格参考来源')).to_have_value('screenshot')
+            expect(page.get_by_role('button', name='外部图片', exact=True)).to_have_attribute('aria-pressed','true')
             # 恢复后定位在「确认规范」；回看阶段一的选择（参考资料与目标页）需展开该阶段，
             # 并等参考列表读取完成（恢复与列表读取是两个独立请求）。
             open_visual_phase(page, 0)
@@ -228,14 +241,13 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             expect(page.get_by_role('textbox', name='截图风格要求')).to_have_value('Cross-origin recovery: preserve complete body')
             open_visual_phase(page, 1)
             # 规范先读后改：编辑视图按需展开（已保存的编辑内容不丢）。
-            spec_editor = page.locator('.visual-style .visual-spec-editor')
-            if not spec_editor.evaluate('node => node.open'): spec_editor.locator(':scope > summary').click()
+            edit_visual_rule(page)
             expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_have_value('Keep edited blue #225588 rules')
             open_visual_phase(page, 2)
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=15000)
             # A frozen plan is deliberately not restored as an executable pending action.
             expect(handoff_action(page)).to_be_hidden()
-            page.locator('summary').filter(has_text='个人草稿与恢复').click()
+            page.get_by_role('button', name='个人草稿与恢复', exact=True).click()
             restore = page.get_by_role('combobox', name='恢复项目中的个人草稿', exact=True)
             option = restore.locator('option').filter(has_text='Saved recovery note')
             restore.select_option(option.get_attribute('value'))
@@ -243,11 +255,10 @@ def test_screenshot_state_restores_from_project_on_new_origin_and_replaced_edito
             open_visual_phase(page, 2)
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_enabled(timeout=15000)
             # Explicit persisted task/recipe selections work without an automatic latest choice.
-            page.locator('summary').filter(has_text='恢复项目中的截图分析与规范').click()
+            page.get_by_role('button', name='恢复项目中的截图分析与规范', exact=True).click()
             page.get_by_role('combobox', name='恢复已保存的截图分析').select_option(task['task_id'])
             open_visual_phase(page, 1)
-            editor = page.locator('.visual-style .visual-spec-editor')
-            if not editor.evaluate('node => node.open'): editor.locator(':scope > summary').click()
+            edit_visual_rule(page)
             expect(page.get_by_role('textbox', name='配色规范', exact=True)).to_be_visible()
             open_visual_phase(page, 2)
             expect(page.get_by_role('button', name='预览单页试作', exact=True)).to_be_disabled()
@@ -283,18 +294,16 @@ def test_saved_analysis_selection_binds_its_reference_and_cancelled_task_stays_s
         browser = runtime.chromium.launch(); page = browser.new_page(viewport={'width':1280,'height':800})
         try:
             page.goto(server.start()); page.get_by_role('button', name='风格校准', exact=True).click()
-            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
-            page.locator('summary').filter(has_text='恢复项目中的截图分析与规范').click()
+            page.get_by_role('button', name='外部图片', exact=True).click()
+            page.get_by_role('button', name='恢复项目中的截图分析与规范', exact=True).click()
             selector = page.get_by_role('combobox', name='恢复已保存的截图分析')
             expect(selector).to_be_enabled()
             # Open B first; then A must switch both rules and the immutable reference selection.
             for index in (1, 0):
                 selector.select_option(rows[index][1]['task_id'])
-                editor = page.locator('.visual-style .visual-spec-editor:visible').first
-                expect(editor).to_be_visible(timeout=15000)
-                if not editor.evaluate('node => node.open'):
-                    editor.locator(':scope > summary').click()
-                expect(editor.get_by_role('textbox', name='配色规范', exact=True)).to_have_value(('RULE-A','RULE-B')[index])
+                open_visual_phase(page, 1)
+                editor = edit_visual_rule(page)
+                expect(editor).to_have_value(('RULE-A','RULE-B')[index])
                 # 阶段一的选择与规范一并切换：回看该阶段的参考资料。
                 open_visual_phase(page, 0)
                 expect(page.get_by_role('checkbox', name=f'选用参考截图 {index+1}', exact=True)).to_be_checked()
@@ -325,8 +334,8 @@ def test_late_saved_recipe_read_after_leaving_recovery_does_not_acquire_images(f
         held = []; errors = []; page.on('pageerror', lambda error: errors.append(str(error)))
         try:
             page.goto(server.start()); page.get_by_role('button', name='风格校准', exact=True).click()
-            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
-            page.locator('summary').filter(has_text='恢复项目中的截图分析与规范').click()
+            page.get_by_role('button', name='外部图片', exact=True).click()
+            page.get_by_role('button', name='恢复项目中的截图分析与规范', exact=True).click()
             selector = page.get_by_role('combobox', name='恢复已确认的截图规范')
             expect(selector).to_be_enabled()
             assert selector.input_value() == ''  # Existing recipes are never silently selected.
@@ -357,7 +366,7 @@ def test_lost_binary_upload_response_verifies_original_operation_without_duplica
         try:
             url = server.start(); page.goto(url)
             page.get_by_role('button', name='风格校准', exact=True).click()
-            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+            page.get_by_role('button', name='外部图片', exact=True).click()
             def lose_response(route):
                 response = route.fetch()  # The real write completes, only the browser response is lost.
                 uploads.append({'operation_id':parse_qs(urlparse(route.request.url).query)['operation_id'][0],

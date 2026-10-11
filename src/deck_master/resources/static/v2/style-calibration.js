@@ -117,7 +117,7 @@ export function style(app) {
   primaryTarget.addEventListener('change',()=>{if(primaryTarget.value)selected=new Set([primaryTarget.value,...selected]);renderTargets();showPrimary();changed();});
   const phases = [
     phase('1 · 参考与目标',studioStyle()?el('div',{class:'studio-style-columns'},
-      el('section',{class:'studio-style-card studio-style-reference stack'},el('h2',{},'选定风格参考'),el('label',{class:'stack'},'固定参考原图',reference),referenceView,detail('查找其它参考页',referenceSearch,referenceCount),el('p',{class:'muted'},'借用视觉规则，保留目标页事实与叙事结构。'),el('label',{},'一句话要求',instruction)),
+      el('section',{class:'studio-style-card studio-style-reference stack'},el('h2',{},'选定风格参考'),el('label',{class:'stack'},'固定参考原图',reference),el('label',{class:'studio-style-instruction'},'一句话要求',instruction),referenceView,detail('查找其它参考页',referenceSearch,referenceCount),el('p',{class:'muted'},'借用视觉规则，保留目标页事实与叙事结构。')),
       el('section',{class:'studio-style-card studio-style-targets stack'},el('h2',{},'选择需要调整的页面'),el('div',{class:'row wrap studio-target-tools'},targetSearch,selectedFilter),targetCount,targets,el('label',{class:'stack'},'先试哪一页',primaryTarget)))
       :el('div',{class:'stack'},el('div',{class:'style-working-pair'},el('div',{class:'stack'},el('label',{class:'stack'},'固定参考原图',reference),referenceView,detail('查找其它参考页',referenceSearch,referenceCount)),el('div',{class:'stack'},el('label',{class:'stack'},'先试哪一页',primaryTarget),primaryPreview)),el('label',{},'一句话要求',instruction),el('div',{class:'row wrap style-primary-actions'},proposeButton),detail('其它目标页',el('div',{class:'row wrap'},targetSearch,selectedFilter),targetCount,targets)),
       detail('高级：借用维度、原文选段与建议',

@@ -53,8 +53,10 @@ export function candidateDesk(app, data) {
   const keep = button('保留当前', keepCurrent);
   const reopen = button('重新打开候选', reopenCandidate, false, {hidden: true});
   const retry = button('回本页调整并再试', () => app.go({candidate_id: null, revision: live?.revision_id || app.route.revision}));
-  root.append(title, el('div', {class: 'toolbar'}, el('label', {}, '候选 ', select), button('刷新候选与当前状态', refresh)), status, previewTools, columns, sources, evidence,
-    el('div', {class: 'row wrap candidate-decisions'}, choosePlan, adopt, keep, reopen, retry), impact, draft);
+  const decisions = el('div', {class: 'row wrap candidate-decisions'}, choosePlan, adopt, keep, reopen, retry);
+  const studio = document.documentElement.dataset.workbenchUi === 'studio';
+  root.append(title, el('div', {class: 'toolbar'}, el('label', {}, '候选 ', select), button('刷新候选与当前状态', refresh)), status, previewTools, columns,
+    ...(studio ? [decisions, impact, sources, evidence, draft] : [sources, evidence, decisions, impact, draft]));
   function controls() {
     select.disabled = busy;
     const unavailable = !selected || selected.candidate.page_id !== data.page_id;

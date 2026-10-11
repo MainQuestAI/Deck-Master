@@ -66,7 +66,7 @@ def test_selection_to_style_path_works_after_using_the_screenshot_source(obligat
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     open_style(page)
-    page.get_by_label('风格参考来源').select_option('screenshot')
+    page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
     expect(page.locator('.visual-style')).to_be_visible()
     # 项目路线的状态行不残留到截图路线（两条路线各有自己的状态出口）。
     expect(page.locator('.style-calibration > [role="status"]')).to_be_hidden()
@@ -74,16 +74,35 @@ def test_selection_to_style_path_works_after_using_the_screenshot_source(obligat
     page.locator('.gallery-viewport').wait_for()
     page.get_by_label(re.compile(r'^选择第 1 页 ')).check()
     page.get_by_label(re.compile(r'^选择第 3 页 ')).check()
-    page.get_by_role('button', name=re.compile(r'^用选页开始风格校准'), exact=True).click()
+    before = store.read_current()
+    page.get_by_role('group', name='画廊选页制作', exact=True).locator('[data-gallery-action="style"]').click()
+    page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    expect(page.locator('.batch-actions')).to_contain_text('2 页用于风格校准')
+    page.get_by_role('combobox', name='批量固定参考原图', exact=True).select_option('p01')
+    expect(page.locator('.batch-actions')).to_contain_text('参考页同时在目标中')
+    expect(page.get_by_role('checkbox', name='选择第 01 页', exact=True)).to_be_checked()
+    # 由用户明确解除参考/目标冲突；入口不得隐式删除选页。
+    page.get_by_role('checkbox', name='选择第 01 页', exact=True).uncheck()
+    page.get_by_role('button', name='带所选页进入风格校准', exact=True).click()
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
 
     # 项目内路线：截图路线收起，固定参考是第 1 页，目标是其余选页。
     expect(page.locator('.style-calibration > .style-phase').first).to_be_visible()
-    expect(page.get_by_label('风格参考来源')).to_have_value('page')
+    expect(page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='项目页面', exact=True)).to_have_attribute('aria-pressed', 'true')
+    expect(page.locator('.visual-style')).to_be_hidden()
+    expect(page.get_by_role('combobox', name='风格参考原图', exact=True).locator('option:checked')).to_have_text(re.compile(r'^第 1 页 .* · R ' + store.current_revision_id()[:8]))
+    page.wait_for_function('''async revision => {
+      const {records} = await (await fetch('/api/drafts')).json();
+      return records.some(r => r.draft.content.style_calibration?.reference?.page_id === 'p01' &&
+        r.draft.content.style_calibration.reference.revision_id === revision &&
+        JSON.stringify(r.draft.content.style_calibration.targets) === '["p03"]');
+    }''', arg=store.current_revision_id())
     expect(page.locator('.style-calibration .style-phase').first).to_contain_text('第 1 页')
     toggle_phase(page, 1)
-    page.get_by_text('其它目标页', exact=True).click()
     expect(page.get_by_role('checkbox', name=re.compile(r'^风格目标 第 3 页')).first).to_be_checked()
+    expect(page.get_by_role('checkbox', name=re.compile(r'^风格目标 第 1 页 ')).first).not_to_be_checked()
+    assert store.read_current() == before
+    assert 'revision=' + store.current_revision_id() in page.url
 
 
 def test_style_handoff_appears_with_a_real_local_plan(obligations_browser):
@@ -100,9 +119,9 @@ def test_style_handoff_appears_with_a_real_local_plan(obligations_browser):
     expect(page).to_have_url(re.compile('revision=' + store.current_revision_id()))
     open_style(page)
     toggle_phase(page, 2)
-    versions = page.get_by_role('combobox', name='已确认的风格版本')
-    expect(versions.locator('option')).to_have_count(2, timeout=20000)
-    versions.select_option(index=1)
+    versions = page.locator('.studio-recipe-card')
+    expect(versions).to_have_count(1, timeout=20000)
+    versions.get_by_role('button', name='使用这版规范', exact=True).click()
     handoff = page.locator('.style-plan button').filter(has_text='保存并交接风格试作')
     expect(handoff).to_be_hidden()
     toggle_phase(page, 3)

@@ -56,12 +56,13 @@ def save_ui(store, name, content, *, layer='svg'):
 def restore(page, name, *, style=False):
     from playwright.sync_api import expect
     if style:
-        detail = page.locator('.style-calibration > details').filter(has_text='个人草稿与恢复')
+        detail = page.locator('.style-calibration > .style-tool').filter(has=page.get_by_role('button', name='个人草稿与恢复', exact=True))
     else:
         page.get_by_role('button', name='笔记', exact=True).click()
-        detail = page.locator('details.source-detail').filter(has_text='恢复、下载与版本详情')
-    if not detail.evaluate('n => n.open'):
-        detail.locator(':scope > summary').click()
+        page.get_by_role('button', name='备份与恢复', exact=True).click()
+    if style:
+        trigger = detail.get_by_role('button', name='个人草稿与恢复', exact=True)
+        if trigger.get_attribute('aria-expanded') != 'true': trigger.click()
     select = page.get_by_label('恢复项目中的个人草稿', exact=True)
     expect(select.locator(f'option[value="{name}"]')).to_be_attached()
     select.select_option(name)
@@ -138,7 +139,7 @@ def test_icon_configuration_preserves_opinions_before_notes_are_ready(icon_store
             page.wait_for_function('() => window.iconNotesHeld >= 1')
         else:
             expect(page.get_by_role('button', name='重新读取已保存意见', exact=True)).to_be_visible()
-        expect(page.get_by_label('图标处理方式')).to_have_value(original['method'])
+        expect(page.locator('select[aria-label="图标处理方式"]')).to_have_value(original['method'])
         expect(page.get_by_label('建议的标准图标')).to_have_value('workflow')
         expect(page.get_by_label('已采用图标样例').locator('option')).to_have_count(3)
         expect(boxes).to_have_count(0)
@@ -147,11 +148,11 @@ def test_icon_configuration_preserves_opinions_before_notes_are_ready(icon_store
                                  and response.url.endswith('/api/drafts/save')
                                  and response.request.post_data_json['draft']['draft_id'] == 'draft-B') as receipt:
             if configuration == 'method':
-                page.get_by_label('图标处理方式').select_option('redraw'); expected['method'] = 'redraw'
+                page.get_by_role('button', name='忠实重绘', exact=False).click(); expected['method'] = 'redraw'
             elif configuration == 'asset':
-                page.get_by_label('建议的标准图标').select_option('file-text'); expected['asset'] = 'file-text'
+                page.get_by_role('button', name='选用标准图标 文件', exact=True).click(); expected['asset'] = 'file-text'
             else:
-                page.get_by_label('已采用图标样例').select_option(index=2); expected['sample_identity'] = samples[1]
+                page.locator('.studio-icon-samples').get_by_role('button').nth(1).click(); expected['sample_identity'] = samples[1]
         assert receipt.value.json()['record']['draft']['content']['icon_ui'] == expected
         assert_icon_saved(page, icon_store, 'draft-B', expected)
         page.evaluate("() => Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>window.iconCopy=text}})")
@@ -181,7 +182,7 @@ def test_icon_configuration_preserves_opinions_before_notes_are_ready(icon_store
         if entry == 'replacement': restore(page, 'draft-B')
         page.get_by_role('button', name='图标优化', exact=True).click()
         expect(boxes.nth(1)).to_be_checked(); expect(boxes.nth(0)).not_to_be_checked()
-        expect(page.get_by_label('图标处理方式')).to_have_value(expected['method'])
+        expect(page.locator('select[aria-label="图标处理方式"]')).to_have_value(expected['method'])
         expect(page.get_by_label('建议的标准图标')).to_have_value(expected['asset'])
         expect(page.get_by_label('已采用图标样例')).to_have_value(
             page.get_by_label('已采用图标样例').locator('option').nth(2 if configuration == 'sample' else 1).get_attribute('value'))
@@ -199,8 +200,7 @@ def test_icon_selection_during_refresh_is_saved_and_not_revived(icon_store, sele
         page.get_by_role('button', name='图标优化', exact=True).click()
         boxes = page.locator('.icon-opinions input'); expect(boxes.nth(0)).to_be_checked()
         page.get_by_role('button', name='笔记', exact=True).click()
-        detail = page.locator('details.source-detail').filter(has_text='恢复、下载与版本详情')
-        if not detail.evaluate('n => n.open'): detail.locator(':scope > summary').click()
+        page.get_by_role('button', name='备份与恢复', exact=True).click()
         page.get_by_role('button', name='图标优化', exact=True).click()
         page.evaluate('() => window.beforeIconRead = document.querySelector(".icon-opinions input")')
         held = []
@@ -216,6 +216,7 @@ def test_icon_selection_during_refresh_is_saved_and_not_revived(icon_store, sele
             if selection == 'B': boxes.nth(1).check()
             # Explicit saving must capture the latest selection before the read finishes.
             page.get_by_role('button', name='笔记', exact=True).click()
+            page.get_by_role('button', name='写笔记', exact=True).click()
             page.get_by_role('button', name='保存个人草稿', exact=True).click()
         assert receipt.value.json()['record']['draft']['content']['icon_ui'] == expected
         assert_icon_saved(page, icon_store, 'draft-refresh', expected)
@@ -303,7 +304,7 @@ def test_icon_method_restoration_is_independent_of_failed_catalog(icon_store, me
         page.route('**/api/icons/list?*', lambda route: route.fulfill(json={'proposals': [], 'recipes': [], 'samples': [sample]}))
         open_page(page, server, icon_store)
         page.get_by_role('button', name='图标优化', exact=True).click()
-        expect(page.get_by_label('图标处理方式')).to_have_value(method)
+        expect(page.locator('select[aria-label="图标处理方式"]')).to_have_value(method)
         expect(page.get_by_role('button', name='重新读取标准目录')).to_be_visible()
         expect(page.locator('.icon-opinions input').first).to_be_checked()
         page.evaluate("() => Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>window.iconCopy=text}})")
@@ -320,7 +321,7 @@ def test_icon_method_restoration_is_independent_of_failed_catalog(icon_store, me
         page.unroute('**/api/icons/catalog')
         page.get_by_role('button', name='重新读取标准目录').click()
         expect(page.get_by_label('建议的标准图标')).to_have_value('workflow')
-        expect(page.get_by_label('图标处理方式')).to_have_value(method)
+        expect(page.locator('select[aria-label="图标处理方式"]')).to_have_value(method)
 
 
 @pytest.mark.parametrize('layer', ['original_image', 'svg', 'ppt'])
@@ -364,8 +365,8 @@ def visual_setup(flow):
 def visual_open(page):
     from playwright.sync_api import expect
     page.get_by_role('button', name='风格校准', exact=True).click()
-    expect(page.get_by_label('风格参考来源')).to_have_value('screenshot')
-    page.get_by_text('调整借用维度', exact=True).click()
+    expect(page.get_by_role('button', name='外部图片', exact=True)).to_have_attribute('aria-pressed', 'true')
+    page.get_by_role('button', name='编辑配色', exact=True).click()
     expect(page.get_by_label('配色规范', exact=True)).to_have_value('blue #225588')
 
 
@@ -419,7 +420,7 @@ def test_screenshot_old_confirmation_cannot_mark_a_restored_draft_confirmed(flow
     with browser_for(flow.project) as (page, _server):
         page.get_by_role('button', name='风格校准', exact=True).click()
         restore(page, 'visual-A', style=True)
-        page.get_by_text('调整借用维度', exact=True).click()
+        page.get_by_role('button', name='编辑配色', exact=True).click()
         route, response = hold_confirmation(page)
         restore(page, 'visual-B', style=True)
         expect(page.get_by_label('配色规范')).to_have_value('red #ff0000')
@@ -441,10 +442,9 @@ def test_primary_style_target_survives_restore_confirm_refresh_and_first_plan(fl
         page.get_by_label('风格参考原图').select_option('p01')
         primary = page.locator('.style-calibration').get_by_role('combobox', name='当前风格试作目标', exact=True)
         primary.select_option('p02')
-        # The preview deliberately shares the target's accessible description.
-        # Wait until it is present to cover slow image-pool scheduling as in CI,
-        # then select through the actual form control rather than a label alias.
-        expect(page.locator('.style-primary-target [aria-label="当前风格试作目标"]')).to_be_attached()
+        # The production target card must remain available while changing the
+        # primary target; use its real control, preserving ordered target state.
+        expect(page.locator('.style-calibration > .style-primary-phase .studio-style-targets')).to_be_visible()
         primary.select_option('p03')
         expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
         records = ui_journal.list_drafts(flow.project)['records']
@@ -460,7 +460,7 @@ def test_primary_style_target_survives_restore_confirm_refresh_and_first_plan(fl
         assert recipe['input']['target_page_ids'] == ['p03', 'p02']
         page.get_by_role('button', name='刷新风格版本', exact=True).click()
         expect(page.get_by_label('先试哪一页')).to_have_value('p03')
-        page.locator('.style-calibration > .style-phase').nth(2).locator(':scope > summary').click()
+        page.locator('.style-calibration > .studio-style-stages').get_by_role('button', name='3 · 试作与采用').click()
         with page.expect_request('**/api/styles/plan') as planned:
             page.locator('.style-calibration > .style-phase').nth(2).get_by_role('button', name='预览单页试作').click()
         assert planned.value.post_data_json['input']['page_ids'] == ['p03']
@@ -479,7 +479,7 @@ def test_rejected_upload_reload_with_lost_private_receipt_preserves_new_result(f
             lost.append(route.request.post_data_json)
             route.abort()
         page.route('**/api/drafts/save', lose_private_receipt)
-        page.get_by_label('风格参考来源').select_option('screenshot')
+        page.get_by_role('button', name='外部图片', exact=True).click()
         expect(page.locator('.draft-state')).to_contain_text('保存结果待核实')
         assert lost
         page.unroute('**/api/drafts/save', lose_private_receipt)
@@ -579,15 +579,16 @@ def test_closing_narrow_tools_keeps_intentional_canvas_annotation(page_fixture, 
     page.get_by_role('button', name=mode, exact=True).click()
     page.get_by_label('意见正文', exact=True).fill('窄屏收起工具仍有意标注')
     page.set_viewport_size({'width': 1024, 'height': 800})
-    page.get_by_role('button', name='工具', exact=True).click()
+    page.get_by_role('button', name='意见', exact=True).click()
     page.get_by_role('button', name='回到画面', exact=True).click()
     overlay = page.locator('.annotation-overlay')
     assert overlay.evaluate('n => getComputedStyle(n).pointerEvents') == 'auto'
     box = overlay.bounding_box(); x, y = box['x'] + box['width'] * .4, box['y'] + box['height'] * .4
     page.mouse.move(x, y); page.mouse.down(); page.mouse.move(x + 25, y + 25); page.mouse.up()
     expect(page.locator('.annotation-mark:not(.saved)')).to_have_count(1)
-    page.get_by_role('button', name='工具', exact=True).click()
+    page.get_by_role('button', name='意见', exact=True).click()
     expect(page.get_by_label('意见正文', exact=True)).to_have_value('窄屏收起工具仍有意标注')
+    page.get_by_role('button', name='回到画面', exact=True).click()
     page.get_by_role('button', name='详情', exact=True).click()
     assert overlay.evaluate('n => getComputedStyle(n).pointerEvents') == 'none'
 

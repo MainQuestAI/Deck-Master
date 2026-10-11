@@ -45,12 +45,15 @@ def test_single_page_native_fit_fullscreen_keeps_basis_and_draft(reading_store,s
             note=page.get_by_label('个人草稿',exact=True);note.fill('W06 固定页面草稿，不因全屏或阅读倍率改变')
             expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
             if size[0]<1280:page.get_by_role('dialog',name='单页工具面板').get_by_role('button',name='回到画面',exact=True).click()
-            native=controls.get_by_role('button',name='原生 100% 阅读',exact=True);native.click()
+            if size[0]==390: controls.get_by_role('button',name='缩放',exact=False).click()
+            zoom_scope=page.get_by_role('dialog',name='图稿缩放') if size[0]==390 else controls
+            native=zoom_scope.get_by_role('button',name='原生 100% 阅读',exact=True);native.click()
             expect(viewport).to_have_attribute('data-reading-mode','native')
             intrinsic=canvas.evaluate('e=>({width:e.width,height:e.height,box:e.getBoundingClientRect().toJSON()})')
             assert intrinsic['width']==960 and intrinsic['height']==540
             assert intrinsic['box']['width']==960 and intrinsic['box']['height']==540
-            for control in controls.get_by_role('button').all():assert control.bounding_box()['height']>=44
+            for control in zoom_scope.get_by_role('button').all():assert control.bounding_box()['height']>=44
+            if size[0]==390: zoom_scope.get_by_role('button',name='关闭',exact=True).click()
             if size[0]==1440:
                 for width,height in [(1280,800),(390,844),(1440,900)]:
                     page.set_viewport_size({'width':width,'height':height})
@@ -61,10 +64,13 @@ def test_single_page_native_fit_fullscreen_keeps_basis_and_draft(reading_store,s
             overlay=page.locator('.studio-page-reading .annotation-overlay')
             expect(overlay).to_be_attached()
             assert abs(overlay.bounding_box()['width']-960)<1
-            controls.get_by_role('button',name='放大图稿',exact=True).click()
+            if size[0]==390: controls.get_by_role('button',name='缩放',exact=False).click()
+            zoom_scope=page.get_by_role('dialog',name='图稿缩放') if size[0]==390 else controls
+            zoom_scope.get_by_role('button',name='放大图稿',exact=True).click()
             assert canvas.bounding_box()['width']==1200
-            controls.get_by_role('button',name='缩小图稿',exact=True).click()
+            zoom_scope.get_by_role('button',name='缩小图稿',exact=True).click()
             assert canvas.bounding_box()['width']==960
+            if size[0]==390: zoom_scope.get_by_role('button',name='关闭',exact=True).click()
             controls.get_by_role('button',name='适应窗口',exact=True).click()
             expect(viewport).to_have_attribute('data-reading-mode','fit')
             fitted=viewport.evaluate('e=>{const c=e.querySelector("canvas"),s=getComputedStyle(e);return {width:e.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight),height:e.clientHeight-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom),canvas:c.getBoundingClientRect().toJSON()}}')
@@ -87,6 +93,7 @@ def test_single_page_native_fit_fullscreen_keeps_basis_and_draft(reading_store,s
             # Existing saved zoom URL keeps its old container-multiplier semantics.
             page.reload();expect(page.locator('.studio-page-reading .page-image-viewport')).to_have_attribute('data-reading-mode','legacy')
             expect(page.get_by_role('group',name='单页图稿阅读')).to_contain_text('已恢复版面比例 150%')
+            if size[0]==390: page.get_by_role('button',name='阅读设置',exact=True).click()
             page.get_by_role('button',name='回到整稿画廊',exact=True).click();expect(page.get_by_role('heading',name='整稿画廊',exact=True)).to_be_visible()
             assert store.load_document()==before and errors==[]
             (out/f'result-{size[0]}.json').write_text(json.dumps({'passed':True,'viewport':size,'native':intrinsic,'fit':fitted,'fixed_revision':before['revision_id'],'business_unchanged':True,'errors':errors},ensure_ascii=False,indent=2))

@@ -321,7 +321,8 @@ def test_pagination_draft_restores_only_a_verified_reading_snapshot(action_brows
     page.get_by_role('button', name='待决定', exact=True).click()
     page.get_by_text('个人记录与操作恢复', exact=True).click()
     page.get_by_role('button', name='保存个人草稿', exact=True).click()
-    expect(page.locator('.candidate-recovery .draft-state')).to_contain_text('已保存到项目')
+    expect(page.get_by_role('dialog', name='个人记录与操作恢复', exact=True).locator('.draft-state')).to_contain_text('已保存到项目')
+    page.get_by_role('dialog', name='个人记录与操作恢复', exact=True).get_by_role('button', name='关闭', exact=True).click()
     if binding == 'missing':
         from deck_master import ui_journal
         records = page.request.get(server.start().rstrip('/') + '/api/drafts').json()['records']
@@ -395,7 +396,8 @@ def test_explicit_reading_write_restarts_pagination_from_first_page(action_brows
         page.get_by_role('button', name='待决定', exact=True).click()
         page.get_by_text('个人记录与操作恢复', exact=True).click()
         page.get_by_role('button', name='保存个人草稿', exact=True).click()
-        expect(page.locator('.candidate-recovery .draft-state')).to_contain_text('已保存到项目')
+        expect(page.get_by_role('dialog', name='个人记录与操作恢复', exact=True).locator('.draft-state')).to_contain_text('已保存到项目')
+        page.get_by_role('dialog', name='个人记录与操作恢复', exact=True).get_by_role('button', name='关闭', exact=True).click()
         records = page.request.get(server.start().rstrip('/') + '/api/drafts').json()['records']
         record = next(record for record in records if record['draft']['content'].get('run_desk', {}).get('offset') == 30)
         draft = copy.deepcopy(record['draft'])

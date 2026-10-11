@@ -117,17 +117,19 @@ export function iconWorkbench(app,data){
     }else body.append(el('p',{class:'field-error'},`图标定位需要本页的 ${missingDependencys.join(' 和 ')}，此刻还未生成或暂不可读。请先完成对应图层的生成再进入定位与要求；已经保存的意见和已有方案仍可阅读。`));
   }
   const methodCards=el('div',{class:'studio-icon-methods',role:'group','aria-label':'图标处理方式'}),assetCards=el('div',{class:'studio-icon-catalog',role:'group','aria-label':'标准图标目录'}),sampleCards=el('div',{class:'studio-icon-samples'});
-  const standardArea=el('section',{class:'stack studio-icon-standard'},el('h3',{},'选择标准图标'),assetCards,assetPreview,catalogState,catalogRetry),sampleArea=el('section',{class:'stack studio-icon-reuse'},el('h3',{},'选择已采用样例'),sampleCards);
+  const standardArea=el('section',{class:'stack studio-icon-standard'},el('h3',{},'选择标准图标'),assetCards,assetPreview),sampleArea=el('section',{class:'stack studio-icon-reuse'},el('h3',{},'选择已采用样例'),sampleCards);
+  const catalogHealth=el('div',{class:'stack studio-icon-catalog-status'},catalogState,catalogRetry);
   function syncStudio(){
     if(!studio)return;
     standardArea.hidden=method.value!=='standard';sampleArea.hidden=method.value!=='reuse';
+    catalogHealth.hidden=!catalogState.textContent;
     methodCards.replaceChildren(...[['redraw','忠实重绘','保留原图中的图标形态，细化线条与比例。'],['standard','标准替换','从正式图标目录选择语义明确的图标。'],['reuse','复用样例','延续已经比较并采用的图标方案。']].map(([value,title,note])=>button([el('strong',{},title),el('small',{},note)],()=>{method.value=value;method.dispatchEvent(new Event('change'));},false,{'aria-pressed':String(method.value===value),disabled:blocked()||Boolean(method.querySelector('[value="'+value+'"]').disabled)})));
     assetCards.replaceChildren(...(catalogManifest?.icons||[]).map(entry=>button([el('img',{src:'/api/icons/catalog/file?'+new URLSearchParams({asset_id:entry.id,sha256:entry.sha256}),alt:'',loading:'lazy'}),el('span',{},entry.label)],()=>{asset.value=entry.id;asset.dispatchEvent(new Event('change'));},false,{'aria-label':'选用标准图标 '+entry.label,'aria-pressed':String(asset.value===entry.id),disabled:blocked()||!catalogReady})));
     sampleCards.replaceChildren(...samples.map(entry=>button([el('strong',{},entry.label),el('small',{},entry.page_id+' · '+entry.semantic_key)],()=>{sample.value=sampleKey(entry);sample.dispatchEvent(new Event('change'));},false,{'aria-pressed':String(sample.value===sampleKey(entry)),disabled:blocked()||!listingReady})));
     if(!samples.length)sampleCards.append(el('p',{class:'muted'},'尚无已采用样例。先完成一次图标比较与采用，再跨页复用。'));
   }
   if(!missingDependencys.length){
-    if(studio){method.hidden=asset.hidden=sample.hidden=true;body.append(method,asset,sample,el('h3',{},'选择处理方式'),methodCards,standardArea,sampleArea,button('复制给 Agent 的图标要求',handoff,true));}
+    if(studio){method.hidden=asset.hidden=sample.hidden=true;body.append(method,asset,sample,el('h3',{},'选择处理方式'),methodCards,catalogHealth,standardArea,sampleArea,button('复制给 Agent 的图标要求',handoff,true));}
     else body.append(el('label',{},'处理方式',method),el('label',{},'标准图标建议',asset),assetPreview,catalogState,catalogRetry,el('label',{},'跨页复用样例',sample),button('复制给 Agent 的图标要求',handoff));
   }
   body.append(listingState,listingRetry,status,proposals,recipes);

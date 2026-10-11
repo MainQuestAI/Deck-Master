@@ -395,3 +395,29 @@ html[data-workbench-ui=studio] {
 .studio-workspace #content-area-plan > .panel > .panel-head {position:sticky;top:8px;z-index:2;background:var(--surface);gap:12px;flex-wrap:wrap}
 .studio-workspace .studio-content-adjust [role=group] > button[aria-pressed=true] {background:var(--fg);color:#fff;border-color:var(--fg)}
 .studio-workspace .content-request-review {padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-warm)}
+
+/* Keep editable requirements above supporting previews; mobile reading starts with a page. */
+.studio-workspace .studio-style-instruction {display:flex;flex-direction:column;gap:6px}
+.studio-workspace .studio-style-instruction textarea {margin:0;min-height:72px}
+.studio-workspace .studio-gallery-settings {display:flex;flex-direction:column;gap:18px}
+.studio-workspace .studio-gallery-settings label {display:flex;flex-direction:column;gap:8px}
+.studio-workspace .studio-gallery-settings select {width:100%;max-width:none}
+@media(max-width:767px){
+ .studio-workspace .sidebar {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
+ .studio-workspace .sidebar>.logo {grid-column:1;grid-row:1;margin:0}
+ .studio-workspace .sidebar>.sidebar-footer {grid-column:2;grid-row:1;padding:0;max-width:210px;gap:6px}
+ .studio-workspace .sidebar-footer button,.studio-workspace .sidebar-footer>a {font-size:12px;padding:8px 10px}
+ .studio-workspace .sidebar>.nav {grid-column:1/-1;grid-row:2}
+ .studio-workspace .sidebar>.nav button {font-size:12px}
+ .studio-workspace .gallery-view>.page-head {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:16px}
+ .studio-workspace .gallery-view>.page-head p {font-size:12px;line-height:1.5}
+ .studio-workspace .gallery-view>.page-head>button {width:auto;align-self:flex-start;font-size:12px;padding:8px 12px}
+ .studio-workspace .gallery-legend {display:flex;flex-wrap:wrap;gap:4px 10px}
+ .studio-workspace .gallery-legend span:last-child {width:auto}
+ .studio-workspace .studio-gallery-mobile-search {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
+ .studio-workspace .studio-gallery-mobile-search .gallery-search,.studio-workspace .studio-gallery-mobile-search input {min-width:0;width:100%}
+ .studio-workspace .studio-gallery-mobile-search input {font-size:12px;padding:10px}
+ .studio-workspace .studio-gallery-mobile-search>button {font-size:12px;padding:8px 10px;max-width:160px;white-space:normal}
+ .studio-workspace .studio-gallery-settings .segmented {display:flex;flex-wrap:wrap}
+ .studio-workspace .studio-gallery-settings .segmented button {flex:1;min-width:85px;font-size:12px;padding:8px}
+}

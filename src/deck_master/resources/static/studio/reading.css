@@ -14,3 +14,45 @@
 .studio-workspace .studio-page-reading:fullscreen>.stack>p {display:none}
 .studio-workspace .studio-page-reading:fullscreen>.fixed-side-label {display:none}
 @media(max-width:767px){.studio-workspace .studio-reading-controls {gap:8px}.studio-workspace .studio-reading-controls output {order:1;flex-basis:100%}.studio-workspace .studio-page-reading:fullscreen {padding:12px}}
+
+/* Reserve the artwork area on desktop while retaining every stage and action. */
+@media (min-width:1024px) {
+  .studio-workspace .page-tools .annotations-panel>.panel-head {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .studio-workspace .page-tools .annotations-panel>.panel-body {padding-top:0}
+  .studio-workspace .page-workbench .page-head {margin-bottom:12px;padding-bottom:12px}
+  .studio-workspace .page-workbench .chain button {display:grid;grid-template-columns:auto 1fr;column-gap:6px;row-gap:0;padding:8px;min-height:62px;align-content:center}
+  .studio-workspace .page-workbench .chain-number {margin:0}
+  .studio-workspace .page-workbench .chain-state {grid-column:2;margin-top:0}
+  .studio-workspace .reading-toolbar {margin-bottom:8px;gap:8px}
+  .studio-workspace .reading-toolbar>.page-tools-switcher {padding-top:8px;margin-top:0}
+  .studio-workspace .studio-page-reading .page-image-viewport {padding:8px}
+}
+
+/* Compact tool controls keep the image and the opinion editor in the first view. */
+.studio-workspace .studio-reading-menu,.studio-workspace .studio-zoom-menu {display:none}
+@media(min-width:1024px){
+ .studio-workspace .page-context>.page-tools {gap:12px}
+ .studio-workspace .page-context .studio-tool-title {padding-bottom:8px}
+ .studio-workspace .page-context .tool-object-summary {padding-bottom:8px}
+}
+@media(max-width:767px){
+ .studio-workspace .page-workbench .page-head {margin-bottom:12px;padding-bottom:12px;gap:8px}
+ .studio-workspace .reading-toolbar {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
+ .studio-workspace .reading-toolbar>.studio-reading-return,.studio-workspace .reading-toolbar>.studio-page-actions {display:none}
+ .studio-workspace .reading-toolbar>.compact-layer-select {display:block;max-width:none;width:100%;grid-column:auto}
+ .studio-workspace .reading-toolbar>.studio-reading-menu {display:block;min-height:44px}
+ .studio-workspace .reading-toolbar>.page-tools-switcher {grid-column:1/-1;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding-top:8px;margin-top:0}
+ .studio-workspace .reading-toolbar>.page-tools-switcher button {display:flex;flex-direction:column;gap:4px;padding:6px 2px;min-height:52px;font-size:11px;line-height:16px}
+ .studio-workspace .studio-reading-controls {flex-wrap:nowrap;padding-bottom:8px}
+ .studio-workspace .studio-reading-controls>.studio-inline-zoom {display:none}
+ .studio-workspace .studio-reading-controls>.studio-zoom-menu {display:block}
+ .studio-workspace .studio-reading-controls>output {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .studio-workspace .studio-reading-controls>button {padding:8px 10px;font-size:12px}
+ .studio-workspace .studio-page-reading .page-image-viewport {padding:8px}
+ .studio-workspace .studio-page-reading:fullscreen .studio-reading-controls {flex-wrap:wrap}
+ .studio-workspace .studio-page-reading:fullscreen .studio-inline-zoom {display:block}
+ .studio-workspace .studio-page-reading:fullscreen .studio-zoom-menu {display:none}
+ .studio-workspace .studio-page-reading:fullscreen .studio-reading-controls>output {position:static;width:auto;height:auto;clip-path:none;margin:0;flex-basis:100%}
+ .studio-reading-menu-body .studio-page-actions>.row {display:flex;flex-direction:column;align-items:stretch;gap:8px}
+ .studio-zoom-dialog button {min-width:44px;min-height:44px}
+}

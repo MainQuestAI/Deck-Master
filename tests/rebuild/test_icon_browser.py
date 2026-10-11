@@ -24,7 +24,7 @@ def icon_browser(icon_store):
         page.goto(url.split('#')[0]+'#'+urlencode({'project':info['project_identity'],'surface':'page','page':'p01','layer':'svg','revision':icon_store.current_revision_id()}))
         # P02:图标工作台在「图标优化」面内,默认意见面;显式切换后才是当前工作上下文。
         page.get_by_role('button',name='图标优化',exact=True).click()
-        page.get_by_role('heading',name='优化图标',exact=True).wait_for()
+        page.get_by_role('region',name='优化图标',exact=True).wait_for()
         try:yield page,icon_store,errors
         finally:browser.close();server.stop()
     assert errors==[]
@@ -57,7 +57,7 @@ def test_icon_proposal_compare_confirm_keyboard_and_dispatch(icon_browser,tmp_pa
     page.get_by_role('button',name='预览选中页图标试作',exact=True).click()
     page.get_by_role('button',name='确认计划并交接图标修复',exact=True).wait_for()
     page.get_by_role('button',name='确认计划并交接图标修复',exact=True).click()
-    page.get_by_role('heading',name='优化图标',exact=True).wait_for(state='hidden')
+    page.get_by_role('region',name='优化图标',exact=True).wait_for(state='hidden')
     doc=store.load_document();new=[store.read_object_json(t) for t in doc['tasks'] if store.read_object_json(t).get('stage_request',{}).get('icon_recipe_ref')]
     assert len(new)==1 and 'icon_repair' in new[0]['required_capabilities']
     assert doc['pages']==before['pages'] and doc['outputs']==before['outputs'] and errors==[]
@@ -144,7 +144,7 @@ def test_saved_sample_identity_survives_reorder_and_missing(icon_browser):
       const app={business:{entries:new Map()},health:{ui_capabilities:['icon_quality.v1']},route:{layer:'svg'},root:document.createElement('div'),disposables:[],editor:{draft:{content:{icon_ui:{method:'reuse',sample_identity:a}}},ready:Promise.resolve(),changed(){}}};
       async function build(){const root=iconWorkbench(app,{page_id:'p01',stages:{content:{ref:{sha256:'content'}},blueprint:{existence:'recorded',ref:{sha256:'bp'},file:'bp.png'},svg:{existence:'recorded',ref:{sha256:'svg'},file:'layer.svg'},ppt_preview:{existence:'not_generated'}}});document.body.append(root);for(let i=0;i<100&&!root.querySelector('[aria-label="已采用图标样例"]').options.length;i++)await new Promise(r=>setTimeout(r,10));return root;}
       let root=await build();const restored=root.querySelector('[aria-label="已采用图标样例"]').value;root.remove();samples=[b];root=await build();
-      const missing=root.querySelector('[aria-label="已采用图标样例"]').value;const warning=root.textContent.includes('请重新选择');root.remove();samples=[];root=await build();const emptyMethod=root.querySelector('[aria-label="图标处理方式"]').value;root.querySelectorAll('button')[1].click();await new Promise(r=>setTimeout(r,10));const blocked=root.textContent.includes('请重新选择');root.remove();app.disposables.forEach(fn=>fn());window.fetch=original;
+      const missing=root.querySelector('[aria-label="已采用图标样例"]').value;const warning=root.textContent.includes('请重新选择');root.remove();samples=[];root=await build();const emptyMethod=root.querySelector('[aria-label="图标处理方式"]').value;[...root.querySelectorAll('button')].find(b=>b.textContent==='复制给 Agent 的图标要求').click();await new Promise(r=>setTimeout(r,10));const blocked=root.textContent.includes('请重新选择');root.remove();app.disposables.forEach(fn=>fn());window.fetch=original;
       return {restored,expected:sampleKey(a),missing,warning,emptyMethod,blocked};
     }''')
     assert outcome['restored']==outcome['expected'] and outcome['missing']=='' and outcome['warning'] and outcome['emptyMethod']=='reuse' and outcome['blocked']
@@ -199,12 +199,12 @@ def test_icon_opinion_scope_and_basis_rows(icon_browser):
     expect(page_box).to_contain_text('整页文字定位')
     expect(page_box).to_contain_text('与当前产物一致')
     expect(workbench.locator('label').filter(has_text='SVG 层意见样例')).to_contain_text('旧底稿意见 · 需重新定位')
-    expect(workbench.get_by_role('status')).not_to_contain_text('已不在本页图标列表')
+    expect(workbench.locator('[role=status]')).not_to_contain_text('已不在本页图标列表')
     assert workbench.locator('label.icon-opinion').count()==2
     page_box.locator('input[type=checkbox]').check()
     page.evaluate("() => {window.iconCopy = null; Object.defineProperty(navigator, 'clipboard', {value: {writeText: async text => {window.iconCopy = text;}}});}")
     workbench.get_by_role('button',name='复制给 Agent 的图标要求',exact=True).click()
-    expect(workbench.get_by_role('status')).to_contain_text('图标要求已复制。尚未启动任务')
+    expect(workbench.locator('[role=status]')).to_contain_text('图标要求已复制。尚未启动任务')
     payload=page.evaluate('JSON.parse(window.iconCopy)')
     listing=page.request.get(url+'api/annotations').json()
     page_record=next(r for r in listing['annotations'] if r['annotation']['scope']=='page' and r['annotation']['page_id']=='p01')

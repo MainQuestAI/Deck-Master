@@ -1,4 +1,4 @@
-import {el, button} from './dom.js';
+import {el, button, modal} from './dom.js';
 
 // Reuse the mounted immutable canvas and its annotation overlay. The legacy
 // route.zoom remains a container multiplier; native-pixel zoom is view-local.
@@ -9,6 +9,7 @@ export function pageReading(reading, {identity, legacyZoom = 1} = {}) {
   const caption = el('p', {class:'studio-reading-identity'}, identity);
   const status = el('output', {'aria-live':'polite'});
   let canvas = null, disposed = false, frame = 0, wasFullscreen = false;
+  let zoomBody = null, zoomStatus = null;
   let mode = legacyZoom === 1 ? 'fit' : 'legacy', zoom = legacyZoom;
   const fit = button('适应窗口', () => change('fit', 1), false, {'aria-pressed':'false'});
   const native = button('100%', () => change('native', 1), false, {'aria-label':'原生 100% 阅读','aria-pressed':'false'});
@@ -20,7 +21,18 @@ export function pageReading(reading, {identity, legacyZoom = 1} = {}) {
       else await reading.requestFullscreen();
     } catch { status.textContent = '当前窗口未允许全屏；仍可适应窗口或放大阅读。'; }
   }, false, {'aria-pressed':'false'});
-  const controls = el('div', {class:'studio-reading-controls',role:'group','aria-label':'单页图稿阅读'}, fit,native,smaller,larger,status,fullscreen);
+  const zoomMenu = button('缩放', () => {
+    zoomStatus = el('output', {'aria-live':'polite'}, status.textContent);
+    zoomBody = el('div', {class:'studio-zoom-dialog stack'},
+      el('p', {class:'muted'}, identity),
+      el('div', {class:'row wrap'},
+        button('100%', () => change('native', 1), false, {'aria-label':'原生 100% 阅读'}),
+        button('−', () => change('native', currentScale()/1.25), false, {'aria-label':'缩小图稿'}),
+        button('+', () => change('native', currentScale()*1.25), false, {'aria-label':'放大图稿'})), zoomStatus);
+    modal('图稿缩放', zoomBody);
+  }, false, {class:'studio-zoom-menu', 'aria-haspopup':'dialog'});
+  native.classList.add('studio-inline-zoom');smaller.classList.add('studio-inline-zoom');larger.classList.add('studio-inline-zoom');
+  const controls = el('div', {class:'studio-reading-controls',role:'group','aria-label':'单页图稿阅读'}, fit,native,smaller,larger,zoomMenu,status,fullscreen);
   reading.prepend(caption,controls);
   function currentScale() { return canvas ? canvas.getBoundingClientRect().width/canvas.width : 1; }
   function center() {
@@ -32,7 +44,7 @@ export function pageReading(reading, {identity, legacyZoom = 1} = {}) {
     if (disposed || !reading.isConnected) return;
     const next=viewport.querySelector('canvas.page-image');
     if(next!==canvas)canvas=next;
-    for(const control of [fit,native,smaller,larger,fullscreen])control.disabled=!canvas;
+    for(const control of [fit,native,smaller,larger,zoomMenu,fullscreen])control.disabled=!canvas;
     if(!canvas){status.textContent=viewport.querySelector('[data-image-state="failed"]')?'图片暂不可读，请使用下方的重试图片。':'图片读取完成后可调整阅读。';return;}
     const top=viewport.getBoundingClientRect().top;
     const height=Math.max(180,Math.min(document.fullscreenElement===reading?innerHeight:innerHeight*.65,innerHeight-top-20));
@@ -46,6 +58,8 @@ export function pageReading(reading, {identity, legacyZoom = 1} = {}) {
     viewport.dataset.readingMode=mode;viewport.dataset.readingScale=String(scale);
     fit.setAttribute('aria-pressed',String(mode==='fit'));native.setAttribute('aria-pressed',String(mode==='native'&&zoom===1));
     status.textContent=mode==='fit'?`适应窗口 · ${Math.round(scale*100)}%`:mode==='legacy'?`已恢复版面比例 ${Math.round(zoom*100)}%`:`原生像素 ${Math.round(zoom*100)}%`;
+    zoomMenu.textContent=`缩放 ${Math.round(scale*100)}%`;
+    if(zoomBody?.isConnected)zoomStatus.textContent=status.textContent;
     if(point)viewport.scrollTo(Math.max(0,point.x*canvas.width*scale-width/2),Math.max(0,point.y*canvas.height*scale-availableHeight/2));
     else if(mode==='fit')viewport.scrollTo(0,0);
   }
@@ -65,5 +79,5 @@ export function pageReading(reading, {identity, legacyZoom = 1} = {}) {
   document.addEventListener('fullscreenchange',fullscreenChanged);
   addEventListener('resize',schedule);addEventListener('scroll',schedule,{passive:true});
   schedule();
-  return {dispose(){disposed=true;cancelAnimationFrame(frame);observed.disconnect();resize.disconnect();reading.removeEventListener('keydown',escape,true);document.removeEventListener('fullscreenchange',fullscreenChanged);removeEventListener('resize',schedule);removeEventListener('scroll',schedule);if(document.fullscreenElement===reading)document.exitFullscreen().catch(()=>{});}};
+  return {dispose(){disposed=true;if(zoomBody?.isConnected)zoomBody.closest('dialog')?.close();cancelAnimationFrame(frame);observed.disconnect();resize.disconnect();reading.removeEventListener('keydown',escape,true);document.removeEventListener('fullscreenchange',fullscreenChanged);removeEventListener('resize',schedule);removeEventListener('scroll',schedule);if(document.fullscreenElement===reading)document.exitFullscreen().catch(()=>{});}};
 }
