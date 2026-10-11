@@ -12,6 +12,38 @@ import {changesetDesk} from './changeset-desk.js';
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
+  get editor() { return this._editor; }
+  set editor(value) {
+    this._editor = value;
+    if (!value) return;
+    value.onRestore = record => this.restoreDraft(value, record);
+    value.onStateChanged = () => {
+      if (this.editor === value && !value.disposed) this.root.dispatchEvent(new CustomEvent('draft-state-changed'));
+    };
+  }
+  restoreDraft(previous, record) {
+    if (this.editor !== previous || previous.disposed || this.navigationPending) return false;
+    if (!previous.archiveLocal()) { previous.updateStatus(); return false; }
+    previous.persist();
+    if (previous.storageError) { previous.updateStatus(); return false; }
+    let replacement;
+    try {
+      localStorage.setItem(previous.activeKey, JSON.stringify(record));
+      previous.disposed = true; clearTimeout(previous.timer);
+      replacement = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef,
+        {readonly: previous.readonly, exactRevision: previous.exactRevision});
+      this.editor = replacement;
+      const node = replacement.mount();
+      previous.node.replaceWith(node);
+    } catch {
+      if (replacement) replacement.disposed = true;
+      this.editor = previous; previous.disposed = false; previous.persist();
+      previous.note = '草稿恢复未完成，原输入仍保留，请重试或下载恢复文件。'; previous.updateStatus();
+      return false;
+    }
+    this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: replacement}));
+    return true;
+  }
   summaryURL(revision=null){const q=new URLSearchParams();if(revision)q.set('revision',revision);if(this.health.ui_capabilities?.includes('result_reading.v1'))q.set('personal','1');return '/api/view/summary'+(q.size?'?'+q:'');}
   // Bind lists to the supplied projection. A fallback summary without an etag
   // must not inherit the previous work surface's personal-reading snapshot.
@@ -26,18 +58,6 @@ export class Project {
     });
     this.route = readRoute(info, this.returnTo, summary);
     addEventListener('hashchange', () => this.loadRoute());
-    this.root.addEventListener('draft-restore-local', event => {
-      const previous = this.editor;
-      try {
-        localStorage.setItem(previous.activeKey, JSON.stringify(event.detail));
-        const editor = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef, {readonly: previous.readonly, exactRevision: previous.exactRevision});
-        const section = event.target.closest('.personal-draft');
-        this.editor = editor; section.replaceWith(editor.mount());
-        this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: editor}));
-      } catch {
-        this.setNotice('本机缓冲不可用，请先下载恢复文件。'); previous.disposed = false;
-      }
-    });
     this.root.addEventListener('business-committed', event => {
       if (event.detail.action !== 'history.restore') return;
       const revision = event.detail.result.revision_id;

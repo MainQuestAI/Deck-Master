@@ -14,7 +14,7 @@ const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content
 const clock = value => new Date(value).toLocaleString('zh-CN', {hour12: false});
 function operationDraft(app) {
   app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
-  const node = app.editor.mount();
+  const node = el('div', {class:'candidate-draft-host'}, app.editor.mount());
   if(document.documentElement.dataset.workbenchUi==='studio')return el('div',{class:'studio-candidate-recovery'},button('个人记录与操作恢复',()=>modal('个人记录与操作恢复',node)));
   return el('details', {class: 'candidate-recovery'}, el('summary', {}, '个人记录与操作恢复'), node);
 }

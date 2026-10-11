@@ -51,7 +51,7 @@ export class DraftEditor {
         el('label', {class: 'recovery-import'}, '导入草稿恢复文件', file),
         el('p', {class: 'muted field-help'}, '恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。'),
         this.restoreNode, this.localRestoreNode));
-    this.updateStatus(); this.ready = this.load();
+    this.node = node; this.updateStatus(); this.ready = this.load();
     return node;
   }
   async load() {
@@ -115,10 +115,7 @@ export class DraftEditor {
       select.addEventListener('change', () => {
         if (!select.value) return;
         const copy = copies[Number(select.value)];
-        // Retire this instance before restoring, so a late ACK cannot reach the new copy.
-        if (!this.archiveLocal()) { this.updateStatus(); return; }
-        this.persist(); this.disposed = true; clearTimeout(this.timer);
-        this.input.dispatchEvent(new CustomEvent('draft-restore-local', {bubbles: true, detail: copy}));
+        this.restoreCopy(copy);
       });
       this.localRestoreNode.append(select);
     } catch { this.storageError = '部分本机副本无法读取，请保留当前内容并下载恢复文件。'; }
@@ -133,17 +130,27 @@ export class DraftEditor {
     select.addEventListener('change', () => {
       const record = records.find(item => item.draft.draft_id === select.value);
       if (!record) return;
-      const restore = () => {
-        if (!this.archiveLocal()) { this.updateStatus(); return; }
-        this.persist(); this.disposed = true; clearTimeout(this.timer);
-        this.input.dispatchEvent(new CustomEvent('draft-restore-local', {bubbles: true, detail: {draft: record.draft, etag: record.etag, status: 'saved', pendingSave: null}}));
-      };
+      const copy = {draft: record.draft, etag: record.etag, status: 'saved', pendingSave: null};
       if (['dirty', 'unknown', 'conflict', 'saving'].includes(this.status)) {
-        modal('保留当前输入再恢复', el('p', {}, '当前本机稿仍保留在浏览器缓冲。建议先下载恢复文件，再打开项目中的另一份草稿。'),
-          [button('下载当前稿', () => this.download()), button('打开所选草稿', () => { restore(); document.querySelector('#modal').close(); })]);
-      } else restore();
+        this.restoreConfirm?.remove();
+        this.restoreConfirm = el('div', {class:'draft-restore-confirm stack', role:'group', 'aria-label':'保留当前输入再恢复'},
+          el('p', {}, '当前稿和待核实保存请求会保留在本机副本中，再打开所选草稿。'),
+          button('下载当前稿', () => this.download()),
+          button('取消恢复', () => { this.restoreConfirm.remove(); select.value=''; }),
+          button('打开所选草稿', () => this.restoreCopy(copy)));
+        this.restoreNode.append(this.restoreConfirm);
+      } else this.restoreCopy(copy);
     });
     this.restoreNode.append(select);
+  }
+  restoreCopy(copy) {
+    if (this.disposed) return;
+    if (!this.onRestore) { this.note = '当前编辑器无法恢复，请保留原稿并重新打开工作面。'; this.updateStatus(); return; }
+    this.onRestore(copy);
+  }
+  notifyState() {
+    if (this.onStateChanged) this.onStateChanged();
+    else this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles:true}));
   }
   adoptRecord(record) {
     this.draft = structuredClone(record.draft); this.etag = record.etag;
@@ -172,7 +179,7 @@ export class DraftEditor {
     this.draft = draft; this.etag = null; this.pendingSave = null; this.sequence = undefined;
     this.status = [text, annotation?.body, requirement?.text].some(value => typeof value === 'string' && value.trim()) ? 'dirty' : 'empty'; this.note = ''; this.restoreNotice = '';
     this.persist(); this.updateStatus();
-    this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles: true}));
+    this.notifyState();
   }
   // The text a pending operation was about. An editor that carries an opinion
   // body must show that body in recovery panes, not the personal note that now
@@ -235,7 +242,7 @@ export class DraftEditor {
     this.importInput.disabled = this.readonly || this.status === 'loading';
     this.verifyButton.hidden = this.status !== 'unknown';
     this.conflictButton.hidden = this.status !== 'conflict';
-    this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles: true}));
+    this.notifyState();
   }
   async save() {
     clearTimeout(this.timer);
