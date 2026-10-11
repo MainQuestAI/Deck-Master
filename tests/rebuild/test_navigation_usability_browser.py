@@ -232,6 +232,17 @@ def test_artwork_and_save_row_share_the_first_screen(workbench_page, width, heig
     image = page.locator('.page-reading canvas:visible').first
     image.wait_for()
     page.get_by_role('button', name='整页意见', exact=True).click()
+    # Focus may scroll the window. Measure the actual first view, never a
+    # transient smooth-scroll position that happens to bring Save on screen.
+    page.evaluate("() => {scrollTo({top:0,behavior:'instant'});document.querySelector('.page-tools').scrollTop=0;}")
+    assert page.evaluate('scrollY') == 0
+    # Preserve the rendered controls when platform font metrics expose overflow.
+    from pathlib import Path
+    import json
+    evidence = Path('output/playwright/studio-first-view')
+    evidence.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(evidence / f'opinion-{width}-{height}.png'))
+    (evidence / f'opinion-{width}-{height}.json').write_text(json.dumps(page.locator('.page-workbench').evaluate('''n => [...n.querySelectorAll('h1,.chain,.reading-toolbar,.page-tools,.studio-tool-title,.tool-object-summary,.annotations-panel .panel-body>*')].map(e=>({tag:e.tagName,cls:e.className,text:e.innerText?.slice(0,250),hidden:e.hidden,rect:e.getBoundingClientRect().toJSON()}))'''),ensure_ascii=False,indent=2))
     artwork = image.bounding_box()
     assert artwork['y'] >= 0 and artwork['y'] + artwork['height'] <= height, artwork
     body = page.get_by_role('textbox', name='意见正文', exact=True).bounding_box()

@@ -295,6 +295,9 @@ export function pageDetail(app, data) {
   }));
   function activateFace(key) {
     toolTitle.textContent=faces.find(([id])=>id===key)?.[1]||'页面工具';
+    // The selected tool already names the opinion editor. Keep its object and
+    // scope metadata, without a duplicate heading consuming the first view.
+    toolTitle.hidden=studio&&key==='opinions';
     if(key!=='opinions'&&annotations&&['point','rect','text'].includes(annotations.mode))annotations.setMode('read');
     for (const [area, node] of faceNode) node.hidden = area !== key;
     for (const [area, control] of faceControl) control.setAttribute('aria-pressed', String(area === key));

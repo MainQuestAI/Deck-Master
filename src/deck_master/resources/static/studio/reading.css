@@ -56,3 +56,5 @@
  .studio-reading-menu-body .studio-page-actions>.row {display:flex;flex-direction:column;align-items:stretch;gap:8px}
  .studio-zoom-dialog button {min-width:44px;min-height:44px}
 }
+
+.studio-workspace .studio-tool-title[hidden] {display:none}
