@@ -311,7 +311,7 @@ export function content(app, data) {
       path.node.hidden=source.action!=='replace';
       action.addEventListener('change',()=>{source.action=action.value;path.node.hidden=source.action!=='replace';changed();});
       note.input.addEventListener('input',()=>{source.usage_note=note.input.value;changed();});path.input.addEventListener('input',()=>{source.path=path.input.value;source.upload=null;changed();});
-      const upload = app.health.ui_capabilities?.includes('material_uploads.v1') ? materialUploads(app,()=>source.upload?[source.upload]:[], records=>{source.upload=records[0]||null;if(source.upload){source.path='';path.input.value='';source.action='replace';action.value='replace';path.node.hidden=false;}changed();},{single:true}) : null;
+      const upload = app.health.ui_capabilities?.includes('material_uploads.v1') ? materialUploads(app,()=>source.upload?[source.upload]:[], (records,event)=>{source.upload=records[0]||null;if(source.upload&&event?.reason==='selected'){source.path='';path.input.value='';source.action='replace';action.value='replace';path.node.hidden=false;}changed();},{single:true}) : null;
       materialEditor.append(...[action,note.node,upload,path.node].filter(Boolean));
     } else {
       editorTitle.textContent=kind==='add'?'添加材料':'修改任务要求与材料';

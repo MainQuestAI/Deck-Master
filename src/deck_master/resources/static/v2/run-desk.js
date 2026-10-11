@@ -96,7 +96,7 @@ export function runDesk(app, data) {
     group.replaceChildren(el('option', {value: ''}, '所有修改组'), ...page.groups.filter(item => item.change_id).map(item =>
       el('option', {value: item.change_id}, `修改组 ${page.groups.indexOf(item) + 1} · ${item.completed_count}/${item.total_count} 项已返回${item.page_ids?.length ? ` · ${item.page_ids.length} 页` : ''} · ${item.change_id.slice(-6)}`)));
     if (state.group && !page.groups.some(item => item.change_id === state.group)) state.group = '';
-    group.value = state.group; status.value = state.status; attention.checked = state.attention; search.value=state.search;
+    group.value = state.group; status.value = state.status; attention.checked = state.attention;
     notice.textContent = `${live ? '当前执行状态' : '固定执行记录'} · 共 ${page.pagination.total} 项`;
     const tasks = page.tasks.filter(task => !state.attention || todo(task).length);
     // UX-05b：每条运行记录默认回答「做什么、对哪些页、现在怎样」，要求原文
@@ -133,7 +133,7 @@ export function runDesk(app, data) {
       task.task_id ? button('查看这项任务',()=>app.go({task_id:task.task_id,revision:page.revision_id}),false,{class:'run-task-open'}) : el('span',{class:'field-error'},'记录无法读取'));
   }
   function controls() {
-    for(const input of [group,status,attention,refreshButton,search,searchButton])input.disabled=busy;
+    for(const input of [group,status,attention,refreshButton])input.disabled=busy;
     const buttons=pager.querySelectorAll('button');
     if(buttons[0])buttons[0].disabled=!loaded||busy||readingBlocked||state.offset===0;
     if(buttons[1])buttons[1].disabled=!loaded||busy||readingBlocked||page.pagination.next_offset===null;
@@ -245,7 +245,8 @@ export function runDesk(app, data) {
   for (const input of [group, status, attention]) input.addEventListener('change', () => {
     choiceMade = true;read({state:{group:group.value,status:status.value,attention:attention.checked,offset:0},refreshReading:true,persist:true});
   });
-  search.addEventListener('keydown',event=>{if(event.key==='Enter'&&!busy)searchButton.click();});
+  search.addEventListener('keydown',event=>{if(event.key==='Enter')searchButton.click();});
+  search.addEventListener('input',()=>{choiceMade=true;});
   const sync = () => { if (live && !document.hidden) read(); };
   app.root.addEventListener('summary-refreshed', sync);
   function hydrate() {
@@ -260,7 +261,7 @@ export function runDesk(app, data) {
         const restored = {offset: Number.isSafeInteger(saved.offset) && saved.offset >= 0 ? saved.offset : 0,
           group: typeof saved.group === 'string' ? saved.group : '', status: Object.hasOwn(statuses, saved.status) ? saved.status : '',
           attention: saved.attention === true, search: typeof saved.search==='string'?saved.search.slice(0,200):''};
-        options={state:restored};
+        options={state:restored};search.value=restored.search;
         if(restored.offset){
           if(!readingSupported||typeof saved.reading_etag==='string'&&/^[a-f0-9]{64}$/.test(saved.reading_etag))
             Object.assign(options,{live:false,pinned:typeof saved.revision==='string'?saved.revision:app.route.revision,readingEtag:readingSupported?saved.reading_etag:null});

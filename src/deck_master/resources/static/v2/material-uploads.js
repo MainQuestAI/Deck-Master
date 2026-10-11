@@ -57,7 +57,7 @@ export function materialUploads(app, read, write, {single = false} = {}) {
         if (record?.state === 'ready') { message.textContent='这份文件已经接收，本次选择保留一份。';continue; }
         if (!record) {
           record = {upload_id:'upload-'+crypto.randomUUID(),name:file.name,size:file.size,sha256,state:'unknown',error:''};
-          write(single ? [record] : [...read(), record]);
+          write(single ? [record] : [...read(), record], {reason:'selected'});
         }
         files.set(record.upload_id, file); draw();
         // Exact re-selection first verifies the original receipt, then sends only
