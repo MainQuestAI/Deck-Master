@@ -37,6 +37,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .panel-head h2,.studio-workspace .panel-head h3 {font-size:16px;line-height:1.5;font-weight:650}
 .studio-workspace .panel-body {padding:20px}
 .studio-workspace .panel-body.stack,.studio-workspace .stack {gap:14px}
+.studio-workspace .production-detail>.panel-body {display:flex;flex-direction:column;gap:16px}
 .studio-workspace details>summary {display:flex;align-items:center;gap:9px;min-height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer;list-style:none}
 .studio-workspace details>summary::before {content:'›';display:block;transform:rotate(0);font-size:19px;color:var(--muted)}
 .studio-workspace details[open]>summary::before {transform:rotate(90deg)}

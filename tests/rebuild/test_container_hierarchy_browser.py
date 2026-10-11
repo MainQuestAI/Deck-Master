@@ -87,6 +87,9 @@ def test_single_page_faces_and_content_sections(workbench_page,tmp_path,width,he
                 expect(page.locator('.page-tools .production-detail > h3')).to_be_visible()
                 assert page.locator('.page-tools details.production-detail').count()==0
                 expect(page.locator('.page-tools .production-facts')).to_be_visible()
+                disclosures=page.locator('.page-tools .production-detail>.panel-body>details')
+                boxes=disclosures.evaluate_all('ns=>ns.map(n=>({top:n.getBoundingClientRect().top,bottom:n.getBoundingClientRect().bottom}))')
+                assert boxes[1]['top']-boxes[0]['bottom']>=8
             # Any remaining panel inside the single tool shell must be an
             # independent object, never a second decorated layout shell.
             sections=page.locator('.page-tools [data-container=section]:visible')
