@@ -12,7 +12,7 @@ const names = {palette: '配色', typography: '文字层级', density: '密度',
 const defaults = {palette: '借用参考页配色', typography: '借用参考页文字层级'};
 const phase = (title, ...body) => {
   const summary = el('span', {class: 'muted style-phase-state'});
-  const node = el(studioStyle() ? 'section' : 'details', {class: 'panel style-phase'}, el(studioStyle() ? 'h2' : 'summary', {class: studioStyle() ? 'panel-head style-phase-heading' : 'panel-head', ...(studioStyle() ? {tabindex:-1} : {})}, el('span', {class:'style-phase-title'}, title), summary), el('div', {class: 'panel-body stack'}, body));
+  const node = el(studioStyle() ? 'section' : 'details', {class: 'panel style-phase', 'data-container':'section'}, el(studioStyle() ? 'div' : 'summary', {class: studioStyle() ? 'panel-head style-phase-heading' : 'panel-head', ...(studioStyle() ? {tabindex:-1} : {})}, el(studioStyle() ? 'h2' : 'span', {class:'style-phase-title'}, title), summary), el('div', {class: 'panel-body stack'}, body));
   return {node, summary};
 };
 const detail = styleDisclosure;

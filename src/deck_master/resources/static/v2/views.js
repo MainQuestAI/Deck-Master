@@ -5,7 +5,7 @@ import {el, button, empty, heading, modal} from './dom.js';
 import {changeHandoffs} from './change-handoff.js';
 import {routeHash} from './routes.js';
 
-const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
+const panel = (title, ...children) => el('section', {class: 'panel', 'data-container':'section'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
 export {overview} from './overview.js';
 export {content} from './content-sources.js';
 export {pageDetail} from './page-workbench.js';
@@ -26,7 +26,7 @@ export function runs(app, data) {
       button('返回任务与交付', () => app.go({review_id: null}))),
       el('p', {}, ({pass: '该项检查通过', fail: '该项检查未通过', blocked: '该项检查受阻'})[review.status] || '记录状态待核实'),
       (review.observations || []).map(text => el('p', {}, text)),
-      (review.findings || []).map(finding => el('article', {class: 'panel'}, el('div', {class: 'panel-body stack'},
+      (review.findings || []).map(finding => el('article', {class: 'panel', 'data-container':'section'}, el('div', {class: 'panel-body stack'},
         el('h2', {}, finding.message), el('p', {}, '预期：' + finding.expected), el('p', {}, '记录：' + finding.actual)))),
       el('details', {}, el('summary', {}, '记录身份与依据'), el('pre', {class: 'evidence-json'}, JSON.stringify(review, null, 2))));
   }

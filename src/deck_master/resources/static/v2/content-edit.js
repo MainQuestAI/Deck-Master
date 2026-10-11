@@ -2,7 +2,7 @@ import {get, post, canonical, readableError, revisionQuery} from './api.js';
 import {el, button, modal, version, actionGroup} from './dom.js';
 import {rangeReplacementEditor} from './text-selection.js';
 
-export const contentPanel = (title, ...body) => el('section', {class:'panel'}, el('div', {class:'panel-head'}, el('h2', {}, title)), el('div', {class:'panel-body stack'}, body));
+export const contentPanel = (title, ...body) => el('section', {class:'panel','data-container':'section'}, el('div', {class:'panel-head'}, el('h2', {}, title)), el('div', {class:'panel-body stack'}, body));
 export const inputField = (label, value = '', rows = 3) => {
   const input = el('textarea', {rows, value, 'aria-label':label});
   return {input, node:el('label', {class:'stack'}, label, input)};

@@ -53,13 +53,13 @@ function personalClearPanel(app) {
       button('个人状态与恢复', () => modal('个人状态与恢复', body)),
       el('span',{class:'muted'},'管理本项目草稿、阅读设置和恢复备份'));
   }
-  return el('details', {class: 'panel personal-clear'}, el('summary', {}, '清理本机个人状态（草稿与阅读设置）'), body);
+  return el('details', {'data-container':'section', class: 'panel personal-clear'}, el('summary', {}, '清理本机个人状态（草稿与阅读设置）'), body);
 }
 
 export function runDesk(app, data) {
   const studio = document.documentElement.dataset.workbenchUi === 'studio';
   const recovery = cancelRecovery(app);
-  const root = el('section', {class: 'panel run-desk', 'aria-label': '运行记录'});
+  const root = el('section', {'data-container':'section', class: 'panel run-desk', 'aria-label': '运行记录'});
   const rows = el('div', {class: 'run-rows stack'}), pager = el('div', {class: 'row wrap run-pagination'});
   const notice = el('div', {class: 'muted run-notice'});
   const recoveryReceipt=el('p',{class:'run-recovery-receipt',role:'status'});

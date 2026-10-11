@@ -42,7 +42,7 @@ export class DraftEditor {
     this.restoreNode = el('div', {class: 'draft-restore'});
     this.localRestoreNode = el('div', {class: 'draft-restore'});
     this.noticeNode = el('p', {class: 'muted draft-notice', hidden: true});
-    const node = el('section', {class: 'panel personal-draft'},
+    const node = el('section', {'data-container':'section', class: 'panel personal-draft'},
       el('div', {class: 'panel-head'}, el('h2', {}, '个人草稿'), el('span', {class: 'status'}, '不提交制作任务')),
       el('div', {class: 'panel-body stack'}, el('label', {for: this.input.id}, '留给自己的内容与意见'), this.input,
         this.basisNode, this.noticeNode, this.stateNode, this.storageNode,

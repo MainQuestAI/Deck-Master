@@ -294,7 +294,7 @@ export function content(app, data) {
   const operationHome=el('div',{class:'content-operation-home'},!app.readonly&&operation.node);
   const inputImpact=el('div',{class:'material-input-impact stack'});
   const inputFields=editable(el('div',{class:'material-input-fields stack'},materialEditor,reason.node,button('预览材料与任务变化',inputPreview)));
-  const adjustDetails = !app.readonly&&inputs ? el('details', {class:'panel materials-adjust-form',hidden:true,'data-step':'edit'},el('summary',{class:'panel-head'},'调整任务要求与材料'),
+  const adjustDetails = !app.readonly&&inputs ? el('details', {'data-container':'section',class:'panel materials-adjust-form',hidden:true,'data-step':'edit'},el('summary',{class:'panel-head'},'调整任务要求与材料'),
     el('div',{class:'panel-body stack'},editorTitle,el('div',{class:'material-edit-context'},inputFields,inputImpact),el('div',{class:'row wrap'},returnEdit,button('关闭编辑并保留草稿',()=>closeMaterialEditor())))) : null;
   function openMaterialEditor(kind,sourceId=null,trigger=document.activeElement) {
     if(!adjustDetails)return;
@@ -330,7 +330,7 @@ export function content(app, data) {
   }
   if(adjustDetails)adjustDetails.addEventListener('toggle',()=>{if(!adjustDetails.open&&!adjustDetails.hidden)closeMaterialEditor();});
   const openAdjustForm = event => openMaterialEditor('add',null,event?.currentTarget);
-  const materialAside=el('aside',{class:'panel materials-aside','aria-label':'使用中的材料'},
+  const materialAside=el('aside',{'data-container':'section',class:'panel materials-aside','aria-label':'使用中的材料'},
     el('div',{class:'panel-head'},el('h2',{},'使用中的材料'),el('span',{class:'status'},inputs?(inputs.sources.length+' 份'):'历史版本')),
     el('div',{class:'panel-body stack'},inputs?sourceList:el('p',{class:'muted'},'材料清单按当前输入读取；正在看历史版本，未加载材料列表。'),
       el('p',{class:'muted'},aligned?'当前输入已由内容结果对齐；这不是独立事实核验。':'输入待协调：制作工具尚需按最新材料判断影响。'),

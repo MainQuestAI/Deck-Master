@@ -12,7 +12,7 @@ const descriptions = {
 };
 const layerNames = {content: '逐页稿', page: '逐页稿', blueprint: '原图', svg: 'SVG', svg_preview: 'SVG 预览', ppt: '整稿 PPT', ppt_preview: 'PPT 预览',
   blueprint_content: '原图内容检查', blueprint_fidelity: '原图一致性检查', conversion: '转换检查', readability: '阅读检查', privacy: '隐私检查', professional_use: '专业使用评估', page_limit: '页数限制', render_report: '制作报告'};
-const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
+const panel = (title, ...children) => el('section', {class: 'panel', 'data-container':'section'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
 const exportURL = (record, name) => '/api/exports/' + encodeURIComponent(record.export_id) + '/files/' + name.split('/').map(encodeURIComponent).join('/');
 
 // Each gap names the rule it actually broke and the honest next step. A locate

@@ -86,7 +86,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .export-downloads {display:flex;gap:10px;flex-wrap:wrap}
 .studio-workspace .export-downloads a {display:inline-flex;align-items:center;padding:11px 16px;border:1px solid var(--border);border-radius:8px;background:#fff;text-decoration:none;color:var(--fg)}
 .studio-workspace .export-downloads a.primary {background:var(--fg);color:#fff;border-color:var(--fg)}
-.studio-workspace .material-uploads {padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-warm)}
+.studio-workspace .material-uploads {padding:16px 0;border:0;border-top:1px solid var(--border);border-radius:0;background:none}
 .studio-workspace .material-upload-row {border-top:1px solid var(--border);padding-top:12px}
 .studio-workspace .studio-overview-commandbar {display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .studio-workspace .studio-overview-commandbar .overview-reading-tools {flex:1 1 500px;display:flex;flex-wrap:nowrap;margin:0;align-items:center}
@@ -149,7 +149,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .studio-style-stages button {min-width:0;min-height:48px;padding:10px 12px;white-space:normal;text-align:left;font-weight:600;background:#fff}
 .studio-workspace .studio-style-stages button[aria-pressed=true] {background:var(--fg);border-color:var(--fg);color:#fff}
 .studio-workspace .style-source-selector {max-width:400px}
-.studio-workspace section.style-phase {padding:20px;border:1px solid var(--border);border-radius:12px;background:#fff;display:flex;flex-direction:column;gap:20px}
+.studio-workspace section.style-phase {padding:0;border:0;border-radius:0;background:none;box-shadow:none;display:flex;flex-direction:column;gap:24px;container-type:inline-size}
 .studio-workspace section.style-phase.panel {padding:0;gap:0}
 .studio-workspace .style-phase-heading {font-size:18px;font-weight:650;line-height:1.4;margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 .studio-workspace .style-phase-state {font-size:12px;font-weight:400}
@@ -158,7 +158,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .style-working-pair select {max-width:100%}
 .studio-workspace .style-reference,.studio-workspace .style-primary-target {border-radius:8px;overflow:hidden}
 .studio-workspace .style-tool>button {align-self:flex-start;text-align:left;min-height:44px}
-.studio-workspace .style-tool-body {padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-warm)}
+.studio-workspace .style-tool-body {padding:16px 0 0;border:0;border-top:1px solid var(--border);border-radius:0;background:none}
 .studio-workspace .style-primary-actions {padding-top:8px}
 .studio-workspace .style-primary-actions button {min-width:160px}
 .studio-workspace .visual-breakdown {display:grid;gap:14px}
@@ -175,7 +175,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .studio-rule-actions button {font-size:12px}
 .studio-workspace .studio-rule-editor {border-top:1px solid var(--border);padding-top:12px}
 .studio-workspace .studio-rule-editor textarea {width:100%;min-height:100px}
-.studio-workspace .visual-plan:not([hidden]),.studio-workspace .style-plan:not([hidden]) {padding:18px;border:1px solid var(--border);border-radius:10px;background:#fff}
+.studio-workspace .visual-plan:not([hidden]),.studio-workspace .style-plan:not([hidden]) {padding:24px 0 0;border:0;border-top:1px solid var(--border);border-radius:0;background:none}
 @media(max-width:767px) {
  .studio-workspace .studio-style-stages {grid-template-columns:repeat(2,minmax(0,1fr))}
  .studio-workspace .studio-style-rule-grid {grid-template-columns:1fr}
@@ -202,18 +202,18 @@ html[data-workbench-ui=studio] {
 .studio-workspace .studio-recipe-card button[aria-pressed=true] {border-color:var(--fg);box-shadow:inset 0 0 0 1px var(--fg)}
 .studio-workspace .studio-recipe-pager {justify-content:space-between}
 .studio-workspace .studio-recipe-pager[hidden] {display:none}
-.studio-workspace .studio-style-confirm-actions {position:sticky;top:12px;z-index:2;padding:12px;background:#fff;border:1px solid var(--border);border-radius:10px}
+.studio-workspace .studio-style-confirm-actions {position:sticky;top:12px;z-index:2;padding:12px 0;background:#fff;border:0;border-bottom:1px solid var(--border);border-radius:0}
 @media(max-width:767px){.studio-workspace .studio-recipe-list {grid-template-columns:1fr}.studio-workspace .studio-style-confirm-actions {top:0}}
 /* Content areas reuse the live content-operation controls, without stacked forms. */
-.studio-workspace .studio-content-areas {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px;border:1px solid var(--border);border-radius:12px;background:var(--surface-warm)}
+.studio-workspace .studio-content-areas {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0;border:0;border-radius:0;background:none}
 .studio-workspace .studio-content-areas button {min-height:48px;text-align:left;white-space:normal}
 .studio-workspace .studio-content-areas button[aria-pressed=true] {background:var(--fg);border-color:var(--fg);color:#fff}
 .studio-workspace .studio-content-area[hidden],.studio-workspace .studio-goal-edit[hidden],.studio-workspace .studio-goal-card[hidden],.studio-workspace .content-operation-home[hidden] {display:none}
 .studio-workspace .content-sources.stack,.studio-workspace .content-sources .stack {display:flex;flex-direction:column;gap:16px}
 .studio-workspace .content-sources .stack[hidden] {display:none}
 .studio-workspace .studio-content-commandbar {padding:12px 0}
-.studio-workspace .studio-content-adjust {padding:20px;border:1px solid var(--border);border-radius:10px;background:var(--surface-warm)}
-.studio-workspace .studio-content-review:not(:empty) {padding:20px;border:1px solid var(--border);border-radius:10px;background:var(--surface-warm)}
+.studio-workspace .studio-content-adjust {padding:24px 0;border:0;border-top:1px solid var(--border);border-radius:0;background:none}
+.studio-workspace .studio-content-review:not(:empty) {padding:24px 0;border:0;border-top:1px solid var(--border);border-radius:0;background:none}
 .studio-workspace .studio-content-review button {align-self:flex-start}
 .studio-workspace .studio-goal-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .studio-workspace .studio-goal-card {padding:18px;border:1px solid var(--border);border-radius:10px;min-width:0}
@@ -287,10 +287,10 @@ html[data-workbench-ui=studio] {
 .studio-workspace .studio-style-stages button {border:1px solid var(--border);border-radius:10px;min-height:50px;font-size:14px}
 .studio-workspace .studio-style-stages button[aria-pressed=true] {background:var(--surface);color:var(--fg);border-color:var(--fg)}
 .studio-workspace .style-primary-phase {border:0;background:none;box-shadow:none}
-.studio-workspace .style-primary-phase>.panel-head {padding:16px 20px;border:1px solid var(--border);border-radius:12px;position:sticky;top:8px;z-index:3;background:#fff;box-shadow:0 3px 10px #00000008;margin-bottom:20px}
+.studio-workspace .style-primary-phase>.panel-head {padding:0 0 16px;border:0;border-bottom:1px solid var(--border);border-radius:0;position:static;background:none;box-shadow:none;margin-bottom:24px}
 .studio-workspace .style-primary-phase>.panel-body {padding:0}
-.studio-workspace .studio-style-columns {display:grid;grid-template-columns:minmax(270px,320px) minmax(0,1fr);gap:20px;align-items:start}
-.studio-workspace .studio-style-card {border:1px solid var(--border);border-radius:12px;padding:20px;background:#fff;min-width:0}
+.studio-workspace .studio-style-columns {display:grid;grid-template-columns:minmax(270px,320px) minmax(0,1fr);gap:32px;align-items:start}
+.studio-workspace .studio-style-card {border:0;border-radius:0;padding:0;background:none;min-width:0}
 .studio-workspace .studio-style-card h2 {font-size:17px;margin:0}
 .studio-workspace .studio-style-card p {font-size:12px;line-height:1.65;margin:0}
 .studio-workspace .studio-style-reference .style-reference .pooled-image,.studio-workspace .studio-style-reference .style-reference canvas {height:auto;max-height:180px;aspect-ratio:16/9}
@@ -357,7 +357,7 @@ html[data-workbench-ui=studio] {
  .studio-workspace .studio-style-columns {grid-template-columns:1fr}
  .studio-workspace .studio-style-targets .style-targets {grid-template-columns:repeat(2,minmax(0,1fr));max-height:400px}
  .studio-workspace .studio-style-stages button {font-size:12px;min-height:44px}
- .studio-workspace .studio-style-card {padding:14px}
+ .studio-workspace .studio-style-card {padding:0}
  .studio-workspace .style-primary-phase>.panel-head {padding:12px;top:0}
  .studio-workspace .studio-gallery-main>.row {margin-left:0;width:100%;flex-wrap:wrap}
  .studio-workspace .studio-gallery-main input {max-width:none;width:100%}
@@ -369,7 +369,7 @@ html[data-workbench-ui=studio] {
 }
 
 .studio-workspace .studio-screenshot-first {padding:0!important;border:0!important;background:none;box-shadow:none}
-.studio-workspace .studio-screenshot-first>.style-phase-heading {display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 20px;border:1px solid var(--border);border-radius:12px;position:sticky;top:8px;background:#fff;z-index:3}
+.studio-workspace .studio-screenshot-first>.style-phase-heading {display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 0 16px;border:0;border-bottom:1px solid var(--border);border-radius:0;position:static;background:none}
 .studio-workspace .studio-screenshot-first>.style-phase-heading button {font-size:13px}
 .studio-workspace .studio-style-reference .visual-reference-list {grid-template-columns:1fr;max-height:360px;overflow:auto}
 
@@ -420,4 +420,16 @@ html[data-workbench-ui=studio] {
  .studio-workspace .studio-gallery-mobile-search>button {font-size:12px;padding:8px 10px;max-width:160px;white-space:normal}
  .studio-workspace .studio-gallery-settings .segmented {display:flex;flex-wrap:wrap}
  .studio-workspace .studio-gallery-settings .segmented button {flex:1;min-width:85px;font-size:12px;padding:8px}
+}
+
+/* Container responsibilities: ordinary sections are not independent objects. */
+.studio-workspace [data-container=section] {border:0;border-radius:0;box-shadow:none;background:none;overflow:visible}
+.studio-workspace [data-container=section]>.panel-head {padding:0 0 16px;min-height:44px;border:0;border-bottom:1px solid var(--border-soft);margin-bottom:16px}
+.studio-workspace [data-container=section]>.panel-body {padding:0}
+.studio-workspace .style-phase-title {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.studio-workspace .style-phase-heading {min-height:0}
+.studio-workspace .style-phase-heading:empty {display:none}
+@container (max-width:839px) {
+ .studio-workspace .studio-style-columns {grid-template-columns:minmax(0,1fr);gap:24px}
+ .studio-workspace .studio-style-targets .style-targets {grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
 }

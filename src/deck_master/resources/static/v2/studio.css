@@ -112,7 +112,7 @@ input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
 .matrix thead th { color:var(--studio-muted); font-size:12px; font-weight:500; letter-spacing:.025em; padding-block:16px; }
 .matrix .chapter-row th { background:#edf0f3; font-weight:600; color:var(--studio-ink); }
 .matrix .matrix-thumbnail { border-radius:3px; box-shadow:0 2px 4px #20262e08; }
-.gallery-controls { padding:16px; gap:12px; background:#fff; border:1px solid var(--studio-line); border-radius:12px; }
+.gallery-controls { padding:0; gap:16px; background:none; border:0; border-radius:0; }
 .gallery-controls .segmented { background:var(--studio-ground); border-color:transparent; }
 .gallery-controls .row { gap:10px; }
 .gallery-legend { margin:0; padding:12px 4px 0; background:transparent; font-size:12px; }
@@ -168,7 +168,7 @@ input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
 @media(max-width:767px) {
   .todo-priority,.todo-secondary { padding:24px; }
   .todo-priority h2 { font-size:26px; }
-  .gallery-controls { padding:12px; }
+  .gallery-controls { padding:0; }
   .gallery-legend { padding:12px 0 8px; }
   .gallery-viewport { padding:0; border:0; background:transparent; }
   .gallery.continuous { gap:28px; }

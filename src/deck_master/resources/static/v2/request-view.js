@@ -40,7 +40,7 @@ export function generationBasis(app, data) {
   const attempt = generation.attempts?.find(a => a.ref.sha256 === generation.adopted_attempt_ref?.sha256);
   const observed = generation.adopted_observation;
   const actual = data.prompts.submitted;
-  const node = el('details', {class: 'panel generation-basis', open: true}, el('summary', {}, '当次生成依据'),
+  const node = el('details', {'data-container':'section', class: 'panel generation-basis', open: true}, el('summary', {}, '当次生成依据'),
     el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, `依据版本：${version(data.revision_id)}`), el('p', {}, request ? '已绑定这张原图的冻结请求。' : '这张原图未记录可核对的绑定请求。'),
       el('p', {class: 'observer-label'}, observerLabels[actual.observer] || observerLabels.unknown),
       actual.text !== null ? button('查看实际提示词', () => app.go({layer: 'submitted_prompt', revision: data.revision_id, page_id: data.page_id})) : el('p', {class: 'muted'}, '这张图的实际提示词未记录。'),

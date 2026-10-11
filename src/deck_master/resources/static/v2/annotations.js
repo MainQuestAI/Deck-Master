@@ -15,7 +15,7 @@ export class Annotations {
   constructor(app, data, layer, reading, draftSlot) {
     this.app = app; this.data = data; this.layer = layer; this.reading = reading;
     this.mode = 'read'; this.selected = new Map(); this.records = []; this.regions = [];
-    this.node = el('section', {class: 'panel annotations-panel', 'aria-label': '版本绑定意见'});
+    this.node = el('section', {'data-container':'section', class: 'panel annotations-panel', 'aria-label': '版本绑定意见'});
     this.error = el('p', {class: 'field-error', role: 'status'});
     this.basis = el('p', {class: 'muted'});
     this.regionList = el('div', {class: 'annotation-regions stack'});

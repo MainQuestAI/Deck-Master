@@ -13,7 +13,7 @@ export function openCandidate(app, record, revision) {
 export function trialActions(app, data) {
   if (!app.business || !app.health.ui_capabilities?.includes('candidates.v1') || !['original_image', 'svg', 'ppt'].includes(app.route.layer)) return el('div');
   const image = app.route.layer === 'original_image', slot = image ? 'blueprint' : 'svg';
-  const node = el('section', {class: 'panel trial-actions', 'aria-label': '本页试作与候选'});
+  const node = el('section', {'data-container':'section', class: 'panel trial-actions', 'aria-label': '本页试作与候选'});
   // The near-field entry names how much already waits here, so a returned
   // candidate is not hidden until the user happens to open the panel.
   const counts = el('span', {class: 'trial-counts muted'}, '');

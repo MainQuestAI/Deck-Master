@@ -16,7 +16,7 @@ export function productionView(data) {
   row('SVG 输入图像元素（推导）', trace.svg_input_image_elements === null ? '未知' : `${trace.svg_input_image_elements}；由输入 SVG hash 匹配的 trace 推导`);
   row('PPT 光栅化比例', '未知，未计算'); row('OCR 文字层', '未记录；图片不能按文字选段');
   row('桌面字体替换', '未知；声明 fallback 不表示已成功替换');
-  const node = el('details', {class: 'panel production-detail'}, el('summary', {}, '制作与可编辑性'), el('div', {class: 'panel-body stack'}, facts,
+  const node = el('details', {'data-container':'section', class: 'panel production-detail'}, el('summary', {}, '制作与可编辑性'), el('div', {class: 'panel-body stack'}, facts,
     el('p', {class: 'muted'}, '形状与文本编辑能力不等于 Office Edit Data、原生表格或浏览器直接修改 PPT。'),
     ['professional_use', 'desktop_editing'].map(kind => {
       const record = value.evaluations[kind];

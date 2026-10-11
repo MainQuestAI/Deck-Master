@@ -169,7 +169,7 @@ export function candidateDesk(app, data) {
     }
     const observations = attempt?.observations || [];
     const actual = observations.find(record => record.observer === 'tool_observed' && record.output?.sha256 === selected.artifact.file.sha256);
-    evidence.replaceChildren(el('details', {class: 'panel candidate-basis'}, el('summary', {}, '所选候选的生成依据'),
+    evidence.replaceChildren(el('details', {'data-container':'section', class: 'panel candidate-basis'}, el('summary', {}, '所选候选的生成依据'),
       el('div', {class: 'panel-body stack'},
         el('p', {}, selected.candidate.result_kind === 'page' ? '正文试作候选；没有图像调用记录，原图与实际提示词不受影响。'
           : selected.request ? `已绑定请求与 Attempt · ${selected.attempt?.attempt_id || '未记录'}` : 'SVG 重建结果；没有新增图像调用。原图与实际提示词保留。'),
@@ -293,7 +293,7 @@ export function candidateBatch(app) {
   const pageLabels = new Map(app.summary.pages.map((page, n) => [page.page_id, `第 ${n + 1} 页 · ${page.title || '未命名页面'}`]));
   const batchLabel = record => record.page_id
     ? `${pageLabels.get(record.page_id) || '对应页面'} · ${stageName(record.stage)}` : '整稿正文变更集 · ';
-  const root = el('section', {class: 'panel candidate-batch', 'aria-label': '候选集合采用'});
+  const root = el('section', {'data-container':'section', class: 'panel candidate-batch', 'aria-label': '候选集合采用'});
   const rows = el('div', {class: 'candidate-batch-rows stack'}), notice = el('p', {role: 'status'}), impact = el('div', {class: 'stack'});
   const cards = candidateCards(app); app.disposables.push(() => cards.dispose());
   const pager = el('div', {class: 'row wrap candidate-pagination'});

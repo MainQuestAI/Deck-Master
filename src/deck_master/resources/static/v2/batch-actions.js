@@ -45,14 +45,14 @@ export function batchActions(app, selected, onSelectionChange, {initialAction} =
     el('label', {}, '一句话要求', instruction), requirementError,
     el('label', {}, '固定参考原图（可选）', reference), refPicture,
     budgetArea, budgetError, el('div', {class: 'row wrap'}, preview, commit, toStyle), impact);
-  const node = el('section', {class: 'panel batch-actions', 'aria-label': '所选页制作'},
+  const node = el('section', {'data-container':'section', class: 'panel batch-actions', 'aria-label': '所选页制作'},
     el('div', {class: 'panel-head'}, el('h2', {}, '所选页制作')),
     el('div', {class: 'panel-body stack'}, notice, fields));
   let recoveryButton = null, recoveryPanel = null;
   if (app.business && app.health.ui_capabilities?.includes('ui_draft.v1')) {
     app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
     if (studio) {
-      recoveryPanel = el('section', {class:'panel studio-batch-recovery-body', hidden:true},
+      recoveryPanel = el('section', {'data-container':'section',class:'panel studio-batch-recovery-body', hidden:true},
         el('div', {class:'panel-head'}, el('h2', {}, '个人记录与提交恢复')),
         el('div', {class:'panel-body'}, app.editor.mount()));
       recoveryButton = button([icon('clock'), '个人记录与提交恢复'], () => {

@@ -7,7 +7,7 @@ let sequence = 0;
 // task stage and explicit navigation; switching stages does not complete work.
 export function stylePhase(title, ...body) {
   return studioStyle()
-    ? el('section', {class:'style-phase'}, el('h2', {class:'style-phase-heading', tabindex:-1}, title), ...body)
+    ? el('section', {class:'style-phase'}, el('div', {class:'style-phase-heading', tabindex:-1}, el('h2', {class:'style-phase-title'}, title)), ...body)
     : el('details', {class:'style-phase'}, el('summary', {}, title), ...body);
 }
 
@@ -27,7 +27,7 @@ export function stylePhases(nodes) {
   const nav = studio ? el('nav', {class:'studio-style-stages', 'aria-label':'风格工作阶段'}) : null;
   const buttons = studio ? headings.map((heading, index) => {
     const title = heading.querySelector('.style-phase-title')?.textContent || heading.textContent;
-    const id = `style-stage-${++sequence}`; nodes[index].id = id;
+    const id = `style-stage-${++sequence}`; nodes[index].id = id; nodes[index].setAttribute('aria-label', title);
     const action = button(title, () => { chosen = true; show(index + 1); headings[index].focus(); }, false,
       {'aria-controls':id, 'aria-pressed':String(index === 0)});
     nav.append(action); return action;

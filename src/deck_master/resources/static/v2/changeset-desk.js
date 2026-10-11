@@ -9,7 +9,7 @@ export function changesetDesk(app, data) {
   const root = el('div', {class: 'stack changeset-desk', 'data-candidate-id': record.candidate_id},
     heading('整稿正文变更集比较', `基准 ${version(record.base_revision)}，候选固定在 ${version(data.revision_id)}；阅读不会采用或改稿。`,
       button('返回内容与来源', () => app.go({candidate_id: null}))),
-    el('div', {class: 'panel'}, el('div', {class: 'panel-body stack'},
+    el('div', {'data-container':'section', class: 'panel'}, el('div', {class: 'panel-body stack'},
       el('p', {}, `基准 ${basis.length} 页 → 候选 ${update.page_order.length} 页；${upserts.size} 页新增或重写，${(update.remove_page_ids || []).length} 页移除。`),
       el('p', {}, '候选页序：' + update.page_order.map((id, index) => `第 ${index + 1} 页 · ${upserts.get(id)?.customer_visible.title || app.summary.pages.find(page => page.page_id === id)?.title || id}`).join('；')))),
     el('p', {class: 'muted'}, '展开页面读取基准与候选全文。保留页不重新生成；移除页在基准侧保留可读依据。'));

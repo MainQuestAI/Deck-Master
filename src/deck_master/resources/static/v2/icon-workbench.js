@@ -44,7 +44,7 @@ function iconSwitchEntry(app,data){
     unknown:'保存结果待核实',conflict:'保存冲突待比较',error:'上次保存未完成'};
   const state=el('p',{class:'muted'}), message=el('p',{class:'field-error'});
   function toSvg(){app.go({layer:'svg',page_id:data.page_id,revision:data.revision_id});}
-  return el('section',{class:'panel icon-workbench','aria-label':'优化图标'},
+  return el('section',{'data-container':'section',class:'panel icon-workbench','aria-label':'优化图标'},
     ...[!studio&&el('h2',{},'优化图标'),
     el('p',{class:'muted'},studio?'在 SVG 层定位并修改图标。先保存当前层草稿，再继续；已保存意见仍可阅读。':'图标定位与重构在 SVG 图层（PPT 图层为实际检查）上进行；当前阅读层没有可直接编辑的图标规则。两层草稿各自独立，已保存意见照常阅读，换层不会丢失。')].filter(Boolean),
     message,button('打开SVG层处理图标',async()=>{
@@ -69,12 +69,12 @@ function iconSwitchEntry(app,data){
 export function iconWorkbench(app,data){
   if(!['svg','ppt'].includes(app.route.layer))return iconSwitchEntry(app,data);
   if(!app.business||!app.health.ui_capabilities?.includes('icon_quality.v1'))
-    return el('section',{class:'panel icon-workbench','aria-label':'优化图标'},
+    return el('section',{'data-container':'section',class:'panel icon-workbench','aria-label':'优化图标'},
       el('h2',{},'优化图标'),
       el('div',{class:'panel-body stack'},el('p',{class:'muted'},
         '本核心未提供图标定位能力（icon_quality.v1）。仍可阅读本页的意见、已有方案与候选；不能发起新的图标要求，也不会创建重复任务。')));
   const studio=document.documentElement.dataset.workbenchUi==='studio';
-  const root=el('section',{class:'panel icon-workbench','aria-label':'优化图标'}), body=el('div',{class:'panel-body stack'});
+  const root=el('section',{'data-container':'section',class:'panel icon-workbench','aria-label':'优化图标'}), body=el('div',{class:'panel-body stack'});
   const status=el('p',{role:'status'}), proposals=el('div',{class:'stack'}), recipes=el('div',{class:'stack'});
   const method=el('select',{'aria-label':'图标处理方式'},el('option',{value:'redraw'},'忠实原图精细重绘'),el('option',{value:'standard'},'提出标准图标替换'),el('option',{value:'reuse'},'应用已采用样例到其它页'));
   const asset=el('select',{'aria-label':'建议的标准图标'}), sample=el('select',{'aria-label':'已采用图标样例'}), opinions=el('div',{class:'icon-opinions stack'});
@@ -292,7 +292,7 @@ export function iconWorkbench(app,data){
 
 export function candidateIconReview(app,record,base,{releaseComparison,restoreComparison}={}){
   if(!record.icon_recipe)return null;
-  const root=el('section',{class:'panel stack candidate-icon-review','aria-label':'候选图标实际检查'}),status=el('p',{role:'status'}),slot=el('div');
+  const root=el('section',{'data-container':'section',class:'panel stack candidate-icon-review','aria-label':'候选图标实际检查'}),status=el('p',{role:'status'}),slot=el('div');
   const target=record.icon_recipe.input.targets.find(t=>t.page_id===record.candidate.page_id);
   const choose=el('select',{'aria-label':'比较候选中的图标'},target.icons.map((n,i)=>el('option',{value:i},n.label)));
   const layer=el('select',{'aria-label':'图标比较产物'},el('option',{value:'svg'},'SVG'),el('option',{value:'ppt'},'实际 PPT'));
