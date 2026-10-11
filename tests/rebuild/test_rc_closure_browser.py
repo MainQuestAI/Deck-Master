@@ -470,18 +470,24 @@ def test_requirement_recovers_on_a_new_port(workbench):
 
 @pytest.mark.parametrize('old_error', [False, True])
 def test_late_annotation_list_cannot_remove_a_saved_opinion(workbench, old_error):
-    page, _, _, _, goto, _ = workbench
+    page, _, store, _, goto, _ = workbench
     goto()
     opinion(page, '意见 A')
+    target_revision = store.current_revision_id()
     held = []
     def delay_first(route):
         response = route.fetch()
         if not held:
             held.append((route, response))
+            page.evaluate('() => { window.__heldAnnotationList = true; }')
         else:
             route.fulfill(response=response)
     page.route('**/api/annotations?*', delay_first)
     goto()
+    # Hash navigation returns before the new fixed snapshot is rendered. Do not
+    # select a mode on the previous page and then type into its replacement.
+    expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', target_revision)
+    page.wait_for_function('() => window.__heldAnnotationList === true')
     page.get_by_role('button', name='整页意见', exact=True).click()
     open_opinion_face(page)
     page.get_by_label('意见正文', exact=True).fill('意见 B')

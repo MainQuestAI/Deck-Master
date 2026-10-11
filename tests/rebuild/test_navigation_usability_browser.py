@@ -26,7 +26,10 @@ def test_mobile_gallery_reads_on_page_and_restores_desktop_preference(workbench_
     expect(page.locator('.gallery-viewport')).to_have_attribute('data-mode', 'continuous')
     settings = page.get_by_role('button', name='筛选与阅读设置', exact=True)
     expect(settings).to_be_visible()
-    assert settings.evaluate('node=>node.getBoundingClientRect().height') >= 44
+    # Keep the 44px CSS target; Chromium may round a fractional Y subtraction
+    # to 43.999969px. The subpixel epsilon only covers that measured rounding.
+    geometry = settings.evaluate('node=>({minimum:parseFloat(getComputedStyle(node).minHeight),height:node.getBoundingClientRect().height})')
+    assert geometry['minimum'] >= 44 and geometry['height'] >= 44 - .01, geometry
     expect(page.locator('[aria-label="画廊选页制作"]')).to_have_count(0)
     settings.click()
     expect(page.get_by_role('dialog', name='画廊筛选与阅读设置')).to_be_visible()

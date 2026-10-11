@@ -251,21 +251,57 @@ def test_studio_browser_upload_lost_response_and_partial_selection(tmp_path):
 
 
 @pytest.mark.browser
-def test_studio_reload_during_material_upload_can_verify_and_reselect(tmp_path):
+@pytest.mark.parametrize('held_phase', ['receipt', 'upload'])
+def test_studio_reload_during_material_upload_can_verify_and_reselect(tmp_path, held_phase):
+    from pathlib import Path
+    import os
+    import time
+    from urllib.parse import parse_qs
     from playwright.sync_api import sync_playwright, expect
     store=create(tmp_path/'project');server=WorkbenchServer(store.project_root)
+    before=store.current_revision_id();timeline=[];pending=[];errors=[];failure=None
+    started=time.monotonic();document_generation=[0]
+    def record(kind, **fields):
+        timeline.append({'kind':kind,'at_ms':round((time.monotonic()-started)*1000,3),
+                         'document_generation':document_generation[0],**fields})
     with sync_playwright() as runtime:
-        browser=runtime.chromium.launch(args=['--no-sandbox']);page=browser.new_page();pending=[]
+        browser=runtime.chromium.launch(args=['--no-sandbox']);page=browser.new_page()
+        page.on('request',lambda req:record('request',method=req.method,url=req.url))
+        page.on('response',lambda res:record('response',status=res.status,url=res.url))
+        page.on('requestfailed',lambda req:record('request_failed',url=req.url,failure=req.failure))
+        page.on('pageerror',lambda err:errors.append(str(err)))
+        def navigated(frame):
+            if frame==page.main_frame:
+                document_generation[0]+=1;record('document_navigated',url=frame.url)
+        page.on('framenavigated',navigated)
+        pattern='**/api/content/uploads/*' if held_phase=='receipt' else '**/api/content/uploads?*'
+        expected_method='GET' if held_phase=='receipt' else 'POST'
+        def matches(request):
+            path=urlsplit(request.url).path
+            return request.method==expected_method and (path.startswith('/api/content/uploads/') if held_phase=='receipt' else path=='/api/content/uploads')
+        def hold(route):
+            if not matches(route.request):route.continue_();return
+            pending.append(route)
+            record('target_intercepted',method=route.request.method,url=route.request.url,pending_count=len(pending))
+            # A test-only acknowledgement of the actual route callback, not a
+            # shared status label or a timing delay. The request remains held.
+            page.evaluate('window.__heldMaterialRequest = true')
         try:
             page.goto(server.start()+'studio/')
             page.get_by_role('button',name='内容与来源',exact=True).click()
             page.get_by_role('button',name='添加材料或调整要求',exact=True).click()
             picker=page.get_by_label('选择新增材料文件',exact=True);expect(picker).to_be_enabled()
-            page.route('**/api/content/uploads?*',lambda route:pending.append(route))
+            page.route(pattern,hold)
             file={'name':'未送达材料.md','mimeType':'text/markdown','buffer':b'# exact original'}
-            picker.set_input_files(file)
+            with page.expect_request(matches):picker.set_input_files(file)
+            page.wait_for_function('() => window.__heldMaterialRequest === true')
+            assert len(pending)==1
+            held_url=urlsplit(pending[0].request.url)
+            upload_id=held_url.path.rsplit('/',1)[-1] if held_phase=='receipt' else parse_qs(held_url.query)['upload_id'][0]
             expect(page.locator('.material-upload-row')).to_contain_text('正在核实文件')
-            page.reload();page.unroute('**/api/content/uploads?*')
+            record('reload_requested',url=page.url,pending_count=len(pending),upload_id=upload_id)
+            page.reload();page.unroute(pattern,hold)
+            record('reload_returned',url=page.url,pending_count=len(pending))
             page.get_by_role('heading',name='内容与来源',exact=True).wait_for()
             page.get_by_role('button',name='添加材料或调整要求',exact=True).click()
             page.get_by_role('button',name='核实这份材料',exact=True).click()
@@ -273,12 +309,35 @@ def test_studio_reload_during_material_upload_can_verify_and_reselect(tmp_path):
             page.get_by_label('选择新增材料文件',exact=True).set_input_files(file)
             expect(page.locator('.material-upload-row')).to_have_count(1)
             expect(page.locator('.material-upload-row')).to_contain_text('文件已接收')
+            sent=[event for event in timeline if event['kind']=='request' and event.get('method')=='POST' and urlsplit(event['url']).path=='/api/content/uploads']
+            assert sent and all(parse_qs(urlsplit(event['url']).query)['upload_id']==[upload_id] for event in sent)
+            send_count=len(sent)
             page.get_by_label('选择新增材料文件',exact=True).set_input_files(file)
             expect(page.locator('.material-upload-row')).to_have_count(1)
-            assert store.load_document()['sources']==[]
+            expect(page.locator('.material-uploads')).to_contain_text('这份文件已经接收，本次选择保留一份')
+            assert len([event for event in timeline if event['kind']=='request' and event.get('method')=='POST' and urlsplit(event['url']).path=='/api/content/uploads'])==send_count
+            assert store.load_document()['sources']==[] and store.current_revision_id()==before
+            assert errors==[]
+        except Exception as error:
+            failure=repr(error)
+            raise
         finally:
+            if failure:
+                # Preserve the initial failure; a later successful run is not a
+                # substitute for its navigation, network, and revision evidence.
+                evidence=Path(os.environ.get('STUDIO_UPLOAD_EVIDENCE',str(tmp_path/'upload-evidence')))/held_phase
+                evidence.mkdir(parents=True,exist_ok=True)
+                snapshot={'phase':held_phase,'failure':failure,'url':page.url,'pending_count':len(pending),
+                          'before_revision':before,'after_revision':store.current_revision_id(),
+                          'document_generation':document_generation[0],'page_errors':errors,'timeline':timeline}
+                try:
+                    snapshot['body']=page.locator('body').inner_text(timeout=5000)
+                    snapshot['main']=page.locator('main').first.inner_text(timeout=5000) if page.locator('main').count() else None
+                    (evidence/'document.html').write_text(page.content())
+                    page.screenshot(path=str(evidence/'failure.png'),full_page=True,timeout=5000)
+                except Exception as diagnostic_error:snapshot['capture_error']=repr(diagnostic_error)
+                (evidence/'failure.json').write_text(json.dumps(snapshot,ensure_ascii=False,indent=2))
             browser.close();server.stop()
-
 
 @pytest.mark.browser
 def test_studio_browser_real_file_refresh_and_input_commit(tmp_path):

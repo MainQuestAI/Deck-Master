@@ -65,7 +65,8 @@ def main():
             page.on("response", lambda response: resources.append({"path": urlsplit(response.url).path, "status": response.status}))
             for width, height in [(1440, 900), (1280, 800)]:
                 page.set_viewport_size({"width": width, "height": height})
-                page.goto(url + "v2/#" + urlencode({"project": identity, "revision": revision, "surface": "runs", "area": "files", "layer": "content"}))
+                page.goto(url + "#" + urlencode({"project": identity, "revision": revision, "surface": "runs", "area": "files", "layer": "content"}))
+                expect(page.locator("html")).to_have_attribute("data-workbench-ui", "studio")
                 expect(page.get_by_role("heading", name="版本与文件", exact=True)).to_be_visible()
                 assert page.evaluate("() => document.documentElement.scrollWidth <= innerWidth")
                 page.get_by_role("button", name="文件", exact=True).click()
@@ -79,8 +80,10 @@ def main():
                 checks[f"viewport_{width}_{height}_focus_and_overflow"] = True
             for purpose, label in [("review", "审阅包"), ("delivery", "正式交付包"), ("engineering", "内部工程包")]:
                 if purpose == 'engineering':
-                    page.locator('.export-recovery > summary').click()
+                    page.get_by_role('button', name='内部工程恢复包', exact=True).click()
                 page.get_by_role("button", name="生成" + label, exact=True).click()
+                if purpose == 'engineering':
+                    page.get_by_role('dialog', name='内部工程恢复包', exact=True).get_by_role('button', name='关闭', exact=True).click()
                 row = page.locator(".export-result").filter(has=page.get_by_role("heading", name=label + " ·")).first
                 link = row.get_by_role("link", name="下载 ZIP", exact=True)
                 expect(link).to_be_visible()
@@ -117,12 +120,20 @@ def main():
             assert static.joinpath("assets/deck-master-logo/IBMPlexMono-OFL.txt").is_file()
             assert json.loads(static.joinpath("package.json").read_text())["type"] == "module"
             checks["every_v2_asset_served_from_installed_package"] = True
-            # All supported entries serve the current UI; retired routes stay absent.
+            studio = files("deck_master").joinpath("resources/static/studio")
+            for name, asset in public_assets(studio):
+                response = context.request.get(url + "studio/" + name)
+                assert response.status == 200 and response.body() == asset.read_bytes(), name
+            checks["every_studio_asset_served_from_installed_package"] = True
+            # Default entries serve Studio; explicit v2 entries retain compatibility.
             before = store.read_current()
-            current_index = static.joinpath("index.html").read_bytes()
-            for path in ("", "index.html", "v2/", "v2/index.html"):
+            current_index = studio.joinpath("index.html").read_bytes()
+            for path in ("", "index.html", "studio/", "studio/index.html"):
                 response = context.request.get(url + path)
                 assert response.status == 200 and response.body() == current_index, path
+            for path in ("v2/", "v2/index.html"):
+                response = context.request.get(url + path)
+                assert response.status == 200 and response.body() == static.joinpath("index.html").read_bytes(), path
             page.goto(url + "#" + urlencode({"project": identity, "revision": revision, "surface": "overview", "layer": "content"}))
             expect(page.get_by_role("heading", name="制作总览", exact=True)).to_be_visible()
             assert page.locator(".brand-logo").evaluate("image => image.complete && image.naturalWidth > 0")
