@@ -69,6 +69,12 @@ export class Project {
     const serial = ++this.generation;
     const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
     this.navigationPending = true;
+    // Keep the old snapshot visible, but do not accept actions against it while
+    // the requested version is loading. Otherwise its handlers can supersede
+    // the new read with an old revision or lose a subarea choice on remount.
+    if (this.main) { this.main.inert = true; this.main.setAttribute('aria-busy', 'true'); }
+    if (this.navigationStatus) this.navigationStatus.hidden = false;
+    announce('正在读取工作面');
     try {
       const [info, latest] = await Promise.all([get('/api/project'), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
@@ -131,7 +137,13 @@ export class Project {
         this.root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('无法读取这个位置', readableError(error),
           button('打开项目当前版本', () => { history.replaceState(null, '', location.pathname + location.search); this.loadRoute({...this.route, surface: 'overview', page_id: null, task_id: null, revision: null}); }))));
       }
-    } finally { if (serial === this.generation) this.navigationPending = false; }
+    } finally {
+      if (serial === this.generation) {
+        this.navigationPending = false;
+        if (this.navigationStatus) this.navigationStatus.hidden = true;
+        if (this.main) { this.main.inert = false; this.main.removeAttribute('aria-busy'); }
+      }
+    }
   }
   go(patch) {
     const route = {...this.route, ...patch};
@@ -280,7 +292,8 @@ export class Project {
     const pending = this.summary.task_counts.awaiting_host || 0;
     // 顶栏入口承诺的是"查看待交接任务"：显式落到「正在进行」，不被记住的子区劫持。
     this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
-    const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿')),
+    this.navigationStatus = el('span', {class: 'status navigation-status', hidden: true}, '正在读取工作面');
+    const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿'), this.navigationStatus),
       this.pendingButton);
     this.root.className = 'shell';
     this.root.replaceChildren(aside, el('div', {class: 'content'}, top, banners, this.main));

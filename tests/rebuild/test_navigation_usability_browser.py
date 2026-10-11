@@ -333,3 +333,64 @@ def test_selected_internal_style_keeps_main_action_in_first_view(workbench_page,
     (out/f'style-selected-{width}.json').write_text(json.dumps({'width':width,'height':height,'action':check.bounding_box(),'requirement':field.bounding_box()},indent=2))
     check.click()
     expect(page.get_by_role('button', name='确认这版风格要求', exact=True)).to_be_enabled()
+
+
+@pytest.mark.parametrize('selected', [False, True])
+@pytest.mark.parametrize('read_error', [False, True])
+def test_current_version_read_blocks_obsolete_actions_and_restores_controls(tmp_path, selected, read_error):
+    """An old task view cannot supersede a pending current-version read."""
+    import uuid
+    from playwright.sync_api import expect
+    from test_pr103_complete_browser import browser_for, Flow, confirm, dispatch, commit
+
+    flow = Flow(tmp_path)
+    dispatch(flow, confirm(flow))
+    with browser_for(flow.project) as (page, _):
+        page.get_by_role('button', name='任务与交付', exact=True).click()
+        expect(page.locator('#runs-tasks')).to_be_visible()
+        if selected:
+            page.get_by_role('button', name='查看这项任务', exact=True).first.click()
+            expect(page.locator('.run-detail')).to_be_visible()
+        old_revision = flow.store.load_document()['revision_id']
+        commit(flow.store, flow.store.load_document(), str(uuid.uuid4()))
+        current = flow.store.load_document()
+        page.reload()
+        expect(page.get_by_role('button', name='查看当前版本', exact=True)).to_be_visible()
+        held = []
+
+        def hold_current_read(route):
+            if 'revision=' + current['revision_id'] in route.request.url:
+                held.append((route, route.fetch()))
+                page.evaluate('window.heldCurrentRead=true')
+            else:
+                route.continue_()
+
+        page.route('**/api/tasks?*', hold_current_read)
+        page.get_by_role('button', name='查看当前版本', exact=True).click()
+        page.wait_for_function('()=>window.heldCurrentRead===true')
+        target = page.get_by_role('button', name='待决定', exact=True)
+        box = target.bounding_box()
+        # Real pointer input must not activate the obsolete snapshot's handler.
+        page.mouse.click(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        expect(page.locator('.navigation-status')).to_be_visible()
+        expect(page.locator('#main')).to_have_attribute('aria-busy', 'true')
+        assert page.locator('#main').evaluate('(node)=>node.inert')
+        assert 'area=decisions' not in page.url
+        for route, response in held:
+            if read_error:
+                route.fulfill(status=503, json={'error': {'code': 'operation_unavailable', 'message': '当前版本暂不可读'}})
+            else:
+                route.fulfill(response=response)
+        page.wait_for_function('()=>!document.querySelector("#main").inert')
+        expect(page.locator('.navigation-status')).to_be_hidden()
+        expect(page.locator('#main')).not_to_have_attribute('aria-busy', 'true')
+        if read_error:
+            expect(page.locator('.notice')).to_contain_text('当前版本暂不可读')
+        else:
+            assert 'revision=' + current['revision_id'] in page.url
+        page.get_by_role('button', name='待决定', exact=True).click()
+        expect(page.locator('#runs-decisions')).to_be_visible()
+        expected_revision = old_revision if read_error else current['revision_id']
+        assert 'revision=' + expected_revision in page.url and 'area=decisions' in page.url
+        assert flow.store.load_document() == current
+        page.unroute_all(behavior='ignoreErrors')
