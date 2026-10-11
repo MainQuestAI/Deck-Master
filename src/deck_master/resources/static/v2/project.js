@@ -115,6 +115,7 @@ export class Project {
       this.editor?.dispose(); this.editor = null;
       this.disposables.forEach(dispose => dispose()); this.disposables = [];
       this.info = info; this.latest = latest; this.summary = summary; this.route = route;
+      this.summaryPoll?.useSnapshot(latest);
       this.historical = summary.revision_id !== latest.revision_id;
       this.readonly = this.historical || Boolean(info.sample?.readonly);
       history.replaceState(null, '', routeHash(this.info, route));

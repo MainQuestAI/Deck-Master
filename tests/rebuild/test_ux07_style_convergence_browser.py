@@ -22,6 +22,7 @@ VIEWPORTS = [(1440, 900), (1280, 800), (390, 844)]
 MEASURE = """selector => Array.from(document.querySelectorAll(selector))
   .filter(node => node.getClientRects().length && node.getBoundingClientRect().height > 0)
   .map(node => ({text: (node.textContent || '').trim().slice(0, 24), height: node.getBoundingClientRect().height,
+                 min_height: parseFloat(getComputedStyle(node).minHeight),
                  aria_pressed: node.getAttribute('aria-pressed')}))"""
 
 
@@ -51,7 +52,9 @@ def ux07_browser(tmp_path):
 def assert_touch_targets(page, selector):
     controls = page.evaluate(MEASURE, selector)
     assert controls, f'{selector} 没有可测的控件'
-    small = [item for item in controls if item['height'] < 44]
+    # Layout coordinates can represent an exact 44px box as 43.99994px. Keep
+    # the CSS minimum at 44 and allow only subpixel measurement roundoff.
+    small = [item for item in controls if item['min_height'] < 44 or item['height'] < 44 - 0.01]
     assert not small, f'{selector} 存在小于 44px 的触点: {small}'
 
 

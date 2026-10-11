@@ -315,3 +315,66 @@ def test_studio_split_merge_fields_preview_cancel_refresh_and_dispatch(tmp_path,
             (out/f'{action}-state.json').write_text(json.dumps({'before':before['revision_id'],'after':after['revision_id'],'frozen_input':frozen['input'],'task_id':task['task_id'],'pages_unchanged':after['pages']==before['pages'],'errors':errors},ensure_ascii=False,indent=2))
         finally:
             (out/f'{action}-requests.json').write_text(json.dumps(requests,ensure_ascii=False,indent=2));browser.close();server.stop()
+
+
+@pytest.mark.parametrize('old_poll_error', [False, True])
+def test_old_poll_cannot_invalidate_newly_read_content_plan(tmp_path, old_poll_error):
+    """A delayed poll cannot roll back a newer route's basis or show stale errors."""
+    from playwright.sync_api import sync_playwright, expect
+    project = tmp_path / 'project'
+    create_gallery_sample(project, page_count=24, readonly=False)
+    store = Store(project)
+    server = WorkbenchServer(project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(args=['--no-sandbox'])
+        page = browser.new_page(viewport={'width': 1440, 'height': 900})
+        held, errors = [], []
+        block_following = [False]
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        try:
+            page.goto(server.start())
+            page.get_by_role('button', name='内容与来源', exact=True).click()
+            page.get_by_role('button', name='逐页编辑与顺序', exact=True).click()
+            page.locator('.content-order-row').first.get_by_role('button', name=re.compile('^向后移动 ')).click()
+            page.get_by_role('button', name='预览页序变更', exact=True).click()
+            commit = page.get_by_role('button', name='确认内容变更', exact=True)
+            expect(commit).to_be_enabled()
+            old_revision = store.current_revision_id()
+
+            def hold_poll(route):
+                if not held:
+                    response = route.fetch()
+                    assert response.json()['revision_id'] == old_revision
+                    held.append((route, response))
+                    page.evaluate('() => { window.__heldContentPoll = true; }')
+                elif block_following[0]:
+                    # Do not let a subsequent fresh poll conceal the stale one.
+                    held.append((route, None))
+                else:
+                    route.continue_()
+
+            page.route('**/api/view/summary?personal=1', hold_poll)
+            page.evaluate('() => window.dispatchEvent(new Event("focus"))')
+            page.wait_for_function('() => window.__heldContentPoll === true')
+            with page.expect_response(lambda response: response.url.endswith('/api/content/commit')) as receipt:
+                commit.click()
+            current = receipt.value.json()['operation_result']['revision_id']
+            assert current != old_revision
+            expect(page).to_have_url(re.compile('revision=' + current))
+            expect(page.locator('#content-area-pages')).to_be_visible()
+            page.locator('.content-order-row').first.get_by_role('checkbox').check()
+            page.get_by_label('选页调整要求', exact=True).fill('保留事实，调整这一页表达')
+            block_following[0] = True
+            if old_poll_error:
+                held[0][0].fulfill(status=503, content_type='application/json', body=json.dumps({'error': {'message': 'old poll failure'}}))
+            else:
+                held[0][0].fulfill(response=held[0][1])
+            page.evaluate('() => new Promise(resolve => requestAnimationFrame(resolve))')
+            page.get_by_role('button', name='预览选页改写', exact=True).click()
+            expect(page.get_by_role('button', name='确认并交接内容调整', exact=True)).to_be_enabled()
+            expect(page.locator('.runtime-sync-row')).to_be_hidden()
+            assert store.current_revision_id() == current and errors == []
+        finally:
+            page.unroute_all(behavior='ignoreErrors')
+            browser.close()
+            server.stop()
