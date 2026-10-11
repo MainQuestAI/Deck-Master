@@ -271,8 +271,8 @@ export function pageDetail(app, data) {
   }
   // 无 annotations 路径:bindDraft 已经把维护区装好（占位说明或草稿视图+恢复详情）。
   const detailBasis = layer === 'original_image' || layer === 'prepared_prompt' || layer === 'submitted_prompt'
-    ? (() => { const basis = generationBasis(app, data); basis.open = false; return basis; })() : null;
-  const production = layer === 'svg' || layer === 'ppt' ? detail('可编辑性与制作检查', productionView(data)) : null;
+    ? (() => { const basis = generationBasis(app, data); basis.open = studio; return basis; })() : null;
+  const production = layer === 'svg' || layer === 'ppt' ? (studio ? productionView(data, {expanded:true}) : detail('可编辑性与制作检查', productionView(data))) : null;
   const detailFace = el('div', {class: 'stack'}, detailBasis, production);
   if (!detailBasis && !production) detailFace.append(el('p', {class: 'muted'}, '本层没有多的制作记录；生成依据与检查在对应图层的详情面。'));
   const faces = [

@@ -80,6 +80,10 @@ def test_single_page_faces_and_content_sections(workbench_page,tmp_path,width,he
         for face in ['意见','试作与候选','图标优化','笔记','详情']:
             control=page.get_by_role('group',name='单页工具',exact=True).get_by_role('button',name=face,exact=True)
             control.click();expect(control).to_have_attribute('aria-pressed','true')
+            if face=='详情' and layer in ['svg','ppt']:
+                expect(page.locator('.page-tools .production-detail > h3')).to_be_visible()
+                assert page.locator('.page-tools details.production-detail').count()==0
+                expect(page.locator('.page-tools .production-facts')).to_be_visible()
             # Any remaining panel inside the single tool shell must be an
             # independent object, never a second decorated layout shell.
             sections=page.locator('.page-tools [data-container=section]:visible')
