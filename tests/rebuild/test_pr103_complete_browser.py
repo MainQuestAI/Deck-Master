@@ -564,6 +564,12 @@ def visible_button_style(page, text, pressed=None):
         n.textContent.trim() === text && n.isConnected && n.getClientRects().length &&
         !n.disabled && (!pressed || n.getAttribute('aria-pressed') === pressed));
       if (!button) return null;
+      // The route's translateY entrance animation yields fractional coordinates
+      // and can round a 44px box down during sampling. Measure after the actual
+      // ancestor animation completes, without weakening the 44px assertion.
+      for (let node = button; node; node = node.parentElement) {
+        if (node.getAnimations().some(a => a.playState === 'running')) return null;
+      }
       const box = button.getBoundingClientRect(), style = getComputedStyle(button);
       if (!style.color || !style.backgroundColor) return null;
       return {height: box.height, color: style.color,
