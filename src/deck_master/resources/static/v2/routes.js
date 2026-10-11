@@ -14,6 +14,16 @@ export function readRoute(info, position, summary, hash = location.hash) {
     page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision') === 'null' ? null : params.get('revision'),
     candidate_id: params.get('candidate'), zoom: params.has('zoom') ? Number(params.get('zoom')) : 1, task_id: params.get('task'),
     action_id: params.get('action'), review_id: params.get('review'), runs_area: runsAreas.includes(params.get('area')) ? params.get('area') : null};
+  if (params.has('batch') || params.has('batchPages')) {
+    const pageIds=(params.get('batchPages')||'').split(',');
+    if(route.surface!=='overview'||!route.revision||route.action_id||route.task_id||route.review_id||route.candidate_id||
+      params.getAll('batch').length!==1||params.getAll('batchPages').length!==1||
+      !['blueprint','reconstruct','repair','style'].includes(params.get('batch'))||
+      pageIds.length<1||pageIds.length>300||new Set(pageIds).size!==pageIds.length||
+      pageIds.some(id=>!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(id)))
+      throw new Error('画廊制作链接的动作、选页或固定版本无效，原选择保留。');
+    route.batch_action=params.get('batch'); route.batch_page_ids=pageIds;
+  }
   if (['q','filter','sort'].some(key => params.has(key))) {
     if (route.surface !== 'overview' || ['q','filter','sort'].some(key => params.getAll(key).length > 1) || (params.get('q') || '').length > 200 || (params.has('filter') && !['all','todo'].includes(params.get('filter'))) || (params.has('sort') && !['ascending','descending'].includes(params.get('sort'))))
       throw new Error('总览链接中的搜索、筛选或排序无效，当前内容保留。');
@@ -41,6 +51,9 @@ export function routeHash(info, route) {
   if (route.review_id) params.set('review', route.review_id);
   // 子区上下文随链接全程保留：跨面返回再进任务与交付时仍落在同一工作区。
   if (route.runs_area) params.set('area', route.runs_area);
+  if(route.surface==='overview'&&route.revision&&route.batch_action&&route.batch_page_ids?.length){
+    params.set('batch',route.batch_action);params.set('batchPages',route.batch_page_ids.join(','));
+  }
   if (route.surface === 'overview' && route.overview_preferences) {
     params.set('q', route.overview_preferences.search); params.set('filter', route.overview_preferences.filter); params.set('sort', route.overview_preferences.sort);
   }

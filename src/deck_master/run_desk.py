@@ -52,6 +52,53 @@ def _records(ctx):
     return rows
 
 
+def task_instruction_summary(task):
+    """Only summarize exact core-authored compose wrappers, never edit the request.
+
+    These literals mirror service/content_ops dispatch templates. An unknown or
+    changed template falls back to the complete instruction rather than guessing
+    which words belong to the user's request.
+    """
+    text = task.get('instruction') or ''
+    if task.get('kind') != 'compose':
+        return text
+    initial = ("Read every source in Task.sources plus the method resources; derive the "
+               "audience's open question and write complete visible copy as Page v2 with "
+               "an explicit page order. Same source supports different framings; do not "
+               "call a rule planner or fill pages from templates.")
+    if task.get('intent') == 'initial' and text == initial:
+        return '阅读全部材料，围绕受众的问题组织完整正文与页面顺序。'
+    trial_suffix = (' 当前为显式 trial：除 content_update 外还须提交完整 content_plan_input；'
+                    '结果保存为候选，采用前不改动当前正文、页序或产物。')
+    input_id = task.get('input_revision_id')
+    prefix = f'输入已更新（operation {input_id}）：'
+    suffixes = {
+        'input_revision': ('。读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，'
+                           '只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。'),
+        'initial': '。读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。',
+    }
+    suffix = suffixes.get(task.get('intent'))
+    if input_id and suffix and text.startswith(prefix):
+        trial = text.endswith(trial_suffix)
+        body = text[:-len(trial_suffix)] if trial else text
+        if body.endswith(suffix):
+            reason = body[len(prefix):-len(suffix)]
+            purpose = '核对新材料与全稿正文，只更新受影响内容。' if task['intent'] == 'input_revision' else '阅读更新后的材料，整理完整正文与页面顺序。'
+            return reason + ' · ' + purpose + (' 先返回候选，采用前保持当前稿。' if trial else '')
+    operation_suffix = ('\n仅处理所选页。rewrite 保留原 page_id；merge/split 返回全新 page_id，移除所选旧页。'
+                        '未选页正文及目标不得改变。提交完整 content_plan 和 content_update，包含具体影响依据；不生成图片。')
+    candidate_suffix = '当前为 trial：结果保存为候选，采用前不改动当前正文或页序。'
+    if task.get('content_operation_ref'):
+        trial = text.endswith(candidate_suffix)
+        body = text[:-len(candidate_suffix)] if trial else text
+        for action, label in (('rewrite', '改写所选正文'), ('merge', '合并所选页'), ('split', '拆分所选页')):
+            prefix = f'明确的内容操作 {action}：'
+            if body.startswith(prefix) and body.endswith(operation_suffix):
+                reason = body[len(prefix):-len(operation_suffix)]
+                return reason + ' · ' + label + '，其余页面保持。' + (' 先返回候选，采用前保持当前稿。' if trial else '')
+    return text
+
+
 def task_row(task, ref=None, *, adopted=(), now=None, live=True):
     now = now or datetime.now(timezone.utc)
     def timestamp(value):
@@ -87,7 +134,7 @@ def task_row(task, ref=None, *, adopted=(), now=None, live=True):
             actions.append('review_results')
     return {'ref': ref, 'task_id': task['task_id'], 'operation_id': task['operation_id'],
             'kind': task['kind'], 'status': task['status'], 'scope_pages': task['scope_pages'],
-            'instruction': task['instruction'], 'dispatch_revision': task['dispatch_revision'],
+            'instruction': task['instruction'], 'display_instruction': task_instruction_summary(task), 'dispatch_revision': task['dispatch_revision'],
             'created_at': task['created_at'], 'updated_at': task['updated_at'],
             'execution_ref': task.get('execution_ref'), 'execution_started_at': started,
             'execution_time_source': 'core_recorded' if started else 'not_recorded',
@@ -131,14 +178,29 @@ def _groups(ctx, rows):
 
 
 @_public
-def listing(project, *, revision=None, limit=30, offset=0, change_id=None, status=None, attention=False, reading=None):
+def listing(project, *, revision=None, limit=30, offset=0, change_id=None, status=None, attention=False, reading=None, search=None):
     if type(limit) is not int or not 1 <= limit <= 100 or type(offset) is not int or offset < 0 or type(attention) is not bool:
         raise RunReadError('invalid_run_query', 'pagination', 'limit must be 1..100, offset nonnegative, attention boolean', http_status=400)
     if status is not None and status not in ('queued', 'awaiting_host', 'running', 'completed', 'failed', 'cancelled', 'superseded', 'unreadable'):
         raise RunReadError('invalid_run_query', 'status', 'unknown task status', http_status=400)
     if change_id is not None and (not isinstance(change_id, str) or not IDENTIFIER.fullmatch(change_id)):
         raise RunReadError('invalid_run_query', 'change_id', 'invalid change identifier', http_status=400)
+    if search is not None and (not isinstance(search, str) or len(search) > 200):
+        raise RunReadError('invalid_run_query', 'search', 'search must be text up to 200 characters', http_status=400)
+    needle = (search or '').strip().casefold()
     store = Store(project); doc = load_snapshot(store, revision); ctx = _ReadContext(store, doc)
+    page_terms = {}
+    if needle:
+        for index, entry in enumerate(doc['pages']):
+            title = ''
+            try:
+                title = str((ctx.read(entry['page']).get('customer_visible') or {}).get('title') or '')
+            except READ_FAILURES:
+                pass  # A damaged page must not hide its task's own searchable identity.
+            page_terms[entry['page_id']] = f"{entry['page_id']} 第{index + 1}页 第 {index + 1} 页 {title}"
+    kind_names = {'style_analyze': '分析截图规范', 'reconstruct': '制作可编辑稿', 'compile': '编译整稿',
+                  'check': '工程检查', 'compose': '整理内容', 'blueprint': '制作原图', 'svg': '制作 SVG',
+                  'render': '渲染预览', 'repair': '局部修改', 'review': '检查', 'export': '准备文件'}
     records = _records(ctx); groups = _groups(ctx, records)
     selected_ids = None
     if change_id:
@@ -159,6 +221,12 @@ def listing(project, *, revision=None, limit=30, offset=0, change_id=None, statu
             continue
         if attention and not row['human_actions']:
             continue
+        if needle:
+            text = ' '.join([str(row.get('task_id') or ''), str(row.get('instruction') or ''), str(row.get('display_instruction') or ''),
+                             kind_names.get(row.get('kind'), ''),
+                             *(page_terms.get(pid, pid) for pid in row.get('scope_pages', []))])
+            if needle not in text.casefold():
+                continue
         projected.append(row)
     return copy.deepcopy({'project_id': doc['project_id'], 'revision_id': doc['revision_id'],
         'tasks': projected[offset:offset + limit], 'groups': groups,

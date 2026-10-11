@@ -409,3 +409,7 @@ textarea{font-size:14px;line-height:1.7}
 .visual-breakdown-full .pooled-image {aspect-ratio:auto}
 .visual-breakdown-full canvas {width:auto;max-width:none;height:auto;max-height:none}
 @media(max-width:767px){.style-working-pair{grid-template-columns:1fr}.visual-reference-list{grid-template-columns:repeat(2,minmax(0,1fr))}.visual-rule{grid-template-columns:1fr}.visual-rule details{grid-column:1}}
+
+/* Clear backup review keeps full values readable in the narrow dialog. */
+.recovery-differences{table-layout:fixed;width:100%;border-collapse:collapse;font-size:12px}
+.recovery-differences th,.recovery-differences td{padding:8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border);overflow-wrap:anywhere;white-space:pre-wrap}

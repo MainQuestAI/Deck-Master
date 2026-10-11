@@ -137,3 +137,67 @@ def test_read_result_removes_same_overview_target_and_survives_reload(action_bro
     target=page.request.get(server.start().rstrip('/')+'/api/actions/'+action['action_id']+'/targets?revision='+summary['revision_id']+'&personal=1&reading_etag='+reading['etag']).json()
     assert target['total']==1
     assert errors==[] and page.evaluate('window.cspErrors')==[]
+
+
+def test_target_paging_failure_retries_exact_page_and_ignores_departed_response(action_browser):
+    """A 65-object list retains display identity while another page is requested."""
+    from playwright.sync_api import expect
+    from urllib.parse import parse_qs, urlparse
+    from test_workbench_actions import synthetic_task
+    page,server,path,store=action_browser
+    doc=copy.deepcopy(store.load_document());doc['tasks']=[]
+    for index in range(65):
+        task=synthetic_task(doc,f'pageable-handoff-{index:02d}','awaiting_host')
+        task['scope_pages']=['p01'];doc['tasks'].append(store.put_json_object(task))
+    commit(store,doc,'pageable-action-targets');before=store.read_current()
+    page.goto(server.start()+'studio/')
+    page.locator('.todo-priority').get_by_role('button',name='去交接',exact=True).click()
+    expect(page.locator('.action-target')).to_have_count(30)
+    first=page.locator('.action-target').first.get_attribute('data-target-id')
+    requests=[];held=[]
+    def hold_second(route):
+        query=parse_qs(urlparse(route.request.url).query)
+        if query.get('offset')==['30']:
+            requests.append(route.request.url);held.append(route)
+        else:route.continue_()
+    page.route('**/api/actions/*/targets?*',hold_second)
+    page.get_by_role('button',name='下一页对象',exact=True).click()
+    expect(page.get_by_role('button',name='下一页对象',exact=True)).to_be_disabled()
+    expect(page.get_by_role('button',name='上一页对象',exact=True)).to_be_disabled()
+    assert len(held)==1
+    held.pop().abort()
+    retry=page.get_by_role('button',name='重试第 2 页对象',exact=True)
+    expect(retry).to_be_visible()
+    expect(page.locator('.action-target')).to_have_count(30)
+    assert page.locator('.action-target').first.get_attribute('data-target-id')==first
+    expect(page.locator('.action-targets > .row')).to_contain_text('第 1 页')
+    retry.click();expect(retry).to_be_disabled()
+    assert len(held)==1 and len(requests)==2 and requests[0]==requests[1]
+    held.pop().continue_()
+    expect(page.locator('.action-targets > .row')).to_contain_text('第 2 页')
+    assert page.locator('.action-target').first.get_attribute('data-target-id')!=first
+    expect(retry).to_have_count(0)
+    def mismatched_third(route):
+        query=parse_qs(urlparse(route.request.url).query)
+        if query.get('offset')==['60']:
+            response=route.fetch();value=response.json();value['action_id']='unrelated-action'
+            route.fulfill(response=response,json=value)
+        else:route.fallback()
+    page.route('**/api/actions/*/targets?*',mismatched_third)
+    page.get_by_role('button',name='下一页对象',exact=True).click()
+    expect(page.get_by_role('button',name='重试第 3 页对象',exact=True)).to_be_visible()
+    expect(page.locator('.action-targets > .row')).to_contain_text('第 2 页')
+    expect(page.locator('.action-target')).to_have_count(30)
+    page.unroute('**/api/actions/*/targets?*',mismatched_third)
+    page.get_by_role('button',name='重试第 3 页对象',exact=True).click()
+    expect(page.locator('.action-target')).to_have_count(5)
+    expect(page.locator('.action-targets > .row')).to_contain_text('第 3 页')
+    expect(page.get_by_role('button',name='下一页对象',exact=True)).to_be_disabled()
+    page.get_by_role('button',name='上一页对象',exact=True).click()
+    expect(page.get_by_role('button',name='下一页对象',exact=True)).to_be_disabled()
+    assert len(held)==1
+    page.get_by_role('button',name='返回制作总览',exact=True).click()
+    held.pop().continue_()
+    expect(page.get_by_role('heading',name='制作总览',exact=True)).to_be_visible()
+    expect(page.locator('.action-targets')).to_have_count(0)
+    assert store.read_current()==before

@@ -123,23 +123,24 @@ def test_narrow_viewport_switches_between_panel_and_new_column(page_fixture):
     page.goto(server.start()); page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     identity = page.request.get(page.url.split('#')[0] + 'api/project').json()['project_identity']
     goto_page(page, server.start(), identity, 'p01', 'svg', store.current_revision_id())
-    tools_entry = page.get_by_role('button', name='工具', exact=True)
-    expect(tools_entry).to_be_hidden()
+    tools_entry = page.get_by_role('button', name='笔记', exact=True)
+    expect(tools_entry).to_be_visible()
     page.set_viewport_size({'width': 1279, 'height': 800})
     expect(tools_entry).to_be_visible()
     tools_entry.click()
     expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
-    page.get_by_role('button', name='笔记', exact=True).click()
     note_box = page.get_by_role('textbox', name='个人草稿', exact=True)
     expect(note_box).to_be_visible(timeout=15000)
     note_box.click(); note_box.fill('跨断点输入保留样例')
     expect(note_box).to_have_value('跨断点输入保留样例')
-    page.get_by_role('button', name='笔记', exact=True).click()
-    expect(page.get_by_role('button', name='笔记', exact=True)).to_be_focused()
+    page.get_by_role('button', name='回到画面', exact=True).focus()
+    expect(page.get_by_role('button', name='回到画面', exact=True)).to_be_focused()
     page.set_viewport_size({'width': 1280, 'height': 800})
     tools_root = page.locator('.page-tools')
     expect(tools_root).to_be_visible()
-    expect(tools_entry).to_be_hidden()
+    expect(tools_entry).to_be_visible()
+    expect(tools_entry).to_be_focused()
+    expect(note_box).to_have_value('跨断点输入保留样例')
     # 面板关闭、同一工具仍活动、输入保留。
     expect(page.get_by_role('dialog', name='单页工具面板')).to_have_count(0)
     expect(page.locator('.page-tools-switcher button[aria-pressed=true]')).to_have_text('笔记')
@@ -155,20 +156,19 @@ def test_panel_escape_does_not_leave_page_and_dialog_layers_return_focus(page_fi
     page.goto(server.start()); page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     identity = page.request.get(page.url.split('#')[0] + 'api/project').json()['project_identity']
     goto_page(page, server.start(), identity, 'p01', 'svg', store.current_revision_id())
-    if not page.get_by_role('button', name='工具', exact=True).is_visible():
-        page.set_viewport_size({'width': 1279, 'height': 800})
-    page.get_by_role('button', name='工具', exact=True).click()
+    page.set_viewport_size({'width': 1279, 'height': 800})
+    page.get_by_role('button', name='笔记', exact=True).click()
     panel = page.get_by_role('dialog', name='单页工具面板')
     expect(panel).to_be_visible()
     # O1:面板开启时按 Escape 只关面板,页面级 Escape(回画廊)不执行。
-    page.get_by_role('button', name='笔记', exact=True).focus()
+    page.get_by_role('textbox', name='个人草稿', exact=True).focus()
     page.keyboard.press('Escape')
     expect(page.get_by_role('heading', name='第 1 页', exact=False).first).to_be_visible()
     assert page.url != page.url.split('#')[0], 'page must stay on page surface'
     # 弹窗逐层:面板之上的二级弹窗矩阵由
     # test_second_level_modal_above_panel_keeps_layers_and_returns_focus 覆盖;
     # 本例收尾验证面板关闭后焦点回到「工具」入口。
-    expect(page.get_by_role('button', name='工具', exact=True)).to_be_focused()
+    expect(page.get_by_role('button', name='笔记', exact=True)).to_be_focused()
 
 
 def test_second_level_modal_above_panel_keeps_layers_and_returns_focus(page_fixture):
@@ -179,22 +179,20 @@ def test_second_level_modal_above_panel_keeps_layers_and_returns_focus(page_fixt
     identity = page.request.get(page.url.split('#')[0] + 'api/project').json()['project_identity']
     goto_page(page, server.start(), identity, 'p01', 'svg', store.current_revision_id())
     page.set_viewport_size({'width': 1279, 'height': 800})
-    page.get_by_role('button', name='工具', exact=True).click()
+    page.get_by_role('button', name='笔记', exact=True).click()
     panel = page.get_by_role('dialog', name='单页工具面板')
     expect(panel).to_be_visible()
-    page.get_by_role('button', name='笔记', exact=True).click()
     note = page.get_by_role('textbox', name='个人草稿', exact=True)
     expect(note).to_be_visible(timeout=15000)
     note.fill('面板之上的弹窗样例')
     expect(page.locator('.draft-state').first).to_contain_text('已保存到项目', timeout=20000)
     # 恢复列表由 load 构建:先保存再 reload,让已存草稿进入恢复选择框。
     page.reload()
-    page.get_by_role('button', name='工具', exact=True).click()
     page.get_by_role('button', name='笔记', exact=True).click()
     note = page.get_by_role('textbox', name='个人草稿', exact=True)
     expect(note).to_be_visible(timeout=15000)
     # 恢复详情默认收起,先展开才能选择已保存草稿(真实恢复入口)。
-    page.get_by_text('恢复、下载与版本详情', exact=True).click()
+    page.get_by_role('button', name='备份与恢复', exact=True).click()
     restore = page.get_by_label('恢复项目中的个人草稿')
     expect(restore).to_be_visible(timeout=15000)
     saved_id = restore.locator('option').evaluate_all('os => os.map(o => o.value).filter(Boolean)')[0]
@@ -202,8 +200,10 @@ def test_second_level_modal_above_panel_keeps_layers_and_returns_focus(page_fixt
     # 状态后恢复选择才走「保留当前输入再恢复」弹窗路径。
     held = []
     page.route('**/api/drafts/save', lambda route: held.append(route))
+    page.get_by_role('button', name='写笔记', exact=True).click()
     note.fill('面板弹窗叠加输入')
     expect(page.locator('.draft-state').first).to_contain_text('正在保存到项目', timeout=20000)
+    page.get_by_role('button', name='备份与恢复', exact=True).click()
     restore.select_option(saved_id)
     modal = page.locator('#modal')
     expect(modal).to_be_visible()
@@ -225,11 +225,12 @@ def test_second_level_modal_above_panel_keeps_layers_and_returns_focus(page_fixt
     restore.select_option(saved_id)
     expect(modal).to_be_visible()
     page.get_by_role('button', name='打开所选草稿', exact=True).click()
+    page.get_by_role('button', name='写笔记', exact=True).click()
     expect(note).to_have_value('面板之上的弹窗样例', timeout=15000)
     # 再按 Escape:只关面板这一层,焦点回「工具」入口;页面仍在页工作面。
     page.keyboard.press('Escape')
     expect(panel).not_to_be_visible()
-    expect(page.get_by_role('button', name='工具', exact=True)).to_be_focused()
+    expect(page.get_by_role('button', name='笔记', exact=True)).to_be_focused()
     assert 'surface=page' in page.url.split('#')[1]
 
 

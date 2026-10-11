@@ -1,7 +1,7 @@
 import {deliveryDesk, historyDesk} from './delivery-desk.js';
 import {runDesk} from './run-desk.js';
 import {candidateBatch} from './candidate-desk.js';
-import {el, button, empty, heading} from './dom.js';
+import {el, button, empty, heading, modal} from './dom.js';
 import {changeHandoffs} from './change-handoff.js';
 import {routeHash} from './routes.js';
 
@@ -39,7 +39,8 @@ export function runs(app, data) {
   const handoffButton = titleNode.querySelector('.page-head button.primary');
   const returnButton = selected && app.returnTo && !app.returnTo.task_id
     ? button('返回上次工作面', () => app.go(app.returnTo)) : null;
-  const node = el('div', {}, titleNode);
+  const studio=document.documentElement.dataset.workbenchUi==='studio';
+  const node = el('div', {class:studio?'studio-tasks-workspace':''}, titleNode);
   if (returnButton) node.append(returnButton);
   const syncTaskContext = key => {
     const inTaskContext = key === 'tasks' && selected;
@@ -61,7 +62,7 @@ export function runs(app, data) {
   // 返回后仍落在同一个子区；只有初次访问（链接里没有 area）才默认「正在进行」。
   const subareas = [
     ['tasks', 'runs-tasks', '正在进行', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel,
-      handoffs && el('details', {}, el('summary', {}, '其它修改组的交接'), handoffs))],
+      handoffs && (studio ? button('其它修改组的交接',()=>modal('其它修改组的交接',handoffs),false,{class:'studio-other-handoffs'}) : el('details', {}, el('summary', {}, '其它修改组的交接'), handoffs)))],
     ['decisions', 'runs-decisions', '待决定', el('div', {id: 'runs-decisions', class: 'stack runs-subarea'}, batch)],
   ];
   if (app.health.ui_capabilities?.includes('exports.v1')) {

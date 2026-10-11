@@ -470,11 +470,29 @@ def show(project, *, candidate_id, revision=None):
 @operations.public
 def listing(project, *, page_id=None, revision=None):
     store = Store(project_path(project)); document = load_snapshot(store, revision)
-    return {'project_id': document['project_id'], 'revision_id': document['revision_id'], 'candidates': [
-        {'candidate': candidate, 'ref': ref, 'result_kind': result_kind(candidate),
-         'style_recipe_ref':task.get('stage_request', {}).get('style_recipe_ref'),
-         **_state(store, document, candidate, task)}
-        for candidate, ref, task in _records(store, document).values() if page_id is None or candidate.get('page_id') == page_id]}
+    rows = []
+    for candidate, ref, task in _records(store, document).values():
+        if page_id is not None and candidate.get('page_id') != page_id:
+            continue
+        state = _state(store, document, candidate, task)
+        reason = ('already_adopted' if state['status'] != 'available' else
+                  'kept_current' if state.get('decision', {}).get('state') == 'keep_current' else
+                  'unreadable' if state.get('decision', {}).get('state') == 'unreadable' else
+                  'basis_changed' if (state.get('generation_basis') or state.get('content_basis') or {}).get('status') != 'current' else None)
+        if not reason and task.get('stage_request', {}).get('icon_recipe_ref'):
+            try:
+                # The same actual-PPT and scope gates used by adoption planning.
+                _plan(store, document, [candidate['candidate_id']])
+            except operations.OperationError as exc:
+                reason = exc.error_code
+        change_ref = task.get('change_binding', {}).get('change_ref')
+        change = store.read_object_json(change_ref) if change_ref else None
+        rows.append({'candidate': candidate, 'ref': ref, 'result_kind': result_kind(candidate),
+                     'style_recipe_ref': task.get('stage_request', {}).get('style_recipe_ref'),
+                     'change_id': change.get('change_id') if change else None,
+                     'instruction': task.get('instruction', ''),
+                     'selection_allowed': reason is None, 'selection_blocked_reason': reason, **state})
+    return {'project_id': document['project_id'], 'revision_id': document['revision_id'], 'candidates': rows}
 
 
 class AdoptionConflict(operations.OperationError):

@@ -58,7 +58,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
-                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1")
+                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1")
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
@@ -143,6 +143,22 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if not self._authorized_write():
             return
         try:
+            if urlparse(self.path).path == '/api/content/uploads':
+                from . import source_uploads
+                from .samples import sample_info
+                from .operations import OperationError
+                if (sample_info(self.store.project_root) or {}).get('readonly'):
+                    self._send_json({'error': {'code':'sample_readonly','message':'example is read-only'}},403);return
+                fields = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+                if set(fields) != {'upload_id', 'name'} or any(len(v) != 1 or not v[0] for v in fields.values()):
+                    raise OperationError('material_upload_invalid', 'query', 'provide one upload_id and filename', http_status=422)
+                lengths = self.headers.get_all('Content-Length', [])
+                if self.headers.get('Transfer-Encoding') or len(lengths) != 1 or not 0 < int(lengths[0]) <= source_uploads.MAX_BYTES:
+                    raise OperationError('material_upload_invalid', 'file', 'choose a nonempty file up to 64 MiB', http_status=422)
+                length = int(lengths[0]); raw = self.rfile.read(length)
+                if len(raw) != length:
+                    raise OperationError('material_upload_invalid', 'file', 'incomplete upload; verify original upload ID', http_status=422)
+                self._send_json(source_uploads.receive(self.store.project_root, data=raw, **{key:v[0] for key,v in fields.items()}));return
             if urlparse(self.path).path == '/api/styles/references/import':
                 from . import visual_styles
                 from .samples import sample_info
@@ -182,6 +198,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 from . import ui_journal
                 action = {'/api/ui-state/plan-clear': ui_journal.plan_clear,
                           '/api/ui-state/commit-clear': ui_journal.commit_clear}[self.path]
+                result = action(self.store.project_root, **data)
+            elif self.path in ('/api/ui-state/plan-restore', '/api/ui-state/restore'):
+                from . import personal_recovery
+                action = personal_recovery.plan if self.path.endswith('plan-restore') else personal_recovery.restore
                 result = action(self.store.project_root, **data)
             elif self.path == '/api/gallery':
                 from .gallery_state import save
@@ -269,6 +289,20 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if not self._local_host():
             self._send_json({'error':'loopback Host required'},403);return
         parsed = urlparse(self.path)
+        if parsed.path.startswith('/api/ui-state/backups'):
+            from . import personal_recovery
+            try:
+                if parsed.query:
+                    raise ValueError('backup routes do not accept query parameters')
+                if parsed.path == '/api/ui-state/backups':
+                    self._send_json(personal_recovery.listing(self.store.project_root)); return
+                parts = parsed.path.split('/')
+                if len(parts) != 6 or parts[5] != 'download':
+                    raise ValueError('select a returned backup download')
+                data, name = personal_recovery.download(self.store.project_root, backup_id=parts[4])
+                self._send_bytes(data, 'application/json', download_name=name); return
+            except Exception as exc:
+                self._send_error(exc); return
         if parsed.path.startswith('/api/exports/') or parsed.path == '/api/export-facts':
             from . import exports
             from .operations import OperationError
@@ -289,8 +323,20 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 raise OperationError('export_file_not_found','url','use a returned export download URL',http_status=404)
             except Exception as exc:
                 self._send_error(exc);return
+        if parsed.path.startswith('/studio/') or parsed.path == '/studio':
+            self._serve_ui(parsed.path, 'studio')
+            return
         if parsed.path.startswith('/v2/') or parsed.path == '/v2':
             self._serve_v2(parsed.path)
+            return
+        if parsed.path.startswith('/api/content/uploads/'):
+            try:
+                from . import source_uploads
+                if parsed.query:
+                    raise ValueError('upload reads take no query')
+                self._send_json(source_uploads.show(self.store.project_root, upload_id=parsed.path.removeprefix('/api/content/uploads/')))
+            except Exception as exc:
+                self._send_error(exc)
             return
         if parsed.path.startswith('/api/content/sources/') or parsed.path.startswith('/api/content/lineage/'):
             try:
@@ -467,14 +513,13 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 self._send_error(exc)
             return
         if parsed.path in ("/", "/index.html"):
-            # the v2 entry content is safe to serve on any path: its assets
-            # use absolute /v2/ URLs
-            self._serve_v2("/v2/")
+            # Studio uses absolute asset URLs and is the formal default entry.
+            self._serve_ui("/studio/", "studio")
             return
         if parsed.path == "/api/health":
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
-                             "ui_available": (self.static_dir / 'v2' / 'index.html').is_file(),
+                             "ui_available": (self.static_dir / 'studio' / 'index.html').is_file(),
                              "ui_capabilities": list(UI_CAPABILITIES)})
             return
         if parsed.path == "/api/file":
@@ -493,10 +538,13 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "not found"}, 404)
 
     def _serve_v2(self, path):
+        return self._serve_ui(path, 'v2')
+
+    def _serve_ui(self, path, ui):
         from .local_state import safe_path
-        name = 'index.html' if path in ('/v2', '/v2/') else path.removeprefix('/v2/')
+        name = 'index.html' if path in (f'/{ui}', f'/{ui}/') else path.removeprefix(f'/{ui}/')
         try:
-            target = safe_path(self.static_dir, 'v2', *name.split('/'))
+            target = safe_path(self.static_dir, ui, *name.split('/'))
             media = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
                      '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.svg': 'image/svg+xml'}.get(target.suffix)
             if not media or not target.is_file():
@@ -546,7 +594,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 payload = workbench_mod.action_targets(project, parts[3], revision=revision, limit=limit, offset=offset, reading=reading)
             elif parsed.path == "/api/tasks":
                 from . import run_desk
-                fields = ('limit', 'offset', 'change_id', 'status', 'attention')
+                fields = ('limit', 'offset', 'change_id', 'status', 'attention', 'search')
                 if any(field in query for field in fields):
                     if any(len(query.get(field, [])) > 1 for field in fields):
                         raise run_desk.RunReadError('invalid_run_query', 'query', 'provide each filter once', http_status=400)
@@ -558,7 +606,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     if attention not in ('0', '1'):
                         raise run_desk.RunReadError('invalid_run_query', 'attention', 'attention must be 0 or 1', http_status=400)
                     payload = run_desk.listing(project, revision=revision, limit=limit, offset=offset,
-                        change_id=query.get('change_id', [None])[0], status=query.get('status', [None])[0], attention=attention == '1', reading=reading)
+                        change_id=query.get('change_id', [None])[0], status=query.get('status', [None])[0], attention=attention == '1', reading=reading, search=query.get('search', [None])[0])
                 else:
                     payload = workbench_mod.tasks_view(project, revision=revision)
             elif parsed.path.startswith('/api/tasks/'):
@@ -659,11 +707,12 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
     The server runs in its own process (``python -m deck_master.view_server``),
     so it keeps serving after the CLI exits. Startup waits bounded on a health
     check; failures return ``unavailable`` with the real reason (spec 09.5).
-    The v2 workbench is the only supported UI entry.
+    Studio is the default; the v2 compatibility entry remains explicit.
     """
-    if ui not in (None, "v2"):
+    ui = ui or "studio"
+    if ui not in ("v2", "studio"):
         return {"review_url": None, "view_status": "unavailable",
-                "detail": "only the v2 workbench UI is available", "ui": ui}
+                "detail": "choose the studio or v2 workbench UI", "ui": ui}
     project_dir = Path(project_dir).expanduser().resolve()
     if not (project_dir / ".deckmaster" / "current.json").is_file():
         return {
@@ -679,14 +728,14 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
     except Exception as exc:  # noqa: BLE001 - spawn/health failures surface as a real reason
         return {"review_url": None, "view_status": "unavailable", "detail": f"view service failed: {exc}", "ui": ui}
     # same incomplete-install guard as the launcher: never point the browser
-    # at a /v2/ entry the installed static tree cannot serve
-    ui_available = (_static_dir() / "v2" / "index.html").is_file()
+    # at an entry the installed static tree cannot serve
+    ui_available = (_static_dir() / ui / "index.html").is_file()
     if not ui_available:
         return {"review_url": state["url"], "view_status": "core_ready_ui_unavailable",
-                "detail": "the v2 workbench UI is not present in this installation; reinstall the complete workbench package",
+                "detail": f"the {ui} workbench UI is not present in this installation; reinstall the complete workbench package",
                 "port": state["port"], "pid": state.get("pid"),
                 "reused": state.get("reused", False), "ui": ui}
-    url = state["url"] + "v2/"
+    url = state["url"] + ui + "/"
     if open_browser:
         opened = False
         try:

@@ -1049,7 +1049,7 @@ def _write_input_operation(store: Store, operation_id: str, request_digest: str,
     _atomic_write_bytes(path, canonical_json_bytes(record))
 
 
-def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
+def _normalize_input_patch(patch: dict, *, patch_dir: Path, upload_project=None) -> dict:
     """Validate and resolve one inputs-update patch; paths become absolute."""
     if not isinstance(patch, dict):
         raise ServiceError("(patch)", "patch must be a JSON object")
@@ -1111,6 +1111,13 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
 
     def _resolve(item: dict, where: str) -> dict:
         path_value = item.get("path")
+        upload_digest = None
+        if 'upload_id' in item:
+            if path_value or upload_project is None:
+                raise ServiceError(where, "choose an uploaded material or a local path")
+            from .source_uploads import resolve, show
+            path_value = str(resolve(upload_project, item['upload_id']))
+            upload_digest = show(upload_project, upload_id=item['upload_id'])['sha256']
         if not isinstance(path_value, str) or not path_value:
             raise ServiceError(f"{where}/path", "must be a non-empty path string")
         resolved = Path(path_value).expanduser()
@@ -1120,6 +1127,8 @@ def _normalize_input_patch(patch: dict, *, patch_dir: Path) -> dict:
         if "usage_note" in item and not isinstance(note, str):
             raise ServiceError(f"{where}/usage_note", "must be a string")
         result = {"path": str(resolved.resolve())}
+        if upload_digest:
+            result['upload_sha256'] = upload_digest
         if note is not None:
             result['usage_note'] = note
         return result
@@ -1190,8 +1199,6 @@ def inputs_update(
     store = Store(Path(project_dir).expanduser())
     store.ensure_layout()
     patch_dir = Path(patch_dir).expanduser() if patch_dir else Path.cwd()
-    normalized = _normalize_input_patch(patch, patch_dir=patch_dir)
-    request_digest = sha256_bytes(canonical_json_bytes(normalized))
     business_digest = None
     if _recoverable_workbench:
         from . import operations
@@ -1204,7 +1211,9 @@ def inputs_update(
         existing = operations.recover(store, operation_id, business_digest)
         if existing:
             return existing
-    else:
+    normalized = _normalize_input_patch(patch, patch_dir=patch_dir, upload_project=store.project_root)
+    request_digest = sha256_bytes(canonical_json_bytes(normalized))
+    if not _recoverable_workbench:
         existing = _read_input_operation(store, operation_id)
         if existing is not None:
             if existing.get("request_sha256") == request_digest:
@@ -1215,10 +1224,16 @@ def inputs_update(
     # whole request and leaves current state untouched (§5.3 step 2).
     staged_add: list[tuple[dict, Any]] = []
     staged_replace: list[tuple[dict, Any]] = []
+    def read_confirmed_material(item):
+        material = _read_patch_material(item['path'])
+        if item.get('upload_sha256') and material[0].original_sha256 != item['upload_sha256']:
+            from .operations import OperationError
+            raise OperationError('material_upload_changed', 'file', 'uploaded material changed before confirmation; original input was not modified', http_status=409)
+        return material
     for item in normalized["source_changes"]["add"]:
-        staged_add.append((item, _read_patch_material(item["path"])))
+        staged_add.append((item, read_confirmed_material(item)))
     for item in normalized["source_changes"]["replace"]:
-        staged_replace.append((item, _read_patch_material(item["path"])))
+        staged_replace.append((item, read_confirmed_material(item)))
 
     with store._locked():
         if _recoverable_workbench:

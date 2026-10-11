@@ -45,7 +45,7 @@ export class Project {
       this.notice?.append(button('查看恢复后的版本', () => this.go({surface: 'runs', revision, task_id: null, runs_area: 'versions'})));
     });
     addEventListener('beforeunload', () => this.editor?.persist());
-    addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。'));
+    addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true));
     await this.loadRoute(this.route, false);
     if (this.health.ui_capabilities?.includes('run_desk.v1')) {
       this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), value => {
@@ -58,7 +58,7 @@ export class Project {
         }
         this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
         this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
-      }, error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。'), this.latest);
+      }, error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。', {error:true}), this.latest);
       this.summaryPoll.start();
       this.root.addEventListener('business-state-changed', () => this.summaryPoll.refresh());
       addEventListener('pagehide', () => this.summaryPoll.stop());
@@ -159,9 +159,14 @@ export class Project {
       catch (error) { this.setNotice('阅读位置尚未保存到项目。' + readableError(error)); }
     });
   }
-  syncState(message) {
+  syncState(message, {error = false} = {}) {
     if (!this.syncNotice || !this.syncRow) return;
-    this.syncNotice.textContent = message; this.syncRow.hidden = !message;
+    this.syncMessage = message;
+    this.syncNotice.textContent = this.syncCompact && message ? error ? '同步中断 · 已读内容与草稿保留' : '项目有新状态 · 当前阅读版本保持' : message;
+    this.syncRow.dataset.state = error ? 'error' : 'updated';
+    this.syncRow.hidden = !message;
+    if (this.syncRetry) this.syncRetry.hidden = !error;
+    if (this.syncCurrent) this.syncCurrent.hidden = this.syncCompact && error;
   }
   setNotice(message, retry = false) {
     if (!this.notice) return;
@@ -188,10 +193,33 @@ export class Project {
     const writable = actions.filter(item => item.writable);
     const fact = (term, value) => el('div', {}, el('dt', {}, term), el('dd', {}, value));
     const exportsAction = actions.find(item => item.action === 'exports');
-    modal('连接状态', el('div', {class: 'stack'},
+    const connection = el('span', {role:'status'}, '正在核实连接…');
+    let request;
+    const verify = button('核实连接', async () => {
+      request?.abort(); request = new AbortController();
+      const active = request;
+      verify.disabled = true; reopen.disabled = true;
+      connection.textContent = '正在核实连接…';
+      const timeout = setTimeout(() => active.abort(), 5000);
+      try {
+        const [health, info] = await Promise.all([get('/api/health', {signal:active.signal}), get('/api/project', {signal:active.signal})]);
+        if (health.status !== 'ok' || info.project_identity !== this.info.project_identity) throw new Error('服务中的项目身份已变化，请从项目列表重新打开。');
+        if (dialog.open && request === active) {
+          connection.textContent = `已连接 · ${health.service_version || '本机核心'}`;
+          reopen.disabled = false;
+        }
+      } catch (error) {
+        if (dialog.open && request === active) connection.textContent = '未能连接 · ' + (error.name === 'AbortError' ? '本次核实超时。' : readableError(error)) + ' 已读内容与草稿保持。';
+      } finally {
+        clearTimeout(timeout);
+        if (dialog.open && request === active) verify.disabled = false;
+      }
+    });
+    const reopen = button('重新读取当前工作面', () => { dialog.close(); this.loadRoute({...this.route}); }, false, {disabled:true});
+    const dialog = modal('连接状态', el('div', {class: 'stack'},
       el('p', {}, '本机工作区，项目数据仅保存在这台电脑。服务可达不等于制作工具已接手；生成任务仍需复制制作要求后交接。'),
       el('dl', {class: 'request-facts stack'},
-        fact('本机服务', `已连接 · ${this.health.service_version || '本机核心'}`),
+        fact('本机服务', connection),
         fact('当前项目动作', writable.length ? `${writable.length} 项可用（${writable.map(item => actionLabels[item.action] || item.action).join('、')}）` : '没有可写动作'),
         fact('制作工具', '需交接 · 复制制作要求后到制作工具执行，不会自动开始'),
         fact('文件导出', exportsAction && exportsAction.writable
@@ -201,7 +229,9 @@ export class Project {
       blocked.length > 0 && el('details', {}, el('summary', {}, `受限动作 ${blocked.length} 项`),
         el('div', {class: 'stack'}, blocked.map(item => el('p', {class: 'muted'},
           `${actionLabels[item.action] || item.action}：${item.supported ? (reasons[item.reason] || item.reason || '该核心未提供此能力') : '该核心未提供此能力'}`)))),
-      el('p', {class: 'muted'}, '能力为当前核心与项目的实时投影；写操作仍由服务端独立校验。')));
+      el('p', {class: 'muted'}, '项目动作按已读版本显示；重新读取工作面可更新，写操作仍由服务端独立校验。')), [verify, reopen]);
+    dialog.addEventListener('close', () => request?.abort(), {once:true});
+    verify.click();
   }
   render(data) {
     const nav = el('nav', {class: 'nav', 'aria-label': '项目工作区'});
@@ -217,8 +247,14 @@ export class Project {
     this.notice = el('div', {class: 'notice', role: 'status', hidden: true});
     const banners = el('div', {class: 'banners'}, this.notice);
     if (this.business) banners.append(this.business.node);
-    this.syncNotice = el('p', {class: 'runtime-sync muted', role: 'status'});
-    this.syncRow = el('div', {class: 'runtime-sync-row', hidden: true}, this.syncNotice, button('读取项目最新状态', () => this.current()));
+    this.syncCompact = document.documentElement.dataset.workbenchUi === 'studio';
+    this.syncNotice = el('p', {class: 'runtime-sync', role: 'status'});
+    this.syncRetry = button('重试同步', () => this.summaryPoll?.refresh(), false, {hidden:true});
+    this.syncCurrent = button('读取项目最新状态', () => this.current());
+    this.syncRow = el('div', {class: 'runtime-sync-row', hidden: true},
+      this.syncCompact && icon('attention'), this.syncNotice,
+      el('div', {class:'row runtime-sync-actions'}, this.syncCompact && this.syncRetry,
+        this.syncCurrent, this.syncCompact && button('查看详情', () => modal('项目同步状态', el('div', {class:'stack'}, el('p', {}, this.syncMessage), el('p', {class:'muted'}, '同步只读取运行状态，不会派发任务或更换当前阅读版本。')), [button('核实连接', () => this.connectionInfo())]))));
     if (this.health.ui_capabilities?.includes('run_desk.v1')) banners.append(this.syncRow);
     if (this.historical) banners.append(el('div', {class: 'history-banner'}, el('strong', {}, '历史版本 · 只读'),
       el('span', {}, '你正在阅读过去保存的稿件；内容与比较保持固定。'), button('查看当前版本', () => this.current()), el('details', {}, el('summary', {}, '版本身份'), el('p', {}, `阅读 ${version(this.route.revision)} · 当前 ${version(this.latest.revision_id)}`))));

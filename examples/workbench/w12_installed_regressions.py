@@ -20,6 +20,14 @@ def main():
     assert deck_master.web._static_dir().resolve().is_relative_to(package)
     # Preload the installed parent before conftest inserts src. Every subsequent
     # submodule must resolve through this parent's installed __path__, audited below.
+    studio_tests = [
+        'test_studio_integration.py', 'test_studio_overview_browser.py',
+        'test_studio_connection_browser.py', 'test_studio_content_browser.py',
+        'test_studio_range_edit_browser.py', 'test_studio_style_browser.py',
+        'test_studio_page_browser.py', 'test_studio_reading_browser.py', 'test_studio_gallery_batch_browser.py',
+        'test_studio_candidate_batch_browser.py', 'test_studio_delivery_browser.py',
+        'test_personal_recovery_browser.py',
+    ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
                          str(repo / 'tests/rebuild/test_workbench_usability_browser.py'),
                          str(repo / 'tests/rebuild/test_pr103_repair_browser.py'),
@@ -30,7 +38,9 @@ def main():
                          str(repo / 'tests/rebuild/test_pr104_supplemental_browser.py'),
                          str(repo / 'tests/rebuild/test_ui_design_browser.py') + '::test_modal_falls_back_to_the_caller_provided_focus_when_trigger_gone',
                          str(repo / 'tests/rebuild/test_navigation_usability_browser.py') + '::test_artwork_and_save_row_share_the_first_screen',
-                         str(repo / 'tests/rebuild/test_ux08_task_walkthrough_browser.py'), '--require-browser'])
+                         str(repo / 'tests/rebuild/test_ux08_task_walkthrough_browser.py'),
+                         *[str(repo / 'tests/rebuild' / name) for name in studio_tests],
+                         '--require-browser'])
     modules = {name: str(Path(module.__file__).resolve()) for name, module in sys.modules.items()
                if (name == 'deck_master' or name.startswith('deck_master.')) and getattr(module, '__file__', None)}
     assert all(Path(path).is_relative_to(package) for path in modules.values()), modules

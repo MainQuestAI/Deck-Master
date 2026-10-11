@@ -6,7 +6,7 @@ export function localURL(value) {
   try {
     const url = new URL(value);
     return url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) &&
-      !url.username && !url.password && ['/', '/v2/'].includes(url.pathname) ? url : null;
+      !url.username && !url.password && ['/', '/v2/', '/studio/'].includes(url.pathname) ? url : null;
   } catch { return null; }
 }
 export async function launcher(root, health) {
@@ -63,7 +63,7 @@ export async function launcher(root, health) {
     } catch (error) { message.textContent = readableError(error); }
   };
   async function open(entry_id) {
-    const result = await post('/api/projects/open', {entry_id});
+    const result = await post('/api/projects/open', {entry_id, ui:document.documentElement.dataset.workbenchUi === 'studio' ? 'studio' : 'v2'});
     const url = localURL(result.url);
     if (!url) throw new Error('项目服务返回的位置无效，请从工作台重新打开。');
     location.assign(url.href);

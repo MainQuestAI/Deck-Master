@@ -119,7 +119,8 @@ const cellView = state => ({ready: {icon: 'check', text: '已就绪'}, missing: 
 
 export function overview(app, data = {}) {
   const pages = app.summary.pages;
-  const root = el('div', {});
+  const studio = document.documentElement.dataset.workbenchUi === 'studio';
+  const root = el('div', {class:studio?'studio-overview':''});
   if (!pages.length) {
     root.append(heading('制作总览', '项目已建立，还没有页面内容。'),
       empty('先把内容整理清楚', '补充材料并交接内容整理后，这里会出现逐页内容与制作状态。',
@@ -127,10 +128,12 @@ export function overview(app, data = {}) {
     return root;
   }
   const blueprintCount = pages.filter(page => page.stages.blueprint?.existence === 'recorded').length;
+  const explanation = '依据已变化表示上游内容更新；可先查看已有作品，再决定检查或修改。候选返回后需要比较采用；工程检查和人工认可分别记录。';
   root.append(heading('制作总览',
     `${pages.length} 页内容 · ${blueprintCount} 页已有原图`,
-    button('查看整稿', () => app.go({surface: 'gallery'}), true)));
-  root.append(el('details', {class: 'overview-state-help'}, el('summary', {}, '如何理解制作状态'), el('p', {}, '依据已变化表示上游内容更新；可先查看已有作品，再决定检查或修改。候选返回后需要比较采用；工程检查和人工认可分别记录。')));
+    el('div', {class:'row wrap'}, studio && button([icon('attention'), '状态说明'], () => modal('如何理解制作状态', el('p', {}, explanation))),
+      button([studio && icon('gallery'), '查看整稿'], () => app.go({surface: 'gallery'}), true))));
+  if (!studio) root.append(el('details', {class: 'overview-state-help'}, el('summary', {}, '如何理解制作状态'), el('p', {}, explanation)));
   const todo=todoPanel(app);root.append(todo);
   const sync=event=>{const next=event.detail;if(next.revision_id===app.summary.revision_id&&next.reading_etag!==app.summary.reading_etag){app.summary=next;const updated=todoPanel(app);root.querySelector('.overview-todos')?.replaceWith(updated);}};app.root.addEventListener('summary-refreshed',sync);app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',sync));
   root.append(matrixPanel(app, data.overview));
@@ -139,6 +142,9 @@ export function overview(app, data = {}) {
 
 function matrixPanel(app, saved) {
   const pages = app.summary.pages;
+  const studio = document.documentElement.dataset.workbenchUi === 'studio';
+  let matrixPage = 1;
+  const pageSize = 15;
   const pageIndex = new Map(pages.map((page, index) => [page.page_id, index]));
   const needsWork = page => (page.attention?.items?.length || 0) > 0 || promptState(page) === 'missing';
   const thumbs = new Map();
@@ -157,7 +163,10 @@ function matrixPanel(app, saved) {
     const parsed = JSON.parse(localStorage.getItem(selectionKey) ?? 'null');
     if (Array.isArray(parsed)) storedSelection = parsed.filter(id => typeof id === 'string');
   } catch { /* 选择是阅读辅助，读不到就从服务端记录恢复 */ }
-  const selected = new Set((storedSelection !== null ? storedSelection : (memory.state.selected_page_ids || [])).filter(id => pageIdSet.has(id)));
+  // A gallery transfer is an explicit fixed-version selection, not another filter.
+  // Preserve every requested id, including unavailable pages, until the user removes it.
+  const transferred = app.route.batch_action && Array.isArray(app.route.batch_page_ids) ? [...app.route.batch_page_ids] : null;
+  const selected = new Set(transferred || (storedSelection !== null ? storedSelection : (memory.state.selected_page_ids || [])).filter(id => pageIdSet.has(id)));
   const count = el('span', {class: 'muted', role: 'status'});
   const selectionNote = el('span', {class: 'muted', role: 'status'});
   // AC06/§2.1：常驻选择条——选页后在长列表任意位置都能看到范围摘要并进入配置。
@@ -171,8 +180,12 @@ function matrixPanel(app, saved) {
   const filterTodo = button('只看需要处理', () => setFilter('todo'), false, {'aria-pressed': 'false'});
   const allCheckbox = el('input', {type: 'checkbox', 'aria-label': '选择当前筛选内所有可操作页面'});
   const table = el('table', {class: 'matrix', 'aria-label': '逐页制作进展'});
+  const pageLabel = el('span', {role:'status'});
+  const previousPage = button('上一组页面', () => { matrixPage--; render(); table.scrollIntoView({block:'start'}); });
+  const nextPage = button('下一组页面', () => { matrixPage++; render(); table.scrollIntoView({block:'start'}); });
+  const pager = el('nav', {class:'studio-matrix-pager', 'aria-label':'逐页制作分页', hidden:true}, pageLabel, el('div', {class:'row'}, previousPage, nextPage));
   let batch;
-  batch = batchActions(app, selected, ({selectionChanged = false} = {}) => { if (batch && !disposed) { if (selectionChanged) saveSelection(); render(); } });
+  batch = batchActions(app, selected, ({selectionChanged = false} = {}) => { if (batch && !disposed) { if (selectionChanged) saveSelection(); render(); } }, {initialAction: transferred ? app.route.batch_action : null});
   const preferenceStatus = el('p', {role:'status', class:'muted overview-preference-status'});
   const compareButton = button('核实总览偏好', async () => {
     compareButton.disabled = true;
@@ -193,10 +206,12 @@ function matrixPanel(app, saved) {
   const downloadButton = button('下载总览偏好副本', () => downloadJSON(memory.state, 'deck-master-overview-preferences.json'));
   function reflectURL() { if (disposed || app.navigationPending) return; app.route.overview_preferences = {search,filter,sort:ascending ? 'ascending' : 'descending'}; history.replaceState(null, '', routeHash(app.info, app.route)); }
   function saveSelection({quiet = true} = {}) {
-    if (disposed || app.navigationPending) return;
-    try { localStorage.setItem(selectionKey, JSON.stringify([...selected])); } catch { /* 选择保留在本页，未写入本机 */ }
+    if (disposed || app.navigationPending) return false;
+    let persisted = false;
+    try { localStorage.setItem(selectionKey, JSON.stringify([...selected])); persisted = true; } catch { /* 选择保留在本页，未写入本机 */ }
     memory.update({search,filter,sort:ascending ? 'ascending' : 'descending',selected_page_ids:[...selected]}, {quiet});
     reflectURL();
+    return persisted;
   }
   // 读取项目保存的偏好后，勾选集合必须跟着替换，否则界面仍显示本窗口的选择，
   // 下一次输入会用旧选择把刚读取的记录覆盖回去（两套事实源打架）。
@@ -210,6 +225,7 @@ function matrixPanel(app, saved) {
   function setFilter(value) {
     if (filter === value) return;
     filter = value;
+    matrixPage = 1;
     batch.invalidate({keepErrors: true});
     saveReading();
     render();
@@ -243,6 +259,13 @@ function matrixPanel(app, saved) {
     const focusSort = table.contains(focused) && focused.matches('th[aria-sort] button');
     const focusNext = table.contains(focused) ? focused.getAttribute('data-matrix-next') : null;
     const list = visiblePages();
+    const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
+    matrixPage = Math.max(1, Math.min(matrixPage, pageCount));
+    const shown = studio ? list.slice((matrixPage - 1) * pageSize, matrixPage * pageSize) : list;
+    pager.hidden = !studio || pageCount === 1;
+    previousPage.disabled = matrixPage === 1;
+    nextPage.disabled = matrixPage === pageCount;
+    pageLabel.textContent = `第 ${matrixPage} / ${pageCount} 组 · 共 ${list.length} 页`;
     const operable = list.filter(batch.eligible);
     count.textContent = `${list.length} / ${pages.length} 页`;
     filterAll.textContent = `全部 ${pages.length} 页`;
@@ -270,7 +293,8 @@ function matrixPanel(app, saved) {
     // refresh. Equal matrix facts must not replace keyboard-owned controls.
     batch.render();
     preferenceStatus.textContent = memory.message; compareButton.hidden = !memory.error; downloadButton.hidden = !memory.error;
-    const nextTableState = canonical([filter, search, ascending, list.map(page => [page.page_id,
+    if (preferenceStatus.parentElement) preferenceStatus.parentElement.hidden = studio && memory.supported && !memory.error;
+    const nextTableState = canonical([filter, search, ascending, matrixPage, list.map(page => [page.page_id,
       page.attention?.items?.[0] || null, selected.has(page.page_id), batch.eligible(page), chapterTitleOf(page.page_id)])]);
     if (nextTableState === tableState) return;
     tableState = nextTableState;
@@ -288,7 +312,7 @@ function matrixPanel(app, saved) {
         button('清除筛选', () => { search = ''; searchInput.value = ''; filter = 'all'; batch.invalidate(); saveReading(); render(); })))));
     }
     let lastChapter = Symbol();
-    for (const page of list) {
+    for (const page of shown) {
       const chapter = chapterTitleOf(page.page_id);
       if (chapter !== null && chapter !== lastChapter) {
         lastChapter = chapter;
@@ -331,7 +355,7 @@ function matrixPanel(app, saved) {
       : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
     if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
   }
-  searchInput.addEventListener('input', () => { search = searchInput.value; batch.invalidate({keepErrors: true}); saveReading(); render(); });
+  searchInput.addEventListener('input', () => { search = searchInput.value; matrixPage = 1; batch.invalidate({keepErrors: true}); saveReading(); render(); });
   allCheckbox.addEventListener('change', () => {
     for (const page of visiblePages().filter(batch.eligible)) {
       if (allCheckbox.checked) selected.add(page.page_id); else selected.delete(page.page_id);
@@ -363,25 +387,38 @@ function matrixPanel(app, saved) {
     } catch { /* 章节分组保持关闭，不影响矩阵与待办 */ }
   })();
 
+  const readingTools = el('div', {class: 'row wrap toolbar overview-reading-tools', role: 'group', 'aria-label': '阅读筛选'},
+    el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput);
+  const selectionTools = el('div', {class: 'row wrap matrix-search', role: 'group', 'aria-label': '批量选页动作'},
+    batch.toolbar, selectionNote, clearButton, studio && batch.recoveryButton);
   const node = el('section', {class: 'stack', 'aria-label': '逐页制作进展'},
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     // UAC12:阅读筛选(范围+搜索)与批量选页动作分两行、各自成组;选择摘要条
     // 与配置区独立演进,空选只给短提示(UX-02b),异常恢复不被筛选空态收起。
-    el('div', {class: 'row wrap toolbar overview-reading-tools', role: 'group', 'aria-label': '阅读筛选'},
-      el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput),
-    el('div', {class: 'row wrap matrix-search', role: 'group', 'aria-label': '批量选页动作'},
-      batch.toolbar, selectionNote, clearButton),
+    document.documentElement.dataset.workbenchUi === 'studio' ? el('div', {class:'studio-overview-commandbar'}, readingTools,selectionTools) : [readingTools,selectionTools],
     // F05/§4.1：配置区紧邻选页工具条（不再隔着整张矩阵），三态在同一处
     // 演进：未选=引导；选后=配置（目标摘要—要求—参考—影响—预览）；
     // 核对通过后=交接主动作出现。
     batch.node,
+    studio && batch.recoveryPanel,
     // 选择摘要条紧贴列表：向下滚动选页时它吸附在顶部，配置入口始终够得着。
     selectionBar,
     el('div', {class:'row wrap overview-preferences'}, preferenceStatus, compareButton, downloadButton),
     el('div', {class: 'matrix-wrap'}, table),
+    studio && pager,
     el('div', {class: 'matrix-caption'},
       el('span', {}, icon('check'), ' 可查看　', icon('attention'), ' 需要处理　', icon('minus'), ' 尚未生成'),
       el('span', {}, '按 Tab 访问产物与操作；窄屏可横向滚动查看完整进度。')));
   render();
+  if (transferred) queueMicrotask(() => {
+    if (disposed || !node.isConnected) return;
+    const selectionSaved = saveSelection(), actionSaved = batch.saveWorking();
+    // Consume this one-time transfer only after its local continuation is durable.
+    // Otherwise the fixed route retains the original scope for refresh/recovery.
+    if (selectionSaved && actionSaved) {
+      delete app.route.batch_action; delete app.route.batch_page_ids; reflectURL();
+    }
+    batch.openConfig();
+  });
   return node;
 }

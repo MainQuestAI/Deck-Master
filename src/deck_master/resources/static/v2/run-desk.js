@@ -1,7 +1,8 @@
 import {cancelRecovery} from './run-recovery.js';
 import {taskHandoff} from './change-handoff.js';
+import {personalBackupButton} from './personal-recovery.js';
 import {get, post, readableError, revisionQuery, fileURL} from './api.js';
-import {el, button, empty, version, modal, loading, errorNote, disabledReason} from './dom.js';
+import {el, button, empty, version, modal, loading, errorNote, disabledReason, icon} from './dom.js';
 
 const names = {style_analyze:'分析截图规范', reconstruct:'制作可编辑稿', compile:'编译整稿', check:'工程检查', compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
 const statuses = {queued: '等待执行', awaiting_host: '待接手', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '由新任务接续', unreadable: '记录无法读取'};
@@ -39,36 +40,46 @@ function personalClearPanel(app) {
       const result = await post('/api/ui-state/commit-clear', {operation_id: crypto.randomUUID(),
         input: {project_id: plan.project_id, scope: 'current_project', draft_ids: 'all', reading_preferences: true},
         plan_id: plan.plan_id, manifest_digest: plan.manifest_digest});
-      notice.replaceChildren(el('p', {}, `已清理 ${result.cleared.length} 项，恢复备份已保留；任务与候选未受影响。`), el('details', {}, el('summary', {}, '恢复备份位置'), el('code', {}, result.backup_ref)));
+      notice.replaceChildren(el('p', {}, `已清理 ${result.cleared.length} 项，恢复备份已保留；任务与候选未受影响。`), personalBackupButton(app));
       scopeView.replaceChildren();
       plan = null;
     } catch (error) { notice.textContent = readableError(error) + ' 未清理任何对象。'; }
     finally { keepBusy = false; planButton.disabled = false; }
   }, true, {disabled: true});
-  return el('details', {class: 'panel personal-clear'}, el('summary', {}, '清理本机个人状态（草稿与阅读设置）'),
-    el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。'),
-      el('div', {class: 'row wrap'}, planButton, commit), scopeView, notice));
+  const body = el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。'),
+      el('div', {class: 'row wrap'}, planButton, commit, personalBackupButton(app)), scopeView, notice);
+  if (document.documentElement.dataset.workbenchUi === 'studio') {
+    return el('div', {class:'studio-task-maintenance'},
+      button('个人状态与恢复', () => modal('个人状态与恢复', body)),
+      el('span',{class:'muted'},'管理本项目草稿、阅读设置和恢复备份'));
+  }
+  return el('details', {class: 'panel personal-clear'}, el('summary', {}, '清理本机个人状态（草稿与阅读设置）'), body);
 }
 
 export function runDesk(app, data) {
+  const studio = document.documentElement.dataset.workbenchUi === 'studio';
   const recovery = cancelRecovery(app);
   const root = el('section', {class: 'panel run-desk', 'aria-label': '运行记录'});
   const rows = el('div', {class: 'run-rows stack'}), pager = el('div', {class: 'row wrap run-pagination'});
   const notice = el('div', {class: 'muted run-notice'});
+  const recoveryReceipt=el('p',{class:'run-recovery-receipt',role:'status'});
   const detail = el('div', {class: 'run-detail stack'});
   let handoff = null;
   const group = el('select', {'aria-label': '按修改组筛选'}), status = el('select', {'aria-label': '按执行状态筛选'}, el('option', {value: ''}, '所有执行状态'),
     Object.entries(statuses).map(([key, label]) => el('option', {value: key}, label)));
   const attention = el('input', {type: 'checkbox', 'aria-label': '只看需我处理'});
+  const search = el('input', {type:'search', maxlength:200, 'aria-label':'搜索全部任务', placeholder:'搜索任务、页码或制作要求'});
+  const searchButton = button('查询任务', () => { choiceMade=true; read({state:{search:search.value.trim(),offset:0},refreshReading:true,persist:true}); });
+  const tableHead = el('div',{class:'studio-task-table-head','aria-hidden':'true'},el('span',{},'任务与范围'),el('span',{},'当前状态'),el('span',{},'操作'));
   let page = data.runPage, selected = data.runDetail, disposed = false, serial = 0, busy = false, loaded = false;
-  let state = {offset: 0, group: '', status: '', attention: false};
+  let state = {offset: 0, group: '', status: '', attention: false, search:''};
   let reading={seen:[],etag:null},readingUnavailable=false;const readingSupported=app.health.ui_capabilities?.includes('result_reading.v1');
   let pinned = app.route.revision, live = !app.historical, pendingRead = null, choiceMade = false, readingBlocked = false, recoveryState = null;
   const restart = () => { choiceMade = true; read({state:{...(recoveryState||state),offset:0},live:true,refreshReading:true,persist:true}); };
   const refreshButton = button('核实最新执行状态', restart);
   root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), refreshButton),
     el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '当前执行状态与顶栏的页面阅读版本分开。正常处理中无需你操作；查看结果不代表采用或质量通过。'),
-      el('div', {class: 'row wrap run-filters'}, group, status, el('label', {}, attention, '只看需我处理')), notice, detail, rows, pager),
+      el('div', {class: 'row wrap run-filters'}, studio && el('div',{class:'studio-task-search'}, search, searchButton), group, status, el('label', {}, attention, '只看需我处理')), notice, recoveryReceipt, detail, studio && tableHead, rows, pager),
     personalClearPanel(app));
   function persist() {
     const editor = app.editor;
@@ -85,32 +96,44 @@ export function runDesk(app, data) {
     group.replaceChildren(el('option', {value: ''}, '所有修改组'), ...page.groups.filter(item => item.change_id).map(item =>
       el('option', {value: item.change_id}, `修改组 ${page.groups.indexOf(item) + 1} · ${item.completed_count}/${item.total_count} 项已返回${item.page_ids?.length ? ` · ${item.page_ids.length} 页` : ''} · ${item.change_id.slice(-6)}`)));
     if (state.group && !page.groups.some(item => item.change_id === state.group)) state.group = '';
-    group.value = state.group; status.value = state.status; attention.checked = state.attention;
+    group.value = state.group; status.value = state.status; attention.checked = state.attention; search.value=state.search;
     notice.textContent = `${live ? '当前执行状态' : '固定执行记录'} · 共 ${page.pagination.total} 项`;
     const tasks = page.tasks.filter(task => !state.attention || todo(task).length);
     // UX-05b：每条运行记录默认回答「做什么、对哪些页、现在怎样」，要求原文
     // 折叠在详情里，列表本身不再只有任务类型和内部时间。
-    rows.replaceChildren(...tasks.map(task => el('article', {class: 'run-task stack', 'data-task-id': task.task_id},
-      el('div', {class: 'row wrap'}, el('strong', {}, names[task.kind] || '制作任务'), el('span', {class: 'status'}, statuses[task.status] || task.status)),
+    rows.replaceChildren(...tasks.map(task => studio ? studioTask(task) : el('article', {class: 'run-task stack', 'data-task-id': task.task_id},
+      el('div', {class: 'row wrap run-task-identity'}, el('strong', {}, names[task.kind] || '制作任务'), el('span', {class: 'status'}, statuses[task.status] || task.status)),
       el('p', {class: 'run-requirement'}, `要求：${(task.instruction || '').trim() || '未记录制作要求'}`),
-      el('p', {}, `目标：${scopeLabel(task)}`),
+      el('p', {class:'run-task-scope'}, `目标：${scopeLabel(task)}`),
       el('p', {class: 'muted'}, `接手时间：${clock(task.execution_started_at)}`),
       task.human_actions?.includes('verify_execution') && el('p', {class: 'field-error'}, '需要核实原执行。不会自动重试或取消；未确认取消前请勿重复派发。'),
       todo(task).length > 0 && el('p', {class: 'run-actions'}, todo(task).map(key => actions[key] || key).join(' · ')),
       task.error && errorBox(typeof task.error === 'object' ? task.error : {message: task.error}),
-      task.task_id && button('查看这项任务', () => app.go({task_id: task.task_id, revision: page.revision_id})))));
+      task.task_id && button('查看这项任务', () => app.go({task_id: task.task_id, revision: page.revision_id}), false, {class:'run-task-open'}))));
     if (!tasks.length) rows.append(empty(state.attention ? '本页没有需要你处理的记录' : '没有匹配的运行记录',
       '可继续阅读内容与制作状态。查看其它记录不会触发执行。', el('div', {class: 'row wrap'}, button('阅读内容', () => app.go({surface: 'content'})), button('查看整稿', () => app.go({surface: 'gallery'})))));
     const move = offset => { choiceMade = true; read({state:{offset},live:false,pinned:page.revision_id,persist:true}); };
     pager.replaceChildren(disabledReason(button('上一页任务', () => move(Math.max(0, state.offset - 30)), false, {disabled: state.offset === 0}), state.offset === 0 ? '已在第一页。' : '', {visible: false}),
       el('span', {}, `第 ${Math.floor(state.offset / 30) + 1} 页 · 每页最多 30 项`),
       disabledReason(button('下一页任务', () => move(page.pagination.next_offset), false, {disabled: page.pagination.next_offset === null}), page.pagination.next_offset === null ? '已是最后一页。' : '', {visible: false}));
-    rows.hidden = Boolean(selected); pager.hidden = Boolean(selected);
+    rows.hidden = Boolean(selected); tableHead.hidden = Boolean(selected) || !tasks.length; pager.hidden = Boolean(selected) || (studio && page.pagination.total <= 30); root.querySelector('.run-filters').hidden = Boolean(selected);
     if (selected) renderDetail();
     controls();
   }
+  function studioTask(task) {
+    const label=names[task.kind] || '制作任务', next=todo(task);
+    const statusIcon=task.status==='completed'?'check':task.status==='failed'||task.needs_verification?'attention':'clock';
+    const summary=(task.display_instruction ?? task.instruction ?? '').trim() || '未记录制作要求';
+    return el('article',{class:'run-task studio-task-record','data-task-id':task.task_id},
+      el('div',{class:'studio-task-main'},el('span',{class:'studio-task-symbol','aria-hidden':'true'},icon(task.kind==='compose'?'content':'runs')),
+        el('div',{class:'studio-task-copy'},el('h3',{},label),el('p',{class:'run-task-scope'},`目标：${scopeLabel(task)}`),
+          el('p',{class:'run-requirement',title:summary},`要求：${summary}`))),
+      el('div',{class:'studio-task-state'},el('span',{class:'status'},icon(statusIcon),statuses[task.status]||'状态待核实'),
+        next.length>0 && el('p',{class:task.needs_verification?'field-error':'muted'},next.map(key=>actions[key]||key).join(' · '))),
+      task.task_id ? button('查看这项任务',()=>app.go({task_id:task.task_id,revision:page.revision_id}),false,{class:'run-task-open'}) : el('span',{class:'field-error'},'记录无法读取'));
+  }
   function controls() {
-    for(const input of [group,status,attention,refreshButton])input.disabled=busy;
+    for(const input of [group,status,attention,refreshButton,search,searchButton])input.disabled=busy;
     const buttons=pager.querySelectorAll('button');
     if(buttons[0])buttons[0].disabled=!loaded||busy||readingBlocked||state.offset===0;
     if(buttons[1])buttons[1].disabled=!loaded||busy||readingBlocked||page.pagination.next_offset===null;
@@ -176,6 +199,7 @@ export function runDesk(app, data) {
     if (nextState.group) query.set('change_id', nextState.group);
     if (nextState.status) query.set('status', nextState.status);
     if (nextState.attention) query.set('attention', '1');
+    if (nextState.search) query.set('search', nextState.search);
     let readingRequest=false;
     try {
       let nextReading=reading;let readingWarning=fixedReading&&readingUnavailable;
@@ -221,6 +245,7 @@ export function runDesk(app, data) {
   for (const input of [group, status, attention]) input.addEventListener('change', () => {
     choiceMade = true;read({state:{group:group.value,status:status.value,attention:attention.checked,offset:0},refreshReading:true,persist:true});
   });
+  search.addEventListener('keydown',event=>{if(event.key==='Enter'&&!busy)searchButton.click();});
   const sync = () => { if (live && !document.hidden) read(); };
   app.root.addEventListener('summary-refreshed', sync);
   function hydrate() {
@@ -234,7 +259,7 @@ export function runDesk(app, data) {
       if (!choiceMade && saved && typeof saved === 'object') {
         const restored = {offset: Number.isSafeInteger(saved.offset) && saved.offset >= 0 ? saved.offset : 0,
           group: typeof saved.group === 'string' ? saved.group : '', status: Object.hasOwn(statuses, saved.status) ? saved.status : '',
-          attention: saved.attention === true};
+          attention: saved.attention === true, search: typeof saved.search==='string'?saved.search.slice(0,200):''};
         options={state:restored};
         if(restored.offset){
           if(!readingSupported||typeof saved.reading_etag==='string'&&/^[a-f0-9]{64}$/.test(saved.reading_etag))
@@ -242,7 +267,7 @@ export function runDesk(app, data) {
           else {restored.offset=0;options.notice='原分页的已读版本无法核实，已从第一页重新读取；筛选保留。';}
         }
       }
-      if(readingSupported&&saved?.seen?.length){const migrate=button('核实并导入旧草稿的已读记录',async()=>{try{await editor.save();const current=await get('/api/result-reading');const result=await post('/api/result-reading/import-legacy',{draft_id:editor.draft.draft_id,project_identity:app.info.project_identity,expected_etag:current.etag});if(await read({state:{offset:0},refreshReading:true,persist:true}))notice.textContent=`已核实导入 ${result.verified_count} 项旧记录，原草稿保留。`;migrate.remove();app.summaryPoll?.refresh();}catch(error){notice.textContent=readableError(error);}});root.append(migrate);}
+      if(readingSupported&&saved?.seen?.length){const migrate=button('核实并导入旧草稿的已读记录',async()=>{try{await editor.save();const current=await get('/api/result-reading');const result=await post('/api/result-reading/import-legacy',{draft_id:editor.draft.draft_id,project_identity:app.info.project_identity,expected_etag:current.etag});if(await read({state:{offset:0},refreshReading:true,persist:true}))recoveryReceipt.textContent=`已核实导入 ${result.verified_count} 项旧记录，原草稿保留。`;migrate.remove();app.summaryPoll?.refresh();}catch(error){notice.textContent=readableError(error);}});root.append(migrate);}
       read(options);
     });
   }

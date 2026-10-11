@@ -56,7 +56,7 @@
     },
     "selected_page_ids": {
       "type": "array",
-      "maxItems": 4,
+      "maxItems": 300,
       "uniqueItems": true,
       "items": {
         "type": "string",
@@ -174,5 +174,24 @@
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "compare"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "selected_page_ids": {
+            "minItems": 2,
+            "maxItems": 4
+          }
+        }
+      }
+    }
+  ]
 }
