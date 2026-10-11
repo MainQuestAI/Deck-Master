@@ -222,3 +222,55 @@ def test_studio_recipe_library_search_paging_and_selection_survive_navigation(fl
             assert flow.store.current_revision_id()==before and not errors
         finally:
             browser.close();server.stop()
+
+
+@pytest.mark.parametrize('invalidate', [False, True])
+def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalidate):
+    """Real plan response held while the user reads target controls or leaves."""
+    import uuid
+    from deck_master import styles
+    from test_visual_styles import completed
+    from playwright.sync_api import sync_playwright, expect
+    ref, _, _ = completed(flow)
+    proposed = styles.propose(flow.project, input={'schema_version':'style_input.v2',
+        'project_id':flow.store.load_document()['project_id'], 'base_revision':flow.store.current_revision_id(),
+        'visual_style_ref':ref, 'target_page_ids':['p02','p03'], 'instruction':'借用配色'})
+    rid = styles.confirm(flow.project, proposal_id=proposed['proposal_id'],
+        base_revision=flow.store.current_revision_id(), operation_id=str(uuid.uuid4()))['operation_result']['recipe_id']
+    server = WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch()
+        page = browser.new_page()
+        held = []
+        try:
+            page.goto(server.start()+'studio/')
+            page.locator('.sidebar').get_by_role('button', name='风格校准', exact=True).click()
+            page.get_by_role('button', name='外部图片', exact=True).click()
+            page.get_by_role('button', name='恢复项目中的截图分析与规范', exact=True).click()
+            page.get_by_label('已确认的截图规范').select_option(rid)
+            expect(page.locator('.visual-style > [role=status]')).to_contain_text('已打开所选确认规范')
+            stage(page, 'screenshot', 3)
+            page.route('**/api/styles/plan', lambda route: held.append((route, route.fetch())))
+            page.get_by_role('button', name='预览单页试作', exact=True).click()
+            stage(page, 'screenshot', 1)
+            expect(page.get_by_label('截图风格试作目标', exact=True)).to_be_disabled()
+            expect(page.get_by_role('button', name='先试此页', exact=True).first).to_be_disabled()
+            expect(page.get_by_label(re.compile('^允许后续风格扩展到 ')).first).to_be_disabled()
+            assert held
+            if invalidate:
+                page.locator('.sidebar').get_by_role('button', name='制作总览', exact=True).click()
+                expect(page.locator('.visual-style')).to_have_count(0)
+            route, response = held.pop()
+            route.fulfill(response=response)
+            if invalidate:
+                expect(page.get_by_role('button', name='保存并交接试作', exact=True)).to_have_count(0)
+                assert not any(flow.store.read_object_json(r)['kind']=='blueprint' for r in flow.store.load_document()['tasks'])
+            else:
+                expect(page.locator('.visual-plan')).to_contain_text('第 2 页')
+                page.get_by_role('button', name='保存并交接试作', exact=True).click()
+                expect(page.locator('#runs-tasks .task-handoff')).to_be_visible()
+                task = next(flow.store.read_object_json(r) for r in reversed(flow.store.load_document()['tasks']) if flow.store.read_object_json(r)['kind']=='blueprint')
+                assert task['scope_pages'] == ['p02']
+        finally:
+            browser.close()
+            server.stop()

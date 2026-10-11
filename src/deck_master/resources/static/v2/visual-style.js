@@ -68,18 +68,18 @@ export function visualStyle(app){
   const requirement=el('textarea',{rows:2,maxLength:4000,'aria-label':'截图风格要求',value:state.instruction});
   requirement.addEventListener('input',()=>{state.instruction=requirement.value;invalidateAnalysis();persist();controls();});
   const target=el('select',{'aria-label':'截图风格试作目标'},el('option',{value:''},'先选一页试作'),app.summary.pages.map((p,i)=>el('option',{value:p.page_id},`第 ${i+1} 页 · ${p.title}`)));
-  target.value=state.targets[0]||'';target.addEventListener('change',()=>{state.targets=[target.value,...state.targets.filter(id=>id!==target.value)].filter(Boolean);invalidatePlan();state.recipe=null;persist();showTarget();renderFutureTargets();controls();});
+  target.value=state.targets[0]||'';target.addEventListener('change',()=>{if(blockedInput()){target.value=state.targets[0]||'';return;}state.targets=[target.value,...state.targets.filter(id=>id!==target.value)].filter(Boolean);invalidatePlan();state.recipe=null;persist();showTarget();renderFutureTargets();controls();});
   const targetPreview=el('div',{class:'style-primary-target'});let targetLease;
   function showTarget(){targetLease?.dispose();targetPreview.replaceChildren();const page=app.summary.pages.find(p=>p.page_id===target.value);if(page?.stages.blueprint.file){targetLease=imageView(app,page.stages.blueprint,'试作目标原图');targetPreview.append(targetLease.node);}}
   const analyze=button('分析截图',()=>startAnalysis(),true),refresh=button('查看分析结果',()=>readAnalysis(true)),handoff=button('交给 Deck Master Agent',()=>copyText(state.handoff||`请接续 Deck Master 截图分析任务 ${state.task_id}，读取固定工作单后返回视觉规范。`));
   const confirm=button('检查并确认视觉规范',confirmSpec,true),trial=button('预览单页试作',()=>planTrial(false),true),dispatch=button('保存并交接试作',commitTrial,true);
-  const planBox=el('div',{class:'stack'}),choices=new Map();let plan=null;
+  const planBox=el('div',{class:'stack'}),choices=new Map();let plan=null,planEpoch=0,planSnapshot=null;
   const futureTargets=el('div',{class:'row wrap'}), expansionTargets=el('div',{class:'row wrap'}), candidateRows=el('div',{class:'stack style-candidate-list'});
   const cards=candidateCards(app);app.disposables.push(()=>cards.dispose());
   const sample=el('select',{'aria-label':'已采用的截图风格样例'},el('option',{value:''},'先采用一页满意的试作'));
   const expansion=new Set(),expand=button('预览所选页扩展',()=>planTrial(true),true);
-  sample.addEventListener('change',()=>{expansion.clear();invalidatePlan();renderExpansion();controls();});
-  function invalidatePlan(){plan=null;planBox.replaceChildren();}
+  sample.addEventListener('change',()=>{if(blockedInput())return;expansion.clear();invalidatePlan();renderExpansion();controls();});
+  function invalidatePlan(){planEpoch++;planSnapshot=null;plan=null;planBox.replaceChildren();}
   function clearSpec(){spec=null;specLeases.splice(0).forEach(v=>v.dispose());rules.replaceChildren();choices.clear();}
   function invalidateAnalysis(){analysisSerial++;state.task_id=null;state.handoff=null;state.recipe=null;recipe=null;clearSpec();invalidatePlan();cards.reset();candidateRows.replaceChildren();sample.replaceChildren(el('option',{value:''},'先采用一页满意的试作'));}
   let futureLeases=[];
@@ -88,18 +88,18 @@ export function visualStyle(app){
   futureSearch.addEventListener('input',filterFuture);
   function renderFutureTargets(){futureLeases.splice(0).forEach(x=>x());futureTargets.replaceChildren(...app.summary.pages.filter(p=>p.page_id!==target.value).map((p,i)=>{
     const check=el('input',{type:'checkbox',checked:state.targets.includes(p.page_id),'aria-label':'允许后续风格扩展到 '+p.title,disabled:app.readonly});
-    check.addEventListener('change',()=>{state.targets=check.checked?[...new Set([...state.targets,p.page_id])]:state.targets.filter(id=>id!==p.page_id);state.recipe=null;recipe=null;invalidatePlan();persist();controls();});
+    check.addEventListener('change',()=>{if(blockedInput()){check.checked=state.targets.includes(p.page_id);return;}state.targets=check.checked?[...new Set([...state.targets,p.page_id])]:state.targets.filter(id=>id!==p.page_id);state.recipe=null;recipe=null;invalidatePlan();persist();controls();});
     if(!studioStyle())return el('label',{class:'inline-control'},check,p.title);
     const thumb=el('div',{class:'style-target-thumb'},el('span',{class:'muted'},p.stages.blueprint.file?'原图预览':'未记录原图'));let view;
     const observer=new IntersectionObserver(entries=>{if(disposed)return;if(entries[0].isIntersecting&&p.stages.blueprint.file&&!view){view=imageView(app,p.stages.blueprint,'截图风格目标 '+p.title);thumb.replaceChildren(view.node);}else if(!entries[0].isIntersecting&&view){view.dispose();view=null;thumb.replaceChildren(el('span',{class:'muted'},'原图预览'));}},{rootMargin:'100px'});
     observer.observe(thumb);futureLeases.push(()=>{observer.disconnect();view?.dispose();});
-    const card=el('article',{class:'style-target-card'+(check.checked?' is-selected':''),'data-target-text':`${app.summary.pages.indexOf(p)+1} ${p.title}`.toLocaleLowerCase()},thumb,el('label',{class:'inline-control'},check,p.title),button('先试此页',()=>{target.value=p.page_id;target.dispatchEvent(new Event('change'));}));
+    const card=el('article',{class:'style-target-card'+(check.checked?' is-selected':''),'data-target-text':`${app.summary.pages.indexOf(p)+1} ${p.title}`.toLocaleLowerCase()},thumb,el('label',{class:'inline-control'},check,p.title),button('先试此页',()=>{if(blockedInput())return;target.value=p.page_id;target.dispatchEvent(new Event('change'));}));
     check.addEventListener('change',()=>card.classList.toggle('is-selected',check.checked));return card;
   }));filterFuture();}
 
   function renderExpansion(){const adopted=sample.selectedOptions[0]?.dataset.page;
     expansionTargets.replaceChildren(...(recipe?.input.target_page_ids||[]).filter(id=>id!==adopted).map(id=>{const page=app.summary.pages.find(p=>p.page_id===id),check=el('input',{type:'checkbox',checked:expansion.has(id),'aria-label':'本次扩展到 '+page?.title});
-      check.addEventListener('change',()=>{check.checked?expansion.add(id):expansion.delete(id);invalidatePlan();controls();});return el('label',{class:'inline-control'},check,page?.title||id);}));
+      check.addEventListener('change',()=>{if(blockedInput()){check.checked=expansion.has(id);return;}check.checked?expansion.add(id):expansion.delete(id);invalidatePlan();controls();});return el('label',{class:'inline-control'},check,page?.title||id);}));
   }
   async function loadRecipe(){if(!state.recipe)return;const chosen=state.recipe,epoch=analysisSerial,hydration=hydrateSerial;
     try{const value=await get('/api/styles/'+encodeURIComponent(chosen)+'?'+new URLSearchParams({revision:app.route.revision}));if(disposed||state.recipe!==chosen||epoch!==analysisSerial||hydration!==hydrateSerial)return;
@@ -129,9 +129,9 @@ export function visualStyle(app){
     }catch(error){if(!disposed)status.replaceChildren(el('span',{},readableError(error)+' 已显示的任务与组号保持不变。'),button('重试读取这组任务',()=>loadSaved(requestedPage)));}
     finally{savedLoading=false;savedPager.querySelectorAll('button').forEach(node=>node.disabled=node.dataset.boundary==='true');}
   }
-  savedAnalysis.addEventListener('change',async()=>{const chosen=savedAnalysis.value,task=savedTasks.find(t=>t.task_id===chosen);if(!task)return;
+  savedAnalysis.addEventListener('change',async()=>{if(blockedInput())return;const chosen=savedAnalysis.value,task=savedTasks.find(t=>t.task_id===chosen);if(!task)return;
     invalidateAnalysis();openPhase(2);state.task_id=chosen;state.instruction=task.instruction;requirement.value=task.instruction;persist();await readAnalysis();});
-  savedRecipe.addEventListener('change',async()=>{if(!savedRecipe.value)return;const chosen=savedRecipe.value,token=++analysisSerial;
+  savedRecipe.addEventListener('change',async()=>{if(blockedInput()||!savedRecipe.value)return;const chosen=savedRecipe.value,token=++analysisSerial;
     openPhase(2);
     busy=true;controls();try{const value=await get('/api/styles/'+encodeURIComponent(chosen)+'?'+new URLSearchParams({revision:app.route.revision}));
       if(disposed||token!==analysisSerial)return;const r=value.recipe;if(r.schema_version!=='style_recipe.v2')throw new Error('这不是截图视觉规范。');
@@ -171,9 +171,10 @@ export function visualStyle(app){
     el('div',{class:'visual-plan stack'},planBox,dispatch));
   // 状态行在各阶段之外，任何阶段的提示都可见。
   openPhase(1);
-  function controls(){const blocked=!loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size);
+  function blockedInput(){return !loaded||busy||app.readonly||disposed||Boolean(app.business.entries.size||app.business.loadWarning);}
+  function controls(){const blocked=blockedInput();sample.disabled=blocked;
     input.disabled=blocked||Boolean(pending&&pending.state!=='not_found');savedAnalysis.disabled=blocked;savedRecipe.disabled=blocked;requirement.disabled=blocked;target.disabled=blocked;
-    for(const control of [...rules.querySelectorAll('input,textarea,select,button:not([data-visual-read])'),...images.querySelectorAll('input'),...futureTargets.querySelectorAll('input')])control.disabled=blocked;
+    for(const control of [...rules.querySelectorAll('input,textarea,select,button:not([data-visual-read])'),...images.querySelectorAll('input'),...futureTargets.querySelectorAll('input,button'),...expansionTargets.querySelectorAll('input')])control.disabled=blocked;
     uploadRecovery.replaceChildren();
     if(continuation)uploadRecovery.append(el('p',{},continuation.label+'；结果已保留。'),button('打开已保存的结果',()=>continueCompletion({preserveLocal:true}),false,{disabled:busy||continuing||!loaded}));
     if(pending?.state==='rejected')uploadRecovery.append(el('p',{},pending.rejection?.code==='visual_reference_conflict'?'本次上传因版本变化已明确拒绝，未提交。先读取当前版本，再重新选择截图上传。':'本次截图上传已明确拒绝，未提交。请结束这次失败上传后重新选择合法截图。'),button(pending.rejection?.code==='visual_reference_conflict'?'读取当前版本并重新上传':'结束失败上传，重新选图',restartRejectedUpload,false,{disabled:!loaded||busy||disposed||Boolean(app.business.entries.size)}));
@@ -320,14 +321,32 @@ export function visualStyle(app){
       if(!active())return;
       state.recipe=result.recipe_id;await completedBusiness(result,{},'视觉规范已确认');});
   }catch(error){if(active())status.textContent=readableError(error);}finally{busy=false;if(!disposed)controls();}}
-  async function planTrial(expanding=false){busy=true;controls();try{
-    await app.business.available();const ids=expanding?[...expansion]:[target.value];
-    if(!ids.length||!recipe)throw new Error('先确认规范并明确选择目标页。');
-    const result=await post('/api/styles/plan',{input:{recipe_id:state.recipe,page_ids:ids,max_calls:ids.length,...(expanding?{adopted_candidate_id:sample.value}:{})}});
-    if(disposed)return;if(result.plan.base_revision!==app.route.revision)throw new Error('项目已更新，请保留要求并返回当前版本重新预览。');
-    plan=result;planBox.replaceChildren(el('p',{},`试作 ${ids.length} 页，最多 ${ids.length} 次生图；当前稿保留，返回后比较采用。`));
-  }catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
-  async function commitTrial(){if(!plan)return;busy=true;controls();try{const request={plan_id:plan.plan_id,base_revision:plan.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:plan.plan_id,plan:plan.plan},async result=>{state.change_id=result.change_id;await completedBusiness(result,{surface:'runs',task_id:result.task_ids[0]||null,candidate_id:null,runs_area:'tasks'},'试作要求已保存');});}catch(error){status.textContent=readableError(error);}finally{busy=false;controls();}}
+  function snapshot(expanding){return {epoch:planEpoch,revision:app.route.revision,recipe:state.recipe,
+    specification:spec?.ref,targets:[...state.targets],ids:expanding?[...expansion]:[target.value],
+    sample:expanding?sample.value:null,expanding,hydration:hydrateSerial};}
+  function sameSnapshot(value){return !disposed&&canonical(value)===canonical(snapshot(value.expanding));}
+  async function planTrial(expanding=false){
+    if(blockedInput())return;invalidatePlan();const frozen=snapshot(expanding);busy=true;controls();
+    try{
+      await app.business.available();if(!sameSnapshot(frozen))return;
+      const ids=frozen.ids;if(!ids.length||!ids[0]||!recipe)throw new Error('先确认规范并明确选择目标页。');
+      const result=await post('/api/styles/plan',{input:{recipe_id:frozen.recipe,page_ids:ids,max_calls:ids.length,...(expanding?{adopted_candidate_id:frozen.sample}:{})}});
+      if(!sameSnapshot(frozen))return;
+      if(result.plan.base_revision!==frozen.revision)throw new Error('项目已更新，请保留要求并返回当前版本重新预览。');
+      const actual=result.plan.input.targets.map(item=>item.page_id);
+      if(canonical(actual)!==canonical(ids))throw new Error('计划目标与当前选择不一致，请重新预览。');
+      plan=result;planSnapshot=frozen;
+      planBox.replaceChildren(el('p',{},`试作 ${actual.length} 页，最多 ${actual.length} 次生图；当前稿保留，返回后比较采用。`),
+        el('ul',{},actual.map(id=>{const index=app.summary.pages.findIndex(p=>p.page_id===id);return el('li',{},`第 ${index+1} 页 · ${app.summary.pages[index]?.title||id}`);})));
+    }catch(error){if(sameSnapshot(frozen))status.textContent=readableError(error);}finally{busy=false;if(!disposed)controls();}
+  }
+  async function commitTrial(){
+    if(blockedInput()||!plan)return;
+    if(!planSnapshot||!sameSnapshot(planSnapshot)){invalidatePlan();controls();status.textContent='目标或规范已变化，请重新预览。';return;}
+    const selected=plan;busy=true;controls();
+    try{const request={plan_id:selected.plan_id,base_revision:selected.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:selected.plan_id,plan:selected.plan},async result=>{state.change_id=result.change_id;await completedBusiness(result,{surface:'runs',task_id:result.task_ids[0]||null,candidate_id:null,runs_area:'tasks'},'试作要求已保存');});}
+    catch(error){if(!disposed)status.textContent=readableError(error);}finally{busy=false;if(!disposed)controls();}
+  }
   const referencesReady=loadReferences();
   async function hydrate(){const current=editor(),token=++hydrateSerial;loaded=false;hydratedCompletion=null;analysisSerial++;savedCatalogSerial++;clearSpec();recipe=null;invalidatePlan();cards.reset();candidateRows.replaceChildren();controls();
     try{await Promise.all([current.ready,referencesReady]);if(disposed||token!==hydrateSerial||current!==editor())return;
