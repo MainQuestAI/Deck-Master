@@ -86,7 +86,7 @@ def build_parser() -> argparse.ArgumentParser:
     workbench_cmd = sub.add_parser("workbench", help="Open the independent project launcher or an explicit project")
     workbench_cmd.add_argument("--project")
     workbench_cmd.add_argument("--registry", help="isolated project registry JSON file")
-    workbench_cmd.add_argument("--ui", choices=("v2",), default="v2")
+    workbench_cmd.add_argument("--ui", choices=("v2", "studio"), default="studio")
     workbench_cmd.add_argument("--port", type=int, default=0)
     workbench_cmd.add_argument("--no-open", action="store_true")
     workbench_cmd.add_argument("--stop", action="store_true", help="stop only this selected service; retain projects and registry")
@@ -136,7 +136,7 @@ def build_parser() -> argparse.ArgumentParser:
     inputs_update_parser = inputs_sub.add_parser("update")
     inputs_update_parser.add_argument("--project", required=True)
     inputs_update_parser.add_argument("--patch", required=True,
-                                      help="patch JSON; paths inside resolve against this file's directory")
+                                      help="path to a patch JSON file; paths inside resolve against this file's directory")
     inputs_update_parser.add_argument("--base-revision", dest="base_revision", required=True)
     inputs_update_parser.add_argument("--operation-id", dest="operation_id", required=True)
 
@@ -144,7 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
     view_cmd.add_argument("--project", required=True)
     view_cmd.add_argument("--open", action="store_true", default=False)
     view_cmd.add_argument("--no-open", action="store_true")
-    view_cmd.add_argument("--ui", choices=("v2",), help="select the workbench entry with --open (v2 only)")
+    view_cmd.add_argument("--ui", choices=("v2", "studio"), help="select the workbench entry with --open")
     view_cmd.add_argument("--json", dest="as_json", action="store_true")
     view_cmd.add_argument("--revision", help="read a fixed committed Document snapshot")
     view_cmd.add_argument("--summary", action="store_true", help="read the lightweight workbench summary")
@@ -449,6 +449,12 @@ def main(argv: list[str] | None = None) -> int:
             if options.inputs_command == "show":
                 return _emit(service.inputs_show(options.project))
             patch_path = Path(options.patch).expanduser()
+            if not patch_path.exists() and options.patch.lstrip().startswith("{"):
+                raise ServiceError(
+                    "(patch)",
+                    "--patch expects a path to a JSON patch file, not inline JSON; "
+                    "write the patch object to a file and pass that path",
+                )
             payload = service.inputs_update(
                 options.project,
                 patch=json.loads(patch_path.read_text(encoding="utf-8")),

@@ -54,6 +54,7 @@ def test_cross_chapter_selection_reaches_config_and_survives_return(overview30):
     before_tasks = len(store.load_document()['tasks'])
     page.goto(server.start())
     page.get_by_role('checkbox', name='选择第 02 页', exact=True).check()
+    page.get_by_role('button', name='下一组页面', exact=True).click()
     page.get_by_role('checkbox', name='选择第 28 页', exact=True).check()
     expect(page.locator('.batch-actions')).to_contain_text('2 页用于原图试作')
     page.get_by_role('textbox', name='所选页的制作要求', exact=True).fill(REQUIREMENT)
@@ -68,6 +69,7 @@ def test_cross_chapter_selection_reaches_config_and_survives_return(overview30):
     page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
     page.get_by_role('button', name='制作总览', exact=True).click()
     expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).to_be_checked()
+    page.get_by_role('button', name='下一组页面', exact=True).click()
     expect(page.get_by_role('checkbox', name='选择第 28 页', exact=True)).to_be_checked()
     assert page.get_by_role('textbox', name='所选页的制作要求', exact=True).input_value() == REQUIREMENT
     assert store.current_revision_id() == before_revision
@@ -161,13 +163,14 @@ def test_batch_surface_states_choose_configure_confirm_adjacent_to_selection(ove
     commit = page.get_by_role('button', name='保存并交接所选试作', exact=True)
 
     # 状态一（choose）：未选页只有引导，配置与交接都不出现。
-    expect(page.locator('.batch-actions')).to_contain_text('先选择动作，再勾选此动作允许处理的页面')
+    expect(page.locator('.batch-actions')).to_be_hidden()
     expect(fields).to_be_hidden()
     assert commit.count() == 0
 
     # 状态二（configure）：选页后配置展开且仍不出现交接；配置区位于工具条
     # 与矩阵之间——几何断言替代"滚动可达"。
     page.get_by_role('checkbox', name='选择第 02 页', exact=True).check()
+    page.get_by_role('button', name='下一组页面', exact=True).click()
     page.get_by_role('checkbox', name='选择第 28 页', exact=True).check()
     expect(fields).to_be_visible()
     expect(page.locator('.batch-actions')).to_contain_text('2 页用于原图试作')
@@ -200,12 +203,14 @@ def test_reading_and_batch_tools_distinct_and_recovery_survives_empty_filter(ove
     reading = page.locator('.overview-reading-tools')
     batchRow = page.locator('.matrix-search')
     expect(reading.get_by_role('searchbox', name='搜索页码或标题')).to_be_visible()
-    expect(batchRow.get_by_label('批量动作')).to_be_visible()
+    expect(batchRow.get_by_role('group', name='选页制作动作', exact=True)).to_be_visible()
+    expect(batchRow.get_by_role('group', name='选页制作动作', exact=True).locator('button')).to_have_count(4)
     # 两行各成一组、互不含对方控件;批量选择摘要条是第三个独立容器。
-    assert reading.evaluate('(n) => n.querySelectorAll("[aria-label=批量动作], .overview-selection-bar").length') == 0
+    assert reading.locator('[aria-label="选页制作动作"], .overview-selection-bar').count() == 0
     assert batchRow.evaluate('(n) => n.querySelectorAll("input[type=search], .overview-selection-bar").length') == 0
     # 恢复:预览失败(field-error)后筛到空矩阵,错误与配置不收起。
     page.get_by_role('checkbox', name='选择第 02 页', exact=True).check()
+    page.get_by_role('button', name='下一组页面', exact=True).click()
     page.get_by_role('checkbox', name='选择第 28 页', exact=True).check()
     page.get_by_role('textbox', name='所选页的制作要求', exact=True).fill(REQUIREMENT)
     page.get_by_role('button', name='按所选页设置调用上限', exact=True).click()
@@ -220,4 +225,5 @@ def test_reading_and_batch_tools_distinct_and_recovery_survives_empty_filter(ove
     page.unroute('**/api/changes/plan')
     page.get_by_role('button', name='清除筛选', exact=True).click()
     expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).to_be_checked()
+    page.get_by_role('button', name='下一组页面', exact=True).click()
     expect(page.get_by_role('checkbox', name='选择第 28 页', exact=True)).to_be_checked()

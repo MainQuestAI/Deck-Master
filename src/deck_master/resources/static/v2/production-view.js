@@ -1,7 +1,8 @@
 import {el, version} from './dom.js';
 const statuses = {pass: '记录为通过', fail: '记录为未通过', needs_review: '待判断', not_evaluated: '未评估', not_applicable: '不适用'};
 const reviewers = {tool: '工具', host_self: '制作工具自评', independent_host: '独立工具', human_internal: '内部人员', human_external: '外部人员'};
-export function productionView(data) {
+export function productionView(data, {expanded = false} = {}) {
+  const studio = expanded && document.documentElement.dataset.workbenchUi === 'studio';
   const value = data.production;
   if (!value) return el('p', {class: 'muted'}, '制作摘要未记录，请升级核心后读取。');
   const report = value.render_report, trace = value.object_trace;
@@ -16,7 +17,7 @@ export function productionView(data) {
   row('SVG 输入图像元素（推导）', trace.svg_input_image_elements === null ? '未知' : `${trace.svg_input_image_elements}；由输入 SVG hash 匹配的 trace 推导`);
   row('PPT 光栅化比例', '未知，未计算'); row('OCR 文字层', '未记录；图片不能按文字选段');
   row('桌面字体替换', '未知；声明 fallback 不表示已成功替换');
-  const node = el('details', {class: 'panel production-detail'}, el('summary', {}, '制作与可编辑性'), el('div', {class: 'panel-body stack'}, facts,
+  const node = el(studio ? 'section' : 'details', {'data-container':'section', class: 'panel production-detail'}, el(studio ? 'h3' : 'summary', {}, '制作与可编辑性'), el('div', {class: 'panel-body stack'}, facts,
     el('p', {class: 'muted'}, '形状与文本编辑能力不等于 Office Edit Data、原生表格或浏览器直接修改 PPT。'),
     ['professional_use', 'desktop_editing'].map(kind => {
       const record = value.evaluations[kind];

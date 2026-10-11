@@ -22,6 +22,7 @@ VIEWPORTS = [(1440, 900), (1280, 800), (390, 844)]
 MEASURE = """selector => Array.from(document.querySelectorAll(selector))
   .filter(node => node.getClientRects().length && node.getBoundingClientRect().height > 0)
   .map(node => ({text: (node.textContent || '').trim().slice(0, 24), height: node.getBoundingClientRect().height,
+                 min_height: parseFloat(getComputedStyle(node).minHeight),
                  aria_pressed: node.getAttribute('aria-pressed')}))"""
 
 
@@ -51,7 +52,9 @@ def ux07_browser(tmp_path):
 def assert_touch_targets(page, selector):
     controls = page.evaluate(MEASURE, selector)
     assert controls, f'{selector} 没有可测的控件'
-    small = [item for item in controls if item['height'] < 44]
+    # Layout coordinates can represent an exact 44px box as 43.99994px. Keep
+    # the CSS minimum at 44 and allow only subpixel measurement roundoff.
+    small = [item for item in controls if item['min_height'] < 44 or item['height'] < 44 - 0.01]
     assert not small, f'{selector} 存在小于 44px 的触点: {small}'
 
 
@@ -68,7 +71,7 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     # 批量配置（UX-02b）：空选只有引导；选一页后配置紧邻选页工具条，触点达标。
     batch = page.locator('.batch-actions')
     expect(batch.locator('.batch-fields')).to_be_hidden()
-    page.get_by_label('批量动作').wait_for()
+    page.get_by_role('button',name='原图试作',exact=True).wait_for()
     page.locator('.matrix tbody tr input[type=checkbox]').first.check()
     expect(batch.locator('.batch-fields')).to_be_visible()
     gap = page.evaluate("""() => {
@@ -80,11 +83,11 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     assert_touch_targets(page, '.batch-actions button, .batch-actions select')
     page.screenshot(path=str(EVIDENCE / f'ux07-{width}-overview-batch.png'), full_page=False)
 
-    # 风格阶段组（UX-03b）：阶段摘要触点达标，阶段状态有文字而不是只有颜色。
+    # 风格阶段组（UX-03b）：真实阶段按钮触点达标，阶段状态有文字而不是只有颜色。
     page.get_by_role('button', name='风格校准', exact=True).click()
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
     # 项目路线的阶段是 .style-calibration 的直接子节点（截图路线的阶段在 .visual-style 内）。
-    assert_touch_targets(page, '.style-calibration > .style-phase > summary')
+    assert_touch_targets(page, '.style-calibration > .studio-style-stages button')
     phases = page.locator('.style-calibration > .style-phase')
     assert phases.count() == 4
     expect(phases.first).to_contain_text('1 · 参考与目标')

@@ -14,7 +14,8 @@ const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content
 const clock = value => new Date(value).toLocaleString('zh-CN', {hour12: false});
 function operationDraft(app) {
   app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
-  const node = app.editor.mount();
+  const node = el('div', {class:'candidate-draft-host'}, app.editor.mount());
+  if(document.documentElement.dataset.workbenchUi==='studio')return el('div',{class:'studio-candidate-recovery'},button('个人记录与操作恢复',()=>modal('个人记录与操作恢复',node)));
   return el('details', {class: 'candidate-recovery'}, el('summary', {}, '个人记录与操作恢复'), node);
 }
 function picture(app, stage, label, releases, kind = 'large') {
@@ -52,8 +53,10 @@ export function candidateDesk(app, data) {
   const keep = button('保留当前', keepCurrent);
   const reopen = button('重新打开候选', reopenCandidate, false, {hidden: true});
   const retry = button('回本页调整并再试', () => app.go({candidate_id: null, revision: live?.revision_id || app.route.revision}));
-  root.append(title, el('div', {class: 'toolbar'}, el('label', {}, '候选 ', select), button('刷新候选与当前状态', refresh)), status, previewTools, columns, sources, evidence,
-    el('div', {class: 'row wrap candidate-decisions'}, choosePlan, adopt, keep, reopen, retry), impact, draft);
+  const decisions = el('div', {class: 'row wrap candidate-decisions'}, choosePlan, adopt, keep, reopen, retry);
+  const studio = document.documentElement.dataset.workbenchUi === 'studio';
+  root.append(title, el('div', {class: 'toolbar'}, el('label', {}, '候选 ', select), button('刷新候选与当前状态', refresh)), status, previewTools, columns,
+    ...(studio ? [decisions, impact, sources, evidence, draft] : [sources, evidence, decisions, impact, draft]));
   function controls() {
     select.disabled = busy;
     const unavailable = !selected || selected.candidate.page_id !== data.page_id;
@@ -166,7 +169,7 @@ export function candidateDesk(app, data) {
     }
     const observations = attempt?.observations || [];
     const actual = observations.find(record => record.observer === 'tool_observed' && record.output?.sha256 === selected.artifact.file.sha256);
-    evidence.replaceChildren(el('details', {class: 'panel candidate-basis'}, el('summary', {}, '所选候选的生成依据'),
+    evidence.replaceChildren(el('details', {'data-container':'section', class: 'panel candidate-basis'}, el('summary', {}, '所选候选的生成依据'),
       el('div', {class: 'panel-body stack'},
         el('p', {}, selected.candidate.result_kind === 'page' ? '正文试作候选；没有图像调用记录，原图与实际提示词不受影响。'
           : selected.request ? `已绑定请求与 Attempt · ${selected.attempt?.attempt_id || '未记录'}` : 'SVG 重建结果；没有新增图像调用。原图与实际提示词保留。'),
@@ -283,47 +286,88 @@ export function candidateDesk(app, data) {
 }
 
 export function candidateBatch(app) {
+  const studio=document.documentElement.dataset.workbenchUi==='studio';
   if (!app.business || !app.health.ui_capabilities?.includes('candidates.v1')) return el('div');
   // Candidates are named by the page and layer they belong to, not by an
   // internal page id or a stage code.
   const pageLabels = new Map(app.summary.pages.map((page, n) => [page.page_id, `第 ${n + 1} 页 · ${page.title || '未命名页面'}`]));
   const batchLabel = record => record.page_id
     ? `${pageLabels.get(record.page_id) || '对应页面'} · ${stageName(record.stage)}` : '整稿正文变更集 · ';
-  const root = el('section', {class: 'panel candidate-batch', 'aria-label': '候选集合采用'});
+  const root = el('section', {'data-container':'section', class: 'panel candidate-batch', 'aria-label': '候选集合采用'});
   const rows = el('div', {class: 'candidate-batch-rows stack'}), notice = el('p', {role: 'status'}), impact = el('div', {class: 'stack'});
   const cards = candidateCards(app); app.disposables.push(() => cards.dispose());
   const pager = el('div', {class: 'row wrap candidate-pagination'});
+  const group = el('select', {'aria-label':'按修改组查看候选'}, el('option',{value:''},'全部修改组'));
+  const selectionMessage = el('p',{class:'muted candidate-selection-message',role:'status'});
   let offset = 0;
   let records = [], selected = new Set(), currentPlan = null, disposed = false, busy = false, polling = false, revision = null, serial = 0;
   const draft = operationDraft(app);
   const preview = button('预览所选候选的采用影响', previewSelection), adopt = button('采用所选候选', adoptSelection, true, {disabled: true});
   const assemble = button('更新整稿 PPT', assembleDeck);
+  const selectPage = button('选本页候选',()=>selectEligible(visibleRecords().slice(offset,offset+30)));
+  const selectGroup = button('选本组候选',()=>selectEligible(visibleRecords()));
+  const selectAll = button('选全部候选',()=>selectEligible(records));
+  const clear = button('清除选择',()=>{selected.clear();selectionMessage.textContent='已清除选择，当前稿保持。';selectionChanged();});
   root.append(el('div', {class: 'panel-head'}, el('h2', {}, '候选与当前稿'), button('刷新候选列表', refresh)),
-    el('div', {class: 'panel-body stack'}, el('p', {}, '勾选要采用的候选；同一页只能选一个。任何冲突都会整批不采用，选择继续保留。'), notice, rows, pager,
-      el('div', {class: 'row wrap'}, preview, adopt), impact,
-      el('details', {}, el('summary', {}, '采用后的整稿制作'), el('p', {}, '先由原有 continue 完成受影响页的 SVG 预览和逐页审图，再更新整稿。仍需最终审阅。'), assemble), draft));
+    el('div', {class: 'panel-body stack'}, el('p', {}, '勾选要采用的候选；同一页只能选一个。批选只选每页唯一可采用候选；多项需先比较。任何冲突都会整批不采用，选择继续保留。'),
+      el('div',{class:'row wrap candidate-selection-toolbar'},group,selectPage,selectGroup,selectAll,clear),notice,selectionMessage,
+      studio&&el('div',{class:'studio-candidate-decisions'},el('div',{class:'row wrap'},preview,adopt),impact),rows,pager,
+      !studio&&el('div', {class: 'row wrap'}, preview, adopt),!studio&&impact,
+      studio?el('div',{class:'studio-candidate-next'},el('div',{},el('strong',{},'采用后的整稿制作'),el('p',{class:'muted'},'采用结果后，完成受影响页的 SVG 预览与逐页审图，再更新整稿 PPT。')),assemble)
+        :el('details', {}, el('summary', {}, '采用后的整稿制作'), el('p', {}, '先由原有 continue 完成受影响页的 SVG 预览和逐页审图，再更新整稿。仍需最终审阅。'), assemble), draft));
   function persist() {
     if (!app.editor || app.editor.readonly || app.editor.disposed) return;
     app.editor.draft.content.candidate_selection = [...selected]; app.editor.changed();
   }
   function controls() {
-    preview.disabled = blocked(app, busy) || selected.size === 0;
+    preview.disabled = blocked(app, busy) || selected.size === 0 || [...selected].some(id=>!eligible(records.find(row=>row.candidate.candidate_id===id)));
     adopt.disabled = blocked(app, busy) || !currentPlan || currentPlan.base_revision !== revision;
     assemble.disabled = blocked(app, busy);
-    rows.querySelectorAll('input').forEach(input => { input.disabled = blocked(app, busy); });
+    rows.querySelectorAll('input').forEach(input => { input.disabled = blocked(app, busy) || input.dataset.unavailable==='true'; });
+    group.disabled=busy||polling;
+    selectPage.disabled=blocked(app,busy)||polling||!visibleRecords().slice(offset,offset+30).some(eligible);
+    selectGroup.disabled=blocked(app,busy)||polling||!group.value||!visibleRecords().some(eligible);
+    selectAll.disabled=blocked(app,busy)||polling||!records.some(eligible);
+    clear.disabled=blocked(app,busy)||!selected.size;
   }
+  function eligible(row) {
+    if (!row || row.selection_allowed===false || row.status!=='available' || row.candidate.status!=='available') return false;
+    if (row.decision?.state==='keep_current') return false;
+    return (row.generation_basis || row.content_basis)?.status==='current';
+  }
+  const groupKey = row => row.change_id || 'ungrouped';
+  const visibleRecords = () => records.filter(row=>!group.value||groupKey(row)===group.value);
+  function selectionChanged() { serial++;currentPlan=null;impact.replaceChildren();persist();renderRows(); }
+  function selectEligible(scope) {
+    const byPage=new Map();let ambiguous=0;
+    for(const row of scope.filter(eligible)) {
+      if(!row.candidate.page_id)continue;
+      const page=row.candidate.page_id;if(!byPage.has(page))byPage.set(page,[]);byPage.get(page).push(row);
+    }
+    for(const [page,choices] of byPage) {
+      if(records.some(row=>row.candidate.page_id===page&&selected.has(row.candidate.candidate_id)))continue;
+      if(records.filter(row=>eligible(row)&&row.candidate.page_id===page).length!==1){ambiguous++;continue;}
+      for(const row of records)if(!row.candidate.page_id)selected.delete(row.candidate.candidate_id);
+      selected.add(choices[0].candidate.candidate_id);
+    }
+    selectionMessage.textContent=ambiguous?`${ambiguous} 页有多个可采用候选，需先比较并明确选择；其它唯一候选已选入。`:'已选入范围内每页唯一可采用的候选；已手选项与跨页选择保持。';
+    selectionChanged();
+  }
+  group.addEventListener('change',()=>{offset=0;selectionMessage.textContent='修改组筛选已切换，已选范围保持。';renderRows();});
   function renderRows() {
+    const filtered=visibleRecords();
     const missing = [...selected].filter(id => !records.some(row => row.candidate.candidate_id === id));
-    notice.textContent = `${records.length} 个已返回候选 · 已选 ${selected.size} 个${missing.length ? `（${missing.length} 个暂未读到，选择仍保留）` : ''}`;
-    offset = Math.min(offset, Math.max(0, Math.floor((records.length - 1) / 30) * 30));
-    rows.replaceChildren(...cards.render(records.slice(offset, offset + 30), revision, {selection:(row, localIndex) => {
+    const unavailable=[...selected].filter(id=>!eligible(records.find(row=>row.candidate.candidate_id===id)));
+    notice.textContent = `${filtered.length} 个已返回候选 · 已选 ${selected.size} 个${missing.length ? `（${missing.length} 个暂未读到，选择仍保留）` : ''}${unavailable.length?' · '+unavailable.length+' 个已选项暂不可采用，请核对或清除选择':''}`;
+    offset = Math.min(offset, Math.max(0, Math.floor((filtered.length - 1) / 30) * 30));
+    rows.replaceChildren(...cards.render(filtered.slice(offset, offset + 30), revision, {selection:(row, localIndex) => {
       const index = offset + localIndex;
       const record = row.candidate, id = record.candidate_id;
-      const input = el('input', {type: 'checkbox', checked: selected.has(id), 'aria-label': `选择 ${batchLabel(record)}候选 ${index + 1}`});
+      const input = el('input', {type: 'checkbox', checked: selected.has(id), 'aria-label': `选择 ${batchLabel(record)}候选 ${index + 1}`, 'data-unavailable':String(!eligible(row))});
       input.addEventListener('change', () => {
         serial++; currentPlan = null; impact.replaceChildren();
         if (input.checked) {
-          for (const other of records) if (other.candidate.page_id === record.page_id) selected.delete(other.candidate.candidate_id);
+          for (const other of records) if (!record.page_id || !other.candidate.page_id || other.candidate.page_id === record.page_id) selected.delete(other.candidate.candidate_id);
           selected.add(id);
         } else selected.delete(id);
         persist(); renderRows();
@@ -333,21 +377,26 @@ export function candidateBatch(app) {
     if (!records.length) rows.append(el('p', {class: 'muted'}, '还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务可到“正在进行”继续处理。'));
     pager.replaceChildren(button('上一页候选', () => { offset = Math.max(0, offset - 30); renderRows(); }, false, {disabled: offset === 0}),
       el('span', {}, `第 ${Math.floor(offset / 30) + 1} 页 · 选择跨页保留`),
-      button('下一页候选', () => { offset += 30; renderRows(); }, false, {disabled: offset + 30 >= records.length}));
+      button('下一页候选', () => { offset += 30; renderRows(); }, false, {disabled: offset + 30 >= filtered.length}));
+    if(studio)pager.hidden=filtered.length<=30;
     controls();
   }
   async function refresh() {
-    if (disposed || polling || busy) return; polling = true;
+    if (disposed || polling || busy) return; polling = true;controls();
     try {
       const value = await get('/api/candidates' + (app.historical ? revisionQuery(app.route.revision) : '')); if (disposed || busy) return;
       records = value.candidates; revision = value.revision_id;
+      const previousGroup=group.value,groups=new Map();
+      for(const row of records)if(!groups.has(groupKey(row)))groups.set(groupKey(row),row);
+      group.replaceChildren(el('option',{value:''},'全部修改组'),...[...groups].map(([id,row])=>el('option',{value:id},id==='ungrouped'?'独立试作任务':`${row.instruction?.slice(0,36)||'修改组'} · ${id.slice(-6)}`)));
+      group.value=groups.has(previousGroup)?previousGroup:'';
       if (currentPlan && currentPlan.base_revision !== revision) {
         currentPlan = null;
         impact.replaceChildren(el('p', {class: 'field-error'}, '项目已更新，旧计划不可提交。所选候选仍保留，请重新预览采用影响。'));
       }
       renderRows();
     } catch (error) { if (!disposed) notice.textContent = readableError(error) + ' 已读列表与选择仍保留。'; }
-    finally { polling = false; }
+    finally { polling = false;if(!disposed)controls(); }
   }
   async function previewSelection() {
     if (busy || !selected.size) return; busy = true; const token = ++serial; controls(); currentPlan = null;

@@ -14,6 +14,7 @@ export function candidateState(row) {
 
 // Details remain tied to the fixed revision/ref. Only visible cards acquire images.
 export function candidateCards(app) {
+  const studio=document.documentElement.dataset.workbenchUi==='studio';
   let epoch = 0, disposed = false;
   const details = new Map(), cards = new Map(), pending = new Set();
   const observer = new IntersectionObserver(entries => {
@@ -61,10 +62,16 @@ export function candidateCards(app) {
       const title = record.page_id ? (page ? `第 ${number} 页 · ${page.title || '未命名页面'}` : record.page_id) : '整稿正文变更集';
       const preview = el('div', {class:'candidate-card-preview'}, el('p', {class:'muted'}, '候选摘要在进入阅读区时加载。'));
       const created = record.created_at && Number.isFinite(Date.parse(record.created_at)) ? new Date(record.created_at).toLocaleString('zh-CN', {hour12:false}) : '返回时间未记录';
-      const node = el('article', {class:'candidate-batch-row candidate-card', 'data-candidate-id':record.candidate_id},
-        selection?.(row,index), el('h4', {}, kinds[record.stage] || (row.result_kind === 'content_update' ? '整稿正文变更集' : '正文')),
-        preview, el('p', {class:'muted'}, `${created} · ${candidateState(row)} · ${shortRef(row.ref?.sha256)}`),
-        el('div', {class:'row wrap'}, button(namedComparison ? `比较 ${title} · ${shortRef(row.ref?.sha256)}` : '比较这个候选', () => openCandidate(app,record,revision)), extra?.(row)));
+      const choice=selection?.(row,index), heading=el('h4', {}, kinds[record.stage] || (row.result_kind === 'content_update' ? '整稿正文变更集' : '正文'));
+      const actions=el('div', {class:'row wrap candidate-card-actions'}, button(namedComparison ? `比较 ${title} · ${shortRef(row.ref?.sha256)}` : '比较这个候选', () => openCandidate(app,record,revision)), extra?.(row));
+      const node = studio ? el('article',{class:'candidate-batch-row candidate-card studio-candidate-card','data-candidate-id':record.candidate_id},
+        el('div',{class:'studio-candidate-heading'},heading,el('span',{class:'status'},candidateState(row))),preview,
+        el('div',{class:'studio-candidate-meta'},el('p',{class:'muted'},created),el('span',{class:'muted'},shortRef(row.ref?.sha256))),
+        el('div',{class:'studio-candidate-footer'},choice,actions))
+        :el('article', {class:'candidate-batch-row candidate-card', 'data-candidate-id':record.candidate_id},choice,heading,
+          preview,el('p',{class:'muted'},`${created} · ${candidateState(row)} · ${shortRef(row.ref?.sha256)}`),actions);
+      if(row.decision?.state==='unreadable')node.append(el('p',{class:'field-error'},'决定待核实；采用条件以正式预览为准。'));
+      if(row.change_group_status==='unreadable')node.append(el('p',{class:'field-error'},'修改组信息不可读；其它候选仍可继续处理。'));
       const card = {node,preview,row,revision,title,key:revision + ':' + row.ref?.sha256,visible:false};
       cards.set(node,card); observer.observe(node);
       const groupKey = record.page_id || 'content_update';

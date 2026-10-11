@@ -189,7 +189,7 @@ def test_style_saved_task_and_reference_pagers_stay_within_bounds(ux00_browser):
             if '/api/tasks?' in request.url and 'offset=' in request.url else None)
     page.get_by_role('button', name='风格校准', exact=True).click()
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
-    page.get_by_label('风格参考来源').select_option('screenshot')
+    page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
     page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
 
     # 保存任务分页：首组上一页禁用；下一页后下一页禁用；请求从不越界。

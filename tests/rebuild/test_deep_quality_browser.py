@@ -69,7 +69,7 @@ def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
     expect(c.get_by_role('textbox',name='个人草稿',exact=True)).to_be_editable()
     texts=c.evaluate('''()=>Object.entries(localStorage).filter(([k])=>k.includes(':draft:')).map(([k,v])=>JSON.parse(v).draft?.content?.text)''')
     assert '窗口 A 独有的修改' in texts and '窗口 B 独有的修改' in texts
-    c.get_by_text('恢复、下载与版本详情',exact=True).click()
+    c.get_by_role('button',name='备份与恢复',exact=True).click()
     choices=c.get_by_label('恢复本机保留的草稿副本')
     expect(choices).to_be_visible()
     assert '窗口 A 独有的修改' in choices.inner_text()
@@ -103,7 +103,7 @@ def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     # The older text is recoverable, and copying it forward keeps the text only.
     page.goto(goto())
     open_note_face(page)
-    page.get_by_text('恢复、下载与版本详情',exact=True).click()
+    page.get_by_role('button',name='备份与恢复',exact=True).click()
     choices=page.get_by_label('恢复项目中的个人草稿')
     expect(choices).to_be_visible()
     assert '第一条意见的文字' in choices.inner_text()
@@ -317,8 +317,7 @@ def test_page_candidate_compares_its_own_basis_not_the_current_revision(workbenc
 
 def test_escape_ends_the_open_comparison_before_leaving_the_page(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
-    if not page.get_by_role('button',name='比较此页版本',exact=True).is_visible():
-        page.get_by_text('页面操作', exact=True).click()
+    expect(page.get_by_role('button',name='比较此页版本',exact=True)).to_be_visible()
     page.get_by_role('button',name='比较此页版本',exact=True).click()
     select=page.get_by_label('选择同页比较版本')
     expect(select).to_be_visible()
@@ -332,14 +331,13 @@ def test_escape_ends_the_open_comparison_before_leaving_the_page(workbench):
     # surface stays where it was, with focus back on the entry that opened it.
     expect(page.locator('.page-columns.with-fixed-compare')).to_have_count(0)
     assert 'surface=page' in page.url, page.url
-    expect(page.locator('.page-actions > summary')).to_be_focused()
+    expect(page.get_by_role('button',name='比较此页版本',exact=True)).to_be_focused()
     assert page.locator('.fixed-compare-controls').is_hidden()
 
 
 def test_escape_inside_fullscreen_does_not_navigate_the_surface(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
-    if not page.get_by_role('button',name='比较此页版本',exact=True).is_visible():
-        page.get_by_text('页面操作', exact=True).click()
+    expect(page.get_by_role('button',name='比较此页版本',exact=True)).to_be_visible()
     page.get_by_role('button',name='比较此页版本',exact=True).click()   # user activation for fullscreen
     assert page.evaluate('''async () => { try { await document.querySelector('.page-columns').requestFullscreen(); return true; } catch { return false; } }''')
     expect(page.locator('.page-columns')).to_be_visible()
@@ -498,12 +496,12 @@ def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):
 
 def test_clear_plan_network_failure_allows_retry(workbench):
     page,ctx,store,url,goto,_=workbench;goto('runs')
-    page.get_by_text('清理本机个人状态（草稿与阅读设置）',exact=True).click()
+    page.get_by_role('button',name='个人状态与恢复',exact=True).click()
     page.route('**/api/ui-state/plan-clear',lambda r:r.abort('failed'))
     btn=page.get_by_role('button',name='生成清理计划',exact=True);btn.click()
-    expect(page.locator('.personal-clear')).to_contain_text('本机服务暂时无法连接')
+    expect(page.get_by_role('dialog',name='个人状态与恢复',exact=True)).to_contain_text('本机服务暂时无法连接')
     expect(btn).to_be_enabled();expect(page.get_by_role('button',name='确认清理并保留备份',exact=True)).to_be_disabled()
     page.unroute('**/api/ui-state/plan-clear')
     with page.expect_response('**/api/ui-state/plan-clear') as response:btn.click()
     assert response.value.status==200
-    expect(page.locator('.personal-clear')).to_contain_text('将清理')
+    expect(page.get_by_role('dialog',name='个人状态与恢复',exact=True)).to_contain_text('将清理')

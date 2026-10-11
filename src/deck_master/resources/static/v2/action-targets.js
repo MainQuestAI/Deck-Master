@@ -45,7 +45,7 @@ export function actionTargets(app, data) {
   const root = el('div', {class: 'stack action-targets'}, heading('待办对象', `固定在 ${version(data.revision_id)}，共 ${data.total} 个对象；不会自动选第一项。`,
     button('返回制作总览', () => app.go({action_id: null}))));
   const rows = el('div', {class: 'stack'}), pager = el('div', {class: 'row wrap'}), notice = el('p', {role: 'status'});
-  let current = data, disposed = false, busy = false;
+  let current = data, disposed = false, busy = false, pending = null;
   function draw() {
     rows.replaceChildren(...current.targets.map(target => {
       const pages = target.page_ids.map(id => app.summary.pages.findIndex(page => page.page_id === id) + 1);
@@ -63,15 +63,19 @@ export function actionTargets(app, data) {
       button('下一页对象', () => load(current.offset + current.limit), false, {disabled: busy || current.offset + current.limit >= current.total}));
   }
   async function load(offset) {
-    if (busy) return;
-    busy = true; draw();
+    if (busy || disposed) return;
+    busy = true; pending = new AbortController();
+    notice.querySelector('button')?.setAttribute('disabled', ''); draw();
     try {
       const result = await get('/api/actions/' + encodeURIComponent(data.action_id) + '/targets?' +
-        new URLSearchParams({revision: data.revision_id, limit: String(data.limit), offset: String(offset)})+(app.readingQuery?.()||''));
-      if (!disposed) { current = result; notice.textContent = ''; }
-    } catch (error) { if (!disposed) notice.replaceChildren(readableError(error)+' 已读对象列表仍保留。',button('重新读取待办',()=>app.go({surface:'overview',action_id:null})));  }
-    finally { busy = false; if (!disposed) draw(); }
+        new URLSearchParams({revision: data.revision_id, limit: String(data.limit), offset: String(offset)})+(app.readingQuery?.()||''), {signal: pending.signal});
+      if (disposed) return;
+      if (result.project_id !== data.project_id || result.revision_id !== data.revision_id || result.action_id !== data.action_id || result.offset !== offset || result.limit !== data.limit)
+        throw new Error('返回对象与本次待办或目标页不一致，已读列表保持。');
+      current = result; notice.textContent = '';
+    } catch (error) { if (!disposed) notice.replaceChildren(readableError(error)+' 已读对象列表和页码保留。',button(`重试第 ${Math.floor(offset / data.limit) + 1} 页对象`,()=>load(offset))); }
+    finally { busy = false; pending = null; if (!disposed) draw(); }
   }
-  app.disposables.push(() => { disposed = true; });
+  app.disposables.push(() => { disposed = true; pending?.abort(); });
   root.append(notice, rows, pager); draw(); return root;
 }

@@ -3,6 +3,7 @@ import {imageView} from './images.js';
 import {GalleryMemory} from './gallery-state.js';
 import {layers} from './routes.js';
 import {canonical} from './api.js';
+import {batchNames} from './batch-policy.js';
 
 export const stageKey = {content: 'content', original_image: 'blueprint', svg: 'svg', ppt: 'ppt_preview'};
 export const stageLabel = stage => !stage || stage.existence === 'not_generated' ? '未生成' : stage.existence !== 'recorded' ? '暂不可读' :
@@ -20,6 +21,7 @@ const tileTag = stage => !stage || stage.existence !== 'recorded' ? (stage?.exis
   stage.applicability?.status === 'current' ? ['当前采用', 'ok'] : ['适用性待核实', 'warn'];
 
 export function gallery(app, data) {
+  const studio=document.documentElement.dataset.workbenchUi==='studio';
   if (data.unsupported) return el('div', {}, heading('整稿画廊', '当前项目服务需要更新画廊读取能力。'),
     empty('请重启升级后的项目服务', '已保留项目和原有页面。', button('查看制作总览', () => app.go({surface: 'overview'}))));
   const memory = app.galleryMemory ||= new GalleryMemory(app, data.saved);
@@ -33,7 +35,7 @@ export function gallery(app, data) {
   const selected = memory.state.selected_page_ids.filter(id => ids.has(id));
   const layer = layerNames[app.route.layer] ? app.route.layer : 'original_image';
   const adjusted = {...memory.state, revision_id: app.route.revision, layer, selected_page_ids: selected,
-    mode: memory.state.mode === 'compare' && selected.length < 2 ? 'grid' : memory.state.mode,
+    mode: memory.state.mode === 'compare' && (selected.length < 2 || selected.length > 4) ? 'grid' : memory.state.mode,
     anchor: ids.has(memory.state.anchor.page_id) ? memory.state.anchor : {page_id: null, offset: 0},
     filter: {...memory.state.filter, chapter_id: chapterPages.has(memory.state.filter.chapter_id) ? memory.state.filter.chapter_id : null}};
   if (canonical(adjusted) !== canonical(memory.state)) memory.update(adjusted);
@@ -68,11 +70,18 @@ export function gallery(app, data) {
       filter.status === 'stale' && current.applicability.status === 'basis_changed' || filter.status === 'attention' && noted.has(page.page_id) ||
       filter.status === 'references' && state().references.some(ref => ref.page_id === page.page_id);
   });
-  const node = el('div', {class: 'gallery-view'}, heading('整稿画廊', `${pages.length} 页 · 浏览作品与比较修改`));
+  const node = el('div', {class: 'gallery-view'}, heading('整稿画廊', `${pages.length} 页 · 浏览作品与比较修改`,studio?button('跨页风格校准',()=>app.go({surface:'style'}),true):null));
   const status = el('div', {class: 'gallery-save', role: 'status'});
   const legend = el('div', {class: 'legend gallery-legend', role: 'status'});
   const hint = el('p', {class: 'form-hint', hidden: true});
   const controls = el('div', {class: 'gallery-controls'});
+  const readingSettings = el('div', {class:'studio-gallery-settings stack'});
+  const settingsButton = button('筛选与阅读设置', () => modal('画廊筛选与阅读设置', readingSettings, [], {fallback:settingsButton}), false,
+    {'aria-haspopup':'dialog'});
+  function closeReadingSettings() {
+    const dialog = document.querySelector('#modal');
+    if (dialog?.open && dialog.contains(readingSettings)) dialog.close();
+  }
   const viewPort = el('div', {class: 'gallery-viewport', tabindex: '0', 'aria-label': '整稿画廊阅读区'});
   const topSpace = el('div', {'aria-hidden': true}); const grid = el('div', {class: 'gallery'}); const bottomSpace = el('div', {'aria-hidden': true});
   viewPort.append(topSpace, grid, bottomSpace);
@@ -123,10 +132,10 @@ export function gallery(app, data) {
   }
   function toggle(page) {
     const selection = state().selected_page_ids;
-    if (!selection.includes(page.page_id) && selection.length === 4) { toast('最多同时选择 4 页。先取消一页后再选择。'); renderRows(true); return; }
+    if (!selection.includes(page.page_id) && selection.length >= 300) { toast('每次制作最多选择 300 页，请先调整范围。'); renderRows(true); return; }
     const next = selection.includes(page.page_id) ? selection.filter(id => id !== page.page_id) : [...selection, page.page_id];
     const patch = {selected_page_ids: next};
-    if (effectiveMode() === 'compare' && next.length < 2) patch.mode = 'grid';
+    if (state().mode === 'compare' && (next.length < 2 || next.length > 4)) patch.mode = 'grid';
     memory.update(patch); renderControls(); renderRows(true);
   }
   function reference(page) {
@@ -139,6 +148,7 @@ export function gallery(app, data) {
   }
   function renderControls() {
     const s = state();
+    const settingsFocus = readingSettings.contains(document.activeElement) ? document.activeElement.getAttribute('aria-label') : null;
     const settingsOpen = Boolean(controls.querySelector('.gallery-reading-settings')?.open);
     const isNarrow = narrow(), mode = effectiveMode();
     const tabs = el('div', {class: 'segmented', role: 'group', 'aria-label': '画廊图层'});
@@ -148,7 +158,7 @@ export function gallery(app, data) {
     const modes = el('div', {class: 'segmented', role: 'group', 'aria-label': '阅读方式'});
     for (const [key, label] of Object.entries({grid: '联系表', continuous: '连续阅读', compare: '并排比较'})) modes.append(button(label,
       () => resetReading({mode: key}, true), false, {'aria-pressed': String(mode === key), class: mode === key ? 'active' : '',
-        disabled: isNarrow && key !== 'continuous' || key === 'compare' && s.selected_page_ids.length < 2}));
+        disabled: isNarrow && key !== 'continuous' || key === 'compare' && (s.selected_page_ids.length < 2 || s.selected_page_ids.length > 4)}));
     const columns = el('div', {class: 'segmented', role: 'group', 'aria-label': '联系表列数', hidden: mode !== 'grid' || isNarrow});
     for (const number of [2, 3, 4]) columns.append(button(`${number} 列`, () => resetReading({columns: number}, true), false,
       {'data-columns': number, 'aria-pressed': String(columnsNow() === number), class: columnsNow() === number ? 'active' : ''}));
@@ -164,15 +174,36 @@ export function gallery(app, data) {
     }
     if (s.selected_page_ids.length) extras.append(button('清空选页', () => resetReading({selected_page_ids: [], mode: s.mode === 'compare' ? 'grid' : s.mode}, true)));
     if (s.references.length) extras.append(button(`管理参考页（${s.references.length}）`, manageReferences));
-    if (s.selected_page_ids.length && app.health.ui_capabilities?.includes('style_recipes.v1')) extras.append(button('用选页开始风格校准', () => {
+    if (!studio && s.selected_page_ids.length && app.health.ui_capabilities?.includes('style_recipes.v1')) extras.append(button('用选页开始风格校准', () => {
       const first = pages.find(p => p.page_id === s.selected_page_ids[0]);
       app.styleSelection = {reference: first.stages.blueprint.existence === 'recorded' ? {page_id:first.page_id, revision_id:app.route.revision, artifact_ref:first.stages.blueprint.ref, file:first.stages.blueprint.file, role:'reference'} : null,
         project_identity:app.info.project_identity, revision:app.route.revision,
         target_ids:s.selected_page_ids.slice(1), target_refs:s.selected_page_ids.slice(1).map(id => ({page_id:id, page_ref:pages.find(page => page.page_id === id).stages.content.ref}))};
       app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.route.revision});
     }, false, {disabled:app.readonly}));
+    const make=el('div',{class:'studio-gallery-production',role:'group','aria-label':'画廊选页制作'},
+      el('strong',{},s.selected_page_ids.length?`已选 ${s.selected_page_ids.length} 页`:'选页后开始制作'),
+      el('div',{class:'row wrap'},Object.entries(batchNames).map(([action,label])=>button(label,()=>{
+        if(app.readonly||app.historical||app.info.sample?.readonly)return;
+        if(app.latest?.revision_id!==app.route.revision){hint.hidden=false;hint.textContent='项目已有新版本，当前选择保留。先查看新版本，再明确选择制作范围。';return;}
+        const chosen=[...state().selected_page_ids];if(!chosen.length)return;
+        rememberAnchor();memory.flush();
+        app.go({surface:'overview',page_id:null,candidate_id:null,task_id:null,action_id:null,review_id:null,
+          revision:app.route.revision,batch_action:action,batch_page_ids:chosen});
+      },false,{'data-gallery-action':action,'aria-label':`对画廊选页${label}`,disabled:!s.selected_page_ids.length||app.readonly||app.historical||Boolean(app.info.sample?.readonly)}))),
+      el('span',{class:'muted'},app.readonly?'历史或只读版本仅供阅读，制作范围保持。':`完整选页带入配置，核对后才保存。${s.selected_page_ids.length > 4 ? '并排比较仅支持 2–4 页；制作范围不受影响。' : ''}`));
     const filters = el('div', {class: 'row wrap gallery-filter-fields'}, chapter, filter, searchSlot, modes, columns, extras);
-    if (isNarrow) {
+    if(studio && isNarrow){
+      settingsButton.textContent = s.filter.chapter_id || s.filter.status !== 'all' ? '筛选与阅读设置 · 已筛选' : '筛选与阅读设置';
+      readingSettings.replaceChildren(el('label',{class:'stack'},'章节',chapter),el('label',{class:'stack'},'页面状态',filter),
+        el('div',{class:'stack'},el('strong',{},'阅读方式'),modes,el('p',{class:'muted'},'窄屏按页连续阅读；回到桌面宽度后恢复原来的阅读方式。')),columns,extras);
+      controls.replaceChildren(tabs,el('div',{class:'studio-gallery-mobile-search'},searchSlot,settingsButton),
+        ...(s.selected_page_ids.length ? [make] : []));
+      if(settingsFocus) [...readingSettings.querySelectorAll('[aria-label]')].find(control=>control.getAttribute('aria-label')===settingsFocus)?.focus({preventScroll:true});
+    } else if(studio){
+      closeReadingSettings();
+      controls.replaceChildren(el('div',{class:'studio-gallery-main'},tabs,el('div',{class:'row wrap'},searchSlot,modes)),el('div',{class:'studio-gallery-filters row wrap'},chapter,filter,columns,extras),make);
+    } else if (isNarrow) {
       const expanded = Boolean(query || s.filter.chapter_id || s.filter.status !== 'all');
       controls.replaceChildren(tabs, el('details', {class: 'gallery-filter-disclosure', open: expanded}, el('summary', {}, expanded ? '筛选作品（已筛选）' : '筛选作品与管理选页'), filters));
     } else {
@@ -194,7 +225,7 @@ export function gallery(app, data) {
       : `显示 ${shown.size} / ${pages.length} 页 · 已选 ${s.selected_page_ids.length} 页`;
     // replaceChildren 不做子节点过滤：布尔条件必须先组数组，避免渲染出 "false" 文本。
     const parts = [el('span', {}, '当前显示：', el('strong', {}, layers[s.layer])),
-      el('span', {class: 'muted'}, `${counts}${outside ? ` · 筛选外选中 ${outside} 页，比较仍保留` : ''}`)];
+      el('span', {class: 'muted'}, `${counts}${outside ? ` · 筛选外选中 ${outside} 页，完整选择保留` : ''}`)];
     if (stale > 0) parts.push(el('span', {class: 'accent'}, `${stale} 页依据已变化`));
     const text = parts.map(part => part.textContent).join('\u0000');
     if (text !== legend.dataset.text) { legend.dataset.text = text; legend.replaceChildren(...parts); }
@@ -256,7 +287,7 @@ export function gallery(app, data) {
     const runningTask = page.execution?.find(task => ['awaiting_host', 'running', 'blocked'].includes(task.status));
     tile.append(cover, retrySlot,
       el('div', {class: 'tile-title'}, el('strong', {title: label}, el('span', {class: 'mono'}, String(index + 1).padStart(2, '0')), page.title || '未命名页面'),
-        el('label', {class: 'inline-control tile-select'}, check, '比较')),
+        el('label', {class: 'inline-control tile-select'}, check, studio ? '选择' : '比较')),
       el('div', {class: 'tile-meta'}, el('span', {class: `status ${tagClass}`}, tagText),
         chapter && el('span', {}, chapter.title), noted.has(page.page_id) && el('span', {class: 'accent'}, '有个人意见'),
         el('span', {class: 'tile-actions'},
@@ -418,7 +449,7 @@ export function gallery(app, data) {
     restoring = false;
   };
   addEventListener('resize', resize);
-  app.disposables.push(() => { rememberAnchor(); memory.flush(); disposed = true; cancelAnimationFrame(frame); observer.disconnect(); removeEventListener('resize', resize); removeEventListener('scroll', pageScroll); unsubscribe(); views.forEach(view => view.dispose()); });
+  app.disposables.push(() => { closeReadingSettings(); rememberAnchor(); memory.flush(); disposed = true; cancelAnimationFrame(frame); observer.disconnect(); removeEventListener('resize', resize); removeEventListener('scroll', pageScroll); unsubscribe(); views.forEach(view => view.dispose()); });
   renderControls();
   requestAnimationFrame(() => {
     if (disposed) return;

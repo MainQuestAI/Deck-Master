@@ -40,6 +40,7 @@ def batch_browser(tmp_path):
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(server.start())
         page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+        assert page.locator('html').get_attribute('data-workbench-ui') == 'studio'
         try:
             yield page, server, path, store
             assert errors == []
@@ -65,7 +66,7 @@ def test_mixed_modes_keep_selection_until_explicit_range_adjustment(batch_browse
     page, server, path, store = batch_browser
     before = store.read_current()
     select(page, 1, 2)
-    page.get_by_role('combobox', name='批量动作', exact=True).select_option('repair')
+    page.get_by_role('group', name='选页制作动作', exact=True).get_by_role('button', name='SVG 修复', exact=True).click()
     expect(page.get_by_role('checkbox', name='选择第 01 页', exact=True)).to_be_checked()
     expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).to_be_checked()
     expect(page.locator('.batch-actions')).to_contain_text('没有可修复的 SVG')
@@ -192,7 +193,7 @@ def test_style_transfer_preserves_exact_context_and_reference_target_conflict(ba
     from playwright.sync_api import expect
     page, server, path, store = batch_browser
     before = store.read_current()
-    page.get_by_role('combobox', name='批量动作', exact=True).select_option('style')
+    page.get_by_role('group', name='选页制作动作', exact=True).get_by_role('button', name='对选页校准风格', exact=True).click()
     select(page, 2, 3)
     page.get_by_role('combobox', name='批量固定参考原图', exact=True).select_option('p02')
     expect(page.locator('.batch-actions')).to_contain_text('参考页同时在目标中')
@@ -203,7 +204,7 @@ def test_style_transfer_preserves_exact_context_and_reference_target_conflict(ba
     page.get_by_role('heading', name='风格校准', exact=True).wait_for()
     expect(page.get_by_role('textbox', name='风格短要求', exact=True)).to_have_value('仅借用配色，保留构图。')
     expect(page.get_by_role('combobox', name='当前风格试作目标', exact=True)).to_have_value('p03')
-    page.get_by_text('其它目标页', exact=True).click()
+    # Studio keeps target choices visible in the reference/target workspace.
     assert not page.get_by_role('checkbox', name='风格目标 第 1 页 · 项目目标与阅读顺序', exact=True).is_checked()
     page.get_by_role('combobox', name='风格参考原图', exact=True).select_option('p03')
     expect(page.locator('.style-calibration')).to_contain_text('目标未被自动移除')

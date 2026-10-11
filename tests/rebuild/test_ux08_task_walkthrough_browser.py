@@ -129,8 +129,9 @@ def test_batch_route_normal_result_and_lost_response_recovery(walkthrough):
         expect(page.locator('.batch-actions .batch-fields')).to_be_hidden()
         journal.shot('empty-selection')
 
-        for index in (2, 28):
-            page.get_by_role('checkbox', name=f'选择第 {index:02} 页', exact=True).check()
+        page.get_by_role('checkbox', name='选择第 02 页', exact=True).check()
+        page.get_by_role('button', name='下一组页面', exact=True).click()
+        page.get_by_role('checkbox', name='选择第 28 页', exact=True).check()
         bar = page.locator('.overview-selection-bar')
         expect(bar).to_contain_text('已选 2 页用于')
         journal.shot('selected-2-and-28-with-sticky-summary')
@@ -212,7 +213,7 @@ def test_content_route_change_list_impact_and_draft_restore(walkthrough):
         page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: 'p01', layer: 'content', revision: args[1]})}",
                       [identity, before])
         page.locator('.content-editor summary').click()
-        page.get_by_label('页面标题').fill('项目目标与阅读顺序（走查核对）')
+        page.get_by_role('textbox', name='页面标题', exact=True).fill('项目目标与阅读顺序（走查核对）')
         expect(page.locator('.draft-state')).to_contain_text('已保存到项目', timeout=15000)
         journal.shot('edited-with-live-change-list')
 

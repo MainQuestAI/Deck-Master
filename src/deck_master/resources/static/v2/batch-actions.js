@@ -1,24 +1,27 @@
 import {get, post, readableError} from './api.js';
-import {el, button, version} from './dom.js';
+import {el, button, version, icon} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {imageView} from './images.js';
 import {batchNames, batchExclusion, batchInput} from './batch-policy.js';
 
-export function batchActions(app, selected, onSelectionChange) {
+export function batchActions(app, selected, onSelectionChange, {initialAction} = {}) {
   const pages = app.summary.pages, label = id => {
     const index = pages.findIndex(page => page.page_id === id);
     return index < 0 ? id : `第 ${index + 1} 页 · ${pages[index].title || '未命名页面'}`;
   };
   let serial = 0, disposed = false, busy = false, plan = null, fixed = null, referenceView;
+  const studio = document.documentElement.dataset.workbenchUi === 'studio';
   const action = el('select', {'aria-label': '批量动作'}, Object.entries(batchNames).map(([value, name]) => el('option', {value}, name)));
-  const toolbar = el('label', {class: 'row'}, '选页用于', action);
+  const actionButtons = Object.entries(batchNames).map(([value, name]) => button(name, () => { action.value = value; action.dispatchEvent(new Event('change')); }, false, {'data-batch-action': value, 'aria-label': value === 'style' ? '对选页校准风格' : name, 'aria-pressed':String(value === action.value)}));
+  const toolbar = studio ? el('div', {class:'studio-batch-modes', role:'group', 'aria-label':'选页制作动作'}, el('span', {}, '选页用于'), el('div', {class:'row wrap'}, actionButtons)) : el('label', {class: 'row'}, '选页用于', action);
   const notice = el('p', {role: 'status'}), excluded = el('div', {class: 'stack'}), impact = el('div', {class: 'stack batch-impact'});
   const instruction = el('textarea', {rows: 2, maxLength: 4000, 'aria-label': '所选页的制作要求', placeholder: '写明本次需要修改的内容和应保留的内容。'});
   // 返回/刷新后要求保留（F05/AC06）：要求是个人工作配置，保存在本机项目键下；
   // 它不是业务草稿，也不进入任何提交 payload，直到用户明确预览。
   const workingKey = 'deck-master:overview-working:' + app.info.project_identity;
-  try { const storedWorking = JSON.parse(localStorage.getItem(workingKey) || '{}'); if (typeof storedWorking.instruction === 'string') instruction.value = storedWorking.instruction; } catch { /* 读取失败则从空要求开始 */ }
-  const saveWorking = () => { try { localStorage.setItem(workingKey, JSON.stringify({instruction: instruction.value})); } catch { /* 要求保留在本页 */ } };
+  try { const storedWorking = JSON.parse(localStorage.getItem(workingKey) || '{}'); if (typeof storedWorking.instruction === 'string') instruction.value = storedWorking.instruction; if (Object.hasOwn(batchNames, storedWorking.action)) action.value = storedWorking.action; } catch { /* 读取失败则从空要求开始 */ }
+  if (Object.hasOwn(batchNames, initialAction)) action.value = initialAction;
+  const saveWorking = () => { try { localStorage.setItem(workingKey, JSON.stringify({instruction: instruction.value, action: action.value})); return true; } catch { return false; /* 要求与动作保留在本页 */ } };
   instruction.addEventListener('input', saveWorking);
   const reference = el('select', {'aria-label': '批量固定参考原图'}, el('option', {value: ''}, '不指定参考，进入风格面后仍可确认'));
   const refs = new Map();
@@ -42,12 +45,21 @@ export function batchActions(app, selected, onSelectionChange) {
     el('label', {}, '一句话要求', instruction), requirementError,
     el('label', {}, '固定参考原图（可选）', reference), refPicture,
     budgetArea, budgetError, el('div', {class: 'row wrap'}, preview, commit, toStyle), impact);
-  const node = el('section', {class: 'panel batch-actions', 'aria-label': '所选页制作'},
+  const node = el('section', {'data-container':'section', class: 'panel batch-actions', 'aria-label': '所选页制作'},
     el('div', {class: 'panel-head'}, el('h2', {}, '所选页制作')),
     el('div', {class: 'panel-body stack'}, notice, fields));
+  let recoveryButton = null, recoveryPanel = null;
   if (app.business && app.health.ui_capabilities?.includes('ui_draft.v1')) {
     app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
-    node.lastChild.append(el('details', {}, el('summary', {}, '个人记录与提交恢复'), app.editor.mount()));
+    if (studio) {
+      recoveryPanel = el('section', {'data-container':'section',class:'panel studio-batch-recovery-body', hidden:true},
+        el('div', {class:'panel-head'}, el('h2', {}, '个人记录与提交恢复')),
+        el('div', {class:'panel-body'}, app.editor.mount()));
+      recoveryButton = button([icon('clock'), '个人记录与提交恢复'], () => {
+        recoveryPanel.hidden = !recoveryPanel.hidden;
+        recoveryButton.setAttribute('aria-expanded', String(!recoveryPanel.hidden));
+      }, false, {'aria-expanded':'false'});
+    } else node.lastChild.append(el('details', {}, el('summary', {}, '个人记录与提交恢复'), app.editor.mount()));
   }
   let editor = app.editor;
   function exclusions() { return [...selected].map(id => ({id, reason: batchExclusion(app, pages.find(page => page.page_id === id), action.value, fixed)})).filter(item => item.reason); }
@@ -56,6 +68,9 @@ export function batchActions(app, selected, onSelectionChange) {
   function invalidate({keepErrors} = {}) { serial++; plan = null; if (!keepErrors) impact.replaceChildren(); }
   function render() {
     const unavailable = exclusions(), image = action.value === 'blueprint', style = action.value === 'style';
+    actionButtons.forEach(control => control.setAttribute('aria-pressed', String(control.dataset.batchAction === action.value)));
+    node.dataset.selection = selected.size ? 'selected' : 'empty';
+    node.hidden = studio && !selected.size;
     fields.hidden = !selected.size;
     const saving = !editor || editor.disposed || editor.readonly || ['loading', 'unknown', 'conflict', 'saving'].includes(editor.status);
     const calls = Number(budget.value), budgetInvalid = image && (!Number.isInteger(calls) || calls < selected.size || calls > 300);
@@ -85,7 +100,7 @@ export function batchActions(app, selected, onSelectionChange) {
     budget.setAttribute('aria-invalid', String(badBudget));
     if (saving && selected.size) notice.textContent += ' 个人保存状态尚未就绪，请先核实。';
   }
-  action.addEventListener('change', () => { invalidate(); onSelectionChange(); });
+  action.addEventListener('change', () => { saveWorking(); invalidate(); onSelectionChange(); });
   instruction.addEventListener('input', () => { invalidate(); render(); });
   budget.addEventListener('input', () => { invalidate(); render(); });
   reference.addEventListener('change', () => {
@@ -149,7 +164,7 @@ export function batchActions(app, selected, onSelectionChange) {
   app.disposables.push(() => { disposed = true; serial++; referenceView?.dispose(); app.root.removeEventListener('summary-refreshed', sync); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', replaced); });
   editor?.ready.then(() => { if (!disposed) { render(); onSelectionChange(); } });
   render();
-  return {node, toolbar, render, invalidate, eligible: page => !batchExclusion(app, page, action.value, fixed),
+  return {node, toolbar, recoveryButton, recoveryPanel, render, invalidate, saveWorking, eligible: page => !batchExclusion(app, page, action.value, fixed),
     // AC06/§2.1（深度复审）：长列表里选择摘要与配置入口必须持续可达——
     // 概览用这两个方法渲染常驻选择条，并让「配置要求」把用户带回配置区。
     selectionSummary: hidden => selected.size ? `已选 ${selected.size} 页用于${batchNames[action.value]}${hidden ? ` · 筛选外 ${hidden} 页` : ''}` : '',

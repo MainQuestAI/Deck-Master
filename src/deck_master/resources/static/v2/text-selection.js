@@ -1,5 +1,5 @@
 import {post, readableError} from './api.js';
-import {el, button, field} from './dom.js';
+import {el, button, field, modal, actionGroup} from './dom.js';
 
 export function boundaries(text) {
   const offsets = [0]; let position = 0;
@@ -31,6 +31,83 @@ export function selectionRange(pre, source, selection = getSelection()) {
   if (!pre.contains(range.startContainer) || !pre.contains(range.endContainer)) return null;
   return makeRange(source, codePointOffset(source.text, offset(range.startContainer, range.startOffset)),
     codePointOffset(source.text, offset(range.endContainer, range.endOffset)));
+}
+
+// A range edit is bound to one exact leaf and its current draft text. The
+// content transaction still owns the immutable page basis and final CAS.
+export function rangeReplacementEditor({label, draft, read, writable, save, apply, fallback}) {
+  let value = structuredClone(draft), validated = null, replacementText = null, capturedRange = null;
+  const original = el('pre', {class:'read-text selectable-text', tabindex:0, 'aria-label':'选段原文'}, value.source);
+  const start = field('起始字符（从 1 计）', el('input',{type:'number',min:1,value:value.start+1}));
+  const end = field('结束字符（含）', el('input',{type:'number',min:1,value:value.end}));
+  const replacement = field('替换文字（留空删除选段）',el('textarea',{rows:3,value:value.replacement}));
+  const status = el('p',{role:'status'}), review = el('div',{class:'stack',hidden:true});
+  const form = el('div',{class:'stack'});
+  // Focusing the capture button can collapse the browser's native selection.
+  // Snapshot only a real selection made within this exact original text node.
+  const captureNative = () => {
+    try { const range=selectionRange(original,{text:value.source});if(range)capturedRange=range; }
+    catch(error){capturedRange=null;status.textContent=error.message;}
+  };
+  original.addEventListener('pointerup',captureNative);original.addEventListener('keyup',captureNative);
+  function current() {
+    if(!writable())throw Error('当前版本已变化或暂不可编辑。范围草稿保留，请读取当前版本后重新定位。');
+    if(read()!==value.source)throw Error('这个正文位置已被修改。范围草稿保留，请按当前文字重新定位。');
+  }
+  function changed() {
+    value.start=Number(start.input.value)-1;value.end=Number(end.input.value);value.replacement=replacement.input.value;
+    validated=null;replacementText=null;review.replaceChildren();review.hidden=true;form.hidden=false;compare.disabled=true;use.disabled=true;
+    save(structuredClone(value));status.textContent='范围草稿已保留；校验后核对具体改动。';
+  }
+  const capture = button('使用当前选段',()=>{
+    try {
+      const selected=selectionRange(original,{text:value.source})||capturedRange;
+      if(!selected)throw Error('先在上方原文选择同一个字段内的文字。');
+      start.input.value=selected.start+1;end.input.value=selected.end;changed();
+    }catch(error){status.textContent=error.message;}
+  });
+  const validate=button('校验替换选段',()=>{
+    try {
+      current();validated=makeRange({text:value.source},Number(start.input.value)-1,Number(end.input.value));
+      status.textContent=`已校验第 ${validated.start+1}–${validated.end} 字：${validated.excerpt}`;
+      compare.disabled=false;
+    }catch(error){validated=null;compare.disabled=true;status.textContent=error.message;}
+  });
+  const compare=button('比较选段原文与改文',()=>{
+    try {
+      current();if(!validated)throw Error('请先校验当前选段。');
+      const points=Array.from(value.source);
+      replacementText=points.slice(0,validated.start).join('')+replacement.input.value+points.slice(validated.end).join('');
+      review.replaceChildren(el('h3',{},'仅修改这个位置'),el('p',{},label),
+        actionGroup(use,button('返回调整选段',()=>{review.hidden=true;form.hidden=false;use.disabled=true;dialog.scrollTo(0,0);start.input.focus();})),
+        el('p',{},`第 ${validated.start+1}–${validated.end} 字 · 其余同文位置保持不变`),
+        el('strong',{},'原文'),el('pre',{class:'read-text'},validated.excerpt),
+        el('strong',{},'改文'),el('pre',{class:'read-text'},replacement.input.value||'（删除该选段）'));
+      use.disabled=false;form.hidden=true;review.hidden=false;dialog.scrollTo(0,0);use.focus();
+    }catch(error){use.disabled=true;status.textContent=error.message;}
+  },false,{disabled:true});
+  const use=button('应用到正文草稿并查看影响',async()=>{
+    try {
+      current();if(replacementText===null)throw Error('请先核对这次具体改动。');
+      const next=replacementText;use.disabled=true;
+      // apply rechecks the leaf before updating it and uses contentOperation.
+      await apply(next,value.source);
+      // #modal is shared. A newer editor may have replaced this one while
+      // content planning was in flight; its inputs and focus belong to it.
+      if(dialog.contains(body))dialog.close();
+    }catch(error){status.textContent=error.message;use.disabled=true;}
+  },true,{disabled:true});
+  for(const input of [start.input,end.input,replacement.input])input.addEventListener('input',changed);
+  const rebase=button('按当前文字重新定位',()=>{
+    value.source=read();capturedRange=null;original.textContent=value.source;start.input.value=1;end.input.value=Math.min(1,Array.from(value.source).length);changed();
+  });
+  form.append(el('p',{},label),
+    el('p',{class:'muted'},'拖选下方原文或填写字符范围。空替换会删除选段；确认内容变更前不会改动正式稿件。'),original,
+    actionGroup(capture,rebase),el('div',{class:'range-fields'},start.node,end.node),replacement.node,
+    actionGroup(validate,compare));
+  const body=el('div',{class:'stack'},form,review,status);
+  const dialog=modal('精确修改选段',body,[button('取消并保留范围草稿',()=>dialog.close())],{fallback});
+  return {dispose(){if(dialog.open&&dialog.contains(body))dialog.close();}};
 }
 export function textObject(app, source, {revision, pageId, layer, label = '原始文本'} = {}) {
   const pre = el('pre', {class: 'read-text selectable-text', tabindex: '0', 'aria-label': label}, source.text);

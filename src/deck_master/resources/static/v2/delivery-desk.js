@@ -1,6 +1,6 @@
 import {historyLabel} from './history-labels.js';
 import {get, post, revisionQuery, readableError} from './api.js';
-import {el, button, modal, version, actionGroup} from './dom.js';
+import {el, button, modal, version, actionGroup, icon} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {productionView} from './production-view.js';
 
@@ -12,7 +12,7 @@ const descriptions = {
 };
 const layerNames = {content: '逐页稿', page: '逐页稿', blueprint: '原图', svg: 'SVG', svg_preview: 'SVG 预览', ppt: '整稿 PPT', ppt_preview: 'PPT 预览',
   blueprint_content: '原图内容检查', blueprint_fidelity: '原图一致性检查', conversion: '转换检查', readability: '阅读检查', privacy: '隐私检查', professional_use: '专业使用评估', page_limit: '页数限制', render_report: '制作报告'};
-const panel = (title, ...children) => el('section', {class: 'panel'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
+const panel = (title, ...children) => el('section', {class: 'panel', 'data-container':'section'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
 const exportURL = (record, name) => '/api/exports/' + encodeURIComponent(record.export_id) + '/files/' + name.split('/').map(encodeURIComponent).join('/');
 
 // Each gap names the rule it actually broke and the honest next step. A locate
@@ -55,9 +55,12 @@ function gapsView(app, gaps, revision) {
 }
 
 function exportFiles(record) {
+  const studio=document.documentElement.dataset.workbenchUi==='studio';
   const archive = record.files[record.archive];
-  const node = el('section', {class: 'export-result stack'}, el('h3', {}, `${names[record.purpose]} · ${version(record.revision_id)}`),
-    el('p', {}, record.archive), el('a', {class: 'download-link', href: exportURL(record, record.archive), download: record.archive}, '下载 ZIP'),
+  const node = el('section', {class: 'export-result stack'}, el('div',{class:'studio-export-result-heading'},el('h3', {}, `${names[record.purpose]} · ${version(record.revision_id)}`),el('span',{class:'status'},'文件已生成')),
+    el('p', {class:'export-archive-name'}, record.archive), el('div', {class:'export-downloads'},
+      el('a', {class: 'download-link primary', href: exportURL(record, record.archive), download: record.archive}, '下载 ZIP'),
+      record.files['deck.pptx'] && el('a', {class:'download-link', href:exportURL(record,'deck.pptx'), download:'deck.pptx'}, '下载 PPT')),
     el('p', {class: 'muted hash-line'}, `ZIP SHA256 ${archive.sha256}`),
     el('p', {class: 'muted'}, '文件已生成。下载由浏览器完成；中断后可继续使用同一链接。'));
   const details = el('details', {}, el('summary', {}, `查看文件与哈希（${record.manifest.files.length} 项）`));
@@ -68,25 +71,38 @@ function exportFiles(record) {
       el('small', {class: 'hash-line'}, item.sha256)));
     shown += 30; more.hidden = shown >= record.manifest.files.length;
   }
-  details.append(list, more); details.addEventListener('toggle', () => { if (details.open && !shown) append(); }); node.append(details); return node;
+  details.append(list, more); details.addEventListener('toggle', () => { if (details.open && !shown) append(); });
+  if(studio) node.append(button(`查看文件与哈希（${record.manifest.files.length} 项）`,()=>{if(!shown)append();modal('文件清单与完整性校验',el('div',{class:'stack'},list,more));},false,{class:'studio-export-integrity'}));
+  else node.append(details); return node;
 }
 
 export function deliveryDesk(app) {
+  const studio=document.documentElement.dataset.workbenchUi==='studio';
   const revision = app.route.revision, key = `deck-master:v3:exports:${app.info.project_identity}`;
   const status = el('p', {role: 'status'}), results = el('div', {class: 'stack export-results'}), facts = el('div', {class: 'stack'});
   let disposed = false; app.disposables.push(() => { disposed = true; });
   // UX-05b：文件区按「版本—用途—结果」组织：版本先固定，正式用途（交付/审阅）
   // 在先，工程恢复包退到辅助位置；生成结果按同一用途与版本列出。
-  const purposeCard = (purpose, primary) => el('article', {class: 'export-purpose stack'},
-    el('h3', {}, names[purpose]), el('p', {}, descriptions[purpose]),
-    button('生成' + names[purpose], event => create(purpose, event.currentTarget), primary, {disabled: Boolean(app.info.sample?.readonly)}));
-  const node = panel('版本与文件', el('p', {class: 'export-version'}, `本次文件固定为 ${version(revision)}。后台新结果不会改变已经生成的包。`),
-    el('section', {class: 'export-group stack'}, el('h3', {class: 'export-group-title'}, '正式用途（按此版本生成）'),
-      el('div', {class: 'export-purpose-grid'}, purposeCard('delivery', true), purposeCard('review', false))),
-    el('details', {class: 'export-group export-recovery'}, el('summary', {}, '工程恢复包（辅助，仅在需要恢复或交付内部材料时使用）'),
-      el('div', {class: 'stack'}, purposeCard('engineering', false))),
-    app.info.sample?.readonly && el('p', {class: 'muted'}, '只读示例不生成文件包。请在自己的项目操作。'), status,
+  const purposeCard = (purpose, primary) => studio ? el('article',{class:'studio-delivery-row'},
+    el('span',{class:'studio-file-symbol','aria-hidden':'true'},icon(purpose==='delivery'?'check':purpose==='review'?'content':'runs')),
+    el('div',{class:'studio-delivery-copy'},el('h3',{},names[purpose]),el('p',{class:'muted'},descriptions[purpose])),
+    button('生成' + names[purpose], event => create(purpose,event.currentTarget),primary,{disabled:Boolean(app.info.sample?.readonly)}))
+    : el('article', {class: 'export-purpose stack'},el('h3', {}, names[purpose]), el('p', {}, descriptions[purpose]),
+      button('生成' + names[purpose], event => create(purpose,event.currentTarget),primary,{disabled:Boolean(app.info.sample?.readonly)}));
+  const versionBar=el('div',{class:'studio-files-version'},el('div',{},el('strong',{},app.historical?'历史版本文件':'当前阅读版本文件'),
+    el('p',{class:'export-version'},`本次文件固定为 ${version(revision)}。后台新结果不会改变已经生成的包。`)),
+    button('选择其它版本',()=>app.go({surface:'runs',runs_area:'versions',task_id:null})));
+  const availability=el('div',{class:'studio-file-summary'},[['blueprint','原图'],['svg','SVG'],['ppt_preview','PPT 预览']].map(([key,label])=>
+    el('div',{},el('span',{class:'muted'},label),el('strong',{},`${app.summary.pages.filter(p=>p.stages[key]?.existence==='recorded').length} / ${app.summary.pages.length} 页`))));
+  const recoveryPurpose=studio?el('div',{class:'studio-internal-export'},button('内部工程恢复包',()=>modal('内部工程恢复包',purposeCard('engineering',false))),
+    el('span',{class:'muted'},'仅在需要内部材料与项目恢复时生成'))
+    :el('details',{class:'export-group export-recovery'},el('summary',{},'工程恢复包（辅助，仅在需要恢复或交付内部材料时使用）'),el('div',{class:'stack'},purposeCard('engineering',false)));
+  const node = panel('版本与文件',studio?versionBar:el('p', {class: 'export-version'}, `本次文件固定为 ${version(revision)}。后台新结果不会改变已经生成的包。`),
+    studio&&availability,el('section', {class: 'export-group stack'}, el('h3', {class: 'export-group-title'}, '正式用途（按此版本生成）'),
+      el('div', {class: studio?'studio-delivery-options':'export-purpose-grid'}, purposeCard('delivery', true), purposeCard('review', false))),
+    recoveryPurpose,app.info.sample?.readonly && el('p', {class: 'muted'}, '只读示例不生成文件包。请在自己的项目操作。'), status,
     el('h3', {class: 'export-group-title'}, '生成结果'), results);
+  if(studio){node.classList.add('studio-files-desk'); results.append(el('p',{class:'muted export-empty'},'尚未在此浏览器生成文件。选择用途后，下载入口会显示在这里。'));}
   node.id = 'delivery-desk'; node.querySelector('h2').tabIndex = -1;
   function read() {
     const value = JSON.parse(localStorage.getItem(key) || '[]');
@@ -128,10 +144,12 @@ export function deliveryDesk(app) {
     const request = {purpose, revision, export_id: 'export-' + crypto.randomUUID()};
     try { remember(request); }
     catch (error) { status.textContent = readableError(error) + ' 尚未发送生成请求。'; trigger.disabled = false; return; }
+    results.querySelector('.export-empty')?.remove();
     const row = el('section', {class: 'export-result'}); results.prepend(row); try { await generate(request, row); } finally { trigger.disabled = Boolean(app.info.sample?.readonly); }
   }
   try {
     const saved = read();
+    if(saved.length)results.querySelector('.export-empty')?.remove();
     for (const request of saved.slice(0, 6)) results.append(pending(request, '已保存导出请求，可核实并重新取得同一版本的文件。'));
   } catch (error) { status.textContent = readableError(error); }
   const detail = el('details', {class: 'export-facts'}, el('summary', {}, '查看此版本的交付缺项与制作证据'), facts); let loaded = false;
@@ -149,10 +167,20 @@ export function deliveryDesk(app) {
       facts.append(el('p', {class: 'muted'}, '工程检查、可编辑声明、专业评估和桌面编辑分别记录。没有实际证据的项目保持未评估。'));
     } catch (error) { loaded = false; if (!disposed) facts.replaceChildren(el('p', {class: 'field-error'}, readableError(error)), button('重读交付缺项', loadFacts)); }
   }
-  detail.addEventListener('toggle', () => { if (detail.open) loadFacts(); }); node.append(detail); return node;
+  detail.addEventListener('toggle', () => { if (detail.open) loadFacts(); });
+  if(studio){
+    node.append(el('div',{class:'studio-delivery-evidence'},button('查看此版本的交付缺项与制作证据',()=>{modal('此版本的交付缺项与制作证据',facts);loadFacts();})));
+    node.append(el('section',{class:'studio-file-pages'},el('h3',{},'此版本逐页文件'),
+      app.summary.pages.map((page,index)=>el('article',{class:'studio-file-page'},el('span',{class:'studio-page-number'},String(index+1).padStart(2,'0')),
+        el('div',{},el('strong',{},page.title||'未命名页面'),el('p',{class:'muted'},[['blueprint','原图'],['svg','SVG'],['ppt_preview','PPT 预览']].map(([key,label])=>`${label} ${page.stages[key]?.existence==='recorded'?'已记录':'未记录'}`).join(' · '))),
+        button('查看本页',()=>app.go({surface:'page',page_id:page.page_id,revision,layer:page.stages.ppt_preview?.existence==='recorded'?'ppt':page.stages.svg?.existence==='recorded'?'svg':page.stages.blueprint?.existence==='recorded'?'original_image':'content'}))))));
+  }else node.append(detail);
+  return node;
 }
 
 export function historyDesk(app, history) {
+  const studio=document.documentElement.dataset.workbenchUi==='studio';
+  const versionList=el('div',{class:'studio-version-list',role:'group','aria-label':'选择历史版本'});
   const revision = app.route.revision;
   const pageLabels = new Map(app.summary.pages.map((page, index) => [page.page_id, `第 ${index + 1} 页`]));
   const selected = el('select', {'aria-label': '阅读历史版本'});
@@ -181,7 +209,10 @@ export function historyDesk(app, history) {
       el('span', {class: 'state-chip'}, `当前版本：${nameFor(history.current)}`),
       ...(history.head && history.head !== history.current && history.head !== revision
         ? [el('span', {class: 'state-chip'}, `读取锚点：${nameFor(history.head)}`)] : []),
-      ...(selected.value !== revision ? [el('span', {}, '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。')] : []));
+      ...(selected.value !== revision ? [el('span', {class:'history-mismatch'}, '所选版本与正在阅读的版本不同，请先读取所选版本，再预览恢复。')] : []));
+    if(studio)versionList.replaceChildren(...[...selected.options].map(option=>button(option.textContent,()=>{selected.value=option.value;stateIdentity();},false,
+      {'aria-pressed':String(option.value===selected.value),'data-version-id':option.value})));
+
   }
   function append(records, reset = false) {
     const chosen = reset ? revision : selected.value;
@@ -219,9 +250,16 @@ export function historyDesk(app, history) {
     button('读取所选版本', () => app.go({revision: selected.value, task_id: null})), more,
     app.summary.pages.length > 0 && button('逐页查看与固定比较', () => app.go({surface: 'page', page_id: app.summary.pages[0].page_id, layer: 'content', revision})), restore);
   versionControls.classList.add('history-reading-controls');
-  const node = panel('版本记录', identity, versionControls,
-    el('label', {class: 'inline-control'}, allRecords, '全部记录（包括执行与个人状态）'), notice,
-    el('p', {class: 'muted'}, '先读取历史版本并查看差异，再预览恢复影响。恢复会创建新版本，当前执行与调用记录不会回滚。'));
+  const historyHelp=el('p',{class:'muted'},'先读取历史版本并查看差异，再预览恢复影响。恢复会创建新版本，当前执行与调用记录不会回滚。');
+  const allLabel=el('label',{class:'inline-control'},allRecords,'全部记录（包括执行与个人状态）');
+  const node = studio ? panel('版本记录',identity,el('div',{class:'studio-version-workspace'},
+    el('aside',{class:'studio-version-sidebar'},el('label',{},'定位版本',selected),versionList,more,allLabel),
+    el('section',{class:'studio-version-reading'},el('div',{class:'studio-version-reading-heading'},el('div',{},el('h3',{},'正在阅读的版本'),el('p',{class:'muted'},version(revision))),
+      button('查看此版本文件',()=>app.go({surface:'runs',runs_area:'files',task_id:null,revision}))),versionControls,
+      el('div',{class:'studio-version-pages'},app.summary.pages.map((page,index)=>el('article',{},el('span',{class:'studio-page-number'},String(index+1).padStart(2,'0')),
+        el('strong',{},page.title||'未命名页面'),button('查看本页',()=>app.go({surface:'page',page_id:page.page_id,layer:'content',revision}))))),historyHelp)),notice)
+    : panel('版本记录',identity,versionControls,allLabel,notice,historyHelp);
+  if(studio)node.classList.add('studio-history-desk');
   app.disposables.push(() => { disposed = true; serial++; });
   async function preview() {
     restore.disabled = true;

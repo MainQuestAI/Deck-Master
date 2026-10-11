@@ -1,7 +1,8 @@
 import {get, post, canonical, readableError, revisionQuery} from './api.js';
-import {el, button, modal, version} from './dom.js';
+import {el, button, modal, version, actionGroup} from './dom.js';
+import {rangeReplacementEditor} from './text-selection.js';
 
-export const contentPanel = (title, ...body) => el('section', {class:'panel'}, el('div', {class:'panel-head'}, el('h2', {}, title)), el('div', {class:'panel-body stack'}, body));
+export const contentPanel = (title, ...body) => el('section', {class:'panel','data-container':'section'}, el('div', {class:'panel-head'}, el('h2', {}, title)), el('div', {class:'panel-body stack'}, body));
 export const inputField = (label, value = '', rows = 3) => {
   const input = el('textarea', {rows, value, 'aria-label':label});
   return {input, node:el('label', {class:'stack'}, label, input)};
@@ -11,6 +12,7 @@ export const inputField = (label, value = '', rows = 3) => {
 export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   let loaded = false, disposed = false, serial = 0, pending = null; const guards = [];
   const notice = el('p', {role:'status', class:'content-operation-note'}), impact = el('div', {class:'stack'});
+  const receipt = el('div', {role:'status',class:'content-save-receipt stack',hidden:true});
   const submit = button('确认内容变更', async () => {
     if (!pending || !canWrite() || !currentBasis()) return;
     const frozen = pending, typed = canonical(read()); submit.disabled = true;
@@ -18,9 +20,9 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
       await app.business.submit(app.editor, frozen.action, frozen.request, frozen.basis, async result => {
         if (disposed) return;
         pending = null; impact.replaceChildren();
-        notice.textContent = result.status === 'dispatched' || result.pending_tasks?.length ? '已保存，内容仍待制作工具阅读并判断影响。' : '修改已保存；保留的原图需按新内容核对。';
+        receipt.hidden=false;receipt.textContent = result.status === 'dispatched' || result.pending_tasks?.length ? '已保存，内容仍待制作工具阅读并判断影响。' : `修改已保存到 ${version(result.revision_id)}；保留的原图需按新内容核对。`;
         if (canonical(read()) === typed) onDone?.(result);
-        else notice.append(el('span', {}, ' 后写输入仍保留在原基准草稿中。'), button('查看已保存版本', () => app.go({revision:result.revision_id})));
+        else receipt.append(el('span', {}, '后写输入仍保留在原基准草稿中。'), actionGroup(button('查看已保存版本', () => app.go({revision:result.revision_id}))));
       });
     } catch (error) { notice.textContent = readableError(error); }
     finally { controls(); }
@@ -85,7 +87,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   app.root.addEventListener('summary-refreshed', versionChanged);
   app.disposables.push(() => { disposed = true; serial++; app.root.removeEventListener('summary-refreshed', versionChanged); app.root.removeEventListener('draft-editor-replaced', bind); app.root.removeEventListener('business-state-changed', controls); app.root.removeEventListener('business-rejected', reject); });
   bind();
-  return {changed, preview, previewInputs, canWrite, guard(node) { const fieldset = el('fieldset', {class:'content-form-fields', disabled:!canWrite()}, node); guards.push(fieldset); return fieldset; }, node:el('div', {class:'content-operation stack'}, notice, impact, submit)};
+  return {changed, preview, previewInputs, canWrite, guard(node) { const fieldset = el('fieldset', {class:'content-form-fields', disabled:!canWrite()}, node); guards.push(fieldset); return fieldset; }, node:el('div', {class:'content-operation stack'}, notice, receipt, impact, submit)};
 }
 
 export function sourceReader(app, link, revision = app.route.revision) {
@@ -155,7 +157,20 @@ export function pageContentEditor(app, data) {
   // 预览后滚动到这里就能同屏核对；逐项文本框仍保留在下方随时返回修改。
   const check = el('div', {class:'stack content-check'});
   const reason = inputField('正文修改说明', '调整本页标题或正文', 2);
-  let operation;
+  let operation, rangeDraft = null, rangeDialog = null;
+  function openRange(path, label) {
+    const pathKey=canonical(path), source=at(value,path);
+    const draft=rangeDraft?.path===pathKey?rangeDraft:{path:pathKey,source,start:0,end:Math.min(1,Array.from(source).length),replacement:''};
+    rangeDraft=structuredClone(draft);operation.changed();
+    rangeDialog=rangeReplacementEditor({label,draft,read:()=>at(value,path),
+      writable:()=>operation.canWrite()&&app.latest?.revision_id===app.route.revision,
+      save:saved=>{rangeDraft=saved;operation.changed();},
+      apply:async(next,basis)=>{
+        if(at(value,path)!==basis)throw Error('当前字段已变化，请重新定位并核对。');
+        const parent=at(value,path.slice(0,-1));parent[path.at(-1)]=next;rangeDraft=null;
+        operation.changed();draw();await previewEdit();
+      },fallback:document.querySelector('#view-title')});
+  }
   function leafLabelFor(path) {
     if (path.length === 1) return ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字');
     const arrayAt = blockAt(path);
@@ -180,7 +195,7 @@ export function pageContentEditor(app, data) {
         const label = ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字');
         const item = inputField(label, at(value,path), 2);
         item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); drawChanges(); });
-        fields.append(item.node);
+        fields.append(item.node,actionGroup(button('精确修改选段',()=>openRange(path,label),false,{'aria-label':'精确修改选段 · '+label.replaceAll(' · ','/')})));
         lastHeading = null;
         continue;
       }
@@ -190,20 +205,22 @@ export function pageContentEditor(app, data) {
       const label = `${head || '正文'} · ${leafLabel(path, arrayAt)}`;
       const item = inputField(label, at(value,path), 4);
       item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); drawChanges(); });
-      fields.append(item.node);
+      fields.append(item.node,actionGroup(button('精确修改选段',()=>openRange(path,label),false,{'aria-label':'精确修改选段 · '+label.replaceAll(' · ','/')})));
     }
     drawChanges();
   }
   draw();
-  operation = contentOperation(app, 'page_edit', () => ({visible:value,reason:reason.input.value}), saved => {
+  operation = contentOperation(app, 'page_edit', () => ({visible:value,reason:reason.input.value,range_edit:rangeDraft}), saved => {
     // 草稿恢复只更新当前输入；比较基准见上（R3）。
     if (saved.visible) value = saved.visible;
-    reason.input.value = saved.reason || ''; draw();
+    reason.input.value = saved.reason || '';rangeDraft=saved.range_edit||null;draw();
   }, data.stages.content.ref,
     result => app.go({revision:result.revision_id, layer:'content'}));
   reason.input.addEventListener('input', operation.changed);
-  const preview = button('预览正文修改影响', () => operation.preview({content_plan_ref:data.content_plan?.ref || null, action:'edit', instruction:reason.input.value,
-    targets:[{page_id:data.page_id,page_ref:data.stages.content.ref}],customer_visible:value}));
+  const previewEdit = () => operation.preview({content_plan_ref:data.content_plan?.ref || null, action:'edit', instruction:reason.input.value,
+    targets:[{page_id:data.page_id,page_ref:data.stages.content.ref}],customer_visible:value});
+  const preview = button('预览正文修改影响',previewEdit);
+  app.disposables.push(()=>rangeDialog?.dispose());
   const derivations = el('div');
   get('/api/content/lineage/'+encodeURIComponent(data.page_id)+revisionQuery(data.revision_id)).then(result => {
     if (result.records.length) derivations.append(el('p', {class:'notice'}, '本页由合并或拆分产生。旧页意见仍留在旧身份，不会自动迁移到这里。'),

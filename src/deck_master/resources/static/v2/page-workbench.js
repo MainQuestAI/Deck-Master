@@ -1,10 +1,11 @@
 import {historyLabel} from './history-labels.js';
 import {sourceReader, pageContentEditor} from './content-edit.js';
 import {get, revisionQuery, readableError} from './api.js';
-import {el, button, heading, empty, version, modal} from './dom.js';
+import {el, button, heading, empty, version, modal, icon} from './dom.js';
 import {layers, routeHash} from './routes.js';
 import {DraftEditor} from './drafts.js';
 import {imageView} from './images.js';
+import {pageReading} from './page-reading.js';
 import {stageKey, stageLabel} from './gallery.js';
 import {promptView, generationBasis, preparedRecords} from './request-view.js';
 import {textObject} from './text-selection.js';
@@ -169,28 +170,48 @@ export function pageDetail(app, data) {
   app.disposables.push(() => { clearInterval(timer); app.root.removeEventListener('summary-refreshed', fromSummary); });
   const aside = el('aside', {class: 'page-context stack'}), draftSlot = el('div');
   const noteRecovery = el('div', {class: 'note-recovery-slot'});
+  const studio = document.documentElement.dataset.workbenchUi === 'studio';
+  let recoveryView = null, noteArea = 'write', selectNoteArea = () => {};
   let annotations, draftRef;
+  function renderNoteTools() {
+    const maintenance = annotations?.maintenanceNodes || [draftSlot];
+    if (!studio) { noteRecovery.replaceChildren(...maintenance, ...(recoveryView ? [recoveryView] : [])); return; }
+    for (const item of [...maintenance, ...(recoveryView ? [recoveryView] : [])]) {
+      if (item.tagName === 'DETAILS') { item.open = true; item.classList.add('studio-note-section'); }
+    }
+    const writing = el('section', {class:'studio-note-writing stack'}, maintenance);
+    const recovery = el('section', {class:'studio-note-recovery stack'}, recoveryView || el('p', {class:'muted'}, '这一层没有可恢复的个人草稿。'));
+    const tabs = el('div', {class:'studio-note-tabs', role:'group', 'aria-label':'私人笔记与恢复'});
+    const controls = [['write','写笔记'],['recover','备份与恢复']].map(([key,label]) => {
+      const control = button(label, () => selectNoteArea(key), false, {'aria-pressed':'false'});
+      tabs.append(control); return [key,control];
+    });
+    selectNoteArea = key => { noteArea=key;writing.hidden=key!=='write';recovery.hidden=key!=='recover';for(const [name,control] of controls)control.setAttribute('aria-pressed',String(name===key)); };
+    selectNoteArea(noteArea);
+    noteRecovery.replaceChildren(tabs,writing,recovery);
+  }
   function bindDraft(ref, text) {
     noteRecovery.replaceChildren();
+    recoveryView = null;
     draftRef = ref;
     app.editor?.dispose(); app.editor = null;
     if (layer === 'source') {
       annotations?.bind(null, null);
       draftSlot.replaceChildren(el('p', {class: 'muted'}, '个人草稿绑定逐页稿或提示词层；来源层只提供阅读。'));
-      noteRecovery.replaceChildren(...(annotations?.maintenanceNodes || [draftSlot])); return;
+      renderNoteTools(); return;
     }
     if (layer === 'prepared_prompt' && preparedRecords(data).length > 1 && !ref) {
       annotations?.bind(null, null);
       draftSlot.replaceChildren(el('p', {class: 'muted'}, '请选择明确的预备稿，再写绑定这份原文的个人草稿。'));
       // draftSlot 住在维护区里：早退也必须把维护区装回去，否则提示写进脱离 DOM 的节点。
-      noteRecovery.replaceChildren(...(annotations?.maintenanceNodes || [draftSlot])); return;
+      renderNoteTools(); return;
     }
     const info = {...app.info, page_label: `第 ${index + 1} 页`};
     const samePageBasis = app.latest.pages.find(p => p.page_id === data.page_id)?.stages.content.ref?.sha256 === data.stages.content.ref?.sha256;
     app.editor = new DraftEditor(info, {scope: 'page', page_id: data.page_id, layer}, fixed, ref,
       {readonly: app.business && samePageBasis ? Boolean(app.info.sample?.readonly) : app.readonly, exactRevision: true});
     const draftView = app.editor.mount();
-    app.editor.input.rows = 2;
+    app.editor.input.rows = studio ? 4 : 2;
     // Recovery and portability stay a separate secondary entry next to the note,
     // not nested one level deeper behind it. The hoist runs again whenever the
     // editor is restored-replaced: stale entries dispatched from a detached input
@@ -213,7 +234,8 @@ export function pageDetail(app, data) {
     app.root.addEventListener('draft-editor-replaced', replacedListener);
     app.disposables.push(() => app.root.removeEventListener('draft-editor-replaced', replacedListener));
     // 维护区顺序：私人笔记与草稿操作（意见面板移交）→ 恢复、下载与版本详情。
-    noteRecovery.replaceChildren(...(annotations?.maintenanceNodes || [draftSlot]), recovery);
+    recoveryView = recovery;
+    renderNoteTools();
     draftSlot.replaceChildren(draftView);
     annotations?.bind(app.editor, ref);
     if (text !== null) draftSlot.append(button('比较原文与草稿', () => {
@@ -223,6 +245,10 @@ export function pageDetail(app, data) {
   }
   const original = el('section', {class: 'page-reading stack', 'aria-label': '页面内容', 'data-revision': fixed, 'data-page-id': data.page_id},
     renderLayer(app, data, layer, pageTitle(page, index), primaryReleases, bindDraft));
+  if(studio&&['original_image','svg','ppt'].includes(layer)){
+    const view=pageReading(original,{identity:`${pageTitle(page,index)} · ${layers[layer]} · ${version(fixed)}`,legacyZoom:app.route.zoom||1});
+    primaryReleases.push(()=>view.dispose());
+  }
   const fixedLabel = el('h2', {class: 'fixed-side-label', hidden: true}, `原固定版本 · ${version(fixed)} · ${layers[layer]}`);
   original.prepend(fixedLabel);
   const comparison = el('section', {class: 'page-reading stack compare-side', 'aria-label': '比较版本内容', hidden: true});
@@ -240,13 +266,13 @@ export function pageDetail(app, data) {
     if (app.editor) annotations.bind(app.editor, draftRef);
     // 面板可能在草稿绑定之后才建立：这里把它的维护项补进维护区（顺序在恢复入口
     // 之前、bindDraft 装入的恢复详情之后不能被丢弃——不再整体 replaceChildren）。
-    noteRecovery.prepend(...annotations.maintenanceNodes);
+    renderNoteTools();
     app.disposables.push(() => annotations.dispose());
   }
   // 无 annotations 路径:bindDraft 已经把维护区装好（占位说明或草稿视图+恢复详情）。
   const detailBasis = layer === 'original_image' || layer === 'prepared_prompt' || layer === 'submitted_prompt'
-    ? (() => { const basis = generationBasis(app, data); basis.open = false; return basis; })() : null;
-  const production = layer === 'svg' || layer === 'ppt' ? detail('可编辑性与制作检查', productionView(data)) : null;
+    ? (() => { const basis = generationBasis(app, data); basis.open = studio; return basis; })() : null;
+  const production = layer === 'svg' || layer === 'ppt' ? (studio ? productionView(data, {expanded:true}) : detail('可编辑性与制作检查', productionView(data))) : null;
   const detailFace = el('div', {class: 'stack'}, detailBasis, production);
   if (!detailBasis && !production) detailFace.append(el('p', {class: 'muted'}, '本层没有多的制作记录；生成依据与检查在对应图层的详情面。'));
   const faces = [
@@ -259,12 +285,19 @@ export function pageDetail(app, data) {
   const switchRow = el('div', {class: 'page-tools-switcher', role: 'group', 'aria-label': '单页工具'});
   const faceZone = el('div', {class: 'page-tools-faces stack'});
   const faceNode = new Map(faces.map(([key, , node]) => [key, node]));
+  let revealTools=()=>{};
+  let lastToolTrigger=null;
+  const toolTitle=el('strong',{class:'studio-tool-title'},'意见');
   const faceControl = new Map(faces.map(([key, name]) => {
-    const control = button(name, () => activateFace(key), false, {'aria-pressed': 'false'});
+    const control = button(studio?[icon(({opinions:'content',trials:'runs',icons:'gallery',notes:'content',details:'attention'})[key]),name]:name, () => {activateFace(key);if(studio){lastToolTrigger=control;revealTools();}}, false, {'aria-pressed': 'false'});
     switchRow.append(control);
     return [key, control];
   }));
   function activateFace(key) {
+    toolTitle.textContent=faces.find(([id])=>id===key)?.[1]||'页面工具';
+    // The selected tool already names the opinion editor. Keep its object and
+    // scope metadata, without a duplicate heading consuming the first view.
+    toolTitle.hidden=studio&&key==='opinions';
     if(key!=='opinions'&&annotations&&['point','rect','text'].includes(annotations.mode))annotations.setMode('read');
     for (const [area, node] of faceNode) node.hidden = area !== key;
     for (const [area, control] of faceControl) control.setAttribute('aria-pressed', String(area === key));
@@ -277,6 +310,7 @@ export function pageDetail(app, data) {
   // 个人草稿异常就近入口(D2-A):只在真实未解决状态出现;点击打开笔记面并聚焦对应恢复动作。
   const draftChip = button('个人草稿待处理', () => {
     activateFace('notes');
+    if (studio) selectNoteArea('write');
     const status = app.editor?.status;
     const editor = app.editor;
     const target = status === 'conflict' && editor?.conflictButton ? editor.conflictButton
@@ -304,7 +338,10 @@ export function pageDetail(app, data) {
   const toolsEntry = button('工具', () => {
     if (narrowTools.matches) toolsPanel.showModal(); else toolsPanel.open = true;
   }, false, {class: 'quiet page-tools-entry', 'aria-haspopup': 'dialog'});
-  toolsPanel.addEventListener('close', () => { if (toolsEntry.isConnected) toolsEntry.focus({preventScroll: true}); });
+  toolsPanel.addEventListener('close', () => {
+    const trigger=studio?lastToolTrigger:toolsEntry;
+    if(trigger?.isConnected&&!trigger.hidden)trigger.focus({preventScroll:true});
+  });
   const narrowTools = matchMedia('(max-width:1279px)');
   const placeTools = () => {
     if (narrowTools.matches) {
@@ -320,7 +357,8 @@ export function pageDetail(app, data) {
   const onNarrowTools = () => placeTools();
   narrowTools.addEventListener?.('change', onNarrowTools);
   app.disposables.push(() => narrowTools.removeEventListener?.('change', onNarrowTools));
-  const toolsRoot = el('div', {class: 'page-tools stack'}, objectSummary, anomalySlot, switchRow, faceZone);
+  revealTools=()=>{if(narrowTools.matches&&!toolsPanel.open)toolsPanel.showModal();};
+  const toolsRoot = el('div', {class: 'page-tools stack'}, studio?toolTitle:null,objectSummary, anomalySlot, studio?null:switchRow, faceZone);
   aside.append(toolsRoot);
   placeTools();
 
@@ -405,7 +443,7 @@ export function pageDetail(app, data) {
   const closeCompare = button('结束固定比较', () => {
     compareSerial++; compareData = null; compareReleases.splice(0).forEach(fn => fn()); comparison.replaceChildren(); comparison.hidden = true; original.hidden = false;
     compareControls.hidden = true; fixedLabel.hidden = true; reading.classList.remove('is-comparing'); layout.classList.remove('with-fixed-compare'); compareButton.disabled = false;
-    pageActions.querySelector('summary').focus();
+    (studio?(innerWidth<=767?readingMenu:openCompare):pageActions.querySelector('summary')).focus();
   }); compareControls.querySelector('.row').append(closeCompare);
   // Escape handles the topmost layer: an open dialog or a fullscreen element wins,
   // then an open fixed comparison ends without the same keypress also leaving the
@@ -418,22 +456,47 @@ export function pageDetail(app, data) {
   };
   document.addEventListener('keydown', escapeCompare, true);
   app.disposables.push(() => document.removeEventListener('keydown', escapeCompare, true));
-  const pageActions = detail('页面操作', el('div', {class: 'stack'}, openCompare, styleReference));
-  pageActions.classList.add('page-actions');
+  const pageActions = studio?el('div',{class:'studio-page-actions'},el('div',{class:'row wrap'},openCompare,styleReference)):detail('页面操作',el('div',{class:'stack'},openCompare,styleReference));
+  if(!studio)pageActions.classList.add('page-actions');
   pageActions.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || !pageActions.open) return;
     event.preventDefault(); event.stopPropagation(); pageActions.open = false;
-    pageActions.querySelector('summary').focus();
+    (studio?(innerWidth<=767?readingMenu:openCompare):pageActions.querySelector('summary')).focus();
   });
-  const toolbar = el('div', {class: 'toolbar reading-toolbar'},
-    button('回到整稿画廊', () => app.go({surface: 'gallery'}), false, {class: 'quiet'}), layerSelect, pageActions);
-  if (['original_image', 'svg', 'ppt'].includes(layer)) {
+  const backToGallery = button('回到整稿画廊', () => app.go({surface: 'gallery'}), false, {class: 'quiet studio-reading-return'});
+  let readingMenuBody = null;
+  const restoreReadingActions = () => {
+    toolbar.prepend(backToGallery);
+    toolbar.insertBefore(pageActions, readingMenu);
+  };
+  const readingMenu = button('阅读设置', () => {
+    readingMenuBody = el('div', {class:'studio-reading-menu-body stack'}, backToGallery, pageActions);
+    let activated = false;
+    const dialog = modal('阅读设置', readingMenuBody);
+    // Return the same buttons before their own action runs. Fixed comparison and
+    // navigation keep their normal identity, focus, and disposal behavior.
+    readingMenuBody.addEventListener('click', event => {
+      if (!event.target.closest('button')) return;
+      activated = true; dialog.close(); restoreReadingActions();
+    }, {capture:true});
+    dialog.onclose = () => {
+      restoreReadingActions();readingMenuBody = null;
+      if (!activated && !disposed) (matchMedia('(max-width:767px)').matches?readingMenu:backToGallery).focus({preventScroll:true});
+    };
+  }, false, {class:'studio-reading-menu', 'aria-haspopup':'dialog'});
+  const toolbar = el('div', {class: 'toolbar reading-toolbar'}, backToGallery, layerSelect, pageActions, studio?readingMenu:null);
+  if(studio) {
+    const menuResize = () => { if (innerWidth > 767 && readingMenuBody?.isConnected) readingMenuBody.closest('dialog')?.close(); };
+    addEventListener('resize',menuResize);
+    app.disposables.push(() => {removeEventListener('resize',menuResize);if(readingMenuBody?.isConnected)readingMenuBody.closest('dialog')?.close();});
+  }
+  if (!studio && ['original_image', 'svg', 'ppt'].includes(layer)) {
     const zoom = el('select', {'aria-label': '阅读缩放'}, [.5, .75, 1, 1.25, 1.5, 2, 3].map(value => el('option', {value}, `${value * 100}%`)));
     zoom.value = String(app.route.zoom || 1); zoom.addEventListener('change', () => {
       const value = Number(zoom.value); node.querySelectorAll('.page-image-viewport>.stack,.page-image-viewport>.pooled-image').forEach(image => { image.style.width = `${value * 100}%`; image.style.height = `${value * 100}%`; });
       app.route.zoom = value; history.replaceState(null, '', routeHash(app.info, app.route)); app.savePosition();
     }); pageActions.querySelector(':scope > div').append(el('label', {}, '阅读缩放 ', zoom));
   }
-  toolbar.insertAdjacentElement('afterbegin', toolsEntry);
+  if(studio){toolbar.append(switchRow);toolsEntry.hidden=true;}else toolbar.insertAdjacentElement('afterbegin', toolsEntry);
   node.append(chain, toolbar, update, compareControls, layout, toolsPanel); return node;
 }

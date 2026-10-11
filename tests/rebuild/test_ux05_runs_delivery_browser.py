@@ -124,11 +124,12 @@ def test_gallery_comparison_entry_stays_on_the_toolbar(ux05_browser):
     expect(page.locator('.gallery-viewport')).to_have_attribute('data-mode', 'compare')
 
 
-def test_file_area_orders_version_purpose_result_with_recovery_secondary(ux05_browser):
+@pytest.mark.parametrize('ui',['studio','v2'])
+def test_file_area_orders_version_purpose_result_with_recovery_secondary(ux05_browser,ui):
     from playwright.sync_api import expect
     page, server, path, store = ux05_browser
     url = server.start()
-    page.goto(url)
+    page.goto(url+ui+'/')
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('button', name='文件', exact=True).click()
@@ -137,10 +138,16 @@ def test_file_area_orders_version_purpose_result_with_recovery_secondary(ux05_br
     # 版本—用途—结果：正式用途在前，工程恢复包退到辅助折叠，需要时才展开。
     expect(files.get_by_role('button', name='生成正式交付包', exact=True)).to_be_visible()
     expect(files.get_by_role('button', name='生成审阅包', exact=True)).to_be_visible()
-    recovery = files.locator('details.export-recovery')
-    expect(recovery.get_by_role('button', name='生成内部工程包', exact=True)).to_be_hidden()
-    recovery.locator('summary').click()
-    expect(recovery.get_by_role('button', name='生成内部工程包', exact=True)).to_be_visible()
+    if ui=='studio':
+        expect(page.get_by_role('button', name='生成内部工程包', exact=True)).to_have_count(0)
+        files.get_by_role('button',name='内部工程恢复包',exact=True).click()
+        expect(page.get_by_role('dialog').get_by_role('button',name='生成内部工程包',exact=True)).to_be_visible()
+        page.get_by_role('dialog').get_by_role('button',name='关闭',exact=True).click()
+    else:
+        recovery = files.locator('details.export-recovery')
+        expect(recovery.get_by_role('button', name='生成内部工程包', exact=True)).to_be_hidden()
+        recovery.locator('summary').click()
+        expect(recovery.get_by_role('button', name='生成内部工程包', exact=True)).to_be_visible()
     expect(files.get_by_role('heading', name='生成结果', exact=True)).to_be_visible()
 
 

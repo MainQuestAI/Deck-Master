@@ -197,7 +197,7 @@ def test_cli_accept_auto_opens_workbench_after_first_content(tmp_path, monkeypat
         assert payload["review_url"], "first content triggers the automatic workbench URL"
         assert payload["view_status"] == "opened"
         assert opened and opened[0] == payload["review_url"]
-        assert payload["review_url"].endswith("/v2/"), "the default entry is the v2 workbench"
+        assert payload["review_url"].endswith("/studio/"), "the default entry is the Studio workbench"
         # The service is real and healthy without any further user command.
         origin = urllib.parse.urlsplit(payload["review_url"])._replace(path="", query="").geturl()
         status, _, health = _get_json(origin + "/api/health")

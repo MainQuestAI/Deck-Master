@@ -324,8 +324,8 @@ def test_cli_no_open_workbench_port_and_help(tmp_path, monkeypatch, capsys):
     result_code = cli.main(['workbench', '--registry', str(reg), '--no-open', '--json'])
     payload = json.loads(capsys.readouterr().out)
     assert result_code == (0 if payload['ui_available'] else 3)
-    assert payload['url'].endswith('/v2/') and payload['project_id'] is None
-    assert payload['mode'] == 'v2' and payload['service_version']
+    assert payload['url'].endswith('/studio/') and payload['project_id'] is None
+    assert payload['mode'] == 'studio' and payload['service_version']
     assert cli.main(['workbench', '--registry', str(reg), '--stop']) == 0
     capsys.readouterr()
     p = project(tmp_path / 'project')

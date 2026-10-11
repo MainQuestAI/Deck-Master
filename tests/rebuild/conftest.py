@@ -6,6 +6,7 @@ user's installed version (isolated until T05 restructures packaging).
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -17,6 +18,28 @@ if str(SRC_DIR) not in sys.path:
 
 from deck_master.models import new_document  # noqa: E402
 from deck_master.store import Store  # noqa: E402
+
+
+# Regression: ISSUE-003 — ambient HTTP_PROXY/HTTPS_PROXY (common on developer
+# machines) routed the tests' loopback requests through the proxy, so host
+# boundary tests received the proxy's 502 instead of the server's 403.
+# Found by /qa on 2026-10-10
+# Report: .gstack/qa-reports/run-20261010T025115Z/
+@pytest.fixture(autouse=True, scope="session")
+def _bypass_ambient_proxy_for_loopback_tests():
+    proxy_vars = ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY",
+                  "http_proxy", "https_proxy", "all_proxy")
+    saved = {name: os.environ.pop(name, None) for name in proxy_vars}
+    os.environ["NO_PROXY"] = "*"
+    os.environ["no_proxy"] = "*"
+    yield
+    for name, value in saved.items():
+        if value is None:
+            os.environ.pop(name, None)
+        else:
+            os.environ[name] = value
+    os.environ.pop("NO_PROXY", None)
+    os.environ.pop("no_proxy", None)
 
 
 def pytest_addoption(parser):

@@ -33,6 +33,10 @@ async function request(path, options) {
 }
 export function readableError(error) {
   const labels = {
+    material_upload_invalid:'材料文件未接收。请检查支持的文件类型、文件名及 64 MiB 大小限制；已有材料保留。',
+    material_upload_not_found:'尚未找到这个文件的接收记录。可重新选择原文件，沿原编号继续上传。',
+    material_upload_conflict:'此接收编号对应另一份文件。已接收内容保留，请重新选入要添加的文件。',
+    material_upload_changed:'已接收文件与原记录不一致，未改项目输入。请重新选入文件并核对。',
     visual_reference_conflict: '参考或项目已更新，要求仍保留，请回当前版本核实后重新分析。',
     visual_reference_invalid: '截图或分析结果不满足要求，请检查格式、范围和参考冲突。',
     icon_basis_changed:'图标对象或页面版本已变化。范围和意见保留，请重新定位并确认。',

@@ -12,6 +12,38 @@ import {changesetDesk} from './changeset-desk.js';
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
+  get editor() { return this._editor; }
+  set editor(value) {
+    this._editor = value;
+    if (!value) return;
+    value.onRestore = record => this.restoreDraft(value, record);
+    value.onStateChanged = () => {
+      if (this.editor === value && !value.disposed) this.root.dispatchEvent(new CustomEvent('draft-state-changed'));
+    };
+  }
+  restoreDraft(previous, record) {
+    if (this.editor !== previous || previous.disposed || this.navigationPending) return false;
+    if (!previous.archiveLocal()) { previous.updateStatus(); return false; }
+    previous.persist();
+    if (previous.storageError) { previous.updateStatus(); return false; }
+    let replacement;
+    try {
+      localStorage.setItem(previous.activeKey, JSON.stringify(record));
+      previous.disposed = true; clearTimeout(previous.timer);
+      replacement = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef,
+        {readonly: previous.readonly, exactRevision: previous.exactRevision});
+      this.editor = replacement;
+      const node = replacement.mount();
+      previous.node.replaceWith(node);
+    } catch {
+      if (replacement) replacement.disposed = true;
+      this.editor = previous; previous.disposed = false; previous.persist();
+      previous.note = '草稿恢复未完成，原输入仍保留，请重试或下载恢复文件。'; previous.updateStatus();
+      return false;
+    }
+    this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: replacement}));
+    return true;
+  }
   summaryURL(revision=null){const q=new URLSearchParams();if(revision)q.set('revision',revision);if(this.health.ui_capabilities?.includes('result_reading.v1'))q.set('personal','1');return '/api/view/summary'+(q.size?'?'+q:'');}
   // Bind lists to the supplied projection. A fallback summary without an etag
   // must not inherit the previous work surface's personal-reading snapshot.
@@ -26,18 +58,6 @@ export class Project {
     });
     this.route = readRoute(info, this.returnTo, summary);
     addEventListener('hashchange', () => this.loadRoute());
-    this.root.addEventListener('draft-restore-local', event => {
-      const previous = this.editor;
-      try {
-        localStorage.setItem(previous.activeKey, JSON.stringify(event.detail));
-        const editor = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef, {readonly: previous.readonly, exactRevision: previous.exactRevision});
-        const section = event.target.closest('.personal-draft');
-        this.editor = editor; section.replaceWith(editor.mount());
-        this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: editor}));
-      } catch {
-        this.setNotice('本机缓冲不可用，请先下载恢复文件。'); previous.disposed = false;
-      }
-    });
     this.root.addEventListener('business-committed', event => {
       if (event.detail.action !== 'history.restore') return;
       const revision = event.detail.result.revision_id;
@@ -45,7 +65,7 @@ export class Project {
       this.notice?.append(button('查看恢复后的版本', () => this.go({surface: 'runs', revision, task_id: null, runs_area: 'versions'})));
     });
     addEventListener('beforeunload', () => this.editor?.persist());
-    addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。'));
+    addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true));
     await this.loadRoute(this.route, false);
     if (this.health.ui_capabilities?.includes('run_desk.v1')) {
       this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), value => {
@@ -58,7 +78,7 @@ export class Project {
         }
         this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
         this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
-      }, error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。'), this.latest);
+      }, error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。', {error:true}), this.latest);
       this.summaryPoll.start();
       this.root.addEventListener('business-state-changed', () => this.summaryPoll.refresh());
       addEventListener('pagehide', () => this.summaryPoll.stop());
@@ -69,6 +89,12 @@ export class Project {
     const serial = ++this.generation;
     const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
     this.navigationPending = true;
+    // Keep the old snapshot visible, but do not accept actions against it while
+    // the requested version is loading. Otherwise its handlers can supersede
+    // the new read with an old revision or lose a subarea choice on remount.
+    if (this.main) { this.main.inert = true; this.main.setAttribute('aria-busy', 'true'); }
+    if (this.navigationStatus) this.navigationStatus.hidden = false;
+    announce('正在读取工作面');
     try {
       const [info, latest] = await Promise.all([get('/api/project'), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
@@ -115,6 +141,7 @@ export class Project {
       this.editor?.dispose(); this.editor = null;
       this.disposables.forEach(dispose => dispose()); this.disposables = [];
       this.info = info; this.latest = latest; this.summary = summary; this.route = route;
+      this.summaryPoll?.useSnapshot(latest);
       this.historical = summary.revision_id !== latest.revision_id;
       this.readonly = this.historical || Boolean(info.sample?.readonly);
       history.replaceState(null, '', routeHash(this.info, route));
@@ -130,7 +157,13 @@ export class Project {
         this.root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('无法读取这个位置', readableError(error),
           button('打开项目当前版本', () => { history.replaceState(null, '', location.pathname + location.search); this.loadRoute({...this.route, surface: 'overview', page_id: null, task_id: null, revision: null}); }))));
       }
-    } finally { if (serial === this.generation) this.navigationPending = false; }
+    } finally {
+      if (serial === this.generation) {
+        this.navigationPending = false;
+        if (this.navigationStatus) this.navigationStatus.hidden = true;
+        if (this.main) { this.main.inert = false; this.main.removeAttribute('aria-busy'); }
+      }
+    }
   }
   go(patch) {
     const route = {...this.route, ...patch};
@@ -159,9 +192,14 @@ export class Project {
       catch (error) { this.setNotice('阅读位置尚未保存到项目。' + readableError(error)); }
     });
   }
-  syncState(message) {
+  syncState(message, {error = false} = {}) {
     if (!this.syncNotice || !this.syncRow) return;
-    this.syncNotice.textContent = message; this.syncRow.hidden = !message;
+    this.syncMessage = message;
+    this.syncNotice.textContent = this.syncCompact && message ? error ? '同步中断 · 已读内容与草稿保留' : '项目有新状态 · 当前阅读版本保持' : message;
+    this.syncRow.dataset.state = error ? 'error' : 'updated';
+    this.syncRow.hidden = !message;
+    if (this.syncRetry) this.syncRetry.hidden = !error;
+    if (this.syncCurrent) this.syncCurrent.hidden = this.syncCompact && error;
   }
   setNotice(message, retry = false) {
     if (!this.notice) return;
@@ -188,10 +226,33 @@ export class Project {
     const writable = actions.filter(item => item.writable);
     const fact = (term, value) => el('div', {}, el('dt', {}, term), el('dd', {}, value));
     const exportsAction = actions.find(item => item.action === 'exports');
-    modal('连接状态', el('div', {class: 'stack'},
+    const connection = el('span', {role:'status'}, '正在核实连接…');
+    let request;
+    const verify = button('核实连接', async () => {
+      request?.abort(); request = new AbortController();
+      const active = request;
+      verify.disabled = true; reopen.disabled = true;
+      connection.textContent = '正在核实连接…';
+      const timeout = setTimeout(() => active.abort(), 5000);
+      try {
+        const [health, info] = await Promise.all([get('/api/health', {signal:active.signal}), get('/api/project', {signal:active.signal})]);
+        if (health.status !== 'ok' || info.project_identity !== this.info.project_identity) throw new Error('服务中的项目身份已变化，请从项目列表重新打开。');
+        if (dialog.open && request === active) {
+          connection.textContent = `已连接 · ${health.service_version || '本机核心'}`;
+          reopen.disabled = false;
+        }
+      } catch (error) {
+        if (dialog.open && request === active) connection.textContent = '未能连接 · ' + (error.name === 'AbortError' ? '本次核实超时。' : readableError(error)) + ' 已读内容与草稿保持。';
+      } finally {
+        clearTimeout(timeout);
+        if (dialog.open && request === active) verify.disabled = false;
+      }
+    });
+    const reopen = button('重新读取当前工作面', () => { dialog.close(); this.loadRoute({...this.route}); }, false, {disabled:true});
+    const dialog = modal('连接状态', el('div', {class: 'stack'},
       el('p', {}, '本机工作区，项目数据仅保存在这台电脑。服务可达不等于制作工具已接手；生成任务仍需复制制作要求后交接。'),
       el('dl', {class: 'request-facts stack'},
-        fact('本机服务', `已连接 · ${this.health.service_version || '本机核心'}`),
+        fact('本机服务', connection),
         fact('当前项目动作', writable.length ? `${writable.length} 项可用（${writable.map(item => actionLabels[item.action] || item.action).join('、')}）` : '没有可写动作'),
         fact('制作工具', '需交接 · 复制制作要求后到制作工具执行，不会自动开始'),
         fact('文件导出', exportsAction && exportsAction.writable
@@ -201,7 +262,9 @@ export class Project {
       blocked.length > 0 && el('details', {}, el('summary', {}, `受限动作 ${blocked.length} 项`),
         el('div', {class: 'stack'}, blocked.map(item => el('p', {class: 'muted'},
           `${actionLabels[item.action] || item.action}：${item.supported ? (reasons[item.reason] || item.reason || '该核心未提供此能力') : '该核心未提供此能力'}`)))),
-      el('p', {class: 'muted'}, '能力为当前核心与项目的实时投影；写操作仍由服务端独立校验。')));
+      el('p', {class: 'muted'}, '项目动作按已读版本显示；重新读取工作面可更新，写操作仍由服务端独立校验。')), [verify, reopen]);
+    dialog.addEventListener('close', () => request?.abort(), {once:true});
+    verify.click();
   }
   render(data) {
     const nav = el('nav', {class: 'nav', 'aria-label': '项目工作区'});
@@ -217,8 +280,14 @@ export class Project {
     this.notice = el('div', {class: 'notice', role: 'status', hidden: true});
     const banners = el('div', {class: 'banners'}, this.notice);
     if (this.business) banners.append(this.business.node);
-    this.syncNotice = el('p', {class: 'runtime-sync muted', role: 'status'});
-    this.syncRow = el('div', {class: 'runtime-sync-row', hidden: true}, this.syncNotice, button('读取项目最新状态', () => this.current()));
+    this.syncCompact = document.documentElement.dataset.workbenchUi === 'studio';
+    this.syncNotice = el('p', {class: 'runtime-sync', role: 'status'});
+    this.syncRetry = button('重试同步', () => this.summaryPoll?.refresh(), false, {hidden:true});
+    this.syncCurrent = button('读取项目最新状态', () => this.current());
+    this.syncRow = el('div', {class: 'runtime-sync-row', hidden: true},
+      this.syncCompact && icon('attention'), this.syncNotice,
+      el('div', {class:'row runtime-sync-actions'}, this.syncCompact && this.syncRetry,
+        this.syncCurrent, this.syncCompact && button('查看详情', () => modal('项目同步状态', el('div', {class:'stack'}, el('p', {}, this.syncMessage), el('p', {class:'muted'}, '同步只读取运行状态，不会派发任务或更换当前阅读版本。')), [button('核实连接', () => this.connectionInfo())]))));
     if (this.health.ui_capabilities?.includes('run_desk.v1')) banners.append(this.syncRow);
     if (this.historical) banners.append(el('div', {class: 'history-banner'}, el('strong', {}, '历史版本 · 只读'),
       el('span', {}, '你正在阅读过去保存的稿件；内容与比较保持固定。'), button('查看当前版本', () => this.current()), el('details', {}, el('summary', {}, '版本身份'), el('p', {}, `阅读 ${version(this.route.revision)} · 当前 ${version(this.latest.revision_id)}`))));
@@ -243,7 +312,8 @@ export class Project {
     const pending = this.summary.task_counts.awaiting_host || 0;
     // 顶栏入口承诺的是"查看待交接任务"：显式落到「正在进行」，不被记住的子区劫持。
     this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
-    const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿')),
+    this.navigationStatus = el('span', {class: 'status navigation-status', hidden: true}, '正在读取工作面');
+    const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿'), this.navigationStatus),
       this.pendingButton);
     this.root.className = 'shell';
     this.root.replaceChildren(aside, el('div', {class: 'content'}, top, banners, this.main));

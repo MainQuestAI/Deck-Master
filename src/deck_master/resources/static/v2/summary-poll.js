@@ -22,6 +22,13 @@ export class SummaryPoll {
     clearTimeout(this.timer);
     if (!this.stopped && !document.hidden) this.timer = setTimeout(() => this.refresh(), this.delay);
   }
+  useSnapshot(value) {
+    // A completed route read is newer than any poll already in flight. Retire
+    // that poll's value and error so it cannot roll the current basis backward.
+    this.generation++; this.delay = this.interval(value); this.again = false;
+    this.controller?.abort();
+    if (!this.busy) this.schedule();
+  }
   async refresh() {
     if (this.stopped || document.hidden) return;
     if (this.busy) { this.again = true; return; }

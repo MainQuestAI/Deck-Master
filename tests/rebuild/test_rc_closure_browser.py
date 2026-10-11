@@ -17,6 +17,9 @@ def open_face(page, name):
     entry = page.get_by_role('button', name='工具', exact=True)
     page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
     panel_open = page.locator('dialog.page-tools-panel[open]').count() > 0
+    if panel_open and page.locator('html[data-workbench-ui=studio]').count():
+        page.get_by_role('dialog', name='单页工具面板').get_by_role('button', name='回到画面', exact=True).click()
+        panel_open = False
     if entry.count() and entry.first.is_visible() and not panel_open:
         entry.click()
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
@@ -200,11 +203,12 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
         other = fresh.new_page()
         other.goto(url + '#' + page.url.split('#')[1])
         open_note_face(other)
-        other.get_by_text('恢复、下载与版本详情', exact=True).click()
+        other.get_by_role('button', name='备份与恢复', exact=True).click()
         other.get_by_label('恢复项目中的个人草稿').select_option(draft['draft_id'])
         open_opinion_face(other)
         other.get_by_role('button', name='对当前版本写新意见', exact=True).click()
         open_note_face(other)
+        other.get_by_role('button', name='写笔记', exact=True).click()
         expect(other.get_by_role('button', name='保存个人草稿', exact=True)).to_be_enabled()
         other.get_by_role('button', name='保存个人草稿', exact=True).click()
         expect(other.locator('.draft-state')).to_contain_text('已保存到项目')
@@ -230,7 +234,7 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
             restored = fresh.new_page()
             restored.goto(new_url + '#' + fragment)
             open_note_face(restored)
-            restored.get_by_text('恢复、下载与版本详情', exact=True).click()
+            restored.get_by_role('button', name='备份与恢复', exact=True).click()
             restored.get_by_label('恢复项目中的个人草稿').select_option(copied['draft_id'])
             open_opinion_face(restored)
             expect(restored.get_by_label('修改要求', exact=True)).to_have_value(state['text'])
@@ -383,7 +387,7 @@ def test_old_basis_copy_clears_scope_and_requirement_selection(workbench):
     ui_journal.save(store.project_root, draft=draft, expected_etag=record['etag'])
     goto()
     open_note_face(page)
-    page.get_by_text('恢复、下载与版本详情', exact=True).click()
+    page.get_by_role('button', name='备份与恢复', exact=True).click()
     choices = page.get_by_label('恢复项目中的个人草稿')
     choices.select_option(draft['draft_id'])
     open_opinion_face(page)
@@ -466,18 +470,24 @@ def test_requirement_recovers_on_a_new_port(workbench):
 
 @pytest.mark.parametrize('old_error', [False, True])
 def test_late_annotation_list_cannot_remove_a_saved_opinion(workbench, old_error):
-    page, _, _, _, goto, _ = workbench
+    page, _, store, _, goto, _ = workbench
     goto()
     opinion(page, '意见 A')
+    target_revision = store.current_revision_id()
     held = []
     def delay_first(route):
         response = route.fetch()
         if not held:
             held.append((route, response))
+            page.evaluate('() => { window.__heldAnnotationList = true; }')
         else:
             route.fulfill(response=response)
     page.route('**/api/annotations?*', delay_first)
     goto()
+    # Hash navigation returns before the new fixed snapshot is rendered. Do not
+    # select a mode on the previous page and then type into its replacement.
+    expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', target_revision)
+    page.wait_for_function('() => window.__heldAnnotationList === true')
     page.get_by_role('button', name='整页意见', exact=True).click()
     open_opinion_face(page)
     page.get_by_label('意见正文', exact=True).fill('意见 B')
@@ -584,7 +594,7 @@ def test_prepared_prompt_selection_mounts_one_recovery_panel(workbench):
         select.select_option(ref)
         # 恢复详情在笔记面且每次恢复替换后重建(默认收起):每轮先切面再重开。
         open_note_face(page)
-        recovery = page.get_by_text('恢复、下载与版本详情', exact=True)
+        recovery = page.get_by_role('button', name='备份与恢复', exact=True)
         expect(recovery).to_have_count(1)
         recovery.click()
         expect(page.get_by_role('button', name='下载草稿恢复文件', exact=True)).to_be_visible()

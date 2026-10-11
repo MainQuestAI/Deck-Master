@@ -52,6 +52,7 @@ deck_master = [
   "resources/icons/lucide/*",
   "resources/compiler/*.mjs",
   "resources/static/v2/*",
+  "resources/static/studio/*",
   "resources/static/v2/assets/deck-master-logo/*",
 ]
 

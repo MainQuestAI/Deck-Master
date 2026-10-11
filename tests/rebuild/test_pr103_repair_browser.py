@@ -7,11 +7,12 @@ import pytest
 import os
 import re
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin
 
 from test_ux04_content_annotations_browser import ux04_browser  # noqa: F401
 from test_styles import flow  # noqa: F401
 from test_visual_styles import image_bytes
+from test_style_content_browser import toggle_phase
 from deck_master.web import WorkbenchServer
 
 pytestmark = pytest.mark.browser
@@ -30,7 +31,7 @@ def test_saved_opinion_is_still_saved_after_reload(ux04_browser, next_opinion):
     page, server, _project, store = ux04_browser
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
-    info = page.request.get(page.url.split('#')[0] + 'api/project').json()
+    info = page.request.get(urljoin(page.url, '/api/project')).json()
     page.goto(page.url.split('#')[0] + '#' + urlencode({'project': info['project_identity'], 'surface': 'page',
         'page': 'p01', 'layer': 'original_image', 'revision': store.current_revision_id()}))
     page.get_by_role('button', name='整页意见', exact=True).click()
@@ -131,7 +132,7 @@ def test_screenshot_analysis_restore_cannot_override_a_manual_phase(flow):
         browser=runtime.chromium.launch(args=['--no-sandbox']);page=browser.new_page();held=[]
         try:
             page.goto(server.start());page.get_by_role('button',name='风格校准',exact=True).click()
-            page.get_by_label('风格参考来源').select_option('screenshot')
+            page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
             page.get_by_text('恢复项目中的截图分析与规范',exact=True).click()
             page.get_by_label('恢复已保存的截图分析').select_option(task['task_id'])
             expect(page.locator('.visual-style p[role=status]')).to_contain_text('分析已返回')
@@ -142,10 +143,11 @@ def test_screenshot_analysis_restore_cannot_override_a_manual_phase(flow):
             page.route('**/api/styles/references?*',delay)
             page.reload();page.wait_for_function('() => window.pr103ReferencesHeld === true')
             phase=page.locator('.visual-style .style-phase').nth(2)
-            phase.locator(':scope > summary').click()
+            page.locator('.visual-style > .studio-style-stages button').nth(2).click()
             held[0][0].fulfill(response=held[0][1])
             expect(page.locator('.visual-style p[role=status]')).to_contain_text('分析已返回')
-            expect(phase).to_have_attribute('open','')
+            expect(phase).to_be_visible()
+            expect(page.locator('.visual-style > .style-phase:visible')).to_have_count(1)
         finally:
             browser.close();server.stop()
 
@@ -213,7 +215,7 @@ def test_reference_preview_and_same_file_retry_after_not_found(flow):
         try:
             page.goto(server.start())
             page.get_by_role('button', name='风格校准', exact=True).click()
-            page.get_by_role('combobox', name='风格参考来源').select_option('screenshot')
+            page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
             upload = page.get_by_label('导入参考截图', exact=True)
             expect(upload).to_be_enabled()
             def drop(route):
@@ -281,7 +283,7 @@ def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection)
         page.on('pageerror', lambda error: errors.append(str(error)))
         try:
             page.goto(server.start()); page.get_by_role('button', name='风格校准', exact=True).click()
-            page.get_by_label('风格参考来源').select_option('screenshot')
+            page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
             upload = page.get_by_label('导入参考截图', exact=True)
             expect(upload).to_be_enabled()
             # Choosing the source writes a private draft independently of the
@@ -381,7 +383,7 @@ def test_untrusted_upload_failure_keeps_original_request(flow, status, body):
         browser = runtime.chromium.launch(args=['--no-sandbox']); page = browser.new_page(); requests = []
         try:
             page.goto(server.start()); page.get_by_role('button',name='风格校准',exact=True).click()
-            page.get_by_label('风格参考来源').select_option('screenshot')
+            page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
             upload = page.get_by_label('导入参考截图',exact=True)
             expect(upload).to_be_enabled()
             def fault(route):
@@ -420,7 +422,7 @@ def test_committed_upload_with_lost_response_recovers_without_new_attempt(flow):
         browser = runtime.chromium.launch(args=['--no-sandbox']); page = browser.new_page(); requests = []
         try:
             page.goto(server.start()); page.get_by_role('button',name='风格校准',exact=True).click()
-            page.get_by_label('风格参考来源').select_option('screenshot')
+            page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
             upload = page.get_by_label('导入参考截图',exact=True); expect(upload).to_be_enabled()
             def lose_receipt(route):
                 requests.append(route.request.url)
@@ -457,10 +459,10 @@ def test_delayed_recipe_restore_does_not_close_manually_chosen_phase(flow, keybo
         release = [False]
         try:
             page.goto(server.start());page.get_by_role('button', name='风格校准', exact=True).click()
-            page.locator('.style-calibration > .style-phase').nth(1).locator(':scope > summary').click()
+            toggle_phase(page, 2)
             with page.expect_response(lambda response: '/api/drafts/save' in response.url and
                     response.request.post_data_json['draft']['content'].get('style_trial', {}).get('recipe_id') == recipe['recipe_id']) as saved:
-                page.get_by_label('已确认的风格版本').select_option(recipe['recipe_id'])
+                page.locator('.studio-recipe-card[data-recipe-id="'+recipe['recipe_id']+'"]').get_by_role('button', name='使用这版规范', exact=True).click()
             assert saved.value.ok
             assert saved.value.json()['record']['draft']['content']['style_trial']['recipe_id'] == recipe['recipe_id']
             expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
@@ -476,17 +478,19 @@ def test_delayed_recipe_restore_does_not_close_manually_chosen_phase(flow, keybo
             page.route('**/api/styles?*', delay)
             page.reload();page.wait_for_function('() => window.pr103RecipeHeld === true')
             phase = page.locator('.style-calibration > .style-phase').nth(2)
-            summary = phase.locator(':scope > summary')
+            stage = page.locator('.style-calibration > .studio-style-stages button').nth(2)
             if keyboard:
-                summary.focus();summary.press('Enter')
+                stage.focus();stage.press('Enter')
             else:
-                summary.locator('.style-phase-title').click()
-            assert phase.evaluate('node => node.open')
+                stage.click()
+            expect(phase).to_be_visible()
+            expect(stage).to_have_attribute('aria-pressed', 'true')
             release[0] = True
             for route, response in held:
                 route.fulfill(response=response)
-            expect(page.get_by_label('已确认的风格版本')).to_have_value(recipe['recipe_id'])
-            expect(phase).to_have_attribute('open', '')
+            expect(page.locator('.studio-recipe-card[data-recipe-id="'+recipe['recipe_id']+'"] button')).to_have_attribute('aria-pressed', 'true')
+            expect(phase).to_be_visible()
+            expect(stage).to_have_attribute('aria-pressed', 'true')
         finally:
             browser.close();server.stop()
 
@@ -572,16 +576,19 @@ def test_candidate_cards_show_real_fixed_images_and_release_on_navigation(flow, 
         try:
             page.goto(server.start());page.get_by_role('button',name='风格校准',exact=True).click()
             if source == 'screenshot':
-                page.get_by_label('风格参考来源').select_option('screenshot')
+                page.get_by_role('group', name='风格参考来源', exact=True).get_by_role('button', name='外部图片', exact=True).click()
                 page.get_by_text('恢复项目中的截图分析与规范',exact=True).click()
                 page.get_by_label('已确认的截图规范').select_option(recipe['recipe_id'])
                 expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
                 phase = page.locator('.visual-style .style-phase').nth(2)
             else:
-                page.locator('.style-calibration > .style-phase').nth(1).locator(':scope > summary').click()
-                page.get_by_label('已确认的风格版本').select_option(recipe['recipe_id'])
+                toggle_phase(page, 2)
+                page.locator('.studio-recipe-card[data-recipe-id="'+recipe['recipe_id']+'"]').get_by_role('button', name='使用这版规范', exact=True).click()
                 phase = page.locator('.style-calibration > .style-phase').nth(2)
-            phase.locator(':scope > summary').click()
+            if source == 'screenshot':
+                page.locator('.visual-style > .studio-style-stages button').nth(2).click()
+            else:
+                toggle_phase(page, 3)
             for id in ids:
                 card = phase.locator('[data-candidate-id="'+id+'"]')
                 card.scroll_into_view_if_needed()
@@ -638,6 +645,7 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
             entry.click()
             expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
         page.get_by_role('button', name='笔记', exact=True).click()
+        page.get_by_role('button', name='写笔记', exact=True).click()
         expect(page.get_by_role('textbox', name='个人草稿', exact=True)).to_be_visible()
 
     def save_pair(body, note):
@@ -683,8 +691,8 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
     # 恢复列表同时列出两份；从真实 select 恢复甲（不得用合成事件）。
     goto_page()
     open_note()
-    recovery = page.locator('details.source-detail').filter(has_text='恢复、下载与版本详情').first
-    recovery.locator('summary').click()
+    page.get_by_role('button', name='备份与恢复', exact=True).click()
+    recovery = page.locator('.studio-note-recovery')
     select = page.get_by_role('combobox', name='恢复项目中的个人草稿')
     expect(select).to_be_visible()
     select.select_option(value=first_record['draft']['draft_id'])
@@ -699,6 +707,7 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
     second_record = next(record for record in page.request.get(base + 'api/drafts').json()['records']
                          if record['draft']['content']['text'] == '乙的私人备注')
     open_note()
+    page.get_by_role('button', name='备份与恢复', exact=True).click()
     recovery.get_by_role('combobox', name='恢复项目中的个人草稿').select_option(value=second_record['draft']['draft_id'])
     expect(editor).to_have_value('乙的私人备注')
     open_opinions()

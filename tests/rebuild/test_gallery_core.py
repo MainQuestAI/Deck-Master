@@ -92,7 +92,7 @@ def test_reorder_does_not_change_personal_selection_or_reference_basis(project):
     assert updated['selected_page_ids'] == ['p01', 'p03'] and updated['references'] == saved['state']['references']
 
 
-@pytest.mark.parametrize('case', ['project', 'page', 'chapter', 'reference', 'duplicate', 'compare', 'overflow', 'anchor'])
+@pytest.mark.parametrize('case', ['project', 'page', 'chapter', 'reference', 'duplicate', 'compare', 'compare_overflow', 'overflow', 'anchor'])
 def test_invalid_gallery_state_never_overwrites_saved_selection(project, case):
     good = state(project); saved = gallery_state.save(project, state=good)['record']; bad = copy.deepcopy(good)
     if case == 'project': bad['project_identity'] = 'a' * 64
@@ -101,7 +101,8 @@ def test_invalid_gallery_state_never_overwrites_saved_selection(project, case):
     elif case == 'reference': bad['references'] = [{'page_id': 'p01', 'revision_id': bad['revision_id'], 'original_ref': original(project, 1)}]
     elif case == 'duplicate': bad['selected_page_ids'] = ['p01', 'p01']
     elif case == 'compare': bad.update(mode='compare', selected_page_ids=['p01'])
-    elif case == 'overflow': bad['selected_page_ids'] = ['p01', 'p02', 'p03', 'p04', 'p05']
+    elif case == 'compare_overflow': bad.update(mode='compare', selected_page_ids=['p01', 'p02', 'p03', 'p04', 'p05'])
+    elif case == 'overflow': bad['selected_page_ids'] = [f'p{i:03}' for i in range(301)]
     else: bad['anchor']['page_id'] = 'p99'
     with pytest.raises((LocalStateError, ValueError)):
         gallery_state.save(project, state=bad, expected_etag=saved['etag'])
@@ -280,3 +281,15 @@ def test_mixed_gallery_factory_keeps_originals_and_declares_synthetic_layers(tmp
     for entry in previous['pages']:
         assert store.read_object_bytes(store.read_object_json(entry['blueprint'])['file'])
     assert samples.sample_info(project)['readonly']
+
+
+def test_gallery_production_selection_exceeds_comparison_limit_without_mutation(project):
+    before = business(project)
+    value = state(project)
+    value['selected_page_ids'] = ['p01', 'p02', 'p03', 'p04', 'p05']
+    saved = gallery_state.save(project, state=value)['record']
+    assert gallery_state.get(project)['record']['state']['selected_page_ids'] == value['selected_page_ids']
+    for mode in ('continuous', 'grid'):
+        value['mode'] = mode
+        saved = gallery_state.save(project, state=value, expected_etag=saved['etag'])['record']
+    assert business(project) == before

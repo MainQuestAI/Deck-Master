@@ -1,6 +1,6 @@
 """B02 entry selection and project-effective capabilities; synthetic only.
 
-Covers the `view --open` entry selection — the default opens the v2
+Covers the `view --open` entry selection — the default opens the Studio
 workbench; the retired legacy choice is rejected (JSON, exit codes,
 service
 reuse with `workbench`), the /api/project effective_actions projection
@@ -190,8 +190,8 @@ def test_view_ui_flag_reuses_service_and_matches_workbench(modern, capsys):
         rc = cli.main(["view", "--project", str(modern), "--open", "--no-open", "--json"])
         assert rc == 0
         default_entry = json.loads(capsys.readouterr().out)
-        assert default_entry["ui"] is None
-        assert default_entry["review_url"].endswith("/v2/")
+        assert default_entry["ui"] == "studio"
+        assert default_entry["review_url"].endswith("/studio/")
 
         rc = cli.main(["view", "--project", str(modern), "--open", "--ui", "v2", "--no-open", "--json"])
         assert rc == 0
@@ -231,4 +231,8 @@ def test_view_ui_requires_open_and_validates_choice(modern, capsys):
 def test_skill_and_cli_expose_the_entry_contract():
     skill = SKILL.read_text("utf-8")
     assert "view --open --ui v2" in skill and "默认入口已切换为新工作台" in skill
-    assert '"--ui", choices=("v2",)' in (Path(cli.__file__).resolve()).read_text("utf-8")
+    parser = cli.build_parser()
+    assert parser.parse_args(["workbench"]).ui == "studio"
+    for ui in ("v2", "studio"):
+        assert parser.parse_args(["workbench", "--ui", ui]).ui == ui
+        assert parser.parse_args(["view", "--project", "/unused", "--open", "--ui", ui]).ui == ui

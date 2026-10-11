@@ -48,7 +48,7 @@ export function taskHandoff(app, task, groups) {
   read(); return {node, dispose: () => { disposed = true; }};
 }
 export function changeHandoffs(app) {
-  const node = el('section', {class: 'panel change-handoffs', 'aria-label': '持久修改交接'});
+  const node = el('section', {'data-container':'section', class: 'panel change-handoffs', 'aria-label': '持久修改交接'});
   const heading = el('div', {class: 'panel-head'}, el('h2', {}, '修改交接'), el('span', {class: 'status'}, '当前执行状态'));
   const list = el('div', {class: 'change-list stack'}), detail = el('div', {class: 'handoff-detail stack'});
   const notice = el('p', {role: 'status', class: 'muted'});

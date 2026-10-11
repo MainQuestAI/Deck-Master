@@ -16,17 +16,17 @@ from .store import Store
 from .web import WorkbenchHandler, _static_dir
 
 
-def open_workbench(*, project=None, registry_file=None, ui="v2", port=0, open_browser=True, stop=False):
-    if ui != "v2":
-        raise LocalStateError("ui", "only the v2 workbench UI is available")
+def open_workbench(*, project=None, registry_file=None, ui="studio", port=0, open_browser=True, stop=False):
+    if ui not in ("v2", "studio"):
+        raise LocalStateError("ui", "choose the v2 or studio workbench UI")
     runtime._check_port(port)
     desc = runtime.descriptor(project=project) if project else runtime.descriptor(registry=registry.registry_path(registry_file))
     if stop:
         return runtime.stop(desc)
     entry = registry.register(registry_file, project)["project"] if project else None
     state = runtime.ensure(desc, port=port)
-    available = (_static_dir() / "v2" / "index.html").is_file()
-    url = state["url"] + "v2/"
+    available = (_static_dir() / ui / "index.html").is_file()
+    url = state["url"] + ui + "/"
     opened = False
     if open_browser and available:
         try:
@@ -105,8 +105,11 @@ class LauncherHandler(WorkbenchHandler):
             self._send_json({"error": "loopback Host required"}, 403)
             return
         parsed = urlparse(self.path)
-        if parsed.path in ("/", "/v2", "/v2/") or parsed.path.startswith("/v2/"):
-            self._serve_v2("/v2/" if parsed.path == "/" else parsed.path)
+        if parsed.path in ("/", "/studio", "/studio/") or parsed.path.startswith("/studio/"):
+            self._serve_ui("/studio/" if parsed.path == "/" else parsed.path, "studio")
+            return
+        if parsed.path in ("/v2", "/v2/") or parsed.path.startswith("/v2/"):
+            self._serve_v2(parsed.path)
             return
         if parsed.path == "/api/session":
             self._send_json({"token": self.write_token})
@@ -114,7 +117,7 @@ class LauncherHandler(WorkbenchHandler):
         if parsed.path == "/api/health":
             self._send_json({"status": "ok", **self.runtime_state,
                              "registry_identity": self.runtime_state["identity"],
-                             "ui_available": (self.static_dir / "v2" / "index.html").is_file()})
+                             "ui_available": (self.static_dir / "studio" / "index.html").is_file()})
             return
         if parsed.path == "/api/projects":
             try:
@@ -153,10 +156,10 @@ class LauncherHandler(WorkbenchHandler):
                     raise LocalStateError("body", "open accepts an entry_id and optional ui")
                 target = registry.registered_path(self.registry_path, data["entry_id"])
                 result = open_workbench(project=target, registry_file=self.registry_path,
-                                        ui=data.get("ui", "v2"), open_browser=False)
-                if result["mode"] == "v2":
+                                        ui=data.get("ui", "studio"), open_browser=False)
+                if result["mode"] in ("v2", "studio"):
                     from urllib.parse import urlencode
-                    result["url"] += "?" + urlencode({"launcher": self.runtime_state["url"] + "v2/"})
+                    result["url"] += "?" + urlencode({"launcher": self.runtime_state["url"] + result['mode'] + "/"})
             elif self.path == "/api/directories/pick":
                 if data:
                     raise LocalStateError("body", "directory picker takes no paths or scripts")

@@ -22,7 +22,7 @@ def _validate(store, current, identity, state):
         raise LocalStateError('selected_page_ids', 'selected page is not in the fixed version')
     if state['anchor']['page_id'] is not None and state['anchor']['page_id'] not in ids:
         raise LocalStateError('anchor/page_id', 'reading anchor is not in the fixed version')
-    if state['mode'] == 'compare' and len(selected) < 2:
+    if state['mode'] == 'compare' and not 2 <= len(selected) <= 4:
         raise LocalStateError('selected_page_ids', 'comparison requires two to four pages')
     if state['filter']['chapter_id'] is not None:
         from .content_plan import projection
