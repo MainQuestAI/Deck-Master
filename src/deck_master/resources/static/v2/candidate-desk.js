@@ -332,7 +332,7 @@ export function candidateBatch(app) {
   }
   function eligible(row) {
     if (!row || row.selection_allowed===false || row.status!=='available' || row.candidate.status!=='available') return false;
-    if (['keep_current','unreadable'].includes(row.decision?.state)) return false;
+    if (row.decision?.state==='keep_current') return false;
     return (row.generation_basis || row.content_basis)?.status==='current';
   }
   const groupKey = row => row.change_id || 'ungrouped';

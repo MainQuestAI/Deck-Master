@@ -18,7 +18,7 @@ from .models import (ModelError, bump_revision, canonical_json_bytes, compute_in
                      content_identity, require_writer, sha256_bytes, validate_schema,
                      validate_task_semantics)
 from .snapshots import load_snapshot
-from .store import Store
+from .store import Store, StoreError
 
 WRITER = 'candidates.v1'
 CONTENT_WRITER = 'content-candidates.v1'
@@ -477,7 +477,6 @@ def listing(project, *, page_id=None, revision=None):
         state = _state(store, document, candidate, task)
         reason = ('already_adopted' if state['status'] != 'available' else
                   'kept_current' if state.get('decision', {}).get('state') == 'keep_current' else
-                  'unreadable' if state.get('decision', {}).get('state') == 'unreadable' else
                   'basis_changed' if (state.get('generation_basis') or state.get('content_basis') or {}).get('status') != 'current' else None)
         if not reason and task.get('stage_request', {}).get('icon_recipe_ref'):
             try:
@@ -486,10 +485,22 @@ def listing(project, *, page_id=None, revision=None):
             except operations.OperationError as exc:
                 reason = exc.error_code
         change_ref = task.get('change_binding', {}).get('change_ref')
-        change = store.read_object_json(change_ref) if change_ref else None
+        change = None
+        group_status = 'absent'
+        if change_ref:
+            try:
+                change = store.read_object_json(change_ref)
+                validate_schema('change_set', change)
+                if change['project_id'] != document['project_id']:
+                    raise ValueError('foreign change group')
+                group_status = 'available'
+            except (StoreError, ModelError, OSError, ValueError, KeyError, TypeError):
+                change = None
+                group_status = 'unreadable'
         rows.append({'candidate': candidate, 'ref': ref, 'result_kind': result_kind(candidate),
                      'style_recipe_ref': task.get('stage_request', {}).get('style_recipe_ref'),
                      'change_id': change.get('change_id') if change else None,
+                     'change_group_status': group_status,
                      'instruction': task.get('instruction', ''),
                      'selection_allowed': reason is None, 'selection_blocked_reason': reason, **state})
     return {'project_id': document['project_id'], 'revision_id': document['revision_id'], 'candidates': rows}

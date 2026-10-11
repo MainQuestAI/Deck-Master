@@ -70,6 +70,8 @@ export function candidateCards(app) {
         el('div',{class:'studio-candidate-footer'},choice,actions))
         :el('article', {class:'candidate-batch-row candidate-card', 'data-candidate-id':record.candidate_id},choice,heading,
           preview,el('p',{class:'muted'},`${created} · ${candidateState(row)} · ${shortRef(row.ref?.sha256)}`),actions);
+      if(row.decision?.state==='unreadable')node.append(el('p',{class:'field-error'},'决定待核实；采用条件以正式预览为准。'));
+      if(row.change_group_status==='unreadable')node.append(el('p',{class:'field-error'},'修改组信息不可读；其它候选仍可继续处理。'));
       const card = {node,preview,row,revision,title,key:revision + ':' + row.ref?.sha256,visible:false};
       cards.set(node,card); observer.observe(node);
       const groupKey = record.page_id || 'content_update';
