@@ -154,8 +154,10 @@ export class DraftEditor {
     return this.onRestore(copy);
   }
   notifyState() {
-    if (this.onStateChanged) this.onStateChanged();
-    else this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles:true}));
+    // Local consumers (annotations) observe the editor itself; Project owns the
+    // root notification even when this node lives outside its DOM tree.
+    this.input.dispatchEvent(new CustomEvent('draft-state-changed', {bubbles:!this.onStateChanged}));
+    this.onStateChanged?.();
   }
   adoptRecord(record) {
     this.draft = structuredClone(record.draft); this.etag = record.etag;

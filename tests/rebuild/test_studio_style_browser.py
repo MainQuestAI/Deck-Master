@@ -225,7 +225,8 @@ def test_studio_recipe_library_search_paging_and_selection_survive_navigation(fl
 
 
 @pytest.mark.parametrize('invalidate', [False, True])
-def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalidate):
+@pytest.mark.parametrize('target_page', ['p02', 'p03'])
+def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalidate, target_page):
     """Real plan response held while the user reads target controls or leaves."""
     import uuid
     from deck_master import styles
@@ -234,7 +235,7 @@ def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalida
     ref, _, _ = completed(flow)
     proposed = styles.propose(flow.project, input={'schema_version':'style_input.v2',
         'project_id':flow.store.load_document()['project_id'], 'base_revision':flow.store.current_revision_id(),
-        'visual_style_ref':ref, 'target_page_ids':['p02','p03'], 'instruction':'借用配色'})
+        'visual_style_ref':ref, 'target_page_ids':[target_page, 'p03' if target_page=='p02' else 'p02'], 'instruction':'借用配色'})
     rid = styles.confirm(flow.project, proposal_id=proposed['proposal_id'],
         base_revision=flow.store.current_revision_id(), operation_id=str(uuid.uuid4()))['operation_result']['recipe_id']
     server = WorkbenchServer(flow.project)
@@ -266,11 +267,11 @@ def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalida
                 expect(page.get_by_role('button', name='保存并交接试作', exact=True)).to_have_count(0)
                 assert not any(flow.store.read_object_json(r)['kind']=='blueprint' for r in flow.store.load_document()['tasks'])
             else:
-                expect(page.locator('.visual-plan')).to_contain_text('第 2 页')
+                expect(page.locator('.visual-plan')).to_contain_text('第 '+str(int(target_page[1:]))+' 页')
                 page.get_by_role('button', name='保存并交接试作', exact=True).click()
                 expect(page.locator('#runs-tasks .task-handoff')).to_be_visible()
                 task = next(flow.store.read_object_json(r) for r in reversed(flow.store.load_document()['tasks']) if flow.store.read_object_json(r)['kind']=='blueprint')
-                assert task['scope_pages'] == ['p02']
+                assert task['scope_pages'] == [target_page]
         finally:
             browser.close()
             server.stop()
