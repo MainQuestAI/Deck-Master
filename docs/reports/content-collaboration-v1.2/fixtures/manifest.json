@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "purpose": "T00 固定样例 manifest：EXAMPLES.md 固定源文本与任务答案的可重用合成输入。行号 locator 对应本目录实际保存内容。",
   "synthetic": true,
   "golden_truth_note": "文本候选不是 golden truth；实现必须依据源材料与评价锚点复核，不得逐字模仿示例当作通过。",
@@ -45,37 +45,37 @@
       "lines": 36
     },
     "q4/q4a-pages.json": {
-      "sha256": "636f7a491b9d606ef4aa8747914d65e9e90c729c3284bba46991e85b874cf01a",
-      "bytes": 5604,
-      "lines": 76
+      "sha256": "e61b4d566995d2470570a46c442c9097e9d9c4c43a3323f02204a09ced78fb61",
+      "bytes": 7679,
+      "lines": 222
     },
     "q4/q4b-pages.json": {
-      "sha256": "2c6fa188f3a780e5d5c0c9b8caba21d5019f2ef2d21a29cec28fa9280fc5fa18",
-      "bytes": 6011,
-      "lines": 78
+      "sha256": "2eb0454cb12fad8fa732b33cc40cad282b16d4199559fabe33bb65197ad566b3",
+      "bytes": 7519,
+      "lines": 205
     }
   },
   "reviewed_inputs": {
-    "note": "二轮独立复核输入（evaluation/evaluator-c/d 以此哈希为准）；manifest 自身不计入。",
+    "note": "二轮独立复核（evaluator-c/d，commit 6e26176a）的输入哈希；本轮复核后修订的版本以 manifest_version 3 的哈希为准，供后续复核引用。manifest 自身不计入。",
     "prototype/q1-content-prototype.md": {
-      "sha256": "644aeed3e29ff06bf43cfcef285ab9acc6abec2bd03533533712a26b3e5b3372",
-      "bytes": 21804,
+      "sha256": "6f6091d881fe050245d6dcc954c6cdc7763d8fd61378af31b139fc9c3884e9ce",
+      "bytes": 22121,
       "lines": 242
     },
     "anchors/content-anchors.md": {
-      "sha256": "c342e7dd6a0545fa3e96106e0011cf479585a46f0652f3cde2eb13e7d28c8bbb",
-      "bytes": 15383,
-      "lines": 185
+      "sha256": "42774a7006dec5e8e319cfbd9c58d0cf9c3cc52f1e67793d81cfb9133643ad4c",
+      "bytes": 16130,
+      "lines": 188
     },
     "fixtures/q4/q4a-pages.json": {
-      "sha256": "636f7a491b9d606ef4aa8747914d65e9e90c729c3284bba46991e85b874cf01a",
-      "bytes": 5604,
-      "lines": 76
+      "sha256": "e61b4d566995d2470570a46c442c9097e9d9c4c43a3323f02204a09ced78fb61",
+      "bytes": 7679,
+      "lines": 222
     },
     "fixtures/q4/q4b-pages.json": {
-      "sha256": "2c6fa188f3a780e5d5c0c9b8caba21d5019f2ef2d21a29cec28fa9280fc5fa18",
-      "bytes": 6011,
-      "lines": 78
+      "sha256": "2eb0454cb12fad8fa732b33cc40cad282b16d4199559fabe33bb65197ad566b3",
+      "bytes": 7519,
+      "lines": 205
     }
   },
   "locators": {
@@ -97,7 +97,7 @@
       "第2行": "错误：先补齐版本再处理（AN-Q1-2 反例源）"
     },
     "q2/S1-facts.txt": {
-      "第1行": "54/120 首次提交缺设备条件",
+      "第1行": "54/120 首次提交缺设备条件（缺失计数，非补问计数）",
       "第2行": "访谈机制假设+未测限定（AN-Q2-1 依据）",
       "第3行": "无实施后测量"
     },
@@ -121,14 +121,14 @@
     },
     "q4/q4a-pages.json": {
       "p1": "两候选路径框架（A 只改表单 / B 增加引用助手）",
-      "p6": "路径对照表+推荐条件与改变条件（AN-Q2-4 正例；F03 修订）",
+      "p6": "路径对照表（含 A 的补问归因测量）+推荐条件+改变条件+显式决定请求（AN-Q2-4 正例；F03 修订，D 复核并入）",
       "p5": "人工确认后在现有系统正式提交（V07 正例）"
     },
     "q4/q4b-pages.json": {
-      "p5/b2": "F0：人员确认后自动提交（确定承诺）",
-      "p1/b2": "F0：本期即由 AI 自动提交（确定承诺；局改 P5 后仍违背）",
+      "p5/b2": "F0：本期即由 AI 在人员确认后自动提交（确定承诺）",
+      "p1/b2": "F0：本期试点即由 AI 自动提交（确定承诺；局改 P5 后仍违背）",
       "p6/b2": "F0：本期已具备自动提交能力（确定承诺；局改 P5 后仍违背）",
-      "future_proposal_pair": "AN-Q2-5 成对校准（缺前提未来承诺 vs 带前提合法未来建议）"
+      "future_proposal_pair": "AN-Q2-5 成对校准（定为 F1 的缺前提未来承诺 vs 不得判 F0 的合法未来建议）"
     }
   },
   "expected_behaviors": {
