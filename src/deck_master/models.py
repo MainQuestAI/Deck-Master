@@ -23,8 +23,12 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
+from referencing import Registry, Resource
 
 SCHEMA_FILES = {
+    "collaboration": "collaboration.v1.schema.json",
+    "collaboration_decision": "collaboration-decision.v1.schema.json",
+    "collaboration_authorization": "collaboration-authorization.v1.schema.json",
     "style_reference": "style-reference.v1.schema.json",
     "visual_style_spec": "visual-style-spec.v1.schema.json",
     "style_input_v2": "style-input.v2.schema.json",
@@ -131,8 +135,23 @@ def load_schema(kind: str) -> dict[str, Any]:
     return json.loads(text)
 
 
+@lru_cache(maxsize=None)
+def _contract_registry() -> Registry:
+    """Cross-file $ref support: contracts reference each other by file name
+    (e.g. document.v1 -> collaboration.v1.schema.json). Every registered
+    contract is loaded once; a bare filename resolves against this registry."""
+    registry = Registry()
+    for filename in sorted(set(SCHEMA_FILES.values())):
+        schema = json.loads(
+            resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+        )
+        registry = registry.with_resource(filename, Resource.from_contents(schema))
+    return registry
+
+
+@lru_cache(maxsize=None)
 def _validator(kind: str) -> Draft202012Validator:
-    return Draft202012Validator(load_schema(kind))
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
 
 
 def validate_schema(kind: str, obj: Any) -> None:
@@ -261,7 +280,8 @@ def validate_review_semantics(review: dict[str, Any]) -> None:
 
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
-               "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10}
+               "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
+               "collaboration.v1": 11}
 
 
 def require_writer(document, minimum):
@@ -273,37 +293,181 @@ def require_writer(document, minimum):
                                  current if WRITER_RANK[current] >= WRITER_RANK[minimum] else minimum}
 
 
+def _writer_rank_of(document) -> int:
+    """Unknown/absent writers rank below every named boundary (MIGRATION §2.6:
+    one rank comparison helper instead of hand-written writer lists)."""
+    return WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
+
+
+def writer_at_least(document, minimum: str) -> bool:
+    return _writer_rank_of(document) >= WRITER_RANK[minimum]
+
+
+# Central registry of accepted proposal projections (CONTRACTS §3.1). A
+# decision binds a registered slice only — never an arbitrary JSONPath; the
+# list grows with the cards that introduce new projections (T03/T05/T06).
+REGISTERED_PROJECTIONS = (
+    "direction", "page_roles", "page_order", "visible_copy", "speech",
+    "style.palette", "style.density",
+)
+
+
+def validate_evidence_semantics(evidence: dict[str, Any], where: str) -> None:
+    """Evidence shape plus the fixed assurance floors (CONTRACTS §4). Client
+    payloads cannot upgrade assurance: the Runtime adapter context is the only
+    source that computes verified_user, and this check keeps recorded kinds
+    from carrying mismatch assurance (service paths enforce the rest)."""
+    floors = {
+        "host_attested_instruction": ("host_attested",),
+        "imported_unknown": ("unverified",),
+        "user_event": ("verified_user",),
+    }
+    allowed = floors.get(evidence.get("kind"))
+    if allowed is not None and evidence.get("assurance") not in allowed:
+        raise ModelError(
+            f"{where}/assurance",
+            f"{evidence.get('kind')} evidence must carry assurance "
+            f"{allowed[0]!r}; assurance is never client-upgradable",
+        )
+
+
+def _validate_scope_semantics(scope: dict[str, Any], where: str) -> None:
+    page_ids = scope.get("page_ids") or []
+    if len(page_ids) != len(set(page_ids)):
+        raise ModelError(f"{where}/page_ids", "duplicate page ids in scope")
+    layers = scope.get("layers") or []
+    if len(layers) != len(set(layers)):
+        raise ModelError(f"{where}/layers", "duplicate layers in scope")
+
+
+def validate_collaboration_region(region: dict[str, Any]) -> None:
+    """Structure and record semantics of the single collaboration region
+    (CONTRACTS §2). Field completeness and semantic quality are separate
+    checks; this one only enforces what the contract fixes structurally."""
+    validate_schema("collaboration", region)
+    for index, ref in enumerate(region.get("decisions") or []):
+        validate_ref(ref, where=f"collaboration/decisions[{index}]")
+    for index, ref in enumerate(region.get("authorizations") or []):
+        validate_ref(ref, where=f"collaboration/authorizations[{index}]")
+    profile = region.get("quality_profile") or {}
+    requirement = profile.get("content_review_requirement")
+    origin = profile.get("requirement_origin")
+    if requirement == "host_self" and not profile.get("override_decision_ref"):
+        raise ModelError(
+            "collaboration/quality_profile/override_decision_ref",
+            "a host_self content-review downgrade must bind the explicit decision that explains it",
+        )
+    if requirement == "fidelity_only" and origin != "confirmed_manuscript":
+        raise ModelError(
+            "collaboration/quality_profile/requirement_origin",
+            "fidelity_only is only valid for a confirmed-manuscript mapping",
+        )
+    request = region.get("request")
+    if request is not None:
+        validate_evidence_semantics(request["instruction_evidence"], "collaboration/request/instruction_evidence")
+        _validate_scope_semantics(request["scope"], "collaboration/request/scope")
+        if bool(request.get("paused")) != bool(request.get("pause_reason")):
+            raise ModelError(
+                "collaboration/request/pause_reason",
+                "pause_reason must be present exactly when the request is paused",
+            )
+        if bool(request.get("closed")) != bool(request.get("closed_reason")):
+            raise ModelError(
+                "collaboration/request/closed_reason",
+                "closed_reason must be present exactly when the request is closed",
+            )
+
+
+def validate_decision_semantics(decision: dict[str, Any]) -> None:
+    """Decision record semantics (CONTRACTS §3.1). authority_mode names the
+    claimed source; trust comes only from evidence.assurance."""
+    validate_schema("collaboration_decision", decision)
+    validate_evidence_semantics(decision["evidence"], "decision/evidence")
+    mode = decision.get("authority_mode")
+    if mode == "delegated" and not decision.get("delegation_ref"):
+        raise ModelError(
+            "decision/delegation_ref",
+            "a delegated decision must reference the covering authorization",
+        )
+    if mode != "delegated" and decision.get("delegation_ref"):
+        raise ModelError(
+            "decision/delegation_ref",
+            "delegation_ref is only valid for authority_mode=delegated",
+        )
+    _validate_scope_semantics(decision["scope"], "decision/scope")
+    for index, proposal in enumerate(decision.get("subject_refs") or []):
+        projection = proposal.get("projection")
+        if projection not in REGISTERED_PROJECTIONS:
+            raise ModelError(
+                f"decision/subject_refs[{index}]/projection",
+                f"projection {projection!r} is not a registered slice",
+            )
+
+
+def validate_authorization_semantics(authorization: dict[str, Any]) -> None:
+    """Authorization record semantics (CONTRACTS §3.2). Every execution grant
+    carries an integer call ceiling; delegate mode names its topics."""
+    validate_schema("collaboration_authorization", authorization)
+    validate_evidence_semantics(authorization["evidence"], "authorization/evidence")
+    mode = authorization.get("mode")
+    topics = authorization.get("delegated_topics") or []
+    if mode == "delegate" and not topics:
+        raise ModelError(
+            "authorization/delegated_topics",
+            "delegate mode must declare the topics it covers",
+        )
+    if mode == "execute" and topics:
+        raise ModelError(
+            "authorization/delegated_topics",
+            "delegated_topics belong to delegate mode; an execute grant names decisions and scope",
+        )
+    _validate_scope_semantics(authorization["scope"], "authorization/scope")
+
+
 def validate_document_structure(document: dict[str, Any]) -> None:
     """Schema plus structural checks reachable without loading other objects."""
     validate_schema("document", document)
+    if document.get("narrative"):
+        validate_ref(document["narrative"], where="document/narrative")
+        if not writer_at_least(document, "collaboration.v1"):
+            raise ModelError("document/compatibility",
+                             "a Narrative pointer requires the collaboration.v1 writer boundary")
+    if document.get("collaboration") is not None:
+        if not writer_at_least(document, "collaboration.v1"):
+            raise ModelError("document/compatibility",
+                             "the collaboration region requires the collaboration.v1 writer boundary")
+        validate_collaboration_region(document["collaboration"])
+    elif writer_at_least(document, "collaboration.v1"):
+        raise ModelError("document/collaboration",
+                         "the collaboration.v1 writer boundary requires the collaboration region")
     if document.get("content_plan"):
         validate_ref(document["content_plan"], where="document/content_plan")
-        if document.get("compatibility", {}).get("minimum_writer") not in ("content-plan.v1", "changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1", "workbench-quality.v1"):
+        if not writer_at_least(document, "content-plan.v1"):
             raise ModelError("document/compatibility", "content plans require the content-plan.v1 writer boundary")
     receipt = (document.get("change") or {}).get("operation_receipt")
     if receipt is not None and receipt["response"]["revision_id"] != document["revision_id"]:
         raise ModelError("document/change/operation_receipt/response/revision_id",
                          "operation receipt must name its own Document revision")
     if (document.get("annotations") or document.get("changes") or document.get("change", {}).get("operation_commit")):
-        if document.get("compatibility", {}).get("minimum_writer") not in ("changes.v1", "candidates.v1", "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1", "workbench-quality.v1"):
+        if not writer_at_least(document, "changes.v1"):
             raise ModelError("document/compatibility", "change records require the changes.v1 writer boundary")
     if document.get('candidates') or document.get('candidate_adoptions'):
-        if document.get('compatibility', {}).get('minimum_writer') not in ('candidates.v1', 'run-desk.v1', 'style-recipes.v1', 'content-ops.v1', 'content-candidates.v1', 'icon-quality.v1', 'workbench-quality.v1'):
+        if not writer_at_least(document, "candidates.v1"):
             raise ModelError('document/compatibility', 'candidate records require the candidates.v1 writer boundary')
 
-    if document.get("style_recipes") and document.get("compatibility", {}).get("minimum_writer") not in ("style-recipes.v1", "content-ops.v1", "content-candidates.v1", "icon-quality.v1", "workbench-quality.v1"):
+    if document.get("style_recipes") and not writer_at_least(document, "style-recipes.v1"):
         raise ModelError("document/compatibility", "style recipes require the style-recipes.v1 writer boundary")
     if document.get("page_derivations"):
-        if document.get("compatibility", {}).get("minimum_writer") not in ("content-ops.v1", "content-candidates.v1", "icon-quality.v1", "workbench-quality.v1"):
+        if not writer_at_least(document, "content-ops.v1"):
             raise ModelError("document/compatibility", "page derivations require content-ops.v1")
         for ref in document["page_derivations"]:
             validate_ref(ref, where="document/page_derivations")
     if document.get("icon_recipes"):
-        if WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1) < WRITER_RANK["icon-quality.v1"]:
+        if not writer_at_least(document, "icon-quality.v1"):
             raise ModelError("document/compatibility", "icon recipes require icon-quality.v1")
         for ref in document["icon_recipes"]: validate_ref(ref, where="document/icon_recipes")
     if document.get("style_references") or document.get("committed_at"):
-        if document.get("compatibility", {}).get("project_format") == "workbench.v3" and WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1) < WRITER_RANK["workbench-quality.v1"]:
+        if document.get("compatibility", {}).get("project_format") == "workbench.v3" and not writer_at_least(document, "workbench-quality.v1"):
             raise ModelError("document/compatibility", "new workbench facts require workbench-quality.v1")
         for ref in document.get("style_references", []):
             validate_ref(ref, where="document/style_references")

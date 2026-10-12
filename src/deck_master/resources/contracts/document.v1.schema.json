@@ -874,7 +874,8 @@
             "content-ops.v1",
             "content-candidates.v1",
             "icon-quality.v1",
-            "workbench-quality.v1"
+            "workbench-quality.v1",
+            "collaboration.v1"
           ]
         }
       },
@@ -1237,6 +1238,26 @@
           }
         }
       }
+    },
+    "narrative": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "collaboration.v1.schema.json#/$defs/ref"
+        }
+      ]
+    },
+    "collaboration": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "collaboration.v1.schema.json"
+        }
+      ]
     }
   },
   "required": [

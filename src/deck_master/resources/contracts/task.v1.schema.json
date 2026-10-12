@@ -654,6 +654,90 @@
           "pattern": "^[a-f0-9]{64}$"
         }
       }
+    },
+    "collaboration_binding": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "description": "Task collaboration binding (CONTRACTS \u00a75). Required for newly dispatched tasks once the writer boundary is collaboration.v1.",
+          "additionalProperties": false,
+          "required": [
+            "request_id",
+            "phase",
+            "executor_type",
+            "authorization_ref",
+            "decision_refs",
+            "write_scope",
+            "adoption_policy",
+            "eligibility_basis",
+            "eligibility_digest"
+          ],
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "phase": {
+              "enum": [
+                "framing",
+                "argument",
+                "page_copy",
+                "speech",
+                "design",
+                "production",
+                "review",
+                "delivery"
+              ]
+            },
+            "executor_type": {
+              "enum": [
+                "runtime",
+                "host",
+                "external_reviewer"
+              ]
+            },
+            "authorization_ref": {
+              "anyOf": [
+                {
+                  "$ref": "collaboration.v1.schema.json#/$defs/ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "decision_refs": {
+              "type": "array",
+              "items": {
+                "$ref": "collaboration.v1.schema.json#/$defs/ref"
+              }
+            },
+            "write_scope": {
+              "$ref": "collaboration.v1.schema.json#/$defs/scope"
+            },
+            "adoption_policy": {
+              "enum": [
+                "proposal_only",
+                "candidate_only",
+                "within_scope"
+              ]
+            },
+            "eligibility_basis": {
+              "type": "array",
+              "items": {
+                "$ref": "collaboration.v1.schema.json#/$defs/dependency_slice"
+              }
+            },
+            "eligibility_digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      ]
     }
   },
   "required": [
