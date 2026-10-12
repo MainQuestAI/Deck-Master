@@ -98,18 +98,30 @@ SELF_DOCUMENTING = {"src/deck_master/cli.py", "tests/rebuild/test_cli.py",
                     "CHANGELOG.md", "docs/migration-to-rebuilt-core.md"}
 
 
-def _is_timestamped_audit_record(relative: str, path: Path) -> bool:
-    """docs/reports/ directories named with a trailing 8-digit date hold
-    timestamped audit/evidence records that cite retired trees as historical
-    fact — the same non-living status as docs/archive/. The exemption never
-    covers code (.py stays scanned) and never covers undated living documents;
-    register a new dated directory here deliberately if one is needed."""
-    parts = relative.split("/")
-    if len(parts) < 3 or parts[0] != "docs" or parts[1] != "reports":
-        return False
+# Point-in-time audit/evidence directories that legitimately cite retired
+# trees as historical fact — the same non-living status as docs/archive/.
+# Registration is explicit and deliberate: a date in a directory name does
+# not grant an exemption (see test_dated_but_unregistered_doc_stays_guarded).
+# Code files are never exempt, wherever they live.
+HISTORICAL_AUDIT_DIRS = (
+    "docs/reports/controlled-collaboration-audit-20261012",
+    "docs/reports/skill-flow-review-20261012",
+    "docs/reports/webui-backend-feasibility-20260926",
+    "docs/reports/workbench-v3-execution-20260926",
+)
+
+
+def _is_historical_audit_record(relative: str, path: Path) -> bool:
+    """True only for non-code files inside an explicitly registered historical
+    audit directory. Everything else (code, living documents, dated-but-
+    unregistered directories, including this increment's own evidence
+    directory) stays on the scanned living surface."""
     if path.suffix == ".py":
         return False
-    return re.search(r"\d{8}$", parts[2]) is not None
+    parts = relative.split("/")
+    if len(parts) < 3:
+        return False
+    return "/".join(parts[:3]) in HISTORICAL_AUDIT_DIRS
 
 
 def _living_surfaces() -> list[Path]:
@@ -132,10 +144,24 @@ def _living_surfaces() -> list[Path]:
                 continue
             if relative.startswith("docs/specs/deck-master-rebuild-v1/"):
                 continue
-            if _is_timestamped_audit_record(relative, path):
+            if _is_historical_audit_record(relative, path):
                 continue
             surfaces.append(path)
     return surfaces
+
+
+def test_dated_but_unregistered_doc_stays_guarded() -> None:
+    """A directory carrying a date is not thereby historical: only explicitly
+    registered audit directories are exempt, and code inside them never is."""
+    for registered in HISTORICAL_AUDIT_DIRS:
+        assert _is_historical_audit_record(f"{registered}/notes.md", Path("notes.md")), registered
+        assert not _is_historical_audit_record(f"{registered}/tool.py", Path("tool.py")), registered
+    # A dated directory that is NOT registered remains an active surface — an
+    # operational guide with a date in its name must not silently hide.
+    assert not _is_historical_audit_record("docs/reports/some-active-guide-20260101/guide.md",
+                                           Path("guide.md"))
+    assert not _is_historical_audit_record("docs/reports/deep/nested-20260101/notes.md",
+                                           Path("notes.md"))
 
 
 def test_retired_tree_has_zero_living_references() -> None:
