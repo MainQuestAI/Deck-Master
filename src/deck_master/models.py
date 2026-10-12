@@ -29,6 +29,11 @@ SCHEMA_FILES = {
     "collaboration": "collaboration.v1.schema.json",
     "collaboration_decision": "collaboration-decision.v1.schema.json",
     "collaboration_authorization": "collaboration-authorization.v1.schema.json",
+    "narrative": "narrative.v1.schema.json",
+    "content_plan_input_v2": "content-plan-input.v2.schema.json",
+    "content_plan_v2": "content-plan.v2.schema.json",
+    "compose_result_v2": "compose-result.v2.schema.json",
+    "review_v2": "review.v2.schema.json",
     "style_reference": "style-reference.v1.schema.json",
     "visual_style_spec": "visual-style-spec.v1.schema.json",
     "style_input_v2": "style-input.v2.schema.json",
@@ -154,8 +159,22 @@ def _validator(kind: str) -> Draft202012Validator:
     return Draft202012Validator(load_schema(kind), registry=_contract_registry())
 
 
+# schema_version dispatch: the same logical kind maps to newer contract files
+# without replacing the default validator, so old objects stay readable
+# (MIGRATION §2.2). Read-only dispatch; writers are gated by the writer rank.
+_VERSIONED_KINDS = {
+    "content_plan": {"content_plan.v2": "content_plan_v2"},
+    "content_plan_input": {"content_plan_input.v2": "content_plan_input_v2"},
+    "review": {"deck_review.v2": "review_v2"},
+}
+
+
 def validate_schema(kind: str, obj: Any) -> None:
     """Schema-format validation; errors carry the failing JSON path."""
+    if isinstance(obj, dict):
+        dispatched = _VERSIONED_KINDS.get(kind, {}).get(obj.get("schema_version"))
+        if dispatched:
+            kind = dispatched
     if kind in ("style_input", "style_proposal", "style_recipe") and isinstance(obj, dict) and obj.get("schema_version") == kind + ".v2":
         kind += "_v2"
     errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
@@ -264,6 +283,25 @@ def validate_page_semantics(page: dict[str, Any]) -> None:
             raise ModelError(
                 where, f"edge endpoints must exist in nodes, got {edge.get('from')}->{edge.get('to')}"
             )
+    mapping = page.get("content_mapping")
+    if mapping:
+        atom_refs = [link.get("element_ref") for link in mapping.get("visible_links") or []]
+        if len(atom_refs) != len(set(atom_refs)):
+            raise ModelError("page/content_mapping/visible_links",
+                             "each visible atom gets exactly one mapping entry")
+        segments = mapping.get("speech_segments") or []
+        segment_ids = [segment.get("segment_id") for segment in segments]
+        if len(segment_ids) != len(set(segment_ids)):
+            raise ModelError("page/content_mapping/speech_segments", "duplicate segment_id")
+        previous_end = 0
+        for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+            start, end = segment.get("start_codepoint"), segment.get("end_codepoint")
+            where = f"page/content_mapping/speech_segments/{segment.get('segment_id')}"
+            if start is None or end is None or start >= end:
+                raise ModelError(where, "speech ranges are half-open and must be non-empty")
+            if start < previous_end:
+                raise ModelError(where, "speech ranges must not overlap")
+            previous_end = end
 
 
 def validate_task_semantics(task: dict[str, Any]) -> None:
@@ -274,8 +312,128 @@ def validate_task_semantics(task: dict[str, Any]) -> None:
             raise ModelError(f"task/call_allowances[{index}]", f"unknown allowance state {state!r}")
 
 
+_REVIEW_ASSURANCE_FLOORS = {
+    "human_internal": ("verified_user",),
+    "human_external": ("verified_user",),
+    "independent_host": ("host_attested",),
+    "host_self": ("host_attested", "unverified"),
+    "tool": ("host_attested", "unverified"),
+}
+
+
 def validate_review_semantics(review: dict[str, Any]) -> None:
     validate_schema("review", review)
+    if review.get("schema_version") != "deck_review.v2":
+        return  # v1 records stay readable with their original identity labels
+    reviewer = review.get("reviewer") or {}
+    allowed = _REVIEW_ASSURANCE_FLOORS.get(reviewer.get("type"))
+    if allowed is not None and reviewer.get("assurance") not in allowed:
+        raise ModelError(
+            "review/reviewer/assurance",
+            f"{reviewer.get('type')} reviewers must record assurance "
+            f"{allowed[0]!r}; identity evidence is verified by its receipt, not by a claimed level",
+        )
+
+
+def validate_narrative_semantics(narrative: dict[str, Any]) -> None:
+    """Narrative semantics (CONTRACTS §11.1): reference integrity across
+    nodes/edges/issues, argument maturity requirements, and the authority
+    floor for reported facts and calculations. Source support quality stays a
+    content-review question; this checks what can be checked structurally."""
+    validate_schema("narrative", narrative)
+    nodes = narrative.get("nodes") or []
+    node_ids = [node.get("node_id") for node in nodes]
+    if len(node_ids) != len(set(node_ids)):
+        raise ModelError("narrative/nodes", "duplicate node_id")
+    known = set(node_ids)
+    issues = narrative.get("issues") or []
+    issue_ids = [issue.get("issue_id") for issue in issues]
+    if len(issue_ids) != len(set(issue_ids)):
+        raise ModelError("narrative/issues", "duplicate issue_id")
+    blocker_ids = {issue.get("issue_id") for issue in issues if issue.get("impact") == "blocker"}
+
+    def require_known(ids, where):
+        unknown = sorted(set(ids) - known)
+        if unknown:
+            raise ModelError(where, f"unknown node ids: {unknown}")
+
+    for node in nodes:
+        where = f"narrative/nodes/{node.get('node_id')}"
+        require_known(node.get("qualification_node_ids") or [], where + "/qualification_node_ids")
+        unknown_issues = sorted(set(node.get("unresolved_issue_ids") or []) - set(issue_ids))
+        if unknown_issues:
+            raise ModelError(where + "/unresolved_issue_ids", f"unknown issue ids: {unknown_issues}")
+        if node.get("authority") in ("reported_fact", "calculation"):
+            has_source = bool(node.get("source_links"))
+            has_blocker = bool(set(node.get("unresolved_issue_ids") or []) & blocker_ids)
+            if not (has_source or has_blocker):
+                raise ModelError(
+                    where,
+                    f"{node.get('authority')} needs a verifiable source locator or an explicit blocker issue",
+                )
+    for index, edge in enumerate(narrative.get("edges") or []):
+        endpoints = [edge.get("from_node_id"), edge.get("to_node_id")]
+        require_known(endpoints, f"narrative/edges[{index}]")
+    for issue in issues:
+        require_known(issue.get("affected_node_ids") or [], f"narrative/issues/{issue.get('issue_id')}/affected_node_ids")
+    central = narrative.get("central_node_id")
+    if narrative.get("maturity") == "argument":
+        if central is None or central not in known:
+            raise ModelError("narrative/central_node_id",
+                             "an argument narrative needs a central node that exists in nodes")
+    elif central is not None and central not in known:
+        raise ModelError("narrative/central_node_id", "central node id must exist in nodes")
+
+
+def validate_content_plan_semantics(plan: dict[str, Any]) -> None:
+    """ContentPlan v2 semantics (CONTRACTS §11.2): stable page order, role
+    coverage, local issue registry, budget coherence and mode-specific
+    requirements. Equality with the committed Document.pages order (mode=bound)
+    is checked at the write point that has the document."""
+    validate_schema("content_plan", plan)
+    if plan.get("schema_version") != "content_plan.v2":
+        return
+    data = plan.get("input") or {}
+    page_order = data.get("page_order") or []
+    if len(page_order) != len(set(page_order)):
+        raise ModelError("content_plan/input/page_order", "duplicate page ids")
+    roles = [role.get("page_id") for role in data.get("page_roles") or []]
+    if len(roles) != len(set(roles)):
+        raise ModelError("content_plan/input/page_roles", "duplicate page role entries")
+    unknown = sorted(set(roles) - set(page_order))
+    if unknown:
+        raise ModelError("content_plan/input/page_roles", f"roles for pages outside page_order: {unknown}")
+    for chapter in data.get("chapters") or []:
+        unknown = sorted(set(chapter.get("page_ids") or []) - set(page_order))
+        if unknown:
+            raise ModelError(f"content_plan/input/chapters/{chapter.get('chapter_id')}",
+                             f"chapter pages outside page_order: {unknown}")
+    issue_ids = [issue.get("issue_id") for issue in data.get("issues") or []]
+    if len(issue_ids) != len(set(issue_ids)):
+        raise ModelError("content_plan/input/issues", "duplicate issue_id")
+    unknown = sorted(set(data.get("tradeoff_issue_ids") or []) - set(issue_ids))
+    if unknown:
+        raise ModelError("content_plan/input/tradeoff_issue_ids", f"unknown issue ids: {unknown}")
+    budget = data.get("page_budget") or {}
+    if (budget.get("exact") is not None and budget.get("max") is not None
+            and budget["exact"] > budget["max"]):
+        raise ModelError("content_plan/input/page_budget",
+                         "exact page budget exceeds the hard max; resolve the tradeoff first")
+    mode = plan.get("mode")
+    if mode == "imported_mapping" and not plan.get("imported_manuscript"):
+        raise ModelError("content_plan/imported_manuscript",
+                         "imported_mapping requires the manuscript source and its claimed-confirmation evidence")
+    if mode == "bound":
+        links = [link.get("page_id") for link in plan.get("page_links") or []]
+        if len(links) != len(set(links)) or set(links) != set(page_order):
+            raise ModelError("content_plan/page_links",
+                             "a bound plan must link every page_order page exactly once")
+
+
+def validate_compose_result_semantics(result: dict[str, Any]) -> None:
+    """Compose v2 envelope shape (CONTRACTS §11.5). Variant payload contents
+    are parsed by the task protocol branch; this checks the envelope only."""
+    validate_schema("compose_result_v2", result)
 
 
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,

@@ -1,0 +1,400 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "content_plan_input.v2",
+  "description": "ContentPlan input v2 (content collaboration v1.2 CONTRACTS \u00a711.2): chapters, stable page order, page roles with narrative/source mapping, budgets, speech policy and local issues.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "chapters",
+    "page_order",
+    "page_roles",
+    "page_budget",
+    "time_budget",
+    "speech_policy",
+    "issues",
+    "tradeoff_issue_ids"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "content_plan_input.v2"
+    },
+    "chapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "chapter_id",
+          "title",
+          "page_ids"
+        ],
+        "properties": {
+          "chapter_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "page_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            }
+          }
+        }
+      }
+    },
+    "page_order": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+      }
+    },
+    "page_roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "page_id",
+          "role",
+          "audience_question",
+          "intended_takeaway",
+          "narrative_node_ids",
+          "source_links",
+          "required_qualifications",
+          "content_profile",
+          "density_rationale",
+          "timing_seconds",
+          "transition_to_next"
+        ],
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "audience_question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "intended_takeaway": {
+            "type": "string",
+            "minLength": 1
+          },
+          "narrative_node_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            }
+          },
+          "source_links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_id",
+                "source_version",
+                "locator"
+              ],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                },
+                "source_version": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "original_sha256",
+                    "extract"
+                  ],
+                  "properties": {
+                    "original_sha256": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "extract": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "path",
+                        "sha256"
+                      ],
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      }
+                    }
+                  }
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "required_qualifications": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "content_profile": {
+            "enum": [
+              "simple",
+              "evidence",
+              "mechanism",
+              "data_dense",
+              "mixed"
+            ]
+          },
+          "density_rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "timing_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "transition_to_next": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "page_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exact",
+        "target",
+        "max"
+      ],
+      "properties": {
+        "exact": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "time_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_seconds",
+        "speaking_seconds",
+        "interaction_seconds",
+        "constraint"
+      ],
+      "properties": {
+        "total_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "speaking_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "interaction_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "constraint": {
+          "enum": [
+            "hard",
+            "soft",
+            "unspecified"
+          ]
+        }
+      }
+    },
+    "speech_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "source",
+        "output"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "none",
+            "cues",
+            "verbatim"
+          ]
+        },
+        "source": {
+          "enum": [
+            "provided",
+            "delegated",
+            "default"
+          ]
+        },
+        "output": {
+          "enum": [
+            "none",
+            "separate_script",
+            "pptx_notes",
+            "both"
+          ]
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "issue_id",
+          "question",
+          "impact",
+          "affected_page_ids",
+          "resolution",
+          "resolution_ref"
+        ],
+        "properties": {
+          "issue_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "impact": {
+            "enum": [
+              "blocker",
+              "needs_judgment",
+              "advisory"
+            ]
+          },
+          "affected_page_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            }
+          },
+          "resolution": {
+            "enum": [
+              "open",
+              "resolved",
+              "accepted_limit"
+            ]
+          },
+          "resolution_ref": {
+            "anyOf": [
+              {
+                "$ref": "collaboration.v1.schema.json#/$defs/ref"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "tradeoff_issue_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+      }
+    }
+  }
+}

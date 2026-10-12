@@ -84,6 +84,59 @@
         "original_internal",
         "sanitized_public_copy"
       ]
+    },
+    "variant": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "description": "live/read variant metadata (CONTRACTS \u00a711.7): labels and fixed refs only; never a second content truth.",
+          "additionalProperties": false,
+          "required": [
+            "group_id",
+            "variant_id",
+            "label",
+            "narrative_ref",
+            "plan_ref"
+          ],
+          "properties": {
+            "group_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variant_id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_-]*$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "narrative_ref": {
+              "anyOf": [
+                {
+                  "$ref": "collaboration.v1.schema.json#/$defs/ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "plan_ref": {
+              "anyOf": [
+                {
+                  "$ref": "collaboration.v1.schema.json#/$defs/ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   }
 }
