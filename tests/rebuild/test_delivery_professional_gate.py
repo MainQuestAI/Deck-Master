@@ -65,6 +65,47 @@ def _final_readiness(project, capsys):
     return json.loads(capsys.readouterr().out)
 
 
+def _accept_review(project, store, review, *, task_id='review-professional',
+                   operation_id='op-professional'):
+    """Formal submission entry: dispatch a final review task, then accept the
+    envelope carrying the review (service.accept_result → _adopt_review)."""
+    document = store.load_document()
+    task = tasks_mod.new_task(
+        task_id=task_id, operation_id=operation_id, kind='review',
+        scope_pages=[entry['page_id'] for entry in document['pages']],
+        instruction='review', inputs=[entry['page'] for entry in document['pages']],
+        dependencies=[], dispatch_revision=document['revision_id'],
+        produced_against=content_identity(document))
+    task_ref = store.put_json_object(task)
+    dispatch_operation = f'dispatch-{operation_id}'
+    bumped = bump_revision(document, {'operation_id': dispatch_operation, 'kind': 'task_update',
+                                      'description': 'dispatch review', 'read_set': []})
+    bumped['tasks'] = list(bumped.get('tasks') or []) + [task_ref]
+    store.commit_change(base_revision=document['revision_id'], document=bumped,
+                        operation_id=dispatch_operation)
+    dispatched = store.load_document()
+    record = next(store.read_object_json(ref) for ref in dispatched['tasks']
+                  if store.read_object_json(ref)['task_id'] == task_id)
+    return service.accept_result(project, task_id=task_id,
+                                 operation_id=record['operation_id'],
+                                 produced_against=record['produced_against'],
+                                 result_payload={'kind': 'review', 'files': [], 'reviews': [review]})
+
+
+def _professional_review(document, *, review_id, status, reviewer, dependencies,
+                         findings=(), observations=('已逐页核对整稿正文与来源引用。',),
+                         subjects=None, replaces=None):
+    return {
+        'schema_version': 'deck_review.v1', 'review_id': review_id,
+        'kind': 'professional_use', 'status': status, 'review_stage': 'final',
+        'subjects': list(subjects if subjects is not None else
+                         [document['outputs']['pptx']] + [entry['page'] for entry in document['pages']]),
+        'dependencies': list(dependencies), 'reviewer': reviewer,
+        'observations': list(observations), 'findings': list(findings),
+        'created_at': '2026-10-21T08:00:00Z', 'replaces': replaces,
+    }
+
+
 def _assert_refused_everywhere(tmp_path, project, store, capsys, *, reason,
                                engineering_shadowed=False):
     """No entry may satisfy the human policy and no delivery output is produced
@@ -211,6 +252,79 @@ def test_incomplete_dependencies_cannot_satisfy(tmp_path, capsys, synthetic_huma
             dependencies=deps)
     _assert_refused_everywhere(tmp_path, project, store, capsys,
                                reason='required_dependencies_incomplete')
+
+
+def test_stale_extra_declared_dependency_blocks_all_entries(tmp_path, capsys,
+                                                            synthetic_human_adapter):
+    """F01 (PR107 round 2): the runtime minimum set is only the floor — every
+    declared dependency must resolve against the same current artifact map the
+    shared check summary uses. A stale extra dependency (style:p1 with a wrong
+    sha) is stale everywhere, never "stale in the summary, valid for delivery"."""
+    project, store = _passing_deck(tmp_path)
+    _complete_page_slots(store, tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    document = store.load_document()
+    dependencies = professional_dependencies(store, document)
+    dependencies.append({'kind': 'style', 'identity': 'p1', 'sha256': 'f' * 64})
+    review = _professional_review(document, review_id='rv-professional', status='pass',
+                                  reviewer=human_professional_reviewer(document, event_id='evt-stale-extra'),
+                                  dependencies=dependencies)
+    assert _accept_review(project, store, review, task_id='review-stale-extra',
+                          operation_id='op-stale-extra')['status'] == 'accepted'
+    policy = professional_policy(store, store.load_document())
+    assert policy['satisfied'] is False
+    assert 'stale_review_dependency' in policy['gap_reasons'], policy['gap_reasons']
+    _assert_refused_everywhere(tmp_path, project, store, capsys,
+                               reason='stale_review_dependency')
+
+
+def test_unresolvable_extra_declared_dependency_blocks_all_entries(tmp_path, capsys,
+                                                                   synthetic_human_adapter):
+    """F01: an extra declared dependency that resolves nowhere (source that
+    does not exist) cannot back a valid human pass."""
+    project, store = _passing_deck(tmp_path)
+    _complete_page_slots(store, tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    document = store.load_document()
+    dependencies = professional_dependencies(store, document)
+    dependencies.append({'kind': 'source', 'identity': 'missing-source-1', 'sha256': 'a' * 64})
+    review = _professional_review(document, review_id='rv-professional', status='pass',
+                                  reviewer=human_professional_reviewer(document, event_id='evt-unresolvable'),
+                                  dependencies=dependencies)
+    assert _accept_review(project, store, review, task_id='review-unresolvable',
+                          operation_id='op-unresolvable')['status'] == 'accepted'
+    policy = professional_policy(store, store.load_document())
+    assert policy['satisfied'] is False
+    assert 'unresolvable_review_dependency' in policy['gap_reasons'], policy['gap_reasons']
+    _assert_refused_everywhere(tmp_path, project, store, capsys,
+                               reason='unresolvable_review_dependency')
+
+
+def test_valid_extra_declared_dependencies_still_satisfy(tmp_path, capsys,
+                                                         synthetic_human_adapter):
+    """F01 positive: complete minimum set plus extra dependencies that all
+    resolve and match keep the legitimate human path open — the fix must not
+    strand valid reviews."""
+    project, store = _passing_deck(tmp_path)
+    _complete_page_slots(store, tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    document = store.load_document()
+    from deck_master.editing import _current_artifact_digests
+    artifacts = _current_artifact_digests(store, document)
+    dependencies = professional_dependencies(store, document)
+    dependencies.append({'kind': 'style', 'identity': 'p1', 'sha256': artifacts['style:p1']})
+    dependencies.append({'kind': 'artifact', 'identity': 'svg:p1',
+                         'sha256': artifacts['artifact:svg:p1']})
+    review = _professional_review(document, review_id='rv-professional', status='pass',
+                                  reviewer=human_professional_reviewer(document, event_id='evt-valid-extra'),
+                                  dependencies=dependencies)
+    assert _accept_review(project, store, review, task_id='review-valid-extra',
+                          operation_id='op-valid-extra')['status'] == 'accepted'
+    exported = export_project(project, output_dir=tmp_path / 'delivery-ok', purpose='delivery')
+    assert exported['status'] == 'exported'
+    readiness = _final_readiness(project, capsys)
+    assert readiness['status'] == 'ready'
+    assert readiness['professional']['human_signoff'] is True
 
 
 def test_empty_observations_cannot_satisfy(tmp_path, capsys, synthetic_human_adapter):

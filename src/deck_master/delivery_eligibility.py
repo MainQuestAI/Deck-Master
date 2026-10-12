@@ -23,6 +23,8 @@ _REASON_ORDER = (
     'identity_adapter_error',
     'subject_not_current_pptx',
     'required_dependencies_incomplete',
+    'stale_review_dependency',
+    'unresolvable_review_dependency',
     'no_substantive_observations',
     'open_must_fix_findings',
     'not_final_stage',
@@ -97,6 +99,11 @@ def _dependency_key(dep: dict) -> str:
     return key_of(dep)
 
 
+def _declared_dependency_problems(review, artifacts):
+    from .review import dependency_problems
+    return dependency_problems(review, artifacts or {})
+
+
 def _ref_pair(ref) -> tuple | None:
     if isinstance(ref, dict) and ref.get('path') and ref.get('sha256'):
         return (ref['path'], ref['sha256'])
@@ -140,6 +147,10 @@ def professional_policy(store, doc) -> dict:
         return result
 
     required_deps = required_professional_dependencies(store, doc)
+    # The same artifact map the shared check summary uses: declared review
+    # dependencies are validated against one currentness rule, never two.
+    from .editing import _current_artifact_digests
+    artifacts = _current_artifact_digests(store, doc)
     # Only a same-logical-review replacement (same kind, same review_id —
     # mirroring the formal adoption path's rule) can supersede a record.
     # Defense in depth: the predicate does not trust arbitrary replaces
@@ -156,7 +167,7 @@ def professional_policy(store, doc) -> dict:
         if review.get('kind') != 'professional_use':
             continue
         result['reviews_considered'] += 1
-        entry = _diagnose(review, ref, doc, pptx_pair, required_deps, replaced,
+        entry = _diagnose(review, ref, doc, pptx_pair, required_deps, replaced, artifacts,
                           project_id=doc.get('project_id'))
         result['reviews'].append(entry)
 
@@ -179,7 +190,7 @@ def professional_policy(store, doc) -> dict:
     return result
 
 
-def _diagnose(review, ref, doc, pptx_pair, required_deps, replaced, *, project_id) -> dict:
+def _diagnose(review, ref, doc, pptx_pair, required_deps, replaced, artifacts, *, project_id) -> dict:
     reviewer = review.get('reviewer') or {}
     reasons: list[str] = []
     status = review.get('status')
@@ -201,6 +212,18 @@ def _diagnose(review, ref, doc, pptx_pair, required_deps, replaced, *, project_i
     missing = sorted(key for key, sha in required_deps.items() if provided.get(key) != sha)
     if missing:
         reasons.append('required_dependencies_incomplete')
+    # Every declared dependency must resolve against the current artifact map
+    # and match it — the same single rule the shared check summary uses
+    # (review.dependency_problems). Required keys are owned by the named
+    # required_dependencies_incomplete reason above and are not double-counted.
+    declared_problems = [
+        problem for problem in _declared_dependency_problems(review, artifacts)
+        if problem['key'] not in required_deps
+    ]
+    if any(p['kind'] == 'sha_mismatch' for p in declared_problems):
+        reasons.append('stale_review_dependency')
+    if any(p['kind'] != 'sha_mismatch' for p in declared_problems):
+        reasons.append('unresolvable_review_dependency')
     observations = [o for o in review.get('observations') or []
                     if isinstance(o, str) and o.strip()]
     if not observations:
@@ -224,6 +247,7 @@ def _diagnose(review, ref, doc, pptx_pair, required_deps, replaced, *, project_i
         'status': status,
         'subject_current': subject_current,
         'missing_dependencies': missing,
+        'declared_dependency_problems': declared_problems,
         'superseded': superseded,
         'satisfies': not reasons,
         'reasons': _sort_reasons(reasons),
