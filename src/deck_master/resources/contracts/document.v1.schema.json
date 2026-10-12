@@ -505,7 +505,8 @@
             "policy_update",
             "legacy_import",
             "design_update",
-            "input_update"
+            "input_update",
+            "collaboration_update"
           ]
         },
         "description": {
@@ -583,6 +584,18 @@
               "pattern": "^[a-f0-9]{64}$"
             }
           }
+        },
+        "payload_digest": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Canonical digest of the write payload: the same operation id replayed with a different payload is a conflict."
         }
       }
     },
