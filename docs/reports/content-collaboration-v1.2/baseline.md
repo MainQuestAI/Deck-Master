@@ -33,19 +33,23 @@
 
 结论：本包关键源码路径与 base 无实质漂移；三处引用起点有 1 行级偏移，不影响所指行为。T01 实施后 `exports._gate` 已由统一 `delivery_eligibility.professional_policy` 替代。
 
-## 4. 实施分支全量回归（T01 后）
+## 3. 实施分支全量回归（T01 后）
 
 命令：`.venv/bin/python -m pytest tests/rebuild -q`（仓库源码直跑，2026-10-12）。结果：**1752 passed / 3 failed**，3 个失败均已定位并修复：
 
 | 失败 | 归因 | 处置 |
 | --- | --- | --- |
-| `test_package_boundary.py::test_retired_tree_has_zero_living_references` | **本包规范提交 1c266c86 引入的既有失败**（非 T01 代码）：`docs/reports/controlled-collaboration-audit-20261012/` 审计文档以历史证据名义引用 retired 树路径 | 将 `docs/reports/`（时间戳审计/证据记录目录）与 `docs/archive/` 同等列为非活动面；src/tests/skills/CI/根文档/specs 守卫不变。裁决记录于此 |
+| `test_package_boundary.py::test_retired_tree_has_zero_living_references` | **PR106 分支既有失败（非 T01 代码）**：首个规范提交 9797f9e2 引入的 `docs/reports/controlled-collaboration-audit-20261012/source-index.md` 与 `workbench-v3-execution-20260926/W01.md` 已含 retired 树引用（在 9797f9e2 上即红）；后续 1c266c86 又给 `repair-plan.md` 新增 3 行同类引用 | 收窄豁免：仅 `docs/reports/` 下**目录名带 8 位日期后缀**的非 `.py` 文件按时间戳审计记录豁免（与 `docs/archive/` 同等非活动面）；`.py` 代码与未注日期目录（含本证据目录）保持受扫描。PR107 审查（P2-3）将最初的整前缀豁免收窄为当前口径 |
 | `test_package_boundary.py::test_spec_contracts_match_packaged_contracts_byte_for_byte` | T01 为 review.v1 新增可选 `identity_receipt` 后 spec 镜像未同步 | 同步 `docs/specs/deck-master-rebuild-v1/contracts/review.v1.schema.json`（向后兼容的可选字段） |
 | `test_styles.py::test_schema_mirrors_and_cli_typed_errors` | 同上（同一镜像守卫） | 同上 |
 
 修复后以上测试单独复跑全部通过。测试套件运行会重新生成部分跟踪的 `output/playwright/` 截图（字节级非确定性产物），提交前已还原，不进入实施提交。
 
-## 5. 环境与来源差异（保留，不覆盖）
+**行为微变登记**：`editing._professional_evidence`（现为 `delivery_eligibility` 统一实现）对不可读的 review ref 从基线的异常上抛改为跳过该记录（状态如实缺省为 not_evaluated），方向更稳；其余既有报告字段与语义不变。
+
+**PR107 审查修复登记**：`blocking_fail` 去除依赖完整性条件（fail 只要主体当前即保持阻断，防止较新 fail 因依赖不完整被 pass 掩盖——审查已实证的放行漏洞）；`replaces` 信任收窄为同 kind 同 review_id 的同逻辑审查替代；新增 2 个回归负例。
+
+## 4. 环境与来源差异（保留，不覆盖）
 
 - 用户主工作区（main）存在未提交的 `README.md` 修改与 `docs/reports/`、`docs/work-items/`、`evidence/`、`output/` 下若干未跟踪目录；实施分支不包含、不覆盖这些修改。
 - 本轮验证使用仓库 `.venv`（Python 3.x，仓库源码直跑）；未验证目标安装版本行为（见上表 digest 行）。

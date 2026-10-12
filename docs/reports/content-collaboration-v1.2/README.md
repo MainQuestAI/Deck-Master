@@ -10,6 +10,7 @@ Task: T00（内容原型与评价锚点）+ T01（人类专业交付谓词），
 Implementation commit / source baseline:
   - 规范基线：1c266c86（PR106 head，文档）
   - T01 代码提交：243eaa045d334310a97e9d373e2452158bd4a25e
+  - T01 审查修复提交：bd8ea877（fail 依赖不完整仍保持阻断 + replaces 信任收窄 + 豁免收窄，PR107 审查 P1-1/P2-1/P2-2/P2-3）
   - 边界守卫豁免提交：35f33ffefce50b8171782232dbc0f2824ea1fd5b
   - 本文档提交：见 git log（提交时生成）
   - 分支：impl/t01-t00-content-collab（基于 origin/codex/skill-flow-review）
@@ -25,7 +26,8 @@ Changed paths and resulting behavior:
   - handoff.py / cli.py(final-readiness)：同一政策结果，工程状态单独展示。
   - review.v1.schema.json：新增可选 reviewer.identity_receipt；spec 镜像同步。
   - 测试：test_delivery_professional_gate.py（正例走正式 review envelope，
-    16 个负例三入口一致拒绝）；test_export.py 的 _review helper 显式化，
+    17 个负例三入口一致拒绝，另 2 个谓词级回归（含审查 P1-1 的 thin
+    fail / deck-level fail 放行路径回归）；test_export.py 的 _review helper 显式化，
     seed="human" 错误正例删除。
   T00（本目录）：
   - fixtures/：Q1–Q4 固定材料包可重用化 + manifest（SHA/行号 locator/预期行为）
@@ -57,7 +59,7 @@ AC IDs and status:
 
 Actual commands, environment, inputs and outputs:
   - .venv/bin/python -m pytest tests/rebuild -q → 1752 passed / 3 failed，
-    3 个失败归因与修复见 baseline.md §4（其中 2 个为 T01 schema 镜像同步、
+    3 个失败归因与修复见 baseline.md §3（其中 2 个为 T01 schema 镜像同步、
     1 个为规范提交 1c266c86 引入的审计文档 retired 引用）；修复后目标测试
     复跑通过
   - git ls-remote origin main / codex/skill-flow-review → 基线 SHA 核实
