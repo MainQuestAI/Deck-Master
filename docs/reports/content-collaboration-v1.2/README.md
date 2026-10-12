@@ -10,7 +10,9 @@ Task: T00（内容原型与评价锚点）+ T01（人类专业交付谓词），
 Implementation commit / source baseline:
   - 规范基线：1c266c86（PR106 head，文档）
   - T01 代码提交：243eaa045d334310a97e9d373e2452158bd4a25e
-  - T01 审查修复提交：bd8ea877（fail 依赖不完整仍保持阻断 + replaces 信任收窄 + 豁免收窄，PR107 审查 P1-1/P2-1/P2-2/P2-3）
+  - T01 初审修复提交：bd8ea877（fail 依赖不完整仍保持阻断 + replaces 信任收窄 + 豁免收窄，PR107 一审 P1-1/P2-1/P2-2/P2-3）
+  - T01 二轮修复提交：cbd7abbb（F01：全部声明依赖按统一当前性规则校验）、29a94858（F02：只有有效重审才解除专业失败）、边界显式注册表（审查裁决 IV.1）
+  - T00 二轮修订提交：6e26176a（q4a 真实替代、q4b 确定性承诺、锚点 12 条、cues/阅读分支补齐、manifest v2）+ 本轮复核修复（SPEC §10 引用、cues 过渡、AN-Q1-4 定级 F0、q4a 归因测量与决定请求、q4b 成对措辞统一、manifest v3）
   - 边界守卫豁免提交：35f33ffefce50b8171782232dbc0f2824ea1fd5b
   - 本文档提交：见 git log（提交时生成）
   - 分支：impl/t01-t00-content-collab（基于 origin/codex/skill-flow-review）
@@ -34,21 +36,26 @@ Changed paths and resulting behavior:
   - prototype/q1-content-prototype.md：理解稿、两张决定卡、Narrative（N/E）、
     页职责与预算、完整六页逐页稿与 verbatim、口播三分支、设计可行性、真实返修
     演示、篇幅冲突预案
-  - anchors/content-anchors.md：F0/F1 可判定定义、三类任务十个正反锚点、
+  - anchors/content-anchors.md：F0/F1 可判定定义、三类任务十二个正反锚点、
     校准规则
-  - evaluation/：两位独立评价者完整初判 + 裁决记录（分歧 3 项、修复 17 项）
+  - evaluation/：两轮各两位独立评价者完整初判（evaluator-a/b 初审、evaluator-c/d 二轮复核）+ 裁决记录
   - baseline.md：AC-B01 基线记录（SHA、锚点漂移、全量回归、环境差异）
 
 AC IDs and status:
   - AC-B01：pass（结构层证据：baseline.md；安装包 digest 明确 not_run）
-  - AC-B02：pass-with-evidence（完整原型 + 决定卡 + 两位评价者独立初判与
-    分歧记录；均声明为 AI 评价，非 L3 人类审查）
-  - AC-B03：pass-with-evidence（评价者确认全部已标明反例可发现、正确限定
-    未被误判；本轮为锚点自校准，T08 陌生实例迁移未跑）
+  - AC-B02：pass-with-evidence（完整原型 + 决定卡 + 两轮四份独立评价与
+    分歧记录；二轮复核（evaluator-c/d，commit 6e26176a，输入哈希已重算）
+    确认 cues 六页与阅读版解析块齐备、修订后无新增内容级 F0/F1；复核建议
+    已全部处置。均声明为 AI 评价，非 L3 人类审查）
+  - AC-B03：pass-with-evidence（二轮评价者逐条核验十二个锚点：错误候选全部
+    属实、等级恰当、正确限定无误删；AN-Q1-4 按复核裁决修正为 F0；T08
+    陌生实例迁移未跑，候选投放机制见锚点来源行）
   - AC-P01：pass at L1（正式 review envelope 提交人类凭据正例，export/
     handoff-check/final-readiness 三入口一致满足；受信适配器为受控 L1
     fixture，CONTRACTS §12.1 边界内，不声称真实人类已阅）
-  - AC-P02：pass at L1（host_self/tool/independent_host、not_evaluated/
+  - AC-P02：pass at L1，二轮复审后成立（一审 P1-1 与二轮 F01/F02 均已修复并
+    有正式入口回归：thin fail/deck-level fail 阻断、额外依赖过期/不可解析拒绝、
+    记录替代≠有效重审；host_self/tool/independent_host、not_evaluated/
     needs_review/not_applicable、错 kind、空/过期依赖、空观察、开放
     must_fix、重放/篡改凭据、旧 PPTX 主体、新 fail 掩盖旧 pass——全部拒绝
     且命名缺口；无 delivery 输出产生）
@@ -69,13 +76,16 @@ Actual commands, environment, inputs and outputs:
 
 Evidence layer for each claim:
   - L0（结构/静态）：schema、锚点比对、manifest 哈希、门禁测试存在性
-  - L1（Runtime 行为）：三入口正负矩阵全部经正式 API（export/handoff-check/
-    final-readiness/service.accept_result）验证；受控适配器 fixture 明确标注
-    synthetic/unit（CONTRACTS §12.1），不升级为真实人类证据
+  - L1（Runtime 行为）：三入口正负矩阵经正式 API（export/handoff-check/
+    final-readiness/service.accept_result）。证据分层如实区分：依赖过期/不可解析、
+    有效重审解除失败、无效替代不解除失败等专业判定均走正式接纳路径；
+    `test_review_binding_replaced_pptx_is_not_current` 为"先正式提交、再模拟
+    后续输出替换"的谓词级构造。受控适配器 fixture 明确标注 synthetic/unit
+    （CONTRACTS §12.1），不升级为真实人类证据
   - 本轮不产生 L2–L6 证据（真实 Host/人类审查/用户认可/听众/文件工程）
 
 Failing examples and repair performed:
-  - 评价发现的 17 项修复全部落实（adjudication.md §3 对照表），含原型自身
+  - 评价发现的 17 项处置（修复/移交 T02–T07/登记不单独立锚，见 adjudication.md §3 对照表与二轮增补节），含原型自身
     的 1 处复核行号错误（分歧裁决：以表格事实源裁定，A 对 B 错）
   - 测试开发中修复 3 处：cli.py final-readiness 的 bool 化与 view 变量、
     适配器防重放语义（同一凭据重复验证不得误报重放，仅拒绝同 event_id
@@ -92,7 +102,7 @@ Not run / blocked evidence and concrete next step:
     blocked，具体缺口为 identity_adapter_unavailable / evidence missing）
   - 真实 Host 会话、生图、PPTX 编译与备注回读、用户与听众验证：T08
   - Q4 控制变体 Runtime fixtures（无 ContentPlan 旧项目、1 次额度等）：T02–T04
-  - P6 阅读稿可见解析块：T03 内容写作输入（已登记）
+（P6 阅读稿可见解析块已产出，见原型 6.2；原 T03 登记项撤销。）
   - 本目录评价均为 AI 评价者；不充当 L3 人类专业审查
 
 Scope of this change; next dependent card:
@@ -114,11 +124,13 @@ content-collaboration-v1.2/
 ├── prototype/
 │   └── q1-content-prototype.md  ← 完整专业产物原型（AC-B02）
 ├── anchors/
-│   └── content-anchors.md       ← 三类任务十个正反锚点 + 可判定等级定义（AC-B03）
+│   └── content-anchors.md       ← 三类任务十二个正反锚点 + 可判定等级定义（AC-B03）
 └── evaluation/
     ├── evaluator-a.md   ← 评价者A完整初判（事实/证据视角，PASS-with-repairs）
     ├── evaluator-b.md   ← 评价者B完整初判（可用性/表达视角，PASS-with-repairs）
-    └── adjudication.md  ← 分歧裁决（3 项）与修复对照（17 项）
+    ├── evaluator-c.md   ← 二轮复核（事实/证据视角，PASS-with-repairs）
+    ├── evaluator-d.md   ← 二轮复核（可用性视角，PASS-with-repairs）
+    └── adjudication.md  ← 分歧裁决（一轮 3 项、二轮 1 项）与修复对照（含二轮增补节）
 ```
 
 ## 与规范的对照说明
