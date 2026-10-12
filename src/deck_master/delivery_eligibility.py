@@ -116,25 +116,41 @@ def professional_policy(store, doc) -> dict:
         'required': required,
         'satisfied': not required,
         'human_signoff': False,
-        'evidence': _recorded_evidence(store, doc),
+        'evidence': {'professional_use': 'not_evaluated', 'desktop_editing': 'not_evaluated'},
         'reviews_considered': 0,
         'gap_reasons': [],
         'reviews': [],
     }
-    if not required:
-        return result
 
-    pptx_ref = (doc.get('outputs') or {}).get('pptx')
-    pptx_pair = _ref_pair(pptx_ref)
-    required_deps = required_professional_dependencies(store, doc)
+    current_ref = (doc.get('outputs') or {}).get('pptx')
+    pptx_pair = _ref_pair(current_ref)
     reviews = []
     for ref in doc.get('reviews') or []:
         try:
             reviews.append((ref, store.read_object_json(ref)))
         except Exception:  # noqa: BLE001 - unreadable review records stay unread
             continue
-    replaced = {pair for _, review in reviews
-                if (pair := _ref_pair(review.get('replaces')))}
+    # One pass records the verbatim per-kind evidence for every review kind;
+    # professional_use records additionally get the full delivery diagnosis.
+    for _, review in reviews:
+        kind = review.get('kind')
+        if kind in result['evidence'] and current_ref and current_ref in (review.get('subjects') or []):
+            result['evidence'][kind] = review.get('status') or 'not_evaluated'
+    if not required:
+        return result
+
+    required_deps = required_professional_dependencies(store, doc)
+    # Only a same-logical-review replacement (same kind, same review_id —
+    # mirroring the formal adoption path's rule) can supersede a record.
+    # Defense in depth: the predicate does not trust arbitrary replaces
+    # pointers from other kinds.
+    review_ids_by_ref = {_ref_pair(ref): review.get('review_id') for ref, review in reviews}
+    replaced = set()
+    for _, review in reviews:
+        pair = _ref_pair(review.get('replaces'))
+        if (pair and review.get('kind') == 'professional_use'
+                and review_ids_by_ref.get(pair) == review.get('review_id')):
+            replaced.add(pair)
 
     for ref, review in reviews:
         if review.get('kind') != 'professional_use':
@@ -198,7 +214,10 @@ def _diagnose(review, ref, doc, pptx_pair, required_deps, replaced, *, project_i
     superseded = bool(ref_pair) and ref_pair in replaced
     if superseded:
         reasons.append('superseded')
-    blocking_fail = (status == 'fail' and not superseded and subject_current and not missing)
+    # Unlike a pass, a fail needs only its subject to be current to stay
+    # effective: incomplete or stale dependencies never soften a fail into
+    # invisibility (an earlier pass must never mask a newer fail).
+    blocking_fail = (status == 'fail' and not superseded and subject_current)
     return {
         'review_id': review.get('review_id'),
         'reviewer_type': reviewer.get('type'),
@@ -215,19 +234,3 @@ def _diagnose(review, ref, doc, pptx_pair, required_deps, replaced, *, project_i
 def _sort_reasons(reasons):
     rank = {name: i for i, name in enumerate(_REASON_ORDER)}
     return sorted(reasons, key=lambda r: (rank.get(r, len(rank)), r))
-
-
-def _recorded_evidence(store, doc) -> dict:
-    """Recorded status per professional kind, verbatim; missing means
-    not_evaluated, never a fabricated pass (T15.03 semantics)."""
-    current = (doc.get('outputs') or {}).get('pptx')
-    evidence = {'professional_use': 'not_evaluated', 'desktop_editing': 'not_evaluated'}
-    for ref in doc.get('reviews') or []:
-        try:
-            review = store.read_object_json(ref)
-        except Exception:  # noqa: BLE001
-            continue
-        kind = review.get('kind')
-        if kind in evidence and current and current in (review.get('subjects') or []):
-            evidence[kind] = review.get('status') or 'not_evaluated'
-    return evidence

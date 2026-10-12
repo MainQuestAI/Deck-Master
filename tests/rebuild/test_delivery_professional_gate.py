@@ -91,9 +91,13 @@ def _assert_refused_everywhere(tmp_path, project, store, capsys, *, reason,
 
     readiness = _final_readiness(project, capsys)
     assert readiness['status'] == 'blocked'
-    if not engineering_shadowed:
+    if engineering_shadowed:
+        assert readiness['engineering_ready'] is False
+        assert readiness['review_status'] in ('not_evaluated', 'fail'), \
+            'a recorded non-pass professional review must degrade the shared summary'
+    else:
         assert readiness['engineering_ready'] is True, 'engineering pass must stay visible separately'
-    assert readiness['review_status'] in ('pass', 'not_evaluated', 'fail', 'needs_review')
+        assert readiness['review_status'] == 'pass'
     assert readiness['professional']['satisfied'] is False
     assert reason in readiness['professional']['gap_reasons'], readiness['professional']
 
@@ -217,8 +221,7 @@ def test_empty_observations_cannot_satisfy(tmp_path, capsys, synthetic_human_ada
             reviewer=human_professional_reviewer(document, event_id='evt-no-obs'),
             observations=['', '   '])
     _assert_refused_everywhere(tmp_path, project, store, capsys,
-                               reason='no_substantive_observations',
-                               engineering_shadowed=True)
+                               reason='no_substantive_observations')
 
 
 def test_open_must_fix_cannot_satisfy(tmp_path, capsys, synthetic_human_adapter):
@@ -234,6 +237,47 @@ def test_open_must_fix_cannot_satisfy(tmp_path, capsys, synthetic_human_adapter)
     _assert_refused_everywhere(tmp_path, project, store, capsys,
                                reason='open_must_fix_findings',
                                engineering_shadowed=True)
+
+
+def test_incomplete_fail_on_current_deck_still_blocks(tmp_path, capsys, synthetic_human_adapter):
+    """Regression (PR107 review P1-1): a fail bound to the current PPTX keeps
+    its blocking power even when its dependency list is incomplete — a fail's
+    missing dependencies must never soften it into invisibility while a
+    verified human pass exists."""
+    project, store = _passing_deck(tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    document = store.load_document()
+    _review(store, document, 'professional_use', 'pass', seed='human-pass-complete',
+            reviewer=human_professional_reviewer(document, event_id='evt-pass-complete'))
+    _review(store, store.load_document(), 'professional_use', 'fail', seed='human-fail-thin',
+            reviewer=human_professional_reviewer(document, event_id='evt-fail-thin'),
+            dependencies=[])
+    policy = professional_policy(store, store.load_document())
+    assert policy['satisfied'] is False
+    assert 'professional_review_failed' in policy['gap_reasons'], policy['gap_reasons']
+    _assert_refused_everywhere(tmp_path, project, store, capsys,
+                               reason='professional_review_failed')
+
+
+def test_deck_level_fail_without_findings_still_blocks(tmp_path, capsys, synthetic_human_adapter):
+    """Regression (PR107 review P1-1, sharper variant): a fail whose subjects
+    cite only the deck file and which carries no page findings never enters a
+    check_summary dimension, so engineering stays green — the professional
+    gate alone must refuse delivery."""
+    project, store = _passing_deck(tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    document = store.load_document()
+    reviewer = human_professional_reviewer(document, event_id='evt-deck-fail')
+    _review(store, document, 'professional_use', 'fail', seed='human-deck-fail',
+            reviewer=reviewer,
+            subjects=[document['outputs']['pptx']],
+            observations=['整稿复核不通过：中心论证与任务不匹配。'],
+            dependencies=[])
+    policy = professional_policy(store, store.load_document())
+    assert policy['satisfied'] is False
+    assert 'professional_review_failed' in policy['gap_reasons'], policy['gap_reasons']
+    _assert_refused_everywhere(tmp_path, project, store, capsys,
+                               reason='professional_review_failed')
 
 
 def test_review_binding_replaced_pptx_is_not_current(tmp_path, synthetic_human_adapter):
@@ -340,7 +384,7 @@ def test_positive_human_review_via_formal_submission(tmp_path, capsys, synthetic
                                     operation_id=task_record['operation_id'],
                                     produced_against=task_record['produced_against'],
                                     result_payload={'kind': 'review', 'files': [], 'reviews': [review]})
-    assert outcome['status'] in ('accepted', 'already_applied')
+    assert outcome['status'] == 'accepted'
 
     exported = export_project(project, output_dir=tmp_path / 'delivery-ok', purpose='delivery')
     assert exported['status'] == 'exported'

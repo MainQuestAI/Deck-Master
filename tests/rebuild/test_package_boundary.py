@@ -98,6 +98,20 @@ SELF_DOCUMENTING = {"src/deck_master/cli.py", "tests/rebuild/test_cli.py",
                     "CHANGELOG.md", "docs/migration-to-rebuilt-core.md"}
 
 
+def _is_timestamped_audit_record(relative: str, path: Path) -> bool:
+    """docs/reports/ directories named with a trailing 8-digit date hold
+    timestamped audit/evidence records that cite retired trees as historical
+    fact — the same non-living status as docs/archive/. The exemption never
+    covers code (.py stays scanned) and never covers undated living documents;
+    register a new dated directory here deliberately if one is needed."""
+    parts = relative.split("/")
+    if len(parts) < 3 or parts[0] != "docs" or parts[1] != "reports":
+        return False
+    if path.suffix == ".py":
+        return False
+    return re.search(r"\d{8}$", parts[2]) is not None
+
+
 def _living_surfaces() -> list[Path]:
     roots = ["src/", "tests/rebuild/", "tools/", "skills/deck-master/", ".github/",
              "docs/"]
@@ -109,12 +123,18 @@ def _living_surfaces() -> list[Path]:
         if not target.is_dir():
             continue
         for path in sorted(target.rglob("*")):
-            # docs/reports/ holds timestamped audit/evidence records that cite
-            # retired trees as historical fact — the same non-living status as
-            # docs/archive/. Living documentation (AGENTS, agent-* guides,
-            # specs, skills, code) stays fully guarded.
-            if path.is_file() and "__pycache__" not in path.parts                     and path.suffix in {".py", ".md", ".toml", ".yml", ".yaml", ".in", ".txt"}                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/archive/")                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/specs/deck-master-rebuild-v1/")                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/reports/"):
-                surfaces.append(path)
+            if not path.is_file() or "__pycache__" in path.parts:
+                continue
+            if path.suffix not in {".py", ".md", ".toml", ".yml", ".yaml", ".in", ".txt"}:
+                continue
+            relative = str(path.relative_to(REPO_ROOT))
+            if relative.startswith("docs/archive/"):
+                continue
+            if relative.startswith("docs/specs/deck-master-rebuild-v1/"):
+                continue
+            if _is_timestamped_audit_record(relative, path):
+                continue
+            surfaces.append(path)
     return surfaces
 
 
