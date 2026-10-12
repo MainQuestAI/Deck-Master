@@ -223,17 +223,10 @@ def page_visual_summary(store, doc, entry):
 
 
 def _professional_evidence(store, doc):
-    """Human/professional review dimensions are reported honestly: a kind only
-    shows its recorded status when a current review exists, else not_evaluated
-    (never a fabricated human pass)."""
-    current = (doc.get('outputs') or {}).get('pptx')
-    evidence = {'professional_use': 'not_evaluated', 'desktop_editing': 'not_evaluated'}
-    for ref in doc.get('reviews') or []:
-        review = store.read_object_json(ref)
-        kind = review.get('kind')
-        if kind in evidence and current and current in (review.get('subjects') or []):
-            evidence[kind] = review.get('status') or 'not_evaluated'
-    return evidence
+    """Delegate to the single professional-evidence interpretation
+    (delivery_eligibility); kept for existing importers."""
+    from .delivery_eligibility import professional_policy
+    return professional_policy(store, doc)['evidence']
 
 
 

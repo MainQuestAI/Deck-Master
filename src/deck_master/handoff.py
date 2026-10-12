@@ -66,6 +66,10 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
     review_status = check_summary(store, document)["status"] if output_ref else "not_evaluated"
     if purpose == "delivery" and review_status != "pass":
         gaps.append("required_review_not_pass")
+    from .delivery_eligibility import professional_policy
+    professional = professional_policy(store, document)
+    if purpose == "delivery" and professional["required"] and not professional["satisfied"]:
+        gaps.append("professional_review_not_satisfied")
     from .models import input_alignment
     alignment = input_alignment(document)
     if alignment == "needs_reconciliation":
@@ -87,6 +91,12 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
         "page_count": len(document.get("pages") or []),
         "render_report_status": report_status or "not_evaluated",
         "review_status": review_status,
+        "professional": {
+            "required": professional["required"],
+            "satisfied": professional["satisfied"],
+            "human_signoff": professional["human_signoff"],
+            "gap_reasons": professional["gap_reasons"],
+        },
         "pending_tasks": pending,
         "gaps": gaps,
         "evidence_level": "engineering",

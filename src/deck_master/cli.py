@@ -819,18 +819,29 @@ def _legacy_final_readiness(argv) -> int:
     if rejected is not None:
         return rejected
     from .editing import check_summary
+    from .delivery_eligibility import professional_policy
     from .store import Store
     from .view import project_view
     store = Store(project)
     doc = store.load_document()
     summary = check_summary(store, doc)
+    professional = professional_policy(store, doc)
     view = project_view(project)
+    engineering_ready = bool(summary['status'] == 'pass' and doc['outputs'].get('pptx'))
     report = {
-        'status': 'ready' if summary['status'] == 'pass' and doc['outputs'].get('pptx') else 'blocked',
+        'status': 'ready' if engineering_ready and professional['satisfied'] else 'blocked',
         'review_status': summary['status'],
         'unresolved': {'missing_dimensions': sorted(summary['missing_dimensions']),
                        'failed_dimensions': sorted(k for k, v in summary['dimensions'].items()
                                                  if v['open_must_fix'] or v['status'] == 'fail')},
+        'professional': {
+            'required': professional['required'],
+            'satisfied': professional['satisfied'],
+            'human_signoff': professional['human_signoff'],
+            'gap_reasons': professional['gap_reasons'],
+            'evidence': professional['evidence'],
+        },
+        'engineering_ready': engineering_ready,
         'view_status': view['view_status'],
         'revision_id': doc['revision_id'],
         'evidence_level': 'engineering',

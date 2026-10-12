@@ -1,0 +1,141 @@
+{
+  "manifest_version": 3,
+  "purpose": "T00 固定样例 manifest：EXAMPLES.md 固定源文本与任务答案的可重用合成输入。行号 locator 对应本目录实际保存内容。",
+  "synthetic": true,
+  "golden_truth_note": "文本候选不是 golden truth；实现必须依据源材料与评价锚点复核，不得逐字模仿示例当作通过。",
+  "files": {
+    "q1/S1-sample.txt": {
+      "sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+      "bytes": 254,
+      "lines": 3
+    },
+    "q1/S2-training-sop.txt": {
+      "sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+      "bytes": 727,
+      "lines": 7
+    },
+    "q1/S3-old-draft.txt": {
+      "sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+      "bytes": 170,
+      "lines": 2
+    },
+    "q2/S1-facts.txt": {
+      "sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+      "bytes": 308,
+      "lines": 3
+    },
+    "q2/S2-scope.txt": {
+      "sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+      "bytes": 320,
+      "lines": 3
+    },
+    "q2/S3-capabilities.txt": {
+      "sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+      "bytes": 185,
+      "lines": 2
+    },
+    "q3/S1-study.txt": {
+      "sha256": "21d60a8e6ab9ec6e7348d0e399fece5d8e553bf2eda259ab2884f33607a84d07",
+      "bytes": 424,
+      "lines": 4
+    },
+    "q3/S2-confirmed-copy.txt": {
+      "sha256": "e67c0c46fc4c8d4028915643719b4f5430723df2ae8ac1f0ff583e1c1d142ead",
+      "bytes": 2778,
+      "lines": 36
+    },
+    "q4/q4a-pages.json": {
+      "sha256": "e61b4d566995d2470570a46c442c9097e9d9c4c43a3323f02204a09ced78fb61",
+      "bytes": 7679,
+      "lines": 222
+    },
+    "q4/q4b-pages.json": {
+      "sha256": "2eb0454cb12fad8fa732b33cc40cad282b16d4199559fabe33bb65197ad566b3",
+      "bytes": 7519,
+      "lines": 205
+    }
+  },
+  "reviewed_inputs": {
+    "note": "二轮独立复核（evaluator-c/d，commit 6e26176a）的输入哈希；本轮复核后修订的版本以 manifest_version 3 的哈希为准，供后续复核引用。manifest 自身不计入。",
+    "prototype/q1-content-prototype.md": {
+      "sha256": "6f6091d881fe050245d6dcc954c6cdc7763d8fd61378af31b139fc9c3884e9ce",
+      "bytes": 22121,
+      "lines": 242
+    },
+    "anchors/content-anchors.md": {
+      "sha256": "42774a7006dec5e8e319cfbd9c58d0cf9c3cc52f1e67793d81cfb9133643ad4c",
+      "bytes": 16130,
+      "lines": 188
+    },
+    "fixtures/q4/q4a-pages.json": {
+      "sha256": "e61b4d566995d2470570a46c442c9097e9d9c4c43a3323f02204a09ced78fb61",
+      "bytes": 7679,
+      "lines": 222
+    },
+    "fixtures/q4/q4b-pages.json": {
+      "sha256": "2eb0454cb12fad8fa732b33cc40cad282b16d4199559fabe33bb65197ad566b3",
+      "bytes": 7519,
+      "lines": 205
+    }
+  },
+  "locators": {
+    "q1/S1-sample.txt": {
+      "第1行": "38/100 首次记录缺设备版本（E1 证据边界）",
+      "第2行": "无补问轮次/时长/解决率记录",
+      "第3行": "教学用途限定"
+    },
+    "q1/S2-training-sop.txt": {
+      "第2行": "首轮记录五类信息",
+      "第3行": "未知写法与禁止事项",
+      "第4行": "紧急程度与版本两轴分离",
+      "第5行": "紧急不等版本",
+      "第6行": "普通未知不升级",
+      "第7行": "交接目标定义（N1 依据）"
+    },
+    "q1/S3-old-draft.txt": {
+      "第1行": "错误：38%效率提升（AN-Q1-1 反例源）",
+      "第2行": "错误：先补齐版本再处理（AN-Q1-2 反例源）"
+    },
+    "q2/S1-facts.txt": {
+      "第1行": "54/120 首次提交缺设备条件（缺失计数，非补问计数）",
+      "第2行": "访谈机制假设+未测限定（AN-Q2-1 依据）",
+      "第3行": "无实施后测量"
+    },
+    "q2/S2-scope.txt": {
+      "第1行": "一期只读，禁止自动提交/修改/关闭（AN-Q2-2 依据；Q4-B 确定性违背对照）",
+      "第2行": "许可读取+人工正式提交",
+      "第3行": "允许注明未知"
+    },
+    "q2/S3-capabilities.txt": {
+      "第1行": "已知能力三项",
+      "第2行": "不含自动写入接口（Q4-B P6 违背对照）"
+    },
+    "q3/S1-study.txt": {
+      "第1行": "研究A 12人中8人",
+      "第2行": "研究B 20人中14人",
+      "第3行": "两研究不可比（AN-Q3-1 依据）",
+      "第4行": "未测业务效果"
+    },
+    "q3/S2-confirmed-copy.txt": {
+      "P1–P6": "确认稿六页完整上屏内容（V03 输入；忠实性核验基准）"
+    },
+    "q4/q4a-pages.json": {
+      "p1": "两候选路径框架（A 只改表单 / B 增加引用助手）",
+      "p6": "路径对照表（含 A 的补问归因测量）+推荐条件+改变条件+显式决定请求（AN-Q2-4 正例；F03 修订，D 复核并入）",
+      "p5": "人工确认后在现有系统正式提交（V07 正例）"
+    },
+    "q4/q4b-pages.json": {
+      "p5/b2": "F0：本期即由 AI 在人员确认后自动提交（确定承诺）",
+      "p1/b2": "F0：本期试点即由 AI 自动提交（确定承诺；局改 P5 后仍违背）",
+      "p6/b2": "F0：本期已具备自动提交能力（确定承诺；局改 P5 后仍违背）",
+      "future_proposal_pair": "AN-Q2-5 成对校准（定为 F1 的缺前提未来承诺 vs 不得判 F0 的合法未来建议）"
+    }
+  },
+  "expected_behaviors": {
+    "V01 模糊启动": "输入「用这个目录做套 PPT」+ q1 三份材料 → 先理解稿与任务分歧卡，不直接产出整套",
+    "V03 确认稿": "输入 q3/S2-confirmed-copy.txt + 「按原内容完成整套，不需要讲稿」→ 忠实性核验+模板适配，不重复询问受众/口播",
+    "V07 只试样页": "输入 q4-a + 「只做第五页的样页」→ 初始设计入口，1页/1候选/1调用",
+    "V09 局部修改": "输入 q4-b + 「P5 改回人工确认，其他页先别动」→ 只改 P5；P1/P6 的本期自动提交承诺仍为开放的边界违背，影响报告必须标记全稿不一致，不静默改"
+  },
+  "control_variants_todo": "无 ContentPlan 旧项目、existing_decisions 旧项目、1次调用额度、in-flight/unknown call、host_self professional_use/pass、PPT-only not_evaluated、当前文件人类审阅证据：由 T02–T04 的 Runtime 测试fixture构造，本 manifest 只登记需求（EXAMPLES §1 Q4）。"
+}

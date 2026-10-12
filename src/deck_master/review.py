@@ -328,6 +328,27 @@ def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
             'unclosed_prior_findings': unclosed_prior}
 
 
+def dependency_problems(review: dict, artifacts: dict) -> list[dict]:
+    """The single currentness rule for review dependencies (P1-07): a
+    dependency counts as current only when it resolves against the current
+    digest map and the sha matches; anything unresolvable is stale with a
+    typed reason (no silent pass for known prefixes). Every consumer — the
+    shared check summary and the delivery professional predicate — must use
+    this one implementation instead of maintaining two rule sets."""
+    problems: list[dict] = []
+    for dep in review.get('dependencies') or []:
+        key = _dependency_key(dep)
+        if key in artifacts:
+            if artifacts[key] != dep.get('sha256'):
+                problems.append({'key': key, 'kind': 'sha_mismatch'})
+            continue
+        if key.startswith('source:'):
+            problems.append({'key': key, 'kind': 'unresolvable_source'})
+            continue
+        problems.append({'key': key, 'kind': 'unverifiable_kind'})
+    return problems
+
+
 def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> dict:
     """The one interpretation of the current check state (AC-R01/R02/R03/R10).
 
@@ -357,19 +378,17 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
             suspended_pages.update(task.get('scope_pages') or [])
 
     def dependencies_current(review):
-        # P1-07: a dependency counts as current only when it resolves against
-        # the current digest map and the sha matches; anything unresolvable is
-        # stale with a typed reason (no silent pass for known prefixes).
-        for dep in review.get('dependencies') or []:
-            key = _dependency_key(dep)
-            if key in artifacts:
-                if artifacts[key] != dep.get('sha256'):
-                    return False, 'dependency sha does not match the current object'
-                continue
-            if key.startswith('source:'):
-                return False, f'unresolvable source dependency {key!r}'
-            return False, f'unverifiable dependency kind {key!r}'
-        return True, ''
+        # P1-07, one implementation: review.dependency_problems (shared with
+        # the delivery professional predicate).
+        problems = dependency_problems(review, artifacts)
+        if not problems:
+            return True, ''
+        problem = problems[0]
+        if problem['kind'] == 'sha_mismatch':
+            return False, 'dependency sha does not match the current object'
+        if problem['kind'] == 'unresolvable_source':
+            return False, f"unresolvable source dependency {problem['key']!r}"
+        return False, f"unverifiable dependency kind {problem['key']!r}"
 
     dimensions: dict[str, dict] = {}
     dimension_reasons: dict[str, str] = {}

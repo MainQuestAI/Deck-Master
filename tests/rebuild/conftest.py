@@ -74,6 +74,49 @@ def store(tmp_path: Path) -> Store:
 
 
 @pytest.fixture()
+def synthetic_human_adapter():
+    """Controlled L1 identity-verifier stub (content collaboration v1.2
+    CONTRACTS §12.1): proves the human-receipt predicate logic — project and
+    reviewer binding, subject coverage, issue time, event anti-replay. It is a
+    synthetic/unit fixture and never evidence that a real human reviewed files;
+    the production registry ships with no adapters until T07.
+
+    Anti-replay note: every delivery entry re-verifies the same receipt, so an
+    adapter must be idempotent per (event_id, receipt content) and reject only
+    one event_id being reused for different content."""
+    from deck_master import delivery_eligibility
+    from deck_master.models import canonical_json_bytes, sha256_bytes
+
+    seen_events: dict[str, str] = {}
+
+    def verify(receipt, review, context):
+        if receipt.get('project_id') != context.get('project_id'):
+            return False, 'receipt_project_mismatch'
+        if receipt.get('reviewer_id') != (review.get('reviewer') or {}).get('id'):
+            return False, 'receipt_reviewer_mismatch'
+        covered = {(s.get('path'), s.get('sha256')) for s in receipt.get('subjects') or []}
+        required = {(s.get('path'), s.get('sha256')) for s in review.get('subjects') or []}
+        if not required or not required <= covered:
+            return False, 'receipt_subjects_incomplete'
+        if not (receipt.get('issued_at') or '').strip():
+            return False, 'receipt_missing_issue_time'
+        event = receipt.get('event_id')
+        if not event:
+            return False, 'receipt_event_replayed'
+        fingerprint = sha256_bytes(canonical_json_bytes(
+            {'receipt': receipt, 'reviewer': review.get('reviewer')}))
+        prior = seen_events.get(event)
+        if prior is not None and prior != fingerprint:
+            return False, 'receipt_event_replayed'
+        seen_events[event] = fingerprint
+        return True, None
+
+    delivery_eligibility.register_identity_adapter('synthetic-unit-fixture', verify)
+    yield seen_events
+    delivery_eligibility.unregister_identity_adapter('synthetic-unit-fixture')
+
+
+@pytest.fixture()
 def created_store(tmp_path: Path) -> Store:
     st = Store(tmp_path / "project")
     st.ensure_layout()

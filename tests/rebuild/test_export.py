@@ -44,15 +44,53 @@ def _deck(tmp_path: Path) -> tuple[Path, Store]:
     return project, Store(project)
 
 
-def _review(store, document, kind, status, *, seed, findings=()):
+def professional_dependencies(store, document):
+    """The runtime minimum dependency set for a professional review: the
+    current PPTX artifact plus every page content digest. An empty array is
+    never a complete dependency list (AC-P02)."""
+    deps = [{'kind': 'content', 'identity': f"page:{entry['page_id']}",
+             'sha256': entry['page']['sha256']}
+            for entry in document['pages'] if entry.get('page')]
+    pptx_ref = document['outputs'].get('pptx')
+    if pptx_ref:
+        deps.append({'kind': 'artifact', 'identity': 'pptx',
+                     'sha256': store.read_object_json(pptx_ref)['file']['sha256']})
+    return deps
+
+
+def human_professional_reviewer(document, *, event_id='evt-human-review-1',
+                                reviewer_id='reviewer-chen',
+                                adapter_id='synthetic-unit-fixture'):
+    """Controlled L1 receipt fixture (CONTRACTS §12.1): proves the predicate
+    combination only. This is a synthetic/unit fixture and must never be
+    presented as a real human having reviewed real files."""
+    subjects = [document['outputs']['pptx']] + [
+        entry['page'] for entry in document['pages'] if entry.get('page')]
+    return {
+        'type': 'human_external', 'id': reviewer_id, 'execution_ref': None,
+        'independence_confirmed': True,
+        'identity_receipt': {
+            'adapter_id': adapter_id, 'event_id': event_id,
+            'issued_at': '2026-09-21T08:00:00Z', 'reviewer_id': reviewer_id,
+            'project_id': document['project_id'], 'subjects': subjects,
+        },
+    }
+
+
+def _review(store, document, kind, status, *, seed, findings=(), reviewer=None,
+            observations=None, dependencies=None, subjects=None):
+    """Callers state who reviewed and what they executed. A seed only names the
+    record: seed="human" on a host_self record was the old false positive and
+    is gone (T01). Defaults name an explicit host_self reviewer."""
     page_ref = document['pages'][0]['page']
     review = {
         'schema_version': 'deck_review.v1', 'review_id': f'rv-{seed}', 'kind': kind, 'status': status,
-        'subjects': [document['outputs']['pptx'], page_ref],
-        'dependencies': [{'kind': 'content', 'identity': 'page:p1', 'sha256': page_ref['sha256']}],
-        'reviewer': {'type': 'host_self', 'id': 'host-1', 'execution_ref': None,
-                     'independence_confirmed': False},
-        'observations': ['实际检查记录'],
+        'subjects': list(subjects if subjects is not None else [document['outputs']['pptx'], page_ref]),
+        'dependencies': list(dependencies if dependencies is not None
+                             else professional_dependencies(store, document)),
+        'reviewer': reviewer or {'type': 'host_self', 'id': f'host-{seed}', 'execution_ref': None,
+                                 'independence_confirmed': False},
+        'observations': list(observations if observations is not None else ['实际检查记录']),
         'findings': list(findings),
         'created_at': '2026-09-21T00:00:00Z', 'replaces': None,
     }
@@ -187,7 +225,7 @@ def test_missing_human_reviews_reported_not_evaluated(tmp_path):
 
 def test_recorded_human_review_status_is_reported_verbatim(tmp_path):
     project, store = _passing_deck(tmp_path)
-    _review(store, store.load_document(), 'professional_use', 'pass', seed='human')
+    _review(store, store.load_document(), 'professional_use', 'pass', seed='recorded-professional')
     export_project(project, output_dir=tmp_path / 'human-present', purpose='delivery')
     report = json.loads((tmp_path / 'human-present' / 'delivery.json').read_text('utf-8'))
     assert report['professional_evidence']['professional_use'] == 'pass'
@@ -241,33 +279,51 @@ def _set_policy(store, **updates):
                         operation_id='policy-' + '-'.join(updates))
 
 
-def test_delivery_honors_professional_review_required_policy(tmp_path):
+def test_delivery_honors_professional_review_required_policy(tmp_path, synthetic_human_adapter):
     # Positive: six passing engineering checks are not enough when the policy
-    # demands professional review — a recorded professional_use pass unlocks it.
+    # demands professional review, and the audit's old false positive — a
+    # host_self professional_use pass whose seed merely said "human" — must
+    # stay blocked (AC-P02). Only a receipt-carrying human review unlocks it.
     project, store = _passing_deck(tmp_path)
     _set_policy(store, professional_review_required_for_delivery=True)
     with pytest.raises(StoreError, match='professional or human review'):
         export_project(project, output_dir=tmp_path / 'needs-human', purpose='delivery')
     assert not (tmp_path / 'needs-human').exists()
 
-    _review(store, store.load_document(), 'professional_use', 'pass', seed='human')
+    _review(store, store.load_document(), 'professional_use', 'pass', seed='self-named-human')
+    with pytest.raises(StoreError, match='professional or human review') as failure:
+        export_project(project, output_dir=tmp_path / 'self-named', purpose='delivery')
+    reasons = {gap['reason'] for gap in failure.value.payload()['error']['gaps']}
+    assert 'reviewer_not_human' in reasons
+    assert not (tmp_path / 'self-named').exists()
+
+    document = store.load_document()
+    _review(store, document, 'professional_use', 'pass', seed='human-verified',
+            reviewer=human_professional_reviewer(document))
     outcome = export_project(project, output_dir=tmp_path / 'with-human', purpose='delivery')
     assert outcome['status'] == 'exported'
     report = json.loads((tmp_path / 'with-human' / 'delivery.json').read_text('utf-8'))
+    assert report['professional']['required'] is True
+    assert report['professional']['satisfied'] is True
+    assert report['professional']['human_signoff'] is True
     assert report['professional_evidence']['professional_use'] == 'pass'
 
     # A failing professional review blocks delivery even earlier: the shared
     # interpretation already fails the deck (refused, destination cleaned).
     project2, store2 = _passing_deck(tmp_path / 'second')
     _set_policy(store2, professional_review_required_for_delivery=True)
-    _review(store2, store2.load_document(), 'professional_use', 'fail', seed='human-fail',
+    _review(store2, store2.load_document(), 'professional_use', 'fail', seed='recorded-fail',
             findings=_must_fix())
     with pytest.raises(StoreError, match='delivery requires every required check'):
         export_project(project2, output_dir=tmp_path / 'second' / 'fail-human', purpose='delivery')
     assert not (tmp_path / 'second' / 'fail-human').exists()
 
-    # The policy only gates delivery; review export stays open (07.7).
-    export_project(project2, output_dir=tmp_path / 'second' / 'review-ok', purpose='review')
+    # The policy only gates delivery; review export stays open and says so (07.7).
+    review_outcome = export_project(project2, output_dir=tmp_path / 'second' / 'review-ok', purpose='review')
+    review_report = json.loads((Path(review_outcome['output_dir']) / 'delivery.json').read_text('utf-8'))
+    assert review_report['professional']['required'] is True
+    assert review_report['professional']['satisfied'] is False
+    assert review_report['professional']['human_signoff'] is False
 
 
 @pytest.mark.render
