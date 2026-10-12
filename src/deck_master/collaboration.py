@@ -134,7 +134,7 @@ def _require_region(store, document) -> dict:
     return region
 
 
-def _replay_or_conflict(store, document, operation_id, action, payload_digest_value):
+def replay_or_conflict(store, document, operation_id, action, payload_digest_value):
     prior = operation_revision(store, document, operation_id)
     if prior is None:
         return None
@@ -148,7 +148,8 @@ def _replay_or_conflict(store, document, operation_id, action, payload_digest_va
     raise ConflictError("operation_id", "different payload already applied")
 
 
-def _commit(store, document, *, operation_id, action, digest, description, updated) -> str:
+def commit_collaboration_change(store, document, *, operation_id, action, digest,
+                                description, updated) -> str:
     change = {
         "operation_id": operation_id,
         "kind": WRITE_CHANGE_KIND,
@@ -258,12 +259,12 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
             raise ModelError("collaboration/request/replace_request_id",
                              "replace_request_id must name the current open request")
         digest = payload_digest(_ACTION_REQUEST, {"input": input, "evidence": evidence})
-        replay = _replay_or_conflict(store, document, operation_id, _ACTION_REQUEST, digest)
+        replay = replay_or_conflict(store, document, operation_id, _ACTION_REQUEST, digest)
         if replay:
             return replay
         updated_region = {**region, "request": candidate}
         updated = {**document, "collaboration": updated_region}
-        committed = _commit(store, document, operation_id=operation_id, action=_ACTION_REQUEST,
+        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=_ACTION_REQUEST,
                             digest=digest, description="start work request", updated=updated)
         return {"status": "accepted", "request_id": candidate["request_id"],
                 "effective_scope": candidate["scope"],
@@ -316,13 +317,13 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         }
         models.validate_decision_semantics(decision)
         digest = payload_digest(_ACTION_DECISION, {"input": input, "evidence": evidence})
-        replay = _replay_or_conflict(store, document, operation_id, _ACTION_DECISION, digest)
+        replay = replay_or_conflict(store, document, operation_id, _ACTION_DECISION, digest)
         if replay:
             return replay
         decision_ref = store.put_json_object(decision)
         updated_region = {**region, "decisions": list(region.get("decisions") or []) + [decision_ref]}
         updated = {**document, "collaboration": updated_region}
-        committed = _commit(store, document, operation_id=operation_id, action=_ACTION_DECISION,
+        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=_ACTION_DECISION,
                             digest=digest,
                             description=f"record decision {decision['decision_id']} ({topic})",
                             updated=updated)
@@ -380,13 +381,13 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
         models.validate_authorization_semantics(authorization)
         _validate_parent_chain(store, region, authorization)
         digest = payload_digest(_ACTION_GRANT, {"input": input, "evidence": evidence})
-        replay = _replay_or_conflict(store, document, operation_id, _ACTION_GRANT, digest)
+        replay = replay_or_conflict(store, document, operation_id, _ACTION_GRANT, digest)
         if replay:
             return replay
         authorization_ref = store.put_json_object(authorization)
         updated_region = {**region, "authorizations": list(region.get("authorizations") or []) + [authorization_ref]}
         updated = {**document, "collaboration": updated_region}
-        committed = _commit(store, document, operation_id=operation_id, action=_ACTION_GRANT,
+        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=_ACTION_GRANT,
                             digest=digest,
                             description=f"grant {authorization['authorization_id']} ({authorization['mode']})",
                             updated=updated)
@@ -427,7 +428,7 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
                     "revision_id": document["revision_id"]}
         digest = payload_digest(_ACTION_REVOKE,
                                 {"authorization_id": authorization_id, "reason": reason})
-        replay = _replay_or_conflict(store, document, operation_id, _ACTION_REVOKE, digest)
+        replay = replay_or_conflict(store, document, operation_id, _ACTION_REVOKE, digest)
         if replay:
             return replay
         revoked = {**target, "status": "revoked", "replaces": refs[target_index]}
@@ -437,7 +438,7 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
         updated_refs[target_index] = revoked_ref
         updated_region = {**region, "authorizations": updated_refs}
         updated = {**document, "collaboration": updated_region}
-        committed = _commit(store, document, operation_id=operation_id, action=_ACTION_REVOKE,
+        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=_ACTION_REVOKE,
                             digest=digest,
                             description=f"revoke authorization {authorization_id}: {reason.strip()}",
                             updated=updated)
@@ -488,14 +489,14 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
             evidence = resolve_evidence(instruction_evidence, adapter_context,
                                         where="collaboration/request/resume/evidence")
         digest = payload_digest(action, {"reason": reason, "evidence": evidence})
-        replay = _replay_or_conflict(store, document, operation_id, action, digest)
+        replay = replay_or_conflict(store, document, operation_id, action, digest)
         if replay:
             return replay
         updated_request = {**request, "paused": paused,
                            "pause_reason": reason.strip() if paused else None}
         updated_region = {**region, "request": updated_request}
         updated = {**document, "collaboration": updated_region}
-        committed = _commit(store, document, operation_id=operation_id, action=action,
+        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=action,
                             digest=digest,
                             description="pause request: " + reason.strip() if paused else "resume request",
                             updated=updated)

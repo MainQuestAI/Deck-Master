@@ -382,6 +382,16 @@ def restore_document(store, current, past, operation_id):
         updated['content_plan'] = copy.deepcopy(past['content_plan'])
     else:
         updated.pop('content_plan', None)
+    # Narrative is content: it is restored with the content it governed, and
+    # removed when the target snapshot predates it (MIGRATION §4).
+    if past.get('narrative'):
+        updated['narrative'] = copy.deepcopy(past['narrative'])
+    else:
+        updated.pop('narrative', None)
+    # The collaboration control region is never rolled back: the current
+    # request, decisions, authorizations, pause/revocation state, stop policy
+    # and the raised minimum writer stay exactly as they are (MIGRATION §4).
+    updated['collaboration'] = current.get('collaboration')
     if not past.get('pages'):
         updated.pop('content_basis', None)
     elif past.get('content_basis'):
