@@ -1,0 +1,114 @@
+{
+  "manifest_version": 1,
+  "purpose": "T00 固定样例 manifest：EXAMPLES.md 固定源文本与任务答案的可重用合成输入。行号 locator 对应本目录实际保存内容。",
+  "synthetic": true,
+  "golden_truth_note": "文本候选不是 golden truth；实现必须依据源材料与评价锚点复核，不得逐字模仿示例当作通过。",
+  "files": {
+    "q1/S1-sample.txt": {
+      "sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+      "bytes": 254,
+      "lines": 3
+    },
+    "q1/S2-training-sop.txt": {
+      "sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+      "bytes": 727,
+      "lines": 7
+    },
+    "q1/S3-old-draft.txt": {
+      "sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+      "bytes": 170,
+      "lines": 2
+    },
+    "q2/S1-facts.txt": {
+      "sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+      "bytes": 308,
+      "lines": 3
+    },
+    "q2/S2-scope.txt": {
+      "sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+      "bytes": 320,
+      "lines": 3
+    },
+    "q2/S3-capabilities.txt": {
+      "sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+      "bytes": 185,
+      "lines": 2
+    },
+    "q3/S1-study.txt": {
+      "sha256": "21d60a8e6ab9ec6e7348d0e399fece5d8e553bf2eda259ab2884f33607a84d07",
+      "bytes": 424,
+      "lines": 4
+    },
+    "q3/S2-confirmed-copy.txt": {
+      "sha256": "e67c0c46fc4c8d4028915643719b4f5430723df2ae8ac1f0ff583e1c1d142ead",
+      "bytes": 2778,
+      "lines": 36
+    },
+    "q4/q4a-pages.json": {
+      "sha256": "09c01195e0d0ac05ee62b9edbae462840cd9aa5e327d31f7617b7e077f5e7cb7",
+      "bytes": 4573,
+      "lines": 69
+    },
+    "q4/q4b-pages.json": {
+      "sha256": "1781a80c9102bd34c17330217217e5b120a57a53d387577b803be883be3b80b7",
+      "bytes": 5167,
+      "lines": 73
+    }
+  },
+  "locators": {
+    "q1/S1-sample.txt": {
+      "第1行": "38/100 首次记录缺设备版本（E1 证据边界）",
+      "第2行": "无补问轮次/时长/解决率记录",
+      "第3行": "教学用途限定"
+    },
+    "q1/S2-training-sop.txt": {
+      "第2行": "首轮记录五类信息",
+      "第3行": "未知写法与禁止事项",
+      "第4行": "紧急程度与版本两轴分离",
+      "第5行": "紧急不等版本",
+      "第6行": "普通未知不升级",
+      "第7行": "交接目标定义（N1 依据）"
+    },
+    "q1/S3-old-draft.txt": {
+      "第1行": "错误：38%效率提升（AN-Q1-1 反例源）",
+      "第2行": "错误：先补齐版本再处理（AN-Q1-2 反例源）"
+    },
+    "q2/S1-facts.txt": {
+      "第1行": "54/120 首次提交缺设备条件",
+      "第2行": "访谈机制假设+未测限定（AN-Q2-1 依据）",
+      "第3行": "无实施后测量"
+    },
+    "q2/S2-scope.txt": {
+      "第1行": "一期只读，禁止自动提交/修改/关闭（AN-Q2-2 依据；Q4-B P5 错误对照）",
+      "第2行": "许可读取+人工正式提交",
+      "第3行": "允许注明未知"
+    },
+    "q2/S3-capabilities.txt": {
+      "第1行": "已知能力三项",
+      "第2行": "不含自动写入接口（Q4-B P6 错误对照）"
+    },
+    "q3/S1-study.txt": {
+      "第1行": "研究A 12人中8人",
+      "第2行": "研究B 20人中14人",
+      "第3行": "两研究不可比（AN-Q3-1 依据）",
+      "第4行": "未测业务效果"
+    },
+    "q3/S2-confirmed-copy.txt": {
+      "P1–P6": "确认稿六页完整上屏内容（V03 输入；忠实性核验基准）"
+    },
+    "q4/q4a-pages.json": {
+      "p1–p6": "正确六页；P5=人工确认后在现有系统正式提交（V07 正例）"
+    },
+    "q4/q4b-pages.json": {
+      "p5/b2": "植入错误句（F0）",
+      "p1/b2+p6/b2": "依赖自动提交的跨页矛盾（F1，局改影响报告测试）"
+    }
+  },
+  "expected_behaviors": {
+    "V01 模糊启动": "输入「用这个目录做套 PPT」+ q1 三份材料 → 先理解稿与任务分歧卡，不直接产出整套",
+    "V03 确认稿": "输入 q3/S2-confirmed-copy.txt + 「按原内容完成整套，不需要讲稿」→ 忠实性核验+模板适配，不重复询问受众/口播",
+    "V07 只试样页": "输入 q4-a + 「只做第五页的样页」→ 初始设计入口，1页/1候选/1调用",
+    "V09 局部修改": "输入 q4-b + 「P5 改回人工确认，其他页先别动」→ 只改 P5；报告 P1/P6 跨页矛盾，不静默改"
+  },
+  "control_variants_todo": "无 ContentPlan 旧项目、existing_decisions 旧项目、1次调用额度、in-flight/unknown call、host_self professional_use/pass、PPT-only not_evaluated、当前文件人类审阅证据：由 T02–T04 的 Runtime 测试fixture构造，本 manifest 只登记需求（EXAMPLES §1 Q4）。"
+}
