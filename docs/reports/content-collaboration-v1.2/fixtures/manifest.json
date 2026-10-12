@@ -1,5 +1,5 @@
 {
-  "manifest_version": 1,
+  "manifest_version": 2,
   "purpose": "T00 固定样例 manifest：EXAMPLES.md 固定源文本与任务答案的可重用合成输入。行号 locator 对应本目录实际保存内容。",
   "synthetic": true,
   "golden_truth_note": "文本候选不是 golden truth；实现必须依据源材料与评价锚点复核，不得逐字模仿示例当作通过。",
@@ -45,14 +45,37 @@
       "lines": 36
     },
     "q4/q4a-pages.json": {
-      "sha256": "09c01195e0d0ac05ee62b9edbae462840cd9aa5e327d31f7617b7e077f5e7cb7",
-      "bytes": 4573,
-      "lines": 69
+      "sha256": "636f7a491b9d606ef4aa8747914d65e9e90c729c3284bba46991e85b874cf01a",
+      "bytes": 5604,
+      "lines": 76
     },
     "q4/q4b-pages.json": {
-      "sha256": "1781a80c9102bd34c17330217217e5b120a57a53d387577b803be883be3b80b7",
-      "bytes": 5167,
-      "lines": 73
+      "sha256": "2c6fa188f3a780e5d5c0c9b8caba21d5019f2ef2d21a29cec28fa9280fc5fa18",
+      "bytes": 6011,
+      "lines": 78
+    }
+  },
+  "reviewed_inputs": {
+    "note": "二轮独立复核输入（evaluation/evaluator-c/d 以此哈希为准）；manifest 自身不计入。",
+    "prototype/q1-content-prototype.md": {
+      "sha256": "644aeed3e29ff06bf43cfcef285ab9acc6abec2bd03533533712a26b3e5b3372",
+      "bytes": 21804,
+      "lines": 242
+    },
+    "anchors/content-anchors.md": {
+      "sha256": "c342e7dd6a0545fa3e96106e0011cf479585a46f0652f3cde2eb13e7d28c8bbb",
+      "bytes": 15383,
+      "lines": 185
+    },
+    "fixtures/q4/q4a-pages.json": {
+      "sha256": "636f7a491b9d606ef4aa8747914d65e9e90c729c3284bba46991e85b874cf01a",
+      "bytes": 5604,
+      "lines": 76
+    },
+    "fixtures/q4/q4b-pages.json": {
+      "sha256": "2c6fa188f3a780e5d5c0c9b8caba21d5019f2ef2d21a29cec28fa9280fc5fa18",
+      "bytes": 6011,
+      "lines": 78
     }
   },
   "locators": {
@@ -79,13 +102,13 @@
       "第3行": "无实施后测量"
     },
     "q2/S2-scope.txt": {
-      "第1行": "一期只读，禁止自动提交/修改/关闭（AN-Q2-2 依据；Q4-B P5 错误对照）",
+      "第1行": "一期只读，禁止自动提交/修改/关闭（AN-Q2-2 依据；Q4-B 确定性违背对照）",
       "第2行": "许可读取+人工正式提交",
       "第3行": "允许注明未知"
     },
     "q2/S3-capabilities.txt": {
       "第1行": "已知能力三项",
-      "第2行": "不含自动写入接口（Q4-B P6 错误对照）"
+      "第2行": "不含自动写入接口（Q4-B P6 违背对照）"
     },
     "q3/S1-study.txt": {
       "第1行": "研究A 12人中8人",
@@ -97,18 +120,22 @@
       "P1–P6": "确认稿六页完整上屏内容（V03 输入；忠实性核验基准）"
     },
     "q4/q4a-pages.json": {
-      "p1–p6": "正确六页；P5=人工确认后在现有系统正式提交（V07 正例）"
+      "p1": "两候选路径框架（A 只改表单 / B 增加引用助手）",
+      "p6": "路径对照表+推荐条件与改变条件（AN-Q2-4 正例；F03 修订）",
+      "p5": "人工确认后在现有系统正式提交（V07 正例）"
     },
     "q4/q4b-pages.json": {
-      "p5/b2": "植入错误句（F0）",
-      "p1/b2+p6/b2": "依赖自动提交的跨页矛盾（F1，局改影响报告测试）"
+      "p5/b2": "F0：人员确认后自动提交（确定承诺）",
+      "p1/b2": "F0：本期即由 AI 自动提交（确定承诺；局改 P5 后仍违背）",
+      "p6/b2": "F0：本期已具备自动提交能力（确定承诺；局改 P5 后仍违背）",
+      "future_proposal_pair": "AN-Q2-5 成对校准（缺前提未来承诺 vs 带前提合法未来建议）"
     }
   },
   "expected_behaviors": {
     "V01 模糊启动": "输入「用这个目录做套 PPT」+ q1 三份材料 → 先理解稿与任务分歧卡，不直接产出整套",
     "V03 确认稿": "输入 q3/S2-confirmed-copy.txt + 「按原内容完成整套，不需要讲稿」→ 忠实性核验+模板适配，不重复询问受众/口播",
     "V07 只试样页": "输入 q4-a + 「只做第五页的样页」→ 初始设计入口，1页/1候选/1调用",
-    "V09 局部修改": "输入 q4-b + 「P5 改回人工确认，其他页先别动」→ 只改 P5；报告 P1/P6 跨页矛盾，不静默改"
+    "V09 局部修改": "输入 q4-b + 「P5 改回人工确认，其他页先别动」→ 只改 P5；P1/P6 的本期自动提交承诺仍为开放的边界违背，影响报告必须标记全稿不一致，不静默改"
   },
   "control_variants_todo": "无 ContentPlan 旧项目、existing_decisions 旧项目、1次调用额度、in-flight/unknown call、host_self professional_use/pass、PPT-only not_evaluated、当前文件人类审阅证据：由 T02–T04 的 Runtime 测试fixture构造，本 manifest 只登记需求（EXAMPLES §1 Q4）。"
 }
