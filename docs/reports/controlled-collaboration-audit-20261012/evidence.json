@@ -1,0 +1,396 @@
+{
+  "date": "2026-10-12",
+  "head": "af9fd7a6b4d08f753d2f16536a03f386384f49d2",
+  "old_before_relaxation": "4d44c7ee92632622a13d3770025ccac5ea49b982",
+  "old_before_rebuild": "d573b3c5dbfbaa742bfed32ec84e9dd79ac62faf",
+  "source_module": "src/deck_master/service.py",
+  "scope": "read-only production audit; synthetic projects in TemporaryDirectory; no real image calls; no customer project writes; no rendering acceptance",
+  "tracked_diff_sha256_before": "6f0edc6551ae0a496e9e9fc199105556f0f7e3b16fd37cf48ce00eb08e33e155",
+  "probes": [
+    {
+      "id": "P01",
+      "method": "real v3 create/start/accept/continue using existing synthetic fixture",
+      "existing_decisions": [],
+      "design": "default",
+      "external_call_limit": null,
+      "unresolved_facts": [
+        "成效指标待实际验证。"
+      ],
+      "after_compose": "auto_view_then_production",
+      "after_continue": "codex_generate_blueprint",
+      "task_kinds": [
+        "blueprint"
+      ],
+      "image_calls": 0
+    },
+    {
+      "id": "P02",
+      "method": "synthetic passing engineering fixture; invoke actual delivery gate",
+      "engineering": "pass",
+      "policy": false,
+      "reviewer_types": [
+        "host_self"
+      ],
+      "delivery_gate": "allowed"
+    },
+    {
+      "id": "P03",
+      "method": "same synthetic project with required professional review; compare gates; role slots seeded in fixture",
+      "export_gate": "export: selected snapshot needs professional or human review",
+      "handoff_status": "verified",
+      "handoff_gaps": [],
+      "evidence_level": "engineering"
+    },
+    {
+      "id": "P04",
+      "method": "existing review fixture produces host_self professional_use pass",
+      "professional_required": true,
+      "reviewer": {
+        "execution_ref": null,
+        "id": "host-1",
+        "independence_confirmed": false,
+        "type": "host_self"
+      },
+      "delivery_gate": "allowed"
+    },
+    {
+      "id": "P05",
+      "method": "synthetic contract-shaped PPT-only professional review; actual delivery predicate",
+      "professional_status": "not_evaluated",
+      "reviewer_type": "host_self",
+      "engineering_status": "pass",
+      "delivery_gate": "allowed",
+      "limit": "fixture store insertion, not demonstrated through UI review submission"
+    }
+  ],
+  "historical_stages": {
+    "before_relaxation": [
+      {
+        "stage": "deck-init",
+        "transition": {
+          "next_stage": "deck-brief",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "init.scan_scope",
+          "init.privacy_boundary",
+          "init.customer_visible_forbidden"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-brief",
+        "transition": {
+          "next_stage": "deck-planner",
+          "mode": "manual",
+          "approval_required": true,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "brief.decision_object",
+          "brief.success_criteria",
+          "brief.non_negotiable_constraints",
+          "brief.forbidden_claims",
+          "brief.evidence_gap"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-planner",
+        "transition": {
+          "next_stage": "deck-sourcing",
+          "mode": "manual",
+          "approval_required": true,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "planner.primary_thesis",
+          "planner.counter_question",
+          "planner.page_budget",
+          "planner.proof_order"
+        ],
+        "required_entry_decisions": [
+          "brief.approved"
+        ]
+      },
+      {
+        "stage": "deck-sourcing",
+        "transition": {
+          "next_stage": "deck-producer",
+          "mode": "manual",
+          "approval_required": true,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "sourcing.source_authority",
+          "sourcing.reuse_license",
+          "sourcing.freshness",
+          "sourcing.screenshot_consent",
+          "sourcing.generation_strategy"
+        ],
+        "required_entry_decisions": [
+          "planner.approved"
+        ]
+      },
+      {
+        "stage": "deck-producer",
+        "transition": {
+          "next_stage": "deck-builder",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": false,
+          "non_bypassable": false
+        },
+        "questions": [
+          "producer.page_claim",
+          "producer.public_evidence",
+          "producer.visual_lead",
+          "producer.internal_client_boundary"
+        ],
+        "required_entry_decisions": [
+          "sourcing.approved"
+        ]
+      },
+      {
+        "stage": "deck-builder",
+        "transition": {
+          "next_stage": "deck-quality",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "builder.output_mode",
+          "builder.font_policy"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-quality",
+        "transition": {
+          "next_stage": "deck-review",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "quality.rule_conflict"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-review",
+        "transition": {
+          "next_stage": "client_export",
+          "mode": "manual",
+          "approval_required": true,
+          "preauthorizable": false,
+          "non_bypassable": true
+        },
+        "questions": [
+          "review.risk_acceptance",
+          "review.final_version",
+          "review.delivery_target",
+          "review.approver"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-learn",
+        "transition": {
+          "next_stage": null,
+          "mode": "optional",
+          "approval_required": false,
+          "preauthorizable": false,
+          "non_bypassable": false
+        },
+        "questions": [
+          "learn.desensitization",
+          "learn.reuse_scope",
+          "learn.win_loss_reason"
+        ],
+        "required_entry_decisions": [
+          "delivery.recorded"
+        ]
+      }
+    ],
+    "before_rebuild": [
+      {
+        "stage": "deck-init",
+        "transition": {
+          "next_stage": "deck-brief",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "init.scan_scope",
+          "init.privacy_boundary",
+          "init.customer_visible_forbidden"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-brief",
+        "transition": {
+          "next_stage": "deck-planner",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "brief.decision_object",
+          "brief.success_criteria",
+          "brief.non_negotiable_constraints",
+          "brief.forbidden_claims",
+          "brief.evidence_gap"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-planner",
+        "transition": {
+          "next_stage": "deck-sourcing",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "planner.primary_thesis",
+          "planner.counter_question",
+          "planner.page_budget",
+          "planner.proof_order"
+        ],
+        "required_entry_decisions": [
+          "brief.approved"
+        ]
+      },
+      {
+        "stage": "deck-sourcing",
+        "transition": {
+          "next_stage": "deck-producer",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "sourcing.generation_strategy"
+        ],
+        "required_entry_decisions": [
+          "planner.approved"
+        ]
+      },
+      {
+        "stage": "deck-producer",
+        "transition": {
+          "next_stage": "deck-builder",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": false,
+          "non_bypassable": false
+        },
+        "questions": [
+          "producer.page_claim",
+          "producer.public_evidence",
+          "producer.visual_lead",
+          "producer.internal_client_boundary"
+        ],
+        "required_entry_decisions": [
+          "sourcing.approved"
+        ]
+      },
+      {
+        "stage": "deck-builder",
+        "transition": {
+          "next_stage": "deck-quality",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "builder.output_mode",
+          "builder.font_policy"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-quality",
+        "transition": {
+          "next_stage": "deck-review",
+          "mode": "automatic",
+          "approval_required": false,
+          "preauthorizable": true,
+          "non_bypassable": false
+        },
+        "questions": [
+          "quality.rule_conflict"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-review",
+        "transition": {
+          "next_stage": "client_export",
+          "mode": "manual",
+          "approval_required": true,
+          "preauthorizable": false,
+          "non_bypassable": true
+        },
+        "questions": [
+          "review.risk_acceptance",
+          "review.final_version",
+          "review.delivery_target",
+          "review.approver"
+        ],
+        "required_entry_decisions": []
+      },
+      {
+        "stage": "deck-learn",
+        "transition": {
+          "next_stage": null,
+          "mode": "optional",
+          "approval_required": false,
+          "preauthorizable": false,
+          "non_bypassable": false
+        },
+        "questions": [
+          "learn.desensitization",
+          "learn.reuse_scope",
+          "learn.win_loss_reason"
+        ],
+        "required_entry_decisions": [
+          "delivery.recorded"
+        ]
+      }
+    ]
+  },
+  "installation_readback": {
+    "release": "af9fd7a6b4d0-66edd87fed03",
+    "source_sha": "af9fd7a6b4d08f753d2f16536a03f386384f49d2",
+    "source_dirty": false,
+    "skill_file_count": 13,
+    "skill_bytes_match": true
+  },
+  "document_validation": {
+    "reproduce_script_reran_successfully": true,
+    "p05_review_schema_valid": true,
+    "responsibility_count": 30,
+    "acceptance_count": 28,
+    "source_index_count": 35,
+    "tracked_diff_unchanged": true
+  },
+  "publication_note": "Local absolute source path normalized for public review; probe results unchanged."
+}
