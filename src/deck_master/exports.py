@@ -49,7 +49,7 @@ def _context(project, revision):
 
 
 def _facts(store, doc):
-    from .editing import check_summary, _professional_evidence
+    from .editing import check_summary
     from .production_detail import projection
     from .workbench import _ReadContext, _deck_output
 
@@ -87,12 +87,20 @@ def _facts(store, doc):
         gaps.append({"page_id": None, "layer": "render_report", "reason": "unresolved"})
     for key, reason in (summary.get("dimension_reasons") or {}).items():
         gaps.append(quality_gap(key, reason))
+    from .delivery_eligibility import professional_policy
+    professional = professional_policy(store, doc)
+    if professional["required"] and not professional["satisfied"]:
+        # Report the named professional gaps wherever this snapshot's gaps are
+        # listed, including when the engineering gate refuses first.
+        gaps.extend({"page_id": None, "layer": "professional_use", "reason": reason}
+                    for reason in professional["gap_reasons"])
     return {
         "revision_id": doc["revision_id"],
         "input_alignment": input_alignment(doc),
         "check_summary": summary,
         "production": production,
-        "professional_evidence": _professional_evidence(store, doc),
+        "professional_evidence": professional["evidence"],
+        "professional": professional,
         "gaps": gaps,
     }
 
@@ -126,33 +134,17 @@ def _gate(store, doc, facts, purpose):
             revision=doc["revision_id"],
             gaps=facts["gaps"],
         )
-    if (doc.get("policy") or {}).get("professional_review_required_for_delivery"):
-        from .editing import _current_artifact_digests
-        from .review import _dependency_key
-
-        artifacts = _current_artifact_digests(store, doc)
-        satisfied = False
-        for ref in doc["reviews"]:
-            review = store.read_object_json(ref)
-            if (
-                doc["outputs"]["pptx"] in review["subjects"]
-                and review.get("review_stage", "final") == "final"
-                and all(artifacts.get(_dependency_key(dep)) == dep["sha256"] for dep in review.get("dependencies", []))
-                and not (
-                    review["kind"] in ("content", "privacy")
-                    and (ref["path"], ref["sha256"]) in artifacts.get("_input_stale_reviews", set())
-                )
-                and review["status"] != "fail"
-                and (review["kind"] == "professional_use" or review["reviewer"]["type"] in ("human_internal", "human_external"))
-            ):
-                satisfied = True
-        if not satisfied:
-            raise ExportError(
-                "delivery_blocked",
-                "selected snapshot needs professional or human review",
-                revision=doc["revision_id"],
-                gaps=[{"page_id": None, "layer": "professional_use", "reason": "not_evaluated"}],
-            )
+    professional = facts["professional"]
+    if professional["required"] and not professional["satisfied"]:
+        # Unified predicate (delivery_eligibility): only a verified human
+        # professional_use pass on the exact current deck satisfies this gate.
+        raise ExportError(
+            "delivery_blocked",
+            "selected snapshot needs professional or human review",
+            revision=doc["revision_id"],
+            gaps=[{"page_id": None, "layer": "professional_use", "reason": reason}
+                  for reason in professional["gap_reasons"]],
+        )
 
 
 def _public_report(doc, facts, purpose):
@@ -173,6 +165,12 @@ def _public_report(doc, facts, purpose):
         else "unknown",
         "professional_evidence": facts["professional_evidence"],
         "desktop_editing": facts["professional_evidence"]["desktop_editing"],
+        "professional": {
+            "required": facts["professional"]["required"],
+            "satisfied": facts["professional"]["satisfied"],
+            "human_signoff": facts["professional"]["human_signoff"],
+            "gap_reasons": facts["professional"]["gap_reasons"],
+        },
         "evidence_level": "engineering",
         "pages": [
             {
@@ -191,7 +189,11 @@ def _public_report(doc, facts, purpose):
         ],
         "notice": "待按新要求更新"
         if facts["input_alignment"] == "needs_reconciliation"
-        else "See the recorded gaps and independent review status.",
+        else (
+            "Professional delivery gate is not satisfied on this snapshot; this copy is for review only and records no human approval."
+            if facts["professional"]["required"] and not facts["professional"]["satisfied"]
+            else "See the recorded gaps and independent review status."
+        ),
         "package_notice": "Public reading copy; internal sources, prompts, project objects and presenter notes are excluded."
         if purpose != "engineering"
         else "Internal recovery package; contains original sources, prompts and project history. No runtime authentication files or personal UI journal.",

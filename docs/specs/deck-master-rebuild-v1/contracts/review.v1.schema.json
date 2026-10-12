@@ -117,6 +117,70 @@
         },
         "independence_confirmed": {
           "type": "boolean"
+        },
+        "identity_receipt": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "description": "Structured receipt from a registered trusted identity adapter (content collaboration v1.2 CONTRACTS \u00a74/\u00a78). A reviewer id or execution_ref string never substitutes for it; synthetic/unit-fixture receipts prove predicate logic only (\u00a712.1).",
+              "required": [
+                "adapter_id",
+                "event_id",
+                "issued_at",
+                "reviewer_id",
+                "project_id",
+                "subjects"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "adapter_id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_-]*$"
+                },
+                "event_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "issued_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "reviewer_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "project_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "subjects": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "path",
+                      "sha256"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
       },
       "required": [

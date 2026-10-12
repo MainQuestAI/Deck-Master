@@ -353,12 +353,14 @@ def test_historical_delivery_uses_its_checks_and_input_alignment(tmp_path):
     assert report["input_alignment"] == "current" and report["review_status"] == "pass"
 
 
-def test_stale_professional_review_cannot_satisfy_delivery_policy(tmp_path):
-    from test_export import _passing_deck, _set_policy, _review
+def test_stale_professional_review_cannot_satisfy_delivery_policy(tmp_path, synthetic_human_adapter):
+    from test_export import _passing_deck, _set_policy, _review, human_professional_reviewer
 
     root, store = _passing_deck(tmp_path)
     _set_policy(store, professional_review_required_for_delivery=True)
-    _review(store, store.load_document(), "professional_use", "pass", seed="professional")
+    document = store.load_document()
+    _review(store, document, "professional_use", "pass", seed="professional",
+            reviewer=human_professional_reviewer(document))
     doc = store.load_document()
     record = store.read_object_json(doc["reviews"][-1])
     record["dependencies"][0]["sha256"] = "a" * 64
@@ -368,8 +370,10 @@ def test_stale_professional_review_cannot_satisfy_delivery_policy(tmp_path):
     changed["reviews"][-1] = store.put_json_object(record)
     store.commit_change(base_revision=doc["revision_id"], document=changed, operation_id="stale-professional")
     assert exports.describe(root)["check_summary"]["status"] == "pass"
-    with pytest.raises(exports.ExportError, match="professional or human review"):
+    with pytest.raises(exports.ExportError, match="professional or human review") as failure:
         exports.create(root, purpose="delivery")
+    reasons = {gap["reason"] for gap in failure.value.payload()["error"]["gaps"]}
+    assert "required_dependencies_incomplete" in reasons, reasons
 
 
 def test_engineering_recovery_keeps_committed_restore_plan_for_retry(tmp_path):
