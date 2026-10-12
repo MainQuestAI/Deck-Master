@@ -393,7 +393,10 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
             store, document, family="decision", key=topic,
             provided=input.get("basis") or [])
         subject_refs = list(input.get("subject_refs") or [])
-        _require_stored_refs(store, subject_refs, "collaboration/decision/subject_refs")
+        # Each entry is a ProposalRef {artifact_kind, artifact_ref, projection};
+        # the stored object to check is its artifact_ref.
+        _require_stored_refs(store, [proposal.get("artifact_ref") for proposal in subject_refs],
+                             "collaboration/decision/subject_refs")
         decision_id = input.get("decision_id") or _stable_id("dec", operation_id)
         existing = [(ref, record) for ref, record in _region_records(store, region, "decisions")
                     if record.get("decision_id") == decision_id]

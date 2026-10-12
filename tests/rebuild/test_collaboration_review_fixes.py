@@ -299,6 +299,22 @@ def test_delegation_from_superseded_request_is_rejected(tmp_path):
 # P2 fixes
 
 
+def test_valid_subject_refs_bind_the_proposal(tmp_path):
+    """A decision may bind a registered projection of a real stored proposal
+    (CONTRACTS §3.1: '用户只认可配色时，决定必须绑定 style.palette')."""
+    project, store = _project(tmp_path)
+    _start(project, store)
+    narrative_ref = store.put_json_object({"schema_version": "narrative.v1", "fixture": True})
+    recorded = collaboration.record_decision(
+        project, input=_decision_input(store, subject_refs=[
+            {"artifact_kind": "narrative", "artifact_ref": narrative_ref,
+             "projection": "direction"}]),
+        base_revision=store.load_document()["revision_id"], operation_id="op-valid-proposal")
+    assert recorded["status"] == "accepted"
+    decision = store.read_object_json(recorded["decision_ref"])
+    assert decision["subject_refs"][0]["projection"] == "direction"
+
+
 def test_dangling_subject_ref_is_rejected(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store)
