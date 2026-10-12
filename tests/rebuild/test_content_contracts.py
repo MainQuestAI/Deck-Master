@@ -304,6 +304,54 @@ def test_content_mapping_structural_rules():
         models.validate_page_semantics(_page(content_mapping=empty))
 
 
+def test_content_mapping_requires_full_atom_and_speech_coverage():
+    notes = "第一段口播。第二段口播。"
+    base_links = [
+        {"element_ref": "atom:p1:title", "narrative_node_ids": [], "source_links": []},
+        {"element_ref": "atom:p1:block:b1:text", "narrative_node_ids": [], "source_links": []},
+    ]
+    segments = [
+        {"segment_id": "s1", "start_codepoint": 0, "end_codepoint": len(notes),
+         "narrative_node_ids": [], "kind": "verbatim", "estimated_seconds": None},
+    ]
+    models.validate_page_semantics(_page(content_mapping={
+        "narrative_ref": None, "plan_role_page_id": "p1",
+        "visible_links": base_links, "speech_segments": segments}))
+    # Missing one visible atom fails (CONTRACTS §11.3 full coverage).
+    with pytest.raises(ModelError, match="missing"):
+        models.validate_page_semantics(_page(content_mapping={
+            "narrative_ref": None, "plan_role_page_id": "p1",
+            "visible_links": base_links[:1], "speech_segments": segments}))
+    # Unknown atoms fail too.
+    unknown = base_links + [{"element_ref": "atom:p1:ghost", "narrative_node_ids": [],
+                             "source_links": []}]
+    with pytest.raises(ModelError, match="not visible content"):
+        models.validate_page_semantics(_page(content_mapping={
+            "narrative_ref": None, "plan_role_page_id": "p1",
+            "visible_links": unknown, "speech_segments": segments}))
+    # Speech segments must not run past the notes text.
+    beyond = [{"segment_id": "s1", "start_codepoint": 0, "end_codepoint": 999,
+               "narrative_node_ids": [], "kind": "verbatim", "estimated_seconds": None}]
+    with pytest.raises(ModelError, match="cover all"):
+        models.validate_page_semantics(_page(content_mapping={
+            "narrative_ref": None, "plan_role_page_id": "p1",
+            "visible_links": base_links, "speech_segments": beyond}))
+    # A gap between segments means uncovered speech text.
+    gapped = [{"segment_id": "s1", "start_codepoint": 0, "end_codepoint": 3,
+               "narrative_node_ids": [], "kind": "verbatim", "estimated_seconds": None},
+              {"segment_id": "s2", "start_codepoint": 4, "end_codepoint": len(notes),
+               "narrative_node_ids": [], "kind": "verbatim", "estimated_seconds": None}]
+    with pytest.raises(ModelError, match="contiguously"):
+        models.validate_page_semantics(_page(content_mapping={
+            "narrative_ref": None, "plan_role_page_id": "p1",
+            "visible_links": base_links, "speech_segments": gapped}))
+    # Non-empty notes with no segments are uncovered.
+    with pytest.raises(ModelError, match="must be covered"):
+        models.validate_page_semantics(_page(content_mapping={
+            "narrative_ref": None, "plan_role_page_id": "p1",
+            "visible_links": base_links, "speech_segments": []}))
+
+
 # ---------------------------------------------------------------------------
 # Export manifest variant metadata
 

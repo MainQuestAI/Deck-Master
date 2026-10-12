@@ -2,11 +2,14 @@
 decisions and authorizations (content collaboration v1.2 CONTRACTS §2–§4).
 
 Assurance is computed here from the transport adapter context; client
-payloads can never set it. These functions own record correctness, the writer
-boundary, CAS and operation replay. Scope/budget enforcement across every
-production entry point is T04's card and is not claimed here: an authorization
-record becoming effective for an action is still decided by the eligibility
-resolver that T04 builds on top of these records.
+payloads can never set it, and a verified user event must be bound to the
+exact write payload it approved. These functions own record correctness, the
+writer boundary, CAS and operation replay. Scope/budget enforcement across
+every production entry point is T04's card; record correctness is not.
+
+Write order per CONTRACTS §6.1: an identical operation id replays its
+original receipt *before* any base-revision check, so a natural retry after
+a timeout succeeds instead of failing on CAS.
 """
 from __future__ import annotations
 
@@ -14,18 +17,18 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import models, tasks as tasks_mod
+from . import dependency_slices, models, tasks as tasks_mod
 from .editing import operation_revision
 from .models import ModelError, bump_revision, canonical_json_bytes, sha256_bytes
 from .store import ConflictError, Store, StoreError
 
 WRITE_CHANGE_KIND = "collaboration_update"
-_ACTION_REQUEST = "collaboration.start_request"
-_ACTION_DECISION = "collaboration.record_decision"
-_ACTION_GRANT = "collaboration.grant"
-_ACTION_REVOKE = "collaboration.revoke"
-_ACTION_PAUSE = "collaboration.pause_request"
-_ACTION_RESUME = "collaboration.resume_request"
+ACTION_REQUEST_START = "collaboration.start_request"
+ACTION_DECISION_RECORD = "collaboration.record_decision"
+ACTION_GRANT = "collaboration.grant"
+ACTION_REVOKE = "collaboration.revoke"
+ACTION_PAUSE = "collaboration.pause_request"
+ACTION_RESUME = "collaboration.resume_request"
 
 ASSURANCE_RANK = {"unverified": 0, "host_attested": 1, "verified_user": 2}
 
@@ -39,44 +42,54 @@ def _stable_id(prefix: str, operation_id: str) -> str:
 
 
 def payload_digest(action: str, payload: dict) -> str:
+    """Canonical digest of a collaboration write payload. The same digest is
+    both the replay-conflict fingerprint and the action binding a verified
+    user event must carry to prove the user approved *this* write."""
     return sha256_bytes(canonical_json_bytes({"action": action, "payload": payload}))
+
+
+def write_digest(action: str, write_input: dict) -> str:
+    return payload_digest(action, {"input": write_input})
 
 
 # ---------------------------------------------------------------------------
 # Evidence: assurance comes from the adapter context, never from the client
 
 
-def _verified_event(evidence: dict, adapter_context) -> dict | None:
-    """Match the declared receipt/source against the adapter's verified user
-    events. The adapter itself (issuer signature, actor binding, nonce,
-    expiry) is T07's trusted transport; this is the record-side contract."""
-    if not adapter_context:
+def _verified_event(evidence: dict, adapter_context, action_binding) -> dict | None:
+    """Match a declared user_event against the adapter's verified events.
+
+    A match requires BOTH the adapter's action binding (the exact write payload
+    the user confirmed — this is what stops replaying one verified event onto
+    a different decision or grant) and a declared transport receipt whose Ref
+    matches the event's receipt. A bare source match never upgrades. Receipt
+    verification itself (issuer signature, actor binding, nonce, expiry) is
+    T07's trusted transport; this is the record-side contract.
+    """
+    if not adapter_context or not action_binding:
         return None
     events = adapter_context.get("verified_user_events") or []
     receipt = evidence.get("transport_receipt_ref") or {}
-    declared_source = evidence.get("source_ref") or {}
+    if not receipt.get("path"):
+        return None
     for event in events:
-        if not isinstance(event, dict):
+        if not isinstance(event, dict) or event.get("action_binding") != action_binding:
             continue
         event_receipt = event.get("receipt_ref") or {}
-        if receipt.get("path") and (event_receipt.get("path"), event_receipt.get("sha256")) == (
+        if (event_receipt.get("path"), event_receipt.get("sha256")) == (
                 receipt.get("path"), receipt.get("sha256")):
             return event
-        if not receipt:
-            event_source = event.get("source_ref") or {}
-            if (event_source.get("path"), event_source.get("sha256")) == (
-                    declared_source.get("path"), declared_source.get("sha256")):
-                return event
     return None
 
 
-def resolve_evidence(declared: dict, adapter_context=None, *, where: str = "evidence") -> dict:
+def resolve_evidence(declared: dict, adapter_context=None, *, where: str = "evidence",
+                     action_binding: str | None = None) -> dict:
     """Compute the recorded Evidence (CONTRACTS §4).
 
     A declared ``user_event`` is only verified_user when a matching trusted
-    adapter event exists; otherwise it is honestly downgraded to a traceable
-    host-attested instruction. Any client-supplied ``assurance`` is rejected
-    outright — assurance is never client-settable.
+    adapter event exists *for this exact write payload*; otherwise it is
+    honestly downgraded to a traceable host-attested instruction. Any
+    client-supplied ``assurance`` is rejected outright.
     """
     if not isinstance(declared, dict):
         raise ModelError(where, "evidence must be an object")
@@ -97,7 +110,7 @@ def resolve_evidence(declared: dict, adapter_context=None, *, where: str = "evid
         "presentation_ref": declared.get("presentation_ref"),
     }
     if kind == "user_event":
-        event = _verified_event(evidence, adapter_context)
+        event = _verified_event(evidence, adapter_context, action_binding)
         if event is None:
             evidence["kind"] = "host_attested_instruction"
             evidence["assurance"] = "host_attested"
@@ -134,7 +147,29 @@ def _require_region(store, document) -> dict:
     return region
 
 
+def _require_stored_refs(store, refs, where: str) -> None:
+    """Every Ref that enters a formal record must exist in the Store
+    (CONTRACTS §11: only real immutable objects may be referenced)."""
+    for index, ref in enumerate(refs):
+        if ref is None:
+            continue
+        try:
+            store.read_object_bytes(ref)
+        except Exception as exc:  # noqa: BLE001
+            raise ModelError(f"{where}[{index}]",
+                             f"referenced object is not in the store: {ref.get('path')!r}") from exc
+
+
+def _require_stored_evidence_refs(store, evidence: dict, where: str) -> None:
+    slots = [evidence.get("source_ref"), evidence.get("transport_receipt_ref"),
+             evidence.get("presentation_ref")]
+    _require_stored_refs(store, [ref for ref in slots if ref], where)
+
+
 def replay_or_conflict(store, document, operation_id, action, payload_digest_value):
+    """CONTRACTS §6.1 order: an already-committed operation replays its receipt
+    first; a different payload under the same operation id conflicts. Callers
+    invoke this before the base-revision check."""
     prior = operation_revision(store, document, operation_id)
     if prior is None:
         return None
@@ -163,6 +198,55 @@ def commit_collaboration_change(store, document, *, operation_id, action, digest
     store._commit_locked(base_revision=document["revision_id"], document=bumped,
                          operation_id=operation_id, blobs=[])
     return bumped["revision_id"]
+
+
+def _region_records(store, region, family):
+    records = []
+    for ref in region.get(family) or []:
+        try:
+            records.append((ref, store.read_object_json(ref)))
+        except Exception:  # noqa: BLE001 - unreadable refs cannot participate
+            continue
+    return records
+
+
+def _head_for_identity(store, region, family, id_field, identity):
+    """The version of ``identity`` the current region still references: the
+    chain head that no other version replaces (CONTRACTS §3.3). Falls back to
+    the last matching entry for records without a replaces chain."""
+    if identity is None:
+        return None
+    records = _region_records(store, region, family)
+    replaced_pairs = set()
+    for _, record in records:
+        pair = record.get("replaces")
+        if isinstance(pair, dict) and pair.get("path"):
+            replaced_pairs.add((pair.get("path"), pair.get("sha256")))
+    heads = [(ref, record) for ref, record in records
+             if record.get(id_field) == identity
+             and (ref.get("path"), ref.get("sha256")) not in replaced_pairs]
+    if heads:
+        return heads[-1]
+    return None
+
+
+def _identity_of(store, ref):
+    try:
+        record = store.read_object_json(ref)
+    except Exception:  # noqa: BLE001
+        return None
+    for field in ("authorization_id", "decision_id"):
+        if field in record:
+            return record[field]
+    return None
+
+
+def _index_of_ref(refs, ref) -> int:
+    pair = (ref.get("path"), ref.get("sha256"))
+    for index, candidate in enumerate(refs):
+        if (candidate.get("path"), candidate.get("sha256")) == pair:
+            return index
+    return -1
 
 
 def _request_source_key(request: dict) -> str:
@@ -204,10 +288,8 @@ def describe(project) -> dict:
     result["authority_policy"] = region.get("authority_policy")
     result["quality_profile"] = region.get("quality_profile")
     result["request"] = region.get("request")
-    for ref in region.get("decisions") or []:
-        result["decisions"].append(store.read_object_json(ref))
-    for ref in region.get("authorizations") or []:
-        result["authorizations"].append(store.read_object_json(ref))
+    result["decisions"] = [record for _, record in _region_records(store, region, "decisions")]
+    result["authorizations"] = [record for _, record in _region_records(store, region, "authorizations")]
     return result
 
 
@@ -220,16 +302,22 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
     id return the existing request instead of creating a second one.
     """
     store = Store(Path(project).expanduser())
+    digest = write_digest(ACTION_REQUEST_START, input)
 
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        replay = replay_or_conflict(store, document, operation_id, ACTION_REQUEST_START, digest)
+        if replay:
+            return replay
         if document["revision_id"] != base_revision:
             raise StoreError("base_revision", "base revision is not current; reload and retry")
         region = _require_region(store, document)
         declared = input.get("instruction_evidence")
         evidence = resolve_evidence(declared, adapter_context,
-                                    where="collaboration/request/instruction_evidence")
+                                    where="collaboration/request/instruction_evidence",
+                                    action_binding=digest)
+        _require_stored_evidence_refs(store, evidence, "collaboration/request/instruction_evidence")
         current = region.get("request")
         replace_request_id = input.get("replace_request_id")
         candidate = {
@@ -258,14 +346,11 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
         elif replace_request_id is not None and (current is None or current.get("request_id") != replace_request_id):
             raise ModelError("collaboration/request/replace_request_id",
                              "replace_request_id must name the current open request")
-        digest = payload_digest(_ACTION_REQUEST, {"input": input, "evidence": evidence})
-        replay = replay_or_conflict(store, document, operation_id, _ACTION_REQUEST, digest)
-        if replay:
-            return replay
         updated_region = {**region, "request": candidate}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=_ACTION_REQUEST,
-                            digest=digest, description="start work request", updated=updated)
+        committed = commit_collaboration_change(store, document, operation_id=operation_id,
+                                                action=ACTION_REQUEST_START, digest=digest,
+                                                description="start work request", updated=updated)
         return {"status": "accepted", "request_id": candidate["request_id"],
                 "effective_scope": candidate["scope"],
                 "assurance": evidence["assurance"],
@@ -277,12 +362,18 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
 def record_decision(project, *, input: dict, base_revision: str, operation_id: str,
                     adapter_context=None) -> dict:
     """Record a decision as an immutable object referenced by the region
-    (CONTRACT §3.1). client assurance upgrades are rejected by resolve_evidence."""
+    (CONTRACT §3.1). Client assurance upgrades are rejected by resolve_evidence;
+    the service completes the registered minimum basis so callers cannot omit
+    a registered dependency (TASKS T02 item 4)."""
     store = Store(Path(project).expanduser())
+    digest = write_digest(ACTION_DECISION_RECORD, input)
 
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        replay = replay_or_conflict(store, document, operation_id, ACTION_DECISION_RECORD, digest)
+        if replay:
+            return replay
         if document["revision_id"] != base_revision:
             raise StoreError("base_revision", "base revision is not current; reload and retry")
         region = _require_region(store, document)
@@ -293,42 +384,73 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         delegation_ref = input.get("delegation_ref")
         authority_mode = input.get("authority_mode")
         if authority_mode == "delegated":
-            _validate_delegation(store, region, delegation_ref, topic)
+            _validate_delegation(store, document, region, delegation_ref, topic)
         evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context,
-                                    where="collaboration/decision/evidence")
+                                    where="collaboration/decision/evidence",
+                                    action_binding=digest)
+        _require_stored_evidence_refs(store, evidence, "collaboration/decision/evidence")
+        basis = dependency_slices.merge_required_basis(
+            store, document, family="decision", key=topic,
+            provided=input.get("basis") or [])
+        subject_refs = list(input.get("subject_refs") or [])
+        _require_stored_refs(store, subject_refs, "collaboration/decision/subject_refs")
+        decision_id = input.get("decision_id") or _stable_id("dec", operation_id)
+        existing = [(ref, record) for ref, record in _region_records(store, region, "decisions")
+                    if record.get("decision_id") == decision_id]
+        replaces_ref = input.get("replaces")
+        replaced_index = -1
+        replaced_record = None
+        if replaces_ref is None:
+            if existing:
+                raise ModelError("decision/replaces",
+                                 "this decision identity already exists in the current region; "
+                                 "pass replaces to write a new version")
+        else:
+            refs = list(region.get("decisions") or [])
+            replaced_index = _index_of_ref(refs, replaces_ref)
+            replaced_record = next((record for ref, record in existing
+                                    if (ref.get("path"), ref.get("sha256")) ==
+                                    (replaces_ref.get("path"), replaces_ref.get("sha256"))), None)
+            if replaced_index < 0 or replaced_record is None:
+                raise ModelError("decision/replaces",
+                                 "replaces must name a version of this decision identity "
+                                 "in the current region")
         decision = {
             "schema_version": "collaboration_decision.v1",
-            "decision_id": input.get("decision_id") or _stable_id("dec", operation_id),
+            "decision_id": decision_id,
             "project_id": document["project_id"],
             "request_id": request["request_id"],
             "topic": topic,
-            "subject_refs": list(input.get("subject_refs") or []),
+            "subject_refs": subject_refs,
             "scope": input.get("scope") or request.get("scope"),
             "value": input.get("value"),
             "disposition": input.get("disposition"),
             "authority_mode": authority_mode,
             "evidence": evidence,
             "delegation_ref": delegation_ref,
-            "basis": list(input.get("basis") or []),
+            "basis": basis,
             "status": "active",
-            "replaces": input.get("replaces"),
+            "replaces": replaces_ref,
             "invalidated_by": None,
             "created_at": _now_iso(),
         }
         models.validate_decision_semantics(decision)
-        digest = payload_digest(_ACTION_DECISION, {"input": input, "evidence": evidence})
-        replay = replay_or_conflict(store, document, operation_id, _ACTION_DECISION, digest)
-        if replay:
-            return replay
         decision_ref = store.put_json_object(decision)
-        updated_region = {**region, "decisions": list(region.get("decisions") or []) + [decision_ref]}
+        updated_refs = list(region.get("decisions") or [])
+        if replaced_record is not None:
+            retirement = {**replaced_record, "status": "superseded",
+                          "invalidated_by": operation_id}
+            models.validate_decision_semantics(retirement)
+            updated_refs[replaced_index] = store.put_json_object(retirement)
+        updated_refs.append(decision_ref)
+        updated_region = {**region, "decisions": updated_refs}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=_ACTION_DECISION,
-                            digest=digest,
-                            description=f"record decision {decision['decision_id']} ({topic})",
-                            updated=updated)
+        committed = commit_collaboration_change(store, document, operation_id=operation_id,
+                                                action=ACTION_DECISION_RECORD, digest=digest,
+                                                description=f"record decision {decision_id} ({topic})",
+                                                updated=updated)
         return {"status": "accepted", "decision_ref": decision_ref,
-                "decision_id": decision["decision_id"], "assurance": evidence["assurance"],
+                "decision_id": decision_id, "assurance": evidence["assurance"],
                 "revision_id": committed}
 
     return locked(store)
@@ -336,13 +458,18 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
 
 def grant(project, *, input: dict, base_revision: str, operation_id: str,
           adapter_context=None) -> dict:
-    """Record an execute/delegate authorization (CONTRACT §3.2). Sub- grants
-    cannot exceed their parent delegation's scope, topics or evidence level."""
+    """Record an execute/delegate authorization (CONTRACT §3.2). Sub-grants
+    cannot exceed their parent delegation's scope, topics, evidence level or
+    effectiveness; a new version of the same identity replaces the old one."""
     store = Store(Path(project).expanduser())
+    digest = write_digest(ACTION_GRANT, input)
 
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        replay = replay_or_conflict(store, document, operation_id, ACTION_GRANT, digest)
+        if replay:
+            return replay
         if document["revision_id"] != base_revision:
             raise StoreError("base_revision", "base revision is not current; reload and retry")
         region = _require_region(store, document)
@@ -350,10 +477,34 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
         if request is None or request.get("closed"):
             raise ModelError("collaboration/request", "a grant requires the current open work request")
         evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context,
-                                    where="collaboration/authorization/evidence")
+                                    where="collaboration/authorization/evidence",
+                                    action_binding=digest)
+        _require_stored_evidence_refs(store, evidence, "collaboration/authorization/evidence")
+        basis = dependency_slices.merge_required_basis(
+            store, document, family="authorization", key=input.get("mode"),
+            provided=input.get("basis") or [])
+        authorization_id = input.get("authorization_id") or _stable_id("authz", operation_id)
+        replaces_ref = input.get("replaces")
+        refs = list(region.get("authorizations") or [])
+        replaced_index = -1
+        if replaces_ref is None:
+            if _head_for_identity(store, region, "authorizations", "authorization_id",
+                                  authorization_id) is not None:
+                raise ModelError("authorization/replaces",
+                                 "this authorization identity already exists in the current region; "
+                                 "pass replaces to write a new version")
+        else:
+            replaced_index = _index_of_ref(refs, replaces_ref)
+            if replaced_index < 0:
+                raise ModelError("authorization/replaces",
+                                 "replaces must name a version of this authorization in the current region")
+            replaced_record = store.read_object_json(replaces_ref)
+            if replaced_record.get("authorization_id") != authorization_id:
+                raise ModelError("authorization/replaces",
+                                 "replaces must name a version of the same authorization identity")
         authorization = {
             "schema_version": "collaboration_authorization.v1",
-            "authorization_id": input.get("authorization_id") or _stable_id("authz", operation_id),
+            "authorization_id": authorization_id,
             "project_id": document["project_id"],
             "request_id": request["request_id"],
             "mode": input.get("mode"),
@@ -370,78 +521,84 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
             "adoption_policy": input.get("adoption_policy", "candidate_only"),
             "delivery_binding": input.get("delivery_binding", "none"),
             "evidence": evidence,
-            "basis": list(input.get("basis") or []),
+            "basis": basis,
             "parent_authorization_ref": input.get("parent_authorization_ref"),
-            "replaces": input.get("replaces"),
+            "replaces": replaces_ref,
             "status": "active",
             "expires_at": input.get("expires_at"),
             "stop_conditions": list(input.get("stop_conditions") or []),
             "created_at": _now_iso(),
         }
         models.validate_authorization_semantics(authorization)
-        _validate_parent_chain(store, region, authorization)
-        digest = payload_digest(_ACTION_GRANT, {"input": input, "evidence": evidence})
-        replay = replay_or_conflict(store, document, operation_id, _ACTION_GRANT, digest)
-        if replay:
-            return replay
+        _require_stored_refs(store, [authorization.get("budget_parent_ref")],
+                             "collaboration/authorization/budget_parent_ref")
+        _validate_parent_chain(store, document, region, authorization)
         authorization_ref = store.put_json_object(authorization)
-        updated_region = {**region, "authorizations": list(region.get("authorizations") or []) + [authorization_ref]}
+        updated_refs = list(refs)
+        if replaced_index >= 0:
+            updated_refs[replaced_index] = authorization_ref
+        else:
+            updated_refs.append(authorization_ref)
+        updated_region = {**region, "authorizations": updated_refs}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=_ACTION_GRANT,
-                            digest=digest,
-                            description=f"grant {authorization['authorization_id']} ({authorization['mode']})",
-                            updated=updated)
+        committed = commit_collaboration_change(store, document, operation_id=operation_id,
+                                                action=ACTION_GRANT, digest=digest,
+                                                description=f"grant {authorization_id} "
+                                                            f"({authorization['mode']})",
+                                                updated=updated)
         return {"status": "accepted", "authorization_ref": authorization_ref,
-                "authorization_id": authorization["authorization_id"],
+                "authorization_id": authorization_id,
                 "assurance": evidence["assurance"], "revision_id": committed}
 
     return locked(store)
 
 
 def revoke_authorization(project, *, authorization_id: str, reason: str, base_revision: str,
-                         operation_id: str, adapter_context=None) -> dict:
-    """Revoke an authorization by writing a new version that replaces it; the
-    original record stays in history (CONTRACT §3.3)."""
+                         operation_id: str, adapter_context=None,
+                         instruction_evidence: dict | None = None) -> dict:
+    """Revoke an authorization by writing a new version that replaces the
+    current one; the original record stays in history (CONTRACT §3.3)."""
     store = Store(Path(project).expanduser())
+    digest = write_digest(ACTION_REVOKE, {"authorization_id": authorization_id,
+                                          "reason": reason,
+                                          "instruction_evidence": instruction_evidence})
 
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        replay = replay_or_conflict(store, document, operation_id, ACTION_REVOKE, digest)
+        if replay:
+            return replay
         if document["revision_id"] != base_revision:
             raise StoreError("base_revision", "base revision is not current; reload and retry")
         region = _require_region(store, document)
         if not (reason or "").strip():
             raise ModelError("collaboration/revoke/reason", "a revocation records its reason")
-        refs = list(region.get("authorizations") or [])
-        target_index = None
-        target = None
-        for index, ref in enumerate(refs):
-            candidate = store.read_object_json(ref)
-            if candidate.get("authorization_id") == authorization_id:
-                target_index, target = index, candidate
-                break
-        if target is None:
+        if instruction_evidence is not None:
+            evidence = resolve_evidence(instruction_evidence, adapter_context,
+                                        where="collaboration/revoke/evidence",
+                                        action_binding=digest)
+            _require_stored_evidence_refs(store, evidence, "collaboration/revoke/evidence")
+        head = _head_for_identity(store, region, "authorizations", "authorization_id", authorization_id)
+        if head is None:
             raise ModelError("collaboration/authorizations",
                              f"no authorization {authorization_id!r} in the current region")
+        head_ref, target = head
         if target.get("status") == "revoked":
             return {"status": "already_revoked", "authorization_id": authorization_id,
                     "revision_id": document["revision_id"]}
-        digest = payload_digest(_ACTION_REVOKE,
-                                {"authorization_id": authorization_id, "reason": reason})
-        replay = replay_or_conflict(store, document, operation_id, _ACTION_REVOKE, digest)
-        if replay:
-            return replay
-        revoked = {**target, "status": "revoked", "replaces": refs[target_index]}
+        revoked = {**target, "status": "revoked", "replaces": head_ref}
         models.validate_authorization_semantics(revoked)
         revoked_ref = store.put_json_object(revoked)
-        updated_refs = list(refs)
-        updated_refs[target_index] = revoked_ref
-        updated_region = {**region, "authorizations": updated_refs}
+        refs = list(region.get("authorizations") or [])
+        refs[_index_of_ref(refs, head_ref)] = revoked_ref
+        updated_region = {**region, "authorizations": refs}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=_ACTION_REVOKE,
-                            digest=digest,
-                            description=f"revoke authorization {authorization_id}: {reason.strip()}",
-                            updated=updated)
+        committed = commit_collaboration_change(store, document, operation_id=operation_id,
+                                                action=ACTION_REVOKE, digest=digest,
+                                                description=f"revoke authorization "
+                                                            f"{authorization_id}: {reason.strip()}",
+                                                updated=updated)
         return {"status": "accepted", "authorization_id": authorization_id,
                 "revoked_ref": revoked_ref, "revision_id": committed}
 
@@ -449,17 +606,22 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
 
 
 def pause_request(project, *, reason: str, base_revision: str, operation_id: str,
-                  adapter_context=None) -> dict:
+                  adapter_context=None, instruction_evidence: dict | None = None) -> dict:
     """Pause the current request; reads keep working, new production stops
     being eligible (enforcement in T04)."""
     return _set_pause(project, paused=True, reason=reason, base_revision=base_revision,
-                      operation_id=operation_id, adapter_context=adapter_context)
+                      operation_id=operation_id, adapter_context=adapter_context,
+                      instruction_evidence=instruction_evidence)
 
 
-def resume_request(project, *, instruction_evidence: dict | None = None, base_revision: str,
+def resume_request(project, *, instruction_evidence: dict, base_revision: str,
                    operation_id: str, adapter_context=None) -> dict:
     """Resume the paused request. It never widens scope: eligibility re-derives
-    from the unchanged request (CONTRACT §7.1)."""
+    from the unchanged request (CONTRACT §7.1). A resume requires its explicit
+    instruction evidence — "继续" is a user action we must be able to trace."""
+    if instruction_evidence is None:
+        raise ModelError("collaboration/request/resume/evidence",
+                         "a resume requires instruction evidence")
     return _set_pause(project, paused=False, reason=None, base_revision=base_revision,
                       operation_id=operation_id, adapter_context=adapter_context,
                       instruction_evidence=instruction_evidence)
@@ -468,11 +630,15 @@ def resume_request(project, *, instruction_evidence: dict | None = None, base_re
 def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_id: str,
                adapter_context=None, instruction_evidence=None) -> dict:
     store = Store(Path(project).expanduser())
-    action = _ACTION_PAUSE if paused else _ACTION_RESUME
+    action = ACTION_PAUSE if paused else ACTION_RESUME
+    digest = write_digest(action, {"reason": reason, "instruction_evidence": instruction_evidence})
 
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        replay = replay_or_conflict(store, document, operation_id, action, digest)
+        if replay:
+            return replay
         if document["revision_id"] != base_revision:
             raise StoreError("base_revision", "base revision is not current; reload and retry")
         region = _require_region(store, document)
@@ -484,22 +650,22 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
         if bool(request.get("paused")) == paused:
             return {"status": "already_paused" if paused else "already_active",
                     "request_id": request["request_id"], "revision_id": document["revision_id"]}
-        evidence = None
-        if not paused and instruction_evidence is not None:
-            evidence = resolve_evidence(instruction_evidence, adapter_context,
-                                        where="collaboration/request/resume/evidence")
-        digest = payload_digest(action, {"reason": reason, "evidence": evidence})
-        replay = replay_or_conflict(store, document, operation_id, action, digest)
-        if replay:
-            return replay
+        if instruction_evidence is not None:
+            evidence = resolve_evidence(
+                instruction_evidence, adapter_context,
+                where=f"collaboration/request/{'pause' if paused else 'resume'}/evidence",
+                action_binding=digest)
+            _require_stored_evidence_refs(
+                store, evidence,
+                f"collaboration/request/{'pause' if paused else 'resume'}/evidence")
         updated_request = {**request, "paused": paused,
                            "pause_reason": reason.strip() if paused else None}
         updated_region = {**region, "request": updated_request}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id, action=action,
-                            digest=digest,
-                            description="pause request: " + reason.strip() if paused else "resume request",
-                            updated=updated)
+        committed = commit_collaboration_change(
+            store, document, operation_id=operation_id, action=action, digest=digest,
+            description="pause request: " + reason.strip() if paused else "resume request",
+            updated=updated)
         return {"status": "accepted", "request_id": request["request_id"],
                 "revision_id": committed}
 
@@ -510,34 +676,47 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
 # Delegation checks
 
 
-def _load_commands(store, region):
-    authorizations = [store.read_object_json(ref) for ref in region.get("authorizations") or []]
-    by_ref = {(ref.get("path"), ref.get("sha256")): obj
-              for ref, obj in zip(region.get("authorizations") or [], authorizations)}
-    return authorizations, by_ref
-
-
-def _validate_delegation(store, region, delegation_ref, topic) -> None:
-    _, by_ref = _load_commands(store, region)
-    target = by_ref.get(((delegation_ref or {}).get("path"), (delegation_ref or {}).get("sha256")))
-    if target is None:
+def _validate_delegation(store, document, region, delegation_ref, topic) -> None:
+    """A delegated decision must trace to a still-effective delegate covering
+    the topic and bound to the same current request (CONTRACTS §3.1)."""
+    if delegation_ref is None:
         raise ModelError("decision/delegation_ref",
                          "a delegated decision must reference an authorization in the current region")
-    if not (target.get("mode") == "delegate" and target.get("status") == "active"
-            and topic in (target.get("delegated_topics") or [])):
+    head = _head_for_identity(store, region, "authorizations", "authorization_id",
+                              _identity_of(store, delegation_ref))
+    if head is None:
+        raise ModelError("decision/delegation_ref",
+                         "a delegated decision must reference an authorization in the current region")
+    _, target = head
+    request = region.get("request") or {}
+    if target.get("request_id") != request.get("request_id"):
+        raise ModelError("decision/delegation_ref",
+                         "the delegation belongs to a superseded request")
+    state = dependency_slices.authorization_effectiveness(store, document, delegation_ref)
+    if not state["effective"]:
+        raise ModelError("decision/delegation_ref",
+                         f"the referenced delegation is not effective: {state['reasons']}")
+    if target.get("mode") != "delegate" or topic not in (target.get("delegated_topics") or []):
         raise ModelError("decision/delegation_ref",
                          "the referenced delegation is not an active delegate covering this topic")
 
 
-def _validate_parent_chain(store, region, authorization) -> None:
+def _validate_parent_chain(store, document, region, authorization) -> None:
+    """A derived authorization needs an effective delegate parent and cannot
+    exceed its scope, topics or evidence level (CONTRACTS §3.2, §7.1)."""
     parent_ref = authorization.get("parent_authorization_ref")
     if parent_ref is None:
         return
-    _, by_ref = _load_commands(store, region)
-    parent = by_ref.get((parent_ref.get("path"), parent_ref.get("sha256")))
-    if parent is None or parent.get("mode") != "delegate":
+    head = _head_for_identity(store, region, "authorizations", "authorization_id",
+                              _identity_of(store, parent_ref))
+    if head is None:
         raise ModelError("authorization/parent_authorization_ref",
                          "a derived authorization must reference its delegate parent in the current region")
+    _, parent = head
+    parent_state = dependency_slices.authorization_effectiveness(store, document, parent_ref)
+    if not parent_state["effective"]:
+        raise ModelError("authorization/parent_authorization_ref",
+                         f"parent delegation is not effective: {parent_state['reasons']}")
     parent_scope, child_scope = parent.get("scope") or {}, authorization.get("scope") or {}
     if child_scope.get("page_ids") and not set(child_scope["page_ids"]) <= set(parent_scope.get("page_ids") or []):
         raise ModelError("authorization/scope/page_ids",

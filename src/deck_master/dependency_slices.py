@@ -17,6 +17,36 @@ from .models import ModelError, canonical_json_bytes, sha256_bytes
 TASK_FACT_IDENTITIES = ("audience", "brief", "scenario", "presentation_mode", "page_limit")
 _MAX_PARENT_DEPTH = 8
 
+# Central minimum-basis registry (CONTRACTS §7, TASKS T02 item 4): the service
+# completes these when a decision/authorization is recorded, so callers cannot
+# omit a registered dependency. T04's eligibility resolver consumes the same
+# registry for read paths.
+REQUIRED_BASIS: dict[tuple[str, str], tuple[tuple[str, str, str], ...]] = {
+    ("decision", "direction"): (("task_fact", "audience", "value"),
+                                 ("task_fact", "brief", "value")),
+    ("decision", "manuscript"): (("task_fact", "brief", "value"),
+                                  ("task_fact", "page_limit", "value")),
+    ("decision", "speech"): (("task_fact", "presentation_mode", "value"),),
+    ("decision", "tradeoff"): (("task_fact", "page_limit", "value"),),
+    ("authorization", "execute"): (("policy", "document", "value"),),
+    ("authorization", "delegate"): (("policy", "document", "value"),),
+}
+
+
+def required_basis(family: str, key: str) -> tuple[tuple[str, str, str], ...]:
+    return REQUIRED_BASIS.get((family, key), ())
+
+
+def merge_required_basis(store, document, *, family: str, key: str, provided) -> list[dict]:
+    """Provided slices plus every registered minimum for (family, key)."""
+    merged = list(provided or [])
+    present = {(dep.get("kind"), dep.get("identity"), dep.get("projection")) for dep in merged}
+    for kind, identity, projection in required_basis(family, key):
+        if (kind, identity, projection) not in present:
+            merged.append(make_dependency_slice(store, document, kind=kind, identity=identity,
+                                                projection=projection))
+    return merged
+
 
 def _canonical(value) -> str:
     return sha256_bytes(canonical_json_bytes(value))
@@ -29,16 +59,35 @@ def _find_page(document, page_id):
     return None
 
 
-def _load_region_object(store, document, family, id_field, identity):
+def _head_for_identity(store, document, family, id_field, identity):
+    """The current version of ``identity``: the chain head no other version
+    replaces (CONTRACTS §3.3). Falls back to the last match for records
+    without a replaces chain."""
+    if identity is None:
+        return None
     region = document.get("collaboration") or {}
+    records = []
     for ref in region.get(family) or []:
         try:
-            record = store.read_object_json(ref)
+            records.append((ref, store.read_object_json(ref)))
         except Exception:  # noqa: BLE001 - unreadable records are simply absent
             continue
-        if record.get(id_field) == identity:
-            return record
+    replaced_pairs = set()
+    for _, record in records:
+        pair = record.get("replaces")
+        if isinstance(pair, dict) and pair.get("path"):
+            replaced_pairs.add((pair.get("path"), pair.get("sha256")))
+    heads = [(ref, record) for ref, record in records
+             if record.get(id_field) == identity
+             and (ref.get("path"), ref.get("sha256")) not in replaced_pairs]
+    if heads:
+        return heads[-1]
     return None
+
+
+def _load_region_object(store, document, family, id_field, identity):
+    head = _head_for_identity(store, document, family, id_field, identity)
+    return head[1] if head else None
 
 
 def _decision_projection(record) -> dict:
@@ -155,15 +204,10 @@ def _resolve_current(store, document, family, id_field, ref):
     except Exception as exc:  # noqa: BLE001
         raise ModelError("(slice)", f"unreadable record {ref.get('path')!r}") from exc
     identity = record.get(id_field)
-    region = document.get("collaboration") or {}
-    for candidate_ref in region.get(family) or []:
-        try:
-            candidate = store.read_object_json(candidate_ref)
-        except Exception:  # noqa: BLE001
-            continue
-        if candidate.get(id_field) == identity:
-            return candidate_ref, candidate
-    return None, record
+    head = _head_for_identity(store, document, family, id_field, identity)
+    if head is None:
+        return None, record
+    return head
 
 
 def _request_state(document, record) -> list[str]:
@@ -187,6 +231,15 @@ def decision_effectiveness(store, document, decision_ref) -> dict:
     if record.get("status") != "active":
         reasons.append(f"decision_{record.get('status')}")
     reasons.extend(_request_state(document, record))
+    if record.get("authority_mode") == "delegated":
+        # CONTRACTS §3.1: a delegated decision must trace to a still-effective
+        # authorization that covers it.
+        if not record.get("delegation_ref"):
+            reasons.append("delegation_missing")
+        else:
+            delegation = authorization_effectiveness(store, document, record["delegation_ref"])
+            if not delegation["effective"]:
+                reasons.append("delegation_ineffective")
     basis = assess_basis(store, document, record.get("basis") or [])
     if basis["stale"]:
         reasons.append("basis_stale")

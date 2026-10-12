@@ -28,8 +28,9 @@ def _scope() -> dict:
             "purpose": "exploratory"}
 
 
-def _declared() -> dict:
-    return {"kind": "host_attested_instruction", "source_ref": _ref("source"),
+def _declared(store) -> dict:
+    return {"kind": "host_attested_instruction",
+            "source_ref": store.put_json_object({"fixture": "source"}),
             "source_locator": "chat:msg-1", "actor_id": None,
             "transport_receipt_ref": None, "presentation_ref": None}
 
@@ -96,14 +97,14 @@ def _build(tmp_path):
     store = Store(project)
     collaboration.start_request(project, input={"intent": "content_only",
                                                 "content_intent": "write_only",
-                                                "instruction_evidence": _declared(),
+                                                "instruction_evidence": _declared(store),
                                                 "scope": _scope()},
                                 base_revision=store.load_document()["revision_id"],
                                 operation_id="op-start")
     grant = collaboration.grant(project, input={"mode": "delegate", "actions": ["task.start"],
                                                 "scope": _scope(), "delegated_topics": ["direction"],
                                                 "max_external_calls": 0,
-                                                "instruction_evidence": _declared()},
+                                                "instruction_evidence": _declared(store)},
                                 base_revision=store.load_document()["revision_id"],
                                 operation_id="op-grant")
     collaboration.revoke_authorization(project, authorization_id=grant["authorization_id"],

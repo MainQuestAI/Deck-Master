@@ -15,6 +15,11 @@ def _ref(seed: str) -> dict:
     return {"path": f".deckmaster/objects/{digest[:2]}/{digest}.json", "sha256": digest}
 
 
+def _stored_ref(store, seed: str) -> dict:
+    """A real store object: formal records may only reference stored refs."""
+    return store.put_json_object({"fixture": seed})
+
+
 def _scope(**over) -> dict:
     scope = {"subject": "pages", "page_ids": [], "page_manifest_ref": None,
              "external_artifact_ref": None, "layers": ["narrative"],
@@ -24,8 +29,9 @@ def _scope(**over) -> dict:
     return scope
 
 
-def _declared(kind: str = "host_attested_instruction", **over) -> dict:
-    evidence = {"kind": kind, "source_ref": _ref("source"), "source_locator": "chat:msg-1",
+def _declared(store, kind: str = "host_attested_instruction", **over) -> dict:
+    evidence = {"kind": kind, "source_ref": _stored_ref(store, "source"),
+                "source_locator": "chat:msg-1",
                 "actor_id": None, "transport_receipt_ref": None, "presentation_ref": None}
     evidence.update(over)
     return evidence
@@ -57,7 +63,7 @@ def _project(tmp_path, *, migrate=True):
 def _start(project, store, *, operation_id="op-start-1", intent="content_only",
            content_intent="plan_only", replace_request_id=None, **extra) -> dict:
     payload = {"intent": intent, "content_intent": content_intent,
-               "instruction_evidence": _declared(), "scope": _scope(**extra.pop("scope", {})),
+               "instruction_evidence": _declared(store), "scope": _scope(**extra.pop("scope", {})),
                "replace_request_id": replace_request_id}
     payload.update(extra)
     return collaboration.start_request(project, input=payload,
@@ -69,25 +75,39 @@ def _start(project, store, *, operation_id="op-start-1", intent="content_only",
 # Evidence assurance
 
 
-def test_assurance_is_never_client_settable():
+def test_assurance_is_never_client_settable(tmp_path):
+    store = Store(tmp_path / "scratch")
+    store.ensure_layout()
     with pytest.raises(ModelError, match="never client-settable"):
-        collaboration.resolve_evidence({**_declared(), "assurance": "verified_user"})
+        collaboration.resolve_evidence({**_declared(store), "assurance": "verified_user"})
     # An unverified user_event claim is honestly downgraded, not upgraded.
-    downgraded = collaboration.resolve_evidence(_declared("user_event"))
+    downgraded = collaboration.resolve_evidence(_declared(store, "user_event"))
     assert downgraded["kind"] == "host_attested_instruction"
     assert downgraded["assurance"] == "host_attested"
 
 
-def test_verified_user_event_requires_adapter_receipt():
-    receipt = _ref("receipt")
-    declared = _declared("user_event", transport_receipt_ref=receipt)
+def test_verified_user_event_requires_receipt_and_action_binding(tmp_path):
+    store = Store(tmp_path / "scratch")
+    store.ensure_layout()
+    receipt = _stored_ref(store, "receipt")
+    declared = _declared(store, "user_event", transport_receipt_ref=receipt)
+    binding = collaboration.write_digest(collaboration.ACTION_REQUEST_START, {"intent": "content_only"})
     adapter = {"verified_user_events": [
-        {"receipt_ref": receipt, "actor_id": "u-123", "source_ref": _ref("source")}]}
-    evidence = collaboration.resolve_evidence(declared, adapter)
+        {"receipt_ref": receipt, "actor_id": "u-123", "action_binding": binding}]}
+    evidence = collaboration.resolve_evidence(declared, adapter, action_binding=binding)
     assert evidence["assurance"] == "verified_user" and evidence["actor_id"] == "u-123"
+    # The same verified event replayed for a different write payload downgrades.
+    other_binding = collaboration.write_digest(collaboration.ACTION_REQUEST_START,
+                                               {"intent": "full_deck"})
+    evidence = collaboration.resolve_evidence(declared, adapter, action_binding=other_binding)
+    assert evidence["assurance"] == "host_attested"
     # A different receipt does not verify.
-    declared = _declared("user_event", transport_receipt_ref=_ref("other-receipt"))
-    evidence = collaboration.resolve_evidence(declared, adapter)
+    declared = _declared(store, "user_event", transport_receipt_ref=_stored_ref(store, "other-receipt"))
+    evidence = collaboration.resolve_evidence(declared, adapter, action_binding=binding)
+    assert evidence["assurance"] == "host_attested"
+    # Without a transport receipt a source match alone never upgrades.
+    evidence = collaboration.resolve_evidence(_declared(store, "user_event"), adapter,
+                                              action_binding=binding)
     assert evidence["assurance"] == "host_attested"
 
 
@@ -127,7 +147,7 @@ def test_request_scope_shape_is_validated_on_commit(tmp_path):
     with pytest.raises(ModelError, match="collaboration/request"):
         collaboration.start_request(
             project, input={"intent": "content_only", "content_intent": "plan_only",
-                            "instruction_evidence": _declared(),
+                            "instruction_evidence": _declared(store),
                             "scope": {"subject": "pages"}},  # missing scope fields
             base_revision=store.load_document()["revision_id"], operation_id="op-bad-scope")
 
@@ -142,13 +162,13 @@ def test_decision_requires_open_request_and_lands_in_region(tmp_path):
         collaboration.record_decision(
             project, input={"topic": "direction", "value": "按培训路径",
                             "disposition": "accepted", "authority_mode": "direct_user",
-                            "instruction_evidence": _declared(), "scope": _scope()},
+                            "instruction_evidence": _declared(store), "scope": _scope()},
             base_revision=store.load_document()["revision_id"], operation_id="op-dec-0")
     _start(project, store)
     outcome = collaboration.record_decision(
         project, input={"topic": "direction", "value": "按培训路径",
                         "disposition": "accepted", "authority_mode": "direct_user",
-                        "instruction_evidence": _declared(), "scope": _scope()},
+                        "instruction_evidence": _declared(store), "scope": _scope()},
         base_revision=store.load_document()["revision_id"], operation_id="op-dec-1")
     assert outcome["status"] == "accepted" and outcome["assurance"] == "host_attested"
     described = collaboration.describe(project)
@@ -163,18 +183,18 @@ def test_delegated_decision_requires_active_covering_delegation(tmp_path):
         collaboration.record_decision(
             project, input={"topic": "style", "value": "暖色", "disposition": "accepted",
                             "authority_mode": "delegated", "delegation_ref": _ref("missing"),
-                            "instruction_evidence": _declared(), "scope": _scope()},
+                            "instruction_evidence": _declared(store), "scope": _scope()},
             base_revision=store.load_document()["revision_id"], operation_id="op-dec-x")
     grant = collaboration.grant(
         project, input={"mode": "delegate", "actions": ["design.propose"],
                         "scope": _scope(layers=["design"]), "delegated_topics": ["style"],
-                        "max_external_calls": 0, "instruction_evidence": _declared()},
+                        "max_external_calls": 0, "instruction_evidence": _declared(store)},
         base_revision=store.load_document()["revision_id"], operation_id="op-grant-d1")
     accepted = collaboration.record_decision(
         project, input={"topic": "style", "value": "暖色", "disposition": "accepted",
                         "authority_mode": "delegated",
                         "delegation_ref": grant["authorization_ref"],
-                        "instruction_evidence": _declared(), "scope": _scope(layers=["design"])},
+                        "instruction_evidence": _declared(store), "scope": _scope(layers=["design"])},
         base_revision=store.load_document()["revision_id"], operation_id="op-dec-2")
     assert accepted["status"] == "accepted"
     with pytest.raises(ModelError, match="covering this topic"):
@@ -182,7 +202,7 @@ def test_delegated_decision_requires_active_covering_delegation(tmp_path):
             project, input={"topic": "direction", "value": "换主线", "disposition": "accepted",
                             "authority_mode": "delegated",
                             "delegation_ref": grant["authorization_ref"],
-                            "instruction_evidence": _declared(), "scope": _scope()},
+                            "instruction_evidence": _declared(store), "scope": _scope()},
             base_revision=store.load_document()["revision_id"], operation_id="op-dec-3")
 
 
@@ -196,7 +216,7 @@ def test_sub_authorization_cannot_exceed_parent(tmp_path):
     parent = collaboration.grant(
         project, input={"mode": "delegate", "actions": ["design.propose"],
                         "scope": _scope(layers=["design"]), "delegated_topics": ["style"],
-                        "max_external_calls": 0, "instruction_evidence": _declared()},
+                        "max_external_calls": 0, "instruction_evidence": _declared(store)},
         base_revision=store.load_document()["revision_id"], operation_id="op-parent")
     parent_ref = parent["authorization_ref"]
 
@@ -204,7 +224,7 @@ def test_sub_authorization_cannot_exceed_parent(tmp_path):
         payload = {"mode": "execute", "actions": ["design.propose"],
                    "scope": _scope(layers=["design"]),
                    "parent_authorization_ref": parent_ref,
-                   "max_external_calls": 1, "instruction_evidence": _declared()}
+                   "max_external_calls": 1, "instruction_evidence": _declared(store)}
         payload.update(over)
         return collaboration.grant(project, input=payload,
                                    base_revision=store.load_document()["revision_id"],
@@ -224,7 +244,7 @@ def test_revoke_writes_new_version_and_keeps_history(tmp_path):
     grant = collaboration.grant(
         project, input={"mode": "delegate", "actions": ["design.propose"],
                         "scope": _scope(layers=["design"]), "delegated_topics": ["style"],
-                        "max_external_calls": 0, "instruction_evidence": _declared()},
+                        "max_external_calls": 0, "instruction_evidence": _declared(store)},
         base_revision=store.load_document()["revision_id"], operation_id="op-grant")
     original_ref = grant["authorization_ref"]
     revoked = collaboration.revoke_authorization(
@@ -262,7 +282,8 @@ def test_pause_and_resume_are_recorded_with_reasons(tmp_path):
         operation_id="op-pause-2")
     assert again["status"] == "already_paused"
     resumed = collaboration.resume_request(
-        project, base_revision=store.load_document()["revision_id"], operation_id="op-resume")
+        project, instruction_evidence=_declared(store),
+        base_revision=store.load_document()["revision_id"], operation_id="op-resume")
     assert resumed["status"] == "accepted"
     assert collaboration.describe(project)["request"]["paused"] is False
 
@@ -271,7 +292,7 @@ def test_operation_replay_and_conflict(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store)
     payload = {"topic": "tradeoff", "value": "六页", "disposition": "accepted",
-               "authority_mode": "direct_user", "instruction_evidence": _declared(),
+               "authority_mode": "direct_user", "instruction_evidence": _declared(store),
                "scope": _scope()}
     first = collaboration.record_decision(
         project, input=payload, base_revision=store.load_document()["revision_id"],

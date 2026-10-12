@@ -27,8 +27,9 @@ def _scope(**over) -> dict:
     return scope
 
 
-def _declared() -> dict:
-    return {"kind": "host_attested_instruction", "source_ref": _ref("source"),
+def _declared(store=None) -> dict:
+    source = store.put_json_object({"fixture": "source"}) if store is not None else _ref("source")
+    return {"kind": "host_attested_instruction", "source_ref": source,
             "source_locator": "chat:msg-1", "actor_id": None,
             "transport_receipt_ref": None, "presentation_ref": None}
 
@@ -61,7 +62,7 @@ def _project(tmp_path):
     store = Store(project)
     collaboration.start_request(
         project, input={"intent": "content_only", "content_intent": "write_only",
-                        "instruction_evidence": _declared(), "scope": _scope()},
+                        "instruction_evidence": _declared(store), "scope": _scope()},
         base_revision=store.load_document()["revision_id"], operation_id="op-start")
     return project, Store(project)
 
@@ -79,14 +80,14 @@ def _page_slice(store, page_id):
 def _record_decision(project, store, *, basis, topic="direction") -> dict:
     return collaboration.record_decision(
         project, input={"topic": topic, "value": "按培训路径", "disposition": "accepted",
-                        "authority_mode": "direct_user", "instruction_evidence": _declared(),
+                        "authority_mode": "direct_user", "instruction_evidence": _declared(store),
                         "scope": _scope(), "basis": basis},
         base_revision=store.load_document()["revision_id"], operation_id=f"op-dec-{topic}")
 
 
 def _grant(project, store, *, basis, parent_ref=None, expires_at=None, operation_id="op-grant") -> dict:
     payload = {"mode": "execute", "actions": ["task.start"], "scope": _scope(layers=["page_copy"]),
-               "basis": basis, "max_external_calls": 1, "instruction_evidence": _declared()}
+               "basis": basis, "max_external_calls": 1, "instruction_evidence": _declared(store)}
     if parent_ref is not None:
         payload["parent_authorization_ref"] = parent_ref
     if expires_at is not None:
@@ -167,7 +168,7 @@ def test_authorization_states_and_parent_chain(tmp_path):
     parent = collaboration.grant(
         project, input={"mode": "delegate", "actions": ["task.start"],
                         "scope": _scope(layers=["page_copy"]), "delegated_topics": ["manuscript"],
-                        "max_external_calls": 0, "instruction_evidence": _declared()},
+                        "max_external_calls": 0, "instruction_evidence": _declared(store)},
         base_revision=store.load_document()["revision_id"], operation_id="op-parent")
     child = _grant(project, store, basis=[], parent_ref=parent["authorization_ref"],
                    operation_id="op-child")

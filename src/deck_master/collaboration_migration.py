@@ -74,26 +74,26 @@ def describe(project) -> dict:
     }
 
 
-def apply(project, *, base_revision: str, plan_digest: str, operation_id: str,
-          instruction_evidence: dict | None = None, adapter_context=None) -> dict:
+def apply(project, *, base_revision: str, plan_digest: str, operation_id: str) -> dict:
     """Apply the described migration in one transaction (MIGRATION §3).
 
-    A real user instruction from this turn is required to *create a request*;
-    apply itself only establishes the control region with ``request=null`` so
-    an upgrade is never smuggled in as a business approval.
+    Apply only establishes the control region with ``request=null``: a real
+    user instruction is required to *create a request* (start_request), so an
+    upgrade is never smuggled in as a business approval.
     """
     store = Store(Path(project).expanduser())
 
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
-        if document["revision_id"] != base_revision:
-            raise StoreError("base_revision", "base revision is not current; reload and retry")
         digest = collaboration.payload_digest(_MIGRATION_ACTION, {"plan_digest": plan_digest})
+        # CONTRACTS §6.1: replay-before-CAS, like every other collaboration write.
         replay = collaboration.replay_or_conflict(store, document, operation_id,
                                                   _MIGRATION_ACTION, digest)
         if replay:
             return replay
+        if document["revision_id"] != base_revision:
+            raise StoreError("base_revision", "base revision is not current; reload and retry")
         if document.get("collaboration") is not None:
             return {"status": "already_migrated", "revision_id": document["revision_id"]}
         current_plan = migration_plan(store, document)

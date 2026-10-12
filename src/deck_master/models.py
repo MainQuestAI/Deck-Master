@@ -289,6 +289,17 @@ def validate_page_semantics(page: dict[str, Any]) -> None:
         if len(atom_refs) != len(set(atom_refs)):
             raise ModelError("page/content_mapping/visible_links",
                              "each visible atom gets exactly one mapping entry")
+        from .content import atom_ids
+        expected_atoms = atom_ids(page)
+        mapped_atoms = {link.get("element_ref") for link in mapping.get("visible_links") or []}
+        missing_atoms = sorted(expected_atoms - mapped_atoms)
+        unknown_atoms = sorted(mapped_atoms - expected_atoms)
+        if missing_atoms:
+            raise ModelError("page/content_mapping/visible_links",
+                             f"every visible atom needs exactly one mapping entry; missing: {missing_atoms}")
+        if unknown_atoms:
+            raise ModelError("page/content_mapping/visible_links",
+                             f"mapping references atoms that are not visible content: {unknown_atoms}")
         segments = mapping.get("speech_segments") or []
         segment_ids = [segment.get("segment_id") for segment in segments]
         if len(segment_ids) != len(set(segment_ids)):
@@ -302,6 +313,20 @@ def validate_page_semantics(page: dict[str, Any]) -> None:
             if start < previous_end:
                 raise ModelError(where, "speech ranges must not overlap")
             previous_end = end
+        notes = page.get("speaker_notes") or ""
+        if segments:
+            cursor = 0
+            for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                if segment.get("start_codepoint") != cursor:
+                    raise ModelError("page/content_mapping/speech_segments",
+                                     "speech segments must cover the notes contiguously")
+                cursor = segment.get("end_codepoint")
+            if cursor != len(notes):
+                raise ModelError("page/content_mapping/speech_segments",
+                                 f"speech segments must cover all {len(notes)} codepoints of speaker_notes")
+        elif notes:
+            raise ModelError("page/content_mapping/speech_segments",
+                             "non-empty speaker notes must be covered by speech segments")
 
 
 def validate_task_semantics(task: dict[str, Any]) -> None:
@@ -319,6 +344,35 @@ _REVIEW_ASSURANCE_FLOORS = {
     "host_self": ("host_attested", "unverified"),
     "tool": ("host_attested", "unverified"),
 }
+
+
+def require_task_binding(document: dict[str, Any], task: dict[str, Any]) -> None:
+    """MIGRATION §2.2: newly dispatched tasks in a collaboration.v1 project
+    must carry a valid collaboration binding (current request, and any bound
+    authorization/decision must be referenced by the current region)."""
+    if not writer_at_least(document, "collaboration.v1"):
+        return
+    binding = task.get("collaboration_binding")
+    if not binding:
+        raise ModelError("task/collaboration_binding",
+                         "a collaboration.v1 project requires the task's collaboration binding")
+    region = document.get("collaboration") or {}
+    request = region.get("request")
+    if request is None or binding.get("request_id") != request.get("request_id"):
+        raise ModelError("task/collaboration_binding/request_id",
+                         "the binding must name the current work request")
+    for key, family, id_field in (("authorization_ref", "authorizations", "authorization_id"),
+                                  ("decision_refs", "decisions", "decision_id")):
+        refs = binding.get(key)
+        if refs is None:
+            continue
+        refs = refs if isinstance(refs, list) else [refs]
+        known = {(ref.get("path"), ref.get("sha256"))
+                 for ref in region.get(family) or []}
+        for index, ref in enumerate(refs):
+            if (ref.get("path"), ref.get("sha256")) not in known:
+                raise ModelError(f"task/collaboration_binding/{key}[{index}]",
+                                 "bound records must be referenced by the current collaboration region")
 
 
 def validate_review_semantics(review: dict[str, Any]) -> None:
@@ -479,6 +533,8 @@ def validate_evidence_semantics(evidence: dict[str, Any], where: str) -> None:
         "host_attested_instruction": ("host_attested",),
         "imported_unknown": ("unverified",),
         "user_event": ("verified_user",),
+        "approved_document": ("unverified", "host_attested"),
+        "delegated": ("host_attested",),
     }
     allowed = floors.get(evidence.get("kind"))
     if allowed is not None and evidence.get("assurance") not in allowed:
