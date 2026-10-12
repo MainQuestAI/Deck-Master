@@ -109,7 +109,11 @@ def _living_surfaces() -> list[Path]:
         if not target.is_dir():
             continue
         for path in sorted(target.rglob("*")):
-            if path.is_file() and "__pycache__" not in path.parts                     and path.suffix in {".py", ".md", ".toml", ".yml", ".yaml", ".in", ".txt"}                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/archive/")                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/specs/deck-master-rebuild-v1/"):
+            # docs/reports/ holds timestamped audit/evidence records that cite
+            # retired trees as historical fact — the same non-living status as
+            # docs/archive/. Living documentation (AGENTS, agent-* guides,
+            # specs, skills, code) stays fully guarded.
+            if path.is_file() and "__pycache__" not in path.parts                     and path.suffix in {".py", ".md", ".toml", ".yml", ".yaml", ".in", ".txt"}                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/archive/")                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/specs/deck-master-rebuild-v1/")                     and not str(path.relative_to(REPO_ROOT)).startswith("docs/reports/"):
                 surfaces.append(path)
     return surfaces
 
