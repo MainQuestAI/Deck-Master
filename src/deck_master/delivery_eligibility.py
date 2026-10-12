@@ -151,16 +151,32 @@ def professional_policy(store, doc) -> dict:
     # dependencies are validated against one currentness rule, never two.
     from .editing import _current_artifact_digests
     artifacts = _current_artifact_digests(store, doc)
-    # Only a same-logical-review replacement (same kind, same review_id —
-    # mirroring the formal adoption path's rule) can supersede a record.
-    # Defense in depth: the predicate does not trust arbitrary replaces
-    # pointers from other kinds.
+    # Replacement effectiveness (F02, PR107 round 2): recording a replacement
+    # is not the same as resolving what it replaces. A record is only retired
+    # by a replacement that is itself an effective re-judgment — same logical
+    # review (kind + review_id, mirroring the formal adoption rule) and every
+    # pass condition satisfied (identity, subject, dependencies, observations,
+    # no open must-fix). A host_self / not_evaluated / unverified device, or a
+    # replacement still carrying open must-fix findings, stays as history and
+    # retires nothing — an earlier pass must not silently revive because a new
+    # record merely exists. Explicit withdrawal or arbitration is a trusted
+    # action (T02/T07), not re-interpreted here. The provisional judgment
+    # excludes supersession itself, so replacement chains cannot cycle.
+    provisional = {}
+    for ref, review in reviews:
+        if review.get('kind') != 'professional_use':
+            continue
+        provisional[_ref_pair(ref)] = _diagnose(review, ref, doc, pptx_pair, required_deps,
+                                                set(), artifacts, project_id=doc.get('project_id'))
     review_ids_by_ref = {_ref_pair(ref): review.get('review_id') for ref, review in reviews}
     replaced = set()
-    for _, review in reviews:
+    for ref, review in reviews:
         pair = _ref_pair(review.get('replaces'))
-        if (pair and review.get('kind') == 'professional_use'
-                and review_ids_by_ref.get(pair) == review.get('review_id')):
+        if not pair or review.get('kind') != 'professional_use':
+            continue
+        if review_ids_by_ref.get(pair) != review.get('review_id'):
+            continue
+        if provisional.get(_ref_pair(ref), {}).get('satisfies'):
             replaced.add(pair)
 
     for ref, review in reviews:

@@ -92,7 +92,7 @@ def _accept_review(project, store, review, *, task_id='review-professional',
                                  result_payload={'kind': 'review', 'files': [], 'reviews': [review]})
 
 
-def _professional_review(document, *, review_id, status, reviewer, dependencies,
+def _professional_review(document, *, review_id, status, reviewer, deps,
                          findings=(), observations=('已逐页核对整稿正文与来源引用。',),
                          subjects=None, replaces=None):
     return {
@@ -100,7 +100,7 @@ def _professional_review(document, *, review_id, status, reviewer, dependencies,
         'kind': 'professional_use', 'status': status, 'review_stage': 'final',
         'subjects': list(subjects if subjects is not None else
                          [document['outputs']['pptx']] + [entry['page'] for entry in document['pages']]),
-        'dependencies': list(dependencies), 'reviewer': reviewer,
+        'dependencies': list(deps), 'reviewer': reviewer,
         'observations': list(observations), 'findings': list(findings),
         'created_at': '2026-10-21T08:00:00Z', 'replaces': replaces,
     }
@@ -268,7 +268,7 @@ def test_stale_extra_declared_dependency_blocks_all_entries(tmp_path, capsys,
     dependencies.append({'kind': 'style', 'identity': 'p1', 'sha256': 'f' * 64})
     review = _professional_review(document, review_id='rv-professional', status='pass',
                                   reviewer=human_professional_reviewer(document, event_id='evt-stale-extra'),
-                                  dependencies=dependencies)
+                                  deps=dependencies)
     assert _accept_review(project, store, review, task_id='review-stale-extra',
                           operation_id='op-stale-extra')['status'] == 'accepted'
     policy = professional_policy(store, store.load_document())
@@ -290,7 +290,7 @@ def test_unresolvable_extra_declared_dependency_blocks_all_entries(tmp_path, cap
     dependencies.append({'kind': 'source', 'identity': 'missing-source-1', 'sha256': 'a' * 64})
     review = _professional_review(document, review_id='rv-professional', status='pass',
                                   reviewer=human_professional_reviewer(document, event_id='evt-unresolvable'),
-                                  dependencies=dependencies)
+                                  deps=dependencies)
     assert _accept_review(project, store, review, task_id='review-unresolvable',
                           operation_id='op-unresolvable')['status'] == 'accepted'
     policy = professional_policy(store, store.load_document())
@@ -317,7 +317,7 @@ def test_valid_extra_declared_dependencies_still_satisfy(tmp_path, capsys,
                          'sha256': artifacts['artifact:svg:p1']})
     review = _professional_review(document, review_id='rv-professional', status='pass',
                                   reviewer=human_professional_reviewer(document, event_id='evt-valid-extra'),
-                                  dependencies=dependencies)
+                                  deps=dependencies)
     assert _accept_review(project, store, review, task_id='review-valid-extra',
                           operation_id='op-valid-extra')['status'] == 'accepted'
     exported = export_project(project, output_dir=tmp_path / 'delivery-ok', purpose='delivery')
@@ -396,12 +396,17 @@ def test_deck_level_fail_without_findings_still_blocks(tmp_path, capsys, synthet
 
 def test_review_binding_replaced_pptx_is_not_current(tmp_path, synthetic_human_adapter):
     """A review of the previous deck file stays historical after the output is
-    replaced; the unified predicate names the stale subject directly."""
+    replaced; the unified predicate names the stale subject directly. (The
+    review is submitted formally first; the output swap simulates the later
+    project state a review record must survive.)"""
     project, store = _passing_deck(tmp_path)
     _set_policy(store, professional_review_required_for_delivery=True)
     document = store.load_document()
-    _review(store, document, 'professional_use', 'pass', seed='human-old-deck',
-            reviewer=human_professional_reviewer(document, event_id='evt-old-deck'))
+    review = _professional_review(document, review_id='rv-professional', status='pass',
+                                  reviewer=human_professional_reviewer(document, event_id='evt-old-deck'),
+                                  deps=professional_dependencies(store, document))
+    assert _accept_review(project, store, review, task_id='review-old-deck',
+                          operation_id='op-old-deck')['status'] == 'accepted'
     new_file = tmp_path / 'deck-v2.pptx'
     new_file.write_bytes(
         store.read_object_bytes(store.read_object_json(document['outputs']['pptx'])['file']) + b'\x00')
@@ -417,46 +422,124 @@ def test_review_binding_replaced_pptx_is_not_current(tmp_path, synthetic_human_a
     assert 'subject_not_current_pptx' in policy['gap_reasons'], policy['gap_reasons']
 
 
-def test_newer_fail_masks_older_pass_until_explicit_replacement(tmp_path, synthetic_human_adapter):
-    """An earlier pass never masks a newer current fail (F0); only an explicit
-    replacement review that re-judges the finding retires the fail."""
+_ADVISORY_FINDING = {'finding_id': 'pf-1', 'kind': 'content', 'impact': 'advisory',
+                     'page_id': 'p1', 'element_refs': [], 'message': '限定可更明确',
+                     'expected': '明确', 'actual': '含混', 'evidence': [], 'resolution': 'open'}
+
+
+def test_newer_fail_masks_older_pass_until_effective_replacement(tmp_path, capsys,
+                                                                 synthetic_human_adapter):
+    """An earlier pass never masks a newer current fail (F0), and recording a
+    replacement is not resolving it (F02): the fail stays blocking until an
+    effective human re-review actually retires it."""
     project, store = _passing_deck(tmp_path)
+    _complete_page_slots(store, tmp_path)
     _set_policy(store, professional_review_required_for_delivery=True)
     document = store.load_document()
-    _review(store, document, 'professional_use', 'pass', seed='human-pass-first',
-            reviewer=human_professional_reviewer(document, event_id='evt-pass-first'))
+
+    first_pass = _professional_review(document, review_id='rv-prof-a', status='pass',
+                                      reviewer=human_professional_reviewer(document, event_id='evt-pass-first'),
+                                      deps=professional_dependencies(store, document))
+    assert _accept_review(project, store, first_pass, task_id='review-a',
+                          operation_id='op-a')['status'] == 'accepted'
     assert professional_policy(store, store.load_document())['human_signoff'] is True
 
-    _review(store, store.load_document(), 'professional_use', 'fail', seed='human-fail-second',
-            reviewer=human_professional_reviewer(document, event_id='evt-fail-second'),
-            findings=[{'finding_id': 'pf-1', 'kind': 'content', 'impact': 'must_fix',
-                       'page_id': 'p1', 'element_refs': [], 'message': '限定缺失',
-                       'expected': '有', 'actual': '无', 'evidence': [], 'resolution': 'open'}])
+    fail_review = _professional_review(store.load_document(), review_id='rv-prof-b', status='fail',
+                                       reviewer=human_professional_reviewer(store.load_document(),
+                                                                            event_id='evt-fail-second'),
+                                       deps=professional_dependencies(store, store.load_document()),
+                                       findings=[_ADVISORY_FINDING])
+    assert _accept_review(project, store, fail_review, task_id='review-b',
+                          operation_id='op-b')['status'] == 'accepted'
     fail_ref = store.load_document()['reviews'][-1]
     policy = professional_policy(store, store.load_document())
     assert policy['satisfied'] is False
     assert 'professional_review_failed' in policy['gap_reasons'], policy['gap_reasons']
 
-    replacement = human_professional_reviewer(store.load_document(), event_id='evt-rejudge',
-                                              reviewer_id='reviewer-zhao')
-    _review(store, store.load_document(), 'professional_use', 'pass', seed='human-fail-second-r2',
-            reviewer=replacement,
-            findings=[{'finding_id': 'pf-1', 'kind': 'content', 'impact': 'must_fix',
-                       'page_id': 'p1', 'element_refs': [], 'message': '限定缺失',
-                       'expected': '有', 'actual': '已补齐', 'evidence': [], 'resolution': 'fixed',
-                       'resolution_reason': '重审后补上适用边界'}])
-    doc = store.load_document()
-    record = store.read_object_json(doc['reviews'][-1])
-    record['review_id'] = 'rv-human-fail-second'
-    record['replaces'] = fail_ref
-    changed = bump_revision(doc, {'operation_id': 'rejudge-professional', 'kind': 'task_update',
-                                  'description': 'rejudge', 'read_set': []})
-    changed['reviews'][-1] = store.put_json_object(record)
-    store.commit_change(base_revision=doc['revision_id'], document=changed,
-                        operation_id='rejudge-professional')
+    # F02 probe: a host_self / not_evaluated replacement that keeps the finding
+    # open is accepted as history but retires nothing.
+    inert_replacement = _professional_review(
+        store.load_document(), review_id='rv-prof-b', status='not_evaluated',
+        reviewer={'type': 'host_self', 'id': 'host-1', 'execution_ref': None,
+                  'independence_confirmed': False},
+        deps=professional_dependencies(store, store.load_document()),
+        findings=[_ADVISORY_FINDING], replaces=fail_ref)
+    assert _accept_review(project, store, inert_replacement, task_id='review-b-inert',
+                          operation_id='op-b-inert')['status'] == 'accepted'
+    policy = professional_policy(store, store.load_document())
+    assert policy['satisfied'] is False, 'a recorded but ineffective replacement must not retire the fail'
+    assert 'professional_review_failed' in policy['gap_reasons'], policy['gap_reasons']
+    _assert_refused_everywhere(tmp_path, project, store, capsys,
+                               reason='professional_review_failed')
+
+    # An effective human re-review (same logical review, all pass conditions,
+    # shared finding kept open with advisory impact) formally retires it.
+    effective = _professional_review(
+        store.load_document(), review_id='rv-prof-b', status='pass',
+        reviewer=human_professional_reviewer(store.load_document(), event_id='evt-rejudge',
+                                             reviewer_id='reviewer-zhao'),
+        deps=professional_dependencies(store, store.load_document()),
+        findings=[_ADVISORY_FINDING], replaces=fail_ref)
+    assert _accept_review(project, store, effective, task_id='review-b-rejudge',
+                          operation_id='op-b-rejudge')['status'] == 'accepted'
     policy = professional_policy(store, store.load_document())
     assert policy['satisfied'] is True and policy['human_signoff'] is True, policy
     assert 'professional_review_failed' not in policy['gap_reasons']
+    assert export_project(project, output_dir=tmp_path / 'delivery-ok', purpose='delivery')['status'] == 'exported'
+
+
+def test_replacement_with_unverified_identity_does_not_retire_fail(tmp_path, capsys,
+                                                                  synthetic_human_adapter):
+    """F02 variant: a replacement that parrots the human claim without a
+    verified receipt is history, not a resolution."""
+    project, store = _passing_deck(tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    document = store.load_document()
+    fail_review = _professional_review(document, review_id='rv-prof-b', status='fail',
+                                       reviewer=human_professional_reviewer(document, event_id='evt-fail-b'),
+                                       deps=professional_dependencies(store, document),
+                                       findings=[_ADVISORY_FINDING])
+    assert _accept_review(project, store, fail_review, task_id='review-b',
+                          operation_id='op-b')['status'] == 'accepted'
+    fail_ref = store.load_document()['reviews'][-1]
+    bare_human = {'type': 'human_external', 'id': 'reviewer-li', 'execution_ref': None,
+                  'independence_confirmed': True}
+    replacement = _professional_review(store.load_document(), review_id='rv-prof-b', status='pass',
+                                       reviewer=bare_human,
+                                       deps=professional_dependencies(store, store.load_document()),
+                                       findings=[_ADVISORY_FINDING], replaces=fail_ref)
+    assert _accept_review(project, store, replacement, task_id='review-b-bare',
+                          operation_id='op-b-bare')['status'] == 'accepted'
+    _assert_refused_everywhere(tmp_path, project, store, capsys,
+                               reason='professional_review_failed')
+
+
+def test_replacement_with_open_must_fix_does_not_retire_fail(tmp_path, capsys,
+                                                            synthetic_human_adapter):
+    """F02 variant: an effective-identity replacement still carrying an open
+    must-fix finding has not resolved anything and cannot retire the fail."""
+    project, store = _passing_deck(tmp_path)
+    _set_policy(store, professional_review_required_for_delivery=True)
+    document = store.load_document()
+    must_fix = {**_ADVISORY_FINDING, 'impact': 'must_fix'}
+    fail_review = _professional_review(document, review_id='rv-prof-b', status='fail',
+                                       reviewer=human_professional_reviewer(document, event_id='evt-fail-mf'),
+                                       deps=professional_dependencies(store, document),
+                                       findings=[must_fix])
+    assert _accept_review(project, store, fail_review, task_id='review-b',
+                          operation_id='op-b')['status'] == 'accepted'
+    fail_ref = store.load_document()['reviews'][-1]
+    replacement = _professional_review(store.load_document(), review_id='rv-prof-b', status='pass',
+                                       reviewer=human_professional_reviewer(store.load_document(),
+                                                                            event_id='evt-rejudge-mf',
+                                                                            reviewer_id='reviewer-zhao'),
+                                       deps=professional_dependencies(store, store.load_document()),
+                                       findings=[must_fix], replaces=fail_ref)
+    assert _accept_review(project, store, replacement, task_id='review-b-mf',
+                          operation_id='op-b-mf')['status'] == 'accepted'
+    _assert_refused_everywhere(tmp_path, project, store, capsys,
+                               reason='professional_review_failed',
+                               engineering_shadowed=True)
 
 
 def test_positive_human_review_via_formal_submission(tmp_path, capsys, synthetic_human_adapter):
