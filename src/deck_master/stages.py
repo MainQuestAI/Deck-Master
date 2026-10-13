@@ -4,6 +4,7 @@ from __future__ import annotations
 from . import operations
 from .local_state import project_path
 from .models import input_alignment, validate_schema
+from .store import Store
 
 
 def require_assembly_ready(store, document):
@@ -32,6 +33,10 @@ def require_assembly_ready(store, document):
 
 @operations.public
 def assemble(project, *, base_revision, operation_id):
+    from . import eligibility
+    gate_store = Store(project_path(project))
+    eligibility.guard(gate_store, gate_store.load_document(), "stage.assemble",
+                      context={"targets": {"layers": ["output"]}})
     from .pipeline import produce, NeedsTool, RendererError
     try:
         return produce(project_path(project), base_revision=base_revision, operation_id=operation_id)

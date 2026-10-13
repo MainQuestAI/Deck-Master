@@ -171,6 +171,8 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
           production=True, external=True, role="runtime"),
     # -- adoption (row 3)
     _spec("task.accept", "adoption", "pages", writes=True, role="runtime"),
+    _spec("call.settle", "execution", "pages", writes=True, role="host"),
+    _spec("material.upload", "adoption", "external_artifact", writes=True, role="user"),
     _spec("content.inputs_update", "adoption", "deck", layers=("narrative",),
           production=False, writes=True, role="user", card="direction"),
     _spec("page.edit", "adoption", "pages", layers=("page_copy",), production=True,
@@ -178,6 +180,7 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
     _spec("asset.import", "adoption", "deck", layers=("design",), writes=True, role="user"),
     _spec("design.update", "adoption", "deck", layers=("design",), writes=True, role="user"),
     _spec("review.record", "adoption", "deck", layers=("review",), writes=True, role="reviewer"),
+    _spec("annotation.save", "adoption", "deck", layers=("review",), writes=True, role="reviewer"),
     _spec("review.strict", "adoption", "external_artifact", layers=("review",),
           writes=False, role="reviewer"),
     # -- change / candidates / content operations (row 4)
@@ -187,6 +190,8 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
     _spec("candidate.select", "change", "pages", writes=True, role="user"),
     _spec("candidate.adopt", "change", "pages", authority="execute", writes=True,
           production=False, role="user", card="style.palette"),
+    _spec("style.propose", "change", "pages", layers=("design",), authority="either",
+          production=True, role="user", card="style.density"),
     _spec("style.trial", "change", "pages", authority="either", production=True,
           external=True, role="user", card="style.density"),
     _spec("style.expand", "change", "pages", authority="either", production=True,
@@ -219,8 +224,20 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
     _spec("delivery.historical", "delivery", "deck", layers=("output",), authority="either",
           topics=("delivery_acceptance",), writes=True, role="user",
           card="delivery_acceptance", delivery=True),
+    # -- control plane (T02 write paths; correctness lives in collaboration.py,
+    # T04 consumes the same judgement for reporting and migration gating)
+    _spec("request.start", "control", "project", writes=True, production=False, role="user"),
+    _spec("request.pause", "control", "project", writes=True, production=False, role="user"),
+    _spec("request.resume", "control", "project", writes=True, production=False, role="user"),
+    _spec("decision.record", "control", "project", writes=True, production=False, role="user"),
+    _spec("authorization.grant", "control", "project", writes=True, production=False, role="user"),
+    _spec("authorization.revoke", "control", "project", writes=True, production=False, role="user"),
+    _spec("migration.describe", "control", "project", writes=False, role="operator"),
+    _spec("migration.apply", "control", "project", writes=True, production=False, role="operator"),
+    _spec("review.import", "control", "deck", layers=("review",), writes=True, role="reviewer"),
     # -- history and policy (row 7)
     _spec("restore", "history", "deck", writes=True, role="user"),
+    _spec("task.cancel", "history", "pages", writes=True, role="user"),
     _spec("policy.update", "history", "deck", topics=("policy",), writes=True, role="user",
           card="policy"),
     _spec("authority.update", "history", "deck", writes=True, role="user"),
@@ -241,8 +258,22 @@ DELIVERY_ENTRY_ACTIONS = ("export.delivery", "handoff.delivery", "studio.deliver
 # paused request: reading, displaying, cancelling and settling are explicitly
 # allowed while paused (CONTRACTS §7.1), and `continue` reports the decision
 # card instead of raising (CONTRACTS §5).
+# Control-plane writes are checked structurally by the T02 collaboration write
+# path itself (writer boundary, open request, delegation chains, CAS/receipts);
+# T04 consumes the same judgement for reporting/route projection but does not
+# re-refuse them — a decision or grant must be recordable even while paused.
+CONTROL_PLANE_ACTIONS = ("request.start", "request.pause", "request.resume",
+                         "decision.record", "authorization.grant",
+                         "authorization.revoke", "migration.describe", "migration.apply",
+                         "review.import")
+
+# Actions whose answer is reported rather than enforced on the caller's behalf
+# (read routing, stop/settlement facts, control-plane writes).
 ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
-                   "export.engineering", "readiness.final", "review.strict")
+                   "export.engineering", "readiness.final", "review.strict",
+                   "task.cancel", "call.settle", "material.upload", "candidate.select",
+                   "restore",
+                   *CONTROL_PLANE_ACTIONS)
 
 # Per-intent production ceiling (CONTRACTS §5 table). A new request only
 # advances what its own intent/content_intent covers; an action outside that
@@ -534,13 +565,30 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
     """
     binding = binding_of(task)
     if not binding:
-        declared = "collaboration.v1" in (task.get("required_capabilities") or [])
+        declared = ("collaboration.v1" in (task.get("required_capabilities") or [])
+                    or str(task.get("protocol_version") or "").endswith(".v2"))
         return {"status": "absent", "reasons": ["binding_missing"],
                 "new_protocol": declared,
                 "digest": None, "expected_digest": None}
     try:
         models.require_task_binding(document, task)
     except ModelError as exc:
+        # A binding whose authorization was replaced by a *withdrawal* is not a
+        # foreign binding: report the withdrawal (CONTRACTS §3.3), so the user
+        # sees "the withdrawal stands" rather than a structural complaint.
+        auth_ref = binding.get("authorization_ref")
+        if isinstance(auth_ref, dict) and auth_ref.get("path"):
+            try:
+                record = store.read_object_json(auth_ref)
+            except Exception:  # noqa: BLE001
+                record = None
+            if isinstance(record, dict) and record.get("authorization_id"):
+                head = _head(_records(store, _region(document) or {}, "authorizations"),
+                             "authorization_id", record["authorization_id"])
+                if head is None or head[1].get("status") in ("revoked", "superseded", "invalidated"):
+                    return {"status": "withdrawn", "reasons": [exc.detail], "new_protocol": True,
+                            "digest": binding.get("eligibility_digest"), "expected_digest": None,
+                            "authorization_id": record["authorization_id"]}
         return {"status": "invalid", "reasons": [exc.detail], "new_protocol": True,
                 "digest": binding.get("eligibility_digest"), "expected_digest": None}
     digest = binding.get("eligibility_digest")
@@ -670,14 +718,26 @@ def _effective_targets(spec: ActionSpec, targets: dict) -> dict:
     return wanted
 
 
+# Executing one authorized production action necessarily allocates and begins
+# its own bounded call slots, so the task's bound authorization also covers
+# these slots (CONTRACTS §1.6/§3.2: each external generation needs a bounded
+# authorization *and* the existing allowance — from one authority chain).
+SLOT_ACTIONS = ("call.begin", "generation.dispatch", "allowance.allocate", "allowance.repair")
+
+
 def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
-                          targets: dict) -> list[dict]:
+                          targets: dict, task: dict | None = None) -> list[dict]:
     candidates = []
     accepted_names = DELIVERY_ENTRY_ACTIONS if spec.delivery else (spec.name,)
+    bound_ref = binding_of(task).get("authorization_ref") if task is not None else None
     for ref, record in _authorization_heads(store, document):
         actions = record.get("actions") or []
         if not (any(name in actions for name in accepted_names)
-                or _family_match(spec.name, actions)):
+                or _family_match(spec.name, actions)
+                or (bound_ref is not None and _same_ref(ref, bound_ref))):
+            continue
+        if bound_ref is not None and _same_ref(ref, bound_ref) and spec.name not in actions \
+                and spec.name not in SLOT_ACTIONS and not any(name in actions for name in accepted_names):
             continue
         state = dependency_slices.authorization_effectiveness(store, document, ref)
         candidates.append({
@@ -908,7 +968,8 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                   "required business decisions are missing or ineffective: "
                   + ", ".join(missing_topics),
                   missing="decision", topics=missing_topics,
-                  card={"topics": missing_topics, "projection": spec.card,
+                  card={"kind": "decision_card", "topics": missing_topics,
+                        "projection": spec.card,
                         "subject_refs": context.get("subject_refs") or [],
                         "scope": (request or {}).get("scope")})
 
@@ -916,7 +977,12 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
     binding_state = None
     if task is not None and (enforced or region is not None):
         binding_state = task_binding_state(store, control, task)
-        if binding_state["status"] == "invalid":
+        if binding_state["status"] == "withdrawn":
+            block("authorization_revoked",
+                  "the authorization this task bound was withdrawn; the withdrawal stands "
+                  "and only settled call facts remain",
+                  authorization_id=binding_state.get("authorization_id"))
+        elif binding_state["status"] == "invalid":
             block("binding_invalid",
                   "the task's collaboration binding is not valid in the current region",
                   reasons=binding_state["reasons"])
@@ -924,12 +990,19 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
             block("binding_stale",
                   "the task binding's digest/basis no longer matches the current document",
                   reasons=binding_state["reasons"])
-        elif binding_state["status"] == "absent":
+        elif binding_state["status"] == "absent" and binding_state["new_protocol"]:
+            # Per-protocol rule (TASKS T04 item 3): a task that declares the
+            # collaboration.v1 capability but carries no binding cannot open new
+            # production; it may only settle facts. A task from an older
+            # protocol keeps its request/authorization/scope gates instead —
+            # inventing a binding requirement for protocols that never wrote one
+            # would refuse historical settle-only tasks.
             if spec.name in ("call.begin", "generation.dispatch", "allowance.allocate",
-                             "allowance.repair", "task.start") and not spec.delivery:
+                             "allowance.repair", "task.start"):
                 block("decision_needed",
-                      "this task predates the collaboration binding; only already-started "
-                      "call facts may settle — dispatch a bound task for new production",
+                      "this task declares the collaboration capability without a binding; "
+                      "only already-started call facts may settle — dispatch a bound task "
+                      "for new production",
                       missing="task_binding")
 
     # -- authority ---------------------------------------------------------
@@ -939,7 +1012,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         authority_assurance = request_evidence.get("assurance")
         candidates = []
         if spec.authority in ("execute", "either", "delegate"):
-            candidates = _authority_candidates(store, control, spec, targets)
+            candidates = _authority_candidates(store, control, spec, targets, task)
             usable = [c for c in candidates if c["effective"]
                       and (c["mode"] == "execute" or spec.authority in ("delegate", "either"))]
             covering = [c for c in usable if c["covers"]]

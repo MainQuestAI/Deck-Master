@@ -228,6 +228,9 @@ def _preserve(folder,check_id):
 
 @operations.public
 def request(project, *, candidate_id, retry=False, wait=True):
+    from . import eligibility
+    gate_store = Store(project_path(project))
+    eligibility.guard(gate_store, gate_store.load_document(), "render.preview")
     try:context=_context(project,candidate_id)
     except pipeline.NeedsTool as exc:return {'status':'needs_tool','error':{'code':'needs_tool','message':str(exc)}}
     store=context[0];identity,key=context[-2:];job=(str(store.project_root),key)

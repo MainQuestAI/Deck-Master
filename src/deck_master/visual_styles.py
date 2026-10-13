@@ -67,6 +67,10 @@ def _artifact(store, data, ext, media, *, original=None):
 @operations.public
 def import_reference(project, *, data=None, file=None, base_revision, operation_id):
     operations.validate_id(operation_id, new=True)
+    from . import eligibility
+    gate_store = Store(project)
+    eligibility.guard(gate_store, gate_store.load_document(), "asset.import",
+                      context={"targets": {"layers": ["design"]}})
     if data is None:
         source = Path(file).expanduser()
         if not source.is_file() or source.stat().st_size > MAX_BYTES:
@@ -145,6 +149,10 @@ def analyze(project, *, reference_ids=None, instruction=None, input=None, base_r
         fail('reference_ids', 'select 1–5 distinct imported screenshots')
     if not isinstance(instruction,str) or not instruction.strip() or len(instruction) > 4000:
         fail('instruction', 'describe the visual direction in 1–4000 characters')
+    from . import eligibility
+    gate_store = Store(project)
+    eligibility.guard(gate_store, gate_store.load_document(), "dispatch.host_task",
+                      context={"targets": {"layers": ["design"]}})
     store = Store(project)
     with store._locked():
         doc = store.load_document()

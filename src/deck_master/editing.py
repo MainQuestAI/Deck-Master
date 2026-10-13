@@ -241,7 +241,20 @@ def operation_revision(store, current, operation_id):
     return None
 
 
+def _eligibility_guard(store, action, targets=None, context=None):
+    """One call shape for every editing boundary (CONTRACTS §6.2 rows 3/6/7)."""
+    from . import eligibility
+    payload = dict(context or {})
+    if targets is not None:
+        payload["targets"] = targets
+    return eligibility.guard(store, store.load_document(), action, context=payload)
+
+
 def edit_page(project_dir, *, page, base_revision, page_hash, operation_id):
+    # A direct page edit is an adoption boundary: the edited page must be inside
+    # the request's authorized pages/layers like any other write.
+    _eligibility_guard(Store(Path(project_dir).expanduser()), "page.edit",
+                       {"page_ids": [page.get("page_id")], "layers": ["page_copy"]})
     return _edit(Store(project_dir),page=check_page(page),base_revision=base_revision,page_hash=page_hash,operation_id=operation_id)
 
 @_project_transaction
@@ -275,6 +288,15 @@ def _edit(store, *, page, base_revision, page_hash, operation_id):
 def export_project(project_dir, *, output_dir, purpose='working', revision=None, export_id=None):
     """Export a frozen public copy or explicitly internal recovery package."""
     from .exports import create
+    if purpose == "delivery":
+        # The delivery purpose consumes the unified gate (CONTRACTS §6.2 row 6);
+        # review/working/engineering copies stay report-only.
+        action = "delivery.historical" if revision else "export.delivery"
+        _eligibility_guard(Store(Path(project_dir).expanduser()), action,
+                           {"layers": ["output"]},
+                           {"expected_output_ref": (None if revision else
+                                                    (Store(Path(project_dir).expanduser())
+                                                     .load_document().get("outputs") or {}).get("pptx"))})
     return create(project_dir, output_dir=output_dir, purpose=purpose, revision=revision, export_id=export_id)
 
 
@@ -356,6 +378,10 @@ def restore(project_dir, *, revision_id, base_revision, operation_id):
 
 @_project_transaction
 def _restore(store, *, revision_id, base_revision, operation_id):
+    # Restore recovers content/visual facts only; the current request,
+    # decisions, withdrawals, pauses, budget and writer boundary stay as they
+    # are (CONTRACTS §7.1). It is still a project write and consumes the gate.
+    _eligibility_guard(store, "restore")
     current=store.load_document()
     prior=operation_revision(store,current,operation_id)
     if prior:

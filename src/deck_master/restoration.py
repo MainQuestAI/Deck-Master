@@ -65,6 +65,8 @@ def commit(project, *, plan_id, base_revision, operation_id):
     if not isinstance(plan_id, str) or not re.fullmatch(r"restore-plan-[a-f0-9]{64}", plan_id):
         raise operations.OperationError("invalid_restore_plan", "plan_id", "use the immutable restoration plan ID")
     store = Store(project_path(project))
+    from . import eligibility
+    eligibility.guard(store, store.load_document(), "restore")
     digest = plan_id.removeprefix("restore-plan-")
     plan_ref = {"path": f".deckmaster/objects/{digest[:2]}/{digest}.json", "sha256": digest}
     planned = store.read_object_json(plan_ref)

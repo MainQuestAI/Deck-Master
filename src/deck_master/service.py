@@ -19,6 +19,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from . import eligibility
 from . import tasks as tasks_mod
 from .content import normalize_design_assets, check_page
 from .errors import InputRevisionConflict, SourceUnreadable, SourceUnsupported
@@ -180,15 +181,19 @@ def create(
             result_refs=[entry["page"] for entry in document.get("pages") or []],
         ), **source_manifest}
     document = store.load_document()
+    decision = eligibility.evaluate(store, document, document, "create")
     task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
     document = store.load_document()
-    return {**_response(
+    response = {**_response(
         status="created",
         document=document,
         requested_action="create",
         pending_tasks=[task_summary(store, document, task)],
         next_action="submit_host_results",
     ), **source_manifest}
+    if decision["enforcement"] == "active":
+        response["eligibility"] = _eligibility_report(decision)
+    return response
 
 
 def _validate_draft(payload):
@@ -212,6 +217,10 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
     if not isinstance(pages, list) or not pages:
         raise ServiceError("(draft)/pages", "draft must carry a non-empty pages array")
+    store_document = store.load_document()
+    eligibility.guard(store, store_document, "import_draft",
+                      context={"targets": {"page_ids": [page.get("page_id") for page in pages],
+                                           "layers": ["page_copy"]}})
     envelope = {
         "kind": "compose",
         "files": [],
@@ -280,6 +289,9 @@ def _input_compose_task(document, *, operation_id, reason):
 def open_compose_task(store: Store, document: dict, *, operation_id: str,
                       intent: str = "initial", input_revision_id: str | None = None) -> dict:
     """Open a compose Host task against the current content identity."""
+    # CONTRACTS §6.2 row 1: routing a content task consumes the request's own
+    # intent/scope/decision state before any task object is created.
+    eligibility.guard(store, document, "dispatch.compose")
     produced_against = content_identity(document)
     methods = method_resources("compose", intent=intent)
     task = tasks_mod.new_task(
@@ -566,6 +578,11 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     if content_identity(current) != content_identity(document):
         raise tasks_mod.TaskConflict("(blueprint)", "inputs changed before dispatch")
     document = current
+    # An image blueprint is real production: request scope, authorization and
+    # preproduction review are checked before the task or its allowance exist.
+    eligibility.guard(store, document, "dispatch.blueprint",
+                      context={"targets": {"page_ids": [page_entry["page_id"]],
+                                           "layers": ["blueprint"]}})
     for ref in document.get("tasks") or []:
         existing = store.read_object_json(ref)
         if existing.get("stage_request", {}).get("mode") != "trial" and existing.get("kind") == "blueprint" and existing.get("status") in ("awaiting_host", "running") and existing.get("scope_pages") == [page_entry["page_id"]]:
@@ -642,21 +659,75 @@ def _resolve_permitted_asset_files(store: Store, assets: list[dict]) -> list[dic
     return resolved
 
 
+def _eligibility_report(decision: dict) -> dict:
+    """The decision projection attached to routing responses (no IDs/hashes in
+    the human path; the machine fields stay available for adapters)."""
+    return {
+        "allowed": decision["allowed"],
+        "action": decision["action"],
+        "enforcement": decision["enforcement"],
+        "reason_codes": decision["reason_codes"],
+        "reasons": decision["reasons"],
+        "responsible_role": decision["responsible_role"],
+        "next_action": decision["next_action"],
+        "decision_card": decision["decision_card_ref_or_projection"],
+        "scope": decision["scope"],
+    }
+
+
 def continue_project(project_dir: Path | str) -> dict:
+    """Run runnable local work and return the stable pending Host tasks.
+
+    `continue` is a routing action: it consumes the same eligibility judgement
+    and reports it as a decision card/gap list (CONTRACTS §5: waiting for the
+    user is not a production task), while every dispatch it attempts goes
+    through its own gated helper.
+    """
     try:
-        return _continue_project(project_dir)
+        result = _continue_project(project_dir)
+    except eligibility.EligibilityBlocked as exc:
+        # A blocked dispatch is reported as a decision/stop card instead of an
+        # exception (CONTRACTS §5: waiting for the user is not a production
+        # task); nothing was dispatched, so the card is the whole answer.
+        document = Store(Path(project_dir)).load_document()
+        decision = exc.decision
+        response = _response(
+            status="needs_input", document=document, requested_action="continue",
+            findings=[{"code": decision["reason_codes"][0],
+                       "field": f"eligibility/{decision['action']}",
+                       "message": decision["reasons"][0]["detail"],
+                       "reasons": decision["reasons"],
+                       "responsible_role": decision["responsible_role"],
+                       "next_action": decision["next_action"],
+                       "decision_card": decision["decision_card_ref_or_projection"]}],
+            next_action=decision["next_action"] or "resolve_admission_gap")
+        if decision["enforcement"] == "active":
+            response["eligibility"] = _eligibility_report(decision)
+        return response
     except tasks_mod.CallBlocked as exc:
         document = Store(Path(project_dir)).load_document()
-        return _response(status="needs_input", document=document, requested_action="continue",
-                         findings=[{"code": "external_call_blocked", "field": exc.path, "message": exc.detail}],
-                         next_action="resolve_external_call_block")
+        return _with_eligibility(project_dir, _response(
+            status="needs_input", document=document, requested_action="continue",
+            findings=[{"code": "external_call_blocked", "field": exc.path, "message": exc.detail}],
+            next_action="resolve_external_call_block"))
     except StoreError as exc:
         if not exc.path.startswith('asset:'):
             raise
         document = Store(Path(project_dir)).load_document()
-        return _response(status='needs_input', document=document, requested_action='continue',
-                         findings=[{'code': 'broken_asset_reference', 'field': exc.path,
-                                    'message': exc.detail}], next_action='restore_or_replace_asset')
+        return _with_eligibility(project_dir, _response(
+            status='needs_input', document=document, requested_action='continue',
+            findings=[{'code': 'broken_asset_reference', 'field': exc.path,
+                       'message': exc.detail}], next_action='restore_or_replace_asset'))
+    return _with_eligibility(project_dir, result)
+
+
+def _with_eligibility(project_dir, response: dict) -> dict:
+    store = Store(Path(project_dir).expanduser())
+    document = store.load_document()
+    decision = eligibility.evaluate(store, document, document, "continue_project")
+    if decision["enforcement"] == "active":
+        response["eligibility"] = _eligibility_report(decision)
+    return response
 
 
 @tasks_mod._project_transaction
@@ -962,6 +1033,10 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         raise ServiceError('scope_pages', 'must name existing distinct pages')
     if review_stage == 'page_visual' and len(page_ids) != 1:
         raise ServiceError('scope_pages', 'page_visual must target exactly one page')
+    host_layers = {"reconstruct": ["svg", "blueprint"], "repair": ["page_copy", "svg"],
+                   "review": ["review"]}[kind]
+    eligibility.guard(store, document, "dispatch.host_task",
+                      context={"targets": {"page_ids": list(page_ids), "layers": host_layers}})
     for ref in document['tasks']:
         task = store.read_object_json(ref)
         if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running'):
@@ -1247,6 +1322,8 @@ def inputs_update(
                     return record["result"]
                 raise InputRevisionConflict(f"(operation {operation_id})", "operation id already applied with a different patch")
         document = store.load_document()
+        eligibility.guard(store, document, "content.inputs_update",
+                          context={"targets": {"layers": ["narrative"]}})
         if document["revision_id"] != base_revision:
             raise InputRevisionConflict(
                 "(base-revision)",
@@ -1619,6 +1696,8 @@ def import_asset(
     """Store real media as an asset Artifact and register it in design_context."""
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
+    eligibility.guard(store, document, "asset.import",
+                      context={"targets": {"layers": ["design"]}})
     source = Path(file_path).expanduser().resolve()
     if not source.is_file():
         raise ServiceError(f"(asset {asset_id})", f"asset file not found: {source}")
@@ -1694,6 +1773,8 @@ def update_design(
     if base_revision is not None and base_revision != document["revision_id"]:
         from .store import ConflictError
         raise ConflictError("revision", "project changed; reload before updating design")
+    eligibility.guard(store, document, "design.update",
+                      context={"targets": {"layers": ["design"]}})
     old_design = document.get("design_context") or {}
     new_design = dict(design_context)
     operation_id = _new_operation_id("design")
@@ -1741,6 +1822,9 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     task = tasks_mod._lookup_task(document, task_id, store)
+    eligibility.guard(store, document, "task.start",
+                      context={"task": task,
+                               "targets": {"page_ids": task.get("scope_pages") or []}})
     declaration = {"supported_protocols": supported_protocols, "capabilities": capabilities}
     if task.get("protocol_version"):
         from .generation import check_host
@@ -1777,6 +1861,7 @@ def task_cancel(project_dir: Path | str, *, task_id: str, reason: str = "") -> d
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     task = tasks_mod._lookup_task(document, task_id, store)
+    eligibility.guard(store, document, "task.cancel", context={"task": task})
     if task.get("status") in ("completed", "cancelled", "superseded"):
         raise tasks_mod.TaskConflict(
             f"(task {task_id})", f"task already {task.get('status')}; cancel refused"

@@ -682,6 +682,13 @@ def adopt(project, *, input, base_revision, operation_id):
         if (base_revision != document['revision_id'] or input['base_revision'] != base_revision
                 or input['project_id'] != document['project_id']):
             raise operations.OperationError('conflict', 'base_revision', 'adoption plan needs a new current basis; no candidates adopted', exit_code=5)
+        from . import eligibility
+        eligibility.guard(store, document, "candidate.adopt", context={
+            "targets": {"page_ids": [item['page_id'] for item in input['selections']
+                                     if item.get('page_id')],
+                        "layers": [layer for layer in
+                                   dict.fromkeys(_adoption_layer(item) for item in input['selections'])
+                                   if layer]}})
         ids = [item['candidate_id'] for item in input['selections']]
         current_plan = _plan(store, document, ids)
         if current_plan != input:
@@ -742,6 +749,12 @@ def adopt(project, *, input, base_revision, operation_id):
                                          operation_id=operation_id, kind='candidates.adopt', digest=digest, result=result)
 
 
+def _adoption_layer(item: dict) -> str | None:
+    """Scope-vocabulary layer of one adoption selection (never an invented one)."""
+    return {'blueprint': 'blueprint', 'svg': 'svg', 'ppt': 'output',
+            'page': 'page_copy', 'content': 'page_copy'}.get(item.get('stage'))
+
+
 def _last_decision(store, document, candidate_id):
     """Latest decision record for one candidate; damaged refs fail loudly."""
     last = None
@@ -788,6 +801,9 @@ def decide(project, *, input, base_revision, operation_id):
     operations.validate_id(operation_id, new=True)
     if not isinstance(input, dict):
         raise operations.OperationError('invalid_input', 'input', 'decision request must be an object')
+    from . import eligibility
+    gate_store = Store(project_path(project))
+    eligibility.guard(gate_store, gate_store.load_document(), "candidate.select")
     if input.get('schema_version') != 'candidate_decision.v1':
         raise operations.OperationError('invalid_input', 'input/schema_version',
                                         'decision requests use candidate_decision.v1')

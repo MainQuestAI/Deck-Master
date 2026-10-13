@@ -351,6 +351,8 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "request.start")
         replay = replay_or_conflict(store, document, operation_id, ACTION_REQUEST_START, digest)
         if replay:
             return replay
@@ -415,6 +417,8 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "decision.record")
         replay = replay_or_conflict(store, document, operation_id, ACTION_DECISION_RECORD, digest)
         if replay:
             return replay
@@ -513,6 +517,8 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "authorization.grant")
         replay = replay_or_conflict(store, document, operation_id, ACTION_GRANT, digest)
         if replay:
             return replay
@@ -623,6 +629,8 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "authorization.revoke")
         replay = replay_or_conflict(store, document, operation_id, ACTION_REVOKE, digest)
         if replay:
             return replay
@@ -692,6 +700,9 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document,
+                          "request.pause" if paused else "request.resume")
         replay = replay_or_conflict(store, document, operation_id, action, digest)
         if replay:
             return replay

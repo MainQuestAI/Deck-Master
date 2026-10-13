@@ -773,16 +773,36 @@ def test_binding_invalid_and_stale_are_distinct(tmp_path):
     assert "binding_stale" not in decision["reason_codes"]
 
 
-def test_binding_absent_task_may_settle_but_not_start_new_production(tmp_path):
+def test_binding_absent_new_protocol_task_settles_but_never_produces(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store)
     _grant(project, store, actions=("call.begin",))
     document = store.load_document()
-    legacy = _task(document, allowances=[_allowance("call-1", "consumed")])
-    blocked = _evaluate(store, "call.begin", task=legacy, context={"allowance_id": "call-1"})
+    new_protocol = _task(document, allowances=[_allowance("call-1", "consumed")],
+                         protocol_version="compose.v2",
+                         required_capabilities=["compose.v2", "collaboration.v1"])
+    blocked = _evaluate(store, "call.begin", task=new_protocol,
+                        context={"allowance_id": "call-1"})
     assert "decision_needed" in blocked["reason_codes"]
     assert "settle" in blocked["reasons"][0]["detail"]
-    assert _evaluate(store, "task.accept", task=legacy)["reason_codes"] == []
+    assert _evaluate(store, "task.accept", task=new_protocol)["reason_codes"] == []
+
+
+def test_binding_absent_old_protocol_task_keeps_its_other_gates(tmp_path):
+    """A task from a protocol that never wrote a binding is judged by the
+    request/authorization/scope gates, not by an invented binding rule."""
+    project, store = _project(tmp_path)
+    _start(project, store)
+    document = store.load_document()
+    legacy = _task(document, allowances=[_allowance("call-1", "reserved")])
+    decision = _evaluate(store, "call.begin", task=legacy, context={"allowance_id": "call-1"})
+    assert decision["binding"]["status"] == "absent"
+    assert decision["binding"]["new_protocol"] is False
+    assert "decision_needed" not in decision["reason_codes"]
+    assert "authority_insufficient" in decision["reason_codes"]
+    _grant(project, store, actions=("call.begin",))
+    allowed = _evaluate(store, "call.begin", task=legacy, context={"allowance_id": "call-1"})
+    assert allowed["allowed"] is True, allowed["reason_codes"]
 
 
 def test_binding_digest_formula_is_the_t03_contract():
