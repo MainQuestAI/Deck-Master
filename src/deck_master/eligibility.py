@@ -1051,7 +1051,11 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
             # what was reviewed about artifacts that already exist, so it stays a
             # fact channel like settlement. Anything that would write production
             # state, and any production task, is refused (the caller computes
-            # record_only from the envelope *and* the task kind).
+            # record_only from the envelope *and* the task kind). Note the
+            # asymmetry this leaves today: a style_analyze result carries a
+            # `style_analysis` envelope, which is not classified as record-only,
+            # so its acceptance stays refused in managed projects until the
+            # design flow (T05) gives that envelope its own fact-channel judgement.
             record_only = (spec.name == "task.accept" and context.get("record_only"))
             if (spec.production or spec.group == "adoption") and not record_only:
                 block("decision_needed",
