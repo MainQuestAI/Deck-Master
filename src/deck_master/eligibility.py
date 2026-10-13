@@ -53,7 +53,7 @@ from dataclasses import dataclass
 
 from . import dependency_slices, models, operations
 from .models import ModelError, canonical_json_bytes, sha256_bytes
-from .store import Store
+from .store import Store, StoreError
 
 SCHEMA_VERSION = "eligibility.v1"
 
@@ -366,21 +366,15 @@ def normalize_scope(scope: dict | None) -> dict:
 
 
 def binding_eligibility_digest(phase: str, write_scope: dict | None, basis) -> str:
-    """The T03/T04 shared binding digest.
+    """The T03/T04 shared binding digest — one implementation, no drift.
 
-    sha256 over ``canonical_json_bytes({"phase", "write_scope", "basis"})`` with
-    ``basis`` the slice sha256 list sorted by slice key (CONTRACTS §5, §7).
-    Gates recompute a task binding with this exact formula; T03's compose.v2
-    dispatch writes it.
+    The dispatch-side builder (``collaboration_binding.eligibility_digest``)
+    owns the canonical formula; gates recompute through this wrapper so a
+    stamped binding and its re-check can never disagree about slice ordering
+    or scope canonicalisation (the joint gate caught exactly that drift).
     """
-    digests = sorted(
-        (dep.get("sha256") or "") for dep in (basis or [])
-    )
-    return sha256_bytes(canonical_json_bytes({
-        "phase": phase,
-        "write_scope": normalize_scope(write_scope),
-        "basis": digests,
-    }))
+    from .collaboration_binding import eligibility_digest as _canonical
+    return _canonical(phase=phase, write_scope=write_scope or {}, basis=basis)
 
 
 def eligibility_digest(action: str, scope: dict | None, basis) -> str:
@@ -731,6 +725,53 @@ def _covers(store: Store, scope: dict | None, targets: dict | None) -> bool:
     return True
 
 
+def _page_coverage_from_binding(store: Store, request: dict, wanted: dict, task,
+                                control: dict | None = None) -> bool:
+    """Whether a deck request's planner scope already covers the page target.
+
+    A deck request carries no fixed page set until a plan exists
+    (``page_ids=[]`` with no manifest never means "all pages", CONTRACTS §2.1).
+    The adopted plan is the frozen projection of that page manifest (§2.1), so
+    a target wholly inside the current plan's page set is covered by the
+    request's own production intent — including at dispatch time, before the
+    task exists. A bound task materialises the same set (§3.4), and the
+    plan-creating phase (``page_copy``) fixes the set with its own accepted
+    result under the §11.5 atomic swap. Layers must still sit inside the
+    request scope, and anything outside the frozen set stays refused.
+    """
+    scope = request.get("scope") or {}
+    if scope_page_ids(store, scope) is not None:
+        return False  # a fixed request page set is authoritative on its own
+    wanted_layers = set(wanted.get("layers") or [])
+    if not wanted_layers <= set(scope.get("layers") or []):
+        return False
+    wanted_pages = target_page_ids(store, wanted)
+    if not wanted_pages:
+        return False
+    plan_ref = (control or {}).get("content_plan")
+    if plan_ref:
+        try:
+            plan = store.read_object_json(plan_ref)
+        except StoreError:
+            plan = None
+        if isinstance(plan, dict):
+            order = [link.get("page_id") for link in (plan.get("page_links") or [])
+                     if isinstance(link, dict)]
+            if not order:
+                order = list((plan.get("input") or {}).get("page_order") or [])
+            if order and set(wanted_pages) <= set(order):
+                return True
+    binding = (task or {}).get("collaboration_binding") or {}
+    if not binding or binding.get("request_id") != request.get("request_id"):
+        return False
+    bound_pages = scope_page_ids(store, binding.get("write_scope"))
+    if bound_pages is None:
+        # The plan-creating phase writes the page set its own result fixes;
+        # every page still validates inside the variant acceptance (§11.5).
+        return binding.get("phase") == "page_copy"
+    return set(wanted_pages) <= set(bound_pages)
+
+
 def _effective_targets(spec: ActionSpec, targets: dict) -> dict:
     """The concrete target the action must be covered for: the caller's explicit
     targets, plus the action's own declared layers when the caller names none
@@ -977,7 +1018,8 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         wanted = dict(targets or {}) if action in ROUTING_ACTIONS \
             else _effective_targets(spec, targets)
         if (wanted.get("layers") or target_page_ids(store, wanted)) \
-                and not _covers(store, request.get("scope"), wanted):
+                and not _covers(store, request.get("scope"), wanted) \
+                and not _page_coverage_from_binding(store, request, wanted, task, control):
             allowed_pages = scope_page_ids(store, request.get("scope"))
             block("scope_exceeded",
                   "the target is outside the current request scope",

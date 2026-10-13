@@ -239,6 +239,16 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
                           dispatch_revision=basis['revision_id'], produced_against=content_identity(basis),
                           cost_class='external_generation' if action['max_calls'] else 'host_reasoning',
                           method_release=method_release(method_resources(action['kind'])))
+    # A collaboration.v1 project dispatches an accountable task: the change
+    # action materialises into a phase binding before any allowance is
+    # reserved, so the same judgement covers the dispatch and its call slots
+    # (T03 binding writer; T04 refuses unbound production unconditionally).
+    # Older projects keep their exact old dispatch (stamp_task is a no-op).
+    from . import collaboration_binding
+    collaboration_binding.stamp_task(
+        store, basis, task, phase="production", executor_type="host",
+        page_ids=[action["page_id"]],
+        adoption_policy="candidate_only" if action.get("mode") == "trial" else "within_scope")
     # Reserve on the prospective complete Document so the whole batch observes
     # its own earlier reservations. No intermediate pointer is published.
     if action['max_calls']:

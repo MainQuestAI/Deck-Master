@@ -75,6 +75,11 @@ SERVICE_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
                       "service.inputs_update: guard inside the locked transaction before "
                       "staging/commit; the reconciliation task is dispatched through "
                       "open_compose_task's gate", None),
+    "revision_compose_task": ("dispatch.compose",
+                              "service.revision_compose_task (T03): the input-reconciliation "
+                              "dispatch helper; callers (inputs_update/content_ops) hold the "
+                              "gated boundary and the returned task carries its collaboration "
+                              "binding on enforced projects", None),
     "accept_result": ("task.accept",
                       "service.accept_result → tasks.accept_result: call facts settle first "
                       "(unchanged protocol, CONTRACTS §6.1 accept_result exception), then "

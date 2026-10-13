@@ -214,7 +214,18 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     imported copy and Host-composed copy behave identically downstream.
     """
     _validate_draft(draft_payload)
-    if writer_at_least(store.load_document(), "collaboration.v1"):
+    pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
+    page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
+    if not isinstance(pages, list) or not pages:
+        raise ServiceError("(draft)/pages", "draft must carry a non-empty pages array")
+    # The boundary consumes the eligibility resolver first (CONTRACTS §6.1
+    # order): a paused request or an intent that cannot import (review_only)
+    # gets its precise reason before the writer-boundary route check below.
+    store_document = store.load_document()
+    eligibility.guard(store, store_document, "import_draft",
+                      context={"targets": {"page_ids": [page.get("page_id") for page in pages],
+                                           "layers": ["page_copy"]}})
+    if writer_at_least(store_document, "collaboration.v1"):
         # TASKS T03 item P3-3: never dispatch an unbound legacy compose task on a
         # collaboration.v1 project. The legacy envelope carries no request, no
         # collaboration binding and no write scope, and the frozen page_copy
@@ -230,14 +241,6 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
             "(2) record an explicit decision for a confirmed-manuscript mapping (imported_mapping "
             "+ fidelity review) once the unified import routing lands. No page, plan or output was "
             "written by this call")
-    pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
-    page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
-    if not isinstance(pages, list) or not pages:
-        raise ServiceError("(draft)/pages", "draft must carry a non-empty pages array")
-    store_document = store.load_document()
-    eligibility.guard(store, store_document, "import_draft",
-                      context={"targets": {"page_ids": [page.get("page_id") for page in pages],
-                                           "layers": ["page_copy"]}})
     envelope = {
         "kind": "compose",
         "files": [],
