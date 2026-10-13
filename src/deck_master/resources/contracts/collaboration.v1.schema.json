@@ -1,0 +1,447 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "collaboration.v1",
+  "description": "Document collaboration region (content collaboration v1.2 CONTRACTS \u00a72). Embedded in deck_document.v1 once minimum_writer reaches collaboration.v1; decisions and authorizations live in their own object families and are referenced here by Ref.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "authority_policy",
+    "quality_profile",
+    "request",
+    "decisions",
+    "authorizations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "collaboration.v1"
+    },
+    "authority_policy": {
+      "enum": [
+        "traceable",
+        "verified_user"
+      ]
+    },
+    "quality_profile": {
+      "$ref": "#/$defs/quality_profile"
+    },
+    "request": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/request"
+        }
+      ]
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      }
+    },
+    "authorizations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ref"
+      }
+    }
+  },
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Evidence record (CONTRACTS \u00a74). assurance is computed by Runtime adapter context; client payloads cannot upgrade it.",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "assurance",
+        "source_ref",
+        "source_locator",
+        "actor_id",
+        "transport_receipt_ref",
+        "presentation_ref"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "user_event",
+            "host_attested_instruction",
+            "approved_document",
+            "delegated",
+            "imported_unknown"
+          ]
+        },
+        "assurance": {
+          "enum": [
+            "verified_user",
+            "host_attested",
+            "unverified"
+          ]
+        },
+        "source_ref": {
+          "$ref": "#/$defs/ref"
+        },
+        "source_locator": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transport_receipt_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "presentation_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "description": "Scope (CONTRACTS \u00a72.1). An empty page_ids array always means no pages, never all pages.",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "page_ids",
+        "page_manifest_ref",
+        "external_artifact_ref",
+        "layers",
+        "allow_page_membership_change",
+        "allow_page_order_change",
+        "purpose"
+      ],
+      "properties": {
+        "subject": {
+          "enum": [
+            "deck",
+            "pages",
+            "external_artifact"
+          ]
+        },
+        "page_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        },
+        "page_manifest_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "external_artifact_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "narrative",
+              "plan",
+              "page_copy",
+              "speech",
+              "design",
+              "blueprint",
+              "svg",
+              "review",
+              "output"
+            ]
+          }
+        },
+        "allow_page_membership_change": {
+          "type": "boolean"
+        },
+        "allow_page_order_change": {
+          "type": "boolean"
+        },
+        "purpose": {
+          "enum": [
+            "exploratory",
+            "review",
+            "working",
+            "delivery"
+          ]
+        }
+      }
+    },
+    "dependency_slice": {
+      "type": "object",
+      "description": "DependencySlice (CONTRACTS \u00a77): a registered semantic projection with its canonical digest.",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "identity",
+        "projection",
+        "ref",
+        "sha256"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "task_fact",
+            "artifact",
+            "source",
+            "decision",
+            "authorization",
+            "policy"
+          ]
+        },
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projection": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*([.][a-z][a-z0-9_]*)*$"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "description": "live/read sub-request label (CONTRACTS \u00a711.7); metadata only, never a second content truth.",
+      "additionalProperties": false,
+      "required": [
+        "group_id",
+        "variant_id",
+        "label",
+        "requested_variant_ids"
+      ],
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variant_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requested_variant_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          }
+        }
+      }
+    },
+    "quality_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content_review_requirement",
+        "requirement_origin",
+        "override_decision_ref"
+      ],
+      "properties": {
+        "content_review_requirement": {
+          "enum": [
+            "independent_model_or_human",
+            "host_self",
+            "fidelity_only"
+          ]
+        },
+        "requirement_origin": {
+          "enum": [
+            "default_new_argument",
+            "confirmed_manuscript",
+            "explicit_decision"
+          ]
+        },
+        "override_decision_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "description": "The current user work request boundary (CONTRACTS \u00a72); not a second task state machine.",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "intent",
+        "content_intent",
+        "instruction_evidence",
+        "scope",
+        "paused",
+        "pause_reason",
+        "closed",
+        "closed_reason",
+        "background_request_ids",
+        "variant"
+      ],
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+        },
+        "intent": {
+          "enum": [
+            "full_deck",
+            "content_only",
+            "design_trial",
+            "review_only",
+            "edit"
+          ]
+        },
+        "content_intent": {
+          "anyOf": [
+            {
+              "enum": [
+                "plan_only",
+                "write_only",
+                "speech_only",
+                "content_full"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "instruction_evidence": {
+          "$ref": "#/$defs/evidence"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "paused": {
+          "type": "boolean"
+        },
+        "pause_reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "closed_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "completed",
+                "rejected",
+                "withdrawn",
+                "superseded"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "background_request_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/variant"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

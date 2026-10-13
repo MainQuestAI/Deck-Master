@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "content_plan.v2",
+  "description": "ContentPlan v2 (content collaboration v1.2 CONTRACTS \u00a711.2). Document.content_plan stays the single current pointer; mode=bound page_order must equal the committed Document.pages order.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "version",
+    "project_id",
+    "task_id",
+    "origin",
+    "basis",
+    "previous_ref",
+    "mode",
+    "narrative_ref",
+    "imported_manuscript",
+    "input",
+    "page_links"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "content_plan.v2"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "origin": {
+      "enum": [
+        "host_composed",
+        "user_imported",
+        "user_edited"
+      ]
+    },
+    "basis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision_id",
+        "input_digest"
+      ],
+      "properties": {
+        "revision_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "previous_ref": {
+      "anyOf": [
+        {
+          "$ref": "collaboration.v1.schema.json#/$defs/ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mode": {
+      "enum": [
+        "planned",
+        "bound",
+        "imported_mapping"
+      ]
+    },
+    "narrative_ref": {
+      "anyOf": [
+        {
+          "$ref": "collaboration.v1.schema.json#/$defs/ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "imported_manuscript": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_ref",
+            "claimed_confirmation_evidence",
+            "preserve_mainline",
+            "unresolved_mapping_items"
+          ],
+          "properties": {
+            "source_ref": {
+              "$ref": "collaboration.v1.schema.json#/$defs/ref"
+            },
+            "claimed_confirmation_evidence": {
+              "$ref": "collaboration.v1.schema.json#/$defs/evidence"
+            },
+            "preserve_mainline": {
+              "const": true
+            },
+            "unresolved_mapping_items": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "input": {
+      "$ref": "content-plan-input.v2.schema.json"
+    },
+    "page_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "page_id",
+          "page_ref",
+          "plan_role_page_id"
+        ],
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "page_ref": {
+            "$ref": "collaboration.v1.schema.json#/$defs/ref"
+          },
+          "plan_role_page_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        }
+      }
+    }
+  }
+}

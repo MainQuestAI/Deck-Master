@@ -1,0 +1,223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "compose_result.v2",
+  "description": "Compose v2 result envelope (content collaboration v1.2 CONTRACTS \u00a711.5). Variant payloads write only what the table allows; the tasks parser branches on variant (T03).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "variant",
+    "task_id",
+    "operation_id",
+    "produced_against",
+    "eligibility_digest",
+    "payload",
+    "usage_events"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "compose_result.v2"
+    },
+    "kind": {
+      "const": "compose"
+    },
+    "variant": {
+      "enum": [
+        "framing",
+        "narrative",
+        "page_copy",
+        "speech",
+        "input_revision"
+      ]
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "produced_against": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "eligibility_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Variant-specific payload; allowed keys are fixed per variant."
+    },
+    "usage_events": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "variant": {
+            "const": "framing"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "narrative"
+            ],
+            "properties": {
+              "narrative": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "variant": {
+            "const": "narrative"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "narrative"
+            ],
+            "properties": {
+              "narrative": {
+                "type": "object"
+              },
+              "plan": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "variant": {
+            "const": "page_copy"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pages",
+              "page_order",
+              "plan_input"
+            ],
+            "properties": {
+              "pages": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "page_order": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                }
+              },
+              "plan_input": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "variant": {
+            "const": "speech"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "updates"
+            ],
+            "properties": {
+              "updates": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "variant": {
+            "const": "input_revision"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "changed_layers"
+            ],
+            "properties": {
+              "changed_layers": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "proposals": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "diff": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

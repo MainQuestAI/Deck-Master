@@ -446,6 +446,180 @@
       },
       "required": [],
       "additionalProperties": false
+    },
+    "content_mapping": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "description": "Page content mapping (CONTRACTS \u00a711.3): atom-level links to Narrative nodes/sources and speaker-note speech segments.",
+          "additionalProperties": false,
+          "required": [
+            "narrative_ref",
+            "plan_role_page_id",
+            "visible_links",
+            "speech_segments"
+          ],
+          "properties": {
+            "narrative_ref": {
+              "anyOf": [
+                {
+                  "$ref": "collaboration.v1.schema.json#/$defs/ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "plan_role_page_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "visible_links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "element_ref",
+                  "narrative_node_ids",
+                  "source_links"
+                ],
+                "properties": {
+                  "element_ref": {
+                    "type": "string",
+                    "pattern": "^atom:[A-Za-z0-9_.:-]+$"
+                  },
+                  "narrative_node_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    }
+                  },
+                  "source_links": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "source_id",
+                        "source_version",
+                        "locator"
+                      ],
+                      "properties": {
+                        "source_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                        },
+                        "source_version": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "original_sha256",
+                            "extract"
+                          ],
+                          "properties": {
+                            "original_sha256": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "pattern": "^[a-f0-9]{64}$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "extract": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "path",
+                                "sha256"
+                              ],
+                              "properties": {
+                                "path": {
+                                  "type": "string",
+                                  "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                                },
+                                "sha256": {
+                                  "type": "string",
+                                  "pattern": "^[a-f0-9]{64}$"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "locator": {
+                          "type": "string",
+                          "minLength": 1,
+                          "pattern": "\\S"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "speech_segments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "segment_id",
+                  "start_codepoint",
+                  "end_codepoint",
+                  "narrative_node_ids",
+                  "kind",
+                  "estimated_seconds"
+                ],
+                "properties": {
+                  "segment_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                  },
+                  "start_codepoint": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "end_codepoint": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "narrative_node_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    }
+                  },
+                  "kind": {
+                    "enum": [
+                      "cue",
+                      "verbatim"
+                    ]
+                  },
+                  "estimated_seconds": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "required": [

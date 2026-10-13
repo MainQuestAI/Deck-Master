@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "collaboration_decision.v1",
+  "description": "Decision object (content collaboration v1.2 CONTRACTS \u00a73.1). authority_mode names the claimed source; trust only comes from evidence.assurance, which Runtime adapter context computes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision_id",
+    "project_id",
+    "request_id",
+    "topic",
+    "subject_refs",
+    "scope",
+    "value",
+    "disposition",
+    "authority_mode",
+    "evidence",
+    "delegation_ref",
+    "basis",
+    "status",
+    "replaces",
+    "invalidated_by",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "collaboration_decision.v1"
+    },
+    "decision_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "topic": {
+      "enum": [
+        "direction",
+        "manuscript",
+        "speech",
+        "style",
+        "tradeoff",
+        "delivery_acceptance",
+        "policy"
+      ]
+    },
+    "subject_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/proposal_ref"
+      }
+    },
+    "scope": {
+      "$ref": "collaboration.v1.schema.json#/$defs/scope"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "disposition": {
+      "enum": [
+        "accepted",
+        "rejected",
+        "deferred"
+      ]
+    },
+    "authority_mode": {
+      "enum": [
+        "direct_user",
+        "delegated",
+        "host_proposal",
+        "system_default",
+        "imported_unknown"
+      ]
+    },
+    "evidence": {
+      "$ref": "collaboration.v1.schema.json#/$defs/evidence"
+    },
+    "delegation_ref": {
+      "anyOf": [
+        {
+          "$ref": "collaboration.v1.schema.json#/$defs/ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "basis": {
+      "type": "array",
+      "items": {
+        "$ref": "collaboration.v1.schema.json#/$defs/dependency_slice"
+      }
+    },
+    "status": {
+      "enum": [
+        "active",
+        "withdrawn",
+        "superseded",
+        "invalidated"
+      ]
+    },
+    "replaces": {
+      "anyOf": [
+        {
+          "$ref": "collaboration.v1.schema.json#/$defs/ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "invalidated_by": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "proposal_ref": {
+      "type": "object",
+      "description": "ProposalRef: projection must be a centrally registered slice (CONTRACTS \u00a73.1); arbitrary JSONPath is rejected.",
+      "additionalProperties": false,
+      "required": [
+        "artifact_kind",
+        "artifact_ref",
+        "projection"
+      ],
+      "properties": {
+        "artifact_kind": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$"
+        },
+        "artifact_ref": {
+          "$ref": "collaboration.v1.schema.json#/$defs/ref"
+        },
+        "projection": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*([.][a-z][a-z0-9_]*)*$"
+        }
+      }
+    }
+  }
+}

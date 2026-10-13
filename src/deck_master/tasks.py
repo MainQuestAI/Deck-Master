@@ -521,6 +521,15 @@ def _build_artifact(
 def _adopt_review(store: Store, review: dict) -> dict:
     """Reviews must reference already-saved objects, never envelope aliases."""
     validate_review_semantics(review)
+    if review.get("schema_version") == "deck_review.v2":
+        reviewer = review.get("reviewer") or {}
+        if reviewer.get("assurance") == "verified_user":
+            from .delivery_eligibility import human_evidence_status
+            identity = human_evidence_status(review, project_id=store.load_document()["project_id"])
+            if not identity["verified"]:
+                raise EnvelopeError("review/reviewer/assurance", f"human identity is not verified: {identity['reason']}")
+        if reviewer.get("evidence_ref"):
+            store.read_object_bytes(reviewer["evidence_ref"])
     finding_keys = [(item.get('finding_id'), item.get('page_id'))
                     for item in review.get('findings') or []]
     if len(finding_keys) != len(set(finding_keys)):
@@ -540,7 +549,7 @@ def _adopt_review(store: Store, review: dict) -> dict:
             raise EnvelopeError("review/replaces", f"replaced review not found: {exc}") from exc
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise EnvelopeError("review/replaces", "replaced object is not a review") from exc
-        if prior.get("schema_version") != "deck_review.v1":
+        if prior.get("schema_version") not in ("deck_review.v1", "deck_review.v2"):
             raise EnvelopeError("review/replaces", "replaced object is not a review record")
         if (prior.get("review_id") != review.get("review_id") or
                 prior.get("kind") != review.get("kind") or
