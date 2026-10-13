@@ -84,6 +84,7 @@ REASON_ORDER = (
     # money
     "budget_unknown",
     "budget_exhausted",
+    "user_stop",
 )
 
 REASON_MEANINGS = {
@@ -104,12 +105,13 @@ REASON_MEANINGS = {
     "professional_review_required": "delivery policy requires a verified human professional review that the selected artifact does not have",
     "budget_unknown": "an unsettled external call exists project-wide; resolve it before new calls",
     "budget_exhausted": "the authorization's bounded call ceiling has no remaining credit for a new call",
+    "user_stop": "the project stop policy (policy.user_stop) forbids external calls until it is lifted",
 }
 
 # Extra (non-contract-named) codes this resolver registers, kept explicit so
 # the entry inventory test can assert the set never grows silently.
 EXTRA_REASON_CODES = ("request_closed", "binding_invalid", "binding_stale",
-                      "budget_unknown", "persistence_none")
+                      "budget_unknown", "persistence_none", "user_stop")
 
 # The registered decision topics a preproduction content-review delegation
 # covers (AC-R06 "已有审阅委派可复用"). Authorization.delegated_topics is
@@ -1114,6 +1116,12 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                           "only stops new calls (settlement and adoption stay available)",
                           budget={k: v for k, v in budget.items() if k != "chain_ids"})
 
+    # -- project stop policy (a separate stop fact: policy.user_stop) -------
+    if enforced and spec.external_calls and (control.get("policy") or {}).get("user_stop"):
+        block("user_stop",
+              "the project stop policy forbids external calls; it is a separate fact from a "
+              "request pause and stays until it is explicitly lifted")
+
     # -- input reconciliation ---------------------------------------------
     if enforced and spec.production and models.input_alignment(control) == "needs_reconciliation":
         block("input_reconciliation_pending",
@@ -1236,6 +1244,7 @@ def _role_for(primary: dict | None) -> str:
         "authority_channel_unavailable": "user",
         "basis_stale": "user",
         "budget_exhausted": "user",
+        "user_stop": "user",
         "budget_unknown": "host",
         "needs_reviewer": "reviewer",
         "professional_review_required": "user",
@@ -1275,6 +1284,9 @@ def _next_action(primary: dict | None, spec: ActionSpec, targets: dict) -> str |
                 "policy change; the runtime never downgrades this automatically")
     if code == "basis_stale":
         return "re-record the decision/authorization against the current facts, or keep the narrower scope"
+    if code == "user_stop":
+        return ("lift the project stop policy explicitly (or record why it should stay) before "
+                "any external call; the request itself may still be resumed")
     if code == "budget_exhausted":
         return ("the exhausted budget only blocks new calls; settle/accept the last legal result, "
                 "or obtain an explicit increase")
@@ -1335,6 +1347,8 @@ def _card_for(primary: dict | None, spec: ActionSpec, context: dict) -> dict | N
                 "gap_reasons": primary.get("gap_reasons")}
     if code == "request_paused":
         return {"kind": "stop_card", "action": spec.name, "state": "paused"}
+    if code == "user_stop":
+        return {"kind": "stop_card", "action": spec.name, "state": "user_stop"}
     return None
 
 
