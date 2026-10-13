@@ -767,13 +767,54 @@ def test_adopt_proposal_refusals(tmp_path):
                             "decision_ref": subject_decision["decision_ref"],
                             "write_scope": _scope(layers=["narrative"])},
             base_revision=store.load_document()["revision_id"], operation_id="op-adopt-v")
-    # Page candidates adopt through the existing candidate semantics, not here.
+    # Page candidates adopt through the existing candidate semantics, not here:
+    # the decision names the page proposal, so the refusal is about its kind.
     page_ref = store.put_json_object(_page(store, store.load_document(), "p1"))
+    page_decision = collaboration.record_decision(
+        project, input={"topic": "manuscript", "disposition": "accepted",
+                        "authority_mode": "direct_user", "value": {"selected": "这一页"},
+                        "scope": _scope(layers=["page_copy"]),
+                        "subject_refs": [{"artifact_kind": "page", "artifact_ref": page_ref,
+                                          "projection": "page_roles"}],
+                        "instruction_evidence": _instruction(store, "page-decision")},
+        base_revision=store.load_document()["revision_id"], operation_id="op-page-decision")
     with pytest.raises(ModelError, match="candidate adoption semantics"):
         content_production.adopt_proposal(
-            project, input={"proposal_ref": page_ref, "decision_ref": decision["decision_ref"],
-                            "write_scope": _scope(layers=["narrative"])},
+            project, input={"proposal_ref": page_ref,
+                            "decision_ref": page_decision["decision_ref"],
+                            "write_scope": _scope(layers=["page_copy"])},
             base_revision=store.load_document()["revision_id"], operation_id="op-adopt-u")
+    # A decision with empty subject_refs names no artifact and adopts nothing.
+    empty_subjects = collaboration.record_decision(
+        project, input={"topic": "direction", "disposition": "accepted",
+                        "authority_mode": "direct_user", "value": {"selected": "泛指方向"},
+                        "scope": _scope(layers=["narrative"]),
+                        "subject_refs": [],
+                        "instruction_evidence": _instruction(store, "empty-subjects")},
+        base_revision=store.load_document()["revision_id"], operation_id="op-empty-subjects")
+    with pytest.raises(ModelError, match="names no proposal"):
+        content_production.adopt_proposal(
+            project, input={"proposal_ref": proposal_ref,
+                            "decision_ref": empty_subjects["decision_ref"],
+                            "write_scope": _scope(layers=["narrative"])},
+            base_revision=store.load_document()["revision_id"], operation_id="op-adopt-t")
+    # A decision that names the proposal under the wrong registered projection
+    # (a palette decision cannot promote an argument) is refused too.
+    wrong_projection = collaboration.record_decision(
+        project, input={"topic": "direction", "disposition": "accepted",
+                        "authority_mode": "direct_user", "value": {"selected": "配色"},
+                        "scope": _scope(layers=["narrative"]),
+                        "subject_refs": [{"artifact_kind": "narrative",
+                                          "artifact_ref": proposal_ref,
+                                          "projection": "style.palette"}],
+                        "instruction_evidence": _instruction(store, "wrong-projection")},
+        base_revision=store.load_document()["revision_id"], operation_id="op-wrong-projection")
+    with pytest.raises(ModelError, match="needs one of"):
+        content_production.adopt_proposal(
+            project, input={"proposal_ref": proposal_ref,
+                            "decision_ref": wrong_projection["decision_ref"],
+                            "write_scope": _scope(layers=["narrative"])},
+            base_revision=store.load_document()["revision_id"], operation_id="op-adopt-s")
     assert store.load_document().get("narrative") is None
 
 

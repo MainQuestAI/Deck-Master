@@ -21,7 +21,8 @@ from typing import Any
 
 from . import tasks as tasks_mod
 from .content import normalize_design_assets, check_page
-from .errors import InputRevisionConflict, SourceUnreadable, SourceUnsupported
+from .errors import (ImportRequiresPhasedPath, InputRevisionConflict, SourceUnreadable,
+                     SourceUnsupported)
 from .method_resources import method_release, method_resources
 from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics, writer_at_least
 from .sources import discover_sources, read_source_snapshot
@@ -208,6 +209,22 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     imported copy and Host-composed copy behave identically downstream.
     """
     _validate_draft(draft_payload)
+    if writer_at_least(store.load_document(), "collaboration.v1"):
+        # TASKS T03 item P3-3: never dispatch an unbound legacy compose task on a
+        # collaboration.v1 project. The legacy envelope carries no request, no
+        # collaboration binding and no write scope, and the frozen page_copy
+        # payload cannot carry imported-manuscript confirmation evidence, so
+        # this card blocks the import honestly instead of faking authority.
+        raise ImportRequiresPhasedPath(
+            "(draft)",
+            "this project is at the collaboration.v1 writer, where a draft import cannot use the "
+            "legacy unbound compose envelope. Recovery: (1) start a work request whose scope covers "
+            "the whole deck (collaboration.start_request / collaboration request start), adopt an "
+            "argument Narrative for it, then submit the manuscript through the phased page_copy "
+            "task so Pages, page_links and the bound Plan are written under a real scope; or "
+            "(2) record an explicit decision for a confirmed-manuscript mapping (imported_mapping "
+            "+ fidelity review) once the unified import routing lands. No page, plan or output was "
+            "written by this call")
     pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
     page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
     if not isinstance(pages, list) or not pages:

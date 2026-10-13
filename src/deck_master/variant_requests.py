@@ -75,9 +75,51 @@ def _export_records(store) -> list[dict]:
     return records
 
 
-def used_variant_ids(store, document, group_id) -> list[str]:
-    """Variant ids this group has already fixed, from exports and the request."""
+# How far back the committed-revision walk looks for variant sub-requests.
+# A variant group is short-lived (two sequential requests); the bound keeps the
+# check cheap and is reported so a caller never mistakes the bound for "all
+# history".
+VARIANT_HISTORY_LIMIT = 256
+
+
+def _history_variant_ids(store, document, group_id) -> tuple[set[str], bool]:
+    """Variant ids recorded by committed revisions, oldest-to-newest bounded walk.
+
+    The Store's immutable revisions are the durable fact: a sub-request exists
+    as a committed `collaboration.request.variant`, so deleting export output
+    (a user-visible directory) cannot erase the fact that a version was already
+    produced. Returns (ids, truncated) where truncated means the walk hit its
+    bound before reaching the project start.
+    """
     used: set[str] = set()
+    revision = document.get("revision_id")
+    visited = 0
+    truncated = False
+    while revision:
+        if visited >= VARIANT_HISTORY_LIMIT:
+            truncated = True
+            break
+        try:
+            snapshot = store.load_document(revision)
+        except Exception:  # noqa: BLE001 - an unreadable ancestor ends the walk
+            break
+        variant = ((snapshot.get("collaboration") or {}).get("request") or {}).get("variant") or {}
+        if variant.get("group_id") == group_id and variant.get("variant_id"):
+            used.add(variant["variant_id"])
+        revision = snapshot.get("parent_revision_id")
+        visited += 1
+    return used, truncated
+
+
+def used_variant_ids(store, document, group_id) -> list[str]:
+    """Variant ids this group has already fixed.
+
+    Two independent sources, so removing one cannot re-open a finished version:
+    the committed revision history (Store fact) and the frozen export records
+    (which also cover versions whose branch is no longer in the current
+    ancestry, e.g. after a restore).
+    """
+    used, _ = _history_variant_ids(store, document, group_id)
     for record in _export_records(store):
         variant = (record.get("manifest") or {}).get("variant") or {}
         if variant.get("group_id") == group_id and variant.get("variant_id"):
@@ -156,6 +198,7 @@ def validate_variant_request(store, document, candidate: dict, *, replace_reques
         raise ModelError("collaboration/request/variant/requested_variant_ids",
                          "the carried declaration has no variant ids to work from")
     used = used_variant_ids(store, document, group_id)
+    history_used, truncated = _history_variant_ids(store, document, group_id)
     if variant["variant_id"] in used:
         raise ModelError("collaboration/request/variant/variant_id",
                          f"this variant was already fixed in this group: {variant['variant_id']!r}; "
@@ -183,6 +226,7 @@ def validate_variant_request(store, document, candidate: dict, *, replace_reques
             "requested_variant_ids": sorted(requested), "declared_variant_ids": declared_ids,
             "authorization_ref": authorization_ref, "already_fixed": used,
             "declaration_source": declaration_source,
+            "fixed_from_history": sorted(history_used), "history_truncated": truncated,
             "authorization_id": (record or {}).get("authorization_id")}
 
 

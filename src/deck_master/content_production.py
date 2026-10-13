@@ -81,6 +81,13 @@ _FORBIDDEN_V2_SLOTS = ("files", "pages", "page_order", "artifact_specs", "review
 
 _CAPABILITIES = ["compose.v2", "collaboration.v1"]
 
+# Registered adoption projections per proposal schema (models.REGISTERED_PROJECTIONS):
+# a decision may only promote the slice it actually names.
+_ADOPTION_PROJECTIONS = {
+    "narrative.v1": ("direction",),
+    "content_plan.v2": ("page_roles", "page_order"),
+}
+
 
 def expected_variant(task: dict) -> str | None:
     """The only compose.v2 variant this task may submit; None for v1 tasks."""
@@ -373,11 +380,14 @@ def _phased_content_active(store, document) -> bool:
     return False
 
 
-def content_phase_status(store, document) -> dict:
+def content_phase_status(store, document, *, explicit_speech_mode: str | None = None) -> dict:
     """Which content phase comes next and why (read-only; CONTRACTS §5, §6.3).
 
-    This plans content production only. Entry-level eligibility enforcement for
-    every write path is T04's card; nothing here grants production scope.
+    ``explicit_speech_mode`` lets a caller pass an explicit user request (or a
+    delegated decision) into the same effective-policy function that acceptance
+    uses. This plans content production only: entry-level eligibility
+    enforcement for every write path is T04's card; nothing here grants
+    production scope.
     """
     if not _phased_content_active(store, document):
         return {"action": "inactive", "phase": None, "reason": "legacy or non-content project"}
@@ -418,24 +428,28 @@ def content_phase_status(store, document) -> dict:
                     "reason": "a page-copy proposal exists; adopting it needs a covering decision"}
         return {"action": "dispatch", "phase": PAGE_COPY,
                 "reason": "the adopted argument Narrative has no bound page plan yet"}
-    policy = speech_policy(document, plan_input=(plan or {}).get("input"))
-    if policy.get("required"):
+    kind = effective_speech_kind(store, document, explicit_mode=explicit_speech_mode)
+    if kind is not None:
         missing = [entry["page_id"] for entry in document.get("pages") or []
                    if not (store.read_object_json(entry["page"]).get("speaker_notes") or "").strip()]
         if missing:
             return {"action": "dispatch", "phase": SPEECH, "page_ids": sorted(missing),
-                    "speech_mode": policy["mode"], "reason": policy.get("reason")}
+                    "speech_mode": "verbatim" if kind == "verbatim" else "cues",
+                    "speech_kind": kind,
+                    "reason": speech_policy(document, plan_input=(plan or {}).get("input"),
+                                            explicit_mode=explicit_speech_mode)["reason"]}
     return {"action": "complete", "phase": None, "reason": "content phases are current"}
 
 
-def next_phase_task(store, document):
+def next_phase_task(store, document, *, explicit_speech_mode: str | None = None):
     """Dispatch the next content phase task, or None when none is due."""
-    status = content_phase_status(store, document)
+    status = content_phase_status(store, document, explicit_speech_mode=explicit_speech_mode)
     if status.get("action") != "dispatch":
         return None
     phase = status["phase"]
     if phase == SPEECH:
-        kind = "verbatim" if status.get("speech_mode") == "verbatim" else "cue"
+        kind = status.get("speech_kind") or ("verbatim" if status.get("speech_mode") == "verbatim"
+                                            else "cue")
         pages = sorted(status.get("page_ids") or [])
         task = open_phase_task(store, document, operation_id=f"compose-{uuid.uuid4().hex[:12]}",
                                phase=SPEECH, page_ids=pages,
@@ -637,6 +651,22 @@ def _accept_narrative(store, *, document, task, envelope, payload, produced_agai
 
 
 # --- page_copy
+
+
+def _require_mapping_links_current(mapping, known_nodes, where) -> None:
+    """Every visible mapping link must still resolve in the bound Narrative.
+
+    The same predicate page_copy applies to a new page: a mapping bound to the
+    current Narrative may not keep atom links pointing at nodes that no longer
+    exist in it (CONTRACTS §11.3 mapping discipline).
+    """
+    for index, link in enumerate(mapping.get("visible_links") or []):
+        unknown = sorted(set(link.get("narrative_node_ids") or []) - known_nodes)
+        if unknown:
+            raise tasks_mod.EnvelopeError(
+                f"{where}/content_mapping/visible_links[{index}]",
+                f"the visible mapping references narrative nodes that are not in the current "
+                f"Narrative: {unknown}; re-run the page_copy phase for this page")
 
 
 def _check_mapping_against(
@@ -892,35 +922,46 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
         mapping = copy.deepcopy(current.get("content_mapping"))
         segments = update.get("speech_segments")
         if mapping is None:
-            if segments:
+            # CONTRACTS §11.3: every non-empty speaking text is covered by a
+            # speech segment, and a page without a mapping cannot express that
+            # coverage. Writing notes here would create exactly that defect.
+            raise tasks_mod.EnvelopeError(
+                f"{where}/speaker_notes",
+                "this Page has no content_mapping, so new speech cannot be covered by segments; "
+                "re-run the page_copy phase for this page (atom/narrative/source mapping) and then "
+                "write the speech phase")
+        if mapping.get("narrative_ref") != narrative_ref:
+            # The page's visible copy is mapped to a different argument than the
+            # current one. A silent rebind would leave every visible_links entry
+            # dangling, so the fix is the copy phase, not a speech rewrite.
+            raise tasks_mod.EnvelopeError(
+                f"{where}/speaker_notes",
+                "this Page's content_mapping binds another Narrative than the current one "
+                "(its visible copy was written for a superseded argument); re-run the page_copy "
+                "phase to re-map the visible atoms against the current Narrative, then write speech")
+        _require_mapping_links_current(mapping, known_nodes, where)
+        if not isinstance(segments, list) or not segments:
+            raise tasks_mod.EnvelopeError(
+                f"{where}/speech_segments",
+                "the mapping's speech range must cover the new notes")
+        for seg_index, segment in enumerate(segments):
+            seg_where = f"{where}/speech_segments[{seg_index}]"
+            if segment.get("kind") != requested_kind:
                 raise tasks_mod.EnvelopeError(
-                    f"{where}/speech_segments",
-                    "this Page has no content_mapping yet; a speech phase cannot invent atom links")
-        else:
-            if not isinstance(segments, list) or not segments:
+                    f"{seg_where}/kind",
+                    f"this task was dispatched for {requested_kind!r} speech; "
+                    f"got {segment.get('kind')!r}")
+            unknown = sorted(set(segment.get("narrative_node_ids") or []) - known_nodes)
+            if unknown:
+                raise tasks_mod.EnvelopeError(seg_where,
+                                              f"narrative nodes not in the current Narrative: {unknown}")
+            if segment.get("estimated_seconds") is None:
                 raise tasks_mod.EnvelopeError(
-                    f"{where}/speech_segments",
-                    "the mapping's speech range must cover the new notes")
-            for seg_index, segment in enumerate(segments):
-                seg_where = f"{where}/speech_segments[{seg_index}]"
-                if segment.get("kind") != requested_kind:
-                    raise tasks_mod.EnvelopeError(
-                        f"{seg_where}/kind",
-                        f"this task was dispatched for {requested_kind!r} speech; "
-                        f"got {segment.get('kind')!r}")
-                unknown = sorted(set(segment.get("narrative_node_ids") or []) - known_nodes)
-                if unknown:
-                    raise tasks_mod.EnvelopeError(seg_where,
-                                                  f"narrative nodes not in the current Narrative: {unknown}")
-                if segment.get("estimated_seconds") is None:
-                    raise tasks_mod.EnvelopeError(
-                        f"{seg_where}/estimated_seconds",
-                        "speech estimates are required per segment and stay labelled estimated")
-            mapping["speech_segments"] = copy.deepcopy(segments)
-            mapping["narrative_ref"] = narrative_ref
+                    f"{seg_where}/estimated_seconds",
+                    "speech estimates are required per segment and stay labelled estimated")
+        mapping["speech_segments"] = copy.deepcopy(segments)
         updated_page = {**current, "speaker_notes": notes}
-        if mapping is not None:
-            updated_page["content_mapping"] = mapping
+        updated_page["content_mapping"] = mapping
         try:
             updated_page = check_page(updated_page)
         except ModelError as exc:
@@ -985,25 +1026,47 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
                                       result_digest=result_digest, response=response)
 
 
-def _requested_speech_kind(store, document, task) -> str:
-    """cues or verbatim, from the plan's speech policy, else the task binding.
+def effective_speech_kind(store, document, *, explicit_mode: str | None = None) -> str | None:
+    """The one effective speech kind: 'cue', 'verbatim' or None for no new speech.
 
-    CONTRACTS §1.7/§10.1/§10.2: verbatim exists only on an explicit request; a
-    live default still defaults to cues.
+    CONTRACTS §1.7/§10.1: dispatch and acceptance must read the *same* effective
+    policy — a plan that only claims verbatim by default is downgraded to cues,
+    so the task is dispatched for cues and cue segments are what acceptance
+    requires. `none` means this project produces no new speech at all.
     """
+    plan_input = None
     plan_ref = document.get("content_plan")
-    plan = None
     if plan_ref:
         try:
-            plan = store.read_object_json(plan_ref)
+            plan_input = store.read_object_json(plan_ref).get("input") or {}
         except Exception:  # noqa: BLE001 - an unreadable plan cannot select a kind
-            plan = None
-    policy = (plan.get("input") or {}).get("speech_policy") if plan else None
-    if policy and policy.get("mode") == "verbatim":
-        return "verbatim"
-    if task.get("stage_request", {}).get("speech_kind"):
-        return task["stage_request"]["speech_kind"]
-    return "cue"
+            plan_input = None
+    mode = speech_policy(document, plan_input=plan_input, explicit_mode=explicit_mode)["mode"]
+    if mode == "none":
+        return None
+    return "verbatim" if mode == "verbatim" else "cue"
+
+
+def _requested_speech_kind(store, document, task) -> str:
+    """The kind this speech task may write, from the effective policy.
+
+    The dispatched kind is recorded on the task at dispatch time (derived from
+    the same policy); if the plan changed since dispatch the task is stale and
+    never reaches this check. An effective `none` policy refuses new speech
+    instead of quietly producing a verbatim/cue script the request never asked
+    for.
+    """
+    effective = effective_speech_kind(store, document)
+    if effective is None:
+        raise tasks_mod.EnvelopeError(
+            "(result)/payload/updates",
+            "this project's effective speech policy produces no new speech; writing notes would "
+            "expand the requested scope — record an explicit speech request first")
+    recorded = (task.get("stage_request") or {}).get("speech_kind")
+    # The dispatched kind was derived from the same effective policy (including
+    # an explicit instruction); a plan change since dispatch makes the task
+    # stale before this point, so the recorded contract is the right one.
+    return recorded if recorded in ("cue", "verbatim") else effective
 
 
 def stale_speech_reviews(store, document) -> list[dict]:
@@ -1199,13 +1262,31 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
         except Exception as exc:  # noqa: BLE001
             raise ModelError("collaboration/adopt_proposal/proposal_ref",
                              f"proposal is not stored: {exc}") from exc
+        schema = proposal.get("schema_version")
+        # A decision adopts only the proposals it names: an accepted direction
+        # with no subject refs approves no specific artifact, so it must not be
+        # usable to promote any proposal of the topic (CONTRACTS §3.1: a
+        # decision is about ProposalRefs, and a projection is a registered
+        # slice of the named artifact).
         subjects = decision.get("subject_refs") or []
-        if subjects and not any(
-                (item.get("artifact_ref") or {}).get("sha256") == proposal_ref.get("sha256")
-                for item in subjects):
+        if not subjects:
+            raise ModelError(
+                "collaboration/adopt_proposal/decision_ref",
+                "the decision names no proposal (empty subject_refs), so it covers no specific "
+                "artifact; record a decision that names this proposal Ref with a registered "
+                "projection before adopting it")
+        allowed = _ADOPTION_PROJECTIONS.get(schema, ())
+        matches = [item for item in subjects
+                   if (item.get("artifact_ref") or {}).get("sha256") == proposal_ref.get("sha256")]
+        if not matches:
             raise ModelError("collaboration/adopt_proposal/proposal_ref",
                              "the decision does not name this proposal among its subject refs")
-        schema = proposal.get("schema_version")
+        if allowed and not any(item.get("projection") in allowed for item in matches):
+            raise ModelError(
+                "collaboration/adopt_proposal/proposal_ref",
+                f"the decision names this proposal with projection "
+                f"{sorted({item.get('projection') for item in matches})}; adopting a {schema} "
+                f"needs one of {list(allowed)}")
         if schema not in ("narrative.v1", "content_plan.v2"):
             raise ModelError(
                 "collaboration/adopt_proposal/proposal_ref",
