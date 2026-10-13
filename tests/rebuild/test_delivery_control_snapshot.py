@@ -60,6 +60,27 @@ def test_a_current_withdrawal_stops_a_historical_delivery(tmp_path):
     assert decision["control_revision_id"] == current["revision_id"]
 
 
+def test_historical_delivery_entry_consumes_the_current_control(tmp_path):
+    """The real entry (exports.create with a selected revision) reads the old
+    artifact under the current control, and review copies stay report-only."""
+    project, store = _project(tmp_path)
+    grant = _delivery_request(project, store)
+    active_revision = store.load_document()["revision_id"]
+    collaboration.revoke_authorization(project, authorization_id=grant["authorization_id"],
+                                       reason="撤回", base_revision=store.load_document()["revision_id"],
+                                       operation_id="op-revoke")
+    from deck_master import exports
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        exports.create(project, purpose="delivery", revision=active_revision,
+                       output_dir=tmp_path / "historical-delivery")
+    error = excinfo.value.payload()["error"]
+    assert "authorization_revoked" in error["reason_codes"]
+    assert not (tmp_path / "historical-delivery").exists()
+    review = exports.create(project, purpose="review", revision=active_revision,
+                            output_dir=tmp_path / "historical-review")
+    assert review["status"] == "exported"
+
+
 def test_an_old_relaxed_policy_cannot_override_a_current_requirement(tmp_path):
     project, store = _project(tmp_path)
     old_revision = store.load_document()["revision_id"]        # professional review off
