@@ -327,3 +327,93 @@ def show(project_dir, *, revision=None):
     document = load_snapshot(store, revision)
     return {"project_id": document["project_id"], "revision_id": document["revision_id"],
             "content_plan": projection(store, document)}
+
+
+# ---------------------------------------------------------------------------
+# Time budget (content collaboration v1.2 ACCEPTANCE AC-M03, SPEC §9)
+
+TIMING_ITEMS = ("speaking", "pause", "exercise", "qa")
+
+
+def timing_budget(store, document, *, items: dict | None = None) -> dict:
+    """Per-page estimated time that must add up before any length claim.
+
+    Items are separated (speaking / pause / exercise / qa) and every number is
+    labelled an estimate: a measured speaking time only exists in Review
+    evidence from an actual rehearsal (AC-M03 forbids writing an estimate as a
+    measurement). ``items`` may carry explicit per-page numbers; otherwise the
+    speaking item comes from the page's speech segment estimates (falling back
+    to the plan role's whole-page estimate) and the interaction item stays at
+    the plan level.
+    """
+    ref = document.get("content_plan")
+    plan = store.read_object_json(ref) if ref else None
+    if not plan or plan.get("schema_version") != "content_plan.v2":
+        return {"status": "no_plan", "per_page": [], "totals": {}, "estimated": True,
+                "note": "a time budget needs a content_plan.v2 with page roles and time_budget"}
+    data = plan["input"]
+    entries = {entry["page_id"]: entry for entry in document.get("pages") or []}
+    overrides = items or {}
+    per_page = []
+    totals = {item: 0 for item in TIMING_ITEMS}
+    unknown_items: set[str] = set()
+    for role in data.get("page_roles") or []:
+        page_id = role["page_id"]
+        page = None
+        if page_id in entries:
+            page = store.read_object_json(entries[page_id]["page"])
+        segments = ((page or {}).get("content_mapping") or {}).get("speech_segments") or []
+        speaking = sum(segment.get("estimated_seconds") or 0 for segment in segments)
+        page_items = {item: 0 for item in TIMING_ITEMS}
+        page_items["speaking"] = speaking if segments else (role.get("timing_seconds") or 0)
+        for item, value in (overrides.get(page_id) or {}).items():
+            if item not in TIMING_ITEMS:
+                unknown_items.add(item)
+                continue
+            page_items[item] = int(value)
+        source = "speech_segments" if segments else (
+            "plan_role_estimate" if role.get("timing_seconds") is not None else "absent")
+        per_page.append({"page_id": page_id, "role": role.get("role"),
+                         "items": page_items, "total": sum(page_items.values()),
+                         "speaking_source": source,
+                         "plan_role_estimate": role.get("timing_seconds")})
+        for item in TIMING_ITEMS:
+            totals[item] += page_items[item]
+    budget = data.get("time_budget") or {}
+    total_seconds = budget.get("total_seconds")
+    interaction_seconds = budget.get("interaction_seconds") or 0
+    interaction_total = totals["pause"] + totals["exercise"] + totals["qa"]
+    if interaction_total == 0 and interaction_seconds:
+        interaction_total = interaction_seconds
+    estimated_total = totals["speaking"] + interaction_total
+    within = None if total_seconds is None else estimated_total <= total_seconds
+    return {
+        "status": "over_budget" if within is False else "within_budget" if within else "unknown_total",
+        "per_page": per_page,
+        "totals": {**totals, "interaction": interaction_total, "estimated_total": estimated_total},
+        "declared": {"total_seconds": total_seconds,
+                     "speaking_seconds": budget.get("speaking_seconds"),
+                     "interaction_seconds": budget.get("interaction_seconds"),
+                     "constraint": budget.get("constraint"),
+                     "page_count": len(data.get("page_order") or [])},
+        "over_by": None if within is not False else estimated_total - total_seconds,
+        "estimated": True,
+        "measured": False,
+        "unknown_items": sorted(unknown_items),
+        "note": ("all numbers here are estimates; a measured time only exists in Review evidence "
+                 "from an actual rehearsal, and page count alone never proves a duration"),
+    }
+
+
+def check_time_budget(store, document, *, items: dict | None = None) -> dict:
+    """The content-side verdict for a declared hard/soft time budget."""
+    budget = timing_budget(store, document, items=items)
+    if budget["status"] == "no_plan":
+        return {**budget, "allows": False, "next_action": "plan_pages_and_budget"}
+    declared = budget["declared"]
+    if declared["total_seconds"] is None or declared["constraint"] == "unspecified":
+        return {**budget, "allows": True,
+                "next_action": "declare_a_total_and_constraint_before_claiming_a_duration"}
+    if budget["over_by"]:
+        return {**budget, "allows": False, "next_action": "present_a_real_keep_drop_tradeoff"}
+    return {**budget, "allows": True, "next_action": "proceed"}
