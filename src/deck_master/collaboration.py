@@ -395,12 +395,41 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
                              "replace_request_id must name the current open request")
         updated_region = {**region, "request": candidate}
         updated = {**document, "collaboration": updated_region}
+        response = {"request_id": candidate["request_id"],
+                    "effective_scope": candidate["scope"],
+                    "assurance": evidence["assurance"]}
+        if current is not None and current.get("request_id") != candidate["request_id"]:
+            # Replace (CONTRACTS §12): the old request's unfinished scope stops
+            # by default — its authorizations are reported as no longer
+            # executable and its open tasks as affected. Only the explicitly
+            # listed background ids keep running.
+            background = set(candidate.get("background_request_ids") or [])
+            paused = [record.get("authorization_id")
+                      for _, record in _region_records(store, region, "authorizations")
+                      if record.get("request_id") == current.get("request_id")
+                      and record.get("request_id") not in background]
+            response["prior_request_disposition"] = {
+                "request_id": current.get("request_id"),
+                "disposition": "superseded",
+                "background_request_ids": sorted(background),
+            }
+            response["paused_authorizations"] = sorted(paused)
+            affected = []
+            for ref in document.get("tasks") or []:
+                try:
+                    task = store.read_object_json(ref)
+                except Exception:  # noqa: BLE001 - unreadable tasks cannot be affected
+                    continue
+                if task.get("status") not in ("awaiting_host", "running", "queued"):
+                    continue
+                task_request = (task.get("collaboration_binding") or {}).get("request_id")
+                if task_request == current.get("request_id") and task_request not in background:
+                    affected.append(task.get("task_id"))
+            response["affected_tasks"] = sorted(affected)
         return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_REQUEST_START, digest=digest,
                                                 description="start work request", updated=updated,
-                                                response={"request_id": candidate["request_id"],
-                                                          "effective_scope": candidate["scope"],
-                                                          "assurance": evidence["assurance"]})
+                                                response=response)
 
     return locked(store)
 

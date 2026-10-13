@@ -267,6 +267,12 @@ CONTROL_PLANE_ACTIONS = ("request.start", "request.pause", "request.resume",
                          "authorization.revoke", "migration.describe", "migration.apply",
                          "review.import")
 
+# Fact channels: recording that a call settled/released, that a task was
+# cancelled, or staging a material upload never creates production. CONTRACTS
+# §7.1 keeps settlement and cancellation available while paused or withdrawn,
+# so these actions cannot be refused — their decision is informational only.
+FACT_ACTIONS = ("call.settle", "task.cancel", "material.upload")
+
 # Actions whose answer is reported rather than enforced on the caller's behalf
 # (read routing, stop/settlement facts, control-plane writes).
 ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
@@ -573,6 +579,15 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
     try:
         models.require_task_binding(document, task)
     except ModelError as exc:
+        # A task bound to an old request the current request explicitly lists as
+        # background permission keeps its binding (CONTRACTS §2/§12: only an
+        # explicit background list lets old work continue).
+        request = _request(document) or {}
+        if binding.get("request_id") and \
+                binding["request_id"] in (request.get("background_request_ids") or []):
+            return {"status": "valid", "reasons": [], "new_protocol": True,
+                    "digest": binding.get("eligibility_digest"), "expected_digest": None,
+                    "background_request_id": binding["request_id"]}
         # A binding whose authorization was replaced by a *withdrawal* is not a
         # foreign binding: report the withdrawal (CONTRACTS §3.3), so the user
         # sees "the withdrawal stands" rather than a structural complaint.
@@ -1023,7 +1038,8 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                     block("authorization_revoked",
                           "every authorization naming this action is revoked "
                           "(or its parent chain is)",
-                          authorization_ids=[c["record"].get("authorization_id") for c in revoked])
+                          authorization_ids=[c["record"].get("authorization_id") for c in revoked],
+                          reasons=sorted({reason for c in candidates for reason in c["reasons"]}))
                 else:
                     ineffective = [c for c in candidates if not c["effective"]]
                     if ineffective:
@@ -1157,6 +1173,10 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                                                                 "page_ids": [],
                                                                 "layers": list(spec.layers)}
     required_artifacts = _required_artifacts(store, control, artifact, spec, targets)
+    if spec.name in FACT_ACTIONS:
+        # A fact channel records what already happened; nothing here can refuse
+        # it (the surrounding state stays visible in the other decision fields).
+        reasons = []
     reasons.sort(key=lambda item: REASON_ORDER.index(item["code"])
                  if item["code"] in REASON_ORDER else len(REASON_ORDER))
     codes = []
@@ -1185,6 +1205,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         "request_id": (request or {}).get("request_id"),
         "artifact_revision_id": (artifact or {}).get("revision_id"),
         "control_revision_id": control.get("revision_id"),
+        "facts_only": spec.name in FACT_ACTIONS,
         "binding": binding_state,
         "preproduction": preproduction,
         "delivery": delivery,

@@ -242,11 +242,19 @@ def _resolve_current(store, document, family, id_field, ref):
 
 
 def _request_state(document, record) -> list[str]:
+    """Whether a record still belongs to the live work request.
+
+    A replaced request renders its records ineffective by default; the only
+    exception is the explicitly named background set — a new request lists the
+    old request ids it allows to keep running, and nothing else can borrow the
+    old scope (CONTRACTS §2: 新请求默认只推进自己)."""
     reasons: list[str] = []
     request = (document.get("collaboration") or {}).get("request")
     if request is None or request.get("closed"):
         reasons.append("request_closed")
     elif record.get("request_id") != request.get("request_id"):
+        if record.get("request_id") in (request.get("background_request_ids") or []):
+            return reasons
         reasons.append("request_superseded")
     return reasons
 
