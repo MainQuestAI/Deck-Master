@@ -19,6 +19,8 @@ Implementation commit / source baseline:
     feat(content): page mapping checks, time budget and input impact analysis
   - 切片 5 提交：53b7c714902ab504b52a8dc905389ffb21ac6b75
     feat(content): speech policy projection and sequential variant requests
+  - 审查修复提交：19386830b9b83d38f88c33bcab2df91756508093
+    fix(content): review fixes for speech mapping/policy, adoption, import and variants
   - 切片 6（本文档）：docs/reports/content-collaboration-v1.2/t03-content-production.md
   - 分支：impl/t03-content-production（本地提交，未 push / 未合并 / 未开 PR）
 
@@ -212,14 +214,15 @@ eligibility_digest = sha256_bytes(canonical_json_bytes({
 | `pytest -q tests/rebuild/test_content_preproduction_review.py` | 12 passed |
 | `pytest -q tests/rebuild/test_content_mapping_claims.py` | 9 passed |
 | `pytest -q tests/rebuild/test_speech_projection.py` | 7 passed |
-| `pytest -q tests/rebuild/test_variant_requests.py` | 5 passed |
-| `pytest -q tests/rebuild -m 'not render and not browser'` | **1500 passed, 455 deselected**（收口运行，全绿；含本卡新增 70 个用例） |
+| `pytest -q tests/rebuild/test_variant_requests.py` | 6 passed（含 AC-M02 单版反例 `f8a02a56`） |
+| `pytest -q tests/rebuild/test_t03_review_fixes.py` | 9 passed（审查修复回归，见 §9） |
+| `pytest -q tests/rebuild -m 'not render and not browser'` | **1509 passed, 455 deselected**（审查修复后复验运行，全绿；含本卡新增 79 个用例） |
 | `ruff check src/deck_master tests/rebuild` | All checks passed |
 | `git diff --check` | 无输出（无空白/冲突标记） |
 
 ### 3.1 全量回归
 
-- 基线（T02 main `293579f1`）：任务卡要求 1430+ passed 保持全绿。本卡收口运行为 **1500 passed, 455 deselected**（0 failed），其中本卡新增 70 个用例。
+- 基线（T02 main `293579f1`）：任务卡要求 1430+ passed 保持全绿。审查修复后复验运行为 **1509 passed, 455 deselected**（0 failed），其中本卡新增 79 个用例。
 - 记录一次中途运行：切片 4 结束时同一命令曾出现 `test_workbench_services.py` 与本地端口/服务相关的 10 failed + 4 errors；该文件单独重跑 19 passed，收口运行未复现。这里如实记录，不当作产品通过证据。
 - 三处真实回归均由本卡改动引起并已修复：契约镜像未同步（`test_package_boundary::test_spec_contracts_match_packaged_contracts_byte_for_byte`）、`_input_compose_task` 私有签名变化（`test_studio_delivery_browser`）、`content_effects` 调用点未同步（`test_action_targets`/`test_content_candidates`，同一 `_input_compose_task` 签名问题）。
 
@@ -269,3 +272,36 @@ eligibility_digest = sha256_bytes(canonical_json_bytes({
 - 除 §3 列出的命令外未执行其它验证；未运行真实生图、PPTX 编译、浏览器或真实 Host。
 - 本卡不含客户材料、不含生成 runs、不含 tokens；全部 fixture 为仓库内合成内容。
 - 未 push、未合并、未开 PR；提交只在本地区块链。
+
+## 9. 独立审查修复（REQUEST-CHANGES 复验）
+
+独立审查结论为 REQUEST-CHANGES：0 个 P1、2 个 P2、4 个 P3。全部在本卡边界内修复，判据与复现脚本一致（审查者探针保留在其本地目录；本卡只记录结论与自测复现，不复用其文件）。修复提交 `19386830`（`fix(content): review fixes for speech mapping/policy, adoption, import and variants`）。逐项对照：
+
+| 编号 | 问题 | 修复（文件/行为） | 回归测试 |
+| --- | --- | --- | --- |
+| P2-1（阻断） | speech 静默改绑 `content_mapping.narrative_ref`，`visible_links` 全部悬空（page_copy 对同一状态会拒绝） | `content_production._accept_speech` 不再改绑：`mapping.narrative_ref != document.narrative` 时拒绝并给出恢复指引（重走 page_copy 重建映射）；同时用与 page_copy 同一谓词复核既有 `visible_links` 节点（`_require_mapping_links_current`）。拒绝时页面字节不变 | `test_t03_review_fixes.py::test_speech_cannot_silently_rebind_a_superseded_mapping` |
+| P2-2（阻断） | 派发按 cues、接纳按原始 plan 的 verbatim：政策反转 + 任务不可完成 | 新增 `effective_speech_kind`，派发（`content_phase_status`/`next_phase_task`）与接纳（`_requested_speech_kind`）读同一有效政策：`source=default` 的 verbatim 降级为 cue；显式/委派 verbatim 仍要求 verbatim；有效 `none` 时接纳拒绝新口播（不再产出未请求的稿）。`explicit_speech_mode` 允许入口传入明确指令 | `test_default_verbatim_plan_dispatches_and_accepts_cues`、`test_explicit_verbatim_still_requires_verbatim_segments`、`test_a_none_policy_refuses_new_speech` |
+| P3-1 | 无 `content_mapping` 的页面可写入口播且零段覆盖 | 无映射页面拒绝新口播（`EnvelopeError` + 恢复指引）；既有 notes 不受影响（不写任何东西）。非空 notes 必须有段覆盖 | `test_speech_on_a_mapping_less_page_is_refused` |
+| P3-2 | 空 `subject_refs` 的决定可采纳任意同主题提案 | 空 `subject_refs` 视为“未指向任何具体产物”，拒绝采纳；并要求命名提案的 projection 属该类型的注册切片（narrative→direction，plan→page_roles/page_order） | `test_empty_subject_refs_decision_adopts_no_proposal`、`test_compose_v2_phases.py::test_adopt_proposal_refusals`（新增两条反例） |
+| P3-3 | collaboration.v1 项目上 `import_draft` 派发无 binding 的旧协议任务 | 采用清单 (b) 诚实阻塞：`_adopt_draft` 抛出 `import_requires_phased_path`（exit 4），说明两条真实恢复路径且不写任何对象；低于 collaboration.v1 的项目行为不变。理由：旧导入信封一次性写 Pages+页序+Plan，无 request/binding/写集合；而冻结的 page_copy payload 无法携带 imported-manuscript 确认证据，因此本卡不伪造授权。**移交**：imported_mapping（确认稿映射 + fidelity 审查）与统一 import 路由归 T04/T07；残余风险是已迁移项目在 T04/T07 落地前无法直接导入稿件 | `test_import_draft_on_a_collaboration_project_is_blocked_with_recovery`、`test_import_draft_still_works_below_the_collaboration_writer` |
+| P3-4 | `used_variant_ids` 只依赖可删除的 `export-record.json`，删文件后同组变体可再产 | 判据改为 Store 事实：沿已提交 revision 链回溯 `collaboration.request.variant`（`_history_variant_ids`，上界 `VARIANT_HISTORY_LIMIT=256`，`history_truncated` 如实上报），并保留已冻结导出记录作为补充（覆盖 restore 后不在当前祖先链上的版本） | `test_produced_variant_cannot_be_reproduced_after_export_files_vanish` |
+| P3-5 | 证据文档数字与最终 head 不一致 | 本节与 §3 表按最终 head 重核（`test_variant_requests.py` 6 passed、新增 9 个审查回归、全量 1509 passed） | 本节 |
+
+复验命令与结果（修复后）：
+
+```text
+PYTHONPATH=src <venv>/bin/python -m pytest -q tests/rebuild/test_t03_review_fixes.py
+  -> 9 passed
+PYTHONPATH=src <venv>/bin/python -m pytest -q tests/rebuild -m 'not render and not browser'
+  -> 1509 passed, 455 deselected, 0 failed
+<venv>/bin/python -m ruff check src/deck_master tests/rebuild  -> All checks passed
+git diff --check -> 无输出
+```
+
+审查者探针的自测复现（用本仓库测试 fixture 重放同一场景，非复用其脚本）：speech 换论证后拒绝（P2-1）、default-verbatim 计划 cue 派发+cue 接纳（P2-2）、E9 无映射页拒绝（P3-1）、空 subjects 决定拒绝（P3-2）、删除导出记录后仍拒绝再产 live（P3-4）、迁移项目 `continue` 仍为 inactive（未回归）。
+
+残余与移交：
+
+- P3-3 的完整解（确认稿 imported_mapping + fidelity 审查 + 统一 import 路由）移交 T04/T07；本卡只保证“不会无绑定派发”。
+- P3-4 的历史回溯有上界（256 个 revision）；超过上界时 `history_truncated=True`，此时仍以导出记录与当前 request 为补充判据，不宣称覆盖全部历史。
+- 仍未运行：真实 Host、真实独立模型/人类审查、用户与听众验证（分别为 T08/T07、T08）。
