@@ -248,7 +248,9 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
     collaboration_binding.stamp_task(
         store, basis, task, phase="production", executor_type="host",
         page_ids=[action["page_id"]],
-        adoption_policy="candidate_only" if action.get("mode") == "trial" else "within_scope")
+        adoption_policy="candidate_only" if action.get("mode") == "trial" else "within_scope",
+        action="change.commit",
+        action_targets={"page_ids": [action["page_id"]], "layers": _plan_layers({"actions": [action]})})
     # Reserve on the prospective complete Document so the whole batch observes
     # its own earlier reservations. No intermediate pointer is published.
     if action['max_calls']:

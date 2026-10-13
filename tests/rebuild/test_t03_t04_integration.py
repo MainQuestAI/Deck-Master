@@ -19,7 +19,8 @@ from test_eligibility_enforcement import (  # noqa: E402  (shared fixtures)
     _grant, _page, _project, _scope, _start)
 from test_compose_v2_phases import _deck_with_pages, _page as _phase_page  # noqa: E402
 
-from deck_master import changes, collaboration_binding, content_production, eligibility, service
+from deck_master import (changes, collaboration, collaboration_binding, content_production,
+                          eligibility, service)
 from deck_master.store import Store
 
 
@@ -140,3 +141,65 @@ def test_phased_result_is_accepted_under_the_gate(tmp_path):
     assert out["status"] == "accepted"
     page = store.read_object_json(store.load_document()["pages"][0]["page"])
     assert page["speaker_notes"] == notes
+
+
+# ---------------------------------------------------------------------------
+# External review F01: a production task binds the authorization it runs under
+
+
+def _head_authorization_ref(store):
+    document = store.load_document()
+    region = document["collaboration"]
+    assert region["authorizations"], "fixture needs a granted authorization"
+    return region["authorizations"][-1]
+
+
+def test_a_real_dispatch_binds_the_covering_authorization(tmp_path):
+    """The task records which grant its work runs under, not just that some
+    grant existed at dispatch time (F01): budget attribution and revocation
+    follow the bound Ref."""
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=["p1"], layers=["page_copy", "review", "svg"]))
+    grant = _grant(project, store, actions=("dispatch.host_task", "call.begin"),
+                   scope=_scope(page_ids=["p1"]), max_external_calls=2)
+    task = service.open_host_task(store, kind="repair", page_ids=["p1"],
+                                  instruction="repair p1 under the grant")
+    binding = task["collaboration_binding"]
+    assert binding["authorization_ref"] == _head_authorization_ref(store)
+    # Budget attribution follows the bound Ref: the task's held slots count
+    # against the granted chain, not just the project's totals.
+    assert eligibility.task_authorization_id(store, task) == grant["authorization_id"]
+
+
+def test_revoking_the_bound_grant_refuses_the_late_result(tmp_path):
+    """Real dispatch -> claim -> revoke -> late result: the adoption is refused
+    on the bound authorization, the page stays untouched, and the call facts
+    already observed are preserved (F01's closure path)."""
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=["p1"], layers=["page_copy", "review", "svg"]))
+    grant = _grant(project, store, actions=("dispatch.host_task", "call.begin"),
+                   scope=_scope(page_ids=["p1"]), max_external_calls=1)
+    task = service.open_host_task(store, kind="repair", page_ids=["p1"],
+                                  instruction="repair p1 under the grant")
+    assert task["collaboration_binding"]["authorization_ref"] is not None
+    before = _page_text(store)
+    service.task_start(project, task_id=task["task_id"], execution_ref="late-host")
+    collaboration.revoke_authorization(
+        project, authorization_id=grant["authorization_id"], reason="撤销范围",
+        base_revision=store.load_document()["revision_id"], operation_id=str(uuid.uuid4()))
+    envelope = {"kind": "repair",
+                "files": [], "pages": [_page("p1", "晚到结果。")], "page_order": ["p1"],
+                "artifact_specs": [], "reviews": [], "usage_events": [], "notes": "late"}
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        service.accept_result(project, task_id=task["task_id"],
+                              operation_id=task["operation_id"],
+                              produced_against=task["produced_against"],
+                              result_payload=envelope)
+    error = excinfo.value.payload()["error"]
+    assert "authorization_revoked" in error["reason_codes"]
+    assert _page_text(store) == before == "第一页。"
+
+
+def _page_text(store, page_id="p1"):
+    entry = next(e for e in store.load_document()["pages"] if e["page_id"] == page_id)
+    return store.read_object_json(entry["page"])["customer_visible"]["body_blocks"][0]["text"]

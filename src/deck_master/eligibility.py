@@ -837,6 +837,30 @@ def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
     return candidates
 
 
+def covering_authorization_ref(store: Store, document: dict, action: str,
+                                targets: dict | None) -> dict | None:
+    """The effective authorization covering one action's execution.
+
+    The precise Ref a dispatched task carries as its binding's
+    ``authorization_ref``: the first effective, covering candidate the gate
+    itself would choose for this action and target (CONTRACTS §3.2, §6.1.4),
+    so revocation and budget attribution follow the grant the work actually
+    runs under. Pure; ``None`` when no authorization names the action or covers
+    the target — an action that needs no authority stays unbound (F01).
+    """
+    try:
+        spec = action_spec(action)
+    except (ModelError, KeyError):
+        return None
+    candidates = _authority_candidates(store, document, spec, targets or {}, None)
+    for candidate in candidates:
+        if not candidate["effective"] or not candidate["covers"]:
+            continue
+        if candidate["mode"] == "execute" or spec.authority in ("delegate", "either"):
+            return candidate["ref"]
+    return None
+
+
 def _family_match(action: str, actions) -> bool:
     """A grant may name a family, e.g. ``exports.delivery`` for ``export.delivery``
     or ``changes.commit`` for ``change.commit`` — the same verb namespace with a

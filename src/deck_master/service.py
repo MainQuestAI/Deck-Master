@@ -674,7 +674,9 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     from . import collaboration_binding
     collaboration_binding.stamp_task(
         store, document, task, phase="production", executor_type="host",
-        page_ids=[page["page_id"]], adoption_policy="within_scope")
+        page_ids=[page["page_id"]], adoption_policy="within_scope",
+        action="dispatch.blueprint",
+        action_targets={"page_ids": [page["page_id"]], "layers": ["blueprint"]})
     task, _ = tasks_mod.reserve_allowances(store, document, task, 1)
     from .generation import protocol_fields
     task.update(protocol_fields(document))
@@ -1144,7 +1146,8 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         store, document, task,
         phase=phase or ("review" if kind == "review" else "production"),
         executor_type=executor_type or "host", page_ids=page_ids,
-        adoption_policy="within_scope")
+        adoption_policy="within_scope", action="dispatch.host_task",
+        action_targets={"page_ids": list(page_ids), "layers": host_layers})
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])
