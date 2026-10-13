@@ -300,8 +300,13 @@ def _effective_executes(store, document, phase: str) -> list[dict]:
     return found
 
 
+def containment_gaps(store, parent, child) -> list[str]:
+    """Expose the shared scope-containment rule for binding-time checks."""
+    return scope_gaps(store, parent, child)
+
+
 def delegation_containment(store, parent, child) -> list[str]:
-    """Expose the shared containment rule for binding-time checks and tests."""
+    """Expose the shared delegation-containment rule (topics, budget, evidence)."""
     return delegation_gaps(store, parent, child)
 
 
