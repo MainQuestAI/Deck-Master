@@ -966,6 +966,7 @@ def _accept_result_locked(
     operation_id: str,
     produced_against: str,
     envelope_raw: dict[str, Any],
+    adapter_context: dict | None = None,
 ) -> dict:
     """Validate a Host result envelope and adopt it atomically (spec 09.7).
 
@@ -1158,6 +1159,12 @@ def _accept_result_locked(
     for review in envelope.get('reviews') or []:
         if review.get('review_stage', 'final') != stage:
             raise EnvelopeError('review/review_stage', 'review stage does not match the dispatched task')
+    if stage == 'preproduction':
+        # Content collaboration v1.2 CONTRACTS §6.3/§11.6: identity, unit
+        # coverage and subject/dependency binding for the preproduction review.
+        from .content_review import validate_preproduction_result
+        validate_preproduction_result(store, document, task, envelope,
+                                      adapter_context=adapter_context)
     if stage == 'page_visual' and envelope['kind'] == 'review':
         from .review import PAGE_VISUAL_KINDS
         required = set(PAGE_VISUAL_KINDS)
