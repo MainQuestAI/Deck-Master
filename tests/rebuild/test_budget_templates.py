@@ -10,7 +10,8 @@ not-yet-adopted result.
 import pytest
 
 from test_eligibility_enforcement import (  # noqa: E402  (shared fixtures)
-    _binding, _commit_task, _declared, _grant, _page, _project, _scope, _start, _task)
+    _allowance, _binding, _commit_task, _declared, _grant, _page, _project, _scope, _start,
+    _task)
 from test_scope_and_delegation import _plan_object  # noqa: E402
 
 from deck_master import (collaboration, collaboration_budget, dependency_slices,
@@ -254,6 +255,37 @@ def test_child_grants_share_one_ceiling_instead_of_copying_it(tmp_path):
     document = store.load_document()
     budget = eligibility.authorization_budget(store, document, children[0]["authorization_ref"])
     assert budget["used"] == 2 and budget["remaining"] == 0 and budget["state"] == "exhausted"
+
+
+def test_a_bound_authorization_never_widens_beyond_call_slots(tmp_path):
+    """P3 regression: the binding shortcut covers only bounded external-call
+    slots, and only when the authorization also names a production action."""
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=["p1"]))
+    production = _grant(project, store, actions=("dispatch.blueprint",),
+                        scope=_scope(page_ids=["p1"]), operation_id="op-grant-prod")
+    document = store.load_document()
+    bound = _binding(document, authorization_ref=production["authorization_ref"])
+    call_task = _task(document, kind="blueprint", allowances=[_allowance("call-1")],
+                      binding=bound)
+    slot = eligibility.evaluate(store, document, document, "call.begin",
+                                {"task": call_task, "allowance_id": "call-1"})
+    assert slot["allowed"] is True, slot["reason_codes"]
+    # The same authorization does not cover another action family for that task.
+    commit = eligibility.evaluate(store, document, document, "change.commit",
+                                  {"task": call_task})
+    assert "authority_insufficient" in commit["reason_codes"]
+    # A binding to an authorization that names no production action never
+    # unlocks a call slot either.
+    adoption_only = _grant(project, store, actions=("candidate.adopt",),
+                           scope=_scope(page_ids=["p1"]), max_external_calls=0,
+                           operation_id="op-grant-adopt-only")
+    document = store.load_document()
+    task = _task(document, kind="blueprint", allowances=[_allowance("call-2")],
+                 binding=_binding(document, authorization_ref=adoption_only["authorization_ref"]))
+    widened = eligibility.evaluate(store, document, document, "call.begin",
+                                   {"task": task, "allowance_id": "call-2"})
+    assert "authority_insufficient" in widened["reason_codes"]
 
 
 def test_repeated_materialization_never_refreshes_a_consumed_credit(tmp_path):

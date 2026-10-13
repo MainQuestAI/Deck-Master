@@ -960,6 +960,19 @@ def _accept_targets(envelope: dict, task: dict) -> dict:
     return {"page_ids": page_ids, "layers": layers}
 
 
+def _record_only(envelope: dict) -> bool:
+    """A result that only records review observations (no production write).
+
+    Recording what was reviewed is a fact about artifacts that already exist —
+    a result that also carries pages, artifact specs or a content update is a
+    production adoption and must never take this path.
+    """
+    if envelope.get("pages") or envelope.get("content_update") \
+            or envelope.get("content_plan") or envelope.get("artifact_specs"):
+        return False
+    return bool(envelope.get("reviews"))
+
+
 def accept_result(store: Store, **kwargs) -> dict:
     """Serialize replay detection, call settlement and adoption on one project."""
     with store._locked():
@@ -1123,7 +1136,8 @@ def _accept_result_locked(
     # and leaves the current draft untouched.
     from . import eligibility
     adoption = eligibility.evaluate(store, document, document, "task.accept",
-                                    {"task": task, "targets": _accept_targets(envelope, task)})
+                                    {"task": task, "targets": _accept_targets(envelope, task),
+                                     "record_only": _record_only(envelope)})
     if adoption["enforcement"] == "active" and not adoption["allowed"]:
         raise eligibility.EligibilityBlocked(adoption)
     if task["kind"] == "style_analyze":

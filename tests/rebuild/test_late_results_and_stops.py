@@ -36,7 +36,7 @@ def _submit(project, store, task, *, outcome="consumed"):
     staging = store.staging_dir / task["operation_id"]
     staging.mkdir(parents=True, exist_ok=True)
     (staging / "evidence.json").write_bytes(b'{"call": "consumed"}')
-    envelope = {"kind": "compose",
+    envelope = {"kind": task["kind"],
                 "files": [{"file_id": "ev1", "path": "evidence.json",
                            "media_type": "application/json"}],
                 "pages": [_page("p1", "晚到结果。")], "page_order": ["p1"],
@@ -149,6 +149,99 @@ def test_a_revoked_result_is_never_adopted_later(tmp_path):
         with pytest.raises(eligibility.EligibilityBlocked):
             _submit(project, store, task)
     assert _page_text(store) == "第一页。"
+
+
+# ---------------------------------------------------------------------------
+# The unconditional backstop: a real dispatch without a binding cannot adopt
+
+
+def _inject_historical_allowance(store, task_id, allowance):
+    """Give a real task a call slot that already happened (MIGRATION §3.5:
+    an in-flight call keeps settling after the upgrade)."""
+    import uuid
+    from deck_master import tasks as tasks_mod
+    document = store.load_document()
+    task = next(store.read_object_json(ref) for ref in document["tasks"]
+                if store.read_object_json(ref).get("task_id") == task_id)
+    updated = {**task, "call_allowances": [*(task.get("call_allowances") or []), allowance]}
+    task_ref = store.put_json_object(updated)
+    operation_id = f"inject-{uuid.uuid4().hex[:8]}"
+    bumped = bump_revision(document, {"operation_id": operation_id, "kind": "task_update",
+                                      "description": "historical consumed call", "read_set": []})
+    bumped = tasks_mod._replace_task_ref(bumped, task, task_ref, store)
+    store.commit_change(base_revision=document["revision_id"], document=bumped,
+                        operation_id=operation_id)
+
+
+def _real_repair_task(project, store, page_id="p1"):
+    """A task dispatched through the real entry (no binding is written yet)."""
+    task = service.open_host_task(store, kind="repair", page_ids=[page_id],
+                                  instruction="repair p1 after a late result")
+    assert not task.get("collaboration_binding")
+    return task
+
+
+def test_real_dispatch_without_binding_cannot_be_accepted(tmp_path):
+    """P1 regression: a task from the real dispatch path (no binding yet) can
+    never write production state, authorized or not, revoked or not."""
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=["p1"]))
+    _grant(project, store, actions=("dispatch.host_task",),
+           scope=_scope(page_ids=["p1"]))
+    task = _real_repair_task(project, store)
+    before = _page_text(store)
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        _submit(project, store, task, outcome=None)
+    error = excinfo.value.payload()["error"]
+    assert error["reason_codes"] == ["decision_needed"]
+    assert "no collaboration binding" in error["message"]
+    assert "bound task" in error["next_action"]
+    assert "settle" in error["message"]
+    assert _page_text(store) == before == "第一页。"
+
+
+def test_real_dispatch_without_binding_refused_even_after_a_revocation(tmp_path):
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=["p1"]))
+    grant = _grant(project, store, actions=("dispatch.host_task", "call.begin"),
+                   scope=_scope(page_ids=["p1"]))
+    task = _real_repair_task(project, store)
+    collaboration.revoke_authorization(project, authorization_id=grant["authorization_id"],
+                                       reason="撤回", base_revision=store.load_document()["revision_id"],
+                                       operation_id="op-revoke")
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        _submit(project, store, task, outcome=None)
+    assert "decision_needed" in excinfo.value.payload()["error"]["reason_codes"]
+    decision = eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                    "task.accept", {"task": task})
+    assert decision["allowed"] is False
+
+
+def test_real_dispatch_without_binding_settles_its_historical_cost_only(tmp_path):
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=["p1"]))
+    _grant(project, store, actions=("dispatch.host_task",), scope=_scope(page_ids=["p1"]))
+    task = _real_repair_task(project, store)
+    _inject_historical_allowance(store, task["task_id"],
+                                 {"allowance_id": "call-hist", "state": "consumed",
+                                  "execution_ref": "host-old", "invocation_ref": None,
+                                  "evidence": []})
+    with pytest.raises(eligibility.EligibilityBlocked):
+        _submit(project, store, task, outcome=None)
+    # The cost that already happened is untouched by the refusal…
+    current = next(store.read_object_json(ref) for ref in store.load_document()["tasks"]
+                   if store.read_object_json(ref).get("task_id") == task["task_id"])
+    states = {entry["allowance_id"]: entry["state"] for entry in current["call_allowances"]}
+    assert states == {"call-hist": "consumed"}
+    # …and the fact channels stay open for that very task.
+    fresh = {**task, "call_allowances": current["call_allowances"]}
+    assert eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                "call.settle", {"task": fresh})["allowed"] is True
+    assert eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                "task.cancel", {"task": fresh})["allowed"] is True
+    # Production stays refused.
+    assert eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                "task.accept", {"task": fresh})["allowed"] is False
 
 
 # ---------------------------------------------------------------------------

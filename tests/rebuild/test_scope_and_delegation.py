@@ -105,6 +105,32 @@ def test_explicit_background_list_keeps_the_old_work_alive(tmp_path):
     assert binding_state.get("background_request_id") == first["request_id"]
 
 
+def test_replace_reports_unbound_active_tasks_honestly(tmp_path):
+    """P regression from the review probe: a real dispatched task has no
+    binding yet, so it must appear in the replace report (affected + an explicit
+    unbound entry), never be silently missing or credited as covered."""
+    project, store = _project(tmp_path)
+    first = _start(project, store, intent="full_deck")
+    _grant(project, store, actions=("dispatch.host_task",), scope=_scope(page_ids=["p1", "p2"]))
+    task = service.open_host_task(store, kind="repair", page_ids=["p1"],
+                                  instruction="repair p1 (dispatched without a binding)")
+    assert not task.get("collaboration_binding")
+    replaced = _start(project, store, operation_id="op-start-2", intent="edit", content_intent=None,
+                      scope=_scope(page_ids=["p1"], layers=["page_copy"]),
+                      replace_request_id=first["request_id"])
+    assert task["task_id"] in replaced["affected_tasks"]
+    unbound = next(entry for entry in replaced["unbound_tasks"]
+                   if entry["task_id"] == task["task_id"])
+    assert unbound["status"] == "awaiting_host"
+    assert unbound["reason"] == "no_collaboration_binding"
+    assert "only settled call facts remain" in unbound["handling"]
+    # And the report is honest about the consequence: the task can no longer be
+    # accepted as production.
+    decision = eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                    "task.accept", {"task": task})
+    assert decision["allowed"] is False
+
+
 def test_review_only_never_borrows_an_old_full_deck_grant(tmp_path):
     project, store = _project(tmp_path)
     first = _start(project, store, intent="full_deck")

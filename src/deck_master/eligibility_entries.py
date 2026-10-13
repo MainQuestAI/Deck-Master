@@ -155,7 +155,9 @@ OPERATIONS_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "icons.preview": ("render.preview", "icons.preview: local rendering only; request scope applies", None),
     "candidate_preview.request": ("render.preview",
                                   "candidate_preview.request: local candidate rendering request", None),
-    "restoration.commit": ("restore", "restoration.commit: guard before the restore commit", None),
+    "restoration.commit": ("restore",
+                           "restoration.commit: reporting-only decision (never refused: "
+                           "restore recovers content facts and keeps the current control)", None),
     "source_uploads.receive": (None, "-", READ_REASONS["staging"]),
     "stages.assemble": ("stage.assemble", "stages.assemble: guard before the assembly commit", None),
     "styles.propose": ("style.propose", "styles.propose: guard before the proposal/recipe commit", None),
@@ -239,8 +241,12 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "export": ("export.delivery", "cli.export → exports.create (purpose gate)", None),
     "handoff-check": ("handoff.delivery", "cli.handoff-check → handoff.check_handoff", None),
     # -- history and policy
-    "history restore": ("restore", "cli.history restore → editing.restore", None),
-    "history commit-restore": ("restore", "cli.history commit-restore → restoration.commit", None),
+    "history restore": ("restore",
+                        "cli.history restore → editing.restore (reporting-only decision: the "
+                        "current request/withdrawal/pause stay in force)", None),
+    "history commit-restore": ("restore",
+                               "cli.history commit-restore → restoration.commit (reporting-only "
+                               "decision; recovery keeps the current control)", None),
     "ui plan-clear": (None, "-", READ_REASONS["ui_state"]),
     "ui commit-clear": (None, "-", READ_REASONS["ui_state"]),
     # -- read-only / non-project
@@ -332,8 +338,10 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "/api/feedback": ("dispatch.host_task",
                       "web.do_POST → service.open_host_task (feedback dispatch)", None),
     "/api/cancel": ("task.cancel", "web.do_POST → service.task_cancel (available while paused)", None),
-    "/api/history/commit-restore": ("restore", "web.do_POST → restoration.commit", None),
-    "/api/restore": ("restore", "web.do_POST → editing.restore", None),
+    "/api/history/commit-restore": ("restore",
+                                    "web.do_POST → restoration.commit (reporting-only decision)", None),
+    "/api/restore": ("restore",
+                     "web.do_POST → editing.restore (reporting-only decision)", None),
     "/api/exports": ("export.delivery",
                      "web.do_POST → exports.create (purpose=delivery consumes the gate)", None),
     "/api/export": ("export.delivery",

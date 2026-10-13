@@ -204,8 +204,10 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
     _spec("stage.assemble", "change", "deck", layers=("output",), production=True,
           writes=True, role="runtime"),
     # -- local production (row 5): no external fee, still bounded by the request
-    _spec("compile.svg", "local", "pages", production=True, writes=True, role="runtime"),
-    _spec("render.preview", "local", "pages", production=True, writes=True, role="runtime"),
+    _spec("compile.svg", "local", "pages", layers=("svg",), production=True, writes=True,
+          role="runtime"),
+    _spec("render.preview", "local", "pages", layers=("svg",), production=True, writes=True,
+          role="runtime"),
     _spec("compile.ppt", "local", "deck", layers=("output",), production=True,
           writes=True, role="runtime"),
     _spec("compile.repair", "local", "pages", production=True, writes=True, role="runtime"),
@@ -277,6 +279,15 @@ FACT_ACTIONS = ("call.settle", "task.cancel", "material.upload")
 
 # Actions whose answer is reported rather than enforced on the caller's behalf
 # (read routing, stop/settlement facts, control-plane writes).
+# `restore` is a reporting decision, not a veto: it recovers content/visual
+# facts and keeps the current control (request, withdrawals, pauses, budget,
+# writer), so a current stop must not block the recovery itself. The decision it
+# returns is still the same one the other entries consume.
+#
+# T07 note: a strict read-only review (persistence=none) must never reach a
+# project write through this path — `review.strict` is the read-only action and
+# the persistence_none reason keeps refusing any state-writing action when the
+# caller declares persistence=none (see test_persistence_none_forbids_project_writes).
 ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
                    "export.engineering", "readiness.final", "review.strict",
                    "task.cancel", "call.settle", "material.upload", "candidate.select",
@@ -742,6 +753,17 @@ def _effective_targets(spec: ActionSpec, targets: dict) -> dict:
 SLOT_ACTIONS = ("call.begin", "generation.dispatch", "allowance.allocate", "allowance.repair")
 
 
+def _slot_covered_by_binding(spec: ActionSpec, bound_ref, ref, actions) -> bool:
+    """The task's bound authorization also covers its bounded calling slots.
+
+    Limited to actions that really spend a bounded external call
+    (``external_calls``); a binding never silently widens authority over any
+    other action family.
+    """
+    return (bound_ref is not None and _same_ref(ref, bound_ref)
+            and spec.name in SLOT_ACTIONS and spec.external_calls)
+
+
 def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
                           targets: dict, task: dict | None = None) -> list[dict]:
     candidates = []
@@ -749,13 +771,21 @@ def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
     bound_ref = binding_of(task).get("authorization_ref") if task is not None else None
     for ref, record in _authorization_heads(store, document):
         actions = record.get("actions") or []
+        slot_covered = _slot_covered_by_binding(spec, bound_ref, ref, actions)
         if not (any(name in actions for name in accepted_names)
                 or _family_match(spec.name, actions)
-                or (bound_ref is not None and _same_ref(ref, bound_ref))):
+                or slot_covered):
             continue
-        if bound_ref is not None and _same_ref(ref, bound_ref) and spec.name not in actions \
-                and spec.name not in SLOT_ACTIONS and not any(name in actions for name in accepted_names):
-            continue
+        if slot_covered and spec.name not in actions \
+                and not any(name in actions for name in accepted_names):
+            # A bound slot is a *call* slot; the same authorization must still
+            # name a production action so a call cannot ride on an authorization
+            # that only exists to be shared.
+            if not any(record_name in actions for record_name in
+                       ("dispatch.blueprint", "dispatch.compose", "style.trial",
+                        "style.expand", "change.commit", "content.operation",
+                        "page.edit", "dispatch.host_task")):
+                continue
         state = dependency_slices.authorization_effectiveness(store, document, ref)
         candidates.append({
             "ref": ref, "record": record, "effective": state["effective"],
@@ -1007,19 +1037,25 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
             block("binding_stale",
                   "the task binding's digest/basis no longer matches the current document",
                   reasons=binding_state["reasons"])
-        elif binding_state["status"] == "absent" and binding_state["new_protocol"]:
-            # Per-protocol rule (TASKS T04 item 3): a task that declares the
-            # collaboration.v1 capability but carries no binding cannot open new
-            # production; it may only settle facts. A task from an older
-            # protocol keeps its request/authorization/scope gates instead —
-            # inventing a binding requirement for protocols that never wrote one
-            # would refuse historical settle-only tasks.
-            if spec.name in ("call.begin", "generation.dispatch", "allowance.allocate",
-                             "allowance.repair", "task.start"):
+        elif binding_state["status"] == "absent":
+            # A task without a collaboration binding cannot establish *whose*
+            # authority it holds, so in a managed project it may never produce
+            # or adopt: production/dispatch and every state-writing adoption are
+            # refused unconditionally (all task protocols, not just the ones
+            # that will write a binding), while already-started call facts may
+            # still settle. This is the independent backstop the card requires
+            # until every dispatch path stamps a binding (T03).
+            #
+            # A record-only acceptance — a result that carries review records
+            # and no page/artifact/content write — records an observation about
+            # artifacts that already exist, so it stays a fact channel like
+            # settlement. Anything that would write production state is refused.
+            record_only = (spec.name == "task.accept" and context.get("record_only"))
+            if (spec.production or spec.group == "adoption") and not record_only:
                 block("decision_needed",
-                      "this task declares the collaboration capability without a binding; "
-                      "only already-started call facts may settle — dispatch a bound task "
-                      "for new production",
+                      "this task carries no collaboration binding, so the authority behind it "
+                      "cannot be established; only already-started call facts may settle — "
+                      "dispatch and adopt through the collaboration-aware path (a bound task)",
                       missing="task_binding")
 
     # -- authority ---------------------------------------------------------
@@ -1267,6 +1303,10 @@ def _next_action(primary: dict | None, spec: ActionSpec, targets: dict) -> str |
         if topics:
             return (f"record an accepted decision (or an effective delegate) for "
                     f"{', '.join(topics)}{where}, then retry {spec.name}")
+        if primary.get("missing") == "task_binding":
+            return ("re-dispatch this work as a bound task through the collaboration-aware path; "
+                    "the already-started calls may still settle, but this task cannot "
+                    f"{spec.name}{where}")
         return f"start the work request that authorizes {spec.name}{where}, then retry"
     if code == "scope_exceeded":
         return (f"narrow the action to the authorized pages/layers, or get an explicit "

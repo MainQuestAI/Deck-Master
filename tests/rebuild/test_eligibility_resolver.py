@@ -773,36 +773,61 @@ def test_binding_invalid_and_stale_are_distinct(tmp_path):
     assert "binding_stale" not in decision["reason_codes"]
 
 
-def test_binding_absent_new_protocol_task_settles_but_never_produces(tmp_path):
+def test_binding_absent_task_settles_facts_but_never_produces_or_adopts(tmp_path):
+    """The unconditional backstop: in a managed project a task without a
+    collaboration binding cannot produce or adopt on *any* protocol, because it
+    cannot establish whose authority it holds. Already-started call facts still
+    settle, and a record-only review acceptance is a fact channel too."""
     project, store = _project(tmp_path)
     _start(project, store)
-    _grant(project, store, actions=("call.begin",))
+    _grant(project, store, actions=("call.begin", "allowance.allocate"))
     document = store.load_document()
-    new_protocol = _task(document, allowances=[_allowance("call-1", "consumed")],
-                         protocol_version="compose.v2",
-                         required_capabilities=["compose.v2", "collaboration.v1"])
-    blocked = _evaluate(store, "call.begin", task=new_protocol,
-                        context={"allowance_id": "call-1"})
-    assert "decision_needed" in blocked["reason_codes"]
-    assert "settle" in blocked["reasons"][0]["detail"]
-    assert _evaluate(store, "task.accept", task=new_protocol)["reason_codes"] == []
+    for protocol, capabilities in ((None, []), ("compose.v2", ["compose.v2", "collaboration.v1"])):
+        task = _task(document, allowances=[_allowance("call-1", "consumed")],
+                     protocol_version=protocol, required_capabilities=capabilities)
+        for action in ("call.begin", "allowance.allocate", "task.start"):
+            decision = _evaluate(store, action, task=task,
+                                 context={"allowance_id": "call-1"})
+            assert "decision_needed" in decision["reason_codes"], (protocol, action)
+            assert decision["binding"]["status"] == "absent"
+            assert "settle" in decision["reasons"][0]["detail"]
+            assert "bound task" in decision["next_action"]
+        adoption = _evaluate(store, "task.accept", task=task)
+        assert "decision_needed" in adoption["reason_codes"], protocol
+        # Facts already observed stay writable: settlement, cancellation and a
+        # record-only review acceptance (an observation, not production).
+        assert _evaluate(store, "call.settle", task=task)["allowed"] is True
+        assert _evaluate(store, "task.cancel", task=task)["allowed"] is True
+        record_only = _evaluate(store, "task.accept", task=task,
+                                context={"record_only": True})
+        assert record_only["allowed"] is True, record_only["reason_codes"]
 
 
-def test_binding_absent_old_protocol_task_keeps_its_other_gates(tmp_path):
-    """A task from a protocol that never wrote a binding is judged by the
-    request/authorization/scope gates, not by an invented binding rule."""
+def test_a_bound_task_is_judged_by_its_other_gates(tmp_path):
+    """With a binding (the post-integration state) the normal gates apply:
+    authority, scope and withdrawal — never an invented binding complaint."""
     project, store = _project(tmp_path)
-    _start(project, store)
+    _start(project, store, scope=_scope(page_ids=["p1"]))
     document = store.load_document()
-    legacy = _task(document, allowances=[_allowance("call-1", "reserved")])
-    decision = _evaluate(store, "call.begin", task=legacy, context={"allowance_id": "call-1"})
-    assert decision["binding"]["status"] == "absent"
-    assert decision["binding"]["new_protocol"] is False
-    assert "decision_needed" not in decision["reason_codes"]
-    assert "authority_insufficient" in decision["reason_codes"]
-    _grant(project, store, actions=("call.begin",))
-    allowed = _evaluate(store, "call.begin", task=legacy, context={"allowance_id": "call-1"})
+    task = _task(document, allowances=[_allowance("call-1", "reserved")],
+                 binding=_binding(document, authorization_ref=None))
+    without_grant = _evaluate(store, "call.begin", task=task,
+                              context={"allowance_id": "call-1"})
+    assert without_grant["binding"]["status"] == "valid"
+    assert "decision_needed" not in without_grant["reason_codes"]
+    assert "authority_insufficient" in without_grant["reason_codes"]
+    grant = _grant(project, store, actions=("call.begin",), scope=_scope(page_ids=["p1"]))
+    document = store.load_document()
+    task = _task(document, allowances=[_allowance("call-1", "reserved")],
+                 binding=_binding(document, authorization_ref=grant["authorization_ref"]))
+    allowed = _evaluate(store, "call.begin", task=task, context={"allowance_id": "call-1"})
     assert allowed["allowed"] is True, allowed["reason_codes"]
+    # The same bound task for an unauthorized page fails on scope, not binding.
+    out_of_scope = _evaluate(store, "call.begin", task=task,
+                             context={"allowance_id": "call-1",
+                                      "targets": {"page_ids": ["p2"]}})
+    assert "scope_exceeded" in out_of_scope["reason_codes"]
+    assert "decision_needed" not in out_of_scope["reason_codes"]
 
 
 def test_binding_digest_formula_is_the_t03_contract():

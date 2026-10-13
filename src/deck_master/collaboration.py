@@ -415,6 +415,7 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
             }
             response["paused_authorizations"] = sorted(paused)
             affected = []
+            unbound = []
             for ref in document.get("tasks") or []:
                 try:
                     task = store.read_object_json(ref)
@@ -423,9 +424,23 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
                 if task.get("status") not in ("awaiting_host", "running", "queued"):
                     continue
                 task_request = (task.get("collaboration_binding") or {}).get("request_id")
+                if task_request is None:
+                    # A still-active task without a binding cannot be attributed
+                    # to the request it belongs to, so it is reported as affected
+                    # too — it can no longer be accepted as production, only
+                    # settled. The report never pretends it was covered before.
+                    affected.append(task.get("task_id"))
+                    unbound.append({"task_id": task.get("task_id"),
+                                    "status": task.get("status"),
+                                    "reason": "no_collaboration_binding",
+                                    "handling": "only settled call facts remain; "
+                                                "re-dispatch through the collaboration-aware path"})
+                    continue
                 if task_request == current.get("request_id") and task_request not in background:
                     affected.append(task.get("task_id"))
             response["affected_tasks"] = sorted(affected)
+            if unbound:
+                response["unbound_tasks"] = unbound
         return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_REQUEST_START, digest=digest,
                                                 description="start work request", updated=updated,

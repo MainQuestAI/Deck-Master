@@ -152,6 +152,38 @@ def _commit_task(store, task, *, operation_id="task-commit"):
     return ref
 
 
+def _stamp_binding(store, task_id, *, phase="production", authorization_ref=None,
+                   request_id=None):
+    """Stamp a valid collaboration binding on an already dispatched task.
+
+    Simulates the post-integration state the T03 binding writer produces, so a
+    managed-project test can exercise the positive acceptance path; production
+    dispatch itself stays refused until that writer lands.
+    """
+    import uuid
+    from deck_master import tasks as tasks_mod
+    document = store.load_document()
+    request = document["collaboration"]["request"]
+    task = next(store.read_object_json(ref) for ref in document["tasks"]
+                if store.read_object_json(ref).get("task_id") == task_id)
+    scope = request["scope"]
+    binding = {"request_id": request_id or request["request_id"],
+               "phase": phase, "executor_type": "host",
+               "authorization_ref": authorization_ref, "decision_refs": [],
+               "write_scope": scope, "adoption_policy": "candidate_only",
+               "eligibility_basis": [],
+               "eligibility_digest": eligibility.binding_eligibility_digest(phase, scope, [])}
+    updated = {**task, "collaboration_binding": binding}
+    task_ref = store.put_json_object(updated)
+    operation_id = f"stamp-{uuid.uuid4().hex[:8]}"
+    bumped = bump_revision(document, {"operation_id": operation_id, "kind": "task_update",
+                                      "description": "stamp collaboration binding", "read_set": []})
+    bumped = tasks_mod._replace_task_ref(bumped, task, task_ref, store)
+    store.commit_change(base_revision=document["revision_id"], document=bumped,
+                        operation_id=operation_id)
+    return binding
+
+
 def _page_hash(store, page_id="p1"):
     document = store.load_document()
     entry = next(e for e in document["pages"] if e["page_id"] == page_id)
@@ -195,8 +227,11 @@ def test_continue_routes_when_the_request_covers_the_work(tmp_path):
     assert blocked["eligibility"]["reason_codes"] == ["authority_insufficient"]
     _grant(project, store, actions=("dispatch.blueprint", "allowance.allocate"))
     outcome = service.continue_project(project)
-    assert outcome["status"] == "awaiting_host"
-    assert outcome["pending_tasks"][0]["kind"] == "blueprint"
+    # Until the binding writer lands (T03) the managed project stops here with a
+    # concrete next action instead of dispatching an unaccountable task.
+    assert outcome["status"] == "needs_input"
+    assert outcome["eligibility"]["reason_codes"] == ["decision_needed"]
+    assert "bound task" in outcome["next_action"]
 
 
 def test_review_only_request_refuses_page_import_and_blueprint_dispatch(tmp_path):
@@ -223,14 +258,18 @@ def test_blueprint_dispatch_requires_scope_and_authorization(tmp_path):
     assert "authority_insufficient" in error["reason_codes"]
     assert "grant an execute authorization" in error["next_action"]
     assert error["responsible_role"] == "user"
-    # With the execute grant (production action + its bounded call slots) the
-    # dispatch runs for real: one blueprint task with one reserved allowance.
+    # With the execute grant the scope/authority gap is gone; the dispatch then
+    # stops on the missing collaboration binding (the T03 integration point),
+    # never silently creating a task whose authority cannot be established.
     _grant(project, store, actions=("dispatch.blueprint", "allowance.allocate"))
-    task = service.open_blueprint_task(store, store.load_document(), entry)
-    assert task["kind"] == "blueprint" and task["scope_pages"] == ["p1"]
-    assert task["cost_class"] == "external_generation"
-    refreshed = service.task_status(project, task_id=task["task_id"])
-    assert refreshed["pending_tasks"][0]["call_allowances"][0]["state"] == "reserved"
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        service.open_blueprint_task(store, store.load_document(), entry)
+    error = _blocked(excinfo)
+    assert error["reason_codes"] == ["decision_needed"]
+    assert "no collaboration binding" in error["message"]
+    assert "bound task" in error["next_action"]
+    tasks = [store.read_object_json(ref) for ref in store.load_document()["tasks"]]
+    assert not any(task["kind"] == "blueprint" for task in tasks)
 
 
 def test_blueprint_dispatch_outside_request_pages_is_refused(tmp_path):
@@ -281,7 +320,8 @@ def test_allowance_allocation_and_begin_require_the_execute_grant(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
     document = store.load_document()
-    task = _task(document, allowances=[_allowance("call-1")])
+    task = _task(document, allowances=[_allowance("call-1")],
+                 binding=_binding(document, authorization_ref=None))
     _commit_task(store, task)
     # The claim itself is checked against the live control: a paused request
     # stops new production, and the claim is production.
@@ -301,6 +341,9 @@ def test_allowance_allocation_and_begin_require_the_execute_grant(tmp_path):
                                          {"task": task, "allowance_id": "call-1"})
     assert "authority_insufficient" in without_grant["reason_codes"]
     grant = _grant(project, store, actions=("call.begin",), scope=_scope(page_ids=["p1"]))
+    document = store.load_document()
+    task = _task(document, allowances=[_allowance("call-1")],
+                 binding=_binding(document, authorization_ref=grant["authorization_ref"]))
     allowed = eligibility.evaluate(store, store.load_document(), store.load_document(),
                                    "call.begin", {"task": task, "allowance_id": "call-1"})
     assert allowed["allowed"] is True
@@ -335,7 +378,9 @@ def test_zero_image_scope_cannot_begin_a_call(tmp_path):
     _grant(project, store, actions=("call.begin",),
            scope=_scope(page_ids=["p1"], layers=["narrative", "page_copy"]))
     document = store.load_document()
-    task = _task(document, kind="blueprint", allowances=[_allowance("call-1")])
+    grant_ref = None
+    task = _task(document, kind="blueprint", allowances=[_allowance("call-1")],
+                 binding=_binding(document, authorization_ref=grant_ref))
     _commit_task(store, task)
     service.task_start(project, task_id="task-1", execution_ref="host-1")
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
@@ -396,7 +441,8 @@ def test_accept_in_scope_composes_normally(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
     document = store.load_document()
-    task = _task(document, scope_pages=("p1",))
+    task = _task(document, scope_pages=("p1",),
+                 binding=_binding(document, authorization_ref=None))
     _commit_task(store, task)
     service.task_start(project, task_id="task-1", execution_ref="host-1")
     envelope = {"kind": "compose", "files": [], "pages": [_page("p1", "新的一句。")],
@@ -506,23 +552,65 @@ def test_content_operation_requires_the_direction_decision(tmp_path):
 
 
 def test_candidate_adoption_refused_after_withdrawal(tmp_path):
-    project, store = _project(tmp_path)
-    _start(project, store, scope=_scope(page_ids=["p1"]))
-    grant = _grant(project, store, actions=("candidate.adopt",), scope=_scope(page_ids=["p1"]),
-                   max_external_calls=0)
-    collaboration.revoke_authorization(project, authorization_id=grant["authorization_id"],
-                                       reason="withdraw", base_revision=store.load_document()["revision_id"],
-                                       operation_id="op-revoke")
-    from deck_master import candidates
-    with pytest.raises((eligibility.EligibilityBlocked, Exception)) as excinfo:
-        candidates.adopt(project, input={
-            "schema_version": "candidate_adoption.v1", "project_id": store.load_document()["project_id"],
-            "base_revision": store.load_document()["revision_id"], "selections": []},
-            base_revision=store.load_document()["revision_id"],
-            operation_id="8a1b1f2a-1111-4111-8111-111111111111")
-    # Either the eligibility gate or the candidate plan validation refuses;
-    # the important part is that nothing was adopted.
-    assert store.load_document()["pages"] == store.load_document()["pages"]
+    """A real candidate adoption: the trial is dispatched and accepted through
+    the real entries (binding stamped as the post-integration state), the plan
+    is adoptable while the adoption authorization is effective, and the
+    withdrawal refuses the very same adoption with the draft untouched."""
+    from deck_master.samples import create_sample
+    from test_candidates import accept as trial_accept, dispatch as trial_dispatch, \
+        plan as candidate_plan, start as trial_start, adopt as candidate_adopt
+    project = tmp_path / "candidate-project"
+    create_sample(project, page_count=2, readonly=False)
+    store = Store(project)
+    document = store.load_document()
+    bumped = bump_revision(document, {"operation_id": "bootstrap-collaboration",
+                                      "kind": "collaboration_update",
+                                      "description": "bootstrap region", "read_set": []})
+    bumped["collaboration"] = {
+        "schema_version": "collaboration.v1", "authority_policy": "traceable",
+        "quality_profile": {"content_review_requirement": "fidelity_only",
+                            "requirement_origin": "confirmed_manuscript",
+                            "override_decision_ref": None},
+        "request": None, "decisions": [], "authorizations": []}
+    require_writer(bumped, "collaboration.v1")
+    store.commit_change(base_revision=document["revision_id"], document=bumped,
+                        operation_id="bootstrap-collaboration")
+    scope = _scope(page_ids=["p01", "p02"])
+    _start(project, store, scope=scope)
+    _grant(project, store, actions=("change.commit",), scope=scope,
+           operation_id="op-grant-change")
+    task = trial_dispatch(store)                       # real change-plan dispatch
+    _stamp_binding(store, task["task_id"])             # T03's stamp (simulated)
+    trial_start(store, task)
+    result = trial_accept(store, task)
+    candidate_id = result["candidate_ids"][0]
+    adoption_grant = _grant(project, store, actions=("candidate.adopt",), scope=scope,
+                            max_external_calls=0, operation_id="op-grant-adopt")
+    planned = candidate_plan(store, [candidate_id])
+    targets = {"page_ids": [planned["selections"][0]["page_id"]], "layers": ["svg"]}
+    before = eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                  "candidate.adopt", {"targets": targets})
+    assert before["allowed"] is True, before["reason_codes"]
+    collaboration.revoke_authorization(
+        project, authorization_id=adoption_grant["authorization_id"], reason="撤回采用",
+        base_revision=store.load_document()["revision_id"], operation_id="op-revoke")
+    after = eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                 "candidate.adopt", {"targets": targets})
+    assert after["allowed"] is False
+    assert "authorization_revoked" in after["reason_codes"]
+    pages_before = canonical_json_bytes(store.load_document()["pages"])
+    selections_before = list(store.load_document().get("candidate_adoptions") or [])
+    # Re-reading the current state after the revocation produces a fresh plan
+    # (the CAS conflict is the concurrency rule, not an admission gap) — and the
+    # adoption itself is then refused by the withdrawal.
+    replanned = candidate_plan(store, [candidate_id])
+    assert replanned["base_revision"] != planned["base_revision"]
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        candidate_adopt(store, replanned)
+    assert "authorization_revoked" in _blocked(excinfo)["reason_codes"]
+    assert "withdrawal stands" in _blocked(excinfo)["next_action"]
+    assert canonical_json_bytes(store.load_document()["pages"]) == pages_before
+    assert list(store.load_document().get("candidate_adoptions") or []) == selections_before
 
 
 # ---------------------------------------------------------------------------
@@ -555,6 +643,60 @@ def test_preview_render_needs_the_svg_layer(tmp_path):
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         pipeline.preview_svg_page(project, "p1")
     assert "scope_exceeded" in _blocked(excinfo)["reason_codes"]
+
+
+def test_local_rendering_entries_use_the_same_layer_strictness(tmp_path):
+    """P3 regression: every local rendering entry derives the svg layer, so a
+    request without it refuses the render — no entry may silently pass."""
+    project, store = _project(tmp_path)
+    _start(project, store, intent="content_only", content_intent="write_only",
+           scope=_scope(page_ids=["p1"], layers=["narrative", "page_copy"]))
+    for action in ("render.preview", "compile.svg"):
+        decision = eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                        action, {"targets": {"page_ids": ["p1"]}})
+        assert "scope_exceeded" in decision["reason_codes"], action
+    # Both local rendering entries consume that same action with an svg target.
+    from deck_master import candidate_preview, icons
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        candidate_preview.request(project, candidate_id="cand-does-not-exist")
+    assert "scope_exceeded" in _blocked(excinfo)["reason_codes"]
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        icons.preview(project, proposal_id="proposal-missing", page_id="p1")
+    assert "scope_exceeded" in _blocked(excinfo)["reason_codes"]
+    # With the svg layer in scope both entries pass the gate and fail later on
+    # their real prerequisite (a missing candidate/proposal), not on admission.
+    _start(project, store, operation_id="op-start-2", intent="full_deck",
+           replace_request_id=store.load_document()["collaboration"]["request"]["request_id"],
+           scope=_scope(page_ids=["p1"]))
+    with pytest.raises(Exception) as excinfo:
+        candidate_preview.request(project, candidate_id="cand-does-not-exist")
+    assert not isinstance(excinfo.value, eligibility.EligibilityBlocked)
+
+
+def test_restore_is_a_reporting_decision_not_a_veto(tmp_path):
+    """P3 regression: restore recovers content facts and keeps the current
+    control, so it reports instead of refusing; persistence=none still refuses a
+    project write through it (the T07 strict-read-only path)."""
+    from deck_master import eligibility_entries as entries
+    row = entries.classify("operations", "restoration.commit")
+    assert "reporting-only" in row.gate and row.exempt is None
+    project, store = _project(tmp_path, region=False)
+    document = store.load_document()
+    bumped = bump_revision(document, {"operation_id": "older-revision",
+                                      "kind": "task_update",
+                                      "description": "older revision", "read_set": []})
+    store.commit_change(base_revision=document["revision_id"], document=bumped,
+                        operation_id="older-revision")
+    older = store.load_document()["revision_id"]
+    from deck_master.editing import restore
+    outcome = restore(project, revision_id=older,
+                      base_revision=store.load_document()["revision_id"],
+                      operation_id="op-restore-report")
+    assert outcome["status"] in ("edited", "restored")
+    # A strict read-only declaration is still refused through the same path.
+    decision = eligibility.evaluate(store, store.load_document(), store.load_document(),
+                                    "restore", {"persistence": "none"})
+    assert "persistence_none" in decision["reason_codes"]
 
 
 def test_delivery_export_consumes_the_professional_policy(tmp_path):

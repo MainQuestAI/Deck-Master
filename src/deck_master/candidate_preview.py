@@ -226,11 +226,28 @@ def _preserve(folder,check_id):
         _atomic_write_bytes(backup/name,path.read_bytes())
 
 
+def _preview_target(store, document, candidate_id) -> dict:
+    """The page/layer a candidate preview writes (resolved before the gate)."""
+    for ref in document.get("candidates") or []:
+        try:
+            candidate = store.read_object_json(ref)
+        except Exception:  # noqa: BLE001 - unreadable candidates are not a target
+            continue
+        if candidate.get("candidate_id") == candidate_id:
+            page_id = candidate.get("page_id")
+            return {"page_ids": [page_id] if page_id else [], "layers": ["svg"]}
+    return {"page_ids": [], "layers": ["svg"]}
+
+
 @operations.public
 def request(project, *, candidate_id, retry=False, wait=True):
     from . import eligibility
     gate_store = Store(project_path(project))
-    eligibility.guard(gate_store, gate_store.load_document(), "render.preview")
+    gate_document = gate_store.load_document()
+    # Local rendering is still scoped production: name the candidate's page and
+    # the svg layer exactly like the icon preview entry does.
+    eligibility.guard(gate_store, gate_document, "render.preview",
+                      context={"targets": _preview_target(gate_store, gate_document, candidate_id)})
     try:context=_context(project,candidate_id)
     except pipeline.NeedsTool as exc:return {'status':'needs_tool','error':{'code':'needs_tool','message':str(exc)}}
     store=context[0];identity,key=context[-2:];job=(str(store.project_root),key)
