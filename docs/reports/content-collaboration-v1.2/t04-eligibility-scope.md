@@ -77,8 +77,8 @@ Actual commands, environment, inputs and outputs:
   1) 全量非浏览器回归（单独运行，无并发测试进程）
      $ cd <worktree> && PYTHONPATH=src <venv>/python -m pytest -q tests/rebuild \
          -m 'not render and not browser'
-     → 1544 passed, 455 deselected in 110.45s（本卡最终数字，含审查修复的 7 条回归）
-     基线：主工作树 1430 passed（本卡开始前）；本卡新增 114 条 eligibility 测试；
+     → 1545 passed, 455 deselected in 112.60s（本卡最终数字，含审查修复的 8 条回归）
+     基线：主工作树 1430 passed（本卡开始前）；本卡新增 115 条 eligibility 测试；
      T01/T02 测试照常运行，不替换任何旧用例的语义（仅两处 fixture 按新合同更新，见下）。
 
   2) 本卡新增测试（逐文件，最新一次实跑）
@@ -87,7 +87,7 @@ Actual commands, environment, inputs and outputs:
      test_eligibility_enforcement.py         27 passed（§6.2 各边界正/反例 + 拒绝后状态 + 渲染严格度一致 + restore 报告型）
      test_scope_and_delegation.py            10 passed（请求隔离/背景清单/授权绑页/具体化/链撤回/replace 如实报告）
      test_budget_templates.py                12 passed（两模板 + 耗尽/撤回 + 共享预算 + credit 幂等 + slot 不外溢）
-     test_late_results_and_stops.py          12 passed（真实路径无绑定兜底 + 三轨迹 + cancel/continue/user_stop/restore）
+     test_late_results_and_stops.py          13 passed（真实路径无绑定兜底 + record-only 限观察任务 + 三轨迹 + cancel/continue/user_stop/restore）
      test_delivery_control_snapshot.py        7 passed（历史快照 × 当前控制 + 恢复保留）
 
   3) 相关既有套件（回归）
@@ -184,7 +184,7 @@ Not run / blocked evidence and concrete next step:
 
 | 审查项 | 修复 | 回归测试 |
 |---|---|---|
-| **P1-1** 撤回后晚到结果经真实派发路径仍被接纳（accept 侧只经 binding 拦截） | `evaluate` 的 binding 缺失分支改为无条件：受管项目中任何无 `collaboration_binding` 的任务，其生产/派发与一切写项目状态的生产接纳一律拒绝（`decision_needed`，`missing=task_binding`，next_action 指向"经协作感知路径重新派发为带绑定的任务"），与协议版本、是否撤回无关；事实通道（`call.settle`/`task.cancel`/staging）与"仅记录审阅观察"的 record-only accept 保持允许；已结算费用不抹去。绑定存在时维持结构 + digest 时效 + 撤回拦截。 | `test_late_results_and_stops.py::test_real_dispatch_without_binding_cannot_be_accepted`（真实 `open_host_task` 派发→接纳被拒、原稿不变、next_action 具体）、`::test_real_dispatch_without_binding_refused_even_after_a_revocation`、`::test_real_dispatch_without_binding_settles_its_historical_cost_only`；`test_eligibility_resolver.py::test_binding_absent_task_settles_facts_but_never_produces_or_adopts`（两协议 × 生产/接纳 + 事实通道 + record-only）、`::test_a_bound_task_is_judged_by_its_other_gates` |
+| **P1-1** 撤回后晚到结果经真实派发路径仍被接纳（accept 侧只经 binding 拦截） | `evaluate` 的 binding 缺失分支改为无条件：受管项目中任何无 `collaboration_binding` 的任务，其生产/派发与一切写项目状态的生产接纳一律拒绝（`decision_needed`，`missing=task_binding`，next_action 指向"经协作感知路径重新派发为带绑定的任务"），与协议版本、是否撤回无关；事实通道（`call.settle`/`task.cancel`/staging）与"仅记录审阅观察"的 record-only accept 保持允许（该豁免很窄：只有 review/style_analyze 观察类任务 + 信封仅含 reviews 才成立，生产类任务永不适用）；已结算费用不抹去。绑定存在时维持结构 + digest 时效 + 撤回拦截。 | `test_late_results_and_stops.py::test_real_dispatch_without_binding_cannot_be_accepted`（真实 `open_host_task` 派发→接纳被拒、原稿不变、next_action 具体）、`::test_real_dispatch_without_binding_refused_even_after_a_revocation`、`::test_real_dispatch_without_binding_settles_its_historical_cost_only`、`::test_record_only_acceptance_is_limited_to_observation_tasks`；`test_eligibility_resolver.py::test_binding_absent_task_settles_facts_but_never_produces_or_adopts`（两协议 × 生产/接纳 + 事实通道 + record-only）、`::test_a_bound_task_is_judged_by_its_other_gates` |
 | **次生问题（probeE）** replace 的 `affected_tasks` 漏掉无绑定活动任务 | replace 报告把无绑定活动任务列入 `affected_tasks`，并新增 `unbound_tasks[]`（task_id/status/reason=no_collaboration_binding/handling="only settled call facts remain; re-dispatch through the collaboration-aware path"），不夸大覆盖 | `test_scope_and_delegation.py::test_replace_reports_unbound_active_tasks_honestly` |
 | **P2-1** 空测试重写（`raises((EligibilityBlocked, Exception))` 等价 `raises(Exception)`） | 改为真实候选采用状态：`create_sample` 项目 + 真实 change-plan trial 派发 + `_stamp_binding`（模拟 T03 盖章）+ 真实 claim/accept 产出 candidate + `candidates.plan`→`adopt`；撤回前 `evaluate` allowed、撤回后 `authorization_revoked`，真实 `adopt` 抛 `EligibilityBlocked`，原稿与 candidate_adoptions 不变 | `test_eligibility_enforcement.py::test_candidate_adoption_refused_after_withdrawal` |
 | **P3-1** `render.preview` 两个入口 targets 严格度不一致 | `render.preview`/`compile.svg` spec 声明 `layers=("svg",)`；`candidate_preview.request` 在 gate 前解析候选的 page_id 并传 `layers=["svg"]`（与 `icons.preview` 一致） | `test_eligibility_enforcement.py::test_local_rendering_entries_use_the_same_layer_strictness`（两个入口都拒、带 svg 层都过 gate） |

@@ -244,6 +244,31 @@ def test_real_dispatch_without_binding_settles_its_historical_cost_only(tmp_path
                                 "task.accept", {"task": fresh})["allowed"] is False
 
 
+def test_record_only_acceptance_is_limited_to_observation_tasks(tmp_path):
+    """A production task can never use the record-only door: the envelope alone
+    does not decide, the task kind does (review/analysis only)."""
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=["p1"]))
+    document = store.load_document()
+    review_envelope = {"kind": "repair", "files": [],
+                       "artifact_specs": [], "usage_events": [],
+                       "reviews": [{"schema_version": "deck_review.v1",
+                                    "review_id": "r-1", "kind": "readability",
+                                    "review_stage": "final", "status": "pass",
+                                    "reviewer": {"type": "host_self", "assurance": "host_attested"},
+                                    "subjects": [], "dependencies": [],
+                                    "observations": ["observed"], "findings": []}]}
+    production = _task(document, kind="repair", status="running", scope_pages=("p1",))
+    assert eligibility.evaluate(store, document, document, "task.accept",
+                                {"task": production, "record_only": False})["allowed"] is False
+    # The caller's own record_only computation refuses a production task…
+    from deck_master.tasks import _record_only
+    assert _record_only(review_envelope, production) is False
+    # …and an observation task with the very same envelope stays a fact channel.
+    review_task = _task(document, kind="review", status="running", scope_pages=("p1",))
+    assert _record_only(review_envelope, review_task) is True
+
+
 # ---------------------------------------------------------------------------
 # cancel is not a withdrawal; continue neither widens nor revives
 

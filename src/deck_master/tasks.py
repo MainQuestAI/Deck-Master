@@ -960,13 +960,20 @@ def _accept_targets(envelope: dict, task: dict) -> dict:
     return {"page_ids": page_ids, "layers": layers}
 
 
-def _record_only(envelope: dict) -> bool:
+OBSERVATION_TASK_KINDS = ("review", "style_analyze")
+
+
+def _record_only(envelope: dict, task: dict) -> bool:
     """A result that only records review observations (no production write).
 
-    Recording what was reviewed is a fact about artifacts that already exist —
-    a result that also carries pages, artifact specs or a content update is a
-    production adoption and must never take this path.
+    Recording what was reviewed is a fact about artifacts that already exist, so
+    it stays available to the observation tasks. The exemption is deliberately
+    narrow: the task itself must be a review/analysis task, and the envelope must
+    carry no pages, artifact specs, plan or content update — a production task
+    can never use this door to write state.
     """
+    if task.get("kind") not in OBSERVATION_TASK_KINDS:
+        return False
     if envelope.get("pages") or envelope.get("content_update") \
             or envelope.get("content_plan") or envelope.get("artifact_specs"):
         return False
@@ -1137,7 +1144,7 @@ def _accept_result_locked(
     from . import eligibility
     adoption = eligibility.evaluate(store, document, document, "task.accept",
                                     {"task": task, "targets": _accept_targets(envelope, task),
-                                     "record_only": _record_only(envelope)})
+                                     "record_only": _record_only(envelope, task)})
     if adoption["enforcement"] == "active" and not adoption["allowed"]:
         raise eligibility.EligibilityBlocked(adoption)
     if task["kind"] == "style_analyze":

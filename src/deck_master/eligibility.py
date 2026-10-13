@@ -1046,10 +1046,12 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
             # still settle. This is the independent backstop the card requires
             # until every dispatch path stamps a binding (T03).
             #
-            # A record-only acceptance — a result that carries review records
-            # and no page/artifact/content write — records an observation about
-            # artifacts that already exist, so it stays a fact channel like
-            # settlement. Anything that would write production state is refused.
+            # A record-only acceptance — an observation task's result that
+            # carries review records and no page/artifact/content write — records
+            # what was reviewed about artifacts that already exist, so it stays a
+            # fact channel like settlement. Anything that would write production
+            # state, and any production task, is refused (the caller computes
+            # record_only from the envelope *and* the task kind).
             record_only = (spec.name == "task.accept" and context.get("record_only"))
             if (spec.production or spec.group == "adoption") and not record_only:
                 block("decision_needed",
