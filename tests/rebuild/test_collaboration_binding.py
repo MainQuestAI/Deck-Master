@@ -65,11 +65,12 @@ def _project(tmp_path, *, material=True, presentation_mode=None):
 
 
 def _request(project, store, *, layers=("narrative", "plan", "page_copy", "speech"),
-             intent="content_only", content_intent="content_full"):
+             intent="content_only", content_intent="content_full", page_ids=None):
     return collaboration.start_request(
         project, input={"intent": intent, "content_intent": content_intent,
                         "instruction_evidence": _instruction(store),
-                        "scope": _scope(layers=list(layers)), "replace_request_id": None},
+                        "scope": _scope(layers=list(layers), page_ids=list(page_ids or [])),
+                        "replace_request_id": None},
         base_revision=store.load_document()["revision_id"], operation_id="op-request")
 
 
@@ -322,18 +323,26 @@ def test_gate_stamps_every_dispatch_in_a_collaboration_project(tmp_path):
 def test_dispatch_without_a_request_is_refused(tmp_path):
     """The gate closes the door the moment a project is at collaboration.v1."""
     project, store = _project(tmp_path)
+    # The dispatch-side builder refuses without a current request ...
     with pytest.raises(ModelError):
         content_production.open_phase_task(store, store.load_document(),
                                            operation_id="gate-2", phase="framing")
-    with pytest.raises(ModelError):
+    # ... and the service boundary consumes the eligibility resolver first, so
+    # the refusal arrives as a typed decision (missing work_request) before any
+    # task object exists (CONTRACTS §6.2 row 1).
+    from deck_master import eligibility
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         service.open_compose_task(store, store.load_document(), operation_id="gate-3")
+    decision = excinfo.value.decision
+    assert "decision_needed" in decision["reason_codes"]
+    assert any(r.get("missing") == "work_request" for r in decision["reasons"])
 
 
 def test_host_and_blueprint_dispatch_receive_their_phase_binding(tmp_path):
     project, store = _project(tmp_path)
-    _request(project, store, intent="edit")
+    # The page exists first; the edit request names it and carries the layers
+    # its flows write (review checks, page copy, svg repair).
     document = store.load_document()
-    # A review dispatch on an existing page gets a review-phase binding.
     page = {"schema_version": "deck_page_package.v2", "page_id": "p1",
             "customer_visible": {"title": "标题", "body_blocks": [
                 {"id": "b1", "type": "paragraph", "text": "正文"}]},
@@ -345,6 +354,8 @@ def test_host_and_blueprint_dispatch_receive_their_phase_binding(tmp_path):
                         "svg_preview": None, "ppt_preview": None}]
     store.commit_change(base_revision=document["revision_id"], document=bumped,
                         operation_id="add-page")
+    _request(project, store, intent="edit", page_ids=["p1"],
+             layers=("narrative", "plan", "page_copy", "speech", "review", "svg"))
     task = service.open_host_task(store, kind="review", page_ids=["p1"], instruction="审阅这一页")
     binding = task["collaboration_binding"]
     assert binding["phase"] == "review" and binding["write_scope"]["layers"] == ["review"]

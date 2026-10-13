@@ -11,7 +11,7 @@ import pytest
 
 from test_eligibility_enforcement import (  # noqa: E402  (shared fixtures)
     _allowance, _binding, _commit_task, _declared, _grant, _page, _project, _scope,
-    _start, _task)
+    _start, _strip_binding, _task)
 from deck_master import collaboration, dependency_slices, eligibility, service
 from deck_master.models import bump_revision, canonical_json_bytes, sha256_bytes
 from deck_master.store import Store
@@ -173,12 +173,18 @@ def _inject_historical_allowance(store, task_id, allowance):
                         operation_id=operation_id)
 
 
+
+
 def _real_repair_task(project, store, page_id="p1"):
-    """A task dispatched through the real entry (no binding is written yet)."""
+    """A task dispatched through the real entry, then stripped to the legacy
+    shape. The real dispatch path now stamps a collaboration binding (T03), so
+    the unconditional backstop is exercised by removing it the way a
+    pre-upgrade task would look (MIGRATION §3.5: such a task may only settle
+    the call facts it already has)."""
     task = service.open_host_task(store, kind="repair", page_ids=[page_id],
                                   instruction="repair p1 after a late result")
-    assert not task.get("collaboration_binding")
-    return task
+    assert task.get("collaboration_binding")  # the real entry writes one now
+    return _strip_binding(store, task["task_id"])
 
 
 def test_real_dispatch_without_binding_cannot_be_accepted(tmp_path):
