@@ -22,7 +22,7 @@ Implementation commit / source baseline:
   - 审查修复提交：19386830b9b83d38f88c33bcab2df91756508093
     fix(content): review fixes for speech mapping/policy, adoption, import and variants
   - 切片 6（本文档）：docs/reports/content-collaboration-v1.2/t03-content-production.md
-  - 分支：impl/t03-content-production（本地提交，未 push / 未合并 / 未开 PR）
+  - 分支：impl/t03-content-production（提交推送 origin 作备份；未合并 / 未开 PR）
 
 Changed paths and resulting behavior:
   新增模块
@@ -271,7 +271,7 @@ eligibility_digest = sha256_bytes(canonical_json_bytes({
 
 - 除 §3 列出的命令外未执行其它验证；未运行真实生图、PPTX 编译、浏览器或真实 Host。
 - 本卡不含客户材料、不含生成 runs、不含 tokens；全部 fixture 为仓库内合成内容。
-- 未 push、未合并、未开 PR；提交只在本地区块链。
+- 分支推送 origin 作备份；未合并、未开 PR。
 
 ## 9. 独立审查修复（REQUEST-CHANGES 复验）
 

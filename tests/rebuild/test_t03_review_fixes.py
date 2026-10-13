@@ -88,7 +88,7 @@ def test_speech_cannot_silently_rebind_a_superseded_mapping(tmp_path):
     assert document["pages"][0]["page"] == page_ref_before
     assert store.read_object_json(document["pages"][0]["page"]) == page_before
     # The same state cannot be smuggled through a verbatim request either.
-    task2 = content_production.open_phase_task(store, content_production and document,
+    task2 = content_production.open_phase_task(store, document,
                                                operation_id="sp-rebind-2", phase="speech")
     verbatim = {**update, "speech_segments": [
         {**update["speech_segments"][0], "kind": "verbatim"}]}
