@@ -352,6 +352,8 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "request.start")
         replay = replay_or_conflict(store, document, operation_id, ACTION_REQUEST_START, digest)
         if replay:
             return replay
@@ -404,12 +406,56 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
                              "replace_request_id must name the current open request")
         updated_region = {**region, "request": candidate}
         updated = {**document, "collaboration": updated_region}
+        response = {"request_id": candidate["request_id"],
+                    "effective_scope": candidate["scope"],
+                    "assurance": evidence["assurance"]}
+        if current is not None and current.get("request_id") != candidate["request_id"]:
+            # Replace (CONTRACTS §12): the old request's unfinished scope stops
+            # by default — its authorizations are reported as no longer
+            # executable and its open tasks as affected. Only the explicitly
+            # listed background ids keep running.
+            background = set(candidate.get("background_request_ids") or [])
+            paused = [record.get("authorization_id")
+                      for _, record in _region_records(store, region, "authorizations")
+                      if record.get("request_id") == current.get("request_id")
+                      and record.get("request_id") not in background]
+            response["prior_request_disposition"] = {
+                "request_id": current.get("request_id"),
+                "disposition": "superseded",
+                "background_request_ids": sorted(background),
+            }
+            response["paused_authorizations"] = sorted(paused)
+            affected = []
+            unbound = []
+            for ref in document.get("tasks") or []:
+                try:
+                    task = store.read_object_json(ref)
+                except Exception:  # noqa: BLE001 - unreadable tasks cannot be affected
+                    continue
+                if task.get("status") not in ("awaiting_host", "running", "queued"):
+                    continue
+                task_request = (task.get("collaboration_binding") or {}).get("request_id")
+                if task_request is None:
+                    # A still-active task without a binding cannot be attributed
+                    # to the request it belongs to, so it is reported as affected
+                    # too — it can no longer be accepted as production, only
+                    # settled. The report never pretends it was covered before.
+                    affected.append(task.get("task_id"))
+                    unbound.append({"task_id": task.get("task_id"),
+                                    "status": task.get("status"),
+                                    "reason": "no_collaboration_binding",
+                                    "handling": "only settled call facts remain; "
+                                                "re-dispatch through the collaboration-aware path"})
+                    continue
+                if task_request == current.get("request_id") and task_request not in background:
+                    affected.append(task.get("task_id"))
+            response["affected_tasks"] = sorted(affected)
+            if unbound:
+                response["unbound_tasks"] = unbound
         return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_REQUEST_START, digest=digest,
                                                 description="start work request", updated=updated,
-                                                response={"request_id": candidate["request_id"],
-                                                          "effective_scope": candidate["scope"],
-                                                          "assurance": evidence["assurance"]})
+                                                response=response)
 
     return locked(store)
 
@@ -426,6 +472,8 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "decision.record")
         replay = replay_or_conflict(store, document, operation_id, ACTION_DECISION_RECORD, digest)
         if replay:
             return replay
@@ -524,6 +572,8 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "authorization.grant")
         replay = replay_or_conflict(store, document, operation_id, ACTION_GRANT, digest)
         if replay:
             return replay
@@ -634,6 +684,8 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "authorization.revoke")
         replay = replay_or_conflict(store, document, operation_id, ACTION_REVOKE, digest)
         if replay:
             return replay
@@ -703,6 +755,9 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document,
+                          "request.pause" if paused else "request.resume")
         replay = replay_or_conflict(store, document, operation_id, action, digest)
         if replay:
             return replay

@@ -185,6 +185,10 @@ def public(function):
             raise OperationError('operation_unavailable', 'project', 'operation could not be verified; keep its original payload and ID',
                                  exit_code=4, http_status=503, operation_id=kwargs.get('operation_id'),
                                  operation_state='unknown') from exc
+    # Marker for the T04 entry-inventory coverage test: it enumerates the public
+    # operation surface by introspection so a new public operation cannot be
+    # added without being classified against an eligibility action.
+    wrapped.__public_operation__ = function.__qualname__
     return wrapped
 
 

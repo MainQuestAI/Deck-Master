@@ -135,9 +135,24 @@ def _proposal(store, document, value):
             'suggestion_state': 'unconfirmed' if value.get('host_suggestion') else 'none'}
 
 
+def _proposal_pages(input) -> list[str]:
+    """Pages a style proposal names (targets/representative pages), if any."""
+    pages: list[str] = []
+    for key in ("target_page_ids", "sample_targets", "page_ids"):
+        for page_id in input.get(key) or []:
+            value = page_id.get("page_id") if isinstance(page_id, dict) else page_id
+            if value and value not in pages:
+                pages.append(value)
+    return pages
+
+
 @operations.public
 def propose(project, *, input):
     store = Store(project_path(project)); document = load_snapshot(store)
+    from . import eligibility
+    eligibility.guard(store, document, "style.propose",
+                      context={"targets": {"page_ids": _proposal_pages(input),
+                                           "layers": ["design"]}})
     proposal = _proposal(store, document, input); validate_schema('style_proposal', proposal)
     ref = store.put_json_object(proposal)
     return {'status': 'suggestion', 'proposal_id': 'style-proposal-' + ref['sha256'],
@@ -165,6 +180,10 @@ def confirm(project, *, proposal_id, base_revision, operation_id):
             return previous
         if document['revision_id'] != base_revision or proposal['base_revision'] != base_revision:
             raise StyleConflict('base_revision', 'project changed; review a new suggestion', [])
+        from . import eligibility
+        eligibility.guard(store, document, "design.update",
+                          context={"targets": {"page_ids": _proposal_pages(proposal['input']),
+                                               "layers": ["design"]}})
         rederived = _proposal(store, document, proposal['input'])
         # 兼容两类旧核心产物：顶层缺 preserve_dimensions 键（按重推导补齐），
         # 以及 diff 不含 preserve_dimensions 条目（旧 diff 算法）。diff 是派生
