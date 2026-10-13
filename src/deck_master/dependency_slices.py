@@ -12,7 +12,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from .models import ModelError, canonical_json_bytes, sha256_bytes
+from .models import ModelError, canonical_json_bytes, sha256_bytes, parse_authorization_expiry
+from .collaboration_scope import delegation_gaps
 
 TASK_FACT_IDENTITIES = ("audience", "brief", "scenario", "presentation_mode", "page_limit")
 _MAX_PARENT_DEPTH = 8
@@ -90,30 +91,46 @@ def _load_region_object(store, document, family, id_field, identity):
     return head[1] if head else None
 
 
-def _decision_projection(record) -> dict:
-    scope = record.get("scope") or {}
-    return {"topic": record.get("topic"), "disposition": record.get("disposition"),
-            "value": record.get("value"), "status": record.get("status"),
-            "subject": scope.get("subject"),
-            "page_ids": sorted(scope.get("page_ids") or []),
-            "layers": sorted(scope.get("layers") or [])}
+def _semantic_refs(value):
+    if isinstance(value, dict):
+        if set(value) == {"path", "sha256"}:
+            return {"sha256": value["sha256"]}
+        return {key: _semantic_refs(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_semantic_refs(item) for item in value]
+    return value
 
 
-def _authorization_projection(record) -> dict:
-    scope = record.get("scope") or {}
-    return {"mode": record.get("mode"), "actions": sorted(record.get("actions") or []),
-            "subject": scope.get("subject"),
-            "page_ids": sorted(scope.get("page_ids") or []),
-            "layers": sorted(scope.get("layers") or []),
-            "delegated_topics": sorted(record.get("delegated_topics") or []),
-            "max_external_calls": record.get("max_external_calls"),
-            "max_candidate_count": record.get("max_candidate_count"),
-            "adoption_policy": record.get("adoption_policy"),
-            "delivery_binding": record.get("delivery_binding"),
-            "status": record.get("status")}
+def _record_projection(store, record, fields, sets):
+    value = {key: record.get(key) for key in fields}
+    scope = dict(value.get("scope") or {})
+    for key in ("page_ids", "layers"):
+        scope[key] = sorted(scope.get(key) or [])
+    if scope.get("page_manifest_ref"):
+        plan = store.read_object_json(scope["page_manifest_ref"])
+        scope["page_manifest_ref"] = {"page_order": (plan.get("input") or {}).get("page_order")}
+    value["scope"] = scope
+    value = _semantic_refs(value)
+    for key in sets:
+        value[key] = sorted(value.get(key) or [], key=canonical_json_bytes)
+    return value
 
 
-def build_slice(store, document, *, kind, identity, projection):
+def _decision_projection(store, record) -> dict:
+    return _record_projection(store, record, (
+        "topic", "disposition", "value", "status", "scope", "authority_mode",
+        "evidence", "subject_refs", "request_id"), ("subject_refs",))
+
+
+def _authorization_projection(store, record) -> dict:
+    return _record_projection(store, record, (
+        "mode", "actions", "scope", "delegated_topics", "constraints",
+        "max_external_calls", "max_candidate_count", "budget_template", "budget_key",
+        "adoption_policy", "delivery_binding", "status", "expires_at", "stop_conditions",
+        "evidence", "request_id"), ("actions", "delegated_topics", "stop_conditions"))
+
+
+def build_slice(store, document, *, kind, identity, projection, _seen=frozenset(), now=None):
     """Current value of one registered slice, or None when the target is absent
     or the (kind, projection) pair is not registered."""
     if kind == "task_fact" and projection == "value" and identity in TASK_FACT_IDENTITIES:
@@ -148,15 +165,21 @@ def build_slice(store, document, *, kind, identity, projection):
             return None
         return None
     if kind == "decision" and projection == "effective":
-        record = _load_region_object(store, document, "decisions", "decision_id", identity)
-        if record is None:
+        head = _head_for_identity(store, document, "decisions", "decision_id", identity)
+        if head is None:
             return None
-        return {"ref": None, "sha256": _canonical({"decision": _decision_projection(record)})}
+        ref, record = head
+        state = decision_effectiveness(store, document, ref, _seen=_seen, now=now)
+        return {"ref": None, "sha256": _canonical({"decision": _decision_projection(store, record), "state": state}),
+                "effective": state["effective"]}
     if kind == "authorization" and projection == "effective":
-        record = _load_region_object(store, document, "authorizations", "authorization_id", identity)
-        if record is None:
+        head = _head_for_identity(store, document, "authorizations", "authorization_id", identity)
+        if head is None:
             return None
-        return {"ref": None, "sha256": _canonical({"authorization": _authorization_projection(record)})}
+        ref, record = head
+        state = authorization_effectiveness(store, document, ref, _seen=_seen, now=now)
+        return {"ref": None, "sha256": _canonical({"authorization": _authorization_projection(store, record), "state": state}),
+                "effective": state["effective"]}
     return None
 
 
@@ -167,28 +190,36 @@ def make_dependency_slice(store, document, *, kind, identity, projection) -> dic
     if built is None:
         raise ModelError(f"slice:{kind}:{identity}",
                          "slice target is absent or the projection is not registered")
-    return {"kind": kind, "identity": identity, "projection": projection, **built}
+    if built.get("effective") is False:
+        raise ModelError(f"slice:{kind}:{identity}", "cannot bind an ineffective dependency")
+    return {"kind": kind, "identity": identity, "projection": projection,
+            "ref": built["ref"], "sha256": built["sha256"]}
 
 
 def slice_key(dep: dict) -> str:
     return f"{dep.get('kind')}:{dep.get('identity')}:{dep.get('projection')}"
 
 
-def assess_basis(store, document, basis) -> dict:
+def assess_basis(store, document, basis, *, _seen=frozenset(), now=None) -> dict:
     """Compare a recorded basis against the current document. Unknown slices
     are unverifiable and therefore not satisfied — never silently current."""
     matched, stale, unregistered = [], [], []
     for dep in basis or []:
         key = slice_key(dep)
         current = build_slice(store, document, kind=dep.get("kind"),
-                              identity=dep.get("identity"), projection=dep.get("projection"))
+                              identity=dep.get("identity"), projection=dep.get("projection"),
+                              _seen=_seen, now=now)
         if current is None:
             unregistered.append({"key": key, "reason": "unregistered_or_absent"})
+        elif current.get("effective") is False:
+            stale.append({"key": key, "expected": dep.get("sha256"), "current": current["sha256"],
+                          "reason": "dependency_ineffective"})
         elif current["sha256"] != dep.get("sha256"):
             stale.append({"key": key, "expected": dep.get("sha256"), "current": current["sha256"]})
         else:
             matched.append(key)
-    return {"matched": matched, "stale": stale, "unregistered": unregistered,
+    return {"matched": sorted(matched), "stale": sorted(stale, key=canonical_json_bytes),
+            "unregistered": sorted(unregistered, key=canonical_json_bytes),
             "current": not stale and not unregistered}
 
 
@@ -220,11 +251,28 @@ def _request_state(document, record) -> list[str]:
     return reasons
 
 
-def decision_effectiveness(store, document, decision_ref) -> dict:
+def _cycle_state():
+    return {"effective": False, "reasons": ["dependency_cycle"],
+            "basis": {"matched": [], "stale": [], "unregistered": [], "current": False}}
+
+
+def accepted_decision(store, document, ref, *, _seen=frozenset(), now=None):
+    """A reusable rejection is a valid fact, but cannot back execution."""
+    _, record = _resolve_current(store, document, "decisions", "decision_id", ref)
+    return (record.get("disposition") == "accepted"
+            and record.get("authority_mode") in ("direct_user", "delegated")
+            and decision_effectiveness(store, document, ref, _seen=_seen, now=now)["effective"])
+
+
+def decision_effectiveness(store, document, decision_ref, *, _seen=frozenset(), now=None) -> dict:
     """Whether a decision still applies to the current project. Pausing a
     request does not invalidate decisions (it stops production); closing or
     replacing the request, withdrawal, supersession or a stale basis does."""
     current_ref, record = _resolve_current(store, document, "decisions", "decision_id", decision_ref)
+    key = ("decision", record.get("decision_id"))
+    if key in _seen or len(_seen) > 32:
+        return _cycle_state()
+    _seen = _seen | {key}
     reasons: list[str] = []
     if current_ref is None:
         reasons.append("not_in_current_control")
@@ -237,10 +285,13 @@ def decision_effectiveness(store, document, decision_ref) -> dict:
         if not record.get("delegation_ref"):
             reasons.append("delegation_missing")
         else:
-            delegation = authorization_effectiveness(store, document, record["delegation_ref"])
+            delegation = authorization_effectiveness(store, document, record["delegation_ref"], _seen=_seen, now=now)
             if not delegation["effective"]:
                 reasons.append("delegation_ineffective")
-    basis = assess_basis(store, document, record.get("basis") or [])
+            _, parent = _resolve_current(store, document, "authorizations", "authorization_id", record["delegation_ref"])
+            if delegation_gaps(store, parent, record, decision=True):
+                reasons.append("delegation_scope_exceeded")
+    basis = assess_basis(store, document, record.get("basis") or [], _seen=_seen, now=now)
     if basis["stale"]:
         reasons.append("basis_stale")
     if basis["unregistered"]:
@@ -248,12 +299,16 @@ def decision_effectiveness(store, document, decision_ref) -> dict:
     return {"effective": not reasons, "reasons": reasons, "basis": basis}
 
 
-def authorization_effectiveness(store, document, authorization_ref, *, now=None, _depth=0) -> dict:
+def authorization_effectiveness(store, document, authorization_ref, *, now=None, _depth=0, _seen=frozenset()) -> dict:
     """Whether an authorization can still back a new action: active status, a
     current non-paused request, unexpired, a current basis and an effective
     parent chain."""
     current_ref, record = _resolve_current(store, document, "authorizations",
                                            "authorization_id", authorization_ref)
+    key = ("authorization", record.get("authorization_id"))
+    if key in _seen or len(_seen) > 32:
+        return _cycle_state()
+    _seen = _seen | {key}
     reasons: list[str] = []
     if current_ref is None:
         reasons.append("not_in_current_control")
@@ -270,27 +325,32 @@ def authorization_effectiveness(store, document, authorization_ref, *, now=None,
         if request is not None and not request.get("closed") and request.get("paused"):
             reasons.append("request_paused")
     expires = record.get("expires_at")
-    if expires:
+    if expires is not None:
         current_time = now or datetime.now(timezone.utc)
         try:
-            parsed = datetime.fromisoformat(expires.replace("Z", "+00:00"))
-        except ValueError:
-            parsed = None
-        if parsed is not None and current_time > parsed:
-            reasons.append("authorization_expired")
-    basis = assess_basis(store, document, record.get("basis") or [])
+            parsed = parse_authorization_expiry(expires)
+            if current_time >= parsed:
+                reasons.append("authorization_expired")
+        except ModelError:
+            reasons.append("authorization_expiry_invalid")
+    basis = assess_basis(store, document, record.get("basis") or [], _seen=_seen, now=now)
     if basis["stale"]:
         reasons.append("basis_stale")
     if basis["unregistered"]:
         reasons.append("basis_unverifiable")
     parent_ref = record.get("parent_authorization_ref")
     if parent_ref and _depth <= _MAX_PARENT_DEPTH:
-        parent_current, _ = _resolve_current(store, document, "authorizations",
+        parent_current, parent_record = _resolve_current(store, document, "authorizations",
                                              "authorization_id", parent_ref)
         if parent_current is None:
             reasons.append("parent_ineffective")
         else:
-            parent = authorization_effectiveness(store, document, parent_ref, now=now, _depth=_depth + 1)
+            parent = authorization_effectiveness(store, document, parent_ref, now=now, _depth=_depth + 1, _seen=_seen)
             if not parent["effective"]:
                 reasons.append("parent_ineffective")
-    return {"effective": not reasons, "reasons": reasons, "basis": basis}
+            if delegation_gaps(store, parent_record, record):
+                reasons.append("parent_scope_exceeded")
+    for decision_ref in record.get("decision_refs") or []:
+        if not accepted_decision(store, document, decision_ref, _seen=_seen, now=now):
+            reasons.append("decision_ineffective")
+    return {"effective": not reasons, "reasons": sorted(set(reasons)), "basis": basis}

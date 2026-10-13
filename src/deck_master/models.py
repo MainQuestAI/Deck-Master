@@ -387,6 +387,9 @@ def validate_review_semantics(review: dict[str, Any]) -> None:
             f"{reviewer.get('type')} reviewers must record assurance "
             f"{allowed[0]!r}; identity evidence is verified by its receipt, not by a claimed level",
         )
+    if reviewer.get("assurance") == "verified_user" and not reviewer.get("identity_receipt"):
+        raise ModelError("review/reviewer/identity_receipt",
+                         "verified_user review evidence requires an identity receipt; adoption verifies its adapter")
 
 
 def validate_narrative_semantics(narrative: dict[str, Any]) -> None:
@@ -404,7 +407,8 @@ def validate_narrative_semantics(narrative: dict[str, Any]) -> None:
     issue_ids = [issue.get("issue_id") for issue in issues]
     if len(issue_ids) != len(set(issue_ids)):
         raise ModelError("narrative/issues", "duplicate issue_id")
-    blocker_ids = {issue.get("issue_id") for issue in issues if issue.get("impact") == "blocker"}
+    blocker_ids = {issue.get("issue_id") for issue in issues
+                   if issue.get("impact") == "blocker" and issue.get("resolution") == "open"}
 
     def require_known(ids, where):
         unknown = sorted(set(ids) - known)
@@ -430,6 +434,9 @@ def validate_narrative_semantics(narrative: dict[str, Any]) -> None:
         require_known(endpoints, f"narrative/edges[{index}]")
     for issue in issues:
         require_known(issue.get("affected_node_ids") or [], f"narrative/issues/{issue.get('issue_id')}/affected_node_ids")
+    for alternative in narrative.get("alternatives") or []:
+        require_known(alternative.get("affected_node_ids") or [],
+                      f"narrative/alternatives/{alternative.get('option_id')}/affected_node_ids")
     central = narrative.get("central_node_id")
     if narrative.get("maturity") == "argument":
         if central is None or central not in known:
@@ -457,6 +464,8 @@ def validate_content_plan_semantics(plan: dict[str, Any]) -> None:
     unknown = sorted(set(roles) - set(page_order))
     if unknown:
         raise ModelError("content_plan/input/page_roles", f"roles for pages outside page_order: {unknown}")
+    if set(roles) != set(page_order):
+        raise ModelError("content_plan/input/page_roles", "every planned page requires exactly one role")
     for chapter in data.get("chapters") or []:
         unknown = sorted(set(chapter.get("page_ids") or []) - set(page_order))
         if unknown:
@@ -473,10 +482,17 @@ def validate_content_plan_semantics(plan: dict[str, Any]) -> None:
             and budget["exact"] > budget["max"]):
         raise ModelError("content_plan/input/page_budget",
                          "exact page budget exceeds the hard max; resolve the tradeoff first")
+    if budget.get("exact") is not None and budget["exact"] != len(page_order):
+        raise ModelError("content_plan/input/page_budget/exact", "exact page budget must equal page_order count")
+    if budget.get("max") is not None and len(page_order) > budget["max"]:
+        raise ModelError("content_plan/input/page_budget/max", "page_order exceeds the hard maximum")
     mode = plan.get("mode")
     if mode == "imported_mapping" and not plan.get("imported_manuscript"):
         raise ModelError("content_plan/imported_manuscript",
                          "imported_mapping requires the manuscript source and its claimed-confirmation evidence")
+    if plan.get("imported_manuscript"):
+        validate_evidence_semantics(plan["imported_manuscript"]["claimed_confirmation_evidence"],
+                                    "content_plan/imported_manuscript/claimed_confirmation_evidence")
     if mode == "bound":
         links = [link.get("page_id") for link in plan.get("page_links") or []]
         if len(links) != len(set(links)) or set(links) != set(page_order):
@@ -636,6 +652,20 @@ def validate_authorization_semantics(authorization: dict[str, Any]) -> None:
             "delegated_topics belong to delegate mode; an execute grant names decisions and scope",
         )
     _validate_scope_semantics(authorization["scope"], "authorization/scope")
+    if authorization.get("expires_at") is not None:
+        parse_authorization_expiry(authorization["expires_at"])
+
+
+def parse_authorization_expiry(value):
+    """RFC3339-style expiration, with an explicit timezone; never guess local time."""
+    from datetime import datetime
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None or parsed.utcoffset() is None or "T" not in value:
+            raise ValueError("timezone required")
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise ModelError("authorization/expires_at", "expires_at must be a valid timestamp with an explicit timezone") from exc
+    return parsed
 
 
 def validate_document_structure(document: dict[str, Any]) -> None:

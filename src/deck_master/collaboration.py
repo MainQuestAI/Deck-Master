@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import dependency_slices, models, tasks as tasks_mod
+from .collaboration_scope import delegation_gaps
 from .editing import operation_revision
 from .models import ModelError, bump_revision, canonical_json_bytes, sha256_bytes
 from .store import ConflictError, Store, StoreError
@@ -29,8 +30,6 @@ ACTION_GRANT = "collaboration.grant"
 ACTION_REVOKE = "collaboration.revoke"
 ACTION_PAUSE = "collaboration.pause_request"
 ACTION_RESUME = "collaboration.resume_request"
-
-ASSURANCE_RANK = {"unverified": 0, "host_attested": 1, "verified_user": 2}
 
 
 def _now_iso() -> str:
@@ -157,13 +156,24 @@ def _require_stored_refs(store, refs, where: str) -> None:
             store.read_object_bytes(ref)
         except Exception as exc:  # noqa: BLE001
             raise ModelError(f"{where}[{index}]",
-                             f"referenced object is not in the store: {ref.get('path')!r}") from exc
+                             f"referenced object is not in the store: {ref!r}") from exc
 
 
 def _require_stored_evidence_refs(store, evidence: dict, where: str) -> None:
     slots = [evidence.get("source_ref"), evidence.get("transport_receipt_ref"),
              evidence.get("presentation_ref")]
     _require_stored_refs(store, [ref for ref in slots if ref], where)
+
+
+def _require_scope_refs(store, scope, where):
+    scope = scope or {}
+    _require_stored_refs(store, [scope.get("page_manifest_ref"),
+                                scope.get("external_artifact_ref")], where)
+    if scope.get("page_manifest_ref"):
+        manifest = store.read_object_json(scope["page_manifest_ref"])
+        models.validate_content_plan_semantics(manifest)
+        if manifest.get("schema_version") != "content_plan.v2":
+            raise ModelError(where, "page_manifest_ref must reference content_plan.v2")
 
 
 def replay_or_conflict(store, document, operation_id, action, payload_digest_value):
@@ -175,16 +185,47 @@ def replay_or_conflict(store, document, operation_id, action, payload_digest_val
         return None
     change = prior.get("change") or {}
     if change.get("kind") == WRITE_CHANGE_KIND and change.get("payload_digest") == payload_digest_value:
-        return {
-            "status": "already_applied",
-            "revision_id": document["revision_id"],
-            "applied_revision_id": prior["revision_id"],
-        }
+        receipt = store.operation_receipt(operation_id)
+        response = receipt["response"] if receipt else _legacy_response(store, prior, action)
+        return {**response, "status": "already_applied",
+                "current_revision_id": document["revision_id"],
+                "applied_revision_id": prior["revision_id"]}
     raise ConflictError("operation_id", "different payload already applied")
 
 
+def _legacy_response(store, prior, action):
+    """Recover pre-receipt T02 responses from their committed snapshot only."""
+    response = {"status": "accepted", "revision_id": prior["revision_id"]}
+    region = prior.get("collaboration") or {}
+    request = region.get("request") or {}
+    if action in (ACTION_REQUEST_START, ACTION_PAUSE, ACTION_RESUME):
+        response["request_id"] = request.get("request_id")
+        if action == ACTION_REQUEST_START:
+            response.update(effective_scope=request.get("scope"),
+                            assurance=(request.get("instruction_evidence") or {}).get("assurance"))
+        return response
+    parent = store.load_document(prior["parent_revision_id"])
+    if action == "collaboration.migration":
+        from .collaboration_migration import migration_plan, migration_response
+        plan = migration_plan(store, parent)
+        return {**response, **migration_response(plan, plan["tasks_to_supersede"])}
+    family = "decisions" if action == ACTION_DECISION_RECORD else "authorizations"
+    old = (parent.get("collaboration") or {}).get(family) or []
+    for ref in region.get(family) or []:
+        if ref in old:
+            continue
+        record = store.read_object_json(ref)
+        if action == ACTION_REVOKE and record.get("status") == "revoked":
+            return {**response, "revoked_ref": ref, "authorization_id": record["authorization_id"]}
+        if record.get("status") == "active":
+            prefix = "decision" if family == "decisions" else "authorization"
+            return {**response, prefix + "_ref": ref, prefix + "_id": record[prefix + "_id"],
+                    "assurance": record["evidence"]["assurance"]}
+    raise StoreError("operation_receipt", "cannot recover the original collaboration response")
+
+
 def commit_collaboration_change(store, document, *, operation_id, action, digest,
-                                description, updated) -> str:
+                                description, updated, response) -> dict:
     change = {
         "operation_id": operation_id,
         "kind": WRITE_CHANGE_KIND,
@@ -195,9 +236,12 @@ def commit_collaboration_change(store, document, *, operation_id, action, digest
     # Bump the mutated copy; the parent link and CAS still use the loaded document.
     bumped = bump_revision(updated, change)
     models.require_writer(bumped, "collaboration.v1")
+    response = {"status": "accepted", **response, "revision_id": bumped["revision_id"]}
     store._commit_locked(base_revision=document["revision_id"], document=bumped,
-                         operation_id=operation_id, blobs=[])
-    return bumped["revision_id"]
+                         operation_id=operation_id, blobs=[], operation_receipt={
+                             "format": "operation_receipt.v1", "request_digest": digest,
+                             "response": response})
+    return response
 
 
 def _region_records(store, region, family):
@@ -333,6 +377,7 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
             "background_request_ids": list(input.get("background_request_ids") or []),
             "variant": input.get("variant"),
         }
+        _require_scope_refs(store, candidate["scope"], "collaboration/request/scope")
         if current is not None and not current.get("closed"):
             if _request_source_key(current) == _request_source_key(candidate):
                 return {"status": "already_started", "request_id": current["request_id"],
@@ -348,13 +393,12 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
                              "replace_request_id must name the current open request")
         updated_region = {**region, "request": candidate}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id,
+        return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_REQUEST_START, digest=digest,
-                                                description="start work request", updated=updated)
-        return {"status": "accepted", "request_id": candidate["request_id"],
-                "effective_scope": candidate["scope"],
-                "assurance": evidence["assurance"],
-                "revision_id": committed}
+                                                description="start work request", updated=updated,
+                                                response={"request_id": candidate["request_id"],
+                                                          "effective_scope": candidate["scope"],
+                                                          "assurance": evidence["assurance"]})
 
     return locked(store)
 
@@ -383,8 +427,6 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         topic = input.get("topic")
         delegation_ref = input.get("delegation_ref")
         authority_mode = input.get("authority_mode")
-        if authority_mode == "delegated":
-            _validate_delegation(store, document, region, delegation_ref, topic)
         evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context,
                                     where="collaboration/decision/evidence",
                                     action_binding=digest)
@@ -438,6 +480,9 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
             "created_at": _now_iso(),
         }
         models.validate_decision_semantics(decision)
+        _require_scope_refs(store, decision["scope"], "collaboration/decision/scope")
+        if authority_mode == "delegated":
+            _validate_delegation(store, document, region, delegation_ref, decision)
         decision_ref = store.put_json_object(decision)
         updated_refs = list(region.get("decisions") or [])
         if replaced_record is not None:
@@ -448,13 +493,11 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         updated_refs.append(decision_ref)
         updated_region = {**region, "decisions": updated_refs}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id,
+        return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_DECISION_RECORD, digest=digest,
                                                 description=f"record decision {decision_id} ({topic})",
-                                                updated=updated)
-        return {"status": "accepted", "decision_ref": decision_ref,
-                "decision_id": decision_id, "assurance": evidence["assurance"],
-                "revision_id": committed}
+                                                updated=updated, response={"decision_ref": decision_ref,
+                                                    "decision_id": decision_id, "assurance": evidence["assurance"]})
 
     return locked(store)
 
@@ -533,6 +576,18 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
             "created_at": _now_iso(),
         }
         models.validate_authorization_semantics(authorization)
+        _require_scope_refs(store, authorization["scope"], "collaboration/authorization/scope")
+        _require_stored_refs(store, authorization["decision_refs"], "collaboration/authorization/decision_refs")
+        for ref in authorization["decision_refs"]:
+            decision = store.read_object_json(ref)
+            if (decision.get("schema_version") != "collaboration_decision.v1"
+                    or decision.get("project_id") != document["project_id"]
+                    or not dependency_slices.accepted_decision(store, document, ref)):
+                raise ModelError("authorization/decision_refs", "decision must have accepted authority in the current project")
+            dep = dependency_slices.make_dependency_slice(store, document, kind="decision",
+                identity=decision["decision_id"], projection="effective")
+            if not any(dependency_slices.slice_key(item) == dependency_slices.slice_key(dep) for item in basis):
+                basis.append(dep)
         _require_stored_refs(store, [authorization.get("budget_parent_ref")],
                              "collaboration/authorization/budget_parent_ref")
         _validate_parent_chain(store, document, region, authorization)
@@ -544,14 +599,13 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
             updated_refs.append(authorization_ref)
         updated_region = {**region, "authorizations": updated_refs}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id,
+        return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_GRANT, digest=digest,
                                                 description=f"grant {authorization_id} "
                                                             f"({authorization['mode']})",
-                                                updated=updated)
-        return {"status": "accepted", "authorization_ref": authorization_ref,
-                "authorization_id": authorization_id,
-                "assurance": evidence["assurance"], "revision_id": committed}
+                                                updated=updated, response={"authorization_ref": authorization_ref,
+                                                    "authorization_id": authorization_id,
+                                                    "assurance": evidence["assurance"]})
 
     return locked(store)
 
@@ -597,13 +651,12 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
         refs[_index_of_ref(refs, head_ref)] = revoked_ref
         updated_region = {**region, "authorizations": refs}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(store, document, operation_id=operation_id,
+        return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_REVOKE, digest=digest,
                                                 description=f"revoke authorization "
                                                             f"{authorization_id}: {reason.strip()}",
-                                                updated=updated)
-        return {"status": "accepted", "authorization_id": authorization_id,
-                "revoked_ref": revoked_ref, "revision_id": committed}
+                                                updated=updated, response={"authorization_id": authorization_id,
+                                                    "revoked_ref": revoked_ref})
 
     return locked(store)
 
@@ -665,12 +718,10 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
                            "pause_reason": reason.strip() if paused else None}
         updated_region = {**region, "request": updated_request}
         updated = {**document, "collaboration": updated_region}
-        committed = commit_collaboration_change(
+        return commit_collaboration_change(
             store, document, operation_id=operation_id, action=action, digest=digest,
             description="pause request: " + reason.strip() if paused else "resume request",
-            updated=updated)
-        return {"status": "accepted", "request_id": request["request_id"],
-                "revision_id": committed}
+            updated=updated, response={"request_id": request["request_id"]})
 
     return locked(store)
 
@@ -679,7 +730,7 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
 # Delegation checks
 
 
-def _validate_delegation(store, document, region, delegation_ref, topic) -> None:
+def _validate_delegation(store, document, region, delegation_ref, decision) -> None:
     """A delegated decision must trace to a still-effective delegate covering
     the topic and bound to the same current request (CONTRACTS §3.1)."""
     if delegation_ref is None:
@@ -699,9 +750,10 @@ def _validate_delegation(store, document, region, delegation_ref, topic) -> None
     if not state["effective"]:
         raise ModelError("decision/delegation_ref",
                          f"the referenced delegation is not effective: {state['reasons']}")
-    if target.get("mode") != "delegate" or topic not in (target.get("delegated_topics") or []):
+    gaps = delegation_gaps(store, target, decision, decision=True)
+    if gaps:
         raise ModelError("decision/delegation_ref",
-                         "the referenced delegation is not an active delegate covering this topic")
+                         f"the referenced delegation is not an active delegate covering this topic and scope: {gaps}")
 
 
 def _validate_parent_chain(store, document, region, authorization) -> None:
@@ -720,20 +772,15 @@ def _validate_parent_chain(store, document, region, authorization) -> None:
     if not parent_state["effective"]:
         raise ModelError("authorization/parent_authorization_ref",
                          f"parent delegation is not effective: {parent_state['reasons']}")
-    parent_scope, child_scope = parent.get("scope") or {}, authorization.get("scope") or {}
-    if child_scope.get("page_ids") and not set(child_scope["page_ids"]) <= set(parent_scope.get("page_ids") or []):
-        raise ModelError("authorization/scope/page_ids",
-                         "a sub-authorization cannot name pages beyond its parent delegation")
-    parent_layers = set(parent_scope.get("layers") or [])
-    child_layers = set(child_scope.get("layers") or [])
-    if not child_layers <= parent_layers:
-        raise ModelError("authorization/scope/layers",
-                         "a sub-authorization cannot exceed the parent's layers")
-    parent_topics = set(parent.get("delegated_topics") or [])
-    if not set(authorization.get("delegated_topics") or []) <= parent_topics:
-        raise ModelError("authorization/delegated_topics",
-                         "a sub-authorization cannot delegate topics its parent does not cover")
-    if (ASSURANCE_RANK[(authorization.get("evidence") or {}).get("assurance", "unverified")]
-            > ASSURANCE_RANK[(parent.get("evidence") or {}).get("assurance", "unverified")]):
-        raise ModelError("authorization/evidence/assurance",
-                         "a sub-authorization cannot claim stronger assurance than its parent")
+    gaps = delegation_gaps(store, parent, authorization)
+    if gaps:
+        if "scope/page_ids" in gaps:
+            raise ModelError("authorization/scope/page_ids", "a sub-authorization cannot name pages beyond its parent delegation")
+        if "scope/layers" in gaps:
+            raise ModelError("authorization/scope/layers", "a sub-authorization cannot exceed the parent's layers")
+        if "delegated_topics" in gaps:
+            raise ModelError("authorization/delegated_topics", "a sub-authorization cannot delegate topics its parent does not cover")
+        if "evidence/assurance" in gaps:
+            raise ModelError("authorization/evidence/assurance", "a sub-authorization cannot claim stronger assurance than its parent")
+        raise ModelError("authorization/parent_authorization_ref",
+                         f"a sub-authorization cannot exceed its parent: {gaps}")

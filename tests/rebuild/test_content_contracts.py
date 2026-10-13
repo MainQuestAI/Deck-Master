@@ -142,6 +142,13 @@ def test_review_v2_assurance_floors():
         models.validate_review_semantics(bad)
     good = _review_v2()
     good["reviewer"] = {**good["reviewer"], "type": "human_external", "assurance": "verified_user"}
+    with pytest.raises(ModelError, match="receipt"):
+        models.validate_review_semantics(good)
+    good["reviewer"]["identity_receipt"] = {
+        "adapter_id": "synthetic-unit-fixture", "event_id": "event-1",
+        "issued_at": "2026-10-12T08:00:00Z", "reviewer_id": good["reviewer"]["id"],
+        "project_id": "proj", "subjects": good["subjects"],
+    }
     models.validate_review_semantics(good)
 
 

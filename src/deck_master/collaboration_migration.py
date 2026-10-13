@@ -74,6 +74,13 @@ def describe(project) -> dict:
     }
 
 
+def migration_response(plan, superseded_ids):
+    return {"preserved": plan["reusable"], "superseded_tasks": sorted(superseded_ids),
+            "pending_decisions": plan["pending_decisions"], "unknown_calls": plan["unknown_calls"],
+            "note": "content intent is untouched; start a request with this turn's instruction "
+                    "before any new production"}
+
+
 def apply(project, *, base_revision: str, plan_digest: str, operation_id: str) -> dict:
     """Apply the described migration in one transaction (MIGRATION §3).
 
@@ -128,18 +135,9 @@ def apply(project, *, base_revision: str, plan_digest: str, operation_id: str) -
         }
         updated = {**document, "collaboration": region, "tasks": task_refs}
         require_writer(updated, _TARGET_WRITER)
-        committed = collaboration.commit_collaboration_change(
+        return collaboration.commit_collaboration_change(
             store, document, operation_id=operation_id, action=_MIGRATION_ACTION,
-            digest=digest, description="collaboration migration apply", updated=updated)
-        return {
-            "status": "accepted",
-            "revision_id": committed,
-            "preserved": current_plan["reusable"],
-            "superseded_tasks": sorted(superseded_ids),
-            "pending_decisions": current_plan["pending_decisions"],
-            "unknown_calls": current_plan["unknown_calls"],
-            "note": "content intent is untouched; start a request with this turn's instruction "
-                    "before any new production",
-        }
+            digest=digest, description="collaboration migration apply", updated=updated,
+            response=migration_response(current_plan, superseded_ids))
 
     return locked(store)
