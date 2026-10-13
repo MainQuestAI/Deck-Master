@@ -365,6 +365,16 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
         _require_stored_evidence_refs(store, evidence, "collaboration/request/instruction_evidence")
         current = region.get("request")
         replace_request_id = input.get("replace_request_id")
+        if input.get("variant") is not None:
+            from .variant_requests import validate_variant_request
+            validate_variant_request(store, document, input,
+                                     replace_request_id=replace_request_id)
+            if current is not None and not current.get("closed"):
+                from .variant_requests import shared_narrative_check
+                group = (input["variant"] or {}).get("group_id")
+                check = shared_narrative_check(store, document, group)
+                if not check["ok"]:
+                    raise ModelError("collaboration/request/variant/narrative_ref", check["reason"])
         candidate = {
             "request_id": _stable_id("req", operation_id),
             "intent": input.get("intent"),

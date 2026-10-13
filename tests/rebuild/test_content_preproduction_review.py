@@ -107,9 +107,9 @@ def _page(store, document, page_id="p1", *, notes="这一页讲清两个独立�
              "source_links": []},
             {"element_ref": f"atom:{page_id}:block:b1:text", "narrative_node_ids": ["n1"],
              "source_links": [_source_link(store, document, "L1")]}],
-        "speech_segments": [{"segment_id": "s1", "start_codepoint": 0,
-                             "end_codepoint": len(notes), "narrative_node_ids": ["n1"],
-                             "kind": "cue", "estimated_seconds": 20}],
+        "speech_segments": ([{"segment_id": "s1", "start_codepoint": 0,
+                              "end_codepoint": len(notes), "narrative_node_ids": ["n1"],
+                              "kind": "cue", "estimated_seconds": 20}] if notes else []),
     }
     return {
         "schema_version": "deck_page_package.v2", "page_id": page_id,
