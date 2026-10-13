@@ -113,6 +113,149 @@ def attach(document, ref):
         require_writer(document, "content-plan.v1")
 
 
+# ---------------------------------------------------------------------------
+# content_plan.v2 (content collaboration v1.2 CONTRACTS §11.2): the phased
+# production path plans against a Narrative, then binds the real Page hashes.
+# Validation is shared with the record schema so a plan can never carry a
+# page_order the committed Document does not have.
+
+
+def source_locators(store, document, source_id: str) -> set[str]:
+    """Every locator the stored extract of one source version offers."""
+    for source in document.get("sources") or []:
+        if source.get("source_id") != source_id:
+            continue
+        extract_ref = source.get("extract")
+        if not extract_ref:
+            return set()
+        extract = store.read_object_json(extract_ref)
+        return {item["locator"] for field in ("locators", "tables", "image_pages")
+                for item in extract.get(field, []) if "locator" in item}
+    return set()
+
+
+def validate_source_links(store, document, links, where: str, _cache: dict | None = None) -> None:
+    """Every structured SourceLink must name a dispatched source version and a
+    locator that exists in it. Locators prove locatability, not support (the
+    semantic judgement stays with content review, CONTRACTS §11.1)."""
+    known = {source["source_id"]: source for source in document.get("sources") or []}
+    cache = {} if _cache is None else _cache
+    for index, link in enumerate(links or []):
+        source = known.get(link.get("source_id"))
+        if source is None or link.get("source_version") != source_version(source):
+            _fail(f"{where}[{index}]/source_version",
+                  "source identity or version is not in the dispatched inputs")
+        locators = cache.setdefault(link["source_id"], source_locators(store, document, link["source_id"]))
+        if link.get("locator") not in locators:
+            _fail(f"{where}[{index}]/locator", "locator does not exist in this stored source version")
+
+
+def validate_plan_input_v2(store, document, value: dict) -> None:
+    """Structural input validation before any Page/Plan object is written."""
+    from .models import validate_content_plan_semantics
+    shell = {
+        "schema_version": "content_plan.v2", "plan_id": "probe", "version": 1,
+        "project_id": document["project_id"], "task_id": None, "origin": "host_composed",
+        "basis": {"revision_id": document["revision_id"],
+                  "input_digest": compute_input_digest(document)}, "previous_ref": None,
+        "mode": "planned", "narrative_ref": None, "imported_manuscript": None,
+        "input": value, "page_links": [],
+    }
+    validate_content_plan_semantics(shell)
+    cache: dict = {}
+    for role in value.get("page_roles") or []:
+        validate_source_links(store, document, role.get("source_links"),
+                              f"content_plan/input/page_roles/{role.get('page_id')}/source_links", cache)
+
+
+def build_v2_plan(store, document, task, plan_input: dict, page_refs: list[dict], *,
+                  narrative_ref, mode: str = "bound", imported_manuscript=None,
+                  require_role_mapping: bool = True) -> dict:
+    """Store one content_plan.v2 for the same adoption swap.
+
+    ``page_refs`` is the resulting [{page_id, page}] after the swap, so a bound
+    plan links every real Page hash exactly once — ghost pages and partial links
+    are impossible by construction.
+    """
+    validate_plan_input_v2(store, document, plan_input)
+    previous_ref = document.get("content_plan")
+    previous = None
+    if previous_ref:
+        try:
+            previous = store.read_object_json(previous_ref)
+        except Exception:  # noqa: BLE001 - an unreadable old plan is replaced, not trusted
+            previous = None
+    plan_id = previous["plan_id"] if previous and previous.get("plan_id") else "plan-" + uuid.uuid4().hex
+    version = (previous.get("version") or 0) + 1 if previous else 1
+    if mode == "planned":
+        page_links: list[dict] = []
+    else:
+        by_page = {entry["page_id"]: entry["page"] for entry in page_refs}
+        roles_by_page = {role["page_id"]: role for role in plan_input.get("page_roles") or []}
+        missing = sorted(set(plan_input.get("page_order") or []) - set(by_page))
+        if missing:
+            _fail("input/page_order", f"bound pages have no committed Page object: {missing}")
+        page_links = [
+            {"page_id": page_id,
+             "page_ref": by_page[page_id],
+             "plan_role_page_id": page_id if require_role_mapping else page_id}
+            for page_id in plan_input.get("page_order") or []
+        ]
+        unknown = sorted(set(by_page) - set(roles_by_page))
+        if unknown:
+            _fail("input/page_roles", f"every bound page needs exactly one role; missing: {unknown}")
+    record = {
+        "schema_version": "content_plan.v2",
+        "plan_id": plan_id,
+        "version": version,
+        "project_id": document["project_id"],
+        "task_id": task.get("task_id"),
+        "origin": "user_imported" if task.get("intent") == "import_draft" else "host_composed",
+        "basis": {"revision_id": task.get("dispatch_revision"),
+                  "input_digest": task.get("input_digest")
+                  or compute_input_digest(document)},
+        "previous_ref": previous_ref,
+        "mode": mode,
+        "narrative_ref": narrative_ref,
+        "imported_manuscript": imported_manuscript,
+        "input": copy.deepcopy(plan_input),
+        "page_links": page_links,
+    }
+    from .models import validate_content_plan_semantics
+    validate_content_plan_semantics(record)
+    return store.put_json_object(record)
+
+
+def refresh_v2_plan_links(store, document, task, plan: dict, page_refs: list[dict], *,
+                          previous_ref=None) -> dict:
+    """A new Plan version whose only difference is the current page_links.
+
+    CONTRACTS §11.5: a speech update writes notes/mapping for fixed Page Refs and
+    rebinds page_links, so the plan's mapping stays current without touching
+    page_order, roles or budgets.
+    """
+    if plan.get("schema_version") != "content_plan.v2" or plan.get("mode") != "bound":
+        _fail("page_links", "only a bound content_plan.v2 carries page_links to rebind")
+    by_page = {entry["page_id"]: entry["page"] for entry in page_refs}
+    order = plan["input"]["page_order"]
+    missing = sorted(set(order) - set(by_page))
+    if missing:
+        _fail("page_links", f"cannot rebind links for absent pages: {missing}")
+    refreshed = {
+        **copy.deepcopy(plan),
+        "version": plan["version"] + 1,
+        "previous_ref": previous_ref,
+        "task_id": task.get("task_id"),
+        "page_links": [{"page_id": link["page_id"],
+                        "page_ref": by_page[link["page_id"]],
+                        "plan_role_page_id": link["plan_role_page_id"]}
+                       for link in plan["page_links"]],
+    }
+    from .models import validate_content_plan_semantics
+    validate_content_plan_semantics(refreshed)
+    return store.put_json_object(refreshed)
+
+
 def projection(store, document, *, reader=None, page_id=None, summary=False, schema_validated=False):
     """A fixed snapshot projection; absent plans yield a labeled, unwritten TOC."""
     read = reader or store.read_object_json

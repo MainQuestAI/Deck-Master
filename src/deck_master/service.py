@@ -23,7 +23,7 @@ from . import tasks as tasks_mod
 from .content import normalize_design_assets, check_page
 from .errors import InputRevisionConflict, SourceUnreadable, SourceUnsupported
 from .method_resources import method_release, method_resources
-from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics
+from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics, writer_at_least
 from .sources import discover_sources, read_source_snapshot
 from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
@@ -237,6 +237,24 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     return outcome
 
 
+def revision_compose_task(store: Store, document, *, operation_id, reason) -> dict:
+    """Build the input-reconciliation task for this project's writer boundary.
+
+    A collaboration.v1 project dispatches the phased compose.v2
+    ``input_revision`` variant; every older project keeps the historical
+    compose.v1 content-update task. Callers that already own a transaction
+    commit the returned task themselves.
+    """
+    if writer_at_least(document, "collaboration.v1"):
+        from .content_production import build_phase_task
+        return build_phase_task(
+            store, document, operation_id=_new_operation_id("compose"), intent="input_revision",
+            input_revision_id=operation_id,
+            instruction=(f"输入已更新（operation {operation_id}）：{reason}。读取新输入与 diff，"
+                         "提交 compose.v2 input_revision：changed_layers、每个变化层的 proposal Ref 与 diff。"))
+    return _input_compose_task(document, operation_id=operation_id, reason=reason)
+
+
 def _input_compose_task(document, *, operation_id, reason):
     pages = document.get("pages") or []
     if pages:
@@ -278,8 +296,20 @@ def _input_compose_task(document, *, operation_id, reason):
 
 
 def open_compose_task(store: Store, document: dict, *, operation_id: str,
-                      intent: str = "initial", input_revision_id: str | None = None) -> dict:
-    """Open a compose Host task against the current content identity."""
+                      intent: str = "initial", input_revision_id: str | None = None,
+                      phase: str | None = None) -> dict:
+    """Open a compose Host task against the current content identity.
+
+    A collaboration.v1 project dispatches the phased compose.v2 protocol
+    (CONTRACTS §11.5); every older project keeps the historical compose.v1
+    dispatch byte-for-byte.
+    """
+    if writer_at_least(document, "collaboration.v1") and intent != "import_draft":
+        # An imported draft is already a complete manuscript: it keeps the
+        # historical import envelope instead of entering the phased protocol.
+        from .content_production import open_phase_task
+        return open_phase_task(store, document, operation_id=operation_id, intent=intent,
+                               input_revision_id=input_revision_id, phase=phase)
     produced_against = content_identity(document)
     methods = method_resources("compose", intent=intent)
     task = tasks_mod.new_task(
@@ -421,7 +451,8 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         if revision not in dispatch_documents:
             dispatch_documents[revision] = _dispatch_snapshot(store, document, task)
         dispatched = dispatch_documents[revision]
-    methods = method_resources(task.get("kind") or "", intent=task.get("intent"))
+    methods = method_resources(task.get("kind") or "", intent=task.get("intent"),
+                               phase=(task.get("collaboration_binding") or {}).get("phase"))
     from . import visual_styles
     summary = {
         "task_id": task["task_id"],
@@ -598,6 +629,10 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
         produced_against=content_identity(document),
         cost_class="external_generation",
     )
+    from . import collaboration_binding
+    collaboration_binding.stamp_task(
+        store, document, task, phase="production", executor_type="host",
+        page_ids=[page["page_id"]], adoption_policy="within_scope")
     task, _ = tasks_mod.reserve_allowances(store, document, task, 1)
     from .generation import protocol_fields
     task.update(protocol_fields(document))
@@ -705,7 +740,7 @@ def _recover_input_revision(store):
                 and (not valid or task['task_id'] != valid['task_id'])):
             updated['tasks'][index] = store.put_json_object({**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
     if not valid:
-        task = _input_compose_task(updated, operation_id=change.get('operation_id'),
+        task = revision_compose_task(store, updated, operation_id=change.get('operation_id'),
                                    reason=change.get('description') or 'Resume reconciliation against current inputs')
         updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'], document=updated,
@@ -740,7 +775,34 @@ def _continue_project(project_dir: Path | str) -> dict:
             pending_tasks=pending,
             next_action="submit_host_results",
         )
-    if not (document.get("pages") or []):
+    if writer_at_least(document, "collaboration.v1"):
+        # Phased content production (CONTRACTS §5/§6.3). This plans content
+        # phases only; entry-level eligibility enforcement is T04's card.
+        from . import content_production
+        phase_status = content_production.content_phase_status(store, document)
+        if phase_status.get("action") == "dispatch":
+            task = content_production.next_phase_task(store, document)
+            document = store.load_document()
+            pending = _pending_host_tasks(document, store, include_trials=False)
+            return _response(
+                status="awaiting_host",
+                document=document,
+                requested_action="continue",
+                pending_tasks=pending or ([task_summary(store, document, task)] if task else []),
+                next_action="submit_host_results",
+            )
+        if phase_status.get("action") == "await_decision" and not (document.get("pages") or []):
+            return _response(
+                status="needs_input",
+                document=document,
+                requested_action="continue",
+                findings=[{"code": "decision_needed", "phase": phase_status.get("phase"),
+                           "topic": phase_status.get("topic"),
+                           "detail": phase_status.get("reason"),
+                           "proposal_refs": phase_status.get("proposal_refs")}],
+                next_action="record_direction_decision",
+            )
+    elif not (document.get("pages") or []):
         task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
         document = store.load_document()
         pending = _pending_host_tasks(document, store, include_trials=False)
@@ -975,6 +1037,10 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
         dispatch_revision=document['revision_id'],produced_against=content_identity(document),
         review_stage=review_stage,review_units=review_units)
+    from . import collaboration_binding
+    collaboration_binding.stamp_task(
+        store, document, task, phase="review" if kind == "review" else "production",
+        executor_type="host", page_ids=page_ids, adoption_policy="within_scope")
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])
@@ -1363,7 +1429,7 @@ def inputs_update(
                 superseded_ids.append(task["task_id"])
                 new_document["tasks"][index] = store.put_json_object(
                     {**task, "status": "superseded", "updated_at": _utc_now_iso()})
-        task = _input_compose_task(new_document, operation_id=operation_id, reason=normalized["reason"])
+        task = revision_compose_task(store, new_document, operation_id=operation_id, reason=normalized["reason"])
         if normalized.get("mode", "auto") == "trial":
             if not new_document.get("pages"):
                 from .operations import OperationError
@@ -1471,7 +1537,13 @@ def accept_result(
             result_refs=outcome.get("result_refs") or [],
         )
     response["current_revision_id"] = current_revision
-    for key in ("candidate_ids", "candidate_refs", "result_kind", "current_artifacts_changed", "current_content_changed", "new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision"):
+    for key in ("candidate_ids", "candidate_refs", "result_kind", "current_artifacts_changed", "current_content_changed", "new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision",
+                # compose.v2 phased results (CONTRACTS §11.5) project their write
+                # set and invalidation to adapters without a second truth.
+                "variant", "adopted", "page_refs", "plan_ref", "narrative_ref", "proposal_refs",
+                "adopted_refs", "invalidated_refs", "invalidated_outputs", "invalidated_reviews",
+                "effective_scope", "plan_note", "page_count", "creates_confirmation",
+                "authorizes_production"):
         if key in outcome:
             response[key] = outcome[key]
     return response

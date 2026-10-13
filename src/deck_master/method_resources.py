@@ -37,6 +37,20 @@ _RECONSTRUCTION_METHODS = ("blueprint-svg",)
 _REVIEW_METHODS = ("review-and-repair",)
 _REPAIR_METHODS = ("review-and-repair", "content-methods", "blueprint-svg")
 
+# compose.v2 phases (content collaboration v1.2 CONTRACTS §5). Each phase reads
+# the shared reading discipline, its own method section, and the concrete
+# examples: the four-phase content method lives in content-methods.md.
+_PHASE_METHODS = {
+    "framing": ("source-reading", "content-methods", "content-examples"),
+    "argument": ("source-reading", "content-methods", "content-examples"),
+    "page_copy": ("source-reading", "content-methods", "content-examples"),
+    "speech": ("content-methods", "content-examples"),
+    "design": ("content-methods", "visual-reference"),
+    "production": ("content-methods", "visual-reference"),
+    "review": ("review-and-repair", "content-methods"),
+    "delivery": ("content-methods", "review-and-repair"),
+}
+
 _PYPROJECT_NAME_PATTERN = re.compile(r'(?m)^\s*name\s*=\s*"deck-master"\s*$')
 
 
@@ -63,10 +77,13 @@ def resolve_root() -> Path:
     )
 
 
-def method_ids_for(kind: str, *, intent: str | None = None) -> tuple[str, ...]:
+def method_ids_for(kind: str, *, intent: str | None = None,
+                   phase: str | None = None) -> tuple[str, ...]:
     if kind == "style_analyze":
         return ("visual-reference",)
     if kind == "compose":
+        if phase and phase in _PHASE_METHODS and intent != "input_revision":
+            return _PHASE_METHODS[phase]
         return _INPUT_REVISION_METHODS if intent == "input_revision" else _INITIAL_METHODS
     if kind in ("blueprint", "reconstruct"):
         return _RECONSTRUCTION_METHODS
@@ -77,11 +94,12 @@ def method_ids_for(kind: str, *, intent: str | None = None) -> tuple[str, ...]:
     return ()
 
 
-def method_resources(kind: str, *, intent: str | None = None) -> list[dict]:
+def method_resources(kind: str, *, intent: str | None = None,
+                     phase: str | None = None) -> list[dict]:
     """Readable method entries for one task kind: id, path inside the skill, sha256."""
     root = resolve_root()
     items = []
-    for method_id in method_ids_for(kind, intent=intent):
+    for method_id in method_ids_for(kind, intent=intent, phase=phase):
         relative = RELATIVE_PATHS[method_id]
         path = root / relative
         if not path.is_file():

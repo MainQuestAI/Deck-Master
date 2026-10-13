@@ -30,6 +30,7 @@ ACTION_GRANT = "collaboration.grant"
 ACTION_REVOKE = "collaboration.revoke"
 ACTION_PAUSE = "collaboration.pause_request"
 ACTION_RESUME = "collaboration.resume_request"
+ACTION_ADOPT_PROPOSAL = "collaboration.adopt_proposal"
 
 
 def _now_iso() -> str:
