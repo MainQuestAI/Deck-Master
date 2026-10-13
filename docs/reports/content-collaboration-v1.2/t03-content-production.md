@@ -151,7 +151,7 @@ Scope of this change; next dependent card:
 | 3 | `64a3630c` | `content_review.py`（新）、`editing.py`、`service.py`、`tasks.py`、三份 references | preproduction 派发/接纳/消费、packet（AC-M05）、独立执行收据与 needs_reviewer、四阶段方法 |
 | 4 | `689564a8` | `content_impact.py`（新）、`content_plan.py`、`test_content_mapping_claims.py` | 逐页时间预算与超限取舍、事实源变更影响分析并接入 inputs_update |
 | 5 | `53b7c714` | `variant_requests.py`（新）、`exports.py`、`collaboration.py` | 口播政策投影、live/read 顺序子请求与拒绝面、versioned export 的 variant 元数据 |
-| 6 | 本文档 | `docs/reports/content-collaboration-v1.2/t03-content-production.md` | 证据收口 |
+| 6 | `b110b983` + 本文档 | `docs/reports/content-collaboration-v1.2/t03-content-production.md` | 证据收口（AC-M02 单版反例补充提交 `f8a02a56`） |
 
 说明：切片 1 的提交同时包含切片 2 需要的 binding 基础设施（`collaboration_binding.py`），原因是 phased 派发与门禁共享同一对象；切片 2 的提交补齐门禁覆盖与合同测试。
 
@@ -213,13 +213,13 @@ eligibility_digest = sha256_bytes(canonical_json_bytes({
 | `pytest -q tests/rebuild/test_content_mapping_claims.py` | 9 passed |
 | `pytest -q tests/rebuild/test_speech_projection.py` | 7 passed |
 | `pytest -q tests/rebuild/test_variant_requests.py` | 5 passed |
-| `pytest -q tests/rebuild -m 'not render and not browser'` | **1499 passed, 455 deselected**（收口运行，全绿） |
+| `pytest -q tests/rebuild -m 'not render and not browser'` | **1500 passed, 455 deselected**（收口运行，全绿；含本卡新增 70 个用例） |
 | `ruff check src/deck_master tests/rebuild` | All checks passed |
 | `git diff --check` | 无输出（无空白/冲突标记） |
 
 ### 3.1 全量回归
 
-- 基线（T02 main `293579f1`）：任务卡要求 1430+ passed 保持全绿。本卡收口运行为 **1499 passed, 455 deselected**（0 failed），较本卡新增 69 个用例。
+- 基线（T02 main `293579f1`）：任务卡要求 1430+ passed 保持全绿。本卡收口运行为 **1500 passed, 455 deselected**（0 failed），其中本卡新增 70 个用例。
 - 记录一次中途运行：切片 4 结束时同一命令曾出现 `test_workbench_services.py` 与本地端口/服务相关的 10 failed + 4 errors；该文件单独重跑 19 passed，收口运行未复现。这里如实记录，不当作产品通过证据。
 - 三处真实回归均由本卡改动引起并已修复：契约镜像未同步（`test_package_boundary::test_spec_contracts_match_packaged_contracts_byte_for_byte`）、`_input_compose_task` 私有签名变化（`test_studio_delivery_browser`）、`content_effects` 调用点未同步（`test_action_targets`/`test_content_candidates`，同一 `_input_compose_task` 签名问题）。
 
