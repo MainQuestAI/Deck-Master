@@ -256,3 +256,26 @@ def test_a_new_narrative_breaks_the_shared_basis(tmp_path):
     current = store.load_document()["collaboration"]["request"]["request_id"]
     with pytest.raises(ModelError, match="reuse the same Narrative Ref"):
         _start_variant(project, store, variant_id="read", replace_request_id=current)
+
+
+def test_one_requested_version_never_produces_a_second(tmp_path):
+    """AC-M02: without a declared second variant, nothing produces one."""
+    project, store = _deck(tmp_path)
+    _grant_variants(project, store, declared=("live",))
+    store = Store(project)
+    decision = variant = None
+    current = store.load_document()["collaboration"]["request"]["request_id"]
+    _start_variant(project, store, variant_id="live", replace_request_id=current,
+                   requested=("live",))
+    _produce_variant(project, store, text="现场版正文（只请求一版）。")
+    store = Store(project)
+    request_before = store.load_document()["collaboration"]["request"]["request_id"]
+    plan_before = store.load_document()["content_plan"]
+    _export(project, store)
+    store = Store(project)
+    document = store.load_document()
+    # No second request, no second plan, one page set: nothing was produced.
+    assert document["collaboration"]["request"]["request_id"] == request_before
+    assert document["content_plan"] == plan_before
+    assert [entry["page_id"] for entry in document["pages"]] == ["p1"]
+    assert content_production.content_phase_status(store, document)["action"] == "complete"
