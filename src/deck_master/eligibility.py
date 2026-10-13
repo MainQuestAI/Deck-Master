@@ -1,0 +1,1330 @@
+"""Unified eligibility resolver (content collaboration v1.2 CONTRACTS §6–§7).
+
+``evaluate`` is a **pure interpreter**: it reads the Store plus an artifact
+snapshot and a control snapshot, and never creates a task, writes a receipt,
+reserves an allowance or moves the current pointer. Every entry point listed in
+CONTRACTS §6.2 asks the same function for the same facts through ``guard``, so
+"each boundary consumes one eligibility judgement" is a code fact, not a
+convention.
+
+Snapshots
+    ``control_snapshot`` is the current project head for every formal action;
+    ``artifact_snapshot`` may be a user-selected historical revision (CONTRACTS
+    §7/§8: historical delivery reads the selected artifact with the *current*
+    control, so an old relaxed policy or an old human label can never override
+    a current withdrawal).
+
+Enforcement boundary (T04 development increment)
+    Projects at the ``collaboration.v1`` writer boundary (or carrying a
+    ``collaboration`` region) get full enforcement: ``guard`` raises for a
+    blocked action. Projects below that writer keep today's behaviour — the
+    resolver still *computes* ``migration_required`` for them and dedicated
+    tests lock that decision, but the gate does not fire until the deployment
+    step that turns on the new writer for real projects (MIGRATION §5.3: while
+    enforcement is not complete, new-writer production is not enabled for real
+    projects). ``decision["enforcement"]`` states which mode was applied.
+
+Reason codes
+    CONTRACTS §6 requires at least ``request_paused``, ``scope_exceeded``,
+    ``decision_needed``, ``authority_insufficient``,
+    ``authority_channel_unavailable``, ``basis_stale``,
+    ``authorization_revoked``, ``budget_exhausted``,
+    ``input_reconciliation_pending``, ``professional_review_required``,
+    ``migration_required``; ``needs_reviewer`` is an independent addition that
+    never replaces ``professional_review_required`` (the preproduction content
+    review and the human professional sign-off are two policy dimensions).
+    This module registers a small set of extra codes the contract implies but
+    does not name — ``request_closed``, ``binding_invalid``, ``binding_stale``,
+    ``budget_unknown``, ``persistence_none``, ``legacy_writer`` — each listed
+    with its meaning in ``REASON_MEANINGS``.
+
+Task bindings
+    ``binding_eligibility_digest`` is the single formula shared with T03's
+    compose.v2 dispatch: sha256 over the canonical JSON of ``{"phase",
+    "write_scope", "basis"}`` where ``basis`` is the list of slice sha256
+    values sorted by slice key. A task carrying a ``collaboration_binding`` is
+    checked for structure (``models.require_task_binding``) and timeliness
+    (recomputed digest). A task without a binding is judged by protocol: old
+    protocols may settle already-started calls but cannot open new production.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from . import dependency_slices, models, operations
+from .models import ModelError, canonical_json_bytes, sha256_bytes
+from .store import Store
+
+SCHEMA_VERSION = "eligibility.v1"
+
+# ---------------------------------------------------------------------------
+# Registered reason codes
+
+
+REASON_ORDER = (
+    # request / control state
+    "migration_required",
+    "request_closed",
+    "request_paused",
+    "persistence_none",
+    "input_reconciliation_pending",
+    # scope and decisions
+    "scope_exceeded",
+    "decision_needed",
+    "basis_stale",
+    # authority
+    "authorization_revoked",
+    "authority_insufficient",
+    "authority_channel_unavailable",
+    "binding_invalid",
+    "binding_stale",
+    # quality
+    "needs_reviewer",
+    "professional_review_required",
+    # money
+    "budget_unknown",
+    "budget_exhausted",
+)
+
+REASON_MEANINGS = {
+    "migration_required": "the project predates the collaboration writer; the action is refused until its explicit migration apply",
+    "request_closed": "the current work request is closed (completed/rejected/withdrawn/superseded); start a new request",
+    "request_paused": "the current request is paused; reads, display, cancel and settlement stay available",
+    "persistence_none": "a strict read-only request can never write project state; the report belongs outside the project",
+    "input_reconciliation_pending": "inputs changed and the content still awaits reconciliation against the new inputs",
+    "scope_exceeded": "the target pages/layers/purpose are outside the authorized scope; an empty page set is never 'all pages'",
+    "decision_needed": "a required business decision (or delegate covering its topic) is missing or ineffective",
+    "basis_stale": "the controlling decision/authorization basis no longer matches the current document",
+    "authorization_revoked": "the authorization that could cover this action is revoked (or its parent chain is)",
+    "authority_insufficient": "no effective execute/delegate authorization covers this action and scope",
+    "authority_channel_unavailable": "the verified_user policy needs a trusted user-event channel that is not available; no silent downgrade",
+    "binding_invalid": "the task's collaboration binding does not name the current request/records",
+    "binding_stale": "the task's recomputed eligibility digest differs from its recorded binding digest",
+    "needs_reviewer": "the required independent preproduction content review has no acceptable reviewer; a review draft can still be returned",
+    "professional_review_required": "delivery policy requires a verified human professional review that the selected artifact does not have",
+    "budget_unknown": "an unsettled external call exists project-wide; resolve it before new calls",
+    "budget_exhausted": "the authorization's bounded call ceiling has no remaining credit for a new call",
+}
+
+# Extra (non-contract-named) codes this resolver registers, kept explicit so
+# the entry inventory test can assert the set never grows silently.
+EXTRA_REASON_CODES = ("request_closed", "binding_invalid", "binding_stale",
+                      "budget_unknown", "persistence_none")
+
+# The registered decision topics a preproduction content-review delegation
+# covers (AC-R06 "已有审阅委派可复用"). Authorization.delegated_topics is
+# schema-bound to the registered topic vocabulary, so an existing delegation
+# for the manuscript/direction is what the runtime reuses instead of asking
+# for a second review.
+CONTENT_REVIEW_TOPICS = ("manuscript", "direction")
+
+
+# ---------------------------------------------------------------------------
+# Action catalog (CONTRACTS §6.2 row per action)
+
+
+@dataclass(frozen=True)
+class ActionSpec:
+    name: str
+    group: str                  # creation | execution | adoption | change | local | delivery | history
+    subject: str                # project | deck | pages | external_artifact
+    layers: tuple[str, ...]
+    decision_topics: tuple[str, ...]
+    authority: str              # none | execute | delegate | either
+    production: bool            # dispatches or continues content/visual production
+    writes: bool                # mutates project state when it proceeds
+    external_calls: bool        # consumes bounded external image calls
+    role: str                   # responsible role when the action proceeds
+    card: str | None = None     # decision-card projection when a decision is missing
+    delivery: bool = False      # consumes the unified professional delivery policy
+
+
+def _spec(name, group, subject, layers=(), topics=(), authority="none", *,
+          production=False, writes=True, external=False, role="runtime",
+          card=None, delivery=False) -> ActionSpec:
+    return ActionSpec(name=name, group=group, subject=subject, layers=tuple(layers),
+                      decision_topics=tuple(topics), authority=authority,
+                      production=production, writes=writes, external_calls=external,
+                      role=role, card=card, delivery=delivery)
+
+
+ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
+    # -- creation and routing (CONTRACTS §6.2 row 1)
+    _spec("create", "creation", "project", role="user"),
+    _spec("import_draft", "creation", "deck", layers=("page_copy",), authority="none",
+          production=True, role="host", card="visible_copy"),
+    _spec("continue_project", "creation", "deck", role="runtime"),
+    _spec("dispatch.compose", "creation", "deck", layers=("narrative", "plan", "page_copy"),
+          production=True, role="host"),
+    _spec("dispatch.host_task", "creation", "pages", production=True, role="host"),
+    _spec("dispatch.blueprint", "creation", "pages", layers=("blueprint",),
+          authority="either", production=True, external=True, role="host"),
+    # -- execution and fees (row 2)
+    _spec("task.start", "execution", "pages", production=True, role="host"),
+    _spec("allowance.allocate", "execution", "pages", authority="execute",
+          production=True, external=True, role="runtime"),
+    _spec("allowance.repair", "execution", "pages", authority="execute",
+          production=True, external=True, role="runtime"),
+    _spec("call.begin", "execution", "pages", authority="either",
+          production=True, external=True, role="host"),
+    _spec("generation.dispatch", "execution", "pages", authority="execute",
+          production=True, external=True, role="runtime"),
+    # -- adoption (row 3)
+    _spec("task.accept", "adoption", "pages", writes=True, role="runtime"),
+    _spec("content.inputs_update", "adoption", "deck", layers=("narrative",),
+          production=False, writes=True, role="user", card="direction"),
+    _spec("page.edit", "adoption", "pages", layers=("page_copy",), production=True,
+          writes=True, role="host"),
+    _spec("asset.import", "adoption", "deck", layers=("design",), writes=True, role="user"),
+    _spec("design.update", "adoption", "deck", layers=("design",), writes=True, role="user"),
+    _spec("review.record", "adoption", "deck", layers=("review",), writes=True, role="reviewer"),
+    _spec("review.strict", "adoption", "external_artifact", layers=("review",),
+          writes=False, role="reviewer"),
+    # -- change / candidates / content operations (row 4)
+    _spec("change.plan", "change", "pages", writes=False, role="runtime"),
+    _spec("change.commit", "change", "pages", authority="either", production=True,
+          role="user", card="direction"),
+    _spec("candidate.select", "change", "pages", writes=True, role="user"),
+    _spec("candidate.adopt", "change", "pages", authority="execute", writes=True,
+          production=False, role="user", card="style.palette"),
+    _spec("style.trial", "change", "pages", authority="either", production=True,
+          external=True, role="user", card="style.density"),
+    _spec("style.expand", "change", "pages", authority="either", production=True,
+          external=True, role="user", card="style.density"),
+    _spec("content.operation", "change", "deck", layers=("page_copy",), authority="either",
+          topics=("direction",), production=True, writes=True, role="user",
+          card="direction"),
+    _spec("stage.assemble", "change", "deck", layers=("output",), production=True,
+          writes=True, role="runtime"),
+    # -- local production (row 5): no external fee, still bounded by the request
+    _spec("compile.svg", "local", "pages", production=True, writes=True, role="runtime"),
+    _spec("render.preview", "local", "pages", production=True, writes=True, role="runtime"),
+    _spec("compile.ppt", "local", "deck", layers=("output",), production=True,
+          writes=True, role="runtime"),
+    _spec("compile.repair", "local", "pages", production=True, writes=True, role="runtime"),
+    # -- delivery (row 6)
+    _spec("export.review", "delivery", "deck", writes=True, role="runtime"),
+    _spec("export.engineering", "delivery", "deck", writes=True, role="runtime"),
+    _spec("export.delivery", "delivery", "deck", layers=("output",), authority="either",
+          topics=("delivery_acceptance",), writes=True, role="user",
+          card="delivery_acceptance", delivery=True),
+    _spec("handoff.delivery", "delivery", "deck", layers=("output",), authority="either",
+          topics=("delivery_acceptance",), writes=True, role="user",
+          card="delivery_acceptance", delivery=True),
+    _spec("readiness.final", "delivery", "deck", layers=("output",), writes=False,
+          role="runtime", delivery=True),
+    _spec("studio.deliver", "delivery", "deck", layers=("output",), authority="either",
+          topics=("delivery_acceptance",), writes=True, role="user",
+          card="delivery_acceptance", delivery=True),
+    _spec("delivery.historical", "delivery", "deck", layers=("output",), authority="either",
+          topics=("delivery_acceptance",), writes=True, role="user",
+          card="delivery_acceptance", delivery=True),
+    # -- history and policy (row 7)
+    _spec("restore", "history", "deck", writes=True, role="user"),
+    _spec("policy.update", "history", "deck", topics=("policy",), writes=True, role="user",
+          card="policy"),
+    _spec("authority.update", "history", "deck", writes=True, role="user"),
+)}
+
+# Actions that need a preproduction content review before real page production
+# (CONTRACTS §1.9, §6.3: 新论证 full_deck 默认需要独立内容前审).
+PREPRODUCTION_GATED_ACTIONS = ("dispatch.blueprint", "style.trial", "style.expand",
+                               "change.commit")
+
+# Every delivery entry consumes the same authorization vocabulary: a grant
+# naming any delivery entry covers the others (they are the same delivery
+# fact reached through different frontends, CONTRACTS §6.2/§8).
+DELIVERY_ENTRY_ACTIONS = ("export.delivery", "handoff.delivery", "studio.deliver",
+                          "delivery.historical")
+
+# Routing/analysis actions that stay available with no request and under a
+# paused request: reading, displaying, cancelling and settling are explicitly
+# allowed while paused (CONTRACTS §7.1), and `continue` reports the decision
+# card instead of raising (CONTRACTS §5).
+ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
+                   "export.engineering", "readiness.final", "review.strict")
+
+# Per-intent production ceiling (CONTRACTS §5 table). A new request only
+# advances what its own intent/content_intent covers; an action outside that
+# boundary is a scope violation, not a missing decision.
+_INTENT_BLOCKED_ACTIONS = {
+    "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "style.trial",
+                    "style.expand", "change.commit", "compile.ppt", "stage.assemble",
+                    "page.edit", "content.operation"),
+    "design_trial": ("dispatch.compose", "import_draft", "compile.ppt", "stage.assemble",
+                     "page.edit"),
+    "edit": ("dispatch.compose", "stage.assemble"),
+}
+_CONTENT_INTENT_BLOCKED_ACTIONS = {
+    "plan_only": ("dispatch.blueprint", "style.trial", "style.expand", "compile.ppt",
+                  "stage.assemble", "page.edit", "import_draft"),
+    "speech_only": ("dispatch.blueprint", "style.trial", "style.expand", "page.edit",
+                    "import_draft", "dispatch.compose"),
+}
+
+
+def action_spec(action: str) -> ActionSpec:
+    spec = ACTIONS.get(action)
+    if spec is None:
+        raise ModelError("eligibility/action", f"unregistered action {action!r}")
+    return spec
+
+
+def registered_actions() -> tuple[str, ...]:
+    return tuple(sorted(ACTIONS))
+
+
+# ---------------------------------------------------------------------------
+# Scope helpers
+
+
+def scope_page_ids(store: Store, scope: dict | None) -> list[str] | None:
+    """The page set a scope actually authorizes.
+
+    A fixed ``page_manifest_ref`` (content_plan.v2) names the members and the
+    order; otherwise the explicit ``page_ids``. ``None`` means the deck's page
+    set is not fixed yet (a planner scope) — it never means "all pages"
+    (CONTRACTS §2.1, §3.4: 空集恒指没有页面).
+    """
+    scope = scope or {}
+    manifest_ref = scope.get("page_manifest_ref")
+    if manifest_ref:
+        plan = store.read_object_json(manifest_ref)
+        return list((plan.get("input") or {}).get("page_order") or [])
+    if scope.get("subject") == "deck" and not (scope.get("page_ids") or []):
+        return None
+    return list(scope.get("page_ids") or [])
+
+
+def target_page_ids(store: Store, targets: dict | None) -> list[str] | None:
+    """The page set a target names: explicit ids or its own manifest."""
+    targets = targets or {}
+    if targets.get("page_manifest_ref"):
+        return scope_page_ids(store, targets)
+    if targets.get("page_ids") is not None:
+        return list(targets.get("page_ids") or [])
+    return None
+
+
+def normalize_scope(scope: dict | None) -> dict:
+    """Deterministic scope JSON: unordered id/layer sets are sorted, order
+    carriers (page_manifest_ref/page_order) keep their order (CONTRACTS §7)."""
+    scope = dict(scope or {})
+    for key in ("page_ids", "layers"):
+        scope[key] = sorted(scope.get(key) or [])
+    return scope
+
+
+def binding_eligibility_digest(phase: str, write_scope: dict | None, basis) -> str:
+    """The T03/T04 shared binding digest.
+
+    sha256 over ``canonical_json_bytes({"phase", "write_scope", "basis"})`` with
+    ``basis`` the slice sha256 list sorted by slice key (CONTRACTS §5, §7).
+    Gates recompute a task binding with this exact formula; T03's compose.v2
+    dispatch writes it.
+    """
+    digests = sorted(
+        (dep.get("sha256") or "") for dep in (basis or [])
+    )
+    return sha256_bytes(canonical_json_bytes({
+        "phase": phase,
+        "write_scope": normalize_scope(write_scope),
+        "basis": digests,
+    }))
+
+
+def eligibility_digest(action: str, scope: dict | None, basis) -> str:
+    """Action-level digest: action, scope and the required slices (CONTRACTS §7:
+    a canonical hash, not an authorization token)."""
+    digests = sorted((dep.get("sha256") or "") for dep in (basis or []))
+    return sha256_bytes(canonical_json_bytes({
+        "action": action,
+        "scope": normalize_scope(scope),
+        "basis": digests,
+    }))
+
+
+# ---------------------------------------------------------------------------
+# Region / record helpers
+
+
+def _region(document: dict) -> dict | None:
+    return document.get("collaboration")
+
+
+def _request(document: dict) -> dict | None:
+    return (_region(document) or {}).get("request")
+
+
+def _records(store: Store, region: dict, family: str) -> list[tuple[dict, dict]]:
+    records = []
+    for ref in region.get(family) or []:
+        try:
+            records.append((ref, store.read_object_json(ref)))
+        except Exception:  # noqa: BLE001 - unreadable records cannot participate
+            continue
+    return records
+
+
+def _head(records: list[tuple[dict, dict]], id_field: str, identity: str | None):
+    if identity is None:
+        return None
+    replaced = set()
+    for _, record in records:
+        pair = record.get("replaces")
+        if isinstance(pair, dict) and pair.get("path"):
+            replaced.add((pair.get("path"), pair.get("sha256")))
+    heads = [(ref, record) for ref, record in records
+             if record.get(id_field) == identity
+             and (ref.get("path"), ref.get("sha256")) not in replaced]
+    return heads[-1] if heads else None
+
+
+def _authorization_heads(store: Store, document: dict) -> list[tuple[dict, dict]]:
+    region = _region(document) or {}
+    records = _records(store, region, "authorizations")
+    replaced = set()
+    for _, record in records:
+        pair = record.get("replaces")
+        if isinstance(pair, dict) and pair.get("path"):
+            replaced.add((pair.get("path"), pair.get("sha256")))
+    return [(ref, record) for ref, record in records
+            if (ref.get("path"), ref.get("sha256")) not in replaced]
+
+
+def _same_ref(left, right) -> bool:
+    if not isinstance(left, dict) or not isinstance(right, dict):
+        return False
+    return (left.get("path"), left.get("sha256")) == (right.get("path"), right.get("sha256"))
+
+
+def _chain_root_identity(store: Store, document: dict, record: dict) -> str | None:
+    """The numeric budget root of an authorization: itself, or the top of its
+    ``budget_parent_ref`` chain (CONTRACTS §3.4: 子授权共享父预算根)."""
+    seen = set()
+    current = record
+    for _ in range(8):
+        identity = current.get("authorization_id")
+        parent_ref = current.get("budget_parent_ref")
+        if not parent_ref:
+            return identity
+        if identity in seen:
+            return identity
+        seen.add(identity)
+        try:
+            parent = store.read_object_json(parent_ref)
+        except Exception:  # noqa: BLE001
+            return identity
+        if not isinstance(parent, dict) or not parent.get("authorization_id"):
+            return identity
+        current = parent
+    return current.get("authorization_id")
+
+
+def _budget_chain_ids(store: Store, document: dict, authorization_ref: dict) -> set[str]:
+    ids = set()
+    root = _chain_root_identity(store, document, store.read_object_json(authorization_ref))
+    for _, record in _authorization_heads(store, document):
+        if _chain_root_identity(store, document, record) == root:
+            ids.add(record.get("authorization_id"))
+    return ids
+
+
+# ---------------------------------------------------------------------------
+# Ledger accounting (CONTRACTS §3.2–§3.4; the existing allowance ledger is the
+# only fee truth — no second cost ledger)
+
+
+HELD_STATES = ("reserved", "in_flight", "consumed", "unknown")
+
+
+def binding_of(task: dict) -> dict:
+    binding = task.get("collaboration_binding")
+    return binding if isinstance(binding, dict) else {}
+
+
+def task_authorization_id(store: Store, task: dict) -> str | None:
+    ref = binding_of(task).get("authorization_ref")
+    if not ref:
+        return None
+    try:
+        return store.read_object_json(ref).get("authorization_id")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def allowance_usage(store: Store, document: dict) -> dict:
+    """Project ledger totals plus per-budget-key usage for bounded credits."""
+    totals = {state: 0 for state in HELD_STATES}
+    by_key: dict[str, dict] = {}
+    for ref in document.get("tasks") or []:
+        try:
+            task = store.read_object_json(ref)
+        except Exception:  # noqa: BLE001
+            continue
+        key = binding_of(task).get("budget_key")
+        for entry in task.get("call_allowances") or []:
+            state = entry.get("state")
+            if state not in totals:
+                continue
+            totals[state] += 1
+            if key:
+                slot = by_key.setdefault(key, {name: 0 for name in HELD_STATES})
+                slot[state] += 1
+    return {"totals": totals, "by_budget_key": by_key}
+
+
+def credit_state(store: Store, document: dict, budget_key: str, ceiling: int = 1) -> dict:
+    usage = allowance_usage(store, document)["by_budget_key"].get(budget_key)
+    used = sum((usage or {}).get(state, 0) for state in HELD_STATES)
+    return {"budget_key": budget_key, "ceiling": ceiling, "used": used,
+            "remaining": max(0, ceiling - used),
+            "state": "available" if used < ceiling else "exhausted"}
+
+
+def authorization_budget(store: Store, document: dict, authorization_ref: dict) -> dict:
+    """Derived budget state of one authorization and its shared budget root.
+
+    The chain ceiling is the numeric ceiling of the authorization that holds
+    one; per-request credits are bounded by ``budget_key`` reuse instead of a
+    second ledger. ``state`` is available/exhausted (never a revocation).
+    """
+    record = store.read_object_json(authorization_ref)
+    chain_ids = _budget_chain_ids(store, document, authorization_ref)
+    ceiling = 0
+    for _, other in _authorization_heads(store, document):
+        if other.get("authorization_id") in chain_ids:
+            ceiling = max(ceiling, int(other.get("max_external_calls") or 0))
+    used = 0
+    for ref in document.get("tasks") or []:
+        try:
+            task = store.read_object_json(ref)
+        except Exception:  # noqa: BLE001
+            continue
+        if task_authorization_id(store, task) not in chain_ids:
+            continue
+        used += sum(1 for entry in task.get("call_allowances") or []
+                    if entry.get("state") in HELD_STATES)
+    unknown = any(entry.get("state") == "unknown"
+                  for ref in document.get("tasks") or []
+                  for entry in (store.read_object_json(ref).get("call_allowances") or []))
+    return {
+        "authorization_id": record.get("authorization_id"),
+        "budget_parent_ref": record.get("budget_parent_ref"),
+        "budget_key": record.get("budget_key"),
+        "budget_template": record.get("budget_template"),
+        "ceiling": ceiling,
+        "used": used,
+        "remaining": max(0, ceiling - used),
+        "state": "unknown" if unknown else ("available" if used < ceiling else "exhausted"),
+        "chain_ids": sorted(chain_ids),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Task binding state
+
+
+def task_binding_state(store: Store, document: dict, task: dict) -> dict:
+    """Structure and timeliness of one task's collaboration binding.
+
+    ``absent`` is legitimate only for protocols older than collaboration.v1;
+    the caller decides per action whether settlement or new production applies
+    (CONTRACTS §5, MIGRATION §2.2).
+    """
+    binding = binding_of(task)
+    if not binding:
+        declared = "collaboration.v1" in (task.get("required_capabilities") or [])
+        return {"status": "absent", "reasons": ["binding_missing"],
+                "new_protocol": declared,
+                "digest": None, "expected_digest": None}
+    try:
+        models.require_task_binding(document, task)
+    except ModelError as exc:
+        return {"status": "invalid", "reasons": [exc.detail], "new_protocol": True,
+                "digest": binding.get("eligibility_digest"), "expected_digest": None}
+    digest = binding.get("eligibility_digest")
+    basis = binding.get("eligibility_basis")
+    phase = binding.get("phase")
+    write_scope = binding.get("write_scope")
+    expected = None
+    if digest and phase and isinstance(basis, list):
+        expected = binding_eligibility_digest(phase, write_scope, basis)
+        if expected != digest:
+            return {"status": "stale", "reasons": ["eligibility_digest_mismatch"],
+                    "new_protocol": True, "digest": digest, "expected_digest": expected}
+    # Registered slices must still match the current document.
+    if isinstance(basis, list) and basis:
+        state = dependency_slices.assess_basis(store, document, basis)
+        if not state["current"]:
+            return {"status": "stale", "reasons": sorted(
+                [item["key"] for item in state["stale"]] +
+                [item["key"] for item in state["unregistered"]]),
+                "new_protocol": True, "digest": digest, "expected_digest": expected,
+                "basis": state}
+    return {"status": "valid", "reasons": [], "new_protocol": True,
+            "digest": digest, "expected_digest": expected}
+
+
+# ---------------------------------------------------------------------------
+# Authority / decision resolution
+
+
+def _decision_topic_covered(store: Store, document: dict, topic: str, targets: dict) -> dict:
+    """An accepted, effective decision for the topic, or an effective delegate
+    covering it (CONTRACTS §3.1: host_proposal/system_default/imported_unknown
+    can never satisfy a required decision).
+
+    Returns ``stale`` when the only accepted decision for the topic is
+    ineffective *because its registered basis moved* — the actionable gap is
+    then "re-record against current facts", not "record a decision".
+    """
+    region = _region(document) or {}
+    decisions = _records(store, region, "decisions")
+    accepted = []
+    for ref, record in decisions:
+        if record.get("topic") != topic:
+            continue
+        if record.get("disposition") != "accepted" or record.get("authority_mode") not in (
+                "direct_user", "delegated"):
+            continue
+        accepted.append((ref, record))
+    for ref, record in accepted:
+        if not _covers(store, record.get("scope"), targets):
+            continue
+        state = dependency_slices.decision_effectiveness(store, document, ref)
+        if state["effective"]:
+            return {"satisfied": True, "via": "decision", "ref": ref,
+                    "assurance": (record.get("evidence") or {}).get("assurance"),
+                    "reasons": []}
+    for ref, record in _authorization_heads(store, document):
+        if record.get("mode") != "delegate":
+            continue
+        if topic not in (record.get("delegated_topics") or []):
+            continue
+        state = dependency_slices.authorization_effectiveness(store, document, ref)
+        if state["effective"] and _covers(store, record.get("scope"), targets):
+            return {"satisfied": True, "via": "delegate", "ref": ref,
+                    "assurance": (record.get("evidence") or {}).get("assurance"),
+                    "reasons": []}
+    stale_reasons = set()
+    for ref, record in accepted:
+        state = dependency_slices.decision_effectiveness(store, document, ref)
+        stale_reasons.update(state["reasons"])
+    return {"satisfied": False, "via": None, "ref": None,
+            "stale": bool(stale_reasons & {"basis_stale", "basis_unverifiable"}),
+            "reasons": sorted(stale_reasons) or ["missing"]}
+
+
+def _delivery_decision_state(store: Store, document: dict, targets: dict) -> dict:
+    """Delivery acceptance is a business decision: an accepted delivery_acceptance
+    decision, or an effective authorization that already binds the delivery
+    process/artifact (``delivery_binding`` ≠ none, CONTRACTS §3.2 — such a
+    delegation means "deliver once these requirements are met", not "click
+    approve again")."""
+    state = _decision_topic_covered(store, document, "delivery_acceptance", targets)
+    if state["satisfied"]:
+        return state
+    for ref, record in _authorization_heads(store, document):
+        if (record.get("delivery_binding") or "none") == "none":
+            continue
+        if dependency_slices.authorization_effectiveness(store, document, ref)["effective"] \
+                and _covers(store, record.get("scope"), targets):
+            return {"satisfied": True, "via": "delivery_authorization", "ref": ref,
+                    "assurance": (record.get("evidence") or {}).get("assurance"),
+                    "reasons": []}
+    return state
+
+
+def _covers(store: Store, scope: dict | None, targets: dict | None) -> bool:
+    """Whether ``scope`` covers the target pages/layers (an empty page set is
+    never all pages; an unfixed planner scope only covers planner targets)."""
+    scope = scope or {}
+    targets = targets or {}
+    wanted_pages = target_page_ids(store, targets)
+    if wanted_pages:
+        allowed = scope_page_ids(store, scope)
+        if allowed is None or not set(wanted_pages) <= set(allowed):
+            return False
+    wanted_layers = set(targets.get("layers") or [])
+    if wanted_layers and not wanted_layers <= set(scope.get("layers") or []):
+        return False
+    if targets.get("subject") and scope.get("subject") != "deck" \
+            and targets["subject"] != scope.get("subject"):
+        return False
+    return True
+
+
+def _effective_targets(spec: ActionSpec, targets: dict) -> dict:
+    """The concrete target the action must be covered for: the caller's explicit
+    targets, plus the action's own declared layers when the caller names none
+    (a local compile still needs the request to include the output layer —
+    CONTRACTS §6.2 '无外部费用也不代表可越过请求范围').
+
+    The subject axis is never derived: it is a caller statement about the
+    object boundary (deck vs pages), not an action property.
+    """
+    wanted = dict(targets or {})
+    if not wanted.get("layers") and spec.layers:
+        wanted["layers"] = list(spec.layers)
+    return wanted
+
+
+def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
+                          targets: dict) -> list[dict]:
+    candidates = []
+    accepted_names = DELIVERY_ENTRY_ACTIONS if spec.delivery else (spec.name,)
+    for ref, record in _authorization_heads(store, document):
+        actions = record.get("actions") or []
+        if not (any(name in actions for name in accepted_names)
+                or _family_match(spec.name, actions)):
+            continue
+        state = dependency_slices.authorization_effectiveness(store, document, ref)
+        candidates.append({
+            "ref": ref, "record": record, "effective": state["effective"],
+            "reasons": state["reasons"], "assurance": (record.get("evidence") or {}).get("assurance"),
+            "covers": _covers(store, record.get("scope"), targets),
+            "mode": record.get("mode"),
+        })
+    return candidates
+
+
+def _family_match(action: str, actions) -> bool:
+    """A grant may name a family, e.g. ``exports.delivery`` for ``export.delivery``
+    or ``changes.commit`` for ``change.commit`` — the same verb namespace with a
+    plural segment. The fallback requires both segments to agree, so
+    ``style.trial`` never covers ``style.expand``."""
+    head, _, leaf = action.partition(".")
+    for entry in actions:
+        if entry == action:
+            return True
+        entry_head, _, entry_leaf = str(entry).partition(".")
+        if entry_head.rstrip("s") == head.rstrip("s") and entry_leaf == leaf:
+            return True
+    return False
+
+
+_INTENT_STOPS = {
+    "review_only": ("review_only may record review records but never produce, repair or "
+                    "adopt pages (CONTRACTS §5)"),
+    "design_trial": ("design_trial stops at bounded sample-page candidates; it never "
+                     "produces the full deck (CONTRACTS §5)"),
+    "edit": ("an edit request never rebuilds the mainline or the whole deck "
+             "(CONTRACTS §5)"),
+}
+
+
+def _intent_allows(spec: ActionSpec, request: dict | None) -> str | None:
+    """Whether the request's own intent/content_intent reaches this action."""
+    if request is None:
+        return None
+    intent = request.get("intent")
+    content_intent = request.get("content_intent")
+    if spec.name in _INTENT_BLOCKED_ACTIONS.get(intent, ()):
+        return _INTENT_STOPS.get(intent, f"request intent {intent!r} does not reach {spec.name!r}")
+    if spec.name in _CONTENT_INTENT_BLOCKED_ACTIONS.get(content_intent, ()):
+        return (f"content_intent {content_intent!r} does not reach {spec.name!r}; "
+                "the request must say it wants that production")
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Preproduction content review (AC-R06)
+
+
+def preproduction_state(store: Store, document: dict) -> dict:
+    """Independent preproduction review requirement and its satisfaction.
+
+    ``independent_model_or_human`` needs a review record whose reviewer type is
+    an independent model or a human; ``host_self`` is only legitimate through
+    the explicit override decision the region already enforces; a confirmed
+    manuscript mapping is ``fidelity_only`` and requires no new review. An
+    existing delegate covering the review topic is reused (AC-R06).
+    """
+    region = _region(document) or {}
+    profile = region.get("quality_profile") or {}
+    requirement = profile.get("content_review_requirement")
+    result = {"requirement": requirement,
+              "requirement_origin": profile.get("requirement_origin"),
+              "required": requirement == "independent_model_or_human",
+              "satisfied": True, "reviews": [], "via": None, "reasons": []}
+    if requirement in (None, "fidelity_only"):
+        return result
+    acceptable = ({"independent_host", "human_internal", "human_external"}
+                  if requirement == "independent_model_or_human"
+                  else {"host_self", "independent_host", "human_internal", "human_external"})
+    from .editing import _current_artifact_digests
+    from .review import dependency_problems
+    artifacts = _current_artifact_digests(store, document)
+    for ref in document.get("reviews") or []:
+        try:
+            review = store.read_object_json(ref)
+        except Exception:  # noqa: BLE001
+            continue
+        if review.get("review_stage") != "preproduction":
+            continue
+        result["reviews"].append({"ref": ref, "review_id": review.get("review_id"),
+                                  "kind": review.get("kind"),
+                                  "reviewer_type": (review.get("reviewer") or {}).get("type"),
+                                  "status": review.get("status")})
+        if (review.get("status") == "pass"
+                and (review.get("reviewer") or {}).get("type") in acceptable
+                and not dependency_problems(review, artifacts)):
+            result.update(satisfied=True, via="review")
+            return result
+    for ref, record in _authorization_heads(store, document):
+        if record.get("mode") != "delegate":
+            continue
+        if not set(CONTENT_REVIEW_TOPICS) & set(record.get("delegated_topics") or []):
+            continue
+        if dependency_slices.authorization_effectiveness(store, document, ref)["effective"]:
+            result.update(satisfied=True, via="delegate")
+            result.setdefault("delegate_ref", ref)
+            return result
+    result["satisfied"] = False
+    result["reasons"] = ["needs_reviewer"] if requirement == "independent_model_or_human" \
+        else ["host_self_override_missing"]
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Delivery policy (one interpretation: delivery_eligibility)
+
+
+def delivery_control_state(store: Store, artifact_snapshot: dict, control_snapshot: dict) -> dict:
+    """The unified delivery judgement for an artifact snapshot read under the
+    current control (CONTRACTS §8): the selected artifact supplies pages/output/
+    reviews, the current head supplies policy and collaboration control."""
+    from . import delivery_eligibility
+    merged = {**artifact_snapshot, "policy": control_snapshot.get("policy") or {}}
+    professional = delivery_eligibility.professional_policy(store, merged)
+    return {"professional": professional,
+            "output_pptx": (artifact_snapshot.get("outputs") or {}).get("pptx"),
+            "artifact_revision_id": artifact_snapshot.get("revision_id"),
+            "control_revision_id": control_snapshot.get("revision_id")}
+
+
+# ---------------------------------------------------------------------------
+# The resolver
+
+
+def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dict | None,
+             action: str, context: dict | None = None) -> dict:
+    """Pure eligibility judgement for one action (CONTRACTS §6).
+
+    No side effects: nothing is dispatched, written, reserved or advanced.
+    ``context`` accepts ``targets`` (page_ids/layers/subject/purpose),
+    ``task`` (a dispatched task dict, for binding and budget checks),
+    ``persistence`` ("project" | "none") and ``basis`` (extra DependencySlice
+    values the caller wants checked).
+    """
+    spec = action_spec(action)
+    control = control_snapshot if control_snapshot is not None else artifact_snapshot
+    artifact = artifact_snapshot if artifact_snapshot is not None else control
+    context = dict(context or {})
+    if control is None:
+        raise ModelError("eligibility/control_snapshot", "a control snapshot is required")
+    region = _region(control)
+    enforced = region is not None and models.writer_at_least(control, "collaboration.v1")
+    request = _request(control)
+    targets = dict(context.get("targets") or {})
+    task = context.get("task")
+    reasons: list[dict] = []
+
+    def block(code, detail, **extra):
+        reasons.append({"code": code, "detail": detail, **extra})
+
+    # -- writer boundary ---------------------------------------------------
+    if not enforced and (spec.production or spec.delivery):
+        block("migration_required",
+              "this project predates the collaboration writer boundary; "
+              "run collaboration migration apply before this action",
+              writing=spec.writes)
+    if not enforced and context.get("persistence") == "none" and spec.writes:
+        block("persistence_none",
+              "a strict read-only request never writes to the source project")
+
+    # -- request state -----------------------------------------------------
+    if enforced and action not in ROUTING_ACTIONS:
+        if request is None:
+            block("decision_needed",
+                  "no current work request; start one that names the intended intent, "
+                  "scope and evidence before production",
+                  missing="work_request")
+        else:
+            if request.get("closed"):
+                block("request_closed",
+                      f"the current request is closed ({request.get('closed_reason')}); "
+                      "start a new request for new work")
+            if request.get("paused") and (spec.production or spec.writes):
+                block("request_paused",
+                      request.get("pause_reason") or "the current request is paused")
+            stop = _intent_allows(spec, request)
+            if stop:
+                block("scope_exceeded", stop,
+                      request_intent=request.get("intent"),
+                      content_intent=request.get("content_intent"))
+
+    # -- scope coverage ----------------------------------------------------
+    if enforced and request is not None and request.get("scope"):
+        wanted = dict(targets or {}) if action in ROUTING_ACTIONS \
+            else _effective_targets(spec, targets)
+        if (wanted.get("layers") or target_page_ids(store, wanted)) \
+                and not _covers(store, request.get("scope"), wanted):
+            allowed_pages = scope_page_ids(store, request.get("scope"))
+            block("scope_exceeded",
+                  "the target is outside the current request scope",
+                  authorized_pages=allowed_pages,
+                  authorized_layers=sorted(request["scope"].get("layers") or []),
+                  target_pages=target_page_ids(store, wanted),
+                  target_layers=sorted(wanted.get("layers") or []))
+
+    # -- required decisions ------------------------------------------------
+    missing_topics = []
+    stale_topics = []
+    for topic in spec.decision_topics:
+        if not enforced:
+            continue
+        if spec.delivery and not spec.writes:
+            # A read-only delivery readiness report *reports* the decision gap;
+            # it must not refuse to answer because of it (AC-P02: the same
+            # policy result and gaps are returned, not raised).
+            continue
+        state = (_delivery_decision_state(store, control, targets)
+                 if topic == "delivery_acceptance"
+                 else _decision_topic_covered(store, control, topic, targets))
+        if not state["satisfied"]:
+            missing_topics.append(topic)
+            if state.get("stale"):
+                stale_topics.append(topic)
+    if missing_topics:
+        if stale_topics:
+            block("basis_stale",
+                  "the accepted decisions for these topics no longer match the current "
+                  "facts: " + ", ".join(stale_topics),
+                  topics=stale_topics, missing="decision")
+        else:
+            block("decision_needed",
+                  "required business decisions are missing or ineffective: "
+                  + ", ".join(missing_topics),
+                  missing="decision", topics=missing_topics,
+                  card={"topics": missing_topics, "projection": spec.card,
+                        "subject_refs": context.get("subject_refs") or [],
+                        "scope": (request or {}).get("scope")})
+
+    # -- task binding ------------------------------------------------------
+    binding_state = None
+    if task is not None and (enforced or region is not None):
+        binding_state = task_binding_state(store, control, task)
+        if binding_state["status"] == "invalid":
+            block("binding_invalid",
+                  "the task's collaboration binding is not valid in the current region",
+                  reasons=binding_state["reasons"])
+        elif binding_state["status"] == "stale":
+            block("binding_stale",
+                  "the task binding's digest/basis no longer matches the current document",
+                  reasons=binding_state["reasons"])
+        elif binding_state["status"] == "absent":
+            if spec.name in ("call.begin", "generation.dispatch", "allowance.allocate",
+                             "allowance.repair", "task.start") and not spec.delivery:
+                block("decision_needed",
+                      "this task predates the collaboration binding; only already-started "
+                      "call facts may settle — dispatch a bound task for new production",
+                      missing="task_binding")
+
+    # -- authority ---------------------------------------------------------
+    authority_assurance = None
+    if enforced:
+        request_evidence = (request or {}).get("instruction_evidence") or {}
+        authority_assurance = request_evidence.get("assurance")
+        candidates = []
+        if spec.authority in ("execute", "either", "delegate"):
+            candidates = _authority_candidates(store, control, spec, targets)
+            usable = [c for c in candidates if c["effective"]
+                      and (c["mode"] == "execute" or spec.authority in ("delegate", "either"))]
+            covering = [c for c in usable if c["covers"]]
+            if not usable:
+                revoked = [c for c in candidates
+                           if any("revoked" in reason for reason in c["reasons"])]
+                if revoked:
+                    block("authorization_revoked",
+                          "every authorization naming this action is revoked "
+                          "(or its parent chain is)",
+                          authorization_ids=[c["record"].get("authorization_id") for c in revoked])
+                else:
+                    ineffective = [c for c in candidates if not c["effective"]]
+                    if ineffective:
+                        stale = [c for c in ineffective if "basis_stale" in c["reasons"]]
+                        if stale:
+                            block("basis_stale",
+                                  "the covering authorization's registered basis changed",
+                                  authorization_ids=[c["record"].get("authorization_id") for c in stale])
+                        else:
+                            block("authority_insufficient",
+                                  "the covering authorization is not effective",
+                                  reasons=sorted({reason for c in ineffective for reason in c["reasons"]}),
+                                  authorization_ids=[c["record"].get("authorization_id") for c in ineffective])
+                    else:
+                        block("authority_insufficient",
+                              f"no authorization names {spec.name!r} within the request scope",
+                              action=spec.name)
+            elif not covering:
+                block("scope_exceeded",
+                      f"the authorization naming {spec.name!r} does not cover the target "
+                      "pages/layers",
+                      authorization_ids=[c["record"].get("authorization_id") for c in usable],
+                      target_pages=target_page_ids(store, targets),
+                      target_layers=sorted((targets or {}).get("layers") or []))
+            else:
+                chosen = covering[0]
+                authority_assurance = _weakest(
+                    authority_assurance, (chosen["record"].get("evidence") or {}).get("assurance"))
+        # verified_user policy: no silent downgrade when the channel is absent.
+        if region.get("authority_policy") == "verified_user":
+            controllers = [c for c in candidates]
+            controlling = [c for c in controllers if c["effective"] and c["covers"]]
+            if controlling and all(c["assurance"] != "verified_user" for c in controlling):
+                block("authority_channel_unavailable",
+                      "authority_policy=verified_user needs a verified user event for this "
+                      "action; the current records are only host-attested",
+                      authorization_ids=[c["record"].get("authorization_id") for c in controlling])
+            if request is not None and request_evidence.get("assurance") != "verified_user" \
+                    and spec.group in ("execution", "change", "delivery"):
+                block("authority_channel_unavailable",
+                      "authority_policy=verified_user requires verified user evidence for this "
+                      "request; no trusted user-event channel is registered",
+                      missing="verified_user_channel")
+
+        # -- budget --------------------------------------------------------
+        if spec.external_calls:
+            budget = None
+            if candidates:
+                chosen = next((c for c in candidates if c["effective"] and c["covers"]), candidates[0])
+                budget = authorization_budget(store, control, chosen["ref"])
+            elif task is not None:
+                budget_key = binding_of(task).get("budget_key")
+                if budget_key:
+                    budget = credit_state(store, control, budget_key, 1)
+            # CONTRACTS §3.3: begin validates its own already-reserved slot; it
+            # never needs a second remaining credit for the same slot.
+            slot_held = False
+            if spec.name in ("call.begin", "generation.dispatch") and task is not None:
+                allowance_id = context.get("allowance_id")
+                slot_held = any(
+                    entry.get("allowance_id") == allowance_id
+                    and entry.get("state") in ("reserved", "in_flight")
+                    for entry in task.get("call_allowances") or [])
+            if budget is not None and not slot_held:
+                if budget["state"] == "unknown":
+                    block("budget_unknown",
+                          "an unsettled external call exists; resolve it before new calls",
+                          budget={k: v for k, v in budget.items() if k != "chain_ids"})
+                elif budget["state"] == "exhausted":
+                    block("budget_exhausted",
+                          "no remaining credit for a new external call; an exhausted budget "
+                          "only stops new calls (settlement and adoption stay available)",
+                          budget={k: v for k, v in budget.items() if k != "chain_ids"})
+
+    # -- input reconciliation ---------------------------------------------
+    if enforced and spec.production and models.input_alignment(control) == "needs_reconciliation":
+        block("input_reconciliation_pending",
+              "inputs changed; reconcile the content against the new inputs first")
+
+    # -- preproduction content review (independent dimension) -------------
+    preproduction = None
+    if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS:
+        preproduction = preproduction_state(store, control)
+        if preproduction["required"] and not preproduction["satisfied"]:
+            block("needs_reviewer",
+                  "the independent preproduction content review is missing; "
+                  "a review draft can still be returned, and 'continue' does not waive it",
+                  requirement=preproduction["requirement"])
+
+    # -- professional delivery policy (never replaced by the review above) --
+    delivery = None
+    if spec.delivery:
+        if enforced and request is not None and spec.writes:
+            request_scope = request.get("scope") or {}
+            delivers = request_scope.get("purpose") == "delivery" \
+                or request_scope.get("subject") == "deck"
+            if not delivers and not any(
+                    c["effective"] and c["covers"]
+                    and (c["record"].get("delivery_binding") or "none") != "none"
+                    for c in candidates):
+                block("decision_needed",
+                      "delivery needs the request scope purpose=delivery (or a deck-scoped "
+                      "request, or an effective delivery authorization)",
+                      missing="decision", topics=["delivery_acceptance"],
+                      card={"kind": "delivery_card", "projection": spec.card,
+                            "topics": ["delivery_acceptance"]})
+        delivery = delivery_control_state(store, artifact or control, control)
+        professional = delivery["professional"]
+        if professional["required"] and not professional["satisfied"]:
+            block("professional_review_required",
+                  "delivery requires a verified human professional review of the selected artifact",
+                  gap_reasons=professional["gap_reasons"])
+        if context.get("expected_output_ref") and delivery["output_pptx"] \
+                and context["expected_output_ref"] != delivery["output_pptx"]:
+            block("scope_exceeded",
+                  "the selected artifact's current output is not the requested output")
+
+    # -- strict read-only --------------------------------------------------
+    if context.get("persistence") == "none" and spec.writes:
+        block("persistence_none",
+              "persistence=none forbids any write to the source project; "
+              "a report may only be persisted outside the project")
+
+    # -- assemble ----------------------------------------------------------
+    basis = list(context.get("basis") or [])
+    if request is not None:
+        request_scope = request.get("scope")
+    else:
+        request_scope = None
+    effective_scope = context.get("scope") or request_scope or {"subject": spec.subject,
+                                                                "page_ids": [],
+                                                                "layers": list(spec.layers)}
+    required_artifacts = _required_artifacts(store, control, artifact, spec, targets)
+    reasons.sort(key=lambda item: REASON_ORDER.index(item["code"])
+                 if item["code"] in REASON_ORDER else len(REASON_ORDER))
+    codes = []
+    for item in reasons:
+        if item["code"] not in codes:
+            codes.append(item["code"])
+    allowed = not codes
+    primary = reasons[0] if reasons else None
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "allowed": allowed,
+        "action": spec.name,
+        "enforcement": "active" if enforced else "shadow",
+        "scope": normalize_scope(effective_scope),
+        "required_artifact_refs": required_artifacts,
+        "required_decision_topics": list(spec.decision_topics),
+        "missing_decision_topics": missing_topics,
+        "reason_codes": codes,
+        "reasons": reasons,
+        "responsible_role": spec.role if allowed else _role_for(primary),
+        "next_action": None if allowed else _next_action(primary, spec, targets),
+        "decision_card_ref_or_projection": None if allowed else _card_for(primary, spec, context),
+        "dependency_slices": basis,
+        "eligibility_digest": eligibility_digest(spec.name, effective_scope, basis),
+        "authority_assurance": authority_assurance,
+        "request_id": (request or {}).get("request_id"),
+        "artifact_revision_id": (artifact or {}).get("revision_id"),
+        "control_revision_id": control.get("revision_id"),
+        "binding": binding_state,
+        "preproduction": preproduction,
+        "delivery": delivery,
+        "targets": {"page_ids": target_page_ids(store, targets),
+                    "layers": sorted(targets.get("layers") or []),
+                    "subject": targets.get("subject")},
+    }
+
+
+def _weakest(*assurances) -> str | None:
+    from .collaboration_scope import ASSURANCE_RANK
+    values = [a for a in assurances if a]
+    if not values:
+        return None
+    return min(values, key=lambda value: ASSURANCE_RANK.get(value, -1))
+
+
+def _role_for(primary: dict | None) -> str:
+    if primary is None:
+        return "runtime"
+    return {
+        "decision_needed": "user",
+        "request_closed": "user",
+        "request_paused": "user",
+        "scope_exceeded": "user",
+        "authorization_revoked": "user",
+        "authority_insufficient": "user",
+        "authority_channel_unavailable": "user",
+        "basis_stale": "user",
+        "budget_exhausted": "user",
+        "budget_unknown": "host",
+        "needs_reviewer": "reviewer",
+        "professional_review_required": "user",
+        "input_reconciliation_pending": "host",
+        "migration_required": "operator",
+        "binding_invalid": "runtime",
+        "binding_stale": "runtime",
+        "persistence_none": "runtime",
+    }.get(primary["code"], "user")
+
+
+def _next_action(primary: dict | None, spec: ActionSpec, targets: dict) -> str | None:
+    if primary is None:
+        return None
+    pages = sorted(targets.get("page_ids") or [])
+    where = f" for pages {pages}" if pages else ""
+    code = primary["code"]
+    if code == "decision_needed":
+        topics = primary.get("topics")
+        if topics:
+            return (f"record an accepted decision (or an effective delegate) for "
+                    f"{', '.join(topics)}{where}, then retry {spec.name}")
+        return f"start the work request that authorizes {spec.name}{where}, then retry"
+    if code == "scope_exceeded":
+        return (f"narrow the action to the authorized pages/layers, or get an explicit "
+                f"scope/grant covering {sorted(targets.get('page_ids') or []) or 'the target'}")
+    if code == "request_paused":
+        return "resume the request explicitly (resume never widens scope) or cancel it"
+    if code == "request_closed":
+        return "start a new work request for the new work"
+    if code == "authority_insufficient":
+        return f"grant an execute authorization naming {spec.name!r} within the request scope{where}"
+    if code == "authorization_revoked":
+        return "the withdrawal stands; a new authorization requires a new explicit user instruction"
+    if code == "authority_channel_unavailable":
+        return ("provide a trusted user-event channel for verified_user, or record an explicit "
+                "policy change; the runtime never downgrades this automatically")
+    if code == "basis_stale":
+        return "re-record the decision/authorization against the current facts, or keep the narrower scope"
+    if code == "budget_exhausted":
+        return ("the exhausted budget only blocks new calls; settle/accept the last legal result, "
+                "or obtain an explicit increase")
+    if code == "budget_unknown":
+        return "settle the unknown call first (verify success or failure; never auto-retry)"
+    if code == "needs_reviewer":
+        return ("dispatch the independent preproduction review (or an explicit host_self downgrade "
+                "decision) — the manuscript/review draft stays available meanwhile")
+    if code == "professional_review_required":
+        return ("arrange a verified human professional review of the exact selected PPTX; "
+                "an independent model or host self-review never satisfies it")
+    if code == "input_reconciliation_pending":
+        return "read the new inputs and reconcile the affected pages before production"
+    if code == "migration_required":
+        return ("run collaboration migration describe/apply, then start the request that covers "
+                "this action")
+    if code == "binding_invalid":
+        return "re-dispatch the task under the current request; only settled call facts remain"
+    if code == "binding_stale":
+        return "re-dispatch the task with a recomputed binding; do not accept this result"
+    if code == "persistence_none":
+        return "write the report outside the project; import it later as an explicit separate operation"
+    return None
+
+
+def _card_for(primary: dict | None, spec: ActionSpec, context: dict) -> dict | None:
+    """The projection the caller shows the responsible role. A blocking answer
+    always carries the concrete gap; it is never a bare "please confirm"
+    (CONTRACTS §6)."""
+    if primary is None:
+        return None
+    code = primary["code"]
+    if code == "decision_needed":
+        return primary.get("card") or {"kind": "decision_card",
+                                       "topics": list(spec.decision_topics),
+                                       "projection": spec.card,
+                                       "subject_refs": context.get("subject_refs") or []}
+    if code in ("authority_insufficient", "authorization_revoked",
+                "authority_channel_unavailable"):
+        return {"kind": "authorization_card", "action": spec.name,
+                "required_actions": [spec.name], "projection": spec.card,
+                "reason": code, "detail": primary.get("detail")}
+    if code == "scope_exceeded":
+        return {"kind": "scope_card", "action": spec.name,
+                "authorized_pages": primary.get("authorized_pages"),
+                "target_pages": primary.get("target_pages"),
+                "authorized_layers": primary.get("authorized_layers"),
+                "target_layers": primary.get("target_layers"),
+                "projection": spec.card}
+    if code == "needs_reviewer":
+        return {"kind": "review_card", "action": spec.name,
+                "requirement": primary.get("requirement"),
+                "review_draft_still_available": True}
+    if code in ("budget_exhausted", "budget_unknown"):
+        return {"kind": "budget_card", "action": spec.name, "budget": primary.get("budget")}
+    if code == "professional_review_required":
+        return {"kind": "professional_review_card", "action": spec.name,
+                "gap_reasons": primary.get("gap_reasons")}
+    if code == "request_paused":
+        return {"kind": "stop_card", "action": spec.name, "state": "paused"}
+    return None
+
+
+def _required_artifacts(store: Store, control: dict, artifact: dict, spec: ActionSpec,
+                        targets: dict) -> list[dict]:
+    refs: list[dict] = []
+    if spec.delivery:
+        pptx = (artifact.get("outputs") or {}).get("pptx")
+        if pptx:
+            refs.append(pptx)
+    wanted = target_page_ids(store, targets) or []
+    for entry in control.get("pages") or []:
+        if wanted and entry.get("page_id") not in wanted:
+            continue
+        if entry.get("page"):
+            refs.append(entry["page"])
+    return refs
+
+
+# ---------------------------------------------------------------------------
+# Enforcement adapter
+
+
+class EligibilityBlocked(operations.OperationError):
+    """A recoverable admission gap (CONTRACTS §12: CLI exit 4, HTTP 409).
+
+    ``error_code`` is the primary reason code so callers and tests assert on the
+    same vocabulary the resolver reports; the response carries the concrete
+    artifact/decision/scope gap, the responsible role and the next action.
+    """
+
+    def __init__(self, decision: dict) -> None:
+        primary = (decision.get("reasons") or [{}])[0]
+        self.decision = decision
+        code = decision["reason_codes"][0] if decision["reason_codes"] else "eligibility_blocked"
+        message = primary.get("detail") or "action is not eligible"
+        super().__init__(code, f"eligibility/{decision['action']}", message,
+                         exit_code=4, http_status=409, operation_state="blocked")
+
+    def payload(self) -> dict:
+        base = super().payload()
+        base["error"].update({
+            "action": self.decision["action"],
+            "enforcement": self.decision["enforcement"],
+            "reason_codes": self.decision["reason_codes"],
+            "reasons": self.decision["reasons"],
+            "responsible_role": self.decision.get("responsible_role"),
+            "next_action": self.decision.get("next_action") or base["error"]["next_action"],
+            "decision_card": self.decision.get("decision_card_ref_or_projection"),
+            "required_artifact_refs": self.decision.get("required_artifact_refs"),
+        })
+        return base
+
+
+def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+    """Consume the resolver at one write/routing boundary.
+
+    An enforced project raises :class:`EligibilityBlocked` for a blocked action;
+    routing/analysis actions return the decision so the caller can report the
+    gap (``continue`` hands out a decision card, it never raises). A project
+    below the writer boundary keeps current behaviour and returns the computed
+    decision with ``enforcement="shadow"`` — the migration-required decision is
+    still computed for dedicated tests and for the deployment step that enables
+    the new writer for real projects.
+    """
+    decision = evaluate(store, document, document, action, context)
+    if decision["enforcement"] == "active" and not decision["allowed"] \
+            and decision["action"] not in ROUTING_ACTIONS:
+        raise EligibilityBlocked(decision)
+    return decision
+
+
+def describe(project, action: str, *, targets: dict | None = None, revision: str | None = None,
+             context: dict | None = None) -> dict:
+    """Read-only eligibility entry (CONTRACTS §9/§12): ``artifact_revision`` may
+    be a historical revision while control stays the current head. Creates no
+    task, receipt or allowance."""
+    from pathlib import Path
+    store = Store(Path(project).expanduser())
+    control = store.load_document()
+    artifact = store.load_document(revision) if revision else control
+    payload = dict(context or {})
+    if targets is not None:
+        payload["targets"] = targets
+    decision = evaluate(store, artifact, control, action, payload)
+    decision["selected_revision_id"] = artifact.get("revision_id")
+    return decision
