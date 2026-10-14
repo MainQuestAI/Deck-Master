@@ -835,6 +835,29 @@ def _intent_allows(spec: ActionSpec, request: dict | None) -> str | None:
     return None
 
 
+def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpec) -> bool:
+    """Whether this action claims the compose.v2 input_revision task that
+    answers for the pending reconciliation (external review F05).
+
+    The exemption is exact, never a general waiver: the claimed task must be
+    the phased input_revision dispatch, its stamped input digest must equal
+    the current inputs, and its binding must name the current request.
+    Production that still depends on the old content stays blocked.
+    """
+    if spec.name != "task.start" or task is None:
+        return False
+    if task.get("intent") != "input_revision" \
+            or task.get("protocol_version") != "compose.v2":
+        return False
+    if task.get("input_digest") != models.compute_input_digest(control):
+        return False
+    request = _request(control)
+    binding = binding_of(task)
+    if request is None or not binding:
+        return False
+    return binding.get("request_id") == request.get("request_id")
+
+
 # ---------------------------------------------------------------------------
 # Preproduction content review (AC-R06)
 
@@ -1176,8 +1199,9 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
 
     # -- input reconciliation ---------------------------------------------
     if enforced and spec.production and models.input_alignment(control) == "needs_reconciliation":
-        block("input_reconciliation_pending",
-              "inputs changed; reconcile the content against the new inputs first")
+        if not _reconciles_current_inputs(control, task, spec):
+            block("input_reconciliation_pending",
+                  "inputs changed; reconcile the content against the new inputs first")
 
     # -- preproduction content review (independent dimension) -------------
     preproduction = None
