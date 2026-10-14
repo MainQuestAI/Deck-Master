@@ -323,6 +323,9 @@ def validate_review_context(context, store, document, task, envelope):
     if not receipts or any(_time(r.get("expires_at")) <= datetime.now(timezone.utc) for r in receipts):
         raise EvidenceRejected("receipt/time", "completed authenticated receipt is absent or expired")
     for receipt in receipts:
+        if (receipt.get("channel") == "independent_review_receipts" and task.get("execution_ref")
+                and task["execution_ref"] != receipt.get("executor_ref")):
+            raise EvidenceRejected("receipt/executor_ref", "completed receipt must match the current claimed review task executor")
         proof = store.read_object_json(receipt["receipt_ref"])
         validate_schema("authenticated_review_receipt", proof)
         if proof["claims"] != {key: value for key, value in receipt.items() if key != "receipt_ref"}:

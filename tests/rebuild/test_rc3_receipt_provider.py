@@ -233,3 +233,22 @@ def test_user_event_must_persist_the_actual_authenticated_original_bytes(tmp_pat
         fresh.user_event_context(store, store.load_document(), action_binding=digest,
                source_ref=request["instruction_evidence"]["source_ref"], presentation_ref=None,
                receipt_ref=request["instruction_evidence"]["transport_receipt_ref"], selector=selector)
+
+
+@pytest.mark.parametrize("claimed,accepted", [("fixture-executor", True), ("another-actual-claimed-executor", False)])
+def test_completed_receipt_rechecks_current_task_execution_after_claim(tmp_path, claimed, accepted):
+    project, store, registry, provider, channel, task, envelope, claims, selector = _run(tmp_path)
+    assert not task.get("execution_ref")
+    ctx = registry.review_context(store, store.load_document(), task, envelope, selector)
+    with review_evidence.ProviderRuntime(registry).bound():
+        service.task_start(project, task_id=task["task_id"], execution_ref=claimed)
+        before = store.current_revision_id()
+        kwargs = {"task_id": task["task_id"], "operation_id": task["operation_id"],
+                  "produced_against": task["produced_against"], "result_payload": envelope, "adapter_context": ctx}
+        if accepted:
+            assert service.accept_result(project, **kwargs)["status"] == "accepted"
+        else:
+            with pytest.raises(review_evidence.EvidenceRejected, match="current claimed review task executor"):
+                service.accept_result(project, **kwargs)
+            assert store.current_revision_id() == before
+            assert content_review.preproduction_status(store, store.load_document())["status"] == "missing"
