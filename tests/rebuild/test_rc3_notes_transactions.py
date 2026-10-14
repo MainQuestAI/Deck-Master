@@ -22,6 +22,7 @@ from test_compose_v2_phases import _deck_with_pages, _submit
 
 
 def _completed_visual(tmp_path, *, finding=False):
+    """Real rendered preview and formal PageVisual; render-marked callers only."""
     project = tmp_path / 'project'
     page = _draft_page('p-a', '记录未知', '54/120＝45%，不是节约率。')
     page['speaker_notes'] = '原有讲者备注。\n末段。\n'
@@ -32,7 +33,12 @@ def _completed_visual(tmp_path, *, finding=False):
     envelope['artifact_specs'][0]['provenance']['generated_from_page'] = page_ref
     envelope['artifact_specs'][0]['dependencies'] = [{'kind': 'content', 'identity': 'page:p-a', 'sha256': page_ref['sha256']}]
     _accept(project, task, envelope, file_name='page.svg', data=svg)
-    review = service.continue_project(project)['pending_tasks'][0]
+    response = service.continue_project(project)
+    assert response['status'] == 'awaiting_host', response
+    assert len(response['pending_tasks']) == 1, response
+    review = response['pending_tasks'][0]
+    assert review['kind'] == 'review' and review['review_stage'] == 'page_visual', response
+    assert Store(project).load_document()['pages'][0]['svg_preview'] is not None
     if finding:
         reviews = make_page_reviews(review)
         reviews[0]['status'] = 'fail'
@@ -48,6 +54,7 @@ def _completed_visual(tmp_path, *, finding=False):
     return project, Store(project)
 
 
+@pytest.mark.render
 def test_notes_edit_preserves_completed_visual_and_actual_review_bytes(tmp_path):
     project, store = _completed_visual(tmp_path)
     before = store.load_document()
@@ -76,6 +83,7 @@ def test_notes_edit_preserves_completed_visual_and_actual_review_bytes(tmp_path)
     assert store.load_document()['revision_id'] == after['revision_id']
 
 
+@pytest.mark.render
 def test_visual_open_finding_not_fixed_by_notes(tmp_path):
     project, store = _completed_visual(tmp_path, finding=True)
     before = store.load_document(); entry = before['pages'][0]
@@ -278,6 +286,7 @@ def test_imported_null_narrative_speech_creates_honest_mapping_and_current_plan_
     assert status['phase'] == 'speech' and status['page_ids'] == ['p2']
 
 
+@pytest.mark.render
 def test_actual_completed_visual_notes_assembly_export_zero_image_ledger(tmp_path):
     from deck_master import pipeline, exports
     from deck_master.compiler.native import notes_records
@@ -308,6 +317,7 @@ def test_actual_completed_visual_notes_assembly_export_zero_image_ledger(tmp_pat
     assert workbench._deck_output(workbench._ReadContext(store, stale))['applicability'] == 'basis_changed'
 
 
+@pytest.mark.render
 def test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries(tmp_path):
     """Use the immutable actual A installation; never patch its writer set."""
     python = Path('/workspace/work/rc3/baseline-a/venv/bin/python')
