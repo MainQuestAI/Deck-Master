@@ -312,7 +312,7 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
     with store._locked():
         doc=store.load_document()
         if explicit:
-            if doc.get('compatibility', {}).get('project_format') != 'workbench.v3':
+            if not store.workbench_protocol_required(doc):
                 raise operations.OperationError('stage_format_required', 'project', 'explicit stages require an existing workbench.v3 project; no in-place migration')
             operations.validate_id(operation_id, new=True)
             digest = operations.request_digest(doc, 'stages.assemble', base_revision, {})
@@ -321,7 +321,7 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
                 return previous
             if doc['revision_id'] != base_revision:
                 raise operations.OperationError('conflict', 'base_revision', 'assembly basis changed; read current state', exit_code=5)
-        if explicit or doc.get('compatibility', {}).get('project_format') == 'workbench.v3':
+        if explicit or store.workbench_protocol_required(doc):
             require_assembly_ready(store, doc)
     for tool in ('rsvg-convert','soffice','pdftoppm'):executable(tool)
     with tempfile.TemporaryDirectory(prefix='production-',dir=store.staging_dir) as temporary:

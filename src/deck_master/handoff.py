@@ -22,7 +22,7 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
 
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
-    from .exports import resolve_notes_policy, _page_notes
+    from .exports import resolve_notes_policy, _page_notes, _pptx_projection_notes
     resolved_notes = resolve_notes_policy(store, document, notes_policy)
     if purpose == "delivery":
         from . import eligibility
@@ -45,9 +45,9 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
         from .operations import OperationError
         try:
             original = store.read_object_json(output_ref)['file']
-            notes = _page_notes(store, document)
-            included = notes if resolved_notes['pptx_notes'] and any(p['notes'] for p in notes) else None
-            sanitized_hash = hashlib.sha256(pptx(store.read_object_bytes(original), 'deck.pptx', notes=included)).hexdigest()
+            records = _pptx_projection_notes(store, document, resolved_notes)
+            sanitized_hash = hashlib.sha256(pptx(store.read_object_bytes(original), 'deck.pptx',
+                notes=records, include_notes=resolved_notes['pptx_notes'])).hexdigest()
         except OperationError:
             pass
     gaps = []
@@ -60,16 +60,13 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
         actual_notes = notes_records(candidate)
         page_notes = _page_notes(store, document)
         expected_text = [p['notes'] if resolved_notes['pptx_notes'] else '' for p in page_notes]
-        artifact = store.read_object_json(output_ref) if output_ref else {}
-        notes_aware = any(d.get('kind') == 'content' and str(d.get('identity', '')).startswith('page_notes:')
-                          for d in artifact.get('dependencies') or [])
-        strict_notes = notes_policy is not None or notes_aware or any(expected_text)
+        strict_notes = _pptx_projection_notes(store, document, resolved_notes) is not None
         if (strict_notes and (len(actual_notes) != len(expected_text) or
                               [r['notes'] for r in actual_notes] != expected_text)):
             gaps.append('candidate_notes_policy_mismatch')
         elif not strict_notes and any(r['notes'] for r in actual_notes):
             gaps.append('candidate_notes_policy_mismatch')
-        elif any(expected_text) and [r['page_id'] for r in actual_notes] != [p['page_id'] for p in page_notes]:
+        elif strict_notes and [r['page_id'] for r in actual_notes] != [p['page_id'] for p in page_notes]:
             gaps.append('candidate_notes_page_identity_mismatch')
     except (ValueError, KeyError, zipfile.BadZipFile, PackageNotFoundError, XMLSyntaxError):
         gaps.append('candidate_notes_unreadable')

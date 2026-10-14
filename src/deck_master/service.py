@@ -289,10 +289,10 @@ def revision_compose_task(store: Store, document, *, operation_id, reason, impac
         return build_phase_task(
             store, document, operation_id=_new_operation_id("compose"), intent="input_revision",
             input_revision_id=operation_id, instruction=instruction)
-    return _input_compose_task(document, operation_id=operation_id, reason=reason)
+    return _input_compose_task(document, operation_id=operation_id, reason=reason, store=store)
 
 
-def _input_compose_task(document, *, operation_id, reason):
+def _input_compose_task(document, *, operation_id, reason, store=None):
     pages = document.get("pages") or []
     if pages:
         intent = "input_revision"
@@ -328,7 +328,7 @@ def _input_compose_task(document, *, operation_id, reason):
         produced_against=content_identity(document),
     )
     from .content_plan import protocol_fields
-    task.update(protocol_fields(document, intent))
+    task.update(protocol_fields(document, intent, store=store))
     return task
 
 
@@ -379,7 +379,7 @@ def open_compose_task(store: Store, document: dict, *, operation_id: str,
         produced_against=produced_against,
     )
     from .content_plan import protocol_fields
-    task.update(protocol_fields(document, intent))
+    task.update(protocol_fields(document, intent, store=store))
     task_ref = store.put_json_object(task)
     bumped = bump_revision(
         document,
@@ -686,7 +686,7 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
         action_targets={"page_ids": [page["page_id"]], "layers": ["blueprint"]})
     task, _ = tasks_mod.reserve_allowances(store, document, task, 1)
     from .generation import protocol_fields
-    task.update(protocol_fields(document))
+    task.update(protocol_fields(document, store=store))
     task_ref = store.put_json_object(task)
     bumped = bump_revision(
         document,
@@ -1390,7 +1390,7 @@ def inputs_update(
         from .models import require_writer
         operations.validate_id(operation_id, new=True)
         current = store.load_document()
-        if current.get('compatibility', {}).get('project_format') != 'workbench.v3':
+        if not store.workbench_protocol_required(current):
             raise ServiceError('(project)', 'recoverable content inputs require workbench.v3')
         business_digest = operations.request_digest(current, 'content.inputs', base_revision, {'input': patch})
         existing = operations.recover(store, operation_id, business_digest)
@@ -1971,7 +1971,7 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
         "execution_ref": execution_ref,
         "updated_at": _utc_now_iso(),
     }
-    if document.get("compatibility", {}).get("project_format") == "workbench.v3" and task.get("status") != "running":
+    if store.workbench_protocol_required(document) and task.get("status") != "running":
         updated_task["execution_started_at"] = updated_task["updated_at"]
     if task.get("protocol_version"):
         updated_task["host_protocol"] = declaration

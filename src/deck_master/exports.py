@@ -13,7 +13,7 @@ import zipfile
 
 from . import operations
 from .errors import InputReconciliationPending
-from .export_sanitize import sanitize, text_safe, pptx as sanitize_pptx, link_safe
+from .export_sanitize import sanitize, text_safe, pptx as sanitize_pptx, link_safe, public_projection_safe
 from .local_state import local_lock, safe_path
 from .models import canonical_json_bytes, input_alignment, page_limit_violation, sha256_bytes, validate_ref, validate_schema
 from .snapshots import load_snapshot, _snapshot
@@ -289,8 +289,21 @@ def _page_notes(store, doc):
             for entry in doc['pages']]
 
 
+def _pptx_projection_notes(store, doc, policy):
+    """Return the full identity promise even when all notes are empty."""
+    notes = _page_notes(store, doc)
+    output = (doc.get('outputs') or {}).get('pptx')
+    artifact = store.read_object_json(output) if output else {}
+    notes_aware = any(d.get('kind') == 'content' and str(d.get('identity', '')).startswith('page_notes:')
+                      for d in artifact.get('dependencies') or [])
+    if notes_aware or policy['source'] in ('explicit', 'plan') or any(p['notes'] for p in notes):
+        return notes
+    return None
+
+
 def _write_public(store, doc, target, report):
     notes_policy = report['notes_policy']
+    public_projection_safe(report, 'delivery.json')
     headings = []
     original_hashes = {}
     for i, entry in enumerate(doc["pages"], 1):
@@ -314,9 +327,9 @@ def _write_public(store, doc, target, report):
     if doc["outputs"].get("pptx"):
         artifact = _artifact(store, doc["outputs"]["pptx"], "pptx", None)
         ref = artifact["file"]
-        notes = _page_notes(store, doc)
-        included = notes if notes_policy['pptx_notes'] and any(p['notes'] for p in notes) else None
-        (target / "deck.pptx").write_bytes(sanitize_pptx(store.read_object_bytes(ref), 'deck.pptx', notes=included))
+        records = _pptx_projection_notes(store, doc, notes_policy)
+        (target / "deck.pptx").write_bytes(sanitize_pptx(store.read_object_bytes(ref), 'deck.pptx',
+            notes=records, include_notes=notes_policy['pptx_notes']))
         original_hashes["deck.pptx"] = ref["sha256"]
     if notes_policy['separate_script']:
         pages = _page_notes(store, doc)
@@ -327,6 +340,7 @@ def _write_public(store, doc, target, report):
                 link_safe(url, 'speaker-script/notes/link')
         script = {'schema_version': 'speaker_script_projection.v1', 'revision_id': doc['revision_id'],
                   'purpose': report['purpose'], 'newlines': 'LF', 'pages': pages}
+        public_projection_safe(script, 'speaker-script')
         (target / 'speaker-script.json').write_bytes(canonical_json_bytes(script))
         # A readable view and its exact structured pairing are two projections
         # of the same Page truth; edits must be written back to Page notes.
@@ -455,6 +469,8 @@ def _bundle(store, doc, identity, purpose, export_id, target, notes_policy):
     variant = variant_metadata(store, doc)
     if variant is not None:
         manifest["variant"] = variant
+    if purpose != 'engineering':
+        public_projection_safe(manifest, 'manifest.json')
     validate_schema("export_manifest", manifest)
     (target / "manifest.json").write_bytes(canonical_json_bytes(manifest))
     filename = f"deck-{purpose}-{doc['revision_id'][:8]}.zip"

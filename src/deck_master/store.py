@@ -242,6 +242,30 @@ class Store:
             raise StoreError("current.json", "unsupported minimum writer; use the matching core")
         return pointer
 
+    def workbench_protocol_required(self, document: dict[str, Any]) -> bool:
+        """Derive original protocol facts without turning a notes floor into migration.
+
+        Explicit assembly still requires its own gate. New collaboration projects
+        always use workbench rules. A legacy project's first rc3.v1 notes write
+        only changes the supported writer; its committed earlier format remains
+        readable evidence of the original protocol.
+        """
+        if document.get('collaboration') is not None:
+            return True
+        node, seen = document, set()
+        while node:
+            if node['revision_id'] in seen:
+                raise StoreError('history', 'cyclic original protocol history')
+            seen.add(node['revision_id'])
+            compatibility = node.get('compatibility') or {}
+            if compatibility.get('minimum_writer') != 'rc3.v1':
+                return compatibility.get('project_format') == 'workbench.v3'
+            parent = node.get('parent_revision_id')
+            if not parent:
+                return True  # no provable earlier legacy protocol: fail closed
+            node = self.load_document(parent)
+        return True
+
     def load_document(self, revision_id: str | None = None) -> dict[str, Any]:
         revision_id = revision_id or self.current_revision_id()
         if revision_id is None:

@@ -17,7 +17,9 @@ class ContentPlanError(TypedServiceError):
     error_code = "content_plan_invalid"
 
 
-def protocol_fields(document, intent):
+def protocol_fields(document, intent, *, store=None):
+    if store is not None and not store.workbench_protocol_required(document):
+        return {}
     if document.get("compatibility", {}).get("project_format") != "workbench.v3" or intent == "import_draft":
         return {}
     return {"protocol_version": PROTOCOL, "required_capabilities": CAPABILITIES.copy()}
@@ -50,7 +52,7 @@ def bind_result(store, document, task, value, pages):
         if required:
             _fail("input", "compose.v1 requires a content_plan with explicit unresolved facts")
         return None
-    if task.get("kind") != "compose" or document.get("compatibility", {}).get("project_format") != "workbench.v3":
+    if task.get("kind") != "compose" or not store.workbench_protocol_required(document):
         _fail("input", "only compose in an explicit workbench.v3 project can adopt a plan")
     previous_ref, previous = validate_input(store, document, value, pages)
     goals = value["goals"]

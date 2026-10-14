@@ -52,7 +52,7 @@ def _reference_files(store, document, references):
 
 def _plan(store, document, value):
     validate_schema('change_intent', value)
-    if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
+    if not store.workbench_protocol_required(document):
         fail('project', 'changes require an explicit workbench.v3 project')
     if value['project_id'] != document['project_id']:
         fail('project_id', 'change belongs to another project')
@@ -231,7 +231,7 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
             request['prompt_sha256'] = sha256_bytes(request['prompt'].encode('utf-8'))
         request['permitted_asset_files'] = _resolve_permitted_asset_files(store, request['projection']['permitted_assets'])
         inputs.append(store.put_json_object(request))
-        protocol = protocol_fields(basis)
+        protocol = protocol_fields(basis, store=store)
         protocol['required_capabilities'].append('change_plan')
     task = tasks.new_task(task_id=task_id, operation_id=str(uuid.uuid4()), kind=action['kind'],
                           scope_pages=[action['page_id']], instruction=plan['input']['instruction'], inputs=inputs,

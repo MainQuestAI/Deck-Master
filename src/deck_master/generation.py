@@ -32,7 +32,9 @@ def is_new(task):
     return task.get("protocol_version") == PROTOCOL
 
 
-def protocol_fields(document):
+def protocol_fields(document, *, store=None):
+    if store is not None and not store.workbench_protocol_required(document):
+        return {}
     if document.get("compatibility", {}).get("project_format") != "workbench.v3":
         return {}
     return {"protocol_version": PROTOCOL, "required_capabilities": CAPABILITIES.copy(),

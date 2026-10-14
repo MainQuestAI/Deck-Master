@@ -38,6 +38,21 @@ def link_safe(value, where):
         reject(where, "external link contains authentication data")
 
 
+def public_projection_safe(value, where):
+    """Scan every string in a public projection, including identity metadata."""
+    if isinstance(value, str):
+        text_safe(value, where)
+        for url in re.findall(r'https?://[^\s<>]+', value, re.I):
+            link_safe(url, where + '/link')
+    elif isinstance(value, dict):
+        for key, child in value.items():
+            text_safe(str(key), where + '/key')
+            public_projection_safe(child, where + '/' + str(key))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            public_projection_safe(child, where + '/' + str(index))
+
+
 def png(data, where):
     if not data.startswith(b"\x89PNG\r\n\x1a\n"):
         reject(where, "invalid PNG payload")
@@ -287,7 +302,7 @@ def svg(data, where, depth=0):
     return cleaned
 
 
-def pptx(data, where, *, notes=None):
+def pptx(data, where, *, notes=None, include_notes=True):
     """Build a public copy from trusted, already-compiled Page notes only.
 
     The default remains a pure reading copy. Original notes parts are always
@@ -300,19 +315,21 @@ def pptx(data, where, *, notes=None):
             reject(where, 'actual PPTX notes page count differs from selected Pages')
         for row, record in zip(actual, notes, strict=True):
             text = normalize_notes(record['notes'])
-            text_safe(text, where + '/notes')
-            for url in re.findall(r'https?://[^\s<>]+', text, re.I):
-                link_safe(url, where + '/notes/link')
+            if include_notes:
+                text_safe(text, where + '/notes')
+                for url in re.findall(r'https?://[^\s<>]+', text, re.I):
+                    link_safe(url, where + '/notes/link')
             if row['notes'] != text or row['page_id'] != record['page_id']:
                 reject(where, 'actual PPTX notes differ from selected Page text or stable identity')
     clean = _clean_pptx(data, where)
     if notes is not None:
-        rebuilt = attach_notes(clean, notes)
+        projected = [{**record, 'notes': record['notes'] if include_notes else ''} for record in notes]
+        rebuilt = attach_notes(clean, projected)
         clean = _clean_pptx(rebuilt, where, keep_notes=True, page_ids=[r['page_id'] for r in notes])
         actual = notes_records(clean)
         if len(actual) != len(notes) or any(
                 row['page_id'] != record['page_id'] or row['notes'] != normalize_notes(record['notes'])
-                for row, record in zip(actual, notes, strict=True)):
+                for row, record in zip(actual, projected, strict=True)):
             reject(where, 'final public PPTX failed full notes readback')
     return clean
 

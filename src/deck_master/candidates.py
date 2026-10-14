@@ -285,10 +285,10 @@ def _changeset_projection(store, document, candidate, task):
     return {'changeset': changeset, 'upserts': upserts, 'mapping': mapping}
 
 
-def _require_workbench(document):
+def _require_workbench(store, document):
     """G54: candidates are a workbench.v3 family; the gate lives at the service
     layer so CLI and HTTP share one truth (web.py keeps a defensive copy)."""
-    if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
+    if not store.workbench_protocol_required(document):
         raise operations.OperationError('unsupported_project_format', 'project',
                                         'candidate planning, adoption and decisions require a workbench.v3 project',
                                         http_status=409)
@@ -613,7 +613,7 @@ def _plan(store, document, candidate_ids):
 def plan(project, *, input):
     validate_schema('candidate_selection', input)
     store = Store(project_path(project)); document = load_snapshot(store)
-    _require_workbench(document)
+    _require_workbench(store, document)
     if input['project_id'] != document['project_id'] or input['base_revision'] != document['revision_id']:
         raise operations.OperationError('conflict', 'base_revision', 'read current state and preview adoption again', exit_code=5)
     value = _plan(store, document, input['candidate_ids']); ref = store.put_json_object(value)
@@ -695,7 +695,7 @@ def adopt(project, *, input, base_revision, operation_id):
     store = Store(project_path(project))
     with store._locked():
         document = store.load_document()
-        _require_workbench(document)
+        _require_workbench(store, document)
         digest = operations.request_digest(document, 'candidates.adopt', base_revision, input)
         previous = operations.recover(store, operation_id, digest)
         if previous:
@@ -858,7 +858,7 @@ def decide(project, *, input, base_revision, operation_id):
     store = Store(project_path(project))
     with store._locked():
         document = store.load_document()
-        _require_workbench(document)
+        _require_workbench(store, document)
         digest = operations.request_digest(document, 'candidates.decide', base_revision, input)
         previous = operations.recover(store, operation_id, digest)
         if previous:

@@ -379,3 +379,52 @@ def test_legacy_empty_notes_handoff_does_not_claim_or_bypass_new_notes_guarantee
     require_writer(updated, 'rc3.v1')
     store.commit_change(base_revision=doc['revision_id'], document=updated, operation_id='notes-aware-output')
     assert 'candidate_notes_policy_mismatch' in check_handoff(root, file_path=candidate)['gaps']
+
+
+@pytest.mark.parametrize('selection', ['pptx_notes', 'both', 'pure_reading', 'separate_script'])
+@pytest.mark.parametrize('case', ['correct', 'wrong_order', 'wrong_count'])
+def test_empty_notes_new_identity_promise_checked_in_all_final_containers(tmp_path, selection, case):
+    root, store, inputs = _project(tmp_path, notes=['', '', ''])
+    compiled_inputs = inputs if case == 'correct' else list(reversed(inputs)) if case == 'wrong_order' else inputs[:2]
+    compiled = compile_deck(compiled_inputs, CompileOptions(), tmp_path / 'compiled')
+    doc = store.load_document()
+    deps = [{'kind': 'svg', 'identity': e['page_id'], 'sha256': e['svg']['sha256']} for e in doc['pages']]
+    deps += [{'kind': 'content', 'identity': 'page_notes:' + e['page_id'], 'sha256': sha256_bytes(b'')}
+             for e in doc['pages']]
+    updated = bump_revision(doc, {'operation_id': 'identity-promise', 'kind': 'artifact_adoption',
+                                  'description': 'Synthetic adversarial native file, actual ordered dependencies', 'read_set': []})
+    updated['outputs']['pptx'] = artifact(store, compiled.pptx_path, 'pptx', dependencies=deps)
+    require_writer(updated, 'rc3.v1')
+    store.commit_change(base_revision=doc['revision_id'], document=updated, operation_id='identity-promise')
+    original = compiled.pptx_path.read_bytes()
+    if case != 'correct':
+        with pytest.raises(OperationError) as failure:
+            exports.create(root, notes_policy=selection)
+        assert failure.value.payload()['error']['code'] == 'export_privacy_blocked'
+        report = check_handoff(root, file_path=compiled.pptx_path, notes_policy=selection)
+        assert any(gap in report['gaps'] for gap in ('candidate_notes_policy_mismatch', 'candidate_notes_page_identity_mismatch'))
+    else:
+        result = exports.create(root, notes_policy=selection)
+        data, _ = exports.download(root, export_id=result['export_id'], filename='deck.pptx')
+        assert [(r['page_id'], r['notes']) for r in notes_records(data)] == [('p-a', ''), ('p-b', ''), ('p-c', '')]
+        candidate = tmp_path / 'final.pptx'; candidate.write_bytes(data)
+        report = check_handoff(root, file_path=candidate, notes_policy=selection)
+        assert report['candidate_relation'] == 'sanitized_copy'
+        assert not any(gap.startswith('candidate_') for gap in report['gaps'])
+    assert compiled.pptx_path.read_bytes() == original
+
+
+@pytest.mark.parametrize('selection', ['pptx_notes', 'both', 'pure_reading', 'separate_script'])
+@pytest.mark.parametrize('compiled_output', [False, True])
+def test_private_value_in_public_page_identity_rejected_in_all_metadata(tmp_path, selection, compiled_output):
+    canary = 'sk-SYNTHETIC_CANARY_NOT_A_REAL_SECRET'
+    root, store, inputs = _project(tmp_path, ids=(canary, 'p-b', 'p-c'))
+    if compiled_output:
+        _attach_compiled(store, inputs, tmp_path)
+    before = store.load_document()
+    with pytest.raises(OperationError) as failure:
+        exports.create(root, notes_policy=selection, output_dir=tmp_path / 'public')
+    assert failure.value.payload()['error']['code'] == 'export_privacy_blocked'
+    assert not (tmp_path / 'public').exists()
+    assert store.load_document() == before
+    assert store.read_object_json(before['pages'][0]['page'])['page_id'] == canary

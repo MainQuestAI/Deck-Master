@@ -165,6 +165,62 @@ def test_notes_feature_floor_does_not_manufacture_narrative_or_task_migration(tm
         validate_document_semantics(doc)
 
 
+@pytest.mark.parametrize('original_format', [None, 'workbench.v3'])
+def test_notes_feature_floor_preserves_actual_original_protocol_history(tmp_path, original_format):
+    from deck_master import generation
+    from deck_master.content_plan import protocol_fields as content_protocol
+    project = tmp_path / 'project'
+    service.create(project, brief='Synthetic original protocol fixture',
+                   project_format=original_format,
+                   draft={'pages': [_draft_page('p1', '标题', '正文')]})
+    store = Store(project); before = store.load_document()
+    updated = bump_revision(deepcopy(before), {'operation_id': 'notes-floor',
+          'kind': 'content_update', 'description': 'Notes support floor only', 'read_set': []})
+    require_writer(updated, 'rc3.v1')
+    store.commit_change(base_revision=before['revision_id'], document=updated, operation_id='notes-floor')
+    current = store.load_document()
+    assert store.workbench_protocol_required(current) is (original_format == 'workbench.v3')
+    assert bool(generation.protocol_fields(current, store=store)) is (original_format == 'workbench.v3')
+    assert bool(content_protocol(current, 'input_revision', store=store)) is (original_format == 'workbench.v3')
+    unknown = deepcopy(current); unknown['parent_revision_id'] = None
+    assert store.workbench_protocol_required(unknown) is True
+
+
+
+def test_notes_floor_does_not_enable_new_workbench_protocol_entrypoints(tmp_path):
+    from uuid import uuid4
+    from deck_master import changes, candidates, stages
+    from deck_master.content_plan import bind_result
+    from deck_master.operations import OperationError
+    project = tmp_path / 'project'
+    service.create(project, brief='Synthetic legacy protocol entry fixture',
+                   draft={'pages': [_draft_page('p1', '标题', '正文')]})
+    store = Store(project); before = store.load_document()
+    updated = bump_revision(deepcopy(before), {'operation_id': 'notes-floor',
+          'kind': 'content_update', 'description': 'Notes support floor only', 'read_set': []})
+    require_writer(updated, 'rc3.v1')
+    store.commit_change(base_revision=before['revision_id'], document=updated, operation_id='notes-floor')
+    current = store.load_document(); entry = current['pages'][0]
+    intent = {'schema_version': 'change_intent.v1', 'project_id': current['project_id'],
+              'base_revision': current['revision_id'], 'intent': 'clarify',
+              'instruction': 'Synthetic blueprint instruction', 'annotation_refs': [], 'max_calls': 1,
+              'targets': [{'page_id': 'p1', 'page_ref': entry['page'],
+                           'layer': 'original_image', 'artifact_ref': None}]}
+    with pytest.raises(OperationError, match='explicit workbench.v3'):
+        changes.plan(project, input=intent)
+    with pytest.raises(OperationError, match='require a workbench.v3'):
+        candidates.plan(project, input={'schema_version': 'candidate_selection.v1',
+             'project_id': current['project_id'], 'base_revision': current['revision_id'],
+             'candidate_ids': ['synthetic-absent']})
+    with pytest.raises(ContentPlanError, match='explicit workbench.v3'):
+        bind_result(store, current, {'kind': 'compose'}, {}, [])
+    with pytest.raises(service.ServiceError, match='require workbench.v3'):
+        service.inputs_update(project, patch={}, base_revision=current['revision_id'],
+                              operation_id=str(uuid4()), _recoverable_workbench=True)
+    with pytest.raises(OperationError, match='no in-place migration'):
+        stages.assemble(project, base_revision=current['revision_id'], operation_id='explicit-stage')
+    assert store.load_document() == current
+
 def test_notes_only_refresh_reuses_non_speech_preproduction_but_stales_speech(tmp_path):
     from deck_master import content_review
     import test_eligibility_enforcement as enf
@@ -223,11 +279,9 @@ def test_imported_null_narrative_speech_creates_honest_mapping_and_current_plan_
 
 
 def test_actual_completed_visual_notes_assembly_export_zero_image_ledger(tmp_path):
-    from deck_master import pipeline, stages, exports
+    from deck_master import pipeline, exports
     from deck_master.compiler.native import notes_records
-    import uuid
     project, store = _completed_visual(tmp_path)
-    original = store.load_document()
     pipeline.produce(project)
     before = store.load_document(); entry = before['pages'][0]
     page = store.read_object_json(entry['page'])
@@ -239,7 +293,7 @@ def test_actual_completed_visual_notes_assembly_export_zero_image_ledger(tmp_pat
     assert not pipeline.output_matches_current_svg(store, changed)
     assert changed['outputs']['pptx'] is None
     assert editing.page_visual_summary(store, changed, changed['pages'][0])['status'] == 'pass'
-    stages.assemble(project, base_revision=changed['revision_id'], operation_id=str(uuid.uuid4()))
+    pipeline.produce(project)
     after = store.load_document()
     assert after['outputs']['pptx'] != before['outputs']['pptx']
     assert workbench._deck_output(workbench._ReadContext(store, after))['applicability'] == 'current'
