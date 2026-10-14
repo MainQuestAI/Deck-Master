@@ -9,6 +9,9 @@ import pathlib
 
 import pytest
 
+from synthetic_review_provider import synthetic_context, accept_with_synthetic_provider
+from deck_master.review_evidence import EvidenceRejected
+
 from deck_master import collaboration, content_production, content_review, models, service
 from deck_master.models import ModelError, bump_revision, require_writer
 from deck_master.store import Store
@@ -147,7 +150,7 @@ def _deck(tmp_path, *, quality=None, plan_mode="bound"):
     project, store = _project(tmp_path, quality=quality)
     document = store.load_document()
     task = content_production.open_phase_task(store, document, operation_id="arg", phase="argument")
-    service.accept_result(
+    accept_with_synthetic_provider(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],
         result_payload={"schema_version": "compose_result.v2", "kind": "compose",
@@ -177,7 +180,7 @@ def _deck(tmp_path, *, quality=None, plan_mode="bound"):
                                               operation_id="pc", phase="page_copy")
     document = store.load_document()
     pages = [_page(store, document, "p1"), _page(store, document, "p2", notes="第二页口播。")]
-    service.accept_result(
+    accept_with_synthetic_provider(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],
         result_payload={"schema_version": "compose_result.v2", "kind": "compose",
@@ -220,13 +223,13 @@ def _independent_adapter(store, document, *, executor="exec-independent", subjec
     subjects = subjects if subjects is not None else [
         document["narrative"], document["content_plan"]] + [e["page"] for e in document["pages"]]
     receipt_ref = _stored(store, "independent-receipt")
-    return {"independent_review_receipts": [
+    return synthetic_context({"independent_review_receipts": [
         {"receipt_ref": receipt_ref, "executor_ref": executor, "reviewer_id": "model-b",
-         "subjects_sha256": _subjects_digest(subjects)}]}
+         "subjects_sha256": _subjects_digest(subjects)}]})
 
 
 def _submit_reviews(project, store, task, reviews):
-    return service.accept_result(
+    return accept_with_synthetic_provider(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],
         result_payload={"kind": "review", "pages": [], "page_order": [], "artifact_specs": [],
@@ -317,7 +320,7 @@ def test_independent_review_is_accepted_and_consumed(tmp_path):
     document = store.load_document()
     adapter = _independent_adapter(store, document)
     task, reviews = _dispatch_and_reviews(store, document, adapter)
-    out = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+    out = accept_with_synthetic_provider(project, task_id=task["task_id"], operation_id=task["operation_id"],
                                 produced_against=task["produced_against"],
                                 result_payload={"kind": "review", "pages": [], "page_order": [],
                                                 "artifact_specs": [], "reviews": reviews,
@@ -341,8 +344,8 @@ def test_self_declared_independence_is_refused(tmp_path):
     forged = [{**review, "reviewer": {**review["reviewer"], "id": "someone",
                                       "execution_ref": "random-123"}}
               for review in reviews]
-    with pytest.raises(EnvelopeError, match="independent execution receipt"):
-        service.accept_result(project, task_id=task["task_id"],
+    with pytest.raises(EvidenceRejected, match="actual authenticated executor"):
+        accept_with_synthetic_provider(project, task_id=task["task_id"],
                               operation_id=task["operation_id"],
                               produced_against=task["produced_against"],
                               result_payload={"kind": "review", "pages": [], "page_order": [],
@@ -351,7 +354,7 @@ def test_self_declared_independence_is_refused(tmp_path):
                               adapter_context=adapter)
     # Without the capability at all, an independent claim cannot be accepted.
     with pytest.raises(EnvelopeError, match="does not satisfy it"):
-        service.accept_result(project, task_id=task["task_id"],
+        accept_with_synthetic_provider(project, task_id=task["task_id"],
                               operation_id=task["operation_id"],
                               produced_against=task["produced_against"],
                               result_payload={"kind": "review", "pages": [], "page_order": [],
@@ -371,17 +374,17 @@ def test_the_author_cannot_be_the_independent_reviewer(tmp_path):
     author = sorted(author_refs)[0]
     from deck_master.content_review import _subjects_digest
     receipt_ref = _stored(store, "author-receipt")
-    adapter = {"independent_review_receipts": [
+    adapter = synthetic_context({"independent_review_receipts": [
         {"receipt_ref": receipt_ref, "executor_ref": author, "reviewer_id": "same-host",
          "subjects_sha256": _subjects_digest(
              [document["narrative"], document["content_plan"]] +
-             [e["page"] for e in document["pages"]])}]}
+             [e["page"] for e in document["pages"]])}]})
     task, reviews = _dispatch_and_reviews(store, document, adapter)
     same_author = [{**review, "reviewer": {**review["reviewer"], "id": "same-host",
                                            "execution_ref": author}}
                    for review in reviews]
-    with pytest.raises(EnvelopeError, match="author cannot be recorded as an independent"):
-        service.accept_result(project, task_id=task["task_id"],
+    with pytest.raises(EvidenceRejected, match="author cannot be recorded as an independent"):
+        accept_with_synthetic_provider(project, task_id=task["task_id"],
                               operation_id=task["operation_id"],
                               produced_against=task["produced_against"],
                               result_payload={"kind": "review", "pages": [], "page_order": [],
@@ -411,7 +414,7 @@ def test_human_review_needs_a_verifiable_receipt(tmp_path):
                                                       "subjects": subjects}})
                for kind in kinds]
     with pytest.raises(EnvelopeError, match="identity/execution receipt"):
-        service.accept_result(project, task_id=task["task_id"],
+        accept_with_synthetic_provider(project, task_id=task["task_id"],
                               operation_id=task["operation_id"],
                               produced_against=task["produced_against"],
                               result_payload={"kind": "review", "pages": [], "page_order": [],
@@ -430,7 +433,7 @@ def test_incomplete_units_and_stale_subjects_are_refused(tmp_path):
                 "assurance": "host_attested"}
     partial = [_review(store, document, "argument", reviewer=reviewer)]
     with pytest.raises(EnvelopeError, match="missing units"):
-        service.accept_result(project, task_id=task["task_id"],
+        accept_with_synthetic_provider(project, task_id=task["task_id"],
                               operation_id=task["operation_id"],
                               produced_against=task["produced_against"],
                               result_payload={"kind": "review", "pages": [], "page_order": [],
@@ -441,7 +444,7 @@ def test_incomplete_units_and_stale_subjects_are_refused(tmp_path):
                           deps=[{"kind": "content", "identity": "page:p1", "sha256": "0" * 64}])
                   for review in reviews]
     with pytest.raises(EnvelopeError, match="bind the current objects"):
-        service.accept_result(project, task_id=task["task_id"],
+        accept_with_synthetic_provider(project, task_id=task["task_id"],
                               operation_id=task["operation_id"],
                               produced_against=task["produced_against"],
                               result_payload={"kind": "review", "pages": [], "page_order": [],
@@ -496,7 +499,7 @@ def test_host_self_needs_an_explicit_effective_downgrade_decision(tmp_path):
                                  "execution_ref": None, "independence_confirmed": False,
                                  "identity_receipt": None, "assurance": "host_attested"})
                for kind in kinds]
-    service.accept_result(project, task_id=outcome["task"]["task_id"],
+    accept_with_synthetic_provider(project, task_id=outcome["task"]["task_id"],
                           operation_id=outcome["task"]["operation_id"],
                           produced_against=outcome["task"]["produced_against"],
                           result_payload={"kind": "review", "pages": [], "page_order": [],
@@ -543,7 +546,7 @@ def test_blocking_findings_keep_production_blocked(tmp_path):
                          "message": "限定没有进入上屏正文", "expected": "上屏正文带限定",
                          "actual": "正文无该限定", "evidence": []}]
         reviewed.append(_review(store, document, kind, reviewer=reviewer, findings=findings))
-    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+    accept_with_synthetic_provider(project, task_id=task["task_id"], operation_id=task["operation_id"],
                           produced_against=task["produced_against"],
                           result_payload={"kind": "review", "pages": [], "page_order": [],
                                           "artifact_specs": [], "reviews": reviewed,

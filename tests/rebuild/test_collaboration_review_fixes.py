@@ -8,6 +8,8 @@ import hashlib
 
 import pytest
 
+from synthetic_review_provider import synthetic_user_context
+
 from deck_master import collaboration, collaboration_migration, dependency_slices, service
 from deck_master.dependency_slices import (authorization_effectiveness,
                                            decision_effectiveness)
@@ -213,8 +215,7 @@ def test_verified_event_replay_across_actions_downgrades(tmp_path):
                                                      transport_receipt_ref=receipt),
                    "scope": _scope()}
     binding = collaboration.write_digest(collaboration.ACTION_REQUEST_START, start_input)
-    adapter = {"verified_user_events": [
-        {"receipt_ref": receipt, "actor_id": "u-1", "action_binding": binding}]}
+    adapter = synthetic_user_context(store, store.load_document(), action_binding=binding, declared=start_input["instruction_evidence"])
     started = collaboration.start_request(
         project, input=start_input, base_revision=store.load_document()["revision_id"],
         operation_id="op-start-verified", adapter_context=adapter)

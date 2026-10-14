@@ -43,11 +43,12 @@ CAPABILITY_KEYS = ("verified_user_events", "independent_review_receipts", "human
 def reviewer_capabilities(adapter_context=None) -> dict:
     """Read-only capability description; unknown or absent means False.
 
-    A capability is only true when the trusted adapter actually supplies the
-    receipts this contract verifies — never because a caller asked for it.
+    A capability is only true for a registered authenticated provider's live
+    channel. A completed receipt is separately required for result acceptance;
+    advertising a healthy channel does not fabricate a future completion.
     """
-    context = adapter_context or {}
-    return {key: bool(context.get(key)) for key in CAPABILITY_KEYS}
+    from .review_evidence import reviewer_capabilities as available
+    return available(adapter_context)
 
 
 def quality_profile(document) -> dict:
@@ -230,7 +231,8 @@ def author_execution_refs(store, document, subjects) -> set[str]:
 
 def _independent_receipt(adapter_context, review, subjects, forbidden_executors):
     """A trusted independent execution receipt for exactly these subjects."""
-    context = adapter_context or {}
+    from .review_evidence import context_payload
+    context = context_payload(adapter_context)
     receipts = context.get("independent_review_receipts") or []
     reviewer = review.get("reviewer") or {}
     execution_ref = reviewer.get("execution_ref")
@@ -251,7 +253,8 @@ def _independent_receipt(adapter_context, review, subjects, forbidden_executors)
 
 
 def _human_receipt(adapter_context, review, subjects):
-    context = adapter_context or {}
+    from .review_evidence import context_payload
+    context = context_payload(adapter_context)
     receipts = context.get("human_review_receipts") or []
     digest = _subjects_digest(subjects)
     identity = (review.get("reviewer") or {}).get("identity_receipt")
@@ -417,6 +420,9 @@ def validate_preproduction_result(store, document, task, envelope, *, adapter_co
     page_ids = list(task.get("scope_pages") or [])
     capabilities = reviewer_capabilities(adapter_context)
     accepted_reviewers = []
+    if state["effective"] == "independent_model_or_human" and adapter_context is not None:
+        from .review_evidence import validate_review_context
+        validate_review_context(adapter_context, store, document, task, envelope)
     for index, review in enumerate(reviews):
         reviewer_type = _reviewer_type(review)
         subjects = review.get("subjects") or []

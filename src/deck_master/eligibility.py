@@ -169,6 +169,7 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
           production=True, external=True, role="runtime"),
     # -- adoption (row 3)
     _spec("task.accept", "adoption", "pages", writes=True, role="runtime"),
+    _spec("proposal.adopt", "adoption", "deck", writes=True, role="runtime"),
     _spec("call.settle", "execution", "pages", writes=True, role="host"),
     _spec("material.upload", "adoption", "external_artifact", writes=True, role="user"),
     _spec("content.inputs_update", "adoption", "deck", layers=("narrative",),
