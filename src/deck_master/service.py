@@ -838,6 +838,11 @@ def _recover_input_revision(store):
                 and (not valid or task['task_id'] != valid['task_id'])):
             updated['tasks'][index] = store.put_json_object({**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
     if not valid:
+        # The recovery dispatch is a real write, not routing bookkeeping: it
+        # consumes the same gate as every other phased dispatch, so a paused
+        # request gains no reconciliation task through `continue` either
+        # (independent re-review N1, F06's contract).
+        eligibility.guard(store, updated, "dispatch.compose")
         task = revision_compose_task(store, updated, operation_id=change.get('operation_id'),
                                    reason=change.get('description') or 'Resume reconciliation against current inputs')
         updated['tasks'].append(store.put_json_object(task))

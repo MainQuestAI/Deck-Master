@@ -338,6 +338,29 @@ def test_a_full_pass_qualsifies_production_and_a_new_revision_revokes_it(tmp_pat
     assert "needs_reviewer" in blocked["reason_codes"]
 
 
+def test_a_new_failing_review_on_the_same_manuscript_reblocks_production(tmp_path):
+    """F02: a fresh failing record on unchanged bytes answers for the current
+    manuscript just like a moved manuscript does — the earlier passing set
+    stops qualifying production (independent re-review N3)."""
+    project, store = _deck_with_pages(tmp_path)
+    _production_request(project, store, operation_id="op-request-full-4")
+    _grant_blueprint(project, store)
+    _accept_preproduction_reviews(project, store)
+    allowed = _blueprint_eligibility(store)
+    assert allowed["preproduction"]["satisfied"] is True
+    # A second review round on the SAME bytes reports a new must-fix finding.
+    finding = {"finding_id": "f-round2", "kind": "content", "impact": "must_fix",
+               "resolution": "open", "page_id": "p1", "element_refs": ["atom:p1:title"],
+               "message": "第二 round 发现限定缺失", "expected": "上屏正文带限定",
+               "actual": "正文无该限定", "evidence": []}
+    _accept_preproduction_reviews(project, store,
+                                  findings_by_kind={"argument": [finding]})
+    reblocked = _blueprint_eligibility(store)
+    assert reblocked["allowed"] is False
+    assert "preproduction_blocked" in reblocked["reason_codes"]
+    assert reblocked["preproduction"]["blocking_findings"]
+
+
 # ---------------------------------------------------------------------------
 # External review F03: an omitted page is never an implicit deletion
 

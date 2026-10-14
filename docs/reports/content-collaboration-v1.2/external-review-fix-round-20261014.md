@@ -47,7 +47,23 @@
 
 ## 未完成与待授权
 
-1. 三个 PR 仍为 Open/Draft；**合并需要用户重新授权**，建议顺序 #110 → #111 → #112，合并后由 Codex 核对 main 树与 `b36745cb` 一致。
-2. 上一轮 PR 描述/评论中"已收口"口径的撤回与更正由后续 PR 更新处理。
-3. 审查建议的八条联合回归中，本记录覆盖 F01–F06 对应六条；"旧通过后出现新失败"已并入 F02 联合测试（`test_a_full_pass_qualsifies_production_and_a_new_revision_revokes_it`），"输入更新→协调领取接纳"即 F05 测试。
-4. 独立 code-reviewer 复验与 CI 状态确认在推送后进行；CI 结果以 GitHub 工作流实际运行为准。
+1. 三个 PR 仍为 Open/Draft；**合并需要用户重新授权**，建议顺序 #110 → #111 → #112，合并后由 Codex 核对 main 树与联合 head 一致。
+2. 上一轮 PR 描述/评论中"已收口"口径的撤回与更正已通过 PR 评论处理（#110/#111/#112 各一条，2026-10-14）。
+3. CI 结果以 GitHub 工作流实际运行为准。
+
+## 独立复验结论与残留项（2026-10-14，独立 code-reviewer）
+
+复验方法：逐项对照审查原文 + 源码行级核对 + 4 个临时复现脚本实测（/tmp，零仓库改动）。裁决：**F01–F06 全部 pass，无偷换或弱化；测试为真实路径、无恒真断言；回填与联合树语义一致；全套 1638 passed、ruff clean 复核属实。技术闭环成立。**
+
+复验发现三项新 P2，处置如下：
+
+| 项 | 内容 | 处置 |
+|---|---|---|
+| N1 | `_recover_input_revision` 的恢复派发（continue 早期）不经 gate，暂停下可新增 input_revision 任务（无生产逃逸：暂停期间任务不可领取） | **已修**：恢复派发同样消费 `dispatch.compose` gate；补入联合回归，最终联合 head `1639 passed` |
+| N2 | accept 侧撤回检查看绑定授权自身，不显式上溯父链；对 authority=none 的 `dispatch.host_task` 绑定 execute 子授权时，撤回 delegate 父授权后晚到结果仍被接纳（该动作本不要求授权，无"必需检查"被绕过，属纵深防御缺口） | **列为 #112 跟进项**，不在本轮扩大范围；合并授权时如实披露 |
+| N3 | 修复记录把"旧通过后出现新失败"错映射到稿件移动测试；该反例行为正确（复验实测 `preproduction_blocked`）但无测试钉住 | **已修**：更正本记录映射；新增 `test_a_new_failing_review_on_the_same_manuscript_reblocks_production` 钉住同稿新失败反例 |
+
+复验后补充提交：N1 修复 + N3 测试 + 本节记录（联合树）。最终联合 head 回归：**1639 passed, 455 deselected；ruff clean**。
+
+更正：审查建议八条联合回归中，"旧通过后出现新失败"现由 `test_a_new_failing_review_on_the_same_manuscript_reblocks_production`（同稿新失败）与 `test_a_full_pass_qualsifies_production_and_a_new_revision_revokes_it`（稿件移动致过期）分别钉住；"输入更新→协调领取接纳"即 F05 闭环测试。
+
