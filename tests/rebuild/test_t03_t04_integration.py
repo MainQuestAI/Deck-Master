@@ -441,3 +441,61 @@ def test_a_batch_request_larger_than_the_remaining_credit_gets_zero(tmp_path):
     second = tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
     assert second["status"] == "allocated"
     assert held() == ["reserved", "reserved"]
+
+
+# ---------------------------------------------------------------------------
+# External review F05: the reconciliation task itself stays claimable
+
+
+def test_the_input_revision_task_stays_claimable_during_reconciliation(tmp_path):
+    """F05: the compose.v2 input_revision task that inputs_update dispatched is
+    claimable while the project reports needs_reconciliation — start, accept,
+    cleared alignment — while other production against the stale content stays
+    blocked until the revision lands."""
+    from test_compose_v2_phases import (_submit as _phase_submit,)  # noqa: E402
+    from deck_master import models
+    project, store = _deck_with_pages(tmp_path)
+    outcome = service.inputs_update(
+        project,
+        patch={"reason": "受众变化", "task_patch": {"audience": "现场主管"},
+               "source_changes": {"add": [], "replace": [], "remove": [], "metadata": []}},
+        base_revision=store.load_document()["revision_id"], operation_id="op-input-reconcile")
+    assert outcome["input_alignment"] == "needs_reconciliation"
+    summary = outcome["pending_tasks"][0]
+    assert summary["intent"] == "input_revision"
+    task_id = summary["task_id"]
+    # Production that still answers to the old content stays blocked...
+    document = store.load_document()
+    other = content_production.build_phase_task(store, document, operation_id="stale-phase",
+                                                phase="speech", page_ids=["p1"])
+    still_blocked = eligibility.evaluate(store, document, document, "task.start",
+                                         {"task": other, "targets": {"page_ids": ["p1"]}})
+    assert "input_reconciliation_pending" in still_blocked["reason_codes"]
+    # ...while the reconciliation task itself is claimable (the deadlock under
+    # review refused exactly this claim).
+    service.task_start(project, task_id=task_id, execution_ref="reconcile-host",
+                       supported_protocols=["compose.v2"],
+                       capabilities=["compose.v2", "collaboration.v1"])
+    claimed = next(t for t in (store.read_object_json(ref)
+                               for ref in store.load_document()["tasks"])
+                   if t["task_id"] == task_id)
+    assert claimed["status"] == "running"
+    # The revision lands through the normal acceptance path.
+    document = store.load_document()
+    updated = _phase_page(store, document, "p1", notes="现场主管版本的口播。")
+    out = _phase_submit(project, claimed,
+                        {"changed_layers": ["page_copy"],
+                         "proposals": [{"layer": "page_copy",
+                                        "ref": store.put_json_object(updated)}],
+                         "diff": {"input_digest": claimed["input_digest"],
+                                  "summary": "按现场主管受众调整表述",
+                                  "changed_page_ids": ["p1"]}},
+                        "input_revision")
+    assert out["status"] == "accepted"
+    document = store.load_document()
+    assert document["content_basis"]["resolved_by_task_id"] == task_id
+    assert models.input_alignment(document) == "current"
+    # With the reconciliation landed, the same claim no longer sees the block.
+    after = eligibility.evaluate(store, document, document, "task.start",
+                                 {"task": other, "targets": {"page_ids": ["p1"]}})
+    assert "input_reconciliation_pending" not in after["reason_codes"]
