@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "authenticated-review-receipt.v1.schema.json",
+  "title": "Authenticated provider review completion (not a human/professional approval by itself)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "provider_id",
+    "adapter_version",
+    "authentication",
+    "raw_event_ref",
+    "claims"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "authenticated_review_receipt.v1"
+    },
+    "provider_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adapter_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authentication": {
+      "enum": [
+        "external_signature",
+        "protected_transport"
+      ]
+    },
+    "raw_event_ref": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "claims": {
+      "type": "object",
+      "required": [
+        "provider_id",
+        "event_id",
+        "channel",
+        "project_id",
+        "request_id",
+        "task_id",
+        "packet_sha256",
+        "subjects_sha256",
+        "author_execution_refs",
+        "write_scope",
+        "result_sha256",
+        "issued_at",
+        "expires_at"
+      ],
+      "properties": {
+        "provider_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "issued_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expires_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "channel": {
+          "enum": [
+            "independent_review_receipts",
+            "human_review_receipts"
+          ]
+        },
+        "packet_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "subjects_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "result_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "author_execution_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "write_scope": {
+          "type": "object",
+          "required": [
+            "layers",
+            "page_ids"
+          ],
+          "properties": {
+            "layers": {
+              "const": [
+                "review"
+              ]
+            },
+            "page_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "executor_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewer_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

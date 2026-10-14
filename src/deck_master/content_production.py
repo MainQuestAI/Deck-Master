@@ -1274,6 +1274,8 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
         if not isinstance(write_scope, dict):
             raise ModelError("collaboration/adopt_proposal/write_scope",
                              "adoption names its exact write scope")
+        from . import eligibility
+        eligibility.guard(store, document, "proposal.adopt", context={"scope": write_scope})
         gaps = scope_gaps(store, decision.get("scope") or {}, write_scope)
         if gaps:
             raise ModelError("collaboration/adopt_proposal/write_scope",

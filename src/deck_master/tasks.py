@@ -17,7 +17,10 @@ import uuid
 from functools import wraps
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .review_evidence import TrustedContext
 
 from .content import check_page
 from .models import (
@@ -1070,7 +1073,8 @@ def _accept_result_locked(
     operation_id: str,
     produced_against: str,
     envelope_raw: dict[str, Any],
-    adapter_context: dict | None = None,
+    adapter_context: TrustedContext | None = None,
+    review_receipt_selector: dict | None = None,
 ) -> dict:
     """Validate a Host result envelope and adopt it atomically (spec 09.7).
 
@@ -1273,12 +1277,21 @@ def _accept_result_locked(
     for review in envelope.get('reviews') or []:
         if review.get('review_stage', 'final') != stage:
             raise EnvelopeError('review/review_stage', 'review stage does not match the dispatched task')
+    preproduction_receipts = []
     if stage == 'preproduction':
         # Content collaboration v1.2 CONTRACTS §6.3/§11.6: identity, unit
         # coverage and subject/dependency binding for the preproduction review.
         from .content_review import validate_preproduction_result
-        validate_preproduction_result(store, document, task, envelope,
-                                      adapter_context=adapter_context)
+        if review_receipt_selector is not None:
+            from .review_evidence import current_registry
+            adapter_context = current_registry().review_context(store, document, task, envelope, review_receipt_selector)
+        posture = validate_preproduction_result(store, document, task, envelope,
+                                               adapter_context=adapter_context)
+        preproduction_receipts = [item['receipt']['receipt_ref'] for item in posture['reviewers']
+                                  if item.get('receipt')]
+    elif review_receipt_selector is not None:
+        from .review_evidence import EvidenceRejected
+        raise EvidenceRejected('review_receipt_selector', 'receipt selectors are only supported for preproduction review')
     if stage == 'page_visual' and envelope['kind'] == 'review':
         from .review import PAGE_VISUAL_KINDS
         required = set(PAGE_VISUAL_KINDS)
@@ -1387,6 +1400,7 @@ def _accept_result_locked(
     artifact_refs = [store.put_json_object(artifact) for artifact in artifacts]
     review_refs = [store.put_json_object(review) for review in reviews]
     result_refs = list(page_refs.values()) + artifact_refs + review_refs + ([plan_ref] if plan_ref else [])
+    result_refs += [ref for index, ref in enumerate(preproduction_receipts) if ref not in preproduction_receipts[:index]]
     updated_task["result_refs"] = result_refs
     from .candidates import is_trial, record_result
     if is_trial(task):

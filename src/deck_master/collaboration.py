@@ -56,7 +56,7 @@ def write_digest(action: str, write_input: dict) -> str:
 # Evidence: assurance comes from the adapter context, never from the client
 
 
-def _verified_event(evidence: dict, adapter_context, action_binding) -> dict | None:
+def _verified_event(evidence: dict, adapter_context, action_binding, *, project_id=None, request_id=None) -> dict | None:
     """Match a declared user_event against the adapter's verified events.
 
     A match requires BOTH the adapter's action binding (the exact write payload
@@ -66,14 +66,18 @@ def _verified_event(evidence: dict, adapter_context, action_binding) -> dict | N
     verification itself (issuer signature, actor binding, nonce, expiry) is
     T07's trusted transport; this is the record-side contract.
     """
-    if not adapter_context or not action_binding:
+    if not adapter_context or not action_binding or project_id is None:
         return None
-    events = adapter_context.get("verified_user_events") or []
+    from .review_evidence import context_payload
+    events = context_payload(adapter_context).get("verified_user_events") or []
     receipt = evidence.get("transport_receipt_ref") or {}
     if not receipt.get("path"):
         return None
     for event in events:
-        if not isinstance(event, dict) or event.get("action_binding") != action_binding:
+        if (not isinstance(event, dict) or event.get("action_binding") != action_binding
+                or event.get("project_id") != project_id or event.get("request_id") != request_id
+                or event.get("source_ref") != evidence.get("source_ref")
+                or event.get("presentation_ref") != evidence.get("presentation_ref")):
             continue
         event_receipt = event.get("receipt_ref") or {}
         if (event_receipt.get("path"), event_receipt.get("sha256")) == (
@@ -83,7 +87,7 @@ def _verified_event(evidence: dict, adapter_context, action_binding) -> dict | N
 
 
 def resolve_evidence(declared: dict, adapter_context=None, *, where: str = "evidence",
-                     action_binding: str | None = None) -> dict:
+                     action_binding: str | None = None, project_id=None, request_id=None) -> dict:
     """Compute the recorded Evidence (CONTRACTS §4).
 
     A declared ``user_event`` is only verified_user when a matching trusted
@@ -110,7 +114,7 @@ def resolve_evidence(declared: dict, adapter_context=None, *, where: str = "evid
         "presentation_ref": declared.get("presentation_ref"),
     }
     if kind == "user_event":
-        event = _verified_event(evidence, adapter_context, action_binding)
+        event = _verified_event(evidence, adapter_context, action_binding, project_id=project_id, request_id=request_id)
         if event is None:
             evidence["kind"] = "host_attested_instruction"
             evidence["assurance"] = "host_attested"
@@ -363,7 +367,8 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
         declared = input.get("instruction_evidence")
         evidence = resolve_evidence(declared, adapter_context,
                                     where="collaboration/request/instruction_evidence",
-                                    action_binding=digest)
+                                    action_binding=digest, project_id=document["project_id"],
+                                    request_id=(region.get("request") or {}).get("request_id"))
         _require_stored_evidence_refs(store, evidence, "collaboration/request/instruction_evidence")
         current = region.get("request")
         replace_request_id = input.get("replace_request_id")
@@ -488,7 +493,8 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         authority_mode = input.get("authority_mode")
         evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context,
                                     where="collaboration/decision/evidence",
-                                    action_binding=digest)
+                                    action_binding=digest, project_id=document["project_id"],
+                                    request_id=(region.get("request") or {}).get("request_id"))
         _require_stored_evidence_refs(store, evidence, "collaboration/decision/evidence")
         basis = dependency_slices.merge_required_basis(
             store, document, family="decision", key=topic,
@@ -585,7 +591,8 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
             raise ModelError("collaboration/request", "a grant requires the current open work request")
         evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context,
                                     where="collaboration/authorization/evidence",
-                                    action_binding=digest)
+                                    action_binding=digest, project_id=document["project_id"],
+                                    request_id=(region.get("request") or {}).get("request_id"))
         _require_stored_evidence_refs(store, evidence, "collaboration/authorization/evidence")
         basis = dependency_slices.merge_required_basis(
             store, document, family="authorization", key=input.get("mode"),
@@ -697,7 +704,8 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
         if instruction_evidence is not None:
             evidence = resolve_evidence(instruction_evidence, adapter_context,
                                         where="collaboration/revoke/evidence",
-                                        action_binding=digest)
+                                        action_binding=digest, project_id=document["project_id"],
+                                    request_id=(region.get("request") or {}).get("request_id"))
             _require_stored_evidence_refs(store, evidence, "collaboration/revoke/evidence")
         head = _head_for_identity(store, region, "authorizations", "authorization_id", authorization_id)
         if head is None:
@@ -776,7 +784,8 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
             evidence = resolve_evidence(
                 instruction_evidence, adapter_context,
                 where=f"collaboration/request/{'pause' if paused else 'resume'}/evidence",
-                action_binding=digest)
+                action_binding=digest, project_id=document["project_id"],
+                                    request_id=(region.get("request") or {}).get("request_id"))
             _require_stored_evidence_refs(
                 store, evidence,
                 f"collaboration/request/{'pause' if paused else 'resume'}/evidence")

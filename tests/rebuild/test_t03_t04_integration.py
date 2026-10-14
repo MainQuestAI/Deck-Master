@@ -16,6 +16,9 @@ from pathlib import Path
 
 import pytest
 
+from synthetic_review_provider import synthetic_context, accept_with_synthetic_provider, dispatch_with_synthetic_provider
+from deck_master.review_evidence import EvidenceRejected
+
 from test_eligibility_enforcement import (  # noqa: E402  (shared fixtures)
     _grant, _page, _project, _scope, _settle_preproduction, _start)
 from test_compose_v2_phases import _deck_with_pages, _page as _phase_page  # noqa: E402
@@ -87,7 +90,7 @@ def test_change_dispatch_on_an_enforced_project_is_bound_and_accepted(tmp_path):
                                      "attempt_binding", "native_tool_observation"])
     page = store.read_object_json(entry["page"])
     page["customer_visible"]["title"] = "Clear title"
-    service.accept_result(store.project_root, task_id=task_id, operation_id=task["operation_id"],
+    accept_with_synthetic_provider(store.project_root, task_id=task_id, operation_id=task["operation_id"],
                           produced_against=task["produced_against"],
                           result_payload={"kind": "repair", "pages": [page]})
     updated = next(e for e in store.load_document()["pages"] if e["page_id"] == "p1")
@@ -139,7 +142,7 @@ def test_phased_result_is_accepted_under_the_gate(tmp_path):
                 "produced_against": task["produced_against"],
                 "eligibility_digest": task["collaboration_binding"]["eligibility_digest"],
                 "payload": payload, "usage_events": []}
-    out = service.accept_result(project, task_id=task["task_id"],
+    out = accept_with_synthetic_provider(project, task_id=task["task_id"],
                                 operation_id=task["operation_id"],
                                 produced_against=task["produced_against"],
                                 result_payload=envelope)
@@ -196,7 +199,7 @@ def test_revoking_the_bound_grant_refuses_the_late_result(tmp_path):
                 "files": [], "pages": [_page("p1", "晚到结果。")], "page_order": ["p1"],
                 "artifact_specs": [], "reviews": [], "usage_events": [], "notes": "late"}
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
-        service.accept_result(project, task_id=task["task_id"],
+        accept_with_synthetic_provider(project, task_id=task["task_id"],
                               operation_id=task["operation_id"],
                               produced_against=task["produced_against"],
                               result_payload=envelope)
@@ -255,7 +258,7 @@ def _accept_preproduction_reviews(project, store, *, findings_by_kind=None):
     optional map carries open must-fix findings per review kind."""
     document = store.load_document()
     adapter = _independent_adapter(store, document)
-    outcome = content_review.dispatch_preproduction_review(project, adapter_context=adapter)
+    outcome = dispatch_with_synthetic_provider(project, adapter_context=adapter)
     assert outcome["status"] == "review_dispatched"
     task = outcome["task"]
     document = store.load_document()
@@ -265,7 +268,7 @@ def _accept_preproduction_reviews(project, store, *, findings_by_kind=None):
     reviews = [_review(store, document, kind, reviewer=reviewer,
                        findings=(findings_by_kind or {}).get(kind, ()))
                for kind in ("argument", "page_copy", "progression", "speech")]
-    out = service.accept_result(
+    out = accept_with_synthetic_provider(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],
         result_payload={"kind": "review", "pages": [], "page_order": [], "artifact_specs": [],

@@ -60,9 +60,6 @@ def resolve_root() -> Path:
 
     import deck_master
 
-    packaged = Path(str(resources.files("deck_master"))).resolve() / "resources" / "skill"
-    if (packaged / "SKILL.md").is_file():
-        return packaged
     module_file = Path(deck_master.__file__).resolve()
     if module_file.parent.name == "deck_master" and module_file.parents[1].name == "src":
         repo = module_file.parents[2]
@@ -71,6 +68,10 @@ def resolve_root() -> Path:
             canonical = repo / "skills" / "deck-master"
             if (canonical / "SKILL.md").is_file():
                 return canonical
+            raise MethodResourceMissing("method root", "canonical checkout Skill is missing; do not borrow packaged methods")
+    packaged = Path(str(resources.files("deck_master"))).resolve() / "resources" / "skill"
+    if (packaged / "SKILL.md").is_file():
+        return packaged
     raise MethodResourceMissing(
         "method root",
         "no readable deck-master method source for this installation; reinstall the package",
@@ -79,6 +80,8 @@ def resolve_root() -> Path:
 
 def method_ids_for(kind: str, *, intent: str | None = None,
                    phase: str | None = None) -> tuple[str, ...]:
+    if kind == "review" and intent == "preproduction":
+        return ("source-reading", "content-methods", "content-examples", "review-and-repair")
     if kind == "style_analyze":
         return ("visual-reference",)
     if kind == "compose":
@@ -129,3 +132,37 @@ def method_release(items: list[dict]) -> dict:
     if Path(__file__).resolve().is_relative_to(prefix) and manifest.is_file():
         release_id = json.loads(manifest.read_text(encoding='utf-8'))['release_id']
     return {"release_id": release_id, "methods_sha256": methods_sha256(items)}
+
+
+def read_methods(kind: str, *, intent=None, phase=None) -> list[dict]:
+    """Return the exact UTF-8 bytes, with no universal-newline conversion."""
+    items = method_resources(kind, intent=intent, phase=phase)
+    for item in items:
+        raw = Path(item["path"]).read_bytes()
+        if sha256_bytes(raw) != item["sha256"]:
+            raise MethodResourceMissing(item["relative_path"], "method changed while being read; retry")
+        item["content"] = raw.decode("utf-8")
+    return items
+
+
+def read_task_methods(project, task_id: str) -> dict:
+    """Load a real work order's methods; expose an old basis without relabeling it."""
+    from . import service
+    from .store import Store
+    store = Store(Path(project).expanduser())
+    document = store.load_document()
+    task = next((store.read_object_json(ref) for ref in document["tasks"]
+                 if store.read_object_json(ref)["task_id"] == task_id), None)
+    if task is None:
+        raise MethodResourceMissing("task_id", "task is not referenced by the current project")
+    order = service.task_summary(store, document, task)
+    items = read_methods(task["kind"], intent=task.get("intent") or task.get("review_stage"),
+                         phase=(task.get("collaboration_binding") or {}).get("phase"))
+    return {"schema_version": "method_consumption.v1", "status": order["method_basis_status"],
+            "project_id": document["project_id"], "task_id": task_id,
+            "dispatch_revision": task.get("dispatch_revision"),
+            "dispatch_method_release": task.get("method_release"),
+            "current_method_release": method_release(items), "methods": items,
+            "consumption": "runtime_returned_bytes", "work_order": order,
+            "limitations": ["Returning method bytes does not prove the Host applied them",
+                            "basis_changed does not retroactively update the dispatched task"]}

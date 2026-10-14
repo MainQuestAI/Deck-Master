@@ -17,7 +17,10 @@ import json
 import re
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .review_evidence import TrustedContext
 
 from . import eligibility
 from . import tasks as tasks_mod
@@ -488,7 +491,7 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         if revision not in dispatch_documents:
             dispatch_documents[revision] = _dispatch_snapshot(store, document, task)
         dispatched = dispatch_documents[revision]
-    methods = method_resources(task.get("kind") or "", intent=task.get("intent"),
+    methods = method_resources(task.get("kind") or "", intent=task.get("intent") or task.get("review_stage"),
                                phase=(task.get("collaboration_binding") or {}).get("phase"))
     from . import visual_styles
     summary = {
@@ -497,6 +500,10 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         "kind": task["kind"],
         "intent": task.get("intent"),
         "method_release": task.get("method_release"),
+        "current_method_release": method_release(methods),
+        "method_basis_status": ("not_recorded" if not task.get("method_release") else
+                                "current" if task["method_release"]["methods_sha256"] ==
+                                method_release(methods)["methods_sha256"] else "basis_changed"),
         "review_stage": task.get("review_stage", "final"),
         "status": task["status"],
         "scope_pages": task.get("scope_pages") or [],
@@ -1140,7 +1147,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]
     inputs += [ref for ref in extra_inputs if ref]
-    methods = method_resources(kind)
+    methods = method_resources(kind, intent=review_stage)
     task = tasks_mod.new_task(task_id=uuid.uuid4().hex[:12],operation_id=_new_operation_id(kind),kind=kind,
         method_release=method_release(methods),
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
@@ -1618,7 +1625,8 @@ def accept_result(
     produced_against: str,
     result_path: Path | str | None = None,
     result_payload: dict | None = None,
-    adapter_context: dict | None = None,
+    adapter_context: TrustedContext | None = None,
+    review_receipt_selector: dict | None = None,
 ) -> dict:
     """Receive one Host result envelope; prevalidation is all-or-nothing."""
     store = Store(Path(project_dir).expanduser())
@@ -1635,6 +1643,7 @@ def accept_result(
         produced_against=produced_against,
         envelope_raw=envelope_raw,
         adapter_context=adapter_context,
+        review_receipt_selector=review_receipt_selector,
     )
     document = store.load_document()
     current_revision = document["revision_id"]

@@ -200,6 +200,15 @@ OPERATIONS_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 
 
 CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
+    "capabilities": (None, "-", READ_REASONS["read_model"]),
+    "methods": (None, "-", READ_REASONS["read_model"]),
+    "collaboration show": (None, "-", READ_REASONS["read_model"]),
+    "collaboration migration describe": (None, "-", READ_REASONS["read_model"]),
+    "collaboration request start": ("request.start", "collaboration.start_request", None),
+    "collaboration request replace": ("request.start", "collaboration.start_request", None),
+    "collaboration decision": ("decision.record", "collaboration.record_decision", None),
+    "collaboration adopt-proposal": ("proposal.adopt", "content_production.adopt_proposal", None),
+    "collaboration migration apply": ("migration.apply", "collaboration_migration.apply", None),
     # -- creation and routing
     "create": ("create", "cli.create → service.create (routing gate)", None),
     "continue": ("continue_project", "cli.continue → service.continue_project (decision card)", None),

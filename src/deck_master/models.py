@@ -34,6 +34,7 @@ SCHEMA_FILES = {
     "content_plan_v2": "content-plan.v2.schema.json",
     "compose_result_v2": "compose-result.v2.schema.json",
     "review_v2": "review.v2.schema.json",
+    "authenticated_review_receipt": "authenticated-review-receipt.v1.schema.json",
     "style_reference": "style-reference.v1.schema.json",
     "visual_style_spec": "visual-style-spec.v1.schema.json",
     "style_input_v2": "style-input.v2.schema.json",
