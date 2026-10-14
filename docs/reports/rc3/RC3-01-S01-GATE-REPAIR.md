@@ -70,3 +70,25 @@ method-only B 的 `1fb3ddacbb75a2d891b5a14d955cf23db9460931` 安装及其首轮 
 S01 形成新的软件版本；后续公平 A/B 需以相同 S01 核心修复分别新建隔离安装，A
 继续保留旧方法，B 保留 RC3-01 新方法。不能把补充修复后的运行冒称原 B 首次生成
 效果，不能修改冻结 driver/protocol 或已领取 Task 来绕过 basis 检查。
+
+## 第一轮独立 review 的修复追加
+
+独立审查者对固定提交 `5deb222c77cadbdb835c695b17224d4e312d2395` 给出
+**REQUEST_CHANGES / F-S01-01**：正式创建 P1 开放 must_fix，只改 P2 正文使整体
+Plan 依赖变化，再提交无 replaces 的新 pass，原实现先排除 stale finding owner，
+错误返回 pass。第一轮 118 个通过的测试没有覆盖这个场景，不能抵消此真实复现。
+第一轮独立报告保留原判；本报告前面的 118 passed 是第一轮实施验证记录。
+
+追加修复将两种问题分开计算：当前 pass 仍必须绑定当前完整稿件及依赖；历史开放
+finding 只要仍落在当前查询页面和当前 required unit，就继续阻塞，不能因另一页、
+同页正文或仅 notes 的变化而消失。中央 `finding_closed` 取得完整 preproduction
+历史链，包括 stale 中间版本，仍要求真实 explicit replacement/current endpoint。
+当前已退役的 page、查询范围外 page，以及当前 policy 不再要求的 unit 不阻塞本次
+资格；历史记录全部保留，没有另建关闭状态或复写旧 Review。
+
+新增 12 个正式 API 回归覆盖：两种 impact × 同页/页外正文及同页/页外 notes；
+历史多步 replaces 链到真实同页 fixed；P2 子范围不受 P1 finding 阻塞且全稿/P1
+仍阻塞；合法移除 P1 后不再阻塞当前稿；none policy 不再要求旧 speech 单位。
+新文件累计 **38 个案例**；与同组原回归合跑 **130 passed，7.91 秒**，Ruff 与
+diff-check 通过。等待独立第二轮按追加后的精确提交复审；仍不代表真实内容/人类
+使用验收通过。

@@ -477,10 +477,9 @@ def validate_preproduction_result(store, document, task, envelope, *, adapter_co
 # Consumption and query
 
 
-def _applicable_reviews(store, document, page_ids) -> list[dict]:
-    """Preproduction reviews that still bind the current manuscript."""
-    digests = _current_artifact_digests(store, document)
-    applicable = []
+def _preproduction_reviews(store, document) -> list[dict]:
+    """Immutable preproduction history, including stale finding owners."""
+    records = []
     for ref in document.get("reviews") or []:
         try:
             review = store.read_object_json(ref)
@@ -488,6 +487,18 @@ def _applicable_reviews(store, document, page_ids) -> list[dict]:
             continue
         if review.get("review_stage") != STAGE:
             continue
+        records.append({"review_ref": ref, "review": review})
+    return records
+
+
+def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict]:
+    """Preproduction reviews that can satisfy a current manuscript unit."""
+    digests = _current_artifact_digests(store, document)
+    applicable = []
+    if records is None:
+        records = _preproduction_reviews(store, document)
+    for item in records:
+        review = item["review"]
         deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
                 for dep in review.get("dependencies") or []}
         stale = [key for key, value in deps.items()
@@ -502,7 +513,7 @@ def _applicable_reviews(store, document, page_ids) -> list[dict]:
             stale.append("content:page")
         if stale:
             continue
-        applicable.append({"review_ref": ref, "review": review})
+        applicable.append(item)
     return applicable
 
 
@@ -518,17 +529,30 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
     ids = [entry["page_id"] for entry in document.get("pages") or []]
     if page_ids is None:
         page_ids = ids
-    applicable = _applicable_reviews(store, document, page_ids)
+    history = _preproduction_reviews(store, document)
+    applicable = _applicable_reviews(store, document, page_ids, records=history)
     satisfied = sorted({item["review"].get("kind") for item in applicable
                         if item["review"].get("status") == "pass"})
     missing = sorted(set(units) - set(satisfied))
     blocking = []
     from .review import finding_closed, open_findings, pending_judgments
-    records = [{**item["review"], "ref": item["review_ref"]} for item in applicable]
+    records = [{**item["review"], "ref": item["review_ref"]} for item in history]
     artifacts = _current_artifact_digests(store, document)
-    for item in applicable:
+    scoped_pages = set(page_ids) & set(ids)
+    for item in history:
+        if item["review"].get("kind") not in units:
+            continue
         owner = {**item["review"], "ref": item["review_ref"]}
         for finding in open_findings(item["review"]) + pending_judgments(item["review"]):
+            # Freshness determines whether a pass can satisfy a unit; it does
+            # not erase an unresolved defect on a current page. Retired pages,
+            # out-of-scope pages and no-longer-required units do not block this
+            # query. Deck-level findings remain relevant to a non-empty scope.
+            if finding.get("page_id") is None:
+                if not scoped_pages:
+                    continue
+            elif finding.get("page_id") not in scoped_pages:
+                continue
             # Consume the same explicit, current replacement semantics as the
             # receiver and final/page review. A separate pass never closes an
             # older finding; its immutable record remains available as evidence.
