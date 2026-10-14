@@ -96,3 +96,16 @@ class SourceNeedsTool(TypedServiceError):
 
     error_code = "needs_tool"
     exit_code = 3
+
+
+class ImportRequiresPhasedPath(TypedServiceError):
+    """A draft import on a collaboration.v1 project has no legal legacy task (exit 4).
+
+    The legacy import envelope writes Pages, ordering and a Plan in one step
+    with no work request, no collaboration binding and no phased write scope.
+    On a collaboration.v1 project that would be an unbound production task, so
+    the import is refused with the concrete recovery path instead.
+    """
+
+    error_code = "import_requires_phased_path"
+    exit_code = 4

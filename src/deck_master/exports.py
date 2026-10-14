@@ -325,6 +325,26 @@ def _write_engineering(store, doc, target):
     )
 
 
+def variant_metadata(store, doc):
+    """The live/read variant this revision belongs to, as fixed labels and refs.
+
+    CONTRACTS §11.7.2: the versioned export records group_id/variant_id/label
+    plus the frozen Narrative/Plan refs; it never creates a second content
+    truth or a second current pointer.
+    """
+    request = (doc.get("collaboration") or {}).get("request") or {}
+    variant = request.get("variant")
+    if not variant:
+        return None
+    return {
+        "group_id": variant.get("group_id"),
+        "variant_id": variant.get("variant_id"),
+        "label": variant.get("label"),
+        "narrative_ref": doc.get("narrative"),
+        "plan_ref": doc.get("content_plan"),
+    }
+
+
 def _bundle(store, doc, identity, purpose, export_id, target):
     facts = _facts(store, doc)
     _gate(store, doc, facts, purpose)
@@ -351,6 +371,9 @@ def _bundle(store, doc, identity, purpose, export_id, target):
         "excluded": ["runtime_authentication", "service_state", "locks", "personal_ui_drafts"],
         "metadata_policy": "original_internal" if purpose == "engineering" else "sanitized_public_copy",
     }
+    variant = variant_metadata(store, doc)
+    if variant is not None:
+        manifest["variant"] = variant
     validate_schema("export_manifest", manifest)
     (target / "manifest.json").write_bytes(canonical_json_bytes(manifest))
     filename = f"deck-{purpose}-{doc['revision_id'][:8]}.zip"

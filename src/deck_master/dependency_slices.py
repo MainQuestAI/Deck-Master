@@ -31,6 +31,15 @@ REQUIRED_BASIS: dict[tuple[str, str], tuple[tuple[str, str, str], ...]] = {
     ("decision", "tradeoff"): (("task_fact", "page_limit", "value"),),
     ("authorization", "execute"): (("policy", "document", "value"),),
     ("authorization", "delegate"): (("policy", "document", "value"),),
+    # Task dispatch basis per content phase (CONTRACTS §7): the facts a phase
+    # actually reads. Narrative/Plan pointer slices are appended when they exist
+    # (collaboration_binding.binding_basis), never required into absence.
+    ("task", "framing"): (("task_fact", "brief", "value"),),
+    ("task", "argument"): (("task_fact", "brief", "value"),
+                            ("task_fact", "audience", "value")),
+    ("task", "page_copy"): (("task_fact", "brief", "value"),
+                             ("task_fact", "page_limit", "value")),
+    ("task", "speech"): (("task_fact", "presentation_mode", "value"),),
 }
 
 
@@ -147,6 +156,12 @@ def build_slice(store, document, *, kind, identity, projection, _seen=frozenset(
                 return {"ref": ref, "sha256": store.read_object_json(ref)["file"]["sha256"]}
             except Exception:  # noqa: BLE001
                 return None
+        if identity in ("narrative", "content_plan"):
+            # Current pointer slices: absent means absent, never satisfied.
+            ref = document.get(identity)
+            if not ref:
+                return None
+            return {"ref": ref, "sha256": ref["sha256"]}
         if identity.startswith("page:"):
             entry = _find_page(document, identity.split(":", 1)[1])
             if not entry or not entry.get("page"):

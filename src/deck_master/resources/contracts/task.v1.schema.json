@@ -30,9 +30,11 @@
     },
     "review_stage": {
       "enum": [
+        "preproduction",
         "page_visual",
         "final"
-      ]
+      ],
+      "description": "Content collaboration v1.2 CONTRACTS \u00a76.3/\u00a711.6: a preproduction review is bound to the current Narrative/Plan/Page manuscript and its source dependencies."
     },
     "status": {
       "enum": [
@@ -370,8 +372,10 @@
       "enum": [
         "generation.v1",
         "compose.v1",
+        "compose.v2",
         "changes.v1"
-      ]
+      ],
+      "description": "compose.v2 selects the phased result protocol (CONTRACTS \u00a711.5); compose.v1 remains readable for historical tasks and receipts only."
     },
     "required_capabilities": {
       "type": "array",
@@ -585,6 +589,13 @@
               "pattern": "^[a-f0-9]{64}$"
             }
           }
+        },
+        "speech_kind": {
+          "enum": [
+            "cue",
+            "verbatim"
+          ],
+          "description": "Content collaboration v1.2 CONTRACTS \u00a71.7/\u00a710.1: the speech segment kind this phase was dispatched for (cue = cues). The Runtime derives it from the plan speech policy or an explicit instruction; a Host result cannot pick it."
         }
       },
       "required": [

@@ -179,8 +179,12 @@ def commit(project, *, plan_id, base_revision, operation_id):
                 updated['tasks'][i] = store.put_json_object({**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
         task_ids = []
         if action in HOST_ACTIONS:
-            from .service import _input_compose_task
-            task = _input_compose_task(updated, operation_id=operation_id, reason=value['instruction'])
+            from .service import revision_compose_task
+            task = revision_compose_task(store, updated, operation_id=operation_id,
+                                         reason=value['instruction'])
+            if task.get('protocol_version') == 'compose.v2':
+                fail('input', 'content operations are superseded by the phased compose.v2 protocol '
+                              'on this project; dispatch the phased content task instead')
             task['scope_pages'] = ids; task['content_operation_ref'] = plan_ref; task['inputs'].append(plan_ref)
             task['required_capabilities'].append('content_operations')
             if trial:
