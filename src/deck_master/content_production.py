@@ -788,6 +788,17 @@ def _accept_page_copy(store, *, document, task, envelope, payload, produced_agai
         raise tasks_mod.EnvelopeError(
             "(result)/payload/pages",
             f"adding pages needs a scope that allows membership change: {added}")
+    # The same membership rule guards the other direction: the result's
+    # page_order rebuilds the manuscript, so omitting a current page is a
+    # deletion of that page — one a scoped partial write is never authorized
+    # to express by silence (external review F03).
+    removed = sorted(existing - set(page_ids))
+    if removed and scope.get("allow_page_membership_change") is not True:
+        raise tasks_mod.EnvelopeError(
+            "(result)/payload/pages",
+            f"omitting current pages is an undeclared deletion, not a partial write: {removed}; "
+            "page_copy delivers the complete page set, and removing pages needs a scope "
+            "that allows membership change")
     if old_order and scope.get("allow_page_order_change") is not True and old_order != list(page_order) \
             and set(old_order) == set(page_order):
         raise tasks_mod.EnvelopeError(
