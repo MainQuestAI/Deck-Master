@@ -523,9 +523,17 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
                         if item["review"].get("status") == "pass"})
     missing = sorted(set(units) - set(satisfied))
     blocking = []
+    from .review import finding_closed, open_findings, pending_judgments
+    records = [{**item["review"], "ref": item["review_ref"]} for item in applicable]
+    artifacts = _current_artifact_digests(store, document)
     for item in applicable:
-        from .review import open_findings, pending_judgments
+        owner = {**item["review"], "ref": item["review_ref"]}
         for finding in open_findings(item["review"]) + pending_judgments(item["review"]):
+            # Consume the same explicit, current replacement semantics as the
+            # receiver and final/page review. A separate pass never closes an
+            # older finding; its immutable record remains available as evidence.
+            if finding_closed(records, owner, finding, artifacts):
+                continue
             blocking.append({"review_id": item["review"].get("review_id"),
                              "kind": item["review"].get("kind"),
                              "finding_id": finding.get("finding_id") or finding.get("id"),

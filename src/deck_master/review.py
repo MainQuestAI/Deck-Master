@@ -119,7 +119,10 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                    for ref in candidate.get('subjects') or [])
 
     def current_final_output_changed(owner, candidate):
-        if review.get('review_stage', 'final') == 'page_visual':
+        if review.get('review_stage', 'final') in ('page_visual', 'preproduction'):
+            # Content is repaired and reviewed before PPTX production. The
+            # preproduction endpoint still needs the changed current same-page
+            # manuscript, full current dependencies, observations and evidence.
             return True
         if subjects:
             before = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
