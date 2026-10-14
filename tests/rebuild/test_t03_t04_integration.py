@@ -335,3 +335,74 @@ def test_a_full_pass_qualsifies_production_and_a_new_revision_revokes_it(tmp_pat
     assert blocked["allowed"] is False
     assert blocked["preproduction"]["satisfied"] is False
     assert "needs_reviewer" in blocked["reason_codes"]
+
+
+# ---------------------------------------------------------------------------
+# External review F03: an omitted page is never an implicit deletion
+
+
+def _two_page_deck(tmp_path):
+    """A deck built to p1+p2 through the real phased flow: one full-set
+    page_copy result delivers both pages, exactly like the fixture deck."""
+    from test_compose_v2_phases import (_accept_argument, _adopt_direction,  # noqa: E402
+                                        _dispatch as _phase_dispatch,
+                                        _plan_input as _phase_plan_input,
+                                        _project as _phase_project,
+                                        _request as _phase_request,
+                                        _submit as _phase_submit)
+    project, store = _phase_project(tmp_path)
+    _phase_request(project, store)
+    _, out = _accept_argument(project, store)
+    _adopt_direction(project, store, out["result_refs"][0])
+    task = _phase_dispatch(store, phase="page_copy")
+    document = store.load_document()
+    pages = [_phase_page(store, document, "p1"),
+             _phase_page(store, document, "p2", notes="第二页口播。")]
+    _phase_submit(project, task,
+                  {"pages": pages, "page_order": ["p1", "p2"],
+                   "plan_input": _phase_plan_input(document, ["p1", "p2"])},
+                  "page_copy")
+    return project, Store(project)
+
+
+def test_a_scoped_page_copy_result_never_deletes_unselected_pages(tmp_path):
+    """F03: a page_copy task scoped to p1 cannot withdraw p2 from the current
+    manuscript by leaving it out; the acceptance names the omission instead."""
+    from test_compose_v2_phases import (_plan_input as _phase_plan_input,  # noqa: E402
+                                        _submit as _phase_submit)
+    from deck_master import tasks as tasks_mod
+    project, store = _two_page_deck(tmp_path)
+    entry_p2 = next(e for e in store.load_document()["pages"] if e["page_id"] == "p2")
+    task = content_production.open_phase_task(
+        store, store.load_document(), operation_id="scoped-p1", phase="page_copy",
+        page_ids=["p1"])
+    page = _phase_page(store, store.load_document(), "p1", notes="重写后的口播。")
+    with pytest.raises(tasks_mod.EnvelopeError) as excinfo:
+        _phase_submit(project, task,
+                      {"pages": [page], "page_order": ["p1"],
+                       "plan_input": _phase_plan_input(store.load_document(), ["p1"])},
+                      "page_copy")
+    assert "p2" in str(excinfo.value)
+    document = store.load_document()
+    assert [e["page_id"] for e in document["pages"]] == ["p1", "p2"]
+    kept = next(e for e in document["pages"] if e["page_id"] == "p2")
+    assert kept["page"] == entry_p2["page"], "the preserved page keeps its exact Ref"
+    assert store.read_object_json(kept["page"]) == store.read_object_json(entry_p2["page"])
+
+
+def test_a_membership_scope_may_express_a_real_deletion(tmp_path):
+    """F03's authorized counterpart: a full-set page_copy under a scope that
+    allows membership change may shrink the deck — explicitly, by page_order."""
+    from test_compose_v2_phases import (_dispatch as _phase_dispatch,  # noqa: E402
+                                        _plan_input as _phase_plan_input,
+                                        _submit as _phase_submit)
+    project, store = _two_page_deck(tmp_path)
+    task = _phase_dispatch(store, phase="page_copy")
+    document = store.load_document()
+    page = _phase_page(store, document, "p1", notes="收缩后的唯一一页。")
+    _phase_submit(project, task,
+                  {"pages": [page], "page_order": ["p1"],
+                   "plan_input": _phase_plan_input(document, ["p1"])},
+                  "page_copy")
+    document = store.load_document()
+    assert [e["page_id"] for e in document["pages"]] == ["p1"]
