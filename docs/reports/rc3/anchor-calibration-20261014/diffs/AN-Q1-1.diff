@@ -1,0 +1,25 @@
+# diff_kind: frozen original raw statement/variant -> actual replacement text and scope
+# Not a product Git diff; no native Writer output or actual PPTX artifact is reconstructed.
+--- AN-Q1-1/frozen-original-error-description-or-text
++++ AN-Q1-1/actual-full-replacement-targets
+@@ -1 +1,19 @@
+-"采集前移后，首次记录效率提升 38%。"
++TARGET: P2.visible
++### P2｜这次合成抽样中，38 单缺少设备版本记录
++
++上屏表格：
++
++| 首次版本记录情况 | 请求数 |
++| --- | ---: |
++| 被记录为缺少设备版本 | 38 |
++| 未被列入上述缺失组 | 62 |
++| 合计 | 100 |
++
++可以支持：版本记录值得作为本次教学关注点。
++不能推出：解决率、节省时间或效率提升；也不能据此认定其余 62 条的所有信息都完整。
++来源（上屏可读表述）：100 条合成售后请求的抽样统计。
++
++
++
++TARGET: P2.speaker_text
++"先看这里的 38。它表示在 100 条合成记录中，有 38 条首次没有设备版本。它不是解决率，更不是节省了 38% 的时间。另一组 62 条也只能说明没有被列入这个版本缺失组，不能据此说其他字段都完整。这个数字的作用，是提示我们练习怎样处理记录中的缺口；具体怎么填和怎么流转，要依据下一页开始的 SOP。"

@@ -1,0 +1,34 @@
+# diff_kind: frozen original raw statement/variant -> actual replacement text and scope
+# Not a product Git diff; no native Writer output or actual PPTX artifact is reconstructed.
+--- AN-Q1-3/frozen-original-error-description-or-text
++++ AN-Q1-3/actual-full-replacement-targets
+@@ -1 +1,28 @@
+-P6 上屏试题旁直接标注"答案：A 写未知走普通；B 立即紧急流转"，或口播问完立刻念答案、无作答停顿。
++TARGET: P6.visible question and answer reveal phases
++[
++  {
++    "phase": "question",
++    "visible_text": "### P6｜两道情境题：分别判断填写方式和下一动作\n\n情境 A：普通请求，型号、现象和尝试动作已知；版本无法读取。版本字段怎样写？下一步走哪条路径？\n情境 B：请求已符合既有紧急条件，版本 V2.4 已知。应先完成普通流程还是立即按紧急路径流转？版本怎样记录？\n\n作答要求：每题同时说出\"怎样填写\"和\"如何流转\"，并说明依据。\n\n",
++    "answers_visible": false
++  },
++  {
++    "phase": "learner_response",
++    "visible_text": "### P6｜两道情境题：分别判断填写方式和下一动作\n\n情境 A：普通请求，型号、现象和尝试动作已知；版本无法读取。版本字段怎样写？下一步走哪条路径？\n情境 B：请求已符合既有紧急条件，版本 V2.4 已知。应先完成普通流程还是立即按紧急路径流转？版本怎样记录？\n\n作答要求：每题同时说出\"怎样填写\"和\"如何流转\"，并说明依据。\n\n",
++    "answers_visible": false,
++    "continue_condition": "after collecting learner answers; do not hint or read the explanation before this"
++  },
++  {
++    "phase": "explanation",
++    "visible_text": "情境 A：版本写“未知”并说明无法读取的具体原因；按普通路径流转。\n情境 B：版本写 V2.4；立即按既有紧急路径流转，不先走普通流程。\n依据：紧急程度决定路径，版本可得性决定字段怎样填写。",
++    "answers_visible": true,
++    "show_condition": "only after the response phase"
++  }
++]
++
++
++TARGET: P6.speaker_text including explicit learner pause
++> **提问段**："现在试两种情况。先别只说一个动作，每题请同时回答字段怎么写、路径怎么选。情境 A：普通请求，型号、现象和尝试动作都已知，但版本无法读取——版本字段怎样写？下一步走哪条路径？情境 B：请求已经符合既有的紧急条件，版本 V2.4 也已知——应该先走一遍普通流程，还是立即按紧急路径流转？版本怎样记录？
++> **【停顿：现场作答。不提示、不展示答案；作答后再继续读解析段。】**
++> **解析段**："对。A 是普通请求，版本无法取得，因此写未知和具体原因，仍走普通路径。B 已符合紧急条件，版本也已知，因此写 V2.4，并立即按紧急路径流转，不先走一遍普通流程。区别来自紧急程度，不来自版本是否缺失。最后请用自己的话说：可接手的记录，需要让下一位人员知道哪三件事？【停顿：收集回答后给出模型答案】模型答案是：已知的、未知的、下一步。就是 P1 那条完成标准。"
++
++备答预案（讲师 notes）：若学员答出"先补齐版本再处理"，指回 P4 第 4 行——普通未知仍是普通路径，不升级（即被舍弃的 S3 错误直觉，可借此再强调一次）。若学员只答对填写漏答路径，追问"接手人接下来去哪"。

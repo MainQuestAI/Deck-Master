@@ -1,0 +1,51 @@
+# diff_kind: frozen original raw statement/variant -> actual replacement text and scope
+# Not a product Git diff; no native Writer output or actual PPTX artifact is reconstructed.
+--- AN-Q2-2/frozen-original-error-description-or-text
++++ AN-Q2-2/actual-full-replacement-targets
+@@ -1 +1,45 @@
+-架构图从 AI 问答画箭头直连正式工单系统，标注"自动关闭工单"。
++TARGET: P5 visible diagram nodes, edges and caption
++{
++  "id": "b1",
++  "type": "diagram",
++  "nodes": [
++    {
++      "id": "licensed_sources",
++      "text": "经许可的手册 / 历史工单（只读来源）"
++    },
++    {
++      "id": "ai_draft",
++      "text": "AI 问答：带引用的草稿与建议"
++    },
++    {
++      "id": "human_confirmation",
++      "text": "人员核对引用、事实与未知项"
++    },
++    {
++      "id": "human_formal_action",
++      "text": "人员在现有系统完成正式工单动作"
++    }
++  ],
++  "edges": [
++    {
++      "from": "licensed_sources",
++      "to": "ai_draft",
++      "text": "读取与引用"
++    },
++    {
++      "from": "ai_draft",
++      "to": "human_confirmation",
++      "text": "仅供核对的草稿与建议"
++    },
++    {
++      "from": "human_confirmation",
++      "to": "human_formal_action",
++      "text": "人员确认后在现有系统执行"
++    }
++  ],
++  "visible_caption": "一期只读；AI 不自动提交、修改或关闭正式工单。不得从 AI 问答画写回正式系统的箭头。"
++}
++
++
++TARGET: P5.notes
++读图顺序：许可来源、引用草稿、人员核对、人员现有系统正式动作。没有 AI 到正式系统的自动提交或关闭边。未知及具体原因保留；人工确认不是 AI 写回授权。

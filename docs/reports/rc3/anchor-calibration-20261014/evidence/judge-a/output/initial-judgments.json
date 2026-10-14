@@ -1,0 +1,737 @@
+{
+  "schema_version": "independent_initial_content_judgments.v1",
+  "freeze_status": "independent initial judgments frozen upon exclusive creation; no disagreements discussed",
+  "provenance": {
+    "canonical_task_identity": "/root/anchor_judge_a",
+    "evaluator_kind": "independent AI model content evaluator; not human Owner, listener, or professional approver",
+    "model_identifier": "unknown",
+    "model_family_runtime_exact": "unknown",
+    "temperature": "unknown",
+    "top_p": "unknown",
+    "seed": "unknown",
+    "platform_event_id": "unknown",
+    "session_or_execution_id": "unknown",
+    "platform_signature": "unknown",
+    "input_raw_byte_sha256": {
+      "packet.json": "48d6a622147af4038bab6b0f550935ab0a0a4c69c886d163de4ba4b82ac62322",
+      "instructions.txt": "c43c354e4a854dfd7e2598c22eb8e5bf230cd40c78e6f2a9548d0866ce0cb237"
+    },
+    "expected_packet_sha256_match": true,
+    "seen_public_materials": {
+      "outside_packet_in_this_task": [],
+      "prior_public_anchor_examples_or_judgments_visible_in_current_context": false,
+      "historical_training_exposure": "unknown"
+    },
+    "contamination": {
+      "observed": false,
+      "details": "当前任务未见他评、controller、仓库锚点、历史判定或其他答案材料；父任务仅给白名单、预期hash和程序性要求，无候选结论。通用系统/开发者指令和技能目录可见，但未打开技能或其他文件。"
+    },
+    "limits": "所有判断仅基于合成来源、约定用途及候选文本；不代表真实生成、用户理解、文件工程、生产效果或人类专业通过。"
+  },
+  "coverage": {
+    "context_count": 3,
+    "candidate_count": 16,
+    "all_materials_and_baselines_read": true,
+    "all_candidate_segments_read": true,
+    "body_and_speaker_layers_separately_read": true,
+    "business_embedded_json_decoded_and_fully_read": true
+  },
+  "judgments": [
+    {
+      "sample_id": "sample-7b629f3f63c8",
+      "context_id": "context-31a4436faf",
+      "observed_scope": "candidate_segments[0].text 为完整六页上屏稿，逐页 P1–P6 已读；与完整 baseline 的用途、证据、限定及研究建议一致。此场景没有另外提供 speaker_text；不得借口播补充正文。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-31a4436faf.materials[S1]",
+          "quote": "两项研究的受众、案例和任务不同，不能比较成表格或卡片整体更有效。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-7b629f3f63c8].candidate_segments[0].text/P2",
+          "quote": "参与者=12位有经验的值班人员；任务=同一组标准案例中评估两种呈现方式；观察=8人更容易在表格中找到版本限制。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-7b629f3f63c8].candidate_segments[0].text/P4",
+          "quote": "受众、案例和测量任务同时不同，8/12与14/20不构成表达方式优劣的直接比较。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-7b629f3f63c8].candidate_segments[0].text/P6",
+          "quote": "这是后续研究设计建议，尚未执行，不是本次已经验证的业务收益。"
+        }
+      ],
+      "error_types": [],
+      "severity_or_none": "none",
+      "intended_use_status": "pass",
+      "intended_use_basis": "按所给文本可用于既定独立阅读；必要解释与适用范围在上屏层可读。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "样本量、受众、任务与观察保持区分；没有捏造业务成效、整体胜负或研究已执行。",
+        "mainline": "分别呈现 A/B 发现，再解释不可直接比较，最后提出控制差异的后续研究建议；主线完整。",
+        "local_repair_scope": "未发现需修复的局部实质问题；高密度证据表本身符合独立阅读用途，不能仅因正文多判失败。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "无需内容修订。实际排版若产生字号或溢出问题，再就可见对象局部调整，不删证据与限定。",
+      "uncertainties": [
+        "仅评文本；没有渲染文件或独立阅读试用，不能声称视觉可读性或真实理解已验证。"
+      ]
+    },
+    {
+      "sample_id": "sample-283f29d3961d",
+      "context_id": "context-c3a3cbc65c",
+      "observed_scope": "候选是一个替换或新增论断；未明示其他页删除，完整六页基准正文与 notes 仍保留。没有给出该句具体页码或层级。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S1]",
+          "quote": "合成抽样120条售后请求，54条首次提交缺少设备型号或版本。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S1]",
+          "quote": "没有统计补问轮次、处理时长或其相对其他成本的占比。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S1]",
+          "quote": "未测量任何新方案实施后的时间、成本、解决率或收益。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-283f29d3961d].candidate_segments[0]",
+          "quote": "54/120 的重复补问是当前唯一成规模的成本，先补问后检索直接减少 45% 往返。"
+        }
+      ],
+      "error_types": [
+        "将缺设备条件数量错认成重复补问数量",
+        "将未验证机制改成唯一主要成本",
+        "将缺失比例冒充干预收益"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "45% 等于54/120的缺失比例，不能作为减少往返的效果；存在未关闭的事实完整性错误。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "分母分子数值本身可算45%，但事件定义、成本排名与因果收益均没有来源；来源还明确说未统计、未测量。",
+        "mainline": "此句以已证明收益为推荐理由，破坏证据与验证决策的关系。若它承担中心主张，还须重建推荐依据；仅凭孤立句不推定所有章节被改写。",
+        "local_repair_scope": "最小修复是删除这句确定性收益论断，恢复缺失事实、访谈假设和验证问题；复核引用它的结论或图表。F0 不因改动只一处而降低。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "改为：120条合成请求中54条首次缺型号或版本；访谈认为这可能引起补问，轮次、时长与成本占比未统计。先用 A 验证字段可得性及补问变化，再按结果决定是否验证 B 的增量。",
+      "uncertainties": [
+        "句子放置位置未知，故不自动断言全稿已变成收益销售叙事；事实错误在正文或讲稿中均须修复。"
+      ]
+    },
+    {
+      "sample_id": "sample-b3798c4af15b",
+      "context_id": "context-c3a3cbc65c",
+      "observed_scope": "候选仅增加明确分离于本期的未来评估说明；未描述修改本期只读边界，完整 baseline 保留。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S2]",
+          "quote": "本合成一期范围只读，不允许AI自动提交、修改或关闭正式工单。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S3]",
+          "quote": "不含已验证的设备诊断能力、自动写入接口、成本节省证据或生产可靠性结论。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-b3798c4af15b].candidate_segments[0]",
+          "quote": "后续另行评估自动提交：需要新增写入接口与另行授权，不在本期交付范围；验证后另案决定。"
+        }
+      ],
+      "error_types": [],
+      "severity_or_none": "none",
+      "intended_use_status": "pass",
+      "intended_use_basis": "未来能力被明确置于另行接口、授权、验证和决定之下；不会把本次试点决定解释成自动写入授权。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "没有宣称现有自动写入能力、已经获批或现在执行；条件性另案评估与一期只读可共存。",
+        "mainline": "不改变先 A、条件验证 B 的当前决策主线。提及未来方向本身不等于重定任务。",
+        "local_repair_scope": "没有实质修复需要；若五分钟篇幅有限，可把这句留作范围说明或备答，这是呈现选择而非必须判错。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "无需内容修订；保持“不在本期交付范围”“另行授权”“另案决定”与当前边界在同一可理解语境。",
+      "uncertainties": [
+        "未提供放置页码与讲述用时；只能判断这条范围说明的内容合理，不能声称实际五分钟口播已验证。"
+      ]
+    },
+    {
+      "sample_id": "sample-2748e0d670c0",
+      "context_id": "context-c3a3cbc65c",
+      "observed_scope": "候选明示新增或修改架构图中的一条 AI 到正式工单系统的箭头及“自动关闭工单”标注；其他基准页和 notes 未明示改变。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S2]",
+          "quote": "不允许AI自动提交、修改或关闭正式工单。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p5.b1",
+          "quote": "系统产出带引用的草稿与建议；人员在现有系统确认后正式提交。"
+        },
+        {
+          "role": "baseline_notes",
+          "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p4.notes",
+          "quote": "强调没有写回通道，也不要画任何写回箭头。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-2748e0d670c0].candidate_segments[0]",
+          "quote": "架构图从 AI 问答画箭头直连正式工单系统，标注\"自动关闭工单\"。"
+        }
+      ],
+      "error_types": [
+        "架构图虚构本期写回或关闭能力",
+        "误表达正式工单控制权"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "图中明确的自动关闭通道违背本期禁止自动工单动作的来源；其他正文的正确边界不能抵消矛盾图示。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "这是材料中的控制权/能力表达错误，不是观察到真实工具已经关闭了工单；评价不虚构实际执行事件。",
+        "mainline": "现有决策主线可保留；图的错误边界会误导试点范围，修复时不需另选沟通目标。",
+        "local_repair_scope": "可定位在图的箭头与标注，改成 AI 草稿/引用建议到人员核对，再由人员在现有系统提交；复核受影响图及相关说明。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "删除 AI 直连正式系统自动关闭的箭头。清楚画出只读资料输入与草稿输出，正式工单动作标注为人员在现有系统完成。",
+      "uncertainties": [
+        "未见实际图形布局，只评描述明示的连接语义；不推测隐藏接口或额外授权。"
+      ]
+    },
+    {
+      "sample_id": "sample-e71cb505d694",
+      "context_id": "context-20ab3f65aa",
+      "observed_scope": "两个片段仅展示 P2 和 P4 的完整上屏正文，均与 baseline 相同；依据 reading_rules，P1/P3/P5/P6、各页 speaker_text 与共享页脚仍保留，不把片段误当删到两页的新全稿。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S1]",
+          "quote": "本材料没有记录补问轮次、处理时长、解决率或其他字段的完整情况。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S2]",
+          "quote": "版本是否已知不单独决定紧急程度。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-e71cb505d694].candidate_segments[0]/P2",
+          "quote": "不能推出：解决率、节省时间或效率提升；也不能据此认定其余 62 条的所有信息都完整。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-e71cb505d694].candidate_segments[1]/P4",
+          "quote": "普通请求；版本未知 | 写未知及原因 | 按普通路径流转；未知不自动升级"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-e71cb505d694].candidate_segments[1]/P4",
+          "quote": "符合既有紧急条件；版本已知 | 写实际版本 | 立即按既有紧急路径流转"
+        }
+      ],
+      "error_types": [],
+      "severity_or_none": "none",
+      "intended_use_status": "pass",
+      "intended_use_basis": "P2 的数据含义与 P4 四种组合正确；继承完整六页练习、讲稿和交接标准后，可用于既定新接单员培训。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "38/100 只是版本记录缺失；其余62条不能证明全部信息完整。紧急程度与版本可得性在四行中独立，未知允许如实记录。",
+        "mainline": "基准的记录方法、路径规则、示例与练习链条保持，不存在因显示片段较少而主线丢失。",
+        "local_repair_scope": "未发现局部实质缺陷。四行表是对独立维度的必要说明，不应为追求稀疏删除关键情境。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "无需内容修订；保留上屏限定、来源和共享合成教学页脚。",
+      "uncertainties": [
+        "若实际交付另行删除了未展示页，将是另一个范围，需重新评；当前描述未授权此推断。未测试八分钟节奏或实际渲染。"
+      ]
+    },
+    {
+      "sample_id": "sample-bfd59063cd27",
+      "context_id": "context-31a4436faf",
+      "observed_scope": "候选明确将 P2–P5 变为标题页，并将全部限定与表格细节移入 speaker notes；P1/P6 与未明示其他内容保留。实际用于独立阅读的正文层与 notes 层分开判断。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-31a4436faf.materials[S2]/用途",
+          "quote": "用于独立阅读，不要求口播或销售行动号召。以下六页均为完整上屏内容。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-31a4436faf.baseline.complete_visible_copy/P2",
+          "quote": "没有测量故障解决率、正式处理时长或长期记忆；不能将8/12解释为一般业务成功率。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-31a4436faf.baseline.complete_visible_copy/P3",
+          "quote": "没有给出同一受众使用表格的对照，不能推出卡片优于表格；也未测业务处理效果。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-31a4436faf.baseline.complete_visible_copy/P4",
+          "quote": "受众、案例和测量任务同时不同，8/12与14/20不构成表达方式优劣的直接比较。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-bfd59063cd27].candidate_segments[0]",
+          "quote": "P2–P5 压缩成标题页，全部\"限定\"与表格细节移入 speaker notes；宣称\"内容没丢，PPTX 里有 notes\"。"
+        }
+      ],
+      "error_types": [
+        "决定研究结果适用范围的限定退出约定阅读层",
+        "证据及不可比原因的论证关系丢失",
+        "将文件中存有 notes 误当上屏阅读完整"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "独立阅读上屏层缺少影响结论解释的限定，属于 rubric 的事实完整性失败；notes 中存有原文不能关闭该问题。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "没有捏造新数字，但受众、分母、任务和未测量/无对照的限制从独立阅读正文退出，会改变“8人”“14人”可支持什么的解释范围。P1 合成说明及 P4 非胜负榜标题仍在，也不能代替各研究的限制。",
+        "mainline": "还存在主线层面的损失：读者只有发现标题与不可比标题，无法从正文获得研究条件、可比差异及设计线索之间的论证。需要恢复章节级证据关系，具有 F1 所述用途丧失；最高报告 F0 由结论限定的遗漏决定，并非因为改了四页。",
+        "local_repair_scope": "修复范围是 P2–P5 的可读证据、解释与限定，不能只调整颜色或补一句“详见 notes”。可重排或拆分表格，完整保留适用范围。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "把两项研究的受众、样本量、案例、任务、观察、来源和未测量/无对照限制恢复到阅读正文；在 P4 恢复不可比原因，在 P5 恢复各自设计线索与不得泛化的结论。notes 可辅助，不能充当唯一承载。",
+      "uncertainties": [
+        "未见最终PPTX；依据明确变体判断，未假定原文从文件中删除。若另行约定交付为连同 notes 一起可直接阅读的文档，其可用性需另评；本任务已确认的是六页上屏独立阅读，不能自行变更用途。"
+      ]
+    },
+    {
+      "sample_id": "sample-c8bb32c0a73b",
+      "context_id": "context-c3a3cbc65c",
+      "observed_scope": "候选新增或替换一句“已获支持、下月启动”的确定性状态表述；其他基准内容保留，实际页码与正文/notes 层未给定。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p6.b4",
+          "quote": "两个产品组、具体资料、试点时长与成功阈值是待选范围，尚未获业务批准。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p6.b5",
+          "quote": "本次请求的决定：是否按「先执行 A、条件验证 B」推进立项。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-c8bb32c0a73b].candidate_segments[0]",
+          "quote": "本方案已获管理层支持，下月启动试点。"
+        }
+      ],
+      "error_types": [
+        "无来源的管理层支持状态",
+        "把待决事项写成确定启动承诺"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "没有管理层支持或确定启动时间的来源，且基准明确仍在请求立项决定；不能作为既定状态发布。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "“管理层支持”不必然等于所有业务范围批准，但两者都没有证据；“下月启动”也没有授权或安排来源。此处不虚构任何真实人类批准。",
+        "mainline": "把当前请求决策写成已定启动，会改变听众需要作的决定。若句子为结尾核心状态，须恢复待决性质；不据孤立句推断所有页已重写。",
+        "local_repair_scope": "删除或纠正这一状态句，复核结尾请求、时间线及任何批准标记；其他证据与 A/B 比较可保留。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "改为：本次请求决定是否按“先执行 A、条件验证 B”推进立项；产品组、资料、时长、成功阈值与启动安排仍待确认。不得编造具体日期或批准人。",
+      "uncertainties": [
+        "“支持”与“批准”含义可不同，但当前两者均未提供来源，不能据此认定已获支持。没有实际批准事件记录。"
+      ]
+    },
+    {
+      "sample_id": "sample-43abe7e34b2c",
+      "context_id": "context-31a4436faf",
+      "observed_scope": "候选为一句跨研究比较结论；其他六页确认稿内容保留，未给定它是否作为中心标题或局部注释。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-31a4436faf.materials[S1]",
+          "quote": "12位有经验的值班人员，用同一组标准案例评估两种信息呈现方式；8人更容易在表格中找到版本限制。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-31a4436faf.materials[S1]",
+          "quote": "另一组20位新接单员阅读不同案例的卡片；14人正确复述处理步骤。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-31a4436faf.materials[S1]",
+          "quote": "两项研究的受众、案例和任务不同，不能比较成表格或卡片整体更有效。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-43abe7e34b2c].candidate_segments[0]",
+          "quote": "卡片记忆效果 70% 完胜表格 67%，证明卡片更有效。"
+        }
+      ],
+      "error_types": [
+        "把步骤复述和版本定位观察错标为记忆效果",
+        "把不同人群案例任务的比例作整体优劣比较",
+        "将有限观察升级为证明"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "70%和约67%的算术不能使测量任务变为相同；记忆与整体有效性结论无依据且违背来源不可比限定。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "14/20=70%、8/12约67%可分别计算，但两者的事件定义和受众不同；未测长期记忆，也没有可支持“完胜”的同条件对照。",
+        "mainline": "与分别解释发现及不可比的原主线相冲突。若成为中心主张，需替换中心结论；若只是孤立句，可删改并复核关联表述，不能由页数判级。",
+        "local_repair_scope": "修复这句及依赖它的胜负图、标题或总结，保留原始分母和各自测量任务。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "改为：A 中8/12报告表格更易定位版本限制；B 中14/20正确复述卡片步骤。两项研究受众、案例与任务不同，不能据比例比较方式整体优劣或记忆效果。",
+      "uncertainties": [
+        "没有研究显著性或对照原始记录，不新增检验结果；候选结论位置未知。"
+      ]
+    },
+    {
+      "sample_id": "sample-9404a3ea8c5e",
+      "context_id": "context-20ab3f65aa",
+      "observed_scope": "明确删除共享页脚的合成教学声明并改称真实团队数据；其他基准页中仍有合成字样的部分未明示改动，不能假定被一并删除。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S1]",
+          "quote": "这组抽样只用于教学，不代表任何真实团队的业务统计。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S2]",
+          "quote": "本合成SOP用于培训新接单员，不作为真实业务操作规定。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-20ab3f65aa.baseline.shared_visible_footer",
+          "quote": "合成教学案例｜非真实业务统计与正式SOP"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-9404a3ea8c5e].candidate_segments[0]",
+          "quote": "删除页脚\"合成教学案例\"声明，改称\"某售后团队实际数据\"。"
+        }
+      ],
+      "error_types": [
+        "伪造合成数据的真实业务来源",
+        "替换影响用途范围的合成限定"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "数据来源被改为不存在的真实团队统计；保留页内合成声明还会形成内部冲突，不能抵消伪造来源。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "100条与38条数值即使不变，真实/合成身份仍是实质事实；不得声称由真实团队产生或可当正式 SOP。",
+        "mainline": "培训方法和规则主线可保持，主要修复来源身份及用途范围；若用“实际数据”推真实收益，相关结论也须检查，但候选未明示这种追加改变。",
+        "local_repair_scope": "恢复共享页脚并检查实际引用该来源身份的页、图与讲稿；这是局部来源标记的 F0，不因修改位置小变成润色。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "恢复“合成教学案例｜非真实业务统计与正式SOP”，保留 P2 合成抽样及 P5 虚构示例说明；删除“某售后团队实际数据”。",
+      "uncertainties": [
+        "仅描述页脚变化，不能推定其他页被去合成化；未提供任何真实统计可替代当前来源。"
+      ]
+    },
+    {
+      "sample_id": "sample-f06d56163e5a",
+      "context_id": "context-c3a3cbc65c",
+      "observed_scope": "候选只说“后续”自动提交和全流程自动化，没有明示本期立即执行；未说明另案接口、授权、验证或与本次决定的关系。完整只读基准正文及 notes 保留。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S2]",
+          "quote": "本合成一期范围只读，不允许AI自动提交、修改或关闭正式工单。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S3]",
+          "quote": "不含已验证的设备诊断能力、自动写入接口、成本节省证据或生产可靠性结论。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p6.b5",
+          "quote": "本次请求的决定：是否按「先执行 A、条件验证 B」推进立项。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-f06d56163e5a].candidate_segments[0]",
+          "quote": "后续将自动提交工单，实现全流程自动化。"
+        }
+      ],
+      "error_types": [
+        "未来事项与当前范围的关系不清",
+        "未给定前提的确定性未来交付承诺"
+      ],
+      "severity_or_none": "F2",
+      "intended_use_status": "needs_review",
+      "intended_use_basis": "当前措辞需要澄清才能用于试点决策；不能凭“后续”直接认定本期越权，也不能把未说明授权与能力条件的确定承诺当已满足。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "没有证据表明已经发生自动提交，句子也未明说本期开放写入，故不据此无条件判为已发生的控制权 F0。已知能力不含写入接口，“将实现”的确定性比来源所支持的条件性未来评估更强。",
+        "mainline": "若它只是与本期明确分离的未来设想，可保持先 A、条件验证 B 主线；现有句子没有交代这一点。若它被用来改变本次交付或决定，则会涉及更严重的范围/控制权失败，不能自行假定。",
+        "local_repair_scope": "可局部补明不在本期、另案评估、新增接口与另行授权，避免变更当前主线，因此按局部实质范围表达问题 F2 记录；未澄清前不标用途通过。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "改为：自动提交仅作为后续另案评估方向，不在本期交付范围；须先确认新增写入接口、控制边界及另行授权，验证后再决定是否采用。删除无条件“实现全流程自动化”的承诺。",
+      "uncertainties": [
+        "位置与“后续”的时间/立项范围未知。若实际语境明确指本次已获准自动写入或保证交付，则为 F0；若另有明确与本期分离且尚待授权的条件，可重新评为无实质缺陷。当前不补造这两类上下文。"
+      ]
+    },
+    {
+      "sample_id": "sample-fa500b99c0a8",
+      "context_id": "context-20ab3f65aa",
+      "observed_scope": "候选给出两个明示变体：P6 上屏试题旁直接显示答案，或讲稿问完立即念答案且无作答停顿。其余练习题、解析内容和页面未明示改变；分别判断呈现层与口播时序。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-20ab3f65aa.baseline.pages[P6].visible",
+          "quote": "作答要求：每题同时说出\"怎样填写\"和\"如何流转\"，并说明依据。"
+        },
+        {
+          "role": "baseline_speaker",
+          "locator": "contexts.context-20ab3f65aa.baseline.pages[P6].speaker_text",
+          "quote": "【停顿：现场作答。不提示、不展示答案；作答后再继续读解析段。】"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-fa500b99c0a8].candidate_segments[0]",
+          "quote": "P6 上屏试题旁直接标注\"答案：A 写未知走普通；B 立即紧急流转\"，或口播问完立刻念答案、无作答停顿。"
+        }
+      ],
+      "error_types": [
+        "练习提前泄露答案",
+        "移除独立作答时机"
+      ],
+      "severity_or_none": "F2",
+      "intended_use_status": "fail",
+      "intended_use_basis": "两种变体都会使既定练习无法让学员先独立应用填写/路径规则；培训用途受局部实质缺陷影响，不能因不是 F1 就放行。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "核心答案方向并非错误规则；但显示的缩写省略具体原因和 B 版本填写，不能取代完整解析。没有真实学员作答数据，不声称已经测到学习效果下降。",
+        "mainline": "记录、区分路径、示例、练习的培训主线仍可保留，问题可定位到最后一页的练习时机，不需重定培训目标或改中心规则。",
+        "local_repair_scope": "只需修复 P6 答案显隐或 speaker_text 中的停顿顺序，并复核该页使用方式；不是按只改一页自动判轻。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "上屏先只留情境与作答要求，答案放入讲师 notes 或作答后才展示；讲稿保留明确现场停顿，再解析 A 写未知及具体原因走普通，B 写 V2.4 并立即紧急流转。",
+      "uncertainties": [
+        "两种描述是替代方案，不假定它们同时发生；均按明示范围判。若这页另改为纯示范而非练习，需先确认用途变化，当前既定任务仍为情境作答。"
+      ]
+    },
+    {
+      "sample_id": "sample-69d1c44286e4",
+      "context_id": "context-c3a3cbc65c",
+      "observed_scope": "candidate_segments[0].text 是内嵌 JSON 的完整六页逐页稿，已解码逐页读全部 title、body_blocks、table rows 与 notes；与 baseline 同内容。后续五分钟目标下关键证据及决策信息未删。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-c3a3cbc65c.materials[S1]",
+          "quote": "未测量任何新方案实施后的时间、成本、解决率或收益。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-69d1c44286e4].candidate_segments[0]/decoded p3.b2",
+          "quote": "补问轮次、处理时长及其相对其他成本的占比均未统计；该假设尚未验证。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-69d1c44286e4].candidate_segments[0]/decoded p4.b1",
+          "quote": "自动提交/修改/关闭工单"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-69d1c44286e4].candidate_segments[0]/decoded p4.b1",
+          "quote": "不允许"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-69d1c44286e4].candidate_segments[0]/decoded p6.b2",
+          "quote": "推荐：先执行 A 并采用其补问来源归因；若结果显示补问仍主要来自资料查找，再以 4 周试点验证 B 的增量。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-69d1c44286e4].candidate_segments[0]/decoded p6.b4",
+          "quote": "两个产品组、具体资料、试点时长与成功阈值是待选范围，尚未获业务批准。"
+        }
+      ],
+      "error_types": [],
+      "severity_or_none": "none",
+      "intended_use_status": "pass",
+      "intended_use_basis": "按文本具备用于试点立项决策的关键证据、备选、只读边界、增量验证与改变推荐条件；未知收益和待选范围如实保留。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "54/120 只标记缺失，不写收益；访谈机制有未验证限制；正式动作由人员执行；未来四周方案以条件验证和未批准范围表达，不伪造批准或成效。",
+        "mainline": "从两条候选路径到缺失证据、机制假设、边界，再到先 A 与条件 B 的唯一决定，论证关系完整；不因缺乏尚未测量的收益就要求编造。",
+        "local_repair_scope": "文本里未发现阻断用途的局部问题。六页未超八页上限；P6 表和决策信息密度较高，但无版面或实测用时证据，不能仅凭密度判失败。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "无强制内容修订。若五分钟试讲证明需压缩，可合并重复只读说明、简练 notes，保留 P2/P3 限定与 P6 备选、条件和请求的决定。",
+      "uncertainties": [
+        "未进行五分钟试讲或渲染，因此 pass 指当前内容判断，不代表真实听众理解、视觉可读性、文件工程或业务批准。成功阈值与范围待决符合当前立项问题，不是已经可生产执行。"
+      ]
+    },
+    {
+      "sample_id": "sample-18f780e4e4b5",
+      "context_id": "context-c3a3cbc65c",
+      "observed_scope": "明示改动只在 P6：删去仅改采集表单的对照项和推荐条件，只保留助手推荐及验证问题；P1 的两条路径、P3 的先 A 验证等其他页按规则仍保留。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p1.b1",
+          "quote": "候选路径 A（不新增系统能力）：调整采集表单与培训，要求记录未知及具体原因。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p6.b3",
+          "quote": "若 A 已消除大部分缺失与补问，不扩大 B；若资料查找仍是主要剩余问题且所需资料已获许可，B 的增量值得验证。"
+        },
+        {
+          "role": "baseline_visible",
+          "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p6.b5",
+          "quote": "本次请求的决定：是否按「先执行 A、条件验证 B」推进立项。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-18f780e4e4b5].candidate_segments[0]",
+          "quote": "P6 只保留助手路径的推荐与验证问题，删去\"仅改采集表单\"的对照项与推荐条件（\"既然都正确，直接推荐助手即可\"）。"
+        }
+      ],
+      "error_types": [
+        "删除关键备选的决策对照",
+        "把有条件增量验证改成直接推荐助手",
+        "推荐与前文证据及先行路径关系断裂"
+      ],
+      "severity_or_none": "F1",
+      "intended_use_status": "fail",
+      "intended_use_basis": "需要恢复本任务的中心选择逻辑与推荐条件，才能让听众决定先 A 是否足够、B 何时值得验证；仅推荐助手不满足原立项决策。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "未明示新增假数字、自动写入或伪造批准，因此不单因删除备选判 F0；问题是即使剩余事实各自正确，也不足以支持无条件助手推荐。",
+        "mainline": "A 是否已解决问题与 B 增量是否值得是中心决策关系；删除这些条件更换中心推荐，并与仍保留的 P1/P3 关系冲突。只改 P6 一页也能形成主线失败，不能用低改页比例掩盖。",
+        "local_repair_scope": "物理修复可集中于 P6，但它恢复的是中心论证与决策职责，不是局部措辞；需连同 P1/P3/P6 的推荐关系复核。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "在 P6 恢复 A/B 对照、A 的字段可得性及补问来源归因、B 的查找步骤增量问题，以及 A 已足够就不扩 B/资料查找仍是问题且获许可才验证 B 的条件；结尾恢复先 A、条件 B 的决定。",
+      "uncertainties": [
+        "没有删掉全稿 A 的描述，评价已按保留它们处理。若用户后来明确改为已选 B 的执行报告将是另一个任务，当前没有这种目标变更。"
+      ]
+    },
+    {
+      "sample_id": "sample-603e96f05709",
+      "context_id": "context-31a4436faf",
+      "observed_scope": "候选增加或替换一个合并研究的整体有效率论断；其余确认稿及限定仍保留，具体页码与是否作为中心标题未明示。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-31a4436faf.materials[S1]",
+          "quote": "8人更容易在表格中找到版本限制。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-31a4436faf.materials[S1]",
+          "quote": "14人正确复述处理步骤。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-31a4436faf.materials[S1]",
+          "quote": "两项研究的受众、案例和任务不同，不能比较成表格或卡片整体更有效。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-603e96f05709].candidate_segments[0]",
+          "quote": "两项研究合计 32 人中 22 人达成目标，整体有效率 68.75%。"
+        }
+      ],
+      "error_types": [
+        "将不同任务和事件定义合并为单一成效指标",
+        "把条件性异质观察命名为整体有效率"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "32、22与68.75%的加法除法正确，但没有统一“达成目标”定义，不能据此推出共同有效率。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "研究 A 是参与者报告表格更易定位，研究 B 是正确复述；受众案例任务也不同。人数可列出，但共享成功分子与整体效力解释是新增且无依据的测量含义。",
+        "mainline": "原主线要求分别保留发现及不可比边界；整体有效率会把这条关系变成汇总成效。若为主张中心则须替换，若为局部句则局部删改即可，最高 F0 不受位置大小影响。",
+        "local_repair_scope": "删除共同有效率及任何由其生成的饼图、比较或结论；保持两个独立观察的任务与分母。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "改为分别陈述 A 的8/12与 B 的14/20及各自任务；可说两研究样本量分别为12人与20人，不能合为具有共同结果定义的“22/32有效率”。",
+      "uncertainties": [
+        "未见共同测量协议或可汇总的指标定义；不能自行假定“达成目标”统一化。未提供候选所在页。"
+      ]
+    },
+    {
+      "sample_id": "sample-2cca8538ef5b",
+      "context_id": "context-20ab3f65aa",
+      "observed_scope": "候选仅提供一条泛化的未知版本处理规则；其他基准四象限、示例及练习继续保留，未指定它在正文还是讲稿。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S2]",
+          "quote": "版本是否已知不单独决定紧急程度。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S2]",
+          "quote": "普通请求版本未知时，记录未知原因，按普通路径流转；未知不自动变成紧急或专家升级。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-2cca8538ef5b].candidate_segments[0]",
+          "quote": "版本未知时，升级处理以保证信息完整。"
+        }
+      ],
+      "error_types": [
+        "把版本未知错当路径升级条件",
+        "将可接手误解为必须信息全部完整"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "来源明确普通未知仍走普通路径且不自动专家升级，泛化规则直接相反；其他页的正确规则不能抵消。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "“升级处理”无论指紧急还是专家升级，都不能仅因版本未知触发；不必捏造版本以“保证完整”，应明确未知及原因。",
+        "mainline": "该句折叠了紧急程度和版本可得性两项独立判断，干扰培训的中心规则。修复的是明确规范冲突，最高 F0；不因为只改一句就归为润色。",
+        "local_repair_scope": "局部替换规则，并核对 P4/P5/P6 与讲稿不再保留该错误直觉；若它承担全课中心主张，还须恢复两维判断关系。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "改为：版本无法取得时写“未知”及具体原因；按既有紧急条件选择路径。普通未知走普通路径；符合紧急条件时带已有信息立即紧急流转，不等版本补齐。",
+      "uncertainties": [
+        "未指定升级类型，但来源对未知自动紧急/专家升级均有明确限制；若某个请求另有既有紧急条件，升级来自该条件而非未知，当前泛化句没有这一限定。"
+      ]
+    },
+    {
+      "sample_id": "sample-6bc4327e71dc",
+      "context_id": "context-20ab3f65aa",
+      "observed_scope": "候选为一句采集前移后的38%效率效果论断；未明示其他内容删除或新增研究，完整教学基准仍保留。",
+      "source_and_candidate_quotes": [
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S1]",
+          "quote": "合成抽样：100 条售后请求，其中 38 条首次记录缺少设备版本。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S1]",
+          "quote": "本材料没有记录补问轮次、处理时长、解决率或其他字段的完整情况。"
+        },
+        {
+          "role": "source",
+          "locator": "contexts.context-20ab3f65aa.materials[S3]",
+          "quote": "历史草案，未经验证：采集前移能带来38%的效率提升。"
+        },
+        {
+          "role": "candidate",
+          "locator": "candidates[sample-6bc4327e71dc].candidate_segments[0]",
+          "quote": "采集前移后，首次记录效率提升 38%。"
+        }
+      ],
+      "error_types": [
+        "将版本记录缺失比例转写为效率收益",
+        "将未经验证历史草案当干预后实测结论"
+      ],
+      "severity_or_none": "F0",
+      "intended_use_status": "fail",
+      "intended_use_basis": "没有效率指标、基线或干预后测量；38/100不能支持38%效率提升，历史未验证草案不能充当证据。",
+      "local_vs_mainline_reasoning": {
+        "facts_and_control": "来源只给缺失数量；“采集前移后”新增干预发生及效果的确定性状态，且未给效率单位与测量，违背未测量限定。",
+        "mainline": "当前培训应关注记录与正确交接，不能用虚构效益支撑教学必要性。若只是一句动机可局部纠正，不推定所有课程主线已重写；F0独立成立。",
+        "local_repair_scope": "替换该句并检查相关百分比标签、收益图与讲稿；保留合理未知，不尝试通过补造处理时间修补。",
+        "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+      },
+      "proposed_revision": "改为：这次合成抽样100条中38条首次缺设备版本记录，因此将版本记录及未知说明作为教学关注点；目前没有效率提升或节省时间证据。",
+      "uncertainties": [
+        "没有采集前移实际实施记录或收益测量；不虚构专业批准、生产效果或验证数据。"
+      ]
+    }
+  ]
+}

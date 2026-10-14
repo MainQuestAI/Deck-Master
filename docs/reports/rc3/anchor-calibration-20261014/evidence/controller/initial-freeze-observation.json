@@ -1,0 +1,188 @@
+{
+  "observed_at_utc": "2026-10-14T15:51:53.191146+00:00",
+  "observer": "/root",
+  "actual_observation": "collaboration.list_agents returned both canonical judge identities with completed statuses and original completion messages/hash declarations before root compared mappings or judgments",
+  "platform_event_id": "unknown",
+  "platform_signature": "unknown",
+  "human_acceptance": false,
+  "files": {
+    "judge-b/output/initial-judgments.json": {
+      "bytes": 46536,
+      "sha256": "ca9044289887e75cd056d6f3430cd6d5374dfc9431ee68f2161117e0aa3e4b7b"
+    },
+    "judge-b/output/read-log.json": {
+      "bytes": 16120,
+      "sha256": "44046dfa00ae61d343d168969e6cb3d94a0f93d3bc34b1906ef6dd8cc27e3d05"
+    },
+    "judge-a/output/initial-judgments.json": {
+      "bytes": 47624,
+      "sha256": "1d7e3fe6be9c2ae5785b9e0904528f5d74f414c89702f52ca7387c5cbdfe39c2"
+    },
+    "judge-a/output/read-log.json": {
+      "bytes": 11962,
+      "sha256": "2d863b349a81242304757817ad6c7255d6c6acb62354ad3d72c89147b8866687"
+    }
+  },
+  "comparison": {
+    "control-research-full-copy": {
+      "judge-a": {
+        "severity": "none",
+        "status": "pass"
+      },
+      "judge-b": {
+        "severity": "none",
+        "status": "pass"
+      }
+    },
+    "AN-Q2-1": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F0",
+        "status": "fail"
+      }
+    },
+    "future-proposal-second-candidate": {
+      "judge-a": {
+        "severity": "none",
+        "status": "pass"
+      },
+      "judge-b": {
+        "severity": "none",
+        "status": "pass"
+      }
+    },
+    "AN-Q2-2": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F0",
+        "status": "fail"
+      }
+    },
+    "control-training-visible-P2-P4": {
+      "judge-a": {
+        "severity": "none",
+        "status": "pass"
+      },
+      "judge-b": {
+        "severity": "none",
+        "status": "pass"
+      }
+    },
+    "AN-Q3-2": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F2",
+        "status": "fail"
+      }
+    },
+    "AN-Q2-3": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F0",
+        "status": "fail"
+      }
+    },
+    "AN-Q3-1": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F0",
+        "status": "fail"
+      }
+    },
+    "AN-Q1-4": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F0",
+        "status": "fail"
+      }
+    },
+    "AN-Q2-5": {
+      "judge-a": {
+        "severity": "F2",
+        "status": "needs_review"
+      },
+      "judge-b": {
+        "severity": "F2",
+        "status": "needs_review"
+      }
+    },
+    "AN-Q1-3": {
+      "judge-a": {
+        "severity": "F2",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F2",
+        "status": "fail"
+      }
+    },
+    "control-decision-full-pages": {
+      "judge-a": {
+        "severity": "none",
+        "status": "pass"
+      },
+      "judge-b": {
+        "severity": "none",
+        "status": "pass"
+      }
+    },
+    "AN-Q2-4": {
+      "judge-a": {
+        "severity": "F1",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F1",
+        "status": "fail"
+      }
+    },
+    "AN-Q3-3": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F0",
+        "status": "fail"
+      }
+    },
+    "AN-Q1-2": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F0",
+        "status": "fail"
+      }
+    },
+    "AN-Q1-1": {
+      "judge-a": {
+        "severity": "F0",
+        "status": "fail"
+      },
+      "judge-b": {
+        "severity": "F0",
+        "status": "fail"
+      }
+    }
+  }
+}

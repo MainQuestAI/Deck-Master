@@ -1,0 +1,304 @@
+{
+  "controller_only": true,
+  "seeds": {
+    "judge-a": "dcedc8fbb9369b8dbf3147aa8a2366ff1cae768933bd73da0274537d1e32df9e",
+    "judge-b": "bee6e4f10c3abeb61c5f91b7807a1a845237227c6922dcc06c5ea17fa86f3f3e"
+  },
+  "mapping": {
+    "judge-a": [
+      {
+        "sample_id": "sample-7b629f3f63c8",
+        "context_id": "context-31a4436faf",
+        "source_identity": "control-research-full-copy",
+        "semantic_sha256": "9ee6c34ceb861303fbb7c5c53a062ea7ac9c5a9ca1479b5d0073a744702c8ea3",
+        "candidate_segment_sha256": [
+          "e67c0c46fc4c8d4028915643719b4f5430723df2ae8ac1f0ff583e1c1d142ead"
+        ]
+      },
+      {
+        "sample_id": "sample-283f29d3961d",
+        "context_id": "context-c3a3cbc65c",
+        "source_identity": "AN-Q2-1",
+        "semantic_sha256": "34d121c17c3ea409f3453d08b50843653223e0f9d24809e32601fd08dec30e03",
+        "candidate_segment_sha256": [
+          "c29e1d313069fa86e5d8176c981dd617944f9120c59ce99df1657c65d31338bd"
+        ]
+      },
+      {
+        "sample_id": "sample-b3798c4af15b",
+        "context_id": "context-c3a3cbc65c",
+        "source_identity": "future-proposal-second-candidate",
+        "semantic_sha256": "457c2e82987473d8dc5fe1d071c6e83393944846dd836b2bd4ac991279eb9e55",
+        "candidate_segment_sha256": [
+          "fa7dbb8eff209322f4432a3df0df70fab9fa49d742ad192241235a19fea19c2d"
+        ]
+      },
+      {
+        "sample_id": "sample-2748e0d670c0",
+        "context_id": "context-c3a3cbc65c",
+        "source_identity": "AN-Q2-2",
+        "semantic_sha256": "0189d035c90eb82efe678fcced29523d86511d752d3d156d3824709a3ea5d219",
+        "candidate_segment_sha256": [
+          "e980f44ff9c67c110bc9af2d841d4541fc83293e00e1bbc8a2cca5c8f0dc46b9"
+        ]
+      },
+      {
+        "sample_id": "sample-e71cb505d694",
+        "context_id": "context-20ab3f65aa",
+        "source_identity": "control-training-visible-P2-P4",
+        "semantic_sha256": "5e950a495a6e16957e4e13d7ea693be3fce06ca06cdac233c2925bb45f957263",
+        "candidate_segment_sha256": [
+          "2e18ca73466d7227bf8c89b9a2cea02854b6e6bb2c2ee0c3ba29e90a1464d86b",
+          "0d7b8391be531e54f5cebb9584a4af5dedb7dc28415424bc8040356eb5df8754"
+        ]
+      },
+      {
+        "sample_id": "sample-bfd59063cd27",
+        "context_id": "context-31a4436faf",
+        "source_identity": "AN-Q3-2",
+        "semantic_sha256": "6ec5bbaed24723024acde5a1af26a4dadebf5c5292dc02cf7c64d03c10065876",
+        "candidate_segment_sha256": [
+          "d8a3ad4f7f0daad188caf66bc91c4e16b008ccad8b93a8da7b564967f82b1e8c"
+        ]
+      },
+      {
+        "sample_id": "sample-c8bb32c0a73b",
+        "context_id": "context-c3a3cbc65c",
+        "source_identity": "AN-Q2-3",
+        "semantic_sha256": "3ca9fd6ca6575f0fbdfe030bab5af202dfbde9ea3b95e48a40c806c29f9e80a6",
+        "candidate_segment_sha256": [
+          "be59f6ad7b1e53c8e7d2b37840707a658398aa8c98dd15717c549d9949304fbd"
+        ]
+      },
+      {
+        "sample_id": "sample-43abe7e34b2c",
+        "context_id": "context-31a4436faf",
+        "source_identity": "AN-Q3-1",
+        "semantic_sha256": "84bb4765bdc102c057ed7d01f95fb30e1d041d30f93c225a2556736203e045ac",
+        "candidate_segment_sha256": [
+          "04fb19b0dac8c91ecb4b47d4c57110021a6b15e4429b8f70af718b34b49f333c"
+        ]
+      },
+      {
+        "sample_id": "sample-9404a3ea8c5e",
+        "context_id": "context-20ab3f65aa",
+        "source_identity": "AN-Q1-4",
+        "semantic_sha256": "ae423174a7d0039f031dd9246ee5ad98179f6c76877a3f2615ff298ff2068bd8",
+        "candidate_segment_sha256": [
+          "45208dc92c7da67081942b2469a74ded034e9cb6071bc6fa23592501cf3179da"
+        ]
+      },
+      {
+        "sample_id": "sample-f06d56163e5a",
+        "context_id": "context-c3a3cbc65c",
+        "source_identity": "AN-Q2-5",
+        "semantic_sha256": "3052b74feb0c966fc2252de79e9a50b548f9567f27dc3f779cd5020da9dc430d",
+        "candidate_segment_sha256": [
+          "8d0025c594155720d41b9d232bd3e697f5e57c97cfa44a248dad6f71ce8f95a7"
+        ]
+      },
+      {
+        "sample_id": "sample-fa500b99c0a8",
+        "context_id": "context-20ab3f65aa",
+        "source_identity": "AN-Q1-3",
+        "semantic_sha256": "38d70b49f7df86aa6cae174fc755436b56d147f2b79ede85615c82804463f8bb",
+        "candidate_segment_sha256": [
+          "aa585a392ec36d4960cdb3d21b8deae5671f49cf8b6f735af455b55d5ae26dc3"
+        ]
+      },
+      {
+        "sample_id": "sample-69d1c44286e4",
+        "context_id": "context-c3a3cbc65c",
+        "source_identity": "control-decision-full-pages",
+        "semantic_sha256": "86e1b799d6e23636af3670d7e538d5244e6fc4c13f7a39a9fc94746df30e7888",
+        "candidate_segment_sha256": [
+          "a860a724f6fa113b30c2ce8cb933c2f886a1d7bd5eee40b24dc9109eddb38b6f"
+        ]
+      },
+      {
+        "sample_id": "sample-18f780e4e4b5",
+        "context_id": "context-c3a3cbc65c",
+        "source_identity": "AN-Q2-4",
+        "semantic_sha256": "a9d3613bce18289668e30760e174722e04163afe72e14640b73f8873df0140cc",
+        "candidate_segment_sha256": [
+          "3ba21cfc8c988b651609b83c717523c0ffc39efac268010b98b03f51b0807ffc"
+        ]
+      },
+      {
+        "sample_id": "sample-603e96f05709",
+        "context_id": "context-31a4436faf",
+        "source_identity": "AN-Q3-3",
+        "semantic_sha256": "bc986098e5947a1963db18f04414756d84e53b0224d0d75645c3746162641805",
+        "candidate_segment_sha256": [
+          "df2658ce7d93c2e8eac78206b52313a67b447473edf1d987d307050001c9befb"
+        ]
+      },
+      {
+        "sample_id": "sample-2cca8538ef5b",
+        "context_id": "context-20ab3f65aa",
+        "source_identity": "AN-Q1-2",
+        "semantic_sha256": "fbfd7e26aa96b33deaa9f50f2e2b39be859a0e5c254b44712b66f752430762ce",
+        "candidate_segment_sha256": [
+          "2fe96f5d69233ec37c1acf6882f326ae1a801e94b4c677ba0b9479bd03d7e82f"
+        ]
+      },
+      {
+        "sample_id": "sample-6bc4327e71dc",
+        "context_id": "context-20ab3f65aa",
+        "source_identity": "AN-Q1-1",
+        "semantic_sha256": "9ba7853ff5029434d90e47a2ad92b84d856bb49fa299a15f2503689a73104114",
+        "candidate_segment_sha256": [
+          "489b4865850ae411b16242345d75cf1b09a02eee2efdc1a284da955187c54c70"
+        ]
+      }
+    ],
+    "judge-b": [
+      {
+        "sample_id": "sample-68feec78e381",
+        "context_id": "context-9ddcb48240",
+        "source_identity": "control-training-visible-P2-P4",
+        "semantic_sha256": "5e950a495a6e16957e4e13d7ea693be3fce06ca06cdac233c2925bb45f957263",
+        "candidate_segment_sha256": [
+          "2e18ca73466d7227bf8c89b9a2cea02854b6e6bb2c2ee0c3ba29e90a1464d86b",
+          "0d7b8391be531e54f5cebb9584a4af5dedb7dc28415424bc8040356eb5df8754"
+        ]
+      },
+      {
+        "sample_id": "sample-0dc00253f19c",
+        "context_id": "context-9ddcb48240",
+        "source_identity": "AN-Q1-1",
+        "semantic_sha256": "9ba7853ff5029434d90e47a2ad92b84d856bb49fa299a15f2503689a73104114",
+        "candidate_segment_sha256": [
+          "489b4865850ae411b16242345d75cf1b09a02eee2efdc1a284da955187c54c70"
+        ]
+      },
+      {
+        "sample_id": "sample-135a4f57c35b",
+        "context_id": "context-ca8f8d3859",
+        "source_identity": "AN-Q3-2",
+        "semantic_sha256": "6ec5bbaed24723024acde5a1af26a4dadebf5c5292dc02cf7c64d03c10065876",
+        "candidate_segment_sha256": [
+          "d8a3ad4f7f0daad188caf66bc91c4e16b008ccad8b93a8da7b564967f82b1e8c"
+        ]
+      },
+      {
+        "sample_id": "sample-11e006040021",
+        "context_id": "context-ca8f8d3859",
+        "source_identity": "control-research-full-copy",
+        "semantic_sha256": "9ee6c34ceb861303fbb7c5c53a062ea7ac9c5a9ca1479b5d0073a744702c8ea3",
+        "candidate_segment_sha256": [
+          "e67c0c46fc4c8d4028915643719b4f5430723df2ae8ac1f0ff583e1c1d142ead"
+        ]
+      },
+      {
+        "sample_id": "sample-eb18b07b7e54",
+        "context_id": "context-4186b70348",
+        "source_identity": "AN-Q2-1",
+        "semantic_sha256": "34d121c17c3ea409f3453d08b50843653223e0f9d24809e32601fd08dec30e03",
+        "candidate_segment_sha256": [
+          "c29e1d313069fa86e5d8176c981dd617944f9120c59ce99df1657c65d31338bd"
+        ]
+      },
+      {
+        "sample_id": "sample-259f9d58d9f5",
+        "context_id": "context-4186b70348",
+        "source_identity": "AN-Q2-3",
+        "semantic_sha256": "3ca9fd6ca6575f0fbdfe030bab5af202dfbde9ea3b95e48a40c806c29f9e80a6",
+        "candidate_segment_sha256": [
+          "be59f6ad7b1e53c8e7d2b37840707a658398aa8c98dd15717c549d9949304fbd"
+        ]
+      },
+      {
+        "sample_id": "sample-50acef48fae6",
+        "context_id": "context-ca8f8d3859",
+        "source_identity": "AN-Q3-3",
+        "semantic_sha256": "bc986098e5947a1963db18f04414756d84e53b0224d0d75645c3746162641805",
+        "candidate_segment_sha256": [
+          "df2658ce7d93c2e8eac78206b52313a67b447473edf1d987d307050001c9befb"
+        ]
+      },
+      {
+        "sample_id": "sample-40dea7b4ff07",
+        "context_id": "context-9ddcb48240",
+        "source_identity": "AN-Q1-2",
+        "semantic_sha256": "fbfd7e26aa96b33deaa9f50f2e2b39be859a0e5c254b44712b66f752430762ce",
+        "candidate_segment_sha256": [
+          "2fe96f5d69233ec37c1acf6882f326ae1a801e94b4c677ba0b9479bd03d7e82f"
+        ]
+      },
+      {
+        "sample_id": "sample-ae2bc0d20f86",
+        "context_id": "context-4186b70348",
+        "source_identity": "AN-Q2-5",
+        "semantic_sha256": "3052b74feb0c966fc2252de79e9a50b548f9567f27dc3f779cd5020da9dc430d",
+        "candidate_segment_sha256": [
+          "8d0025c594155720d41b9d232bd3e697f5e57c97cfa44a248dad6f71ce8f95a7"
+        ]
+      },
+      {
+        "sample_id": "sample-4290f7688ae8",
+        "context_id": "context-ca8f8d3859",
+        "source_identity": "AN-Q3-1",
+        "semantic_sha256": "84bb4765bdc102c057ed7d01f95fb30e1d041d30f93c225a2556736203e045ac",
+        "candidate_segment_sha256": [
+          "04fb19b0dac8c91ecb4b47d4c57110021a6b15e4429b8f70af718b34b49f333c"
+        ]
+      },
+      {
+        "sample_id": "sample-b272d28e07fe",
+        "context_id": "context-4186b70348",
+        "source_identity": "AN-Q2-2",
+        "semantic_sha256": "0189d035c90eb82efe678fcced29523d86511d752d3d156d3824709a3ea5d219",
+        "candidate_segment_sha256": [
+          "e980f44ff9c67c110bc9af2d841d4541fc83293e00e1bbc8a2cca5c8f0dc46b9"
+        ]
+      },
+      {
+        "sample_id": "sample-8d47dd9da007",
+        "context_id": "context-4186b70348",
+        "source_identity": "future-proposal-second-candidate",
+        "semantic_sha256": "457c2e82987473d8dc5fe1d071c6e83393944846dd836b2bd4ac991279eb9e55",
+        "candidate_segment_sha256": [
+          "fa7dbb8eff209322f4432a3df0df70fab9fa49d742ad192241235a19fea19c2d"
+        ]
+      },
+      {
+        "sample_id": "sample-082c77f056c3",
+        "context_id": "context-4186b70348",
+        "source_identity": "control-decision-full-pages",
+        "semantic_sha256": "86e1b799d6e23636af3670d7e538d5244e6fc4c13f7a39a9fc94746df30e7888",
+        "candidate_segment_sha256": [
+          "a860a724f6fa113b30c2ce8cb933c2f886a1d7bd5eee40b24dc9109eddb38b6f"
+        ]
+      },
+      {
+        "sample_id": "sample-ae9b716f0829",
+        "context_id": "context-9ddcb48240",
+        "source_identity": "AN-Q1-4",
+        "semantic_sha256": "ae423174a7d0039f031dd9246ee5ad98179f6c76877a3f2615ff298ff2068bd8",
+        "candidate_segment_sha256": [
+          "45208dc92c7da67081942b2469a74ded034e9cb6071bc6fa23592501cf3179da"
+        ]
+      },
+      {
+        "sample_id": "sample-4f7504f5e1b1",
+        "context_id": "context-4186b70348",
+        "source_identity": "AN-Q2-4",
+        "semantic_sha256": "a9d3613bce18289668e30760e174722e04163afe72e14640b73f8873df0140cc",
+        "candidate_segment_sha256": [
+          "3ba21cfc8c988b651609b83c717523c0ffc39efac268010b98b03f51b0807ffc"
+        ]
+      },
+      {
+        "sample_id": "sample-684abe077770",
+        "context_id": "context-9ddcb48240",
+        "source_identity": "AN-Q1-3",
+        "semantic_sha256": "38d70b49f7df86aa6cae174fc755436b56d147f2b79ede85615c82804463f8bb",
+        "candidate_segment_sha256": [
+          "aa585a392ec36d4960cdb3d21b8deae5671f49cf8b6f735af455b55d5ae26dc3"
+        ]
+      }
+    ]
+  },
+  "semantic_set_sha256": "57bc54d473fa4ad560dbfb95d0f0b55daa30aaf067c6eb7e2209273ba9e5b49e"
+}

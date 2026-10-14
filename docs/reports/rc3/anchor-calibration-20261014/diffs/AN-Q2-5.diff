@@ -1,0 +1,11 @@
+# diff_kind: frozen original raw statement/variant -> actual replacement text and scope
+# Not a product Git diff; no native Writer output or actual PPTX artifact is reconstructed.
+--- AN-Q2-5/frozen-original-error-description-or-text
++++ AN-Q2-5/actual-full-replacement-targets
+@@ -1 +1,5 @@
+-后续将自动提交工单，实现全流程自动化。
++TARGET: P6 prospective future paragraph b6-future
++后续仅另案评估自动提交，不在本期交付范围。现有材料未提供已验证的写入接口或全流程自动化依据；须先明确拟执行动作与控制边界，评估新增写入接口，取得另行授权并验证后，再另案决定是否采用。本期正式动作仍由人员在现有系统完成。接口方案、授权方、验证标准与时点目前未给定，保留为待明确事项；不承诺已具备或必定交付全流程自动化。
++
++TARGET: P6.notes
++本页必须让听众能回答：只改表单是否可行、助手增加什么价值、什么结果会改变推荐。未验证收益一律用验证设计表达；请求的决定只有一条（b5）。 后续方向仅读为另案条件性评估，不作为当前立项交付项；不要推定已获接口、授权或验证。

@@ -1,0 +1,2535 @@
+{
+  "schema_version": "compose_result.v2",
+  "kind": "compose",
+  "variant": "narrative",
+  "task_id": "0861560323fb",
+  "operation_id": "actual-argument",
+  "produced_against": "e7a324bca7f4e86630774881a26cd7181a92bcec37bbacd440cdc6417ab5fcd3",
+  "eligibility_digest": "a11abb8a8025e3f8fe3b2ed117b5f9aa408fcec96307728bde8580cba8a4e842",
+  "usage_events": [],
+  "payload": {
+    "narrative": {
+      "schema_version": "narrative.v1",
+      "narrative_id": "actual-q2-argument",
+      "version": 1,
+      "project_id": "actual-q2",
+      "origin": "host_composed",
+      "maturity": "argument",
+      "input_basis": [
+        {
+          "kind": "task_fact",
+          "identity": "brief",
+          "projection": "value",
+          "ref": null,
+          "sha256": "77afbbb14f293b52b90d58ccabbc9637ddf94d9a5cd2c939bd204ae2f8b3566a"
+        },
+        {
+          "kind": "task_fact",
+          "identity": "audience",
+          "projection": "value",
+          "ref": null,
+          "sha256": "ead7202de4ffc3d9e7e2861de4d1c9453f64efca9459b67b0c4a9092c5abe371"
+        }
+      ],
+      "communication_job": {
+        "mode": "decide",
+        "audience_fact_key": "audience",
+        "audience_question": "是否开展 4 周小范围试点，来检验可得设备条件前移与只读引用问答是否值得继续投入；若开展，必须先确认哪些前提、由谁记录并在期末判断？",
+        "desired_outcome": "售后运营与 IT 负责人理解合成样本支持的问题线索和证据限度，能够比较单纯只读引用入口、设备条件引导与先补条件三条路线，依据资料许可、现场可得性及实施资源决定开展、补条件后再议或暂缓。受众熟悉程度未知，保留必要定义。",
+        "observable_success": "在 10 分钟现场讨论中，负责人能区分 45%样本缺字段占比与未知收益，说明 AI 只读、人工正式提交及版本未知分支，并针对条件式试点建议明确待确认条件、责任人和后续判断方式；没有受众决定时仍记录为待议提案。",
+        "use_mode": "live",
+        "primary_use": "live"
+      },
+      "central_node_id": "decision-proposal",
+      "nodes": [
+        {
+          "node_id": "decision-proposal",
+          "role": "recommendation",
+          "authority": "recommendation",
+          "statement": "建议在资料许可、现场条件采集和 4 周实施资源可落实时，开展小范围只读试点，以“可得设备条件引导＋引用问答”检验接单后再次确认的机制。立项购买的是一段可观察的验证过程，效果幅度尚未知；前提不满足时先补条件，再议启动，不承诺生产上线。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "sample-boundary",
+            "no-outcome-measurement",
+            "readonly-rule",
+            "unknown-rule",
+            "capability-limit",
+            "start-prerequisites"
+          ],
+          "unresolved_issue_ids": [
+            "field-availability",
+            "access-applicability",
+            "delivery-feasibility",
+            "decision-open"
+          ]
+        },
+        {
+          "node_id": "task-use",
+          "role": "explanation",
+          "authority": "instruction",
+          "statement": "本次面向售后运营与 IT 负责人，服务于 10 分钟现场立项讨论：是否开展 4 周小范围试点。页数上限 8，口播默认 cues；已有决定为空。argument 与 planned Plan 都是提案，不代表已批准试点。",
+          "source_links": [],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": [
+            "audience-knowledge",
+            "decision-open"
+          ]
+        },
+        {
+          "node_id": "sample-observation",
+          "role": "evidence",
+          "authority": "reported_fact",
+          "statement": "合成抽样 120 条售后请求中，54 条首次提交缺少设备型号或版本。这个观察可以帮助选择要检验的信息环节。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [
+            "sample-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "sample-coverage"
+          ]
+        },
+        {
+          "node_id": "sample-share",
+          "role": "evidence",
+          "authority": "calculation",
+          "statement": "54 ÷ 120 × 100%=45%。分母是这批合成请求，分子是首次提交缺型号或版本的请求；该值只描述样本缺字段占比。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [
+            "sample-boundary",
+            "no-outcome-measurement"
+          ],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "sample-boundary",
+          "role": "qualification",
+          "authority": "inference",
+          "statement": "材料未给出抽样时间、请求类型或选择方法，不能认定这批样本代表拟试点场景或全部售后请求；缺字段占比也不能证明该问题是最大成本项，更不能当作节省比例或自动解决率。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": [
+            "sample-coverage"
+          ]
+        },
+        {
+          "node_id": "interview-clue",
+          "role": "evidence",
+          "authority": "reported_fact",
+          "statement": "人员访谈称设备条件缺失可能带来接单后的补问，但没有统计补问轮次、处理时长或其相对其他成本的占比。它提供机制线索，尚未量化影响。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "no-outcome-measurement"
+          ],
+          "unresolved_issue_ids": [
+            "baseline-comparison"
+          ]
+        },
+        {
+          "node_id": "no-outcome-measurement",
+          "role": "qualification",
+          "authority": "reported_fact",
+          "statement": "尚未测量任何新方案实施后的时间、成本、解决率或收益；本次没有可用的效果幅度或 ROI。4 周结束也只能按实际观察的范围报告结果。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": [
+            "baseline-comparison"
+          ]
+        },
+        {
+          "node_id": "information-hypothesis",
+          "role": "reasoning",
+          "authority": "hypothesis",
+          "statement": "待验假设：如果一线确能在首次处理时取得设备型号或版本，且能据此判断资料适用范围，把条件引导放在检索前，可能避免部分接单后为相同条件再次确认。若条件无法现场取得，补问可能仍然必要；增加搜索框或强制填写本身不能证明这一机制成立。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [
+            "unknown-rule",
+            "no-outcome-measurement"
+          ],
+          "unresolved_issue_ids": [
+            "field-availability",
+            "access-applicability",
+            "baseline-comparison"
+          ]
+        },
+        {
+          "node_id": "readonly-rule",
+          "role": "qualification",
+          "authority": "instruction",
+          "statement": "原始一期要求：只读，不允许 AI 自动提交、修改或关闭正式工单。试点建议不得扩大正式工单写入权限。",
+          "source_links": [
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "human-submit",
+          "role": "explanation",
+          "authority": "instruction",
+          "statement": "原始一期要求：只读取经许可的手册与历史工单并展示来源引用；正式提交由人员在现有系统完成。引用是供人核对的依据，不等于已验证的设备诊断结论。",
+          "source_links": [
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "readonly-rule",
+            "capability-limit"
+          ],
+          "unresolved_issue_ids": [
+            "access-applicability"
+          ]
+        },
+        {
+          "node_id": "unknown-rule",
+          "role": "qualification",
+          "authority": "instruction",
+          "statement": "原始一期要求：一线有时拿不到版本，必须允许注明“未知”及原因；不能靠强制填写制造虚假完整性。无法取得与取得真实条件应被如实区分，不能把允许未知解释为要求猜测版本。",
+          "source_links": [
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": [
+            "field-availability"
+          ]
+        },
+        {
+          "node_id": "known-capability",
+          "role": "evidence",
+          "authority": "reported_fact",
+          "statement": "合成已知能力是许可资料接入、引用问答、门户只读嵌入。它们为试点的资料与入口部分提供起点，尚不能证明本次资料已获许可或接入已就绪。",
+          "source_links": [
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [
+            "capability-limit"
+          ],
+          "unresolved_issue_ids": [
+            "access-applicability"
+          ]
+        },
+        {
+          "node_id": "capability-limit",
+          "role": "qualification",
+          "authority": "reported_fact",
+          "statement": "能力说明不含已验证设备诊断、自动写入接口、成本节省证据或生产可靠性结论。设备条件引导与适用资料对应、未知分支和测量记录若采用，属于本次新增设计及待确认工作。",
+          "source_links": [
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": [
+            "delivery-feasibility"
+          ]
+        },
+        {
+          "node_id": "workflow-proposal",
+          "role": "explanation",
+          "authority": "recommendation",
+          "statement": "方案建议的工作链：一线输入可得型号、版本及问题；取不到时标记未知并说明原因；只读助手依据已有条件查找许可资料并给出引用；工作人员核对适用性，无法确认的请求按现有人工方式继续处理；人员在现有系统正式提交。改变的环节是检索前的信息引导和引用核对，人工接手方式及字段如何交接需另行设计。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [
+            "readonly-rule",
+            "unknown-rule",
+            "capability-limit",
+            "information-hypothesis"
+          ],
+          "unresolved_issue_ids": [
+            "field-availability",
+            "access-applicability",
+            "delivery-feasibility"
+          ]
+        },
+        {
+          "node_id": "additional-work",
+          "role": "reasoning",
+          "authority": "inference",
+          "statement": "条件引导路线比单纯只读入口多出可得条件交互、未知原因记录、设备条件与资料适用范围对应及人工交接设计。已知能力清单不足以证明这些工作已完成；需要 IT 与运营共同估算是否能在 4 周内形成可用小范围观察，而非将 4 周当成交付保证。",
+          "source_links": [
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "capability-limit"
+          ],
+          "unresolved_issue_ids": [
+            "delivery-feasibility",
+            "trial-governance"
+          ]
+        },
+        {
+          "node_id": "selection-criteria",
+          "role": "reasoning",
+          "authority": "recommendation",
+          "statement": "建议按三项标准选路线：能否直接检验已观察到的信息缺失环节；新增工作能否在已确认资源内完成并留下可比较记录；能否坚持许可资料、只读和真实未知。时间与成本尚未知，不能凭缺字段占比给方案做精确 ROI 排名。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "sample-boundary",
+            "no-outcome-measurement"
+          ],
+          "unresolved_issue_ids": [
+            "delivery-feasibility",
+            "trial-governance"
+          ]
+        },
+        {
+          "node_id": "option-reference",
+          "role": "explanation",
+          "authority": "recommendation",
+          "statement": "路线 A：只读引用问答入口。优点是沿用已知接入、问答和嵌入能力，设备信息收集流程改变较少，可以观察检索与引用是否可用；仍需许可资料准备、入口接入和记录。它不能直接检验条件收集前移，是否影响补问也未知。",
+          "source_links": [
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "readonly-rule",
+            "no-outcome-measurement",
+            "capability-limit"
+          ],
+          "unresolved_issue_ids": [
+            "access-applicability",
+            "delivery-feasibility"
+          ]
+        },
+        {
+          "node_id": "option-guided",
+          "role": "explanation",
+          "authority": "recommendation",
+          "statement": "路线 B：在只读引用问答前增加可得设备条件引导并保留未知分支。它更贴近缺条件可能引发再次确认的机制，能观察条件是否可前移；代价是新增交互、适用资料对应与人工交接工作。只在现场可得性、资料准备和工作量可落实时推荐，收益仍待测。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "information-hypothesis",
+            "unknown-rule",
+            "readonly-rule",
+            "additional-work"
+          ],
+          "unresolved_issue_ids": [
+            "field-availability",
+            "access-applicability",
+            "delivery-feasibility"
+          ]
+        },
+        {
+          "node_id": "option-prepare",
+          "role": "explanation",
+          "authority": "recommendation",
+          "statement": "路线 C：先补条件再议。先确认试点请求范围、现场信息可得性、资料许可、记录基线和实施资源，优点是避免在关键前提未知时承诺新交互；代价是推迟实际观察。若只缺新增引导的准备，而许可只读入口已就绪，也可另行选择 A 来回答检索问题，但应承认验证问题已改变。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [
+            "no-outcome-measurement"
+          ],
+          "unresolved_issue_ids": [
+            "field-availability",
+            "access-applicability",
+            "delivery-feasibility"
+          ]
+        },
+        {
+          "node_id": "selection-reason",
+          "role": "reasoning",
+          "authority": "inference",
+          "statement": "条件满足时推荐 B，因为现有线索指向首次提交缺设备条件与接单后再次确认，B 直接把这个环节变成可观察对象；A 更适合检验引用检索，C 更适合前提缺失。推荐依据是问题与验证对象的匹配，不是已证明的效率优势。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [
+            "information-hypothesis",
+            "no-outcome-measurement",
+            "additional-work",
+            "start-prerequisites"
+          ],
+          "unresolved_issue_ids": [
+            "sample-coverage",
+            "delivery-feasibility"
+          ]
+        },
+        {
+          "node_id": "start-prerequisites",
+          "role": "qualification",
+          "authority": "recommendation",
+          "statement": "建议启动前确认：一个小范围请求场景及参与人员；获许可且可核对适用范围的资料；取得型号/版本和记录未知原因的方式；可承担新增设计、接入及记录工作的人员与资源；明确基线、比较方法、记录责任和继续/停止判断标准。材料未给出这些配置，不能写成已具备。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "readonly-rule",
+            "unknown-rule"
+          ],
+          "unresolved_issue_ids": [
+            "sample-coverage",
+            "field-availability",
+            "access-applicability",
+            "baseline-comparison",
+            "delivery-feasibility",
+            "trial-governance"
+          ]
+        },
+        {
+          "node_id": "trial-cadence",
+          "role": "explanation",
+          "authority": "recommendation",
+          "statement": "4 周节奏是供负责人评估的建议，工作量和可行性待确认：第 1 周核对小范围对象、资料与未知分支，记录同范围现有流程并完成必要配置；第 2—3 周由参与人员使用只读引导与引用问答，逐请求记录条件状态、补问原因及引用核对结果；第 4 周审阅全部观察及失败样本，判断继续、调整或停止。若准备工作无法按时完成，应缩小范围或重新议定时间，不压缩测量来凑满四周。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "start-prerequisites",
+            "no-outcome-measurement",
+            "capability-limit"
+          ],
+          "unresolved_issue_ids": [
+            "delivery-feasibility",
+            "baseline-comparison",
+            "trial-governance"
+          ]
+        },
+        {
+          "node_id": "measurement-proposal",
+          "role": "explanation",
+          "authority": "recommendation",
+          "statement": "建议对同一约定请求范围逐条记录：首次条件真实可得、未知及原因、未填写各自数量与分母；接单后是否为同一设备条件再确认、原因与轮次；处理起止或实际投入时间的统一口径；引用能否打开、是否适用及人工核对结论。比较现有流程与试点时说明样本数、请求类型和可得性变化；若无法控制差异，只报告观察与限制，不归因于方案。新增记录耗时也要计入。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [
+            "sample-boundary",
+            "no-outcome-measurement",
+            "unknown-rule"
+          ],
+          "unresolved_issue_ids": [
+            "baseline-comparison",
+            "trial-governance"
+          ]
+        },
+        {
+          "node_id": "decision-rule",
+          "role": "recommendation",
+          "authority": "recommendation",
+          "statement": "建议事先由负责人约定可接受工作量和继续标准，材料无数值阈值。期末若在可得条件请求中观察到再次确认减少、引用可核对且新增记录负担可接受，可讨论扩大验证；若条件多数无法取得或未见预期变化，应调整引导或停止该路线。出现未经许可读取、AI 写入正式工单或虚假补齐时应暂停并纠正。四周观察不构成设备诊断验证、ROI 或生产可靠性证明。",
+          "source_links": [
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-781ace7d",
+              "source_version": {
+                "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                "extract": {
+                  "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                  "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "no-outcome-measurement",
+            "capability-limit",
+            "start-prerequisites"
+          ],
+          "unresolved_issue_ids": [
+            "baseline-comparison",
+            "trial-governance"
+          ]
+        },
+        {
+          "node_id": "decision-request",
+          "role": "recommendation",
+          "authority": "recommendation",
+          "statement": "请运营与 IT 负责人对条件式建议作出明确判断：开展 B 并确认小范围对象、前提落实责任及记录方式；选择 A 并把问题限定为只读检索与引用；或先补条件/暂缓。建议运营负责场景、真实可得性和流程记录，IT 负责许可读取、入口接入及只读边界，两方共同评估工作量与期末标准；具体人员、资源、阈值和是否开展均待负责人决定。",
+          "source_links": [
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-475bb85b",
+              "source_version": {
+                "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                "extract": {
+                  "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                  "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-7ef7bfa2",
+              "source_version": {
+                "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                "extract": {
+                  "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                  "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "start-prerequisites",
+            "no-outcome-measurement",
+            "readonly-rule"
+          ],
+          "unresolved_issue_ids": [
+            "decision-open",
+            "delivery-feasibility",
+            "trial-governance"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from_node_id": "task-use",
+          "to_node_id": "decision-proposal",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "sample-observation",
+          "to_node_id": "sample-share",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "sample-observation",
+          "to_node_id": "information-hypothesis",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "sample-share",
+          "to_node_id": "decision-proposal",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "sample-boundary",
+          "to_node_id": "sample-observation",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "sample-boundary",
+          "to_node_id": "sample-share",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "sample-boundary",
+          "to_node_id": "decision-proposal",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "interview-clue",
+          "to_node_id": "information-hypothesis",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "no-outcome-measurement",
+          "to_node_id": "information-hypothesis",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "no-outcome-measurement",
+          "to_node_id": "decision-proposal",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "information-hypothesis",
+          "to_node_id": "workflow-proposal",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "readonly-rule",
+          "to_node_id": "workflow-proposal",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "human-submit",
+          "to_node_id": "workflow-proposal",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "unknown-rule",
+          "to_node_id": "information-hypothesis",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "unknown-rule",
+          "to_node_id": "workflow-proposal",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "known-capability",
+          "to_node_id": "workflow-proposal",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "capability-limit",
+          "to_node_id": "known-capability",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "capability-limit",
+          "to_node_id": "workflow-proposal",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "workflow-proposal",
+          "to_node_id": "additional-work",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "additional-work",
+          "to_node_id": "option-guided",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "selection-criteria",
+          "to_node_id": "selection-reason",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "option-reference",
+          "to_node_id": "selection-reason",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "option-guided",
+          "to_node_id": "selection-reason",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "option-prepare",
+          "to_node_id": "selection-reason",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "workflow-proposal",
+          "to_node_id": "option-guided",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "known-capability",
+          "to_node_id": "option-reference",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "selection-reason",
+          "to_node_id": "decision-proposal",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "start-prerequisites",
+          "to_node_id": "decision-proposal",
+          "relation": "prerequisite"
+        },
+        {
+          "from_node_id": "start-prerequisites",
+          "to_node_id": "option-prepare",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "start-prerequisites",
+          "to_node_id": "trial-cadence",
+          "relation": "prerequisite"
+        },
+        {
+          "from_node_id": "decision-proposal",
+          "to_node_id": "trial-cadence",
+          "relation": "leads_to"
+        },
+        {
+          "from_node_id": "trial-cadence",
+          "to_node_id": "measurement-proposal",
+          "relation": "leads_to"
+        },
+        {
+          "from_node_id": "measurement-proposal",
+          "to_node_id": "decision-rule",
+          "relation": "supports"
+        },
+        {
+          "from_node_id": "decision-rule",
+          "to_node_id": "decision-proposal",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "capability-limit",
+          "to_node_id": "decision-rule",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "decision-proposal",
+          "to_node_id": "decision-request",
+          "relation": "leads_to"
+        },
+        {
+          "from_node_id": "decision-rule",
+          "to_node_id": "decision-request",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "start-prerequisites",
+          "to_node_id": "decision-request",
+          "relation": "prerequisite"
+        }
+      ],
+      "issues": [
+        {
+          "issue_id": "audience-knowledge",
+          "question": "受众对现有流程与只读能力的熟悉程度未知。当前计划保留必要背景；若已有共识，可缩短讲解，把时间留给立项条件。",
+          "impact": "advisory",
+          "affected_node_ids": [
+            "task-use"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "sample-coverage",
+          "question": "120 条请求的时间、类型和选择方式未知，是否与拟试点小范围一致待核对；45%只可解释为合成样本值。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "sample-observation",
+            "sample-boundary",
+            "selection-reason",
+            "start-prerequisites"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "field-availability",
+          "question": "拟试点哪些设备条件能在现场取得、哪些无法取得及如何注明原因？可得比例和取得方式未知，不能靠强制必填替代真实条件。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "information-hypothesis",
+            "unknown-rule",
+            "workflow-proposal",
+            "option-guided",
+            "start-prerequisites"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "access-applicability",
+          "question": "资料是否获许可、可读取并可定位引用？设备型号/版本与资料适用范围如何对应、由谁核对和维护？未知；未落实时不能启动该范围实际读取。",
+          "impact": "blocker",
+          "affected_node_ids": [
+            "known-capability",
+            "human-submit",
+            "workflow-proposal",
+            "option-reference",
+            "option-guided",
+            "start-prerequisites"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "baseline-comparison",
+          "question": "如何选同范围基线并统一补问原因、轮次与时间口径？记录与比较设计未知；若样本条件不同，不能把变化归因为方案。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "interview-clue",
+            "no-outcome-measurement",
+            "information-hypothesis",
+            "measurement-proposal",
+            "trial-cadence",
+            "decision-rule"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "delivery-feasibility",
+          "question": "具体人员、设计接入工作量、资源和成本未知，4 周建议是否能留下足够有效观察待估算。未确认时只能提交条件式节奏，不能承诺实施日期或交付。",
+          "impact": "blocker",
+          "affected_node_ids": [
+            "decision-proposal",
+            "additional-work",
+            "option-guided",
+            "trial-cadence",
+            "start-prerequisites",
+            "decision-request"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "trial-governance",
+          "question": "小范围对象、参与人数、记录负责人、新增工作负担、可接受门槛及继续/调整/停止标准均待运营与 IT 负责人共同确定；未给出数值目标。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "additional-work",
+            "selection-criteria",
+            "start-prerequisites",
+            "trial-cadence",
+            "measurement-proposal",
+            "decision-rule",
+            "decision-request"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "decision-open",
+          "question": "已有决定为空。是否开展、选择哪条路线及接受哪些前提，必须由负责人判断；本内容不记录任何批准或承诺。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "task-use",
+            "decision-proposal",
+            "decision-request"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        }
+      ],
+      "alternatives": [
+        {
+          "option_id": "readonly-reference",
+          "description": "A｜只读引用问答入口，人工在现有系统正式提交。",
+          "benefit": "利用已知资料接入、引用问答和门户只读嵌入作为起点，流程改动较少；适合检验资料检索和引用核对是否可用。",
+          "cost": "仍需许可资料准备、接入与记录；不能直接检验条件收集前移，工作量、成本和效果未知。",
+          "affected_node_ids": [
+            "option-reference",
+            "known-capability",
+            "selection-criteria"
+          ]
+        },
+        {
+          "option_id": "condition-guided-reference",
+          "description": "B｜可得设备条件引导＋只读引用问答，无法取得时保留未知及原因。",
+          "benefit": "直接检验信息是否可在检索前获得，并观察相同条件的接单后再次确认是否变化；只有前提成立才可能体现该机制。",
+          "cost": "增加条件交互、未知记录、适用资料对应和人工交接设计；4 周资源与新增负担尚未确认，效果待测。",
+          "affected_node_ids": [
+            "option-guided",
+            "workflow-proposal",
+            "information-hypothesis",
+            "additional-work",
+            "selection-reason"
+          ]
+        },
+        {
+          "option_id": "prepare-before-trial",
+          "description": "C｜先核对许可、可得性、测量和实施资源，再议是否启动。",
+          "benefit": "在前提缺失时避免把建议当作已可实施计划，让验证对象及判断方式先明确。",
+          "cost": "延后新交互观察；准备工作也需人员及时间，其工作量未知。",
+          "affected_node_ids": [
+            "option-prepare",
+            "start-prerequisites"
+          ]
+        }
+      ],
+      "previous_ref": null
+    },
+    "plan": {
+      "schema_version": "content_plan.v2",
+      "plan_id": "actual-q2-argument-plan",
+      "version": 1,
+      "project_id": "actual-q2",
+      "task_id": "0861560323fb",
+      "origin": "host_composed",
+      "basis": {
+        "revision_id": "a91c55331f2f40a78753577ec8eba76a",
+        "input_digest": "7dc021e0f577d036b6586adf661308568ee20e5c78afb55d379642c515375863"
+      },
+      "previous_ref": null,
+      "mode": "planned",
+      "narrative_ref": null,
+      "imported_manuscript": null,
+      "input": {
+        "schema_version": "content_plan_input.v2",
+        "chapters": [
+          {
+            "chapter_id": "why-and-how",
+            "title": "验证命题、证据与工作机制",
+            "page_ids": [
+              "P01",
+              "P02",
+              "P03"
+            ]
+          },
+          {
+            "chapter_id": "choose-and-observe",
+            "title": "路线取舍、试点节奏与判断依据",
+            "page_ids": [
+              "P04",
+              "P05",
+              "P06"
+            ]
+          },
+          {
+            "chapter_id": "decide-with-conditions",
+            "title": "立项选择与前提责任",
+            "page_ids": [
+              "P07"
+            ]
+          }
+        ],
+        "page_order": [
+          "P01",
+          "P02",
+          "P03",
+          "P04",
+          "P05",
+          "P06",
+          "P07"
+        ],
+        "page_roles": [
+          {
+            "page_id": "P01",
+            "role": "提出立项命题｜条件满足时，用 4 周只读试点检验设备条件前移",
+            "audience_question": "今天要决定什么，为什么可以考虑一次小范围验证？",
+            "intended_takeaway": "建议以可得设备条件引导＋只读引用问答作为优先验证对象；立项条件是资料、采集和实施资源可落实，目标是获得能支持继续判断的观察，效果幅度尚未知。是否开展仍由负责人决定。",
+            "narrative_node_ids": [
+              "task-use",
+              "decision-proposal",
+              "no-outcome-measurement",
+              "start-prerequisites"
+            ],
+            "source_links": [
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L2"
+              }
+            ],
+            "required_qualifications": [
+              "明确标为方案建议、条件式推荐与待决立项，不写已启动。",
+              "4 周是任务所讨论试点周期，不是已确认的工程交付保证。",
+              "本期只读、收益未知必须伴随开头主张出现。"
+            ],
+            "content_profile": "simple",
+            "density_rationale": "开头只承担命题与必要成立条件，不放公司介绍或目录。保留一个推荐句、验证对象和条件提示；删掉此页会让后续证据与流程失去共同决策问题。45 秒为估计口播，后页分别展开依据和工作量。",
+            "timing_seconds": 45,
+            "transition_to_next": "先说明为什么值得检验信息环节，以及现有数据究竟能证明什么。"
+          },
+          {
+            "page_id": "P02",
+            "role": "核对证据及限度｜54/120 是样本缺字段占比",
+            "audience_question": "当前问题线索有多强，45%能否当作预期收益？",
+            "intended_takeaway": "合成样本首次提交缺型号或版本占 45%；访谈只提供“可能带来接单后补问”的机制线索，未统计轮次、时长或成本占比，也未测任何新方案效果。它支持提出验证问题，不能支持效果承诺或总体外推。",
+            "narrative_node_ids": [
+              "sample-observation",
+              "sample-share",
+              "sample-boundary",
+              "interview-clue",
+              "no-outcome-measurement"
+            ],
+            "source_links": [
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L3"
+              }
+            ],
+            "required_qualifications": [
+              "标明合成样本、120 条分母、54 条分子和 54÷120=45%。",
+              "样本选择范围未知，45%不等于节省比例、自动解决率或总体发生率。",
+              "访谈机制未经效果测量，补问轮次与时间未知。"
+            ],
+            "content_profile": "evidence",
+            "density_rationale": "只展示一个可复算比例和一段机制线索，旁边直接保留证据缺口。限定与数字同页，不拆成需要口播补救的脚注；没有其他新数据。65 秒足以解释观察—线索—未测三层。",
+            "timing_seconds": 65,
+            "transition_to_next": "问题线索是缺条件；下一页展示如何改动这个环节，并区分可建议的动作与原始只读范围。"
+          },
+          {
+            "page_id": "P03",
+            "role": "解释工作机制｜先引导可得条件，再只读引用，最后由人提交",
+            "audience_question": "试点具体改变哪一步，版本拿不到或资料不适用时怎样处理？",
+            "intended_takeaway": "方案建议在检索前引导可得型号/版本，无法取得就注明未知及原因，再查找许可资料并展示引用；工作人员核对适用性，未能确认的请求继续人工处理，人员在现有系统正式提交。已知能力仅支撑资料接入、引用问答与门户只读嵌入，条件交互、适用对应及交接属于新增设计。",
+            "narrative_node_ids": [
+              "workflow-proposal",
+              "information-hypothesis",
+              "readonly-rule",
+              "human-submit",
+              "unknown-rule",
+              "known-capability",
+              "capability-limit",
+              "additional-work"
+            ],
+            "source_links": [
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L2"
+              }
+            ],
+            "required_qualifications": [
+              "上屏区分“原始一期要求”与“方案建议”；不得把新增设计写成既有能力。",
+              "只读：AI 不自动提交、修改或关闭正式工单；正式提交在人现有系统完成。",
+              "未知及原因分支必须可见，不能强填制造完整性。",
+              "可能避免再次确认只适用于现场可得且资料适用的条件；引用不是已验证诊断。"
+            ],
+            "content_profile": "mechanism",
+            "density_rationale": "采用一条简洁工作链并在条件输入处保留未知分支；将正式范围与新增设计用文本分开。此页承担角色、触发、动作与交接，删除会使方案成为抽象能力列表；70 秒讲清关键动作，资料/权限和工作量后续讨论。",
+            "timing_seconds": 70,
+            "transition_to_next": "这条工作链比加一个引用入口多了设计工作；下一页比较三条真实路线，并解释推荐条件。"
+          },
+          {
+            "page_id": "P04",
+            "role": "比较真实路线｜按验证对象与准备成本选择",
+            "audience_question": "只做引用入口、增加条件引导或先补条件，各自适合什么情况？",
+            "intended_takeaway": "A 改动较少、适合检验引用检索，但不能直接检验条件前移；B 更贴近缺条件与再次确认机制，增加交互、适用对应和交接工作；C 先确认许可、可得性和资源再议，延后观察但可避免前提未知。条件可落实时推荐 B，缺关键前提时选 C；若选择 A，需明确验证问题转为检索与引用。",
+            "narrative_node_ids": [
+              "selection-criteria",
+              "option-reference",
+              "option-guided",
+              "option-prepare",
+              "selection-reason",
+              "additional-work",
+              "information-hypothesis",
+              "start-prerequisites",
+              "no-outcome-measurement"
+            ],
+            "source_links": [
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L2"
+              }
+            ],
+            "required_qualifications": [
+              "三条路线都是模型建议，尚未获选择。",
+              "给 A 的低流程改动与 C 的准备价值真实空间，不把它们写成失败方案。",
+              "推荐 B 基于验证问题匹配，效率优势、具体成本和 4 周资源尚未知。",
+              "只读和未知分支是所有可采用路线的范围要求。"
+            ],
+            "content_profile": "mixed",
+            "density_rationale": "三行比较仅用验证对象、优点/额外工作、推荐条件三项，不堆技术架构或虚构 ROI 数值。80 秒解释真实取舍；删掉此页会使推荐缺少可行替代与成本理由。",
+            "timing_seconds": 80,
+            "transition_to_next": "若条件式选择 B，下一步不是宣布上线，而是看四周里能否完成准备、观察与复盘。"
+          },
+          {
+            "page_id": "P05",
+            "role": "提出试点节奏｜先有可记录前提，再开展四周观察",
+            "audience_question": "4 周内分别做什么，怎样避免只完成演示却无法判断？",
+            "intended_takeaway": "拟议第 1 周核对小范围、资料与未知分支，记录现有同范围流程并完成必要配置；第 2—3 周参与人员使用只读引导与引用并逐请求记录；第 4 周审阅观察和失败样本，判断继续、调整或停止。实际对象、人员、资源和工作量未知；准备无法按时完成时要缩范围或再议时间。",
+            "narrative_node_ids": [
+              "trial-cadence",
+              "start-prerequisites",
+              "additional-work",
+              "readonly-rule",
+              "unknown-rule",
+              "capability-limit",
+              "no-outcome-measurement"
+            ],
+            "source_links": [
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L2"
+              }
+            ],
+            "required_qualifications": [
+              "每周安排标为方案建议，4 周可行性与具体日期未确认。",
+              "启动前须确认许可、现场条件、适用资料、人员资源及记录口径；当前都不能宣称就绪。",
+              "第 1 周现有流程观察不是已建立可靠基线；是否足以比较须另行确定。",
+              "继续保持只读和真实未知；四周末不自动转生产。"
+            ],
+            "content_profile": "mechanism",
+            "density_rationale": "用四周节奏与各段产出关系解释准备—观察—复盘，保留一条前提不足时的调整说明。90 秒包括新增工作和谁需评估的解释，不引入未给定人数、设备数量或费用。删掉此页会缺少可评估的执行建议。",
+            "timing_seconds": 90,
+            "transition_to_next": "节奏只说明什么时候记录；下一页定义记录什么、如何比较，以及什么观察才能支持继续判断。"
+          },
+          {
+            "page_id": "P06",
+            "role": "设计判断依据｜观察再次确认，也记录未知、引用和新增负担",
+            "audience_question": "用什么证据评估试点，哪些结果只能作为线索？",
+            "intended_takeaway": "建议按约定同范围逐条记录真实可得、未知及原因、未填各自数量与分母，设备条件再次确认的原因/轮次、统一时间口径及引用适用核对。比较时交代样本范围与差异，并记录新增负担。负责人先约定继续标准；数据不足只报告观察，不能归因为方案或宣称收益已证。",
+            "narrative_node_ids": [
+              "measurement-proposal",
+              "decision-rule",
+              "sample-boundary",
+              "no-outcome-measurement",
+              "unknown-rule",
+              "capability-limit",
+              "start-prerequisites"
+            ],
+            "source_links": [
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L2"
+              }
+            ],
+            "required_qualifications": [
+              "测量项与继续规则是建议，负责人尚未决定数值门槛；不得填造改善目标。",
+              "未知不算真实补齐，未填写单列；每个占比注明数量与分母。",
+              "比较范围、可得性或请求类型不同，就限定为观察，不能归因。",
+              "边界违背或虚假补齐须暂停纠正；生产可靠性、诊断能力和 ROI 未获证明。"
+            ],
+            "content_profile": "mixed",
+            "density_rationale": "用紧凑的记录项—回答问题配对解释测量，再列继续、调整/停止和边界纠正原则。信息比其他页多，但每项都服务于同一个期末判断，90 秒为估计；不增加无依据指标或阈值。删掉此页会让试点结果无法支撑立项后的选择。",
+            "timing_seconds": 90,
+            "transition_to_next": "当判断方式也有建议后，回到今天的决定：选择哪条路线、由谁落实哪些启动前提。"
+          },
+          {
+            "page_id": "P07",
+            "role": "发起立项判断｜决定路线并明确前提责任",
+            "audience_question": "今天如何作出开展、补条件后再议或暂缓的判断？",
+            "intended_takeaway": "请负责人选择 B 的条件式试点、A 的检索验证或先补条件/暂缓。若考虑开展，建议运营落实场景、可得性和流程记录，IT 落实许可读取、只读接入，两方确认新增工作量与期末标准。人员、资源、阈值及开展与否尚待决定，不能把讨论记成批准。",
+            "narrative_node_ids": [
+              "decision-request",
+              "decision-proposal",
+              "start-prerequisites",
+              "decision-rule",
+              "readonly-rule",
+              "no-outcome-measurement"
+            ],
+            "source_links": [
+              {
+                "source_id": "src-781ace7d",
+                "source_version": {
+                  "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+                  "extract": {
+                    "path": ".deckmaster/objects/f6/f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7.json",
+                    "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L2"
+              },
+              {
+                "source_id": "src-475bb85b",
+                "source_version": {
+                  "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+                  "extract": {
+                    "path": ".deckmaster/objects/58/58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339.json",
+                    "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+                  }
+                },
+                "locator": "L3"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L1"
+              },
+              {
+                "source_id": "src-7ef7bfa2",
+                "source_version": {
+                  "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+                  "extract": {
+                    "path": ".deckmaster/objects/40/409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82.json",
+                    "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+                  }
+                },
+                "locator": "L2"
+              }
+            ],
+            "required_qualifications": [
+              "负责人决定尚未发生，责任划分仅为建议，具体人员与资源未知。",
+              "选择 A 时明确验证对象变化；选择 B 时保留可得性、许可、资源与记录前提。",
+              "本次立项不代表收益或生产可用性获确认。"
+            ],
+            "content_profile": "simple",
+            "density_rationale": "用一个决策问题与最关键的待确认责任收束。40 秒交代选择与责任，随后在本页保留 120 秒互动，由负责人判断，不再增加结尾宣传或完整口播。",
+            "timing_seconds": 40,
+            "transition_to_next": null
+          }
+        ],
+        "page_budget": {
+          "exact": null,
+          "target": 7,
+          "max": 8
+        },
+        "time_budget": {
+          "total_seconds": 600,
+          "speaking_seconds": 480,
+          "interaction_seconds": 120,
+          "constraint": "hard"
+        },
+        "speech_policy": {
+          "mode": "cues",
+          "source": "default",
+          "output": "pptx_notes"
+        },
+        "issues": [
+          {
+            "issue_id": "audience-knowledge",
+            "question": "受众对现有流程与只读能力的熟悉程度未知。当前计划保留必要背景；若已有共识，可缩短讲解，把时间留给立项条件。",
+            "impact": "advisory",
+            "affected_page_ids": [
+              "P01"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          },
+          {
+            "issue_id": "sample-coverage",
+            "question": "120 条请求的时间、类型和选择方式未知，是否与拟试点小范围一致待核对；45%只可解释为合成样本值。",
+            "impact": "needs_judgment",
+            "affected_page_ids": [
+              "P02",
+              "P04",
+              "P05",
+              "P06"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          },
+          {
+            "issue_id": "field-availability",
+            "question": "拟试点哪些设备条件能在现场取得、哪些无法取得及如何注明原因？可得比例和取得方式未知，不能靠强制必填替代真实条件。",
+            "impact": "needs_judgment",
+            "affected_page_ids": [
+              "P01",
+              "P03",
+              "P04",
+              "P05",
+              "P07"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          },
+          {
+            "issue_id": "access-applicability",
+            "question": "资料是否获许可、可读取并可定位引用？设备型号/版本与资料适用范围如何对应、由谁核对和维护？未知；未落实时不能启动该范围实际读取。",
+            "impact": "blocker",
+            "affected_page_ids": [
+              "P01",
+              "P03",
+              "P04",
+              "P05",
+              "P07"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          },
+          {
+            "issue_id": "baseline-comparison",
+            "question": "如何选同范围基线并统一补问原因、轮次与时间口径？记录与比较设计未知；若样本条件不同，不能把变化归因为方案。",
+            "impact": "needs_judgment",
+            "affected_page_ids": [
+              "P02",
+              "P05",
+              "P06"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          },
+          {
+            "issue_id": "delivery-feasibility",
+            "question": "具体人员、设计接入工作量、资源和成本未知，4 周建议是否能留下足够有效观察待估算。未确认时只能提交条件式节奏，不能承诺实施日期或交付。",
+            "impact": "blocker",
+            "affected_page_ids": [
+              "P01",
+              "P03",
+              "P04",
+              "P05",
+              "P07"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          },
+          {
+            "issue_id": "trial-governance",
+            "question": "小范围对象、参与人数、记录负责人、新增工作负担、可接受门槛及继续/调整/停止标准均待运营与 IT 负责人共同确定；未给出数值目标。",
+            "impact": "needs_judgment",
+            "affected_page_ids": [
+              "P04",
+              "P05",
+              "P06",
+              "P07"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          },
+          {
+            "issue_id": "decision-open",
+            "question": "已有决定为空。是否开展、选择哪条路线及接受哪些前提，必须由负责人判断；本内容不记录任何批准或承诺。",
+            "impact": "needs_judgment",
+            "affected_page_ids": [
+              "P01",
+              "P04",
+              "P07"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          },
+          {
+            "issue_id": "timing-estimate",
+            "question": "逐页口播总计 480 秒、末页互动 120 秒为策划预算，不是实测。未来 cues 阶段需按实际讲述检查；在 10 分钟内优先保留证据限定、只读/未知机制、路线取舍与立项前提，不靠缩字删边界来压时。",
+            "impact": "advisory",
+            "affected_page_ids": [
+              "P01",
+              "P02",
+              "P03",
+              "P04",
+              "P05",
+              "P06",
+              "P07"
+            ],
+            "resolution": "open",
+            "resolution_ref": null
+          }
+        ],
+        "tradeoff_issue_ids": [
+          "delivery-feasibility",
+          "baseline-comparison",
+          "timing-estimate"
+        ]
+      },
+      "page_links": []
+    }
+  }
+}

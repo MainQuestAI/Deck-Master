@@ -1,0 +1,42 @@
+{
+  "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+  "assurance": "host_attested",
+  "observed_at_utc": "2026-10-14T16:30:21.537091+00:00",
+  "spawn": {
+    "tool": "collaboration.spawn_agent",
+    "canonical_task_name": "/root/e1_q2_a_page_copy",
+    "returned_task_name": "/root/e1_q2_a_page_copy",
+    "fork_turns": "none",
+    "input_package": "/workspace/work/rc3/actual-content-runner/actual-Q2-A-run-v1/stages/03-page-copy"
+  },
+  "completion": {
+    "sender": "/root/e1_q2_a_page_copy",
+    "message_type": "FINAL_ANSWER",
+    "status_observation_tool": "collaboration.list_agents",
+    "observed_status": "completed",
+    "observed_completed_agents": [
+      "/root/e1_q1_a_speech",
+      "/root/e1_q2_a_page_copy",
+      "/root/e1_q2_b_page_copy"
+    ],
+    "raw_final_message": "真实执行身份：`/root/e1_q2_a_page_copy`。\n\n已独占创建完整正式信封：\n`/workspace/work/rc3/actual-content-runner/actual-Q2-A-run-v1/stages/03-page-copy/model-output.json`\n\nSHA-256：`46f5d3f46bdbd040ca9c189c529c3e70cc90d2f3748d25b05e1fabc0d71562b5`\n\n方法阅读记录：\n`/workspace/work/rc3/actual-content-runner/actual-Q2-A-run-v1/stages/03-page-copy/method-read-record.json`\n\nSHA-256：`c57fcf40512ce2e82c731aa8477ad5b1b99dfe3d89a82faef19fe2440b853c50`\n\n读取范围：阶段 instructions、claim-read 返回的完整当前三份方法及工作单、保存的 work-order/Task/envelope metadata；current-artifacts 当前引用投影；真实 Narrative 全部 44,292 字符及 Plan 全部 22,760 字符；S1/S2/S3 指定 URI 原件、对象原件与完整 extract；共享 atom shape 合同；当前 Page、PlanInput、ComposeResult JSON schemas 与被引用的 collaboration `$defs/ref`。current-artifacts 初次工具输出被截断，随后依据真实引用分段全文读取采用的 Narrative/Plan。\n\n产出为 7 页、92 个可见 atom，逐 atom 映射完整；讲述预算 480 秒、讨论 120 秒。公开 JSON shape 校验通过。保留许可、现场可得性、资源、基线、标准和负责人决定等 unknown；无效果或生产保证升级。未修改项目对象或执行 accept/adopt、下阶段操作。\n\n可观察原生配置：模型型号、reasoning effort、temperature、seed 均为 `unknown`。"
+  },
+  "project_id": "actual-q2",
+  "task_id": "bb6d564687d1",
+  "method_release": {
+    "release_id": "575eca2c82a5-90a59eec255f",
+    "methods_sha256": "9c5105401194a85a6bf9a7472730925c96b4057086b46d6443fa9c2e564f496b"
+  },
+  "model_output_bytes_sha256": "46f5d3f46bdbd040ca9c189c529c3e70cc90d2f3748d25b05e1fabc0d71562b5",
+  "method_read_record": {
+    "path": "/workspace/work/rc3/actual-content-runner/actual-Q2-A-run-v1/stages/03-page-copy/method-read-record.json",
+    "sha256": "c57fcf40512ce2e82c731aa8477ad5b1b99dfe3d89a82faef19fe2440b853c50"
+  },
+  "native_configuration": {
+    "model": "unknown",
+    "reasoning": "unknown",
+    "seed": "unknown",
+    "tokens": "unknown"
+  },
+  "limits": "Root directly observed native tool responses; no platform signature or human/verified-user assurance."
+}

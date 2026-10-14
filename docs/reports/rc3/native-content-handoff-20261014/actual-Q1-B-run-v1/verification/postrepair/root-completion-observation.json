@@ -1,0 +1,45 @@
+{
+  "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+  "assurance": "host_attested",
+  "observed_at_utc": "2026-10-14T18:44:23.079999+00:00",
+  "spawn": {
+    "tool": "collaboration.spawn_agent",
+    "canonical_task_name": "/root/e1_q1_b_final_verify",
+    "returned_task_name": "/root/e1_q1_b_final_verify",
+    "fork_turns": "none",
+    "input_package": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair"
+  },
+  "completion": {
+    "sender": "/root/e1_q1_b_final_verify",
+    "message_type": "FINAL_ANSWER",
+    "status_observation_tool": "collaboration.list_agents",
+    "observed_status": "completed",
+    "observed_completed_agents": [
+      "/root/e1_q1_a_final_verify",
+      "/root/e1_q1_b_final_verify",
+      "/root/e1_q2_a_final_verify",
+      "/root/e1_q2_b_final_verify"
+    ],
+    "raw_final_message": "已独占写入本层 `model-output.json`，schema、binding 与 replacement 关系校验通过。\n\n- 真实身份：`/root/e1_q1_b_final_verify`\n- raw SHA256：`991462e71f53fccf15c73fe61d6620fcfbe0c0f27fda560420778c6ac945faf4`\n- method record：`/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/method-read-record.json`\n- method SHA256：`633f232607bf9cb0a5822c45c58508d53fb5f31a101ed7a8dd6766ca3aaa5865`\n\n已完整读取指令、shared规则、schema、binding、packet、当前全文、prior records、9份copied evidence、实际5份方法与work order，以及完整stored direction/CAS映射。核对范围含25节点、65关系、6页、80 atoms及全部1,675码点/23段notes。\n\n四项当前内容前审均 `pass`。原argument finding以 `accepted_variance` 关闭；原speech F2经真实cue修订复查为 `fixed`。历史结果未改写。\n\n实际试讲、人类专业复核、Owner、受众、视觉及桌面验收仍 `NOT_RUN`。底层模型、推理和采样配置不可观测。"
+  },
+  "project_id": "actual-q1",
+  "task_id": "2beead4ff603",
+  "method_release": {
+    "release_id": "cc6150da513c-d3adf8322b01",
+    "methods_sha256": "59f0e815805fb379f758554d944ce07c9aef27d54a736dabd2eb09e344368fc9"
+  },
+  "model_output_bytes_sha256": "991462e71f53fccf15c73fe61d6620fcfbe0c0f27fda560420778c6ac945faf4",
+  "method_read_record": {
+    "path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/method-read-record.json",
+    "sha256": "633f232607bf9cb0a5822c45c58508d53fb5f31a101ed7a8dd6766ca3aaa5865"
+  },
+  "native_configuration": {
+    "model": "unknown",
+    "reasoning": "unknown",
+    "seed": "unknown",
+    "tokens": "unknown"
+  },
+  "actual_event_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/root-actual-event.json",
+  "actual_event_sha256": "b8d47051698ead847163a9ca879aa2188755fd8caa92e83e4a359bd37f93439e",
+  "limits": "Root directly observed actual native completion; no platform signature/human assurance."
+}

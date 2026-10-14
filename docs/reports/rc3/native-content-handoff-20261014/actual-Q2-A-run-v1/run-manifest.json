@@ -1,0 +1,64 @@
+{
+  "protocol_sha256": "4fa26f301f817bb274586e8a18359d5ea598b670b28cf785bb46d785e3e14f67",
+  "harness_sha256": "f70a5d63a0da54e941e0e754af62988a37de87e58bad1ff651e9a7fc37947c23",
+  "case": "Q2",
+  "arm": "A_run",
+  "project": "/workspace/work/rc3/actual-content-runner/actual-Q2-A-run-v1/actual-q2",
+  "project_id": "actual-q2",
+  "installation_identity": {
+    "module_path": "/workspace/work/rc3/candidate-04-early-575eca2/prefix/.deck-master/releases/575eca2c82a5-90a59eec255f/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "module_sha256": "1a880a02d9f145c447043fc9bfc91ed0c228b7714909df20be1f3182f2b8889b",
+    "python_executable": "/workspace/work/rc3/candidate-04-early-575eca2/prefix/.deck-master/releases/575eca2c82a5-90a59eec255f/venv/bin/python",
+    "python_prefix": "/workspace/work/rc3/candidate-04-early-575eca2/prefix/.deck-master/releases/575eca2c82a5-90a59eec255f/venv",
+    "method_root": "/workspace/work/rc3/candidate-04-early-575eca2/prefix/.deck-master/releases/575eca2c82a5-90a59eec255f/venv/lib/python3.12/site-packages/deck_master/resources/skill",
+    "method_source": "packaged",
+    "source": null,
+    "install": {
+      "release_id": "575eca2c82a5-90a59eec255f",
+      "source_sha": "575eca2c82a5f43d72d491f888e36c0183d88c73",
+      "source_tree": null,
+      "source_dirty": false,
+      "package_version": "1.0.0.dev2",
+      "wheel_sha256": "90a59eec255ff8cec92531974bad621b7fc3e0419ed1481f6078cb21c457dfb4",
+      "status": "candidate_ready"
+    },
+    "metadata_version": "1.0.0.dev2"
+  },
+  "installation_admission": {
+    "source_sha": "575eca2c82a5f43d72d491f888e36c0183d88c73",
+    "source_tree": "9df9490a76a1288790593518ce190d6e61d84eab",
+    "wheel_sha256": "90a59eec255ff8cec92531974bad621b7fc3e0419ed1481f6078cb21c457dfb4",
+    "manifest": "/workspace/work/rc3/candidate-04-early-575eca2/manifest.json",
+    "python": "/workspace/work/rc3/candidate-04-early-575eca2/prefix/.deck-master/releases/575eca2c82a5-90a59eec255f/venv/bin/python"
+  },
+  "sources": [
+    {
+      "name": "S1-facts.txt",
+      "sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+      "kind": "original uploaded synthetic business materials; never fixture model output"
+    },
+    {
+      "name": "S2-scope.txt",
+      "sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+      "kind": "original uploaded synthetic business materials; never fixture model output"
+    },
+    {
+      "name": "S3-capabilities.txt",
+      "sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+      "kind": "original uploaded synthetic business materials; never fixture model output"
+    }
+  ],
+  "started_at": "2026-10-14T15:54:05.842806+00:00",
+  "model_execution": "NOT_RUN",
+  "synthetic_output_used": false,
+  "budget": {
+    "exact_pages": null,
+    "max_pages": 8,
+    "total_seconds": 600,
+    "presentation_mode": "live",
+    "speech_mode": "cues"
+  },
+  "seen_example": true,
+  "human_acceptance": "NOT_RUN; user explicitly deferred",
+  "original_twelve_host_session": false
+}

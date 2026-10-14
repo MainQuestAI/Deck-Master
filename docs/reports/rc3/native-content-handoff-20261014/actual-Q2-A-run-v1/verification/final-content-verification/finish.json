@@ -1,0 +1,353 @@
+{
+  "purpose": "final-content-verification",
+  "classification": "supplemental_protocol_repair_not_original_frozen_E1",
+  "not_original_frozen_E1": true,
+  "actual_native_reviewer": "/root/e1_q2_a_final_verify",
+  "raw_output_sha256": "579632e9e07dffcb431129099a6b332bfaabd4456eb59aba0f28d5ef83e51f7c",
+  "root_observation_sha256": "36c1cc49e29bf9da6845bb921ee9c3d1172eec8962b8dcf71805261f0991f24f",
+  "binding": {
+    "project_id": "actual-q2",
+    "request_id": "req-1fa78dee3c10",
+    "task_id": "1985d800da20",
+    "packet_sha256": "c30aedcc462f276fe2a3c03d5050fb51eab6df34a13af1486ff6def3b0e8bec8",
+    "subjects_sha256": "e13c8a9c686fb21fd2fc3c61e7d5cfcf351076c67431d09b529e315283468b0f",
+    "author_execution_refs": [
+      "/root/e1_q2_a_argument",
+      "/root/e1_q2_a_speech"
+    ],
+    "write_scope": {
+      "layers": [
+        "review"
+      ],
+      "page_ids": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07"
+      ]
+    },
+    "result_sha256": "15ac8c2d56cb6210353e646b0b19cce802d940a8734d5073891e7863196937e8"
+  },
+  "proof": {
+    "adapter_version": "rc3-native-supplemental-controller.v1",
+    "authentication": "protected_transport",
+    "claims": {
+      "all_native_writer_execution_refs": [
+        "/root/e1_q2_a_argument",
+        "/root/e1_q2_a_framing",
+        "/root/e1_q2_a_page_copy",
+        "/root/e1_q2_a_speech"
+      ],
+      "assurance": "host_attested",
+      "author_execution_refs": [
+        "/root/e1_q2_a_argument",
+        "/root/e1_q2_a_speech"
+      ],
+      "channel": "independent_review_receipts",
+      "controller_observation_sha256": "36c1cc49e29bf9da6845bb921ee9c3d1172eec8962b8dcf71805261f0991f24f",
+      "event_id": "supplemental-36c1cc49e29bf9da6845bb921ee9c3d1",
+      "evidence_scope": "supplemental_protocol_repair_not_original_frozen_E1",
+      "executor_ref": "/root/e1_q2_a_final_verify",
+      "expires_at": "2026-10-14T19:13:01.931002+00:00",
+      "human_acceptance": false,
+      "issued_at": "2026-10-14T18:43:01.931002+00:00",
+      "model_output_bytes_sha256": "579632e9e07dffcb431129099a6b332bfaabd4456eb59aba0f28d5ef83e51f7c",
+      "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+      "packet_sha256": "c30aedcc462f276fe2a3c03d5050fb51eab6df34a13af1486ff6def3b0e8bec8",
+      "project_id": "actual-q2",
+      "provider_id": "rc3-native-supplemental-controller",
+      "request_id": "req-1fa78dee3c10",
+      "result_sha256": "15ac8c2d56cb6210353e646b0b19cce802d940a8734d5073891e7863196937e8",
+      "reviewer_id": "/root/e1_q2_a_final_verify",
+      "subjects_sha256": "e13c8a9c686fb21fd2fc3c61e7d5cfcf351076c67431d09b529e315283468b0f",
+      "task_id": "1985d800da20",
+      "write_scope": {
+        "layers": [
+          "review"
+        ],
+        "page_ids": [
+          "P01",
+          "P02",
+          "P03",
+          "P04",
+          "P05",
+          "P06",
+          "P07"
+        ]
+      },
+      "writer_feedback": false
+    },
+    "provider_id": "rc3-native-supplemental-controller",
+    "raw_event_ref": {
+      "path": ".deckmaster/objects/36/36c1cc49e29bf9da6845bb921ee9c3d1172eec8962b8dcf71805261f0991f24f.json",
+      "sha256": "36c1cc49e29bf9da6845bb921ee9c3d1172eec8962b8dcf71805261f0991f24f"
+    },
+    "schema_version": "authenticated_review_receipt.v1"
+  },
+  "negative_controls": {
+    "every_actual_author": {
+      "/root/e1_q2_a_argument": {
+        "refused": true,
+        "reason": "every actual manuscript author is forbidden as independent verifier"
+      },
+      "/root/e1_q2_a_framing": {
+        "refused": true,
+        "reason": "every actual manuscript author is forbidden as independent verifier"
+      },
+      "/root/e1_q2_a_page_copy": {
+        "refused": true,
+        "reason": "every actual manuscript author is forbidden as independent verifier"
+      },
+      "/root/e1_q2_a_speech": {
+        "refused": true,
+        "reason": "every actual manuscript author is forbidden as independent verifier"
+      }
+    },
+    "ordinary_json_context": {
+      "refused": true,
+      "reason": "adapter_context: a registered provider must issue an opaque trusted context; JSON/dict is untrusted"
+    },
+    "changed_result_replay": {
+      "refused": true,
+      "reason": "receipt/result_sha256: authenticated event does not bind this exact result_sha256"
+    },
+    "foreign_task_replay": {
+      "refused": true,
+      "reason": "receipt/task_id: authenticated event does not bind this exact task_id"
+    }
+  },
+  "acceptance": {
+    "status": "accepted",
+    "project_id": "actual-q2",
+    "revision_id": "62fabf9560e54fa98ff039cbf2e2bcaa",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/a1/a197a9cde4c8ebc62db4856dd1dc371f644b949db2753fd711228f8b418cba4d.json",
+        "sha256": "a197a9cde4c8ebc62db4856dd1dc371f644b949db2753fd711228f8b418cba4d"
+      },
+      {
+        "path": ".deckmaster/objects/a7/a72e644b498d1e943da1ce38665f38a541cf9f69cb68b607bc0b4b76dd888c11.json",
+        "sha256": "a72e644b498d1e943da1ce38665f38a541cf9f69cb68b607bc0b4b76dd888c11"
+      },
+      {
+        "path": ".deckmaster/objects/d7/d712f6f76245c97c4e3c725dfa1ab351606b175eb7b040ffba2556c160af54d6.json",
+        "sha256": "d712f6f76245c97c4e3c725dfa1ab351606b175eb7b040ffba2556c160af54d6"
+      },
+      {
+        "path": ".deckmaster/objects/c9/c9578780099d4b231126a9eefb9280a5a1891e283f346bf0ef7445fd61516c4e.json",
+        "sha256": "c9578780099d4b231126a9eefb9280a5a1891e283f346bf0ef7445fd61516c4e"
+      },
+      {
+        "path": ".deckmaster/objects/63/63d92eaf3131f15330a1853443fedb59713c0fec7c61d2f6b53b60d6d846bc8a.json",
+        "sha256": "63d92eaf3131f15330a1853443fedb59713c0fec7c61d2f6b53b60d6d846bc8a"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "continue_production",
+    "input_alignment": "current",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "62fabf9560e54fa98ff039cbf2e2bcaa",
+    "new_page_hashes": {},
+    "work_complete": true,
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "62fabf9560e54fa98ff039cbf2e2bcaa",
+      "new_page_hashes": {},
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/a1/a197a9cde4c8ebc62db4856dd1dc371f644b949db2753fd711228f8b418cba4d.json",
+          "sha256": "a197a9cde4c8ebc62db4856dd1dc371f644b949db2753fd711228f8b418cba4d"
+        },
+        {
+          "path": ".deckmaster/objects/a7/a72e644b498d1e943da1ce38665f38a541cf9f69cb68b607bc0b4b76dd888c11.json",
+          "sha256": "a72e644b498d1e943da1ce38665f38a541cf9f69cb68b607bc0b4b76dd888c11"
+        },
+        {
+          "path": ".deckmaster/objects/d7/d712f6f76245c97c4e3c725dfa1ab351606b175eb7b040ffba2556c160af54d6.json",
+          "sha256": "d712f6f76245c97c4e3c725dfa1ab351606b175eb7b040ffba2556c160af54d6"
+        },
+        {
+          "path": ".deckmaster/objects/c9/c9578780099d4b231126a9eefb9280a5a1891e283f346bf0ef7445fd61516c4e.json",
+          "sha256": "c9578780099d4b231126a9eefb9280a5a1891e283f346bf0ef7445fd61516c4e"
+        },
+        {
+          "path": ".deckmaster/objects/63/63d92eaf3131f15330a1853443fedb59713c0fec7c61d2f6b53b60d6d846bc8a.json",
+          "sha256": "63d92eaf3131f15330a1853443fedb59713c0fec7c61d2f6b53b60d6d846bc8a"
+        }
+      ],
+      "work_complete": true,
+      "next_action": "continue_production"
+    }
+  },
+  "capabilities": {
+    "schema_version": "host_capabilities.v1",
+    "package_version": "1.0.0.dev2",
+    "installation_identity": {
+      "module_path": "/workspace/work/rc3/candidate-01-s01-a/prefix/.deck-master/releases/e7acd7740353-a6e03ed8f931/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "module_sha256": "1a880a02d9f145c447043fc9bfc91ed0c228b7714909df20be1f3182f2b8889b",
+      "python_executable": "/workspace/work/rc3/candidate-01-s01-a/prefix/.deck-master/releases/e7acd7740353-a6e03ed8f931/venv/bin/python",
+      "python_prefix": "/workspace/work/rc3/candidate-01-s01-a/prefix/.deck-master/releases/e7acd7740353-a6e03ed8f931/venv",
+      "method_root": "/workspace/work/rc3/candidate-01-s01-a/prefix/.deck-master/releases/e7acd7740353-a6e03ed8f931/venv/lib/python3.12/site-packages/deck_master/resources/skill",
+      "method_source": "packaged",
+      "source": null,
+      "install": {
+        "release_id": "e7acd7740353-a6e03ed8f931",
+        "source_sha": "e7acd77403534a73b5fe6e770a3cfffc34f7e5fc",
+        "source_tree": null,
+        "source_dirty": false,
+        "package_version": "1.0.0.dev2",
+        "wheel_sha256": "a6e03ed8f931b42a9d04da133d589e96072e32744e589a8b3698bee14f1bc4ef",
+        "status": "candidate_ready"
+      },
+      "metadata_version": "1.0.0.dev2"
+    },
+    "status": "ready",
+    "verified_user_events": false,
+    "independent_review_receipts": true,
+    "human_review_receipts": false,
+    "adapter_version": "rc3-native-supplemental-controller.v1",
+    "providers": [
+      {
+        "provider_id": "rc3-native-supplemental-controller",
+        "adapter_version": "rc3-native-supplemental-controller.v1",
+        "authentication": "protected_transport",
+        "channels": [
+          "independent_review_receipts"
+        ],
+        "status": "available"
+      }
+    ],
+    "evidence_kinds": [
+      "host_attested_instruction",
+      "independent_execution_receipt"
+    ],
+    "assurance": "host_attested",
+    "methods": [
+      {
+        "id": "visual-reference",
+        "relative_path": "references/visual-reference.md",
+        "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52",
+        "available": true
+      },
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "71547e4fe1f71b6e714ee2f75700259da498164666df1ce1e8e97948e65b0bd1",
+        "available": true
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "16a8f9f47c46f9be740d207e27912c417a588bd81f0219cd67048e2300bf24fc",
+        "available": true
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "1aa737128a871d6a763f90cd9d39fbf81aa6e6b16d6af16dcb558a1e7102f931",
+        "available": true
+      },
+      {
+        "id": "input-update",
+        "relative_path": "references/input-update.md",
+        "sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6",
+        "available": true
+      },
+      {
+        "id": "blueprint-svg",
+        "relative_path": "references/blueprint-svg.md",
+        "sha256": "4bec6451d6e19deec871f0f7c82bf6b40ac537d8e9fea2f3e1ef3e1ccd8e256c",
+        "available": true
+      },
+      {
+        "id": "review-and-repair",
+        "relative_path": "references/review-and-repair.md",
+        "sha256": "9041c498d9532576afa7f4b85201eb5177b13168945d56fe3c099cd26c1a3244",
+        "available": true
+      }
+    ],
+    "method_release": {
+      "release_id": "e7acd7740353-a6e03ed8f931",
+      "methods_sha256": "81e9dd793c6d586f1a27788e987a4370cc9766f402f4ca2a4debcdf700aba47c"
+    },
+    "review_channel_status": "available",
+    "limitations": [
+      "Host-attested instructions do not verify human identity",
+      "Method availability does not prove a Host read or applied the method",
+      "No strict identity/review channel is implied by a CLI call"
+    ]
+  },
+  "preproduction_status": {
+    "stage": "preproduction",
+    "status": "pass",
+    "requirement": "independent_model_or_human",
+    "requirement_state": {
+      "declared": "independent_model_or_human",
+      "origin": "default_new_argument",
+      "override_decision_ref": null,
+      "effective": "independent_model_or_human",
+      "reasons": []
+    },
+    "units": [
+      "argument",
+      "page_copy",
+      "progression",
+      "speech"
+    ],
+    "satisfied_units": [
+      "argument",
+      "page_copy",
+      "progression",
+      "speech"
+    ],
+    "missing_units": [],
+    "review_refs": [
+      {
+        "path": ".deckmaster/objects/a5/a5f685759f6adfd31d8fc0f8bf2ef492385240b93d684cf0b610e7801ed56b2d.json",
+        "sha256": "a5f685759f6adfd31d8fc0f8bf2ef492385240b93d684cf0b610e7801ed56b2d"
+      },
+      {
+        "path": ".deckmaster/objects/e4/e442faac50b3453800d1b19111bc0d735cd70cdce246f87428e347c02e11a3e0.json",
+        "sha256": "e442faac50b3453800d1b19111bc0d735cd70cdce246f87428e347c02e11a3e0"
+      },
+      {
+        "path": ".deckmaster/objects/35/358259984b178e3e685cb892dd9c8e297cff6ad65e59b079206056949c26016d.json",
+        "sha256": "358259984b178e3e685cb892dd9c8e297cff6ad65e59b079206056949c26016d"
+      },
+      {
+        "path": ".deckmaster/objects/e4/e4fa765b909ee9e4cc2223a21ba330a1d107cb36dec4e6bf32ab47d9e43f83d3.json",
+        "sha256": "e4fa765b909ee9e4cc2223a21ba330a1d107cb36dec4e6bf32ab47d9e43f83d3"
+      },
+      {
+        "path": ".deckmaster/objects/a1/a197a9cde4c8ebc62db4856dd1dc371f644b949db2753fd711228f8b418cba4d.json",
+        "sha256": "a197a9cde4c8ebc62db4856dd1dc371f644b949db2753fd711228f8b418cba4d"
+      },
+      {
+        "path": ".deckmaster/objects/a7/a72e644b498d1e943da1ce38665f38a541cf9f69cb68b607bc0b4b76dd888c11.json",
+        "sha256": "a72e644b498d1e943da1ce38665f38a541cf9f69cb68b607bc0b4b76dd888c11"
+      },
+      {
+        "path": ".deckmaster/objects/d7/d712f6f76245c97c4e3c725dfa1ab351606b175eb7b040ffba2556c160af54d6.json",
+        "sha256": "d712f6f76245c97c4e3c725dfa1ab351606b175eb7b040ffba2556c160af54d6"
+      },
+      {
+        "path": ".deckmaster/objects/c9/c9578780099d4b231126a9eefb9280a5a1891e283f346bf0ef7445fd61516c4e.json",
+        "sha256": "c9578780099d4b231126a9eefb9280a5a1891e283f346bf0ef7445fd61516c4e"
+      }
+    ],
+    "blocking_findings": [],
+    "next_action": "proceed_to_visual_production"
+  },
+  "writer_feedback": false,
+  "extra_repair_round": false,
+  "human_acceptance": "NOT_RUN",
+  "professional_predicate": "not asserted",
+  "finished_at": "2026-10-14T18:43:02.058779+00:00"
+}

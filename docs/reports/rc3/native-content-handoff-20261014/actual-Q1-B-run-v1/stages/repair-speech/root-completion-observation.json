@@ -1,0 +1,42 @@
+{
+  "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+  "assurance": "host_attested",
+  "observed_at_utc": "2026-10-14T17:41:24.269574+00:00",
+  "spawn": {
+    "tool": "collaboration.spawn_agent",
+    "canonical_task_name": "/root/e1_q1_b_repair_speech",
+    "returned_task_name": "/root/e1_q1_b_repair_speech",
+    "fork_turns": "none",
+    "input_package": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/stages/repair-speech"
+  },
+  "completion": {
+    "sender": "/root/e1_q1_b_repair_speech",
+    "message_type": "FINAL_ANSWER",
+    "status_observation_tool": "collaboration.list_agents",
+    "observed_status": "completed",
+    "observed_completed_agents": [
+      "/root/e1_q1_a_repair_speech",
+      "/root/e1_q1_b_repair_speech",
+      "/root/rc3_scope_audit"
+    ],
+    "raw_final_message": "已独占创建完整 speech envelope，仅将 P05-speech-02／04／06 改为 `cue`，保留原文、区间、映射和 20／30／10 秒估计。六页完整覆盖 1675 码点，预算为口播 420 秒＋互动 60 秒。公开 schema 验证通过；未执行 SDK consume/accept，未声称复审通过。\n\n- 实际身份：`/root/e1_q1_b_repair_speech`\n- 原始输出：`/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/stages/repair-speech/model-output.json`\n- 输出 SHA256：`194d9a4e46263abdaef8f5fa7a525ad0670b644eb69b79bc71ea6bd7972cea49`\n- 方法记录：同目录 `method-read-record.json`\n- 方法记录 SHA256：`b75a09470cf4484e0a66c6f4ad7a22c6fecd150f78bf8bdc338655cdb8bed137`\n- 原始 current-artifacts SHA256：`eb3d102eb753d769f6b1921e110e8b0d6c4dd8cfd1a3628d9416a914bdb55eb3`\n\n完整读取范围：本 stage 的 instructions、Task、work-order/source_reading、envelope-metadata、dispatch、repair-scope、全部六个 public schemas、current-artifacts 全部字段（含四份历史提案；按精确重复路径无损展开并验证还原相等）、唯一反馈全部四项 review、claim-read 返回的完整方法记录／工作单，以及两份实际安装方法 content-methods/content-examples 全文。prepared-method-bytes 仅检查结构；claim.json 仅列名和大小。未读其他 arm、控制材料或额外反馈。\n\n未验证：实际 SDK 对混合 cue/verbatim 的消费、主线／样稿确认门证据、完整试讲、讲稿导出回读、渲染、学习效果及人类验收。原始失败记录仍保留。\n\nNative 配置未可观察：具体模型 ID／版本、提供方与路由、reasoning effort、temperature、top_p、seed 均为未知；未推断或补造。"
+  },
+  "project_id": "actual-q1",
+  "task_id": "19afcbdd8a25",
+  "method_release": {
+    "release_id": "1fb3ddacbb75-7a5140186dc3",
+    "methods_sha256": "78372f029cf942cc34ab43f48a343a4c753acf87b719bb3bb068bc0809dc06b5"
+  },
+  "model_output_bytes_sha256": "194d9a4e46263abdaef8f5fa7a525ad0670b644eb69b79bc71ea6bd7972cea49",
+  "method_read_record": {
+    "path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/stages/repair-speech/method-read-record.json",
+    "sha256": "b75a09470cf4484e0a66c6f4ad7a22c6fecd150f78bf8bdc338655cdb8bed137"
+  },
+  "native_configuration": {
+    "model": "unknown",
+    "reasoning": "unknown",
+    "seed": "unknown",
+    "tokens": "unknown"
+  },
+  "limits": "Root directly observed native tool responses; no platform signature or human/verified-user assurance."
+}

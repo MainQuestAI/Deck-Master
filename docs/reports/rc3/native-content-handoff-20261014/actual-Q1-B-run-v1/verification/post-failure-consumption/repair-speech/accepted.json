@@ -1,0 +1,197 @@
+{
+  "result": {
+    "status": "accepted",
+    "project_id": "actual-q1",
+    "revision_id": "928ff6e2673f4c9986b37ce8d1839474",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/60/6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841.json",
+        "sha256": "6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841"
+      },
+      {
+        "path": ".deckmaster/objects/49/497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1.json",
+        "sha256": "497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1"
+      },
+      {
+        "path": ".deckmaster/objects/cc/ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9.json",
+        "sha256": "ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9"
+      },
+      {
+        "path": ".deckmaster/objects/bd/bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36.json",
+        "sha256": "bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36"
+      },
+      {
+        "path": ".deckmaster/objects/77/7766b82e88ba6358186c362aee70d240a931c532b2aa3ff65f043c1201373ac1.json",
+        "sha256": "7766b82e88ba6358186c362aee70d240a931c532b2aa3ff65f043c1201373ac1"
+      },
+      {
+        "path": ".deckmaster/objects/32/327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950.json",
+        "sha256": "327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950"
+      },
+      {
+        "path": ".deckmaster/objects/68/68e24fa38fc19e7528f57f6a9ca8b7d8e30b5b85ff3d98e0b16e61345a8a2478.json",
+        "sha256": "68e24fa38fc19e7528f57f6a9ca8b7d8e30b5b85ff3d98e0b16e61345a8a2478"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "speech_review_or_production",
+    "input_alignment": "current",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "928ff6e2673f4c9986b37ce8d1839474",
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "928ff6e2673f4c9986b37ce8d1839474",
+      "variant": "speech",
+      "adopted": true,
+      "page_refs": {
+        "P01": {
+          "path": ".deckmaster/objects/60/6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841.json",
+          "sha256": "6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841"
+        },
+        "P02": {
+          "path": ".deckmaster/objects/49/497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1.json",
+          "sha256": "497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1"
+        },
+        "P03": {
+          "path": ".deckmaster/objects/cc/ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9.json",
+          "sha256": "ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9"
+        },
+        "P04": {
+          "path": ".deckmaster/objects/bd/bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36.json",
+          "sha256": "bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36"
+        },
+        "P05": {
+          "path": ".deckmaster/objects/77/7766b82e88ba6358186c362aee70d240a931c532b2aa3ff65f043c1201373ac1.json",
+          "sha256": "7766b82e88ba6358186c362aee70d240a931c532b2aa3ff65f043c1201373ac1"
+        },
+        "P06": {
+          "path": ".deckmaster/objects/32/327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950.json",
+          "sha256": "327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950"
+        }
+      },
+      "plan_ref": {
+        "path": ".deckmaster/objects/68/68e24fa38fc19e7528f57f6a9ca8b7d8e30b5b85ff3d98e0b16e61345a8a2478.json",
+        "sha256": "68e24fa38fc19e7528f57f6a9ca8b7d8e30b5b85ff3d98e0b16e61345a8a2478"
+      },
+      "plan_note": null,
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/60/6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841.json",
+          "sha256": "6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841"
+        },
+        {
+          "path": ".deckmaster/objects/49/497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1.json",
+          "sha256": "497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1"
+        },
+        {
+          "path": ".deckmaster/objects/cc/ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9.json",
+          "sha256": "ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9"
+        },
+        {
+          "path": ".deckmaster/objects/bd/bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36.json",
+          "sha256": "bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36"
+        },
+        {
+          "path": ".deckmaster/objects/77/7766b82e88ba6358186c362aee70d240a931c532b2aa3ff65f043c1201373ac1.json",
+          "sha256": "7766b82e88ba6358186c362aee70d240a931c532b2aa3ff65f043c1201373ac1"
+        },
+        {
+          "path": ".deckmaster/objects/32/327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950.json",
+          "sha256": "327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950"
+        },
+        {
+          "path": ".deckmaster/objects/68/68e24fa38fc19e7528f57f6a9ca8b7d8e30b5b85ff3d98e0b16e61345a8a2478.json",
+          "sha256": "68e24fa38fc19e7528f57f6a9ca8b7d8e30b5b85ff3d98e0b16e61345a8a2478"
+        }
+      ],
+      "invalidated_outputs": [
+        "pptx",
+        "render_report",
+        "trace"
+      ],
+      "invalidated_reviews": [
+        {
+          "review_id": "actual-Q1-B-native-speech-e1",
+          "review_ref": {
+            "path": ".deckmaster/objects/77/77afa54568f4d733ab7d766afbcf283279ecb588a43d78faf342207a45af8aab.json",
+            "sha256": "77afa54568f4d733ab7d766afbcf283279ecb588a43d78faf342207a45af8aab"
+          },
+          "reason": "speech dependency changed"
+        }
+      ],
+      "next_action": "speech_review_or_production"
+    },
+    "variant": "speech",
+    "adopted": true,
+    "page_refs": {
+      "P01": {
+        "path": ".deckmaster/objects/60/6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841.json",
+        "sha256": "6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841"
+      },
+      "P02": {
+        "path": ".deckmaster/objects/49/497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1.json",
+        "sha256": "497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1"
+      },
+      "P03": {
+        "path": ".deckmaster/objects/cc/ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9.json",
+        "sha256": "ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9"
+      },
+      "P04": {
+        "path": ".deckmaster/objects/bd/bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36.json",
+        "sha256": "bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36"
+      },
+      "P05": {
+        "path": ".deckmaster/objects/77/7766b82e88ba6358186c362aee70d240a931c532b2aa3ff65f043c1201373ac1.json",
+        "sha256": "7766b82e88ba6358186c362aee70d240a931c532b2aa3ff65f043c1201373ac1"
+      },
+      "P06": {
+        "path": ".deckmaster/objects/32/327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950.json",
+        "sha256": "327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950"
+      }
+    },
+    "plan_ref": {
+      "path": ".deckmaster/objects/68/68e24fa38fc19e7528f57f6a9ca8b7d8e30b5b85ff3d98e0b16e61345a8a2478.json",
+      "sha256": "68e24fa38fc19e7528f57f6a9ca8b7d8e30b5b85ff3d98e0b16e61345a8a2478"
+    },
+    "invalidated_outputs": [
+      "pptx",
+      "render_report",
+      "trace"
+    ],
+    "invalidated_reviews": [
+      {
+        "review_id": "actual-Q1-B-native-speech-e1",
+        "review_ref": {
+          "path": ".deckmaster/objects/77/77afa54568f4d733ab7d766afbcf283279ecb588a43d78faf342207a45af8aab.json",
+          "sha256": "77afa54568f4d733ab7d766afbcf283279ecb588a43d78faf342207a45af8aab"
+        },
+        "reason": "speech dependency changed"
+      }
+    ],
+    "plan_note": null
+  },
+  "actual_native_writer": "/root/e1_q1_b_repair_speech",
+  "raw_output_sha256": "194d9a4e46263abdaef8f5fa7a525ad0670b644eb69b79bc71ea6bd7972cea49",
+  "root_observation_sha256": "231bd2cc61ae6b51f0912a805c09cdff60233d9beeb77ef6497c6774f7ae7dc8",
+  "original_stage_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/stages/repair-speech",
+  "original_refusal_preserved": true,
+  "classification": "supplemental_protocol_repair_not_original_frozen_E1",
+  "not_original_frozen_E1": true,
+  "new_native_output": false,
+  "new_claim": false,
+  "dispatch_method_release": {
+    "methods_sha256": "78372f029cf942cc34ab43f48a343a4c753acf87b719bb3bb068bc0809dc06b5",
+    "release_id": "1fb3ddacbb75-7a5140186dc3"
+  },
+  "current_method_release": {
+    "release_id": "cc6150da513c-d3adf8322b01",
+    "methods_sha256": "78372f029cf942cc34ab43f48a343a4c753acf87b719bb3bb068bc0809dc06b5"
+  },
+  "method_basis_status": "current",
+  "historical_immutable_native_completion_reused_for_exact_result": true,
+  "accepted_at": "2026-10-14T18:24:50.885930+00:00"
+}
