@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deck-master"
-version = "1.0.0.dev2"
+version = "1.0.0rc3.dev1"
 description = "Rebuilt Deck Master core: immutable storage, host-task envelopes, native SVG compiler, and read-only workbench."
 readme = "README.md"
 requires-python = ">=3.11,<3.14"

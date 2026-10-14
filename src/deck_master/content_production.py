@@ -1004,7 +1004,7 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
             refreshed_entries.append(entry)
             continue
         refreshed_entries.append({**entry, "page": new_page_refs[page_id],
-                                  "svg_preview": None, "ppt_preview": None})
+                                  "ppt_preview": None})
     updated["pages"] = refreshed_entries
     updated["outputs"] = dict.fromkeys(updated["outputs"])
     plan_ref = None
@@ -1274,6 +1274,10 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
         if not isinstance(write_scope, dict):
             raise ModelError("collaboration/adopt_proposal/write_scope",
                              "adoption names its exact write scope")
+        from . import eligibility
+        eligibility.guard(store, document, 'proposal.adopt',
+                          context={'targets': {'page_ids': write_scope.get('page_ids') or [],
+                                               'layers': write_scope.get('layers') or []}})
         gaps = scope_gaps(store, decision.get("scope") or {}, write_scope)
         if gaps:
             raise ModelError("collaboration/adopt_proposal/write_scope",

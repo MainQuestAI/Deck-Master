@@ -9,3 +9,6 @@ include tools/build_hook.py
 recursive-include skills/deck-master/references *.md
 recursive-include skills/deck-master/agents *.yaml
 include skills/deck-master/SKILL.md
+recursive-include skills/deck-content *.md *.yaml
+recursive-include skills/deck-design *.md *.yaml
+recursive-include skills/deck-review *.md *.yaml

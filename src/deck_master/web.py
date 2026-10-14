@@ -20,7 +20,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse, unquote
 
 from . import view as view_mod
-from .store import Store
+from .store import Store, StoreError
 from . import workbench as workbench_mod
 from .errors import TypedServiceError, NEXT_ACTIONS_BY_CODE
 from .models import ModelError
@@ -176,7 +176,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             data=self._read_json_body()
             from .samples import sample_info
             sample = sample_info(self.store.project_root)
-            if sample and sample['readonly'] and self.path not in ('/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/validate'):
+            if sample and sample['readonly'] and urlparse(self.path).path not in ('/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/validate', '/api/eligibility', '/api/reviews/evaluate'):
                 self._send_json({'error': {'code': 'sample_readonly', 'message': 'this synthetic example is read-only; create your own project'}}, 403)
                 return
             # G54（B07 回填）：document 写族端点补与 FORMAT_GATED 投影一致的格式门。
@@ -189,6 +189,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': {'code': 'unsupported_project_format', 'message': 'this action requires a workbench.v3 project'}}, 409)
                     return
             from . import editing, service
+            from . import collaboration_api
+            collaboration_route = collaboration_api.route(self.path, method='POST')
+            if collaboration_route:
+                collaboration_route = collaboration_api.route(self.path, self.store.load_document(), method='POST')
+                action, parameters = collaboration_route
+                result, status, _ = collaboration_api.invoke(self.store.project_root, action, {**data, **parameters})
+                self._send_json(result, status)
+                return
             if self.path in ('/api/drafts/save', '/api/drafts/import', '/api/drafts/recovery', '/api/ui-state'):
                 from . import ui_journal
                 action = {'/api/drafts/save': ui_journal.save, '/api/drafts/import': ui_journal.import_recovery,
@@ -289,6 +297,18 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if not self._local_host():
             self._send_json({'error':'loopback Host required'},403);return
         parsed = urlparse(self.path)
+        from . import collaboration_api
+        try:
+            collaboration_route = collaboration_api.route(self.path, method='GET')
+            if collaboration_route:
+                collaboration_route = collaboration_api.route(self.path, self.store.load_document(), method='GET')
+                action, parameters = collaboration_route
+                result, status, _ = collaboration_api.invoke(self.store.project_root, action, parameters)
+                self._send_json(result, status)
+                return
+        except (ModelError, StoreError):
+            self._send_json({'error': {'code': 'project_not_found', 'message': 'project route is unavailable'}}, 404)
+            return
         if parsed.path.startswith('/api/ui-state/backups'):
             from . import personal_recovery
             try:

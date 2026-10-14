@@ -256,6 +256,8 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "ui commit-clear": (None, "-", READ_REASONS["ui_state"]),
     # -- read-only / non-project
     "doctor": (None, "-", READ_REASONS["install"]),
+    "capabilities": (None, "-", READ_REASONS["install"]),
+    "methods": (None, "-", READ_REASONS["read_model"]),
     "legacy-map": (None, "-", READ_REASONS["read_model"]),
     "view": (None, "-", READ_REASONS["read_model"]),
     "workbench": (None, "-", READ_REASONS["install"]),
@@ -413,6 +415,30 @@ HTTP_PREFIX_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 }
 
 
+# RC3 transport entries are finite aliases of the same service actions.
+# An unclassified write is never inferred from the existence of a route.
+from .collaboration_api import READ_ROUTES as _RC3_READ_ROUTES, WRITE_ROUTES as _RC3_WRITE_ROUTES, WRITE_ACTIONS as _RC3_WRITE_ACTIONS
+for _route, _action in _RC3_READ_ROUTES.items():
+    HTTP_ENTRIES[_route] = (None, '-', READ_REASONS['read_model'])
+for _route, _action in _RC3_WRITE_ROUTES.items():
+    HTTP_ENTRIES[_route] = ((None, '-', READ_REASONS['read_model']) if _action in ('eligibility', 'review.evaluate') else
+                            (_RC3_WRITE_ACTIONS[_action], 'collaboration_api.invoke → existing service boundary', None))
+HTTP_ENTRIES['/api/collaboration/authorizations/{authorization_id}/revoke'] = (
+    'authorization.revoke', 'collaboration_api.invoke → collaboration.revoke_authorization', None)
+for _entry in ('collaboration show', 'collaboration migration describe', 'eligibility'):
+    CLI_ENTRIES[_entry] = (None, '-', READ_REASONS['read_model'])
+CLI_ENTRIES['review evaluate'] = (None, '-', READ_REASONS['read_model'])
+CLI_ENTRIES['review import'] = ('review.record', 'external_review.import_report → review.record gate', None)
+for _entry, _action in {
+    'collaboration request start': 'request.start', 'collaboration request replace': 'request.start',
+    'collaboration decision': 'decision.record', 'collaboration grant': 'authorization.grant',
+    'collaboration adopt-proposal': 'proposal.adopt', 'collaboration pause': 'request.pause',
+    'collaboration resume': 'request.resume', 'collaboration revoke': 'authorization.revoke',
+    'collaboration migration apply': 'migration.apply',
+}.items():
+    CLI_ENTRIES[_entry] = (_action, 'collaboration_api.invoke → existing service boundary', None)
+
+
 @dataclass(frozen=True)
 class Classification:
     surface: str
@@ -493,6 +519,10 @@ def http_surface() -> set[str]:
             continue
         for match in re.finditer(r"['\"](/api/[^'\"]*)['\"]", text):
             found.add(match.group(1))
+    from .collaboration_api import READ_ROUTES, WRITE_ROUTES
+    found.update(READ_ROUTES)
+    found.update(WRITE_ROUTES)
+    found.add('/api/collaboration/authorizations/{authorization_id}/revoke')
     return found
 
 

@@ -178,6 +178,7 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
     _spec("asset.import", "adoption", "deck", layers=("design",), writes=True, role="user"),
     _spec("design.update", "adoption", "deck", layers=("design",), writes=True, role="user"),
     _spec("review.record", "adoption", "deck", layers=("review",), writes=True, role="reviewer"),
+    _spec("proposal.adopt", "adoption", "deck", writes=True, role="runtime"),
     _spec("annotation.save", "adoption", "deck", layers=("review",), writes=True, role="reviewer"),
     _spec("review.strict", "adoption", "external_artifact", layers=("review",),
           writes=False, role="reviewer"),
@@ -579,6 +580,18 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
         return {"status": "absent", "reasons": ["binding_missing"],
                 "new_protocol": declared,
                 "digest": None, "expected_digest": None}
+    bound_authorization = binding.get('authorization_ref')
+    if bound_authorization:
+        try:
+            effective_authorization = dependency_slices.authorization_effectiveness(store, document, bound_authorization)
+        except ModelError:
+            effective_authorization = {'reasons': ['authorization_unreadable']}
+        if any(r in ('authorization_revoked', 'ancestor_authorization_revoked')
+               for r in effective_authorization['reasons']):
+            return {'status': 'withdrawn', 'reasons': effective_authorization['reasons'],
+                    'new_protocol': True, 'digest': binding.get('eligibility_digest'),
+                    'expected_digest': None, 'authorization_id':
+                    store.read_object_json(bound_authorization).get('authorization_id')}
     try:
         models.require_task_binding(document, task)
     except ModelError as exc:
@@ -882,7 +895,7 @@ _INTENT_STOPS = {
 }
 
 
-def _intent_allows(spec: ActionSpec, request: dict | None) -> str | None:
+def _intent_allows(spec: ActionSpec, request: dict | None, targets=None) -> str | None:
     """Whether the request's own intent/content_intent reaches this action."""
     if request is None:
         return None
@@ -890,7 +903,9 @@ def _intent_allows(spec: ActionSpec, request: dict | None) -> str | None:
     content_intent = request.get("content_intent")
     if spec.name in _INTENT_BLOCKED_ACTIONS.get(intent, ()):
         return _INTENT_STOPS.get(intent, f"request intent {intent!r} does not reach {spec.name!r}")
-    if spec.name in _CONTENT_INTENT_BLOCKED_ACTIONS.get(content_intent, ()):
+    speech_edit = spec.name == 'page.edit' and set((targets or {}).get('layers') or []) == {'speech'}
+    if (spec.name in _CONTENT_INTENT_BLOCKED_ACTIONS.get(content_intent, ())
+            and not (content_intent == 'speech_only' and speech_edit)):
         return (f"content_intent {content_intent!r} does not reach {spec.name!r}; "
                 "the request must say it wants that production")
     return None
@@ -1027,7 +1042,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
             if request.get("paused") and (spec.production or spec.writes):
                 block("request_paused",
                       request.get("pause_reason") or "the current request is paused")
-            stop = _intent_allows(spec, request)
+            stop = _intent_allows(spec, request, targets)
             if stop:
                 block("scope_exceeded", stop,
                       request_intent=request.get("intent"),

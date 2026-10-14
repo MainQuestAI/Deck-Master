@@ -63,6 +63,9 @@ def _proposal(store, document, value):
         raise StyleConflict('base_revision', 'read current state and propose again', [])
     if not value['instruction'].strip():
         fail('instruction', 'provide a short concrete style requirement')
+    if value['schema_version'] == 'style_input.v3':
+        from .initial_design import proposal
+        return proposal(store, document, value)
     external = value['schema_version'] == 'style_input.v2'
     if external:
         from .visual_styles import owned_spec, recipe_references
@@ -200,7 +203,7 @@ def confirm(project, *, proposal_id, base_revision, operation_id):
         if unresolved:
             raise StyleConflict('conflicts', 'explicitly resolve each displayed constraint conflict', unresolved)
         parent, parent_ref = _owned(store, document, recipe_id=proposal['input']['parent_recipe_id']) if proposal['input'].get('parent_recipe_id') else (None, None)
-        recipe = {**copy.deepcopy(proposal), 'schema_version': 'style_recipe.v2' if proposal['schema_version'] == 'style_proposal.v2' else 'style_recipe.v1',
+        recipe = {**copy.deepcopy(proposal), 'schema_version': 'style_recipe.' + proposal['schema_version'].rsplit('.', 1)[1],
                   'recipe_id': 'recipe-' + uuid.uuid4().hex, 'version': parent['version'] + 1 if parent else 1,
                   'parent_ref': parent_ref, 'proposal_ref': proposal_ref,
                   'suggestion_state': 'confirmed' if proposal['input'].get('host_suggestion') else 'none'}
@@ -242,6 +245,11 @@ def effective_spec(recipe):
 
 
 def instruction(recipe, page_id):
+    if recipe['schema_version'] == 'style_recipe.v3':
+        return ('初始设计/制作只消费已确认的不可变 recipe；完整保留目标正文、单元格归属、箭头方向和限定。\n'
+                '设计要求：' + recipe['input']['instruction'] + '\n实际视觉参数：' +
+                json.dumps(recipe['recipe_draft'], ensure_ascii=False) +
+                '\n缺量化数据时回到内容，不补论据，不删关键正文，不把内部依据画进页面。')
     value = recipe['input']; dimensions = recipe['dimensions']
     lines = ['跨页风格试作。只借用明确选定的视觉维度，不复制参考页的标题、事实、数字、论点或其它正文。',
              '目标页结构化正文必须完整保留；未选维度沿用目标页。构图仅在单独选择 composition 时借用。',
@@ -310,6 +318,8 @@ def plan(project, *, input):
     if not isinstance(ids, list) or not ids or any(not isinstance(pid, str) for pid in ids) or len(ids) != len(set(ids)):
         fail('page_ids', 'select unique explicit target pages')
     store = Store(project_path(project)); doc = load_snapshot(store); recipe, ref = _owned(store, doc, input.get('recipe_id'))
+    if recipe.get('intent') == 'feasibility':
+        fail('recipe_id', 'feasibility is a zero-call design proposal, not authorization to produce a sample')
     entries = {e['page_id']: e for e in doc['pages']}
     if any(pid not in entries for pid in ids):
         raise StyleConflict('page_ids', 'selected pages are no longer in the project', [{'page_id': p, 'cause': 'page_absent'} for p in ids if p not in entries])
@@ -330,11 +340,23 @@ def plan(project, *, input):
 
 def apply_request(store, document, value, request, page_id):
     recipe = validate_change(store, document, value)
+    if recipe['schema_version'] == 'style_recipe.v3':
+        from .initial_design import project as project_recipe
+        from .production import project_prompt
+        entry = next(e for e in document['pages'] if e['page_id'] == page_id)
+        design = project_recipe(store, document, recipe, entry, value['style_recipe_ref'])
+        page = store.read_object_json(entry['page'])
+        request.update(project_prompt(page, design, design.get('assets') or []))
+        request['content_requirements'] = design['content_requirements']
+        request['content_basis'] = design['content_basis']
+        request['resolved_design_context'] = design
     request['prompt'] = instruction(recipe, page_id) + '\n\n' + request['prompt']
     request['prompt_sha256'] = sha256_bytes(request['prompt'].encode('utf-8'))
 
 
 def recipe_references(store, document, recipe):
+    if recipe['schema_version'] == 'style_recipe.v3':
+        return copy.deepcopy(recipe['reference_sources']['references'])
     if recipe['schema_version'] == 'style_recipe.v2':
         from .visual_styles import recipe_references as external_references
         return external_references(store, document, recipe['input'])

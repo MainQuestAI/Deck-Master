@@ -76,6 +76,53 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"deck-master {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
+    sub.add_parser("capabilities", help="Read actual methods and available identity/review channels")
+    methods = sub.add_parser("methods", help="Read versioned methods from this installation")
+    methods.add_argument("--kind", choices=("compose", "blueprint", "reconstruct", "review", "repair", "style_analyze"), default="compose")
+    methods.add_argument("--intent", default=None)
+    methods.add_argument("--phase", default=None)
+    methods.add_argument("--read", action="store_true", help="include the actual method text")
+
+    collab = sub.add_parser('collaboration', help='Version-bound collaboration facts and controls')
+    collab_commands = collab.add_subparsers(dest='collaboration_command', required=True)
+    leaves = []
+    leaves.append((collab_commands.add_parser('show'), 'show', False))
+    request = collab_commands.add_parser('request').add_subparsers(dest='collaboration_request_command', required=True)
+    for name in ('start', 'replace'):
+        leaves.append((request.add_parser(name), 'request.' + name, True))
+    for name in ('decision', 'grant', 'adopt-proposal', 'pause', 'resume', 'revoke'):
+        leaves.append((collab_commands.add_parser(name), name, True))
+    migration = collab_commands.add_parser('migration').add_subparsers(dest='collaboration_migration_command', required=True)
+    for name in ('describe', 'apply'):
+        leaves.append((migration.add_parser(name), 'migration.' + name, name == 'apply'))
+    for leaf, action, writes in leaves:
+        leaf.set_defaults(collaboration_action=action)
+        leaf.add_argument('project_arg', nargs='?')
+        leaf.add_argument('--project')
+        if writes:
+            leaf.add_argument('--input', required=True)
+            leaf.add_argument('--base-revision')
+            leaf.add_argument('--operation-id')
+    eligible = sub.add_parser('eligibility', help='Read the common resolver without writing project state')
+    eligible.add_argument('project_arg', nargs='?')
+    eligible.add_argument('--project')
+    eligible.add_argument('--action', required=True)
+    eligible.add_argument('--input')
+    review = sub.add_parser('review', help='Strict external read-only reports and explicit scoped import')
+    review_commands = review.add_subparsers(dest='review_command', required=True)
+    evaluate = review_commands.add_parser('evaluate')
+    evaluate.add_argument('source')
+    evaluate.add_argument('--persistence', choices=('none',), default='none')
+    evaluate.add_argument('--report-output')
+    evaluate.add_argument('--source-sha256')
+    evaluate.add_argument('--scope', help='scope JSON file')
+    review_import = review_commands.add_parser('import')
+    review_import.add_argument('project_arg', nargs='?')
+    review_import.add_argument('--project')
+    review_import.add_argument('--input', required=True)
+    review_import.add_argument('--base-revision')
+    review_import.add_argument('--operation-id')
+
     doctor = sub.add_parser("doctor")
     doctor.add_argument("--step", choices=("compose","blueprint","compile","render","view","export"), default="view")
     doctor.add_argument("--font", action="append", default=[])
@@ -345,6 +392,49 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     options = parser.parse_args(argv)
     try:
+        if options.command == 'review' and options.review_command == 'evaluate':
+            from .collaboration_api import invoke
+            data = {k: getattr(options, k) for k in ('source', 'persistence', 'report_output', 'source_sha256')
+                    if getattr(options, k) is not None}
+            if options.scope:
+                data['scope'] = json.loads(Path(options.scope).read_text(encoding='utf-8'))
+            result, _, code = invoke(None, 'review.evaluate', data)
+            return _emit(result) if code == 0 else _emit_and_exit(result, code)
+        if options.command == 'review' and options.review_command == 'import':
+            from .collaboration_api import invoke
+            data = json.loads(Path(options.input).read_text(encoding='utf-8'))
+            for key in ('base_revision', 'operation_id'):
+                if getattr(options, key) is not None:
+                    data[key] = getattr(options, key)
+            result, _, code = invoke(options.project or options.project_arg, 'review.import', data)
+            return _emit(result) if code == 0 else _emit_and_exit(result, code)
+        if options.command in ('collaboration', 'eligibility'):
+            from .collaboration_api import invoke
+            project = options.project or options.project_arg
+            if not project or (options.project and options.project_arg and options.project != options.project_arg):
+                raise ModelError('project', 'provide one project path or registered project identity')
+            data = json.loads(Path(options.input).read_text(encoding='utf-8')) if getattr(options, 'input', None) else {}
+            if options.command == 'eligibility':
+                data = {'action': options.action, 'targets': data.get('targets', data),
+                        **({'artifact_revision': data['artifact_revision']} if data.get('artifact_revision') else {})}
+                action = 'eligibility'
+            else:
+                for key in ('base_revision', 'operation_id'):
+                    if getattr(options, key, None) is not None:
+                        data[key] = getattr(options, key)
+                action = options.collaboration_action
+            result, _, code = invoke(project, action, data)
+            return _emit(result) if code == 0 else _emit_and_exit(result, code)
+        if options.command == "capabilities":
+            from .capabilities import describe
+            return _emit(describe())
+        if options.command == "methods":
+            from .method_resources import method_resources, method_release
+            items = method_resources(options.kind, intent=options.intent, phase=options.phase)
+            if options.read:
+                items = [{**item, "content": Path(item["path"]).read_text(encoding="utf-8")}
+                         for item in items]
+            return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
         if options.command == "workbench":
             from .launcher import open_workbench
             result = open_workbench(project=options.project, registry_file=options.registry,

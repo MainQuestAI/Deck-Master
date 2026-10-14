@@ -1169,7 +1169,7 @@ def test_skills_tree_reduced_to_deck_master_and_resolver() -> None:
     repo = Path(service.__file__).resolve().parents[2]
     skills = repo / "skills"
     entries = sorted(p.name for p in skills.iterdir())
-    assert entries == ["RESOLVER.md", "deck-master"]
+    assert entries == ["RESOLVER.md", "deck-content", "deck-design", "deck-master", "deck-review"]
     resolver = (skills / "RESOLVER.md").read_text(encoding="utf-8").strip()
     assert "skills/deck-master/SKILL.md" in resolver
     assert len(resolver.splitlines()) == 1
@@ -1182,7 +1182,7 @@ def test_old_skill_names_gone_from_living_surfaces(monkeypatch) -> None:
 
     repo = Path(service.__file__).resolve().parents[2]
     pattern = ("deck-autopilot|deck-brief|deck-builder|deck-doctor|deck-init|deck-learn|"
-               "deck-planner|deck-producer|deck-quality|deck-review|deck-setup|"
+               "deck-planner|deck-producer|deck-quality|deck-setup|"
                "deck-sourcing|deck-upgrade|ppt-deck-pro-max|ppt-quality-gate|ppt-master")
     excluded = {'__pycache__', '.pytest_cache', '.venv', 'venv', 'node_modules',
                 'build', 'dist', 'skills-references'}

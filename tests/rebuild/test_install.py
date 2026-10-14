@@ -257,6 +257,8 @@ def test_wheel_and_sdist_exclude_customer_material_and_secrets(tmp_path: Path) -
     for static in ("index.html", "app.js", "style.css", "tokens.css", "workbench.css", "assets/deck-master-logo/favicon.svg", "assets/deck-master-logo/logo-horizontal-light.svg"):
         assert f"deck_master/resources/static/v2/{static}" in wheel_names
     assert "deck_master/resources/skill/SKILL.md" in wheel_names
+    assert all(f'deck_master/resources/skills/{name}/SKILL.md' in wheel_names
+               for name in ('deck-content','deck-design','deck-review'))
     assert any(n.startswith("deck_master/resources/skill/references/") for n in wheel_names)
 
     # Provenance (T19.01): extraction attribution headers ship with the code.
@@ -265,9 +267,10 @@ def test_wheel_and_sdist_exclude_customer_material_and_secrets(tmp_path: Path) -
     native = dict(wheel_files)["deck_master/compiler/native.py"].decode("utf-8")
     assert "B0 2a866cf" in native
     # License texts ship and match pyproject metadata.
-    license_text = dict(wheel_files)["deck_master-1.0.0.dev2.dist-info/licenses/LICENSE"].decode("utf-8") \
+    from deck_master import __version__
+    license_text = dict(wheel_files)[f"deck_master-{__version__}.dist-info/licenses/LICENSE"].decode("utf-8") \
         if any(n.endswith("dist-info/licenses/LICENSE") for n in wheel_names) \
-        else dict(wheel_files)["deck_master-1.0.0.dev2.dist-info/LICENSE"].decode("utf-8")
+        else dict(wheel_files)[f"deck_master-{__version__}.dist-info/LICENSE"].decode("utf-8")
     assert "Apache License" in license_text
     metadata_name = next(n for n in wheel_names if n.endswith("METADATA"))
     metadata_text = dict(wheel_files)[metadata_name].decode("utf-8")

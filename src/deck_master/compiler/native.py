@@ -144,4 +144,6 @@ def emit(pages, width, height, fonts, output):
                 sh._element.spPr.append(OxmlElement('a:effectLst'))
             else:
                 sh._element.spPr.append(OxmlElement('a:effectLst'))
+        if page.get('speaker_notes'):
+            slide.notes_slide.notes_text_frame.text = page['speaker_notes']
     pres.save(output)

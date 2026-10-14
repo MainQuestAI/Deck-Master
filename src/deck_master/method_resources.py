@@ -27,6 +27,7 @@ RELATIVE_PATHS = {
     "input-update": "references/input-update.md",
     "blueprint-svg": "references/blueprint-svg.md",
     "review-and-repair": "references/review-and-repair.md",
+    "content-calibration": "references/content-calibration.md",
 }
 
 # Task kind / intent -> method ids (spec §3.4). compose/initial may consult
@@ -60,9 +61,6 @@ def resolve_root() -> Path:
 
     import deck_master
 
-    packaged = Path(str(resources.files("deck_master"))).resolve() / "resources" / "skill"
-    if (packaged / "SKILL.md").is_file():
-        return packaged
     module_file = Path(deck_master.__file__).resolve()
     if module_file.parent.name == "deck_master" and module_file.parents[1].name == "src":
         repo = module_file.parents[2]
@@ -71,6 +69,9 @@ def resolve_root() -> Path:
             canonical = repo / "skills" / "deck-master"
             if (canonical / "SKILL.md").is_file():
                 return canonical
+    packaged = Path(str(resources.files("deck_master"))).resolve() / "resources" / "skill"
+    if (packaged / "SKILL.md").is_file():
+        return packaged
     raise MethodResourceMissing(
         "method root",
         "no readable deck-master method source for this installation; reinstall the package",
@@ -79,6 +80,9 @@ def resolve_root() -> Path:
 
 def method_ids_for(kind: str, *, intent: str | None = None,
                    phase: str | None = None) -> tuple[str, ...]:
+    if kind == "review" and intent == "preproduction":
+        return ("source-reading", "content-methods", "content-examples",
+                "content-calibration", "review-and-repair")
     if kind == "style_analyze":
         return ("visual-reference",)
     if kind == "compose":

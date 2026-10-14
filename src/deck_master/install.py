@@ -141,15 +141,18 @@ def _codex_skill_root():
     home=os.environ.get('CODEX_HOME') or os.path.join(os.path.expanduser('~'),'.codex')
     return Path(home)/'skills'
 
-def _managed_target(root):
-    """The one link target this installer owns (always through current)."""
-    return str(root/'current'/'skill'/'deck-master')
+PUBLIC_SKILLS = ('deck-master', 'deck-content', 'deck-design', 'deck-review')
 
-def _link_state(root):
+
+def _managed_target(root, name='deck-master'):
+    """The one link target this installer owns (always through current)."""
+    return str(root/'current'/'skill'/name)
+
+def _link_state(root, name='deck-master'):
     """managed | absent | conflict(path kind) for the Codex skill entry."""
-    link=_codex_skill_root()/'deck-master'
+    link=_codex_skill_root()/name
     if link.is_symlink():
-        return ('managed' if os.readlink(link)==_managed_target(root) else 'foreign', str(link))
+        return ('managed' if os.readlink(link)==_managed_target(root, name) else 'foreign', str(link))
     if link.exists():
         return ('occupied', str(link))
     return ('absent', str(link))
@@ -167,6 +170,16 @@ def _extract_skill(release: Path, wheel: Path) -> None:
             target=skill_root/relative
             target.parent.mkdir(parents=True,exist_ok=True)
             target.write_bytes(archive.read(name))
+        for role in PUBLIC_SKILLS[1:]:
+            prefix='deck_master/resources/skills/'+role+'/'
+            for name in archive.namelist():
+                if name.startswith(prefix) and not name.endswith('/'):
+                    relative=Path(name[len(prefix):])
+                    if relative.is_absolute() or '..' in relative.parts:
+                        raise ValueError('unsafe Skill resource path')
+                    target=release/'skill'/role/relative
+                    target.parent.mkdir(parents=True,exist_ok=True)
+                    target.write_bytes(archive.read(name))
 
 def install_candidate(prefix, manifest_path):
     manifest_path=Path(manifest_path).resolve();manifest=json.loads(manifest_path.read_text())
@@ -310,9 +323,25 @@ def _sync_host_skill(root, *, register: bool):
         state,path=_link_state(root)
         return {'host_skill':'registered' if state=='managed' and skill_marker.is_file() else 'host_unregistered',
                 'skill_link':path if state!='absent' else None}
-    if not skill_marker.is_file():
-        return _retire_host_skill_link(root)
-    return _ensure_host_skill_link(root)
+    result=_ensure_host_skill_link(root) if skill_marker.is_file() else _retire_host_skill_link(root)
+    roles={}
+    for name in PUBLIC_SKILLS[1:]:
+        state,path=_link_state(root,name)
+        link=Path(path)
+        present=(root/'current'/'skill'/name/'SKILL.md').is_file()
+        if present:
+            if state not in ('managed','absent'):
+                raise HostSkillConflict(path,'public Skill belongs to another installation or user')
+            _mkdir(link.parent)
+            if state=='absent':
+                _replace_link(link,_managed_target(root,name))
+            roles[name]='registered'
+        else:
+            if state=='managed':
+                _unlink(link)
+            roles[name]='not_in_release'
+    result['public_skills']={'deck-master':result['host_skill'],**roles}
+    return result
 
 def _preflight_host_skill(root, *, removed_links=()):
     # Walk from the root: exists() alone treats dangling links as missing.
@@ -330,6 +359,10 @@ def _preflight_host_skill(root, *, removed_links=()):
     state,path=_link_state(root)
     if state in ('occupied','foreign') and 'deck-master' not in removed_links:
         raise HostSkillConflict(path, 'the Codex skill path belongs to another installation or user; current is unchanged')
+    for name in PUBLIC_SKILLS[1:]:
+        state,path=_link_state(root,name)
+        if state in ('occupied','foreign') and name not in removed_links:
+            raise HostSkillConflict(path,'public Skill belongs to another installation or user; current is unchanged')
 
 def _checked_release(root, release_id):
     release=_release(root, release_id)

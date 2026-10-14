@@ -14,6 +14,7 @@ from .svg import parse_svg
 class SvgInput:
     page_id: str
     path: Path
+    speaker_notes: str | None = None
 
 @dataclass(frozen=True)
 class CompileOptions:
@@ -37,6 +38,10 @@ class CompileResult:
 def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Path) -> CompileResult:
     if not inputs:
         raise ValueError('At least one SVG is required')
+    if len({i.page_id for i in inputs}) != len(inputs) or any(not i.page_id for i in inputs):
+        raise ValueError('SVG inputs require distinct non-empty stable page IDs')
+    if any(i.speaker_notes is not None and not isinstance(i.speaker_notes, str) for i in inputs):
+        raise ValueError('speaker notes must be text or absent')
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=False)
     target = output_dir / 'deck.pptx'
@@ -50,6 +55,9 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         data = Path(item.path).read_bytes()
         page = parse_svg(data, page_id=item.page_id, assets=options.assets.get(item.page_id, {}))
         page['sha256'] = hashlib.sha256(data).hexdigest()
+        if item.speaker_notes is not None:
+            page['speaker_notes'] = item.speaker_notes
+            page['speaker_notes_sha256'] = hashlib.sha256(item.speaker_notes.encode('utf-8')).hexdigest()
         pages.append(page)
     icon_license = any(b'data-icon-license="lucide-1.49.0"' in Path(item.path).read_bytes() for item in inputs)
     diagnostics = []
@@ -66,6 +74,18 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         candidate = Path(temporary) / 'candidate.pptx'
         if options.node_executable:
             subprocess.run([options.node_executable, str(script), options.artifact_module, str(manifest), str(candidate)], check=True, timeout=options.timeout_seconds)
+            if any(page.get('speaker_notes') for page in pages):
+                # The node emitter and Python emitter consume the same manifest.
+                # Write actual native notes for node output without putting them
+                # into visible shapes or the image-generation prompt.
+                from pptx import Presentation
+                presentation = Presentation(candidate)
+                if len(presentation.slides) != len(pages):
+                    raise ValueError('cannot bind notes: emitted slide count differs')
+                for slide, page in zip(presentation.slides, pages, strict=True):
+                    if page.get('speaker_notes'):
+                        slide.notes_slide.notes_text_frame.text = page['speaker_notes']
+                presentation.save(candidate)
         else:
             from .native import emit
             emit(pages, options.width_px, options.height_px, options.fonts, candidate)

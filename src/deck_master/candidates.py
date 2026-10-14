@@ -71,6 +71,11 @@ def inputs_current(store, document, task):
     stage = 'content' if task.get('stage_request', {}).get('stage') == 'content' else (
         'blueprint' if task['kind'] == 'blueprint' else 'svg')
     dispatched = load_snapshot(store, task['dispatch_revision'])
+    if stage=='blueprint' and task.get('preparation',{}).get('content_basis'):
+        from .design_requirements import task_basis_current
+        return (compute_input_digest(document)==compute_input_digest(dispatched)
+                and document['design_context']==dispatched['design_context']
+                and task_basis_current(store,document,task))
     return all(generation_basis(store, document, pid, stage) == generation_basis(store, dispatched, pid, stage)
                and any(e['page_id'] == pid for e in document['pages'])
                for pid in task['scope_pages'])
@@ -200,6 +205,12 @@ def _state(store, document, candidate, task=None):
                 # adopted sample remains usable for further style expansion.
                 basis = {**basis, 'blueprint_ref':target_reference}
         changed = ['page_membership'] if basis is None else [key for key in basis if basis[key] != expected[key]]
+        if basis and candidate['stage']=='blueprint' and (task or {}).get('preparation',{}).get('content_basis'):
+            from .design_requirements import task_basis_current
+            if task_basis_current(store,document,task):
+                changed=[key for key in changed if key!='page_ref']
+            elif 'consumed_content' not in changed:
+                changed.append('consumed_content')
     return {'generation_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
             'adoption_target': {'status': 'missing_page' if entry is None else 'unchanged' if target == candidate['target_ref'] else 'changed',
                                 'original_ref': candidate['target_ref'], 'current_ref': target},

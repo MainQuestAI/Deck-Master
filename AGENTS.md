@@ -13,6 +13,17 @@ agents working in this repository.
 5. For mainline rebuild work: `docs/specs/deck-master-rebuild-v1/task-cards/README.md`
    first, then `task-cards/<T-NN>.md` and `inventory/baseline-record.md`.
 
+## Active RC3 implementation
+
+RC3 starts at `docs/specs/deck-master-v1.0.0-rc3/README.md` and its six task
+cards. The verified main baseline is `92e9f567eaf506f004cac1ef68f44f314739631a`.
+Its rules override the historical single-Skill disposition below: the four
+public roles are deck-master, deck-content, deck-design and deck-review; shared
+methods remain canonical in deck-master/references. Engineering tests do not
+close professional acceptance. The evidence ledger in docs/reports/rc3 is the
+single source of acceptance status. Development candidates must state any
+unimplemented gates and missing real Host/Owner/audience/desktop evidence.
+
 ## Rebuild Baseline (v1.1)
 
 The current Flow Quality increment follows
@@ -20,7 +31,8 @@ The current Flow Quality increment follows
 ACCEPTANCE and MIGRATION. Its T1–T9 are distinct from the older rebuild cards
 below. This increment authorizes retiring the listed repository skills;
 the real Codex AC-17 session and actual HOME migration remain user-run checks.
-The single public skill is `skills/deck-master/SKILL.md`.
+The former single public Skill was `skills/deck-master/SKILL.md`; RC3 restores
+the four explicit roles described above without duplicating shared methods.
 
 The active implementation baseline for the mainline rebuild is
 `docs/specs/deck-master-rebuild-v1/` (spec pack v1.1). Rules for this effort:
