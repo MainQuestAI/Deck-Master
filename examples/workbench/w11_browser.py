@@ -22,7 +22,8 @@ from deck_master import service, editing, ui_journal
 from deck_master.compiler import CompileOptions, SvgInput, compile_deck
 from deck_master.compiler.svg import parse_svg
 from deck_master.pipeline import artifact, render_deck, resolve_fonts, readback
-from deck_master.models import bump_revision
+from deck_master.models import bump_revision, require_writer
+from deck_master.compiler.native import notes_records, normalize_notes
 from deck_master.local_state import write_json
 from deck_master.samples import FACTORY_VERSION
 from deck_master.store import Store
@@ -39,6 +40,33 @@ def advance(store, description="synthetic background state"):
     return updated
 
 
+PRIVATE_CANARY = "/Users/synthetic/PRIVATE-CANARY"
+PUBLIC_NOTES = "Synthetic presenter notes.\n\nNo customer facts or professional approval are claimed.\n"
+
+
+def verify_download_notes(archive, manifest, store):
+    """Check actual selected files: public scrub + full notes, or original recovery."""
+    doc = store.load_document(manifest["revision_id"])
+    expected = [{"page_id": e["page_id"], "notes": normalize_notes(
+        store.read_object_json(e["page"]).get("speaker_notes", ""))} for e in doc["pages"]]
+    if manifest["purpose"] == "engineering":
+        original = store.read_object_json(doc["outputs"]["pptx"])["file"]
+        data = archive.read("project/" + original["path"])
+        assert data == store.read_object_bytes(original)
+        with zipfile.ZipFile(io.BytesIO(data)) as ppt:
+            assert PRIVATE_CANARY.encode() in ppt.read("docProps/core.xml")
+            assert any(PRIVATE_CANARY.encode() in ppt.read(n)
+                       for n in ppt.namelist() if n.startswith("ppt/notesSlides/notesSlide"))
+    elif "deck.pptx" in archive.namelist():
+        data = archive.read("deck.pptx")
+        with zipfile.ZipFile(io.BytesIO(data)) as ppt:
+            assert all(b"PRIVATE-CANARY" not in ppt.read(n) for n in ppt.namelist())
+    else:
+        return  # A historical snapshot before compilation has no presentation file.
+    actual = notes_records(data)
+    assert [{"page_id": r["page_id"], "notes": r["notes"]} for r in actual] == expected
+
+
 def fixture(root, font="Arial"):
     project = root / "synthetic-project"
     page = {
@@ -46,6 +74,7 @@ def fixture(root, font="Arial"):
         "page_id": "p1",
         "customer_visible": {"title": "W11 file verification", "body_blocks": []},
         "visual_spec": {"intent": "Explicit synthetic export test", "reference_mode": "new_design"},
+        "speaker_notes": PUBLIC_NOTES,
     }
     plan = {
         "schema_version": "content_plan_input.v1",
@@ -82,11 +111,29 @@ def fixture(root, font="Arial"):
     )
     parsed = parse_svg(svg.read_bytes(), page_id="p1", assets={})
     fonts = resolve_fonts([parsed])
-    compiled = compile_deck([SvgInput("p1", svg)], CompileOptions(width_px=1280, height_px=720, fonts=fonts), root / "compiled")
+    compiled = compile_deck([SvgInput("p1", svg, page["speaker_notes"])], CompileOptions(width_px=1280, height_px=720, fonts=fonts), root / "compiled")
     deck = Presentation(compiled.pptx_path)
-    deck.core_properties.author = "/Users/synthetic/PRIVATE-CANARY"
-    deck.slides[0].notes_slide.notes_text_frame.text = "/Users/synthetic/PRIVATE-CANARY"
+    deck.core_properties.author = PRIVATE_CANARY
+    # Retain the privacy canary in hidden notes metadata, while actual body
+    # text stays exactly the declared Page/compiler input.
+    notes_body = deck.slides[0].notes_slide.notes_text_frame
+    notes_body._txBody.getparent().xpath("./p:nvSpPr/p:cNvPr")[0].set("descr", PRIVATE_CANARY)
     deck.save(compiled.pptx_path)
+    original_bytes = compiled.pptx_path.read_bytes()
+    # Keep the old mismatching-body adversary as an explicit actual-file
+    # negative, separate from the declared original and its export path.
+    tampered = Presentation(compiled.pptx_path)
+    tampered.slides[0].notes_slide.notes_text_frame.text = PRIVATE_CANARY
+    mismatch_path = root / "notes-body-mismatch-canary.pptx"
+    tampered.save(mismatch_path)
+    mismatch = readback(mismatch_path, [parsed], [page])
+    assert mismatch["status"] == "fail" and any(
+        f.get("code") == "speaker_notes_mismatch" for f in mismatch["findings"]), mismatch
+    (root / "notes-body-mismatch-readback.json").write_text(json.dumps(mismatch, indent=2))
+    assert compiled.pptx_path.read_bytes() == original_bytes
+    with zipfile.ZipFile(compiled.pptx_path) as raw:
+        assert PRIVATE_CANARY.encode() in raw.read("docProps/core.xml")
+        assert PRIVATE_CANARY.encode() in raw.read("ppt/notesSlides/notesSlide1.xml")
     images = render_deck(compiled.pptx_path, root / "rendered", fonts=fonts)
     report = readback(compiled.pptx_path, [parsed], [page])
     assert report["status"] == "pass", report
@@ -102,9 +149,12 @@ def fixture(root, font="Arial"):
             "read_set": [],
         },
     )
+    require_writer(updated, "rc3.v1")
     entry = updated["pages"][0]
     entry["svg"] = artifact(store, svg, "svg", page_id="p1")
-    deps = [{"kind": "svg", "identity": "p1", "sha256": entry["svg"]["sha256"]}]
+    deps = [{"kind": "svg", "identity": "p1", "sha256": entry["svg"]["sha256"]},
+            {"kind": "content", "identity": "page_notes:p1",
+             "sha256": hashlib.sha256(normalize_notes(page["speaker_notes"]).encode()).hexdigest()}]
     for slot in ("blueprint", "svg_preview", "ppt_preview"):
         entry[slot] = artifact(store, images[0], slot, page_id="p1")
     updated["outputs"] = {
@@ -182,9 +232,7 @@ def main():
                         assert hashlib.sha256(archive.read(item["path"])).hexdigest() == item["sha256"]
                     if manifest["purpose"] != "engineering":
                         assert not any(n.startswith("project/") for n in archive.namelist())
-                        if "deck.pptx" in archive.namelist():
-                            with zipfile.ZipFile(io.BytesIO(archive.read("deck.pptx"))) as ppt:
-                                assert all(b"PRIVATE-CANARY" not in ppt.read(n) for n in ppt.namelist())
+                    verify_download_notes(archive, manifest, store)
                 downloads.append(
                     {"purpose": manifest["purpose"], "revision_id": manifest["revision_id"], "sha256": digest, "filename": file.name}
                 )
