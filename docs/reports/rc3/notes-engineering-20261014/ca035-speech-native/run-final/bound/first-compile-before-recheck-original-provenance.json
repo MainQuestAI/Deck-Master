@@ -1,0 +1,19 @@
+{
+  "case": "bound",
+  "source": "actual immutable Store revision and artifact bytes; no rerun",
+  "revision_id": "18f69e696023441a9643021fdcf3f1ef",
+  "parent_revision_id": "05d488abda8c41b2b7120608d759fd33",
+  "operation_id": "production-017c51f434664378b080191a19151ebb",
+  "render_report_artifact_ref": {
+    "path": ".deckmaster/objects/78/78d71236036b529a2bd52ec3f28fbd500283a7eedaed3af94a160a51a444af8b.json",
+    "sha256": "78d71236036b529a2bd52ec3f28fbd500283a7eedaed3af94a160a51a444af8b"
+  },
+  "render_report_file_ref": {
+    "path": ".deckmaster/objects/20/2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a.json",
+    "sha256": "2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a"
+  },
+  "report_status": "pass",
+  "preproduction_state_before_this_first_compile": "post-speech-before-review-status.json",
+  "subsequent_formal_qualification": "after-speech-review-status.json",
+  "subsequent_compile": "final-native-compile.json"
+}

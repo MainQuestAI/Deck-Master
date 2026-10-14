@@ -1,0 +1,179 @@
+[
+  {
+    "schema_version": "deck_review.v1",
+    "review_id": "2c285343bc35-blueprint_content",
+    "kind": "blueprint_content",
+    "review_stage": "page_visual",
+    "status": "pass",
+    "subjects": [
+      {
+        "path": ".deckmaster/objects/df/dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015.json",
+        "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+      },
+      {
+        "path": ".deckmaster/objects/b5/b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e.json",
+        "sha256": "b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e"
+      },
+      {
+        "path": ".deckmaster/objects/d1/d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28.json",
+        "sha256": "d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28"
+      },
+      {
+        "path": ".deckmaster/objects/35/359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140.json",
+        "sha256": "359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140"
+      }
+    ],
+    "dependencies": [
+      {
+        "kind": "content",
+        "identity": "page:p1",
+        "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+      },
+      {
+        "kind": "blueprint",
+        "identity": "p1",
+        "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f"
+      },
+      {
+        "kind": "artifact",
+        "identity": "svg:p1",
+        "sha256": "a70132067402c68e6cacb820e14f859c1ae7dfdc090134b14663e8388396535c"
+      },
+      {
+        "kind": "style",
+        "identity": "p1",
+        "sha256": "5fb5e15f8b296b5a14c1817ce4f8b98a0d74b2b8f7ae0d1a095a384a603f11ee"
+      }
+    ],
+    "reviewer": {
+      "type": "host_self",
+      "id": "synthetic-test-host",
+      "execution_ref": null,
+      "independence_confirmed": false
+    },
+    "observations": [
+      "Synthetic test inspected the current original and SVG preview."
+    ],
+    "findings": [],
+    "created_at": "2026-09-25T00:00:00Z",
+    "replaces": null
+  },
+  {
+    "schema_version": "deck_review.v1",
+    "review_id": "2c285343bc35-blueprint_fidelity",
+    "kind": "blueprint_fidelity",
+    "review_stage": "page_visual",
+    "status": "pass",
+    "subjects": [
+      {
+        "path": ".deckmaster/objects/df/dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015.json",
+        "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+      },
+      {
+        "path": ".deckmaster/objects/b5/b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e.json",
+        "sha256": "b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e"
+      },
+      {
+        "path": ".deckmaster/objects/d1/d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28.json",
+        "sha256": "d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28"
+      },
+      {
+        "path": ".deckmaster/objects/35/359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140.json",
+        "sha256": "359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140"
+      }
+    ],
+    "dependencies": [
+      {
+        "kind": "content",
+        "identity": "page:p1",
+        "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+      },
+      {
+        "kind": "blueprint",
+        "identity": "p1",
+        "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f"
+      },
+      {
+        "kind": "artifact",
+        "identity": "svg:p1",
+        "sha256": "a70132067402c68e6cacb820e14f859c1ae7dfdc090134b14663e8388396535c"
+      },
+      {
+        "kind": "style",
+        "identity": "p1",
+        "sha256": "5fb5e15f8b296b5a14c1817ce4f8b98a0d74b2b8f7ae0d1a095a384a603f11ee"
+      }
+    ],
+    "reviewer": {
+      "type": "host_self",
+      "id": "synthetic-test-host",
+      "execution_ref": null,
+      "independence_confirmed": false
+    },
+    "observations": [
+      "Synthetic test inspected the current original and SVG preview."
+    ],
+    "findings": [],
+    "created_at": "2026-09-25T00:00:00Z",
+    "replaces": null
+  },
+  {
+    "schema_version": "deck_review.v1",
+    "review_id": "2c285343bc35-readability",
+    "kind": "readability",
+    "review_stage": "page_visual",
+    "status": "pass",
+    "subjects": [
+      {
+        "path": ".deckmaster/objects/df/dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015.json",
+        "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+      },
+      {
+        "path": ".deckmaster/objects/b5/b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e.json",
+        "sha256": "b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e"
+      },
+      {
+        "path": ".deckmaster/objects/d1/d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28.json",
+        "sha256": "d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28"
+      },
+      {
+        "path": ".deckmaster/objects/35/359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140.json",
+        "sha256": "359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140"
+      }
+    ],
+    "dependencies": [
+      {
+        "kind": "content",
+        "identity": "page:p1",
+        "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+      },
+      {
+        "kind": "blueprint",
+        "identity": "p1",
+        "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f"
+      },
+      {
+        "kind": "artifact",
+        "identity": "svg:p1",
+        "sha256": "a70132067402c68e6cacb820e14f859c1ae7dfdc090134b14663e8388396535c"
+      },
+      {
+        "kind": "style",
+        "identity": "p1",
+        "sha256": "5fb5e15f8b296b5a14c1817ce4f8b98a0d74b2b8f7ae0d1a095a384a603f11ee"
+      }
+    ],
+    "reviewer": {
+      "type": "host_self",
+      "id": "synthetic-test-host",
+      "execution_ref": null,
+      "independence_confirmed": false
+    },
+    "observations": [
+      "Synthetic test inspected the current original and SVG preview."
+    ],
+    "findings": [],
+    "created_at": "2026-09-25T00:00:00Z",
+    "replaces": null
+  }
+]

@@ -1,0 +1,119 @@
+{
+  "call_allowances": [
+    {
+      "allowance_id": "call-1",
+      "evidence": [],
+      "execution_ref": null,
+      "invocation_ref": null,
+      "state": "reserved"
+    }
+  ],
+  "collaboration_binding": {
+    "adoption_policy": "within_scope",
+    "authorization_ref": {
+      "path": ".deckmaster/objects/93/937ac33ef6b2ee2d42bc0f5bc541e395dbb0d7ba10c66ab3287c1202b3004153.json",
+      "sha256": "937ac33ef6b2ee2d42bc0f5bc541e395dbb0d7ba10c66ab3287c1202b3004153"
+    },
+    "decision_refs": [],
+    "eligibility_basis": [
+      {
+        "identity": "page:p1",
+        "kind": "artifact",
+        "projection": "visual_input",
+        "ref": {
+          "path": ".deckmaster/objects/df/dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015.json",
+          "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+        },
+        "sha256": "eaac0f6415bd27e964bbf1190029e4fe76ce2167ce4acd4614980c3e297c77cb"
+      },
+      {
+        "identity": "plan:p1",
+        "kind": "artifact",
+        "projection": "visual_role",
+        "ref": {
+          "path": ".deckmaster/objects/7c/7c53a4fd88d56ff6a537e3ee420365759a226b6e3720e817a8671c74bc9ab178.json",
+          "sha256": "7c53a4fd88d56ff6a537e3ee420365759a226b6e3720e817a8671c74bc9ab178"
+        },
+        "sha256": "f5fdc4cfaf5a1d2486c81d502d1171a4e9b2e03b14962dc3a4447b7730ced39b"
+      }
+    ],
+    "eligibility_digest": "811927d6cbcb3fcffcf61132adf44dd5f0ce6f80c18b77d01689264877dca153",
+    "executor_type": "host",
+    "phase": "production",
+    "request_id": "req-1defde7e342d",
+    "write_scope": {
+      "allow_page_membership_change": false,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "blueprint",
+        "output",
+        "svg"
+      ],
+      "page_ids": [
+        "p1"
+      ],
+      "page_manifest_ref": {
+        "path": ".deckmaster/objects/7c/7c53a4fd88d56ff6a537e3ee420365759a226b6e3720e817a8671c74bc9ab178.json",
+        "sha256": "7c53a4fd88d56ff6a537e3ee420365759a226b6e3720e817a8671c74bc9ab178"
+      },
+      "purpose": "working",
+      "subject": "deck"
+    }
+  },
+  "cost_class": "external_generation",
+  "created_at": "2026-10-14T21:04:16Z",
+  "dependencies": [
+    {
+      "identity": "page:p1",
+      "kind": "content",
+      "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+    },
+    {
+      "identity": "style:default",
+      "kind": "style",
+      "sha256": "e76b0359623b5aa29d7b180adaa7fa916554a75cb9830759dfb051a0815780fc"
+    }
+  ],
+  "dispatch_revision": "924b090157c0455bb7826d5646acbb3d",
+  "error": null,
+  "execution_ref": null,
+  "generation_attempts": [],
+  "generation_requests": [],
+  "inputs": [
+    {
+      "path": ".deckmaster/objects/df/dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015.json",
+      "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015"
+    },
+    {
+      "path": ".deckmaster/objects/b6/b60bc2946012e6b0ae4610be0f27b87941fa0d19a741717c9bbd0a3042cbdff4.json",
+      "sha256": "b60bc2946012e6b0ae4610be0f27b87941fa0d19a741717c9bbd0a3042cbdff4"
+    }
+  ],
+  "instruction": "Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，使用当前会话内置图像工具生成一张真实蓝图；保存原始图片与实际提交prompt，实际阅图后settle，再用 blueprint 信封提交。不得请求 Provider/API Key，不得用 fixture 或本地占位图。",
+  "kind": "blueprint",
+  "method_release": {
+    "methods_sha256": "a97781847f170224bb930295580248921c9d994bbf330ecb83faab5fe765c44d",
+    "release_id": "ca0351d2397b-17a3bb5c40bd"
+  },
+  "operation_id": "blueprint-cf3db4c1e6a6",
+  "produced_against": "fda64bfd496210427d07d18c4264b37c76fb0912218eed0cafc95982f923b7d6",
+  "protocol_version": "generation.v1",
+  "required_capabilities": [
+    "generation_request_freeze",
+    "attempt_binding",
+    "native_tool_observation"
+  ],
+  "result_refs": [],
+  "schema_version": "deck_task.v1",
+  "scope_pages": [
+    "p1"
+  ],
+  "status": "awaiting_host",
+  "task_id": "1c7278789b2d",
+  "updated_at": "2026-10-14T21:04:16Z",
+  "usage": {
+    "external_calls": null,
+    "source": "not_reported"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "mode": "bound",
+  "status": "PASS",
+  "source": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+  "quality": "synthetic L1 authority/reviews only",
+  "actual_files": true,
+  "original_pptx_sha256": "cac0f01ea62a59d0cc481bfb7915f243c605d014367e582fa364da6f07b07bdd",
+  "final_pptx_sha256": "2b2bf06042a259072c24be99bc4bca8114eea808146ebfb17809c1842773fa03",
+  "full_notes_equal": true,
+  "zero_additional_image_tasks_allowances_attempts": true,
+  "desktop": "NOT_RUN",
+  "human": "NOT_RUN",
+  "import_entry_e2e": "not_applicable"
+}

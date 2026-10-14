@@ -1,0 +1,129 @@
+{
+  "call_allowances": [
+    {
+      "allowance_id": "call-1",
+      "evidence": [],
+      "execution_ref": null,
+      "invocation_ref": null,
+      "state": "reserved"
+    }
+  ],
+  "collaboration_binding": {
+    "adoption_policy": "within_scope",
+    "authorization_ref": {
+      "path": ".deckmaster/objects/f2/f2116fb97dab835cf5c3491c82cd1bcf46b86cbec68cb6ae8f8fc522109e487e.json",
+      "sha256": "f2116fb97dab835cf5c3491c82cd1bcf46b86cbec68cb6ae8f8fc522109e487e"
+    },
+    "decision_refs": [],
+    "eligibility_basis": [
+      {
+        "identity": "narrative",
+        "kind": "artifact",
+        "projection": "content",
+        "ref": {
+          "path": ".deckmaster/objects/34/341cc5550424ed54b01a336d1fde4778fb3cc17822355197d8e7aa72086ef94a.json",
+          "sha256": "341cc5550424ed54b01a336d1fde4778fb3cc17822355197d8e7aa72086ef94a"
+        },
+        "sha256": "341cc5550424ed54b01a336d1fde4778fb3cc17822355197d8e7aa72086ef94a"
+      },
+      {
+        "identity": "page:p2",
+        "kind": "artifact",
+        "projection": "visual_input",
+        "ref": {
+          "path": ".deckmaster/objects/5b/5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03.json",
+          "sha256": "5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03"
+        },
+        "sha256": "4987caf394dde4c8d0e8aade144f3e4ed8ff756a143b36a2ea966a811fa46b02"
+      },
+      {
+        "identity": "plan:p2",
+        "kind": "artifact",
+        "projection": "visual_role",
+        "ref": {
+          "path": ".deckmaster/objects/37/37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d.json",
+          "sha256": "37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d"
+        },
+        "sha256": "17a5efc70555670f762fa3d8d411244b0bfecd224edeab050fdd357f60eb113c"
+      }
+    ],
+    "eligibility_digest": "bff0f2a1ecb3f739768ba0c07aa64c014cb2c542861392c7832977fc1a9d37df",
+    "executor_type": "host",
+    "phase": "production",
+    "request_id": "req-1defde7e342d",
+    "write_scope": {
+      "allow_page_membership_change": false,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "blueprint",
+        "output",
+        "svg"
+      ],
+      "page_ids": [
+        "p2"
+      ],
+      "page_manifest_ref": {
+        "path": ".deckmaster/objects/37/37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d.json",
+        "sha256": "37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d"
+      },
+      "purpose": "working",
+      "subject": "deck"
+    }
+  },
+  "cost_class": "external_generation",
+  "created_at": "2026-10-14T21:04:13Z",
+  "dependencies": [
+    {
+      "identity": "page:p2",
+      "kind": "content",
+      "sha256": "5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03"
+    },
+    {
+      "identity": "style:default",
+      "kind": "style",
+      "sha256": "43e21b6cec37829db93fdd4c9ca43ef8309519532ed355040548b0d86e9fb266"
+    }
+  ],
+  "dispatch_revision": "7d33421cf38f41ffb51d828615ef9322",
+  "error": null,
+  "execution_ref": null,
+  "generation_attempts": [],
+  "generation_requests": [],
+  "inputs": [
+    {
+      "path": ".deckmaster/objects/5b/5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03.json",
+      "sha256": "5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03"
+    },
+    {
+      "path": ".deckmaster/objects/65/654c54a205d0afbf91f111f097c71e6bc0890a18e3b49fb9dffccbd984b5debe.json",
+      "sha256": "654c54a205d0afbf91f111f097c71e6bc0890a18e3b49fb9dffccbd984b5debe"
+    }
+  ],
+  "instruction": "Codex专用：读取 production_request.prompt，先领取任务并 begin 本任务的调用额度，使用当前会话内置图像工具生成一张真实蓝图；保存原始图片与实际提交prompt，实际阅图后settle，再用 blueprint 信封提交。不得请求 Provider/API Key，不得用 fixture 或本地占位图。",
+  "kind": "blueprint",
+  "method_release": {
+    "methods_sha256": "a97781847f170224bb930295580248921c9d994bbf330ecb83faab5fe765c44d",
+    "release_id": "ca0351d2397b-17a3bb5c40bd"
+  },
+  "operation_id": "blueprint-bf5b047dec97",
+  "produced_against": "12f86c0b2a2d87d6b781bbcc4fd7dcc4155c1b22b9cc44dda4dee3d35ec961a6",
+  "protocol_version": "generation.v1",
+  "required_capabilities": [
+    "generation_request_freeze",
+    "attempt_binding",
+    "native_tool_observation"
+  ],
+  "result_refs": [],
+  "schema_version": "deck_task.v1",
+  "scope_pages": [
+    "p2"
+  ],
+  "status": "awaiting_host",
+  "task_id": "f6252398d567",
+  "updated_at": "2026-10-14T21:04:13Z",
+  "usage": {
+    "external_calls": null,
+    "source": "not_reported"
+  }
+}

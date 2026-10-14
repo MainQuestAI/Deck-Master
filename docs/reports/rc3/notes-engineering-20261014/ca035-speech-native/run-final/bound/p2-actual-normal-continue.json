@@ -1,0 +1,376 @@
+{
+  "status": "awaiting_host",
+  "project_id": "project",
+  "revision_id": "c6d865439fc5441cb753bcb5a06a214c",
+  "requested_action": "continue",
+  "result_refs": [],
+  "pending_tasks": [
+    {
+      "task_id": "5054fa6de864",
+      "operation_id": "review-a339584bbeb2",
+      "kind": "review",
+      "intent": null,
+      "method_release": {
+        "release_id": "ca0351d2397b-17a3bb5c40bd",
+        "methods_sha256": "a84b739d5ec57e4f305a25908441d600e69eeb867c8c3fbad1ea2efbc204b4e9"
+      },
+      "current_method_release": {
+        "release_id": "ca0351d2397b-17a3bb5c40bd",
+        "methods_sha256": "a84b739d5ec57e4f305a25908441d600e69eeb867c8c3fbad1ea2efbc204b4e9"
+      },
+      "method_basis_status": "current",
+      "review_stage": "page_visual",
+      "status": "awaiting_host",
+      "scope_pages": [
+        "p2"
+      ],
+      "instruction": "实际打开本页 Page、原始蓝图、SVG 预览，核对正文、数字、模块、图标语义、连线方向和遮挡；提交 blueprint_content、blueprint_fidelity、readability 三类记录。关闭旧发现时，replaces 必须保持同一 review_id、finding_id、page_id、kind 和 review_stage。must_fix 需本页新产物与复核证据；needs_judgment 可用具体理由、观察与证据接受合理差异。不得把原图文字当事实源。",
+      "inputs": [
+        {
+          "path": ".deckmaster/objects/d3/d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4.json",
+          "sha256": "d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4"
+        },
+        {
+          "path": ".deckmaster/objects/5b/5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03.json",
+          "sha256": "5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03"
+        },
+        {
+          "path": ".deckmaster/objects/70/70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488.json",
+          "sha256": "70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488"
+        },
+        {
+          "path": ".deckmaster/objects/3d/3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589.json",
+          "sha256": "3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589"
+        }
+      ],
+      "dispatch_revision": "fb975811951740f1b70093618da287a6",
+      "produced_against": "c222bc642dfea31d76900be450384202fa11d2da3f115bd36786a565dc60acc6",
+      "call_allowances": [],
+      "sources": [
+        {
+          "external_use": "unspecified",
+          "extract": {
+            "path": ".deckmaster/objects/38/38e459fac2e01d722fc5f3c67da06c4d16e12c1b0c34ba7b2f26fe0e60286b7d.json",
+            "sha256": "38e459fac2e01d722fc5f3c67da06c4d16e12c1b0c34ba7b2f26fe0e60286b7d"
+          },
+          "format": "txt",
+          "locator_scheme": "line",
+          "name": "source.txt",
+          "original_sha256": "10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae",
+          "original_uri": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/source.txt",
+          "restriction": "",
+          "source_id": "src-5c6c49ab"
+        }
+      ],
+      "resolved_design_context": {
+        "allowed_asset_ids": [],
+        "assets": [],
+        "canvas": {
+          "fit": "contain",
+          "height_px": 900,
+          "slide_height_in": 7.5,
+          "slide_width_in": 13.333333333333334,
+          "width_px": 1600
+        },
+        "default_style_id": "default",
+        "fonts": [
+          {
+            "asset_id": null,
+            "face": "Regular",
+            "fallback_font_ids": [],
+            "family": "Noto Sans CJK SC",
+            "font_id": "body",
+            "weight": 400
+          },
+          {
+            "asset_id": null,
+            "face": "Bold",
+            "fallback_font_ids": [],
+            "family": "Noto Sans CJK SC",
+            "font_id": "heading",
+            "weight": 700
+          }
+        ],
+        "language": "zh-CN",
+        "styles": [
+          {
+            "colors": {
+              "accent": "#1478FF",
+              "background": "#FFFFFF",
+              "text": "#14213D"
+            },
+            "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+            "style_id": "default",
+            "typography": {
+              "auxiliary_size_pt": 12,
+              "body_font_id": "body",
+              "body_size_pt": 18,
+              "heading_font_id": "heading",
+              "heading_size_pt": 30
+            }
+          }
+        ]
+      },
+      "method_resources": [
+        {
+          "id": "review-and-repair",
+          "relative_path": "references/review-and-repair.md",
+          "path": "/workspace/work/rc3/candidate-02-ca035/prefix/.deck-master/releases/ca0351d2397b-17a3bb5c40bd/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "sha256": "cf66ea3c6ad0c5776ebf8feb409f00530369823368fcb6f44f11c05b93b63f20"
+        }
+      ],
+      "project_context": {
+        "task": {
+          "audience": "",
+          "brief": "Explicit synthetic RC3 speech native engineering trace",
+          "existing_decisions": [],
+          "page_limit": null,
+          "presentation_mode": "live",
+          "presentation_mode_source": "default",
+          "scenario": "",
+          "title": "Deck task"
+        },
+        "input_digest": "ec4ab368e3b53365c30d0da64a33ade5f2eaf21eeb1bf8fe39246ff95362774f",
+        "dispatch_revision": "fb975811951740f1b70093618da287a6",
+        "current_revision": "c6d865439fc5441cb753bcb5a06a214c",
+        "context_status": "current",
+        "input_alignment": "current"
+      },
+      "staging_dir": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/project/.deckmaster/staging/review-a339584bbeb2",
+      "execution_ref": null,
+      "source_reading": [
+        {
+          "source_id": "src-5c6c49ab",
+          "detail": "",
+          "format": "txt",
+          "format_kind": "text",
+          "image_pages": [],
+          "locators": [
+            {
+              "kind": "line",
+              "locator": "L1",
+              "text": "第一行：版本未知时先记录未知。"
+            },
+            {
+              "kind": "line",
+              "locator": "L2",
+              "text": "第二行：紧急程度与可得性是两个维度。"
+            },
+            {
+              "kind": "line",
+              "locator": "L3",
+              "text": "第三行：不得从缺字段率推出节省比例。"
+            }
+          ],
+          "original_file": {
+            "path": ".deckmaster/objects/10/10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae.txt",
+            "sha256": "10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae"
+          },
+          "original_sha256": "10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae",
+          "original_uri": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/source.txt",
+          "status": "read",
+          "tables": [],
+          "text": "第一行：版本未知时先记录未知。\n第二行：紧急程度与可得性是两个维度。\n第三行：不得从缺字段率推出节省比例。\n",
+          "extract_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/project/.deckmaster/objects/38/38e459fac2e01d722fc5f3c67da06c4d16e12c1b0c34ba7b2f26fe0e60286b7d.json",
+          "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/project/.deckmaster/objects/10/10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae.txt"
+        }
+      ],
+      "page_entries": [
+        {
+          "blueprint": {
+            "path": ".deckmaster/objects/d3/d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4.json",
+            "sha256": "d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4"
+          },
+          "page": {
+            "path": ".deckmaster/objects/5b/5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03.json",
+            "sha256": "5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03"
+          },
+          "page_id": "p2",
+          "ppt_preview": null,
+          "svg": {
+            "path": ".deckmaster/objects/70/70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488.json",
+            "sha256": "70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488"
+          },
+          "svg_preview": {
+            "path": ".deckmaster/objects/3d/3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589.json",
+            "sha256": "3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589"
+          }
+        }
+      ],
+      "reference_images": [
+        {
+          "page_id": "p2",
+          "artifact": {
+            "path": ".deckmaster/objects/d3/d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4.json",
+            "sha256": "d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4"
+          },
+          "file": {
+            "path": ".deckmaster/objects/f0/f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46.png",
+            "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46"
+          },
+          "dimensions": [
+            960,
+            540
+          ],
+          "requirement": "Read this exact immutable image before reconstructing; matching page text alone does not establish visual fidelity."
+        }
+      ],
+      "page_design_contexts": {
+        "p2": {
+          "allowed_asset_ids": [],
+          "assets": [],
+          "canvas": {
+            "fit": "contain",
+            "height_px": 900,
+            "slide_height_in": 7.5,
+            "slide_width_in": 13.333333333333334,
+            "width_px": 1600
+          },
+          "default_style_id": "default",
+          "fonts": [
+            {
+              "asset_id": null,
+              "face": "Regular",
+              "fallback_font_ids": [],
+              "family": "Noto Sans CJK SC",
+              "font_id": "body",
+              "weight": 400
+            },
+            {
+              "asset_id": null,
+              "face": "Bold",
+              "fallback_font_ids": [],
+              "family": "Noto Sans CJK SC",
+              "font_id": "heading",
+              "weight": 700
+            }
+          ],
+          "language": "zh-CN",
+          "styles": [
+            {
+              "colors": {
+                "accent": "#1478FF",
+                "background": "#FFFFFF",
+                "text": "#14213D"
+              },
+              "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+              "style_id": "default",
+              "typography": {
+                "auxiliary_size_pt": 12,
+                "body_font_id": "body",
+                "body_size_pt": 18,
+                "heading_font_id": "heading",
+                "heading_size_pt": 30
+              }
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "pptx": null,
+        "render_report": null,
+        "trace": null
+      },
+      "page_visual_requirements": [
+        {
+          "page_id": "p2",
+          "subject_refs": [
+            {
+              "path": ".deckmaster/objects/5b/5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03.json",
+              "sha256": "5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03"
+            },
+            {
+              "path": ".deckmaster/objects/d3/d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4.json",
+              "sha256": "d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4"
+            },
+            {
+              "path": ".deckmaster/objects/70/70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488.json",
+              "sha256": "70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488"
+            },
+            {
+              "path": ".deckmaster/objects/3d/3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589.json",
+              "sha256": "3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589"
+            }
+          ],
+          "dependencies": [
+            {
+              "kind": "content",
+              "identity": "page:p2",
+              "sha256": "5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03"
+            },
+            {
+              "kind": "blueprint",
+              "identity": "p2",
+              "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46"
+            },
+            {
+              "kind": "artifact",
+              "identity": "svg:p2",
+              "sha256": "d6298263e04b0e9633f8ce68860038ef3cece336d0a42768bf421dda01a4fe54"
+            },
+            {
+              "kind": "style",
+              "identity": "p2",
+              "sha256": "5fb5e15f8b296b5a14c1817ce4f8b98a0d74b2b8f7ae0d1a095a384a603f11ee"
+            }
+          ],
+          "review_kinds": [
+            "blueprint_content",
+            "blueprint_fidelity",
+            "readability"
+          ]
+        }
+      ],
+      "prior_page_visual_findings": []
+    }
+  ],
+  "findings": [
+    {
+      "status": "not_evaluated",
+      "page_id": "p2",
+      "missing_dimensions": [
+        "blueprint_content",
+        "blueprint_fidelity",
+        "readability"
+      ],
+      "open_must_fix": {},
+      "pending_judgments": [],
+      "unclosed_prior_findings": []
+    }
+  ],
+  "next_action": "codex_review_page_visual",
+  "input_alignment": "current",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering",
+  "eligibility": {
+    "allowed": true,
+    "action": "continue_project",
+    "enforcement": "active",
+    "reason_codes": [],
+    "reasons": [],
+    "responsible_role": "runtime",
+    "next_action": null,
+    "decision_card": null,
+    "scope": {
+      "allow_page_membership_change": true,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "blueprint",
+        "design",
+        "narrative",
+        "output",
+        "page_copy",
+        "plan",
+        "review",
+        "speech",
+        "svg"
+      ],
+      "page_ids": [],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    }
+  }
+}

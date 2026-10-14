@@ -1,0 +1,189 @@
+{
+  "status": "exported",
+  "schema_version": "export_record.v1",
+  "export_id": "export-ae29649d-faa4-4e65-b841-f0cb306a3b42",
+  "project_identity": "a4f36c4fdb573efe45b719f1c76e138e9492f7269956f1d0d1c50e9b4f80a4ee",
+  "revision_id": "c6ce06c8c7fe48f98c04e716155d8960",
+  "purpose": "review",
+  "archive": "deck-review-c6ce06c8.zip",
+  "files": {
+    "deck.pptx": {
+      "sha256": "f0c63d91efe72f49aa2e14a2cf222aeab1df27372522039d64771f91dcfa12d1",
+      "size": 30724
+    },
+    "delivery.json": {
+      "sha256": "e68ff25aa2ece175e51da09d61b2505bb9f53b9d11db59595daf49de6ddf96d2",
+      "size": 3420
+    },
+    "page-001/blueprint.png": {
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "size": 23673
+    },
+    "page-001/content.txt": {
+      "sha256": "c9d4d1a04b433533e8d7e101709f46682f2249516b4cc18b32f01857ffef1bdd",
+      "size": 49
+    },
+    "page-001/ppt_preview.png": {
+      "sha256": "8968213a9a3ef317e86f1057b7cff5ad645b9d9a48f9ed93492f55168c9d73cf",
+      "size": 34275
+    },
+    "page-001/svg.svg": {
+      "sha256": "c267a57367e883ec651d9cdf0ee855e44022e541a83ddf6cdedd5ef4329c8598",
+      "size": 312
+    },
+    "page-001/svg_preview.png": {
+      "sha256": "eae2293010e62473de24639a877b3803eba081542e4b071c9d4a4731fa095035",
+      "size": 6609
+    },
+    "page-002/blueprint.png": {
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "size": 24140
+    },
+    "page-002/content.txt": {
+      "sha256": "97917880d31840fc0261aef44a92822ff20b0dc11f80002d4dde63f103c810af",
+      "size": 48
+    },
+    "page-002/ppt_preview.png": {
+      "sha256": "99c27e13b6ffab1bba721dffded08f0d507d9d22cff22e4cf25cd98fd7bd8cd5",
+      "size": 36307
+    },
+    "page-002/svg.svg": {
+      "sha256": "ba63bfde5fbb5eb1045b729cfa1171f63bfb9bf127bcefc2d9ebf06950e997e9",
+      "size": 311
+    },
+    "page-002/svg_preview.png": {
+      "sha256": "9210570168a1e7fb03a8db1e35b4cb2afda734c663fa596d86ce3a53f8373a76",
+      "size": 6664
+    },
+    "review.html": {
+      "sha256": "34f4b86354c3c001d53c48b88dd1f4d6013f72dd3f82125b003d6badc565fcfa",
+      "size": 418
+    },
+    "manifest.json": {
+      "sha256": "040b50e49b89bf52a394552b33608187ba19f22a9fd3cd726f0dbe39a7320a02",
+      "size": 3462
+    },
+    "deck-review-c6ce06c8.zip": {
+      "sha256": "2f16b2df670d25717e4d34ec1d724fa50ef8f03f3e6d78ac06a7807135492c78",
+      "size": 136058
+    }
+  },
+  "manifest": {
+    "schema_version": "export_manifest.v1",
+    "export_id": "export-ae29649d-faa4-4e65-b841-f0cb306a3b42",
+    "project_identity": "a4f36c4fdb573efe45b719f1c76e138e9492f7269956f1d0d1c50e9b4f80a4ee",
+    "revision_id": "c6ce06c8c7fe48f98c04e716155d8960",
+    "purpose": "review",
+    "files": [
+      {
+        "path": "deck.pptx",
+        "sha256": "f0c63d91efe72f49aa2e14a2cf222aeab1df27372522039d64771f91dcfa12d1",
+        "size": 30724,
+        "original_sha256": "f761bc29f757d21193b968bb00ed50432d555d0787ed6dfae1e515660f89bfeb"
+      },
+      {
+        "path": "delivery.json",
+        "sha256": "e68ff25aa2ece175e51da09d61b2505bb9f53b9d11db59595daf49de6ddf96d2",
+        "size": 3420,
+        "original_sha256": null
+      },
+      {
+        "path": "page-001/blueprint.png",
+        "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+        "size": 23673,
+        "original_sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f"
+      },
+      {
+        "path": "page-001/content.txt",
+        "sha256": "c9d4d1a04b433533e8d7e101709f46682f2249516b4cc18b32f01857ffef1bdd",
+        "size": 49,
+        "original_sha256": null
+      },
+      {
+        "path": "page-001/ppt_preview.png",
+        "sha256": "8968213a9a3ef317e86f1057b7cff5ad645b9d9a48f9ed93492f55168c9d73cf",
+        "size": 34275,
+        "original_sha256": "8968213a9a3ef317e86f1057b7cff5ad645b9d9a48f9ed93492f55168c9d73cf"
+      },
+      {
+        "path": "page-001/svg.svg",
+        "sha256": "c267a57367e883ec651d9cdf0ee855e44022e541a83ddf6cdedd5ef4329c8598",
+        "size": 312,
+        "original_sha256": "a70132067402c68e6cacb820e14f859c1ae7dfdc090134b14663e8388396535c"
+      },
+      {
+        "path": "page-001/svg_preview.png",
+        "sha256": "eae2293010e62473de24639a877b3803eba081542e4b071c9d4a4731fa095035",
+        "size": 6609,
+        "original_sha256": "3613fb069bb1de2bbec836c9fd5579aade67f9f2ac80c437b206b77d056d5f5a"
+      },
+      {
+        "path": "page-002/blueprint.png",
+        "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+        "size": 24140,
+        "original_sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46"
+      },
+      {
+        "path": "page-002/content.txt",
+        "sha256": "97917880d31840fc0261aef44a92822ff20b0dc11f80002d4dde63f103c810af",
+        "size": 48,
+        "original_sha256": null
+      },
+      {
+        "path": "page-002/ppt_preview.png",
+        "sha256": "99c27e13b6ffab1bba721dffded08f0d507d9d22cff22e4cf25cd98fd7bd8cd5",
+        "size": 36307,
+        "original_sha256": "99c27e13b6ffab1bba721dffded08f0d507d9d22cff22e4cf25cd98fd7bd8cd5"
+      },
+      {
+        "path": "page-002/svg.svg",
+        "sha256": "ba63bfde5fbb5eb1045b729cfa1171f63bfb9bf127bcefc2d9ebf06950e997e9",
+        "size": 311,
+        "original_sha256": "329dd7d783a69a4e9a4603db0da82f2448d3e454ea2edfd9f2734d557f545e08"
+      },
+      {
+        "path": "page-002/svg_preview.png",
+        "sha256": "9210570168a1e7fb03a8db1e35b4cb2afda734c663fa596d86ce3a53f8373a76",
+        "size": 6664,
+        "original_sha256": "9d4ac4699310a577d4da2be4ed056337b82d38ca4421dedced0725da59c780ef"
+      },
+      {
+        "path": "review.html",
+        "sha256": "34f4b86354c3c001d53c48b88dd1f4d6013f72dd3f82125b003d6badc565fcfa",
+        "size": 418,
+        "original_sha256": null
+      }
+    ],
+    "excluded": [
+      "runtime_authentication",
+      "service_state",
+      "locks",
+      "personal_ui_drafts"
+    ],
+    "metadata_policy": "sanitized_public_copy",
+    "notes_policy": {
+      "selection": "pptx_notes",
+      "source": "explicit",
+      "speech_mode": "cues",
+      "plan_sha256": "cbefe1cf91580bde9eaa7d87ca3ec15dde397ada71ba8947eca20d53e08b629c",
+      "newlines": "LF",
+      "pptx_notes": true,
+      "separate_script": false,
+      "pages": [
+        {
+          "page_id": "p1",
+          "page_sha256": "6dfcd9c78bb1feb848ac6ead4d54c4f09923feb27c6b3673e4cab0749bf30be2",
+          "notes_sha256": "0f1db0aeecb2c98af2dae90c84d222e8c98f840da1b7e7bc7e65de3f3c56b9e6"
+        },
+        {
+          "page_id": "p2",
+          "page_sha256": "5c977243e2885305bb1f43291e9f077c54a711a402e6509324c0767593e569e6",
+          "notes_sha256": "3f0398dec00c28ae6a19aa93f90d586e24ca368baa772b446c2a99d48cb51e33"
+        }
+      ]
+    },
+    "request_sha256": "b6b3fc46ec584da1817320decc2f0b2d03b4c39919ae42a5346f634fc55c91bf"
+  },
+  "download_url": "/api/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/files/deck-review-c6ce06c8.zip",
+  "output_dir": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/public"
+}

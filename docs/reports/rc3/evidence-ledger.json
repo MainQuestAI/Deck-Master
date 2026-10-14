@@ -770,14 +770,42 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L6"
+      ],
+      "input_hashes": [
+        {
+          "ref": "docs/reports/rc3/notes-engineering-20261014/isolated-install-manifest-ca035.json",
+          "sha256": "1085ec1051ca8d66e73d7fdacc51e3593425a05e2b7138a29d51afdd7b34925f"
+        },
+        {
+          "ref": "RC3-02 isolated ca035 wheel",
+          "sha256": "17a3bb5c40bdec788548fe17a3906e40524b41378f27d6ac77bc9c65bd543182"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Original synthetic local acceptance public PPTX (not retroactively source-bound build)",
+          "sha256": "7446e7b505139505bd8853b2e74a19eaa77d9f386f30a4871fffdd3871c06c45"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-02-NOTES.md",
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
+      "findings": [
+        "Notes implementation/native file engineering ready on ca035 after independent code and regression round3 FINAL PASS. First two REQUEST_CHANGES and mixed-source test observation preserved; final professional/desktop/use/integration acceptance remains BLOCKED."
+      ],
+      "limitations": [
+        "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
+        "Synthetic authority/review/native observations are L1; seeded imported_mapping is not formal RC3-04 import E2E.",
+        "Broader current integration/effect coverage and original professional gates remain required; no overall RC3 release PASS.",
+        "Existing compile preproduction enumeration unchanged; first missing-review compilation and later qualified final export recorded separately. RC3-04 selected-file/current-control delivery audit remains required."
+      ],
       "signed_by": null
     },
     {
@@ -790,14 +818,42 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L6"
+      ],
+      "input_hashes": [
+        {
+          "ref": "docs/reports/rc3/notes-engineering-20261014/isolated-install-manifest-ca035.json",
+          "sha256": "1085ec1051ca8d66e73d7fdacc51e3593425a05e2b7138a29d51afdd7b34925f"
+        },
+        {
+          "ref": "RC3-02 isolated ca035 wheel",
+          "sha256": "17a3bb5c40bdec788548fe17a3906e40524b41378f27d6ac77bc9c65bd543182"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Original synthetic local acceptance public PPTX (not retroactively source-bound build)",
+          "sha256": "7446e7b505139505bd8853b2e74a19eaa77d9f386f30a4871fffdd3871c06c45"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-02-NOTES.md",
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
+      "findings": [
+        "Notes implementation/native file engineering ready on ca035 after independent code and regression round3 FINAL PASS. First two REQUEST_CHANGES and mixed-source test observation preserved; final professional/desktop/use/integration acceptance remains BLOCKED."
+      ],
+      "limitations": [
+        "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
+        "Synthetic authority/review/native observations are L1; seeded imported_mapping is not formal RC3-04 import E2E.",
+        "Broader current integration/effect coverage and original professional gates remain required; no overall RC3 release PASS.",
+        "Existing compile preproduction enumeration unchanged; first missing-review compilation and later qualified final export recorded separately. RC3-04 selected-file/current-control delivery audit remains required."
+      ],
       "signed_by": null
     },
     {
@@ -810,14 +866,42 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L6"
+      ],
+      "input_hashes": [
+        {
+          "ref": "docs/reports/rc3/notes-engineering-20261014/isolated-install-manifest-ca035.json",
+          "sha256": "1085ec1051ca8d66e73d7fdacc51e3593425a05e2b7138a29d51afdd7b34925f"
+        },
+        {
+          "ref": "RC3-02 isolated ca035 wheel",
+          "sha256": "17a3bb5c40bdec788548fe17a3906e40524b41378f27d6ac77bc9c65bd543182"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Original synthetic local acceptance public PPTX (not retroactively source-bound build)",
+          "sha256": "7446e7b505139505bd8853b2e74a19eaa77d9f386f30a4871fffdd3871c06c45"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-02-NOTES.md",
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
+      "findings": [
+        "Notes implementation/native file engineering ready on ca035 after independent code and regression round3 FINAL PASS. First two REQUEST_CHANGES and mixed-source test observation preserved; final professional/desktop/use/integration acceptance remains BLOCKED."
+      ],
+      "limitations": [
+        "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
+        "Synthetic authority/review/native observations are L1; seeded imported_mapping is not formal RC3-04 import E2E.",
+        "Broader current integration/effect coverage and original professional gates remain required; no overall RC3 release PASS.",
+        "Existing compile preproduction enumeration unchanged; first missing-review compilation and later qualified final export recorded separately. RC3-04 selected-file/current-control delivery audit remains required."
+      ],
       "signed_by": null
     },
     {
@@ -830,14 +914,42 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L6"
+      ],
+      "input_hashes": [
+        {
+          "ref": "docs/reports/rc3/notes-engineering-20261014/isolated-install-manifest-ca035.json",
+          "sha256": "1085ec1051ca8d66e73d7fdacc51e3593425a05e2b7138a29d51afdd7b34925f"
+        },
+        {
+          "ref": "RC3-02 isolated ca035 wheel",
+          "sha256": "17a3bb5c40bdec788548fe17a3906e40524b41378f27d6ac77bc9c65bd543182"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Original synthetic local acceptance public PPTX (not retroactively source-bound build)",
+          "sha256": "7446e7b505139505bd8853b2e74a19eaa77d9f386f30a4871fffdd3871c06c45"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-02-NOTES.md",
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
+      "findings": [
+        "Notes implementation/native file engineering ready on ca035 after independent code and regression round3 FINAL PASS. First two REQUEST_CHANGES and mixed-source test observation preserved; final professional/desktop/use/integration acceptance remains BLOCKED."
+      ],
+      "limitations": [
+        "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
+        "Synthetic authority/review/native observations are L1; seeded imported_mapping is not formal RC3-04 import E2E.",
+        "Broader current integration/effect coverage and original professional gates remain required; no overall RC3 release PASS.",
+        "Existing compile preproduction enumeration unchanged; first missing-review compilation and later qualified final export recorded separately. RC3-04 selected-file/current-control delivery audit remains required."
+      ],
       "signed_by": null
     },
     {
@@ -1077,9 +1189,14 @@
       "parent_ac": "AC-N01",
       "capability_owner": "T06",
       "execution_card": "RC3-02",
-      "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "status": "BLOCKED",
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-02-NOTES.md",
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+      ],
+      "findings": [
+        "Notes/native/final export full text, none/original preservation, stable identity and privacy have reviewed engineering evidence. Current ca035 independent code/regression FINAL PASS; parent AC target desktop/use/current integration and human acceptance remain BLOCKED/NOT_RUN."
+      ]
     },
     {
       "cq_id": "CQ-07",
