@@ -92,3 +92,34 @@ finding 只要仍落在当前查询页面和当前 required unit，就继续阻�
 新文件累计 **38 个案例**；与同组原回归合跑 **130 passed，7.91 秒**，Ruff 与
 diff-check 通过。等待独立第二轮按追加后的精确提交复审；仍不代表真实内容/人类
 使用验收通过。
+
+## 第二轮独立 review 的修复追加
+
+独立第二轮对 `e1d42878093382254507448732ac0b1c6052a0ba` 确认 F-S01-01
+修复和 130 个回归通过，同时给出 **REQUEST_CHANGES / F-S01-02**：正式 schema
+允许 `page_id=null` 的整稿 argument finding，原中央 closure 却硬要求
+`content:page:None` 和当前同页 Page，使合法完整独立复审也无法关闭此项。
+第二轮原始报告保留，本追加没有改写此前结果或以普通新 pass 绕过旧 finding。
+
+第三轮仅给 `preproduction + page_id=null` 增加全稿关闭出口。候选仍须显式
+replaces 同一 logical review/kind/stage/finding/null page，实际认证/独立性不变，
+完整绑定当前 Narrative（存在时）、Plan 和所有当前 Page 的主体及依赖。缺一页、
+缺 Plan 或依赖过期均拒收。accepted_variance 仍限原 needs_judgment，要求理由、
+observations/evidence；must_fix 不能被接受为差异。
+
+整稿 fixed 还要求原稿与当前端点的实际内容变化。既有
+`editing._current_artifact_digests` 只在临时 `_subjects` 解释中读取真实不可变
+Narrative/Plan/Page 并计算语义 hash；不写入 Store，不改对象或 schema。
+argument/page_copy/progression 的正文、论证关系、页面职责/预算等与 speech
+实际消费分开：仅 notes/segment 变化不能关闭非 speech 的整稿 fixed，真实 notes/
+segment 修改可作为 speech 返修变化。version、previous_ref、page_links、来源定位
+审计、问题关闭状态、制作说明和 layout_hint 的变化不构成这个内容变化证据。
+该最低记录条件不证明专业问题已修复，仍须真实独立 Review 判断完整当前稿并给出
+实质证据；不是通过语义 hash 自动宣布内容质量。final/page_visual 条件保持原样。
+
+新增 32 个案例，其中 30 个使用正式前审 API 链：null variance 正例；完整绑定/
+证据/理由/must_fix 负例；四个 kind 的真实消费内容 fixed 正例；三种非 speech
+kind × 原稿不变/仅 notes/Plan 外壳/几何布局提示/制作说明/源 locator 审计的 18
+个 fixed 拒绝。另两例用真实 Store 派生的当前解释验证 null 分支不会放宽
+final/page_visual 的中央 closure。新文件累计 **70 个案例**；同组回归合跑
+**162 passed，11.42 秒**，Ruff 和 diff-check 通过。等待独立第三轮精确 SHA 复审。

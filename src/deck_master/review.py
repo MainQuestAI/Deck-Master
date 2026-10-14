@@ -69,6 +69,32 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
     subjects = artifacts.get('_subjects') or {}
     retired_assets = artifacts.get('_retired_assets') or set()
     page_id = finding.get('page_id')
+    deck_preproduction = review.get('review_stage') == 'preproduction' and page_id is None
+
+    def current_manuscript_subjects(candidate):
+        """A null-page preproduction finding belongs to the complete manuscript."""
+        expected = {key for key in artifacts if key.startswith('content:page:')}
+        if not expected or 'content:content_plan' not in artifacts:
+            return False
+        expected.add('content:content_plan')
+        if 'content:narrative' in artifacts:
+            expected.add('content:narrative')
+        declared = {_dependency_key(dep) for dep in candidate.get('dependencies') or []}
+        current_refs = {key for key, info in subjects.items()
+                        if info.get('current') and info.get('role') in
+                        ('narrative', 'content_plan', 'page')}
+        cited = {_ref_key(ref) for ref in candidate.get('subjects') or []}
+        return bool(current_refs) and expected <= declared and current_refs <= cited
+
+    def changed_manuscript(owner, candidate):
+        old = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
+        new = [subjects.get(_ref_key(ref)) for ref in candidate.get('subjects') or []]
+        semantic_key = 'speech_semantic_sha' if review.get('kind') == 'speech' else 'semantic_sha'
+        return any(before and before.get(semantic_key) and after and after.get('current') and
+                   before.get('role') == after.get('role') and
+                   before.get('page_id') == after.get('page_id') and
+                   before[semantic_key] != after.get(semantic_key)
+                   for before in old for after in new)
 
     def changed_on_page(owner, candidate):
         old = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
@@ -159,7 +185,10 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
             deps = candidate.get('dependencies') or []
             old_keys = {_dependency_key(dep) for dep in owner.get('dependencies') or []}
             new_keys = {_dependency_key(dep) for dep in deps}
-            if f'content:page:{page_id}' not in new_keys:
+            if deck_preproduction:
+                if not current_manuscript_subjects(candidate):
+                    continue
+            elif f'content:page:{page_id}' not in new_keys:
                 continue
             removed = old_keys - new_keys
             old_deps = {_dependency_key(dep): dep for dep in owner.get('dependencies') or []}
@@ -175,16 +204,19 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
             # Intermediate historical reviews may be stale. Compare the
             # current endpoint with the original finding owner, so a later
             # reversion cannot masquerade as a repair.
-            changed = changed_on_page(review, candidate)
+            changed = (changed_manuscript(review, candidate) if deck_preproduction
+                       else changed_on_page(review, candidate))
+            current_subject = (current_manuscript_subjects(candidate) if deck_preproduction
+                               else current_page_subject(candidate))
             output_changed = current_final_output_changed(review, candidate)
             if current and candidate.get('observations') and followup.get('evidence'):
                 resolution = followup.get('resolution')
                 if (resolution == 'accepted_variance' and finding.get('impact') == 'needs_judgment' and
-                        current_page_subject(candidate) and current_preview_subject(candidate) and
+                        current_subject and current_preview_subject(candidate) and
                         (followup.get('resolution_reason') or '').strip() and
                         (not removed or (followup.get('resolution_reason') or '').strip())):
                     return True
-                if (resolution == 'fixed' and changed and current_page_subject(candidate) and
+                if (resolution == 'fixed' and changed and current_subject and
                         current_preview_subject(candidate) and
                         output_changed):
                     return True

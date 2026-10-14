@@ -7,7 +7,7 @@ from copy import deepcopy
 
 import pytest
 
-from deck_master import content_production, content_review
+from deck_master import content_production, content_review, editing, review as review_module
 from deck_master.store import Store
 from deck_master.tasks import EnvelopeError
 
@@ -375,3 +375,118 @@ def test_no_longer_required_speech_unit_does_not_block_a_none_policy(tmp_path):
     assert "speech" not in status["units"]
     assert status["status"] == "pass" and status["blocking_findings"] == []
     assert store.read_object_json(old_ref) == old_review
+
+
+def _null_initial(project, store, *, impact="needs_judgment", kind="argument"):
+    def mutate(reviews):
+        target = next(r for r in reviews if r["kind"] == kind)
+        target["status"] = "fail" if impact == "must_fix" else "needs_review"
+        target["findings"] = [{**_finding(store, "whole-draft", impact=impact),
+                               "page_id": None, "element_refs": []}]
+    _publish(project, store, mutate)
+    old_ref = next(ref for ref in store.load_document()["reviews"]
+                   if store.read_object_json(ref)["kind"] == kind)
+    return old_ref, store.read_object_json(old_ref)
+
+
+def _null_closure(old_ref, old_review, *, resolution="accepted_variance"):
+    def mutate(reviews):
+        target = next(r for r in reviews if r["kind"] == old_review["kind"])
+        target["review_id"] = old_review["review_id"]
+        target["replaces"] = old_ref
+        target["findings"] = [{**deepcopy(old_review["findings"][0]), "resolution": resolution,
+                               "resolution_reason": "已实际核对完整当前稿；保留未知，未冒称已实测。"}]
+    return mutate
+
+
+def test_deck_level_preproduction_judgment_has_a_full_manuscript_variance_exit(tmp_path):
+    project, store = _deck(tmp_path)
+    old_ref, old_review = _null_initial(project, store)
+    _publish(project, store)
+    assert content_review.preproduction_status(store, store.load_document())["status"] == "blocked"
+    assert _publish(project, store, _null_closure(old_ref, old_review))["status"] == "accepted"
+    assert content_review.preproduction_status(store, store.load_document())["status"] == "pass"
+    assert store.read_object_json(old_ref) == old_review
+
+
+@pytest.mark.parametrize("defect", ["evidence", "observations", "reason", "missing_page",
+                                   "missing_plan", "stale_dependency", "must_fix_variance"])
+def test_deck_level_variance_keeps_complete_binding_and_evidence_floors(tmp_path, defect):
+    project, store = _deck(tmp_path)
+    old_ref, old_review = _null_initial(
+        project, store, impact="must_fix" if defect == "must_fix_variance" else "needs_judgment")
+    closure = _null_closure(old_ref, old_review)
+
+    def mutate(reviews):
+        closure(reviews)
+        target = next(r for r in reviews if r["kind"] == "argument")
+        if defect == "evidence":
+            target["findings"][0]["evidence"] = []
+        elif defect == "observations":
+            target["observations"] = []
+        elif defect == "reason":
+            target["findings"][0]["resolution_reason"] = ""
+        elif defect in ("missing_page", "missing_plan"):
+            document = store.load_document()
+            omit = (document["pages"][1]["page"] if defect == "missing_page"
+                    else document["content_plan"])
+            target["subjects"] = [ref for ref in target["subjects"] if ref != omit]
+        elif defect == "stale_dependency":
+            target["dependencies"][0]["sha256"] = "0" * 64
+    before = store.load_document()["reviews"]
+    with pytest.raises(EnvelopeError):
+        _publish(project, store, mutate)
+    assert store.load_document()["reviews"] == before
+    assert content_review.preproduction_status(store, store.load_document())["status"] != "pass"
+
+
+@pytest.mark.parametrize("kind,layer", [("argument", "copy"), ("page_copy", "copy"),
+                                       ("progression", "copy"), ("speech", "notes")])
+def test_deck_level_fixed_requires_a_real_current_consumed_manuscript_change(tmp_path, kind, layer):
+    project, store = _deck(tmp_path)
+    old_ref, old_review = _null_initial(project, store, impact="must_fix", kind=kind)
+    _revise_page(project, store, "p1", layer=layer)
+    assert _publish(project, store, _null_closure(old_ref, old_review, resolution="fixed"))[
+        "status"] == "accepted"
+    assert content_review.preproduction_status(store, store.load_document())["status"] == "pass"
+    assert store.read_object_json(old_ref) == old_review
+
+
+@pytest.mark.parametrize("kind", ["argument", "page_copy", "progression"])
+@pytest.mark.parametrize("change", ["unchanged", "notes", "plan_version", "layout", "production", "audit_link"])
+def test_deck_level_content_fixed_cannot_use_notes_metadata_layout_or_labels(tmp_path, kind, change):
+    project, store = _deck(tmp_path)
+    old_ref, old_review = _null_initial(project, store, impact="must_fix", kind=kind)
+    if change == "notes":
+        _revise_page(project, store, "p1", layer="notes")
+    elif change != "unchanged":
+        document = store.load_document()
+        pages = [store.read_object_json(e["page"]) for e in document["pages"]]
+        if change == "layout":
+            pages[0]["visual_spec"]["layout_hint"] = "改为上下排列；事实、归属和方向保持。"
+        elif change == "production":
+            pages[0]["internal_only"] = {"production_notes": "仅更新制作备注。"}
+        elif change == "audit_link":
+            pages[0]["content_mapping"]["visible_links"][1]["source_links"][0]["locator"] = "L2"
+        task = content_production.open_phase_task(
+            store, document, operation_id="metadata-copy", phase="page_copy")
+        plan_input = store.read_object_json(document["content_plan"])["input"]
+        _submit(project, task, {"pages": pages, "page_order": plan_input["page_order"],
+                                "plan_input": plan_input}, "page_copy")
+    with pytest.raises(EnvelopeError, match="not closed"):
+        _publish(project, store, _null_closure(old_ref, old_review, resolution="fixed"))
+    assert content_review.preproduction_status(store, store.load_document())["status"] != "pass"
+
+
+@pytest.mark.parametrize("stage", ["final", "page_visual"])
+def test_null_manuscript_closure_does_not_relax_other_review_stages(tmp_path, stage):
+    project, store = _deck(tmp_path)
+    old_ref, old_review = _null_initial(project, store)
+    _publish(project, store, _null_closure(old_ref, old_review))
+    new_ref = next(ref for ref in reversed(store.load_document()["reviews"])
+                   if store.read_object_json(ref)["kind"] == "argument")
+    original = {**old_review, "ref": old_ref, "review_stage": stage}
+    replacement = {**store.read_object_json(new_ref), "ref": new_ref, "review_stage": stage}
+    artifacts = editing._current_artifact_digests(store, store.load_document())
+    assert not review_module.finding_closed(
+        [original, replacement], original, original["findings"][0], artifacts)
