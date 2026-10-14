@@ -321,21 +321,23 @@ def test_gate_stamps_every_dispatch_in_a_collaboration_project(tmp_path):
 
 
 def test_dispatch_without_a_request_is_refused(tmp_path):
-    """The gate closes the door the moment a project is at collaboration.v1."""
+    """The gate closes the door the moment a project is at collaboration.v1.
+
+    Since F06 the phased write point itself consumes the resolver first, so
+    both entries refuse with the same typed decision (missing work_request)
+    before any task object exists (CONTRACTS §6.2 row 1)."""
     project, store = _project(tmp_path)
-    # The dispatch-side builder refuses without a current request ...
-    with pytest.raises(ModelError):
-        content_production.open_phase_task(store, store.load_document(),
-                                           operation_id="gate-2", phase="framing")
-    # ... and the service boundary consumes the eligibility resolver first, so
-    # the refusal arrives as a typed decision (missing work_request) before any
-    # task object exists (CONTRACTS §6.2 row 1).
     from deck_master import eligibility
-    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
-        service.open_compose_task(store, store.load_document(), operation_id="gate-3")
-    decision = excinfo.value.decision
-    assert "decision_needed" in decision["reason_codes"]
-    assert any(r.get("missing") == "work_request" for r in decision["reasons"])
+    for operation_id, call in (
+            ("gate-2", lambda: content_production.open_phase_task(
+                store, store.load_document(), operation_id=operation_id, phase="framing")),
+            ("gate-3", lambda: service.open_compose_task(
+                store, store.load_document(), operation_id=operation_id))):
+        with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+            call()
+        decision = excinfo.value.decision
+        assert "decision_needed" in decision["reason_codes"]
+        assert any(r.get("missing") == "work_request" for r in decision["reasons"])
 
 
 def test_host_and_blueprint_dispatch_receive_their_phase_binding(tmp_path):

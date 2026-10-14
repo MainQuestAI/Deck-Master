@@ -258,8 +258,12 @@ def test_every_task_in_a_collaboration_project_is_gated(tmp_path):
 
 def test_phase_dispatch_requires_an_open_request(tmp_path):
     project, store = _project(tmp_path)
-    with pytest.raises(ModelError, match="current open work request"):
+    # F06: the phase write point consumes the unified gate first, so the
+    # refusal is the typed decision instead of the builder's ModelError.
+    from deck_master import eligibility
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         _dispatch(store, phase="framing")
+    assert "decision_needed" in excinfo.value.decision["reason_codes"]
 
 
 def test_legacy_project_keeps_compose_v1(tmp_path):

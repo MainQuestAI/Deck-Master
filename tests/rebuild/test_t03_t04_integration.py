@@ -12,6 +12,7 @@ cross-card contracts the joint gate must keep:
    result is accepted end-to-end with the gate active.
 """
 import uuid
+from pathlib import Path
 
 import pytest
 
@@ -499,3 +500,81 @@ def test_the_input_revision_task_stays_claimable_during_reconciliation(tmp_path)
     after = eligibility.evaluate(store, document, document, "task.start",
                                  {"task": other, "targets": {"page_ids": ["p1"]}})
     assert "input_reconciliation_pending" not in after["reason_codes"]
+
+
+# ---------------------------------------------------------------------------
+# External review F06: continue's phase progression is not a write side door
+
+
+def _pending_phase(tmp_path, phase):
+    """A real project paused exactly before the named content phase."""
+    from test_compose_v2_phases import (_accept_argument, _adopt_direction,  # noqa: E402
+                                        _instruction as _phase_instruction,
+                                        _project as _phase_project,
+                                        _request as _phase_request)
+    tmp_path = Path(tmp_path)
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    if phase == "framing":
+        project, store = _phase_project(tmp_path)
+        _phase_request(project, store)
+    elif phase == "page_copy":
+        project, store = _phase_project(tmp_path)
+        _phase_request(project, store)
+        _, out = _accept_argument(project, store)
+        _adopt_direction(project, store, out["result_refs"][0])
+    else:
+        project, store = _deck_with_pages(tmp_path)
+    document = store.load_document()
+    # A pre-existing pending task (the legacy initial compose) would be reused
+    # by continue before any phase progression; retire it through the real
+    # cancel path so the scenario pauses exactly at the phase dispatch point.
+    for ref in document["tasks"]:
+        task = store.read_object_json(ref)
+        if task.get("status") == "awaiting_host" and not task.get("collaboration_binding"):
+            service.task_cancel(project, task_id=task["task_id"],
+                                reason="由相位流程接手")
+    document = store.load_document()
+    collaboration.pause_request(project, reason="暂停审视",
+                                base_revision=document["revision_id"],
+                                operation_id=f"op-pause-{phase}")
+    return project, store
+
+
+def test_a_paused_request_gains_no_phase_tasks_through_continue(tmp_path):
+    """F06: with the request paused, `continue` creates no framing, page_copy
+    or speech task through the phase-progression side door; the explicit
+    resume dispatches the correct next phase exactly once."""
+    import pytest
+
+    from test_compose_v2_phases import _instruction as _phase_instruction
+    for phase in ("framing", "page_copy", "speech"):
+        project, store = _pending_phase(tmp_path / phase, phase)
+        tasks_before = len(store.load_document()["tasks"])
+        outcome = service.continue_project(project)
+        document = store.load_document()
+        # The pinned fact: a paused request gains no task. (Reusing a task that
+        # already existed before the pause stays legitimate routing.)
+        assert len(document["tasks"]) == tasks_before, \
+            f"a paused request must not gain a {phase} task"
+        if outcome["status"] == "needs_input":
+            assert outcome["findings"][0]["code"] == "request_paused", (phase, outcome)
+        collaboration.resume_request(
+            project, instruction_evidence=_phase_instruction(store, "resume"),
+            base_revision=document["revision_id"],
+            operation_id=f"op-resume-{phase}")
+        resumed = service.continue_project(project)
+        document = store.load_document()
+        dispatched = [store.read_object_json(ref) for ref in document["tasks"]][tasks_before:]
+        if phase == "speech":
+            # Content phases are complete: the next step is visual production,
+            # and its gated entry refuses it for its own standing reasons
+            # (scope/authority/preproduction review) — no task appears through
+            # the side door, and the speech phase is not dispatched twice.
+            assert resumed["status"] == "needs_input", (phase, resumed)
+            assert not dispatched, (phase, [t["task_id"] for t in dispatched])
+            assert all(f["field"].startswith("eligibility/")
+                       for f in resumed.get("findings", [])), resumed.get("findings")
+        else:
+            assert resumed["status"] == "awaiting_host", (phase, resumed)
+            assert len(dispatched) == 1, (phase, [t["task_id"] for t in dispatched])
+            assert dispatched[0]["collaboration_binding"]["phase"] == phase
