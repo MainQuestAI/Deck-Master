@@ -1,0 +1,66 @@
+{
+  "schema_version": "rc3_engineering_verification.v1",
+  "candidate_code_sha": "b00df8730b3254b43a7ce3b5fe8c085d47ac4132",
+  "candidate_code_tree": "1ee9abc0e5254ce7c3348f5e980b2721b2db133b",
+  "package_version": "1.0.0rc3.dev1",
+  "unit": {
+    "status": "PASS",
+    "passed": 1669,
+    "failed": 0,
+    "errors": 0,
+    "command": "bash /workspace/work/rc3/test.sh -q -m 'not browser and not render'"
+  },
+  "targeted_fix": {
+    "status": "PASS",
+    "passed": 75,
+    "description": "Plan note-link fix, notes, density, reports, authorization, generation and candidates"
+  },
+  "render": {
+    "status": "PASS",
+    "passed": 52,
+    "reuse_basis": "Compiler, native notes and readback implementation unchanged since this run; later edits affect state/transport/install, not rendering"
+  },
+  "browser": {
+    "status": "PASS_WITH_RETRY",
+    "first_run_passed": 399,
+    "first_run_startup_timeouts": 4,
+    "retry_passed": 4,
+    "assertion_failures": 0,
+    "limitations": [
+      "First full run occurred during source edits; four service startup timeouts passed on a fresh rerun",
+      "No final RC3 Studio collaboration UI implemented; this is existing-surface regression evidence",
+      "System Chromium 151 through isolated Playwright cache; not the bundled default revision"
+    ]
+  },
+  "installation": {
+    "status": "PASS",
+    "isolated_prefix": true,
+    "temporary_host_registry": true,
+    "four_public_skills": true,
+    "source_package_method_hashes_match": true,
+    "actual_home_modified": false
+  },
+  "doctor": {
+    "compose": "ready",
+    "compile": "ready",
+    "render": "ready",
+    "view": "ready"
+  },
+  "ruff": "PASS",
+  "git_diff_check": "PASS",
+  "evidence_hashes": {
+    "rc3-candidate-units-final.log": "05ecf820acf6e3d76e039bece739c38f31db790f51794d3127af83e2b5374c4e",
+    "rc3-candidate-fix.log": "4e75743ed5bf2e1c4fff9ffb7fd7329b2cddfc9369e9624ca57883d70ee36ca0",
+    "rc3-candidate-install.log": "455e54cd6c561683885f11d5881c78bf106dc3c662208dec459edd8d48f16c37",
+    "rc3-implementation-render.log": "f5ef12917ab5fb217fcf82331eed5cefbe09270945a93711f679ff5aec9d5724",
+    "rc3-implementation-browser.log": "d697966faacb4211a76e671bfe0828145bd992df8f6789658bd4413a42eaca2e",
+    "rc3-browser-startup-retest.log": "5be8e2d0034edb5e6877d95b11ec35ada6ef61dc34e15dd697d930772e805132",
+    "rc3-candidate-environment.log": "8c0a076ed22837a0c76bec0361711bee440d90df1d07cef58fecbfe4c564d3b4"
+  },
+  "professional_acceptance": "NOT_RUN",
+  "real_host_owner_audience_sessions": "NOT_RUN",
+  "desktop_editing": "NOT_RUN",
+  "limitations": [
+    "See implementation-status.md for remaining software work; engineering PASS is not RC3 release readiness"
+  ]
+}

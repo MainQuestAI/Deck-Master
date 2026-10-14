@@ -49,6 +49,37 @@ def test_fresh_activation_registers_managed_link(isolated) -> None:
     assert result["skill_release_id"] == "r1"
 
 
+def test_rc3_four_skills_switch_and_rollback_together(isolated):
+    prefix,codex=isolated['prefix'],isolated['codex']
+    _make_release(prefix,'old')
+    release=_make_release(prefix,'rc3')
+    for name in install.PUBLIC_SKILLS[1:]:
+        skill=release/'skill'/name
+        skill.mkdir()
+        (skill/'SKILL.md').write_text('RC3 scoped method')
+    install.activate(prefix,'old')
+    result=install.activate(prefix,'rc3')
+    assert set(result['public_skills'])==set(install.PUBLIC_SKILLS)
+    for name in install.PUBLIC_SKILLS:
+        assert (codex/'skills'/name/'SKILL.md').is_file()
+        assert os.readlink(codex/'skills'/name)==str(prefix/'.deck-master/current/skill'/name)
+    install.rollback(prefix)
+    assert (codex/'skills/deck-master/SKILL.md').is_file()
+    assert all(not (codex/'skills'/name).is_symlink() for name in install.PUBLIC_SKILLS[1:])
+
+
+def test_rc3_foreign_role_conflict_prevents_any_release_switch(isolated):
+    prefix,codex=isolated['prefix'],isolated['codex']
+    _make_release(prefix,'old'); release=_make_release(prefix,'rc3')
+    skill=release/'skill/deck-content'; skill.mkdir(); (skill/'SKILL.md').write_text('candidate')
+    install.activate(prefix,'old')
+    foreign=codex/'skills/deck-content'; foreign.mkdir(); (foreign/'SKILL.md').write_text('third party')
+    with pytest.raises(HostSkillConflict):
+        install.activate(prefix,'rc3')
+    assert os.readlink(prefix/'.deck-master/current')=='releases/old'
+    assert (foreign/'SKILL.md').read_text()=='third party'
+
+
 def test_occupied_skill_path_refused_before_current_switch(isolated) -> None:
     prefix, codex = isolated["prefix"], isolated["codex"]
     _make_release(prefix, "r1")

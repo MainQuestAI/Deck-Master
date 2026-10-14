@@ -1,0 +1,482 @@
+{
+  "target_version": "V1.0.0-RC3",
+  "execution_namespace": "RC3",
+  "professional_authority": "../deck-master-content-collaboration-v1.2/ACCEPTANCE.md",
+  "primary_ac": [
+    {
+      "ac_id": "AC-B01",
+      "capability_owner": "T00",
+      "execution_card": "RC3-00",
+      "evidence_providers": [
+        "RC3-00"
+      ]
+    },
+    {
+      "ac_id": "AC-B02",
+      "capability_owner": "T00",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01"
+      ]
+    },
+    {
+      "ac_id": "AC-B03",
+      "capability_owner": "T00",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01"
+      ]
+    },
+    {
+      "ac_id": "AC-P01",
+      "capability_owner": "T01",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-P02",
+      "capability_owner": "T01",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-P03",
+      "capability_owner": "T01",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-C01",
+      "capability_owner": "T02",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-03",
+        "RC3-04"
+      ]
+    },
+    {
+      "ac_id": "AC-C02",
+      "capability_owner": "T02",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-03",
+        "RC3-04"
+      ]
+    },
+    {
+      "ac_id": "AC-C03",
+      "capability_owner": "T02",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-03",
+        "RC3-04"
+      ]
+    },
+    {
+      "ac_id": "AC-C04",
+      "capability_owner": "T02",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-03",
+        "RC3-04"
+      ]
+    },
+    {
+      "ac_id": "AC-M01",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-M02",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-M03",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-M04",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-M05",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-R01",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-R02",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-R03",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-R04",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-R05",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-R06",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-R07",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-D01",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-D02",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-D03",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-N01",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-N02",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-N03",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-N04",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-H01",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-H02",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-H03",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-U01",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-U02",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-U03",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-U04",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    },
+    {
+      "ac_id": "AC-U05",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ]
+    }
+  ],
+  "conditions": [
+    {
+      "cq_id": "CQ-01",
+      "parent_ac": "AC-M01",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01"
+    },
+    {
+      "cq_id": "CQ-02",
+      "parent_ac": "AC-M05",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01"
+    },
+    {
+      "cq_id": "CQ-03",
+      "parent_ac": "AC-D01",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03"
+    },
+    {
+      "cq_id": "CQ-04",
+      "parent_ac": "AC-D03",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03"
+    },
+    {
+      "cq_id": "CQ-05",
+      "parent_ac": "AC-D03",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03"
+    },
+    {
+      "cq_id": "CQ-06",
+      "parent_ac": "AC-N01",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02"
+    },
+    {
+      "cq_id": "CQ-07",
+      "parent_ac": "AC-H03",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04"
+    },
+    {
+      "cq_id": "CQ-08",
+      "parent_ac": "AC-U01",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05"
+    },
+    {
+      "cq_id": "CQ-09",
+      "parent_ac": "AC-U01",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05"
+    },
+    {
+      "cq_id": "CQ-10",
+      "parent_ac": "AC-U02",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05"
+    },
+    {
+      "cq_id": "CQ-11",
+      "parent_ac": "AC-B03",
+      "capability_owner": "T00",
+      "execution_card": "RC3-01"
+    },
+    {
+      "cq_id": "CQ-12",
+      "parent_ac": "AC-U05",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05"
+    },
+    {
+      "cq_id": "CQ-13",
+      "parent_ac": "AC-H01",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04"
+    }
+  ],
+  "note": "Mapping only. Results live in the candidate evidence ledger; original AC owner and severity authority are unchanged."
+}

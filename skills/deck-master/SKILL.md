@@ -98,6 +98,8 @@ create --draft / import draft / compose 结果**第一次形成至少一页后�
 
 ## 按动作读取方法
 
+RC3 的职责入口为 deck-master（连续协作）、deck-content（成稿）、deck-design（固定内容设计）和 deck-review（审阅）。自然路由或显式点名只执行当前职责；Master 按真实工作单串联，不能将一次局部审阅强制转成全套成稿。四入口使用同一 `deck-master` Runtime、合同、方法和 operation_id，不维护私有批准状态。先读取 `deck-master capabilities`；缺少独立或人工通道时保持 needs_reviewer，不改 ID 制造独立。
+
 - 成稿：source-reading、content-methods；需要例子时读取 content-examples。
 - 输入修订：再读 input-update。
 - 生图/重构：读取既有 blueprint-svg 与实际页面/原图。

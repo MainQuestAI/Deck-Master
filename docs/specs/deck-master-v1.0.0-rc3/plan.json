@@ -1,0 +1,94 @@
+{
+  "iteration": "RC3",
+  "target_version": "V1.0.0-RC3",
+  "phase": "implementation",
+  "baseline_frozen": true,
+  "implementation_baseline_sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+  "execution_cards": [
+    {
+      "id": "RC3-00",
+      "path": "task-cards/RC3-00.md"
+    },
+    {
+      "id": "RC3-01",
+      "path": "task-cards/RC3-01.md"
+    },
+    {
+      "id": "RC3-02",
+      "path": "task-cards/RC3-02.md"
+    },
+    {
+      "id": "RC3-03",
+      "path": "task-cards/RC3-03.md"
+    },
+    {
+      "id": "RC3-04",
+      "path": "task-cards/RC3-04.md"
+    },
+    {
+      "id": "RC3-05",
+      "path": "task-cards/RC3-05.md"
+    }
+  ],
+  "upstream_admission": "T03/T04 six findings repaired and verified as one frozen joint baseline; RC3-00 receives the result.",
+  "phases": [
+    {
+      "id": "RC3-00/handoff",
+      "depends_on": []
+    },
+    {
+      "id": "RC3-04/early",
+      "depends_on": [
+        "RC3-00/handoff"
+      ]
+    },
+    {
+      "id": "RC3-01/method",
+      "depends_on": [
+        "RC3-00/handoff"
+      ]
+    },
+    {
+      "id": "RC3-01/handoff",
+      "depends_on": [
+        "RC3-01/method",
+        "RC3-04/early"
+      ]
+    },
+    {
+      "id": "RC3-02/handoff",
+      "depends_on": [
+        "RC3-00/handoff"
+      ]
+    },
+    {
+      "id": "RC3-03/prepare",
+      "depends_on": [
+        "RC3-00/handoff"
+      ]
+    },
+    {
+      "id": "RC3-03/handoff",
+      "depends_on": [
+        "RC3-03/prepare",
+        "RC3-01/handoff"
+      ]
+    },
+    {
+      "id": "RC3-04/handoff",
+      "depends_on": [
+        "RC3-04/early",
+        "RC3-01/handoff",
+        "RC3-02/handoff",
+        "RC3-03/handoff"
+      ]
+    },
+    {
+      "id": "RC3-05/final",
+      "depends_on": [
+        "RC3-04/handoff"
+      ]
+    }
+  ],
+  "note": "Phases describe handoff dependencies; full professional AC acceptance is tracked separately, with no duplicate status in this plan."
+}

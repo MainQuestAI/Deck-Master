@@ -66,6 +66,14 @@ def prepared_input(store, document, task):
     entry = next(p for p in dispatched["pages"] if p["page_id"] == prepared["page_id"])
     page = store.read_object_json(entry["page"])
     design, _ = resolve_design(page, dispatched["design_context"], dispatched["design_context"].get("assets") or [])
+    if 'resolved_design_context' in prepared:
+        design = copy.deepcopy(prepared['resolved_design_context'])
+    # Keep old frozen preparations byte-compatible. New requests carry the
+    # service-derived page slice from their dispatch, never reinterpret it
+    # from today's Plan or today's method version.
+    for key in ('content_requirements', 'content_basis'):
+        if key in prepared:
+            design[key] = copy.deepcopy(prepared[key])
     result = {"schema_version": "generation_input.v1", "prompt": prepared["prompt"],
             "page": {"page_id": entry["page_id"], "page_ref": entry["page"]}, "design_context": design,
             "template_ref": None, "references": copy.deepcopy(task.get("stage_request", {}).get("references", [])), "parameters": {}, "constraints": {},

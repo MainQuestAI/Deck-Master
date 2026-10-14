@@ -222,7 +222,13 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
         from .production import project_prompt
         from .service import _resolve_permitted_asset_files
         design = basis['design_context']
+        from .design_requirements import resolve as resolve_requirements
+        design = resolve_requirements(store, basis, entry, design,
+                                      recipe_ref=plan['input'].get('style_recipe_ref'))
         request = project_prompt(store.read_object_json(entry['page']), design, design.get('assets') or [])
+        request['content_requirements'] = design['content_requirements']
+        request['content_basis'] = design['content_basis']
+        request['resolved_design_context'] = design
         if plan['input'].get('style_recipe_ref'):
             from .styles import apply_request
             apply_request(store, basis, plan['input'], request, action['page_id'])

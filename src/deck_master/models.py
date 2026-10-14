@@ -26,6 +26,7 @@ from jsonschema.exceptions import best_match
 from referencing import Registry, Resource
 
 SCHEMA_FILES = {
+    "content_requirements": "content-requirements.v1.schema.json",
     "collaboration": "collaboration.v1.schema.json",
     "collaboration_decision": "collaboration-decision.v1.schema.json",
     "collaboration_authorization": "collaboration-authorization.v1.schema.json",
@@ -37,6 +38,9 @@ SCHEMA_FILES = {
     "style_reference": "style-reference.v1.schema.json",
     "visual_style_spec": "visual-style-spec.v1.schema.json",
     "style_input_v2": "style-input.v2.schema.json",
+    "style_input_v3": "style-input.v3.schema.json",
+    "style_proposal_v3": "style-proposal.v3.schema.json",
+    "style_recipe_v3": "style-recipe.v3.schema.json",
     "style_proposal_v2": "style-proposal.v2.schema.json",
     "style_recipe_v2": "style-recipe.v2.schema.json",
     "icon_input": "icon-input.v1.schema.json",
@@ -177,6 +181,8 @@ def validate_schema(kind: str, obj: Any) -> None:
             kind = dispatched
     if kind in ("style_input", "style_proposal", "style_recipe") and isinstance(obj, dict) and obj.get("schema_version") == kind + ".v2":
         kind += "_v2"
+    if kind in ("style_input", "style_proposal", "style_recipe") and isinstance(obj, dict) and obj.get("schema_version") == kind + ".v3":
+        kind += "_v3"
     errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
     worst = best_match(errors) if errors else None
     if worst is None:

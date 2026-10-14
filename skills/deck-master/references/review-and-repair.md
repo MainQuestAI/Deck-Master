@@ -31,3 +31,11 @@ accepted_variance：原来需要判断的差异，经具体解释、观察和证
 只有这两种关闭方式。输入更新让原要求失效时，按 input-update 的方法处理，不新增第三种关闭方式。
 
 没有执行阅读就是未评估，不能填默认高分或两套 reviewer 名称。工具可报告真实机械检查，但不能替用户提供专业认可或独立审查身份。
+
+## RC3 内容前审
+
+preproduction 工作单给出 source-reading、content-methods、content-examples 与 content-calibration 的实际文件和 hash。读取完整材料、任务、Narrative、Plan、全部正文与 notes，再按六组校准检查：只有标签、页间重复、空矩阵、侧栏复述、无收益数据时造数/留空、以拥挤替代完整。合理留白、不确定性、教学复习和示意要结合用途判断。
+
+问题定位到 Page/atom/关系、来源和用途影响；提交具体原句、改句与受影响页，不以加 observation/证据编号代替返修。保留首稿、首次 Owner 稿和后续修订；F0/F1 不能用最后精修覆盖，影响用途的 F2 也须修。
+
+先读 `deck-master capabilities`。没有实际独立执行或可信人类通道就记 needs_reviewer，不能换名字、声明已独立或自动降级。方法 identity 漂移（method_basis_status=basis_changed）时重核实际消费版本，旧记录保留原身份；`methods --kind review --intent preproduction --read` 可读当前安装的真实文本。

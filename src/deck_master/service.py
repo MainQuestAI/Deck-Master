@@ -488,7 +488,7 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         if revision not in dispatch_documents:
             dispatch_documents[revision] = _dispatch_snapshot(store, document, task)
         dispatched = dispatch_documents[revision]
-    methods = method_resources(task.get("kind") or "", intent=task.get("intent"),
+    methods = method_resources(task.get("kind") or "", intent=task.get("intent") or task.get("review_stage"),
                                phase=(task.get("collaboration_binding") or {}).get("phase"))
     from . import visual_styles
     summary = {
@@ -497,6 +497,10 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         "kind": task["kind"],
         "intent": task.get("intent"),
         "method_release": task.get("method_release"),
+        "current_method_release": method_release(methods),
+        "method_basis_status": ("not_recorded" if not task.get("method_release") else
+                                "current" if task["method_release"]["methods_sha256"] ==
+                                method_release(methods)["methods_sha256"] else "basis_changed"),
         "review_stage": task.get("review_stage", "final"),
         "status": task["status"],
         "scope_pages": task.get("scope_pages") or [],
@@ -646,7 +650,12 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     page_ref = page_entry["page"]
     page = store.read_object_json(page_ref)
     design = document.get("design_context") or {}
+    from .design_requirements import resolve as resolve_requirements
+    design = resolve_requirements(store, document, page_entry, design)
     request = project_prompt(page, design, design.get("assets") or [])
+    request['content_requirements'] = design['content_requirements']
+    request['content_basis'] = design['content_basis']
+    request['resolved_design_context'] = design
     request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
     operation_id = _new_operation_id("blueprint")
@@ -1140,7 +1149,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]
     inputs += [ref for ref in extra_inputs if ref]
-    methods = method_resources(kind)
+    methods = method_resources(kind, intent=review_stage)
     task = tasks_mod.new_task(task_id=uuid.uuid4().hex[:12],operation_id=_new_operation_id(kind),kind=kind,
         method_release=method_release(methods),
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],

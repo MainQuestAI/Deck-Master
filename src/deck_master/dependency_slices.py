@@ -142,6 +142,19 @@ def _authorization_projection(store, record) -> dict:
 def build_slice(store, document, *, kind, identity, projection, _seen=frozenset(), now=None):
     """Current value of one registered slice, or None when the target is absent
     or the (kind, projection) pair is not registered."""
+    if kind == 'artifact' and projection in ('visual_semantics', 'visual_input') and identity.startswith('page:'):
+        entry = _find_page(document, identity.split(':', 1)[1])
+        if not entry or not entry.get('page'):
+            return None
+        page = store.read_object_json(entry['page'])
+        from .design_requirements import semantic_digest
+        digest = semantic_digest(page) if projection == 'visual_semantics' else _canonical(
+            {'customer_visible': page.get('customer_visible'), 'visual_spec': page.get('visual_spec')})
+        return {'ref': entry['page'], 'sha256': digest}
+    if kind == 'artifact' and projection == 'page_role' and identity.startswith('content_plan:'):
+        from .design_requirements import page_role
+        value = page_role(store, document, identity.split(':', 1)[1], check_binding=False)
+        return {'ref': document.get('content_plan'), 'sha256': _canonical(value)} if value else None
     if kind == "task_fact" and projection == "value" and identity in TASK_FACT_IDENTITIES:
         value = (document.get("task") or {}).get(identity)
         return {"ref": None, "sha256": _canonical({"task_fact": identity, "value": value})}
@@ -371,6 +384,9 @@ def authorization_effectiveness(store, document, authorization_ref, *, now=None,
             parent = authorization_effectiveness(store, document, parent_ref, now=now, _depth=_depth + 1, _seen=_seen)
             if not parent["effective"]:
                 reasons.append("parent_ineffective")
+                if any(r in ('authorization_revoked', 'ancestor_authorization_revoked')
+                       for r in parent['reasons']):
+                    reasons.append('ancestor_authorization_revoked')
             if delegation_gaps(store, parent_record, record):
                 reasons.append("parent_scope_exceeded")
     for decision_ref in record.get("decision_refs") or []:

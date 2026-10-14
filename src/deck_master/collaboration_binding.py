@@ -84,7 +84,7 @@ def eligibility_digest(*, phase: str, write_scope: dict, basis) -> str:
     return sha256_bytes(canonical_json_bytes(payload))
 
 
-def binding_basis(store, document, *, phase: str, provided=None) -> list[dict]:
+def binding_basis(store, document, *, phase: str, provided=None, write_scope=None) -> list[dict]:
     """Registered minimum slices for the phase, plus the current pointers.
 
     ``merge_required_basis`` completes the registered minimum so a caller can
@@ -95,6 +95,8 @@ def binding_basis(store, document, *, phase: str, provided=None) -> list[dict]:
     basis = dependency_slices.merge_required_basis(
         store, document, family="task", key=phase, provided=list(provided or []))
     for identity in ("narrative", "content_plan"):
+        if identity == 'content_plan' and phase == 'production' and (write_scope or {}).get('page_ids'):
+            continue
         probe = dependency_slices.build_slice(store, document, kind="artifact",
                                               identity=identity, projection="content")
         if probe is None:
@@ -103,6 +105,17 @@ def binding_basis(store, document, *, phase: str, provided=None) -> list[dict]:
         if not any(dependency_slices.slice_key(item) == key for item in basis):
             basis.append({"kind": "artifact", "identity": identity, "projection": "content",
                           "ref": probe["ref"], "sha256": probe["sha256"]})
+    if phase == 'production':
+        for page_id in (write_scope or {}).get('page_ids') or []:
+            for identity, projection in [('page:' + page_id, 'visual_input'),
+                                         ('content_plan:' + page_id, 'page_role')]:
+                probe = dependency_slices.build_slice(store, document, kind='artifact',
+                                                     identity=identity, projection=projection)
+                if probe is not None:
+                    key = f'artifact:{identity}:{projection}'
+                    if not any(dependency_slices.slice_key(item) == key for item in basis):
+                        basis.append({'kind': 'artifact', 'identity': identity, 'projection': projection,
+                                      'ref': probe['ref'], 'sha256': probe['sha256']})
     return basis
 
 
@@ -130,7 +143,7 @@ def build_binding(store, document, *, phase: str, executor_type: str, write_scop
         raise ModelError("task/collaboration_binding/request_id",
                          "a collaboration.v1 task needs the current open work request")
     scope = canonical_scope(write_scope)
-    resolved_basis = binding_basis(store, document, phase=phase, provided=basis)
+    resolved_basis = binding_basis(store, document, phase=phase, provided=basis, write_scope=scope)
     binding = {
         "request_id": current["request_id"],
         "phase": phase,

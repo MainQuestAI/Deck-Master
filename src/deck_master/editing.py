@@ -260,8 +260,6 @@ def _eligibility_guard(store, action, targets=None, context=None):
 def edit_page(project_dir, *, page, base_revision, page_hash, operation_id):
     # A direct page edit is an adoption boundary: the edited page must be inside
     # the request's authorized pages/layers like any other write.
-    _eligibility_guard(Store(Path(project_dir).expanduser()), "page.edit",
-                       {"page_ids": [page.get("page_id")], "layers": ["page_copy"]})
     return _edit(Store(project_dir),page=check_page(page),base_revision=base_revision,page_hash=page_hash,operation_id=operation_id)
 
 @_project_transaction
@@ -278,15 +276,36 @@ def _edit(store, *, page, base_revision, page_hash, operation_id):
     # Disjoint page edits can rebase, but design changes cannot.
     base=store.load_document(base_revision)
     if base['design_context']!=doc['design_context']:raise ConflictError('design_context','design moved since edit began')
+    old_page = store.read_object_json(entry['page'])
+    def visual_body(value):
+        value = copy.deepcopy(value)
+        value.pop('speaker_notes', None)
+        if isinstance(value.get('content_mapping'), dict):
+            value['content_mapping'].pop('speech_segments', None)
+        return value
+    notes_only = visual_body(old_page) == visual_body(page)
+    prior_page_ref=copy.deepcopy(entry['page'])
+    _eligibility_guard(store, 'page.edit', {'page_ids':[page['page_id']],
+                                          'layers':['speech' if notes_only else 'page_copy']})
     updated=bump_revision(doc,{'operation_id':operation_id,'kind':'content_update','description':'edit '+page['page_id'],'read_set':[]})
     for e in updated['pages']:
         if e['page_id']==page['page_id']:
             e['page']=store.put_json_object(page)
-            e['svg']=e['svg_preview']=e['ppt_preview']=None
+            if not notes_only:
+                e['svg']=e['svg_preview']=None
+            e['ppt_preview']=None
+    if notes_only and updated.get('content_plan'):
+        plan=store.read_object_json(updated['content_plan'])
+        if plan.get('schema_version')=='content_plan.v2' and plan.get('mode') in ('bound','imported_mapping'):
+            for link in plan.get('page_links') or []:
+                if link.get('page_id')==page['page_id'] and link.get('page_ref')==prior_page_ref:
+                    link['page_ref']=next(e['page'] for e in updated['pages'] if e['page_id']==page['page_id'])
+            updated['content_plan']=store.put_json_object(plan)
     updated['outputs']={key:None for key in doc['outputs']}
     for i,ref in enumerate(updated['tasks']):
         task=store.read_object_json(ref)
-        if page['page_id'] in task['scope_pages'] and task['status'] in ('awaiting_host','running'):
+        if (page['page_id'] in task['scope_pages'] and task['status'] in ('awaiting_host','running')
+                and not (notes_only and task.get('kind')=='blueprint' and task.get('preparation',{}).get('content_basis'))):
             task['status']='superseded';updated['tasks'][i]=store.put_json_object(task)
     store._commit_locked(base_revision=doc['revision_id'],document=updated,operation_id=operation_id,blobs=[])
     return {'status':'edited','revision_id':updated['revision_id'],'next_action':'continue','preserved_blueprint':entry['blueprint']}

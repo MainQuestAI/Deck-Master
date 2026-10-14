@@ -147,6 +147,8 @@ def preview_svg_page(project_dir, page_id):
 def readback(pptx_path,pages,expected_pages):
     ns={'a':'http://schemas.openxmlformats.org/drawingml/2006/main','p':'http://schemas.openxmlformats.org/presentationml/2006/main'}
     findings=[];stats=[]
+    from pptx import Presentation
+    native = Presentation(pptx_path)
     normalize=lambda t:''.join(str(t).split())
     with zipfile.ZipFile(pptx_path) as z:
         presentation=ET.fromstring(z.read('ppt/presentation.xml'))
@@ -168,6 +170,14 @@ def readback(pptx_path,pages,expected_pages):
                 findings.append({'page_id':page['page_id'],'code':'missing_slide'})
                 continue
             root=ET.fromstring(z.read(slide_path))
+            slide = native.slides[index - 1]
+            actual_notes = slide.notes_slide.notes_text_frame.text if slide.has_notes_slide else ''
+            expected_notes = page.get('speaker_notes') or ''
+            if actual_notes != expected_notes:
+                from .models import sha256_bytes
+                findings.append({'page_id': page['page_id'], 'code': 'speaker_notes_mismatch',
+                                 'expected_sha256': sha256_bytes(expected_notes.encode('utf-8')),
+                                 'actual_sha256': sha256_bytes(actual_notes.encode('utf-8'))})
             texts=[e.text or '' for e in root.findall('.//a:t',ns)]
             joined=normalize(''.join(texts))
             svg_texts=[s['text'] for s in source['shapes'] if s['kind']=='text']
@@ -262,7 +272,8 @@ def readback(pptx_path,pages,expected_pages):
                                                f'd(start,from)={d_start_from**0.5/9525:.1f}px, '
                                                f'd(end,to)={d_end_to**0.5/9525:.1f}px '
                                                f'(tolerance {ENDPOINT_TOLERANCE_PX}px)'})
-            stats.append({'page_id':page['page_id'],'text_runs':len(texts),'native_shapes':len(root.findall('.//p:sp',ns))})
+            stats.append({'page_id':page['page_id'],'text_runs':len(texts),'native_shapes':len(root.findall('.//p:sp',ns)),
+                          'notes_codepoints': len(actual_notes), 'notes_match': actual_notes == expected_notes})
     return {'status':'fail' if findings else 'pass','findings':findings,'pages':stats,'visual_review':'not_evaluated','desktop_editing':'not_evaluated'}
 
 def output_matches_current_svg(store, document):
@@ -278,6 +289,13 @@ def output_matches_current_svg(store, document):
     dependencies = [(d.get('identity'), d.get('sha256'))
                     for d in artifact.get('dependencies', []) if d.get('kind') == 'svg']
     expected = [(e['page_id'], (e.get('svg') or {}).get('sha256')) for e in document['pages']]
+    content_deps = [(d.get('identity'), d.get('sha256'))
+                    for d in artifact.get('dependencies', []) if d.get('kind') == 'content']
+    expected_content = [(e['page_id'], (e.get('page') or {}).get('sha256')) for e in document['pages']]
+    if content_deps and content_deps != expected_content:
+        return False
+    if not content_deps and any(store.read_object_json(e['page']).get('speaker_notes') for e in document['pages']):
+        return False
     return bool(dependencies) and dependencies == expected
 
 
@@ -312,7 +330,7 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
             mapping=page_asset_paths(store,doc,entry,work)
             approved[entry['page_id']]=mapping
             path=work/f'page-{index+1}.svg';path.write_bytes(data)
-            inputs.append(SvgInput(entry['page_id'],path));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
+            inputs.append(SvgInput(entry['page_id'],path, page.get('speaker_notes')));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
             preview_path=work/f'preview-input-{index+1}.svg';preview_path.write_bytes(
                 preview_svg_bytes(data, page_id=entry['page_id'], assets=mapping));preview_inputs.append(preview_path)
             expected.append(page)
@@ -324,6 +342,8 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
         report=readback(compiled.pptx_path,parsed,expected)
         report_path=work/'readback.json';report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2))
         deps=[{'kind':'svg','identity':e['page_id'],'sha256':e['svg']['sha256']} for e in doc['pages']]
+        file_deps = deps + [{'kind': 'content', 'identity': e['page_id'], 'sha256': e['page']['sha256']}
+                            for e in doc['pages']]
         new=bump_revision(doc,{'operation_id':operation_id or 'production-'+uuid.uuid4().hex,'kind':'artifact_adoption','description':'native compile, dual rendering and actual PPT readback','read_set':[]})
         for i,entry in enumerate(new['pages']):
             preview=work/f'svg-{i+1}.png';run([executable('rsvg-convert'),str(preview_inputs[i]),'-o',str(preview)])
@@ -335,7 +355,7 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
             if task['kind'] == 'review' and task['status'] in ('running','awaiting_host'):
                 task['status'] = 'superseded'
                 new['tasks'][i] = store.put_json_object(task)
-        new['outputs']={'pptx':artifact(store,compiled.pptx_path,'pptx',dependencies=deps),'trace':artifact(store,compiled.manifest_path,'object_trace',dependencies=deps),'render_report':artifact(store,report_path,'render_report',dependencies=deps)}
+        new['outputs']={'pptx':artifact(store,compiled.pptx_path,'pptx',dependencies=file_deps),'trace':artifact(store,compiled.manifest_path,'object_trace',dependencies=file_deps),'render_report':artifact(store,report_path,'render_report',dependencies=file_deps)}
         if explicit:
             from .models import require_writer
             require_writer(new, 'candidates.v1')

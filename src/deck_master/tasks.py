@@ -403,6 +403,9 @@ def task_inputs_current(store, document, task):
     if (compute_input_digest(dispatched) != compute_input_digest(document)
             or dispatched['design_context'] != document['design_context']):
         return False
+    if task.get('kind')=='blueprint' and task.get('preparation',{}).get('content_basis'):
+        from .design_requirements import task_basis_current
+        return task_basis_current(store, document, task)
     if task.get('kind') == 'compose' and task.get('intent') == 'input_revision':
         # The result writes the whole page order, so its read dependency must
         # include order and membership as well as normalized Page contents.

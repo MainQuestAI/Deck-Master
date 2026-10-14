@@ -26,3 +26,11 @@ class BuildPy(build_py):
         for name in ('references','agents'):
             if (source/name).is_dir():
                 shutil.copytree(source/name,target/name)
+        roles=Path(self.build_lib)/'deck_master'/'resources'/'skills'
+        if roles.exists():
+            shutil.rmtree(roles)
+        for name in ('deck-content','deck-design','deck-review'):
+            role=root/'skills'/name
+            if not (role/'SKILL.md').is_file():
+                raise RuntimeError('missing public Skill source: '+name)
+            shutil.copytree(role,roles/name)

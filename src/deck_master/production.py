@@ -117,6 +117,10 @@ def project_prompt(
             "style_ref": visual.get("style_ref") or resolved_design_context.get("default_style_id"),
         },
     }
+    if 'content_requirements' in resolved_design_context:
+        from .models import validate_schema
+        validate_schema('content_requirements', resolved_design_context['content_requirements'])
+        projection['content_requirements'] = deepcopy(resolved_design_context['content_requirements'])
     payload = json.dumps(projection, ensure_ascii=False, indent=2, sort_keys=True)
     prompt = (
         "Use case: productivity-visual\n"
@@ -129,8 +133,10 @@ def project_prompt(
         "Composition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\n"
         "Text: render the supplied customer-visible text verbatim and legibly\n"
         "Constraints: do not add claims or invent numeric values, dates, customer data, or outcomes. "
-        "If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, "
-        "without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; "
+        "If a quantitative chart lacks required data, return a content gap instead of inventing data. "
+        "A teaching schematic is allowed only when the supplied intent calls for it and it makes no quantitative claim. "
+        "Do not render internal content-basis refs, hashes, production notes or structure IDs as visible text. "
+        "Do not omit modules; connect arrows to their actual nodes; "
         "use only permitted assets; no watermark; no internal notes\n"
         "Structured input:\n" + payload
     )
