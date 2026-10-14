@@ -151,6 +151,13 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
         extract = source.get('extract')
         if extract:
             artifacts[f"source:{source.get('source_id')}"] = extract['sha256']
+    # Content collaboration v1.2 CONTRACTS §11.5/§11.6: a preproduction review
+    # binds the current Narrative and ContentPlan pointers by object hash, using
+    # the same dependency-id scheme as page/style/artifact slices.
+    for identity, pointer in (('narrative', doc.get('narrative')),
+                              ('content_plan', doc.get('content_plan'))):
+        if isinstance(pointer, dict) and pointer.get('sha256'):
+            artifacts[f'content:{identity}'] = pointer['sha256']
     artifacts['policy:document'] = sha256_bytes(canonical_json_bytes(doc.get('policy') or {}))
     # Legacy reviews have no input dependency. Their immutable adoption history
     # identifies which observations predate the latest semantic input change.

@@ -81,3 +81,35 @@
 **好的返修：**“P03 将草稿写入描述为公司已实现能力，但能力资料仅证明只读集成。将该句改为本期新增设计，补充权限和人工正式提交关系；同时检查实施与总结页是否仍沿用‘完全只读’的旧说法。”
 
 正常首稿可以有内部自主编辑；用户收到后需要替系统重建主线、补写核心论证，不算已经达到业务审阅门槛。工程通过、人类认可和跨任务适用范围分别记录，不互相替代。
+
+## 分阶段生产（compose.v2）
+
+工作单声明 `protocol_version=compose.v2` 时，任务只做它这一个阶段，结果按 `compose_result.v2` 变体提交。不要用空 Page 冒充策划，也不要把整份 Page 塞进 framing。
+
+| phase | 你要产出 | 明确不做 |
+| --- | --- | --- |
+| `framing` | `payload.narrative`：`maturity=framing`。材料用途/权威/冲突、受众已知与目标变化、具体缺口与候选方向 | 完整 Page、图像、SVG、PPT、替用户做决定 |
+| `argument` | `payload.narrative`：`maturity=argument`，中心节点 + 连通结构 + 证据/限定/未决项；可选 `payload.plan`（`content_plan.v2`、`mode=planned`） | 完整逐页稿、外部生成、声称已获确认 |
+| `page_copy` | `payload.pages`（完整 Page v2，含 `content_mapping`）、`payload.page_order`、`payload.plan_input`（`content_plan_input.v2`） | 改写 Narrative/来源/全局设计、超出范围的页面 |
+| `speech` | `payload.updates`：固定 Page Ref 的 `speaker_notes` 与覆盖全部口播的 `speech_segments` | 改动上屏正文、页序、视觉配置 |
+| `input_revision` | `payload.changed_layers`、每个变化层的实质 `proposals`、`payload.diff`（`input_digest`、`summary`、`changed_page_ids`） | 范围外差异、无 proposal 的层、半写成功 |
+
+`adoption_policy=proposal_only` 时结果只是提案：当前 Narrative/Plan/Page 指针不动，等有效决定覆盖后才由 Runtime 采用。
+
+### 阶段内的方法顺序
+
+1. **辨材料用途与权威**（framing）：正式要求 / 可核对事实 / 历史参考 / 能力说明 / 用户设想 / 模型建议分开；冲突不靠“较新的文件对”解决。目标写成受众变化：谁在什么场景、已知什么、用后要能判断或做什么。
+2. **建立论证或讲解结构**（argument）：按任务选方法——培训用目标行为与概念/步骤/边界/练习反馈；分析汇报用问题/方法/观察/解释/限制/结论；决策建议用真实选项/判断标准/证据/代价/推荐条件；独立阅读用检索结构/定义/完整解释/前提/可定位来源。每个核心结论标明支持它的事实或适用规则、限定挂在哪个结论上。
+3. **写出实质全文**（page_copy）：先有形（章节与页职责、节点映射、预算），再有文。每页一项可说明的沟通职责；删掉它丢掉什么、上一页留下什么问题、下一页为什么必要。正文写全图表标题、数值、单位、轴标签、注释与必要来源，不用“此处放结论”。
+4. **批判与返修**：写成后按页自查限定是否跟着结论、口播是否讲得完、下一页是否必要；发现问题按依赖范围返修，删字或缩小字号不是修复。
+
+### claim → source → page 映射纪律
+
+- 每个需要事实支撑的可见 atom 在 `content_mapping.visible_links` 里指向它承载的 `narrative_node_ids`，并带真实 `source_links`（`source_id` + `source_version` + 存在的 `locator`）。定位存在只证明可查，不证明支持。
+- `authority=reported_fact/calculation` 的节点必须有可核对来源定位或明确 blocker；`inference/hypothesis/target` 不得冒充事实。
+- 限定不能只留在备注：承担该主张的页面正文必须能看到必要限定。
+- 口播段用 `speech_segments` 覆盖 `speaker_notes` 的全部码点，标 `kind`（cue/verbatim）与 `estimated_seconds`（估计值，实测另记）。
+
+### 前置内容审查（preproduction）
+
+新论证的整套生产在进入真实视觉生产前需要内容审查，对象是任务适配、论证、证据边界、页面覆盖、推进与用途预算。默认要求 `independent_model_or_human`：独立模型必须有可核对的独立执行收据，人类必须有身份证据；作者自审（host_self）只有在用户明确接受降级且记录了范围与原因时才成立，且不影响交付前的人类专业复核政策。能力不存在时如实返回 `needs_reviewer` 并交出可审阅稿，不要伪造收据。

@@ -49,6 +49,13 @@ ENVELOPE_SLOTS = (
     "content_plan",
     "style_analysis",
 )
+# compose_result.v2 variant envelope (content collaboration v1.2 CONTRACTS §11.5).
+# These slots are accepted in addition to the legacy ones; the variant payload
+# itself is parsed by the compose.v2 branch, and the legacy slots are refused
+# there so an old envelope can never act as a hidden channel.
+COMPOSE_V2_SLOTS = ("schema_version", "variant", "payload", "eligibility_digest",
+                    "task_id", "operation_id", "produced_against")
+COMPOSE_V2_SCHEMA = "compose_result.v2"
 
 TASK_KINDS = ENVELOPE_KINDS + ("compile", "render", "check")
 TASK_STATUSES = (
@@ -131,6 +138,21 @@ def parse_envelope(raw: dict[str, Any]) -> dict[str, Any]:
             "(result)/kind",
             f"kind must be one of {', '.join(ENVELOPE_KINDS)}; got {kind!r}",
         )
+    if raw.get("schema_version") == COMPOSE_V2_SCHEMA:
+        # The compose.v2 envelope declares its own schema on the task protocol;
+        # accepting it here is a *shape* check only. The variant/task match,
+        # variant payload and the legacy-slot refusal live in the compose.v2
+        # branch of acceptance (content_production).
+        unknown = sorted(set(raw) - set(ENVELOPE_SLOTS) - set(COMPOSE_V2_SLOTS))
+        if unknown:
+            raise EnvelopeError("(result)", f"unknown envelope fields: {unknown}")
+        from .models import validate_compose_result_semantics
+        try:
+            validate_compose_result_semantics(raw)
+        except ModelError as exc:
+            raise EnvelopeError(str(exc), "compose.v2 envelope is not valid") from exc
+        _validate_usage_events(raw)
+        return raw
     unknown = sorted(set(raw) - set(ENVELOPE_SLOTS))
     if unknown:
         raise EnvelopeError("(result)", f"unknown envelope fields: {unknown}")
@@ -165,6 +187,12 @@ def parse_envelope(raw: dict[str, Any]) -> dict[str, Any]:
                 f"(result)/files/{item.get('file_id')}",
                 f"path must stay inside this operation's staging directory, got {staged_path!r}",
             )
+    _validate_usage_events(raw)
+    return raw
+
+
+def _validate_usage_events(raw: dict[str, Any]) -> None:
+    """Usage events keep the existing allowance protocol in both envelopes."""
     for index, event in enumerate(raw.get('usage_events') or []):
         if not isinstance(event, dict):
             raise EnvelopeError(f'(result)/usage_events[{index}]', 'usage event must be an object')
@@ -178,7 +206,6 @@ def parse_envelope(raw: dict[str, Any]) -> dict[str, Any]:
             raise EnvelopeError(f'(result)/usage_events[{index}]/evidence_file_ids', 'must be an array of strings')
         if event.get('invocation_ref') is not None and not isinstance(event['invocation_ref'], str):
             raise EnvelopeError(f'(result)/usage_events[{index}]/invocation_ref', 'must be a string or null')
-    return raw
 
 
 def _validate_content_envelope(raw: dict) -> None:
@@ -825,7 +852,7 @@ def _validate_content_update_request(envelope: dict, document: dict, task: dict,
 
 def _accept_content_update(store: Store, *, document: dict, task: dict, envelope: dict,
                            content_update: dict, result_digest: str, produced_against: str,
-                           staged: dict[str, dict]) -> dict:
+                           staged: dict[str, dict], plan_build=None) -> dict:
     """Adopt an input_revision result: only changed pages move (spec v1.1 §5.4).
 
     Unchanged pages keep every slot; changed pages keep their original
@@ -889,7 +916,12 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
         "resolved_by_task_id": task["task_id"],
     }
     from .content_plan import bind_result, attach
-    plan_ref = bind_result(store, document, task, envelope.get("content_plan"), new_pages)
+    if plan_build is None:
+        plan_ref = bind_result(store, document, task, envelope.get("content_plan"), new_pages)
+    else:
+        # compose.v2 input_revision supplies the v2 plan binder; adoption stays
+        # exactly the same single-swap code path (no second implementation).
+        plan_ref = plan_build(new_pages)
     attach(new_document, plan_ref)
     bind_derivation(store, document, new_document, task, page_refs)
     result_refs = list(page_refs.values()) + ([plan_ref] if plan_ref else [])
@@ -934,6 +966,7 @@ def _accept_result_locked(
     operation_id: str,
     produced_against: str,
     envelope_raw: dict[str, Any],
+    adapter_context: dict | None = None,
 ) -> dict:
     """Validate a Host result envelope and adopt it atomically (spec 09.7).
 
@@ -1088,6 +1121,13 @@ def _accept_result_locked(
     if envelope.get("style_analysis") is not None:
         raise EnvelopeError("style_analysis", "only style_analyze tasks may return visual specifications")
     _validate_content_envelope(envelope)
+    if task.get("protocol_version") == "compose.v2":
+        # Phased content production (CONTRACTS §11.5): the variant acceptor owns
+        # the write set. compose.v1 keeps its historical path below, unchanged.
+        from .content_production import accept_compose_v2
+        return accept_compose_v2(store, document=document, task=task, envelope=envelope,
+                                 produced_against=produced_against, result_digest=result_digest,
+                                 staged=staged)
     from .changes import validate_result
     validate_result(store, document, task, envelope)
     from .generation import adoption_binding, bind_artifact
@@ -1119,6 +1159,12 @@ def _accept_result_locked(
     for review in envelope.get('reviews') or []:
         if review.get('review_stage', 'final') != stage:
             raise EnvelopeError('review/review_stage', 'review stage does not match the dispatched task')
+    if stage == 'preproduction':
+        # Content collaboration v1.2 CONTRACTS §6.3/§11.6: identity, unit
+        # coverage and subject/dependency binding for the preproduction review.
+        from .content_review import validate_preproduction_result
+        validate_preproduction_result(store, document, task, envelope,
+                                      adapter_context=adapter_context)
     if stage == 'page_visual' and envelope['kind'] == 'review':
         from .review import PAGE_VISUAL_KINDS
         required = set(PAGE_VISUAL_KINDS)
