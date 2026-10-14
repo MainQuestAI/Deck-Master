@@ -16,11 +16,14 @@ import uuid
 import pytest
 
 from test_eligibility_enforcement import (  # noqa: E402  (shared fixtures)
-    _grant, _page, _project, _scope, _start)
+    _grant, _page, _project, _scope, _settle_preproduction, _start)
 from test_compose_v2_phases import _deck_with_pages, _page as _phase_page  # noqa: E402
 
+from test_content_preproduction_review import (  # noqa: E402  (review fixtures)
+    _independent_adapter, _review)
+
 from deck_master import (changes, collaboration, collaboration_binding, content_production,
-                          eligibility, service)
+                          content_review, eligibility, service)
 from deck_master.store import Store
 
 
@@ -55,6 +58,7 @@ def test_change_dispatch_on_an_enforced_project_is_bound_and_accepted(tmp_path):
     _start(project, store, intent="edit",
            scope=_scope(page_ids=["p1"], layers=["page_copy"]))
     _grant(project, store, actions=("change.commit",), scope=_scope(page_ids=["p1"]))
+    _settle_preproduction(store, seed="change-flow")
     document = store.load_document()
     entry = next(e for e in document["pages"] if e["page_id"] == "p1")
     value = {"schema_version": "change_intent.v1", "project_id": document["project_id"],
@@ -203,3 +207,131 @@ def test_revoking_the_bound_grant_refuses_the_late_result(tmp_path):
 def _page_text(store, page_id="p1"):
     entry = next(e for e in store.load_document()["pages"] if e["page_id"] == page_id)
     return store.read_object_json(entry["page"])["customer_visible"]["body_blocks"][0]["text"]
+
+
+# ---------------------------------------------------------------------------
+# External review F02: one preproduction verdict; a delegate never substitutes
+
+
+def _production_request(project, store, *, operation_id):
+    """Replace the compose fixture's content-only request with a full_deck
+    request whose scope also covers the review and blueprint layers, so the
+    preproduction review can be dispatched and dispatch.blueprint judged on
+    the preproduction dimension alone. The prior request stays a background
+    id so its direction decision keeps answering for the adopted manuscript."""
+    from test_compose_v2_phases import (  # noqa: E402
+        _instruction as _phase_instruction, _scope as _phase_scope)
+    document = store.load_document()
+    current = (document.get("collaboration") or {}).get("request")
+    return collaboration.start_request(
+        project,
+        input={"intent": "full_deck", "content_intent": "content_full",
+               "instruction_evidence": _phase_instruction(store),
+               "scope": _phase_scope(layers=["narrative", "plan", "page_copy", "speech",
+                                             "review", "blueprint"],
+                                     allow_page_membership_change=True),
+               "replace_request_id": current["request_id"] if current else None,
+               "background_request_ids": [current["request_id"]] if current else []},
+        base_revision=document["revision_id"], operation_id=operation_id)
+
+
+def _grant_blueprint(project, store, *, mode="execute", operation_id="op-blueprint-grant"):
+    return _grant(project, store, mode=mode, actions=("dispatch.blueprint",),
+                  scope=_scope(page_ids=["p1"], layers=["blueprint"]),
+                  operation_id=operation_id)
+
+
+def _blueprint_eligibility(store):
+    document = store.load_document()
+    return eligibility.evaluate(store, document, document, "dispatch.blueprint",
+                                {"targets": {"page_ids": ["p1"],
+                                             "layers": ["blueprint"]}})
+
+
+def _accept_preproduction_reviews(project, store, *, findings_by_kind=None):
+    """The real review path: dispatch the preproduction review task under the
+    current request, then accept the full unit set through accept_result. An
+    optional map carries open must-fix findings per review kind."""
+    document = store.load_document()
+    adapter = _independent_adapter(store, document)
+    outcome = content_review.dispatch_preproduction_review(project, adapter_context=adapter)
+    assert outcome["status"] == "review_dispatched"
+    task = outcome["task"]
+    document = store.load_document()
+    reviewer = {"type": "independent_host", "id": "model-b", "execution_ref": "exec-independent",
+                "independence_confirmed": True, "identity_receipt": None,
+                "assurance": "host_attested"}
+    reviews = [_review(store, document, kind, reviewer=reviewer,
+                       findings=(findings_by_kind or {}).get(kind, ()))
+               for kind in ("argument", "page_copy", "progression", "speech")]
+    out = service.accept_result(
+        project, task_id=task["task_id"], operation_id=task["operation_id"],
+        produced_against=task["produced_against"],
+        result_payload={"kind": "review", "pages": [], "page_order": [], "artifact_specs": [],
+                        "reviews": reviews, "usage_events": [],
+                        "notes": "preproduction review"},
+        adapter_context=adapter)
+    assert out["status"] == "accepted"
+    return out
+
+
+def test_a_review_delegate_never_replaces_the_preproduction_review(tmp_path):
+    """F02: an effective delegate covering the review topics is reused to
+    arrange the review (AC-R06) — it is never the review itself. With no
+    review records the production gate stays blocked."""
+    project, store = _deck_with_pages(tmp_path)
+    _production_request(project, store, operation_id="op-request-full-1")
+    _grant_blueprint(project, store, mode="delegate", operation_id="op-review-delegate")
+    decision = _blueprint_eligibility(store)
+    assert decision["allowed"] is False
+    assert "needs_reviewer" in decision["reason_codes"]
+    assert decision["preproduction"]["via"] != "delegate"
+
+
+def test_a_partial_preproduction_failure_keeps_production_blocked(tmp_path):
+    """F02: one passing unit never satisfies the whole review; an open
+    must-fix page_copy finding keeps production blocked even though the
+    argument unit passed on the same current manuscript."""
+    project, store = _deck_with_pages(tmp_path)
+    _production_request(project, store, operation_id="op-request-full-2")
+    _grant_blueprint(project, store)
+    finding = {"finding_id": "f-pc-1", "kind": "content", "impact": "must_fix",
+               "resolution": "open", "page_id": "p1", "element_refs": ["atom:p1:title"],
+               "message": "限定没有进入上屏正文", "expected": "上屏正文带限定",
+               "actual": "正文无该限定", "evidence": []}
+    _accept_preproduction_reviews(project, store, findings_by_kind={"page_copy": [finding]})
+    decision = _blueprint_eligibility(store)
+    assert decision["allowed"] is False
+    assert "preproduction_blocked" in decision["reason_codes"]
+    assert decision["preproduction"]["blocking_findings"]
+
+
+def test_a_full_pass_qualsifies_production_and_a_new_revision_revokes_it(tmp_path):
+    """F02: only a full applicable pass qualifies production; once the
+    manuscript moves again the stale pass no longer answers for it."""
+    project, store = _deck_with_pages(tmp_path)
+    _production_request(project, store, operation_id="op-request-full-3")
+    _grant_blueprint(project, store)
+    _accept_preproduction_reviews(project, store)
+    allowed = _blueprint_eligibility(store)
+    assert allowed["preproduction"]["satisfied"] is True
+    assert allowed["preproduction"]["via"] == "review"
+    assert "needs_reviewer" not in allowed["reason_codes"]
+    assert "preproduction_blocked" not in allowed["reason_codes"]
+    # The manuscript moves through the real content path: a page_copy phase
+    # task rewrites p1, so every review record is stale for the new bytes.
+    from test_compose_v2_phases import (_dispatch as _phase_dispatch,  # noqa: E402
+                                        _plan_input as _phase_plan_input,
+                                        _submit as _phase_submit)
+    task = _phase_dispatch(store, phase="page_copy")
+    document = store.load_document()
+    page = _phase_page(store, document, "p1", notes="修订后的口播。")
+    page["customer_visible"]["title"] = "修订后的标题"
+    _phase_submit(project, task,
+                  {"pages": [page], "page_order": ["p1"],
+                   "plan_input": _phase_plan_input(document, ["p1"])},
+                  "page_copy")
+    blocked = _blueprint_eligibility(store)
+    assert blocked["allowed"] is False
+    assert blocked["preproduction"]["satisfied"] is False
+    assert "needs_reviewer" in blocked["reason_codes"]

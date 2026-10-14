@@ -11,8 +11,8 @@ import json
 import pytest
 
 from test_eligibility_enforcement import (  # noqa: E402  (shared fixtures)
-    _binding, _commit_task, _declared, _grant, _page, _project, _scope, _start,
-    _strip_binding, _task)
+    _binding, _commit_task, _declared, _grant, _page, _project, _scope,
+    _settle_preproduction, _start, _strip_binding, _task)
 
 from deck_master import collaboration, collaboration_budget, dependency_slices, eligibility, service
 from deck_master.models import ModelError, canonical_json_bytes, sha256_bytes
@@ -155,6 +155,7 @@ def test_execute_grant_binds_pages_and_layers(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1", "p2"],
                                         layers=["plan", "blueprint", "page_copy"]))
+    _settle_preproduction(store, seed="grant-binding")
     _grant(project, store, actions=("dispatch.blueprint",),
            scope=_scope(page_ids=["p1"], layers=["plan", "blueprint"]))
     document = store.load_document()
