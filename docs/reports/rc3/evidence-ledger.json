@@ -1,0 +1,879 @@
+{
+  "target_version": "V1.0.0-RC3",
+  "candidate_id": null,
+  "candidate_sha": null,
+  "candidate_tree": null,
+  "baseline_sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+  "specification_ref": {
+    "archive_sha256": "3b97b4f22c68a980b212512f1aad4d11789b602b434bedd9a607fe8e9e0493fe",
+    "entry": "docs/specs/deck-master-v1.0.0-rc3/README.md"
+  },
+  "method_manifest": null,
+  "package_manifest": null,
+  "note": "Active RC3 implementation ledger. Current engineering evidence does not close absent L2–L6 evidence; preserve prior candidate and first-draft failures.",
+  "ac_results": [
+    {
+      "ac_id": "AC-B01",
+      "capability_owner": "T00",
+      "execution_card": "RC3-00",
+      "evidence_providers": [
+        "RC3-00"
+      ],
+      "status": "PASS",
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [
+        "docs/reports/rc3/baseline.json",
+        "docs/reports/rc3/baseline-a.json"
+      ],
+      "historical_reuse_basis": "Exact main and final upstream integration tree match; 7 current main CI checks success; independent upstream RF review, N1/N3 fixes and local 99 regressions verified.",
+      "findings": [],
+      "limitations": [
+        "N2 inherited followup assigned to RC3-04",
+        "No RC3 professional/user/desktop acceptance claimed",
+        "Refresh candidate/package identity at final RC3-04/05"
+      ],
+      "signed_by": "Codex / RC3 integration (engineering evidence)"
+    },
+    {
+      "ac_id": "AC-B02",
+      "capability_owner": "T00",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-B03",
+      "capability_owner": "T00",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-P01",
+      "capability_owner": "T01",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-P02",
+      "capability_owner": "T01",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-P03",
+      "capability_owner": "T01",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-C01",
+      "capability_owner": "T02",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-03",
+        "RC3-04"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-C02",
+      "capability_owner": "T02",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-03",
+        "RC3-04"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-C03",
+      "capability_owner": "T02",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-03",
+        "RC3-04"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-C04",
+      "capability_owner": "T02",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-03",
+        "RC3-04"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-M01",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-M02",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-M03",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-M04",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-M05",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-01",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-R01",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-R02",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-R03",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-R04",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-R05",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-R06",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-R07",
+      "capability_owner": "T04",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-00",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-D01",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-D02",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-D03",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-N01",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-N02",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-N03",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-N04",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-H01",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-H02",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-H03",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-U01",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-U02",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-U03",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-U04",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    },
+    {
+      "ac_id": "AC-U05",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "evidence_providers": [
+        "RC3-01",
+        "RC3-02",
+        "RC3-03",
+        "RC3-04",
+        "RC3-05"
+      ],
+      "status": "NOT_RUN",
+      "evidence_layers": [],
+      "input_hashes": [],
+      "output_hashes": [],
+      "evidence_refs": [],
+      "historical_reuse_basis": null,
+      "findings": [],
+      "limitations": [],
+      "signed_by": null
+    }
+  ],
+  "cq_results": [
+    {
+      "cq_id": "CQ-01",
+      "parent_ac": "AC-M01",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-02",
+      "parent_ac": "AC-M05",
+      "capability_owner": "T03",
+      "execution_card": "RC3-01",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-03",
+      "parent_ac": "AC-D01",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-04",
+      "parent_ac": "AC-D03",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-05",
+      "parent_ac": "AC-D03",
+      "capability_owner": "T05",
+      "execution_card": "RC3-03",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-06",
+      "parent_ac": "AC-N01",
+      "capability_owner": "T06",
+      "execution_card": "RC3-02",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-07",
+      "parent_ac": "AC-H03",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-08",
+      "parent_ac": "AC-U01",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-09",
+      "parent_ac": "AC-U01",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-10",
+      "parent_ac": "AC-U02",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-11",
+      "parent_ac": "AC-B03",
+      "capability_owner": "T00",
+      "execution_card": "RC3-01",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-12",
+      "parent_ac": "AC-U05",
+      "capability_owner": "T08",
+      "execution_card": "RC3-05",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    },
+    {
+      "cq_id": "CQ-13",
+      "parent_ac": "AC-H01",
+      "capability_owner": "T07",
+      "execution_card": "RC3-04",
+      "status": "NOT_RUN",
+      "evidence_refs": [],
+      "findings": []
+    }
+  ],
+  "draft_results": {
+    "raw_complete": null,
+    "first_owner_complete": null,
+    "repaired_current": null,
+    "method_rerun": null
+  },
+  "release_conclusion": "NOT_RUN"
+}
