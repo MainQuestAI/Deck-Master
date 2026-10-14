@@ -1148,10 +1148,20 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                     and entry.get("state") in ("reserved", "in_flight")
                     for entry in task.get("call_allowances") or [])
             if budget is not None and not slot_held:
+                requested = context.get("count")
+                batch_over = (isinstance(requested, int) and not isinstance(requested, bool)
+                              and requested > budget["remaining"])
                 if budget["state"] == "unknown":
                     block("budget_unknown",
                           "an unsettled external call exists; resolve it before new calls",
                           budget={k: v for k, v in budget.items() if k != "chain_ids"})
+                elif batch_over:
+                    block("budget_exhausted",
+                          f"the request asks for {requested} external calls but only "
+                          f"{budget['remaining']} remain on the bound authorization chain; a "
+                          "batch request answers to the same ceiling, not just to availability",
+                          budget={k: v for k, v in budget.items() if k != "chain_ids"},
+                          requested=requested)
                 elif budget["state"] == "exhausted":
                     block("budget_exhausted",
                           "no remaining credit for a new external call; an exhausted budget "

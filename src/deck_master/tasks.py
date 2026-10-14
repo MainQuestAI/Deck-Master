@@ -1413,13 +1413,16 @@ def _project_transaction(function):
 def reserve_allowances(store, document, task, count, *, action="allowance.allocate"):
     """Build an updated task using the locked current project ledger."""
     from . import eligibility
+    if not isinstance(count, int) or isinstance(count, bool) or count < 1:
+        raise EnvelopeError("(allocate)/count", "count must be a positive integer")
+    # The requested amount travels with the unified budget judgement: a batch
+    # request must fit under the bound authorization chain's remaining credit,
+    # not just find the ledger "available" (external review F04).
     eligibility.guard(store, document, action,
-                      context={"task": task,
+                      context={"task": task, "count": count,
                                "targets": {"page_ids": task.get("scope_pages") or []}})
     if task.get("kind") == "style_analyze":
         raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
-    if not isinstance(count, int) or isinstance(count, bool) or count < 1:
-        raise EnvelopeError("(allocate)/count", "count must be a positive integer")
     if task.get("status") not in ("awaiting_host", "running", "queued"):
         raise TaskConflict("(allocate)", "allowances require an active task")
     if task.get("change_binding"):
