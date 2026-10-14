@@ -322,7 +322,11 @@ def _proposal_ref(proposal_id):
 
 @operations.public
 def propose(project, *, input):
-    store=Store(project_path(project));doc=load_snapshot(store);proposal=_proposal(store,doc,input)
+    store=Store(project_path(project));doc=load_snapshot(store)
+    from . import eligibility
+    eligibility.guard(store, doc, "style.propose",
+                      context={"targets": {"layers": ["design"]}})
+    proposal=_proposal(store,doc,input)
     ref=store.put_json_object(proposal)
     # Disposable inbox only; the entry explicitly is NOT a confirmation/Document fact.
     folder=store.deck_root/'cache/icon-proposals';folder.mkdir(parents=True,exist_ok=True)
@@ -371,6 +375,10 @@ def listing(project, *, revision=None, include_stale=False):
 @operations.public
 def confirm(project, *, proposal_id, base_revision, operation_id):
     operations.validate_id(operation_id,new=True);store=Store(project_path(project));pr=_proposal_ref(proposal_id);proposal=store.read_object_json(pr)
+    from . import eligibility
+    gate_store = Store(project_path(project))
+    eligibility.guard(gate_store, gate_store.load_document(), "candidate.select",
+                      context={"targets": {"layers": ["design"]}})
     validate_schema('icon_recipe',proposal)
     with store._locked():
         doc=store.load_document();rd=operations.request_digest(doc,'icons.confirm',base_revision,{'proposal_ref':pr})
@@ -484,6 +492,10 @@ def _global_fragment(root,path):
 @operations.public
 def draft(project, *, recipe_id, page_id):
     """Deterministic standard/reuse geometry for a Host to inspect and submit normally."""
+    from . import eligibility
+    gate_store = Store(project_path(project))
+    eligibility.guard(gate_store, gate_store.load_document(), "style.propose",
+                      context={"targets": {"layers": ["design"]}})
     store=Store(project_path(project));doc=load_snapshot(store);recipe,ref=_owned(store,doc,recipe_id)
     target=next((t for t in recipe['input']['targets'] if t['page_id']==page_id),None)
     if not target:fail('page_id','page was not included in recipe')
@@ -499,6 +511,10 @@ def draft(project, *, recipe_id, page_id):
 @operations.public
 def preview(project, *, proposal_id, page_id):
     """Derived fixed proposal SVG; never a candidate or an actual PPT preview."""
+    from . import eligibility
+    gate_store = Store(project_path(project))
+    eligibility.guard(gate_store, gate_store.load_document(), "render.preview",
+                      context={"targets": {"layers": ["svg"]}})
     store=Store(project_path(project));value=store.read_object_json(_proposal_ref(proposal_id))
     validate_schema('icon_recipe',value);current=load_snapshot(store)
     if value['project_id']!=current['project_id']:fail('proposal_id','foreign proposal')

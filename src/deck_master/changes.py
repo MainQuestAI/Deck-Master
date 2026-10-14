@@ -143,6 +143,16 @@ def plan(project, *, input):
     return {'status': 'planned', 'plan_id': 'plan-' + ref['sha256'], 'plan_ref': ref, 'plan': record}
 
 
+def _plan_layers(record) -> list[str]:
+    """The layers a change plan writes, in scope-vocabulary terms."""
+    layers: list[str] = []
+    for action in record['actions']:
+        layer = {'page': 'page_copy', 'blueprint': 'blueprint', 'svg': 'svg'}[action['write_slots'][0]]
+        if layer not in layers:
+            layers.append(layer)
+    return layers
+
+
 def _read_plan(store, plan_id):
     if not isinstance(plan_id, str) or not re.fullmatch(r'plan-[a-f0-9]{64}', plan_id):
         fail('plan_id', 'use the immutable plan ID returned by changes plan')
@@ -167,6 +177,13 @@ def commit(project, *, plan_id, base_revision, operation_id):
             fail('base_revision', 'project changed; preview a new plan', conflict=True)
         if _plan(store, document, record['input']) != record:
             fail('plan_id', 'plan payload or target basis changed; preview again', conflict=True)
+        # CONTRACTS §6.2 row 4: committing a change plan dispatches real work,
+        # so the plan's own write targets must be inside the request scope and
+        # covered by an authorization before any task or allowance is created.
+        from . import eligibility
+        eligibility.guard(store, document, "change.commit", context={
+            "targets": {"page_ids": [action['page_id'] for action in record['actions']],
+                        "layers": _plan_layers(record)}})
         active = [store.read_object_json(ref) for ref in document['tasks']]
         for action in record['actions']:
             if action.get('mode') == 'trial':
@@ -222,6 +239,18 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
                           dispatch_revision=basis['revision_id'], produced_against=content_identity(basis),
                           cost_class='external_generation' if action['max_calls'] else 'host_reasoning',
                           method_release=method_release(method_resources(action['kind'])))
+    # A collaboration.v1 project dispatches an accountable task: the change
+    # action materialises into a phase binding before any allowance is
+    # reserved, so the same judgement covers the dispatch and its call slots
+    # (T03 binding writer; T04 refuses unbound production unconditionally).
+    # Older projects keep their exact old dispatch (stamp_task is a no-op).
+    from . import collaboration_binding
+    collaboration_binding.stamp_task(
+        store, basis, task, phase="production", executor_type="host",
+        page_ids=[action["page_id"]],
+        adoption_policy="candidate_only" if action.get("mode") == "trial" else "within_scope",
+        action="change.commit",
+        action_targets={"page_ids": [action["page_id"]], "layers": _plan_layers({"actions": [action]})})
     # Reserve on the prospective complete Document so the whole batch observes
     # its own earlier reservations. No intermediate pointer is published.
     if action['max_calls']:

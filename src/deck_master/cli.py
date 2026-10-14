@@ -818,6 +818,7 @@ def _legacy_final_readiness(argv) -> int:
     rejected = _reject_legacy_run(project)
     if rejected is not None:
         return rejected
+    from . import eligibility
     from .editing import check_summary
     from .delivery_eligibility import professional_policy
     from .store import Store
@@ -826,6 +827,7 @@ def _legacy_final_readiness(argv) -> int:
     doc = store.load_document()
     summary = check_summary(store, doc)
     professional = professional_policy(store, doc)
+    readiness = eligibility.evaluate(store, doc, doc, "readiness.final")
     view = project_view(project)
     engineering_ready = bool(summary['status'] == 'pass' and doc['outputs'].get('pptx'))
     report = {
@@ -845,6 +847,16 @@ def _legacy_final_readiness(argv) -> int:
         'view_status': view['view_status'],
         'revision_id': doc['revision_id'],
         'evidence_level': 'engineering',
+        # One eligibility interpretation for this report too (CONTRACTS §8):
+        # readiness *reports* the control/scope gaps instead of raising.
+        'eligibility': {
+            'allowed': readiness['allowed'],
+            'action': readiness['action'],
+            'enforcement': readiness['enforcement'],
+            'reason_codes': readiness['reason_codes'],
+            'responsible_role': readiness['responsible_role'],
+            'next_action': readiness['next_action'],
+        },
     }
     return _emit(report)
 

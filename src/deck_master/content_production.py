@@ -175,7 +175,17 @@ def open_phase_task(store, document, *, operation_id: str, intent: str = "initia
                     input_revision_id: str | None = None, phase: str | None = None,
                     adoption_policy: str | None = None, page_ids=None,
                     instruction: str | None = None) -> dict:
-    """Dispatch one compose.v2 phase task carrying its collaboration binding."""
+    """Dispatch one compose.v2 phase task carrying its collaboration binding.
+
+    This is the real write point for phased content tasks, so it consumes the
+    unified gate (CONTRACTS §6.2): `continue`'s phase progression, the guarded
+    compose wrapper and every other path that lands here are judged at
+    dispatch — a paused or closed request gains no task through a side door
+    (external review F06).
+    """
+    from . import eligibility
+    eligibility.guard(store, document, "dispatch.compose",
+                      context={"targets": {"page_ids": sorted(page_ids or [])}})
     task = build_phase_task(store, document, operation_id=operation_id, intent=intent,
                             input_revision_id=input_revision_id, phase=phase,
                             adoption_policy=adoption_policy, page_ids=page_ids,

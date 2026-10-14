@@ -111,6 +111,11 @@ def preview_svg_page(project_dir, page_id):
     """Render and atomically attach one current SVG preview before the next page."""
     store = Store(project_dir)
     doc = store.load_document()
+    # Local production still needs the request to include the layer it writes
+    # (CONTRACTS §6.2 row 5: no external fee does not mean scope-free).
+    from . import eligibility
+    eligibility.guard(store, doc, "render.preview",
+                      context={"targets": {"page_ids": [page_id], "layers": ["svg"]}})
     entry = next(e for e in doc['pages'] if e['page_id'] == page_id)
     if entry.get('svg_preview'):
         return entry['svg_preview']
@@ -280,6 +285,9 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
     from . import operations
     from .stages import require_assembly_ready
     store=Store(project_dir)
+    from . import eligibility
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+                      context={"targets": {"layers": ["output"]}})
     explicit = base_revision is not None or operation_id is not None
     with store._locked():
         doc=store.load_document()

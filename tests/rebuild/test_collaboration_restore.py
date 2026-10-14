@@ -22,8 +22,8 @@ def _page(pid: str, text: str) -> dict:
 
 
 def _scope() -> dict:
-    return {"subject": "pages", "page_ids": [], "page_manifest_ref": None,
-            "external_artifact_ref": None, "layers": ["narrative"],
+    return {"subject": "pages", "page_ids": ["p1", "p2"], "page_manifest_ref": None,
+            "external_artifact_ref": None, "layers": ["narrative", "page_copy"],
             "allow_page_membership_change": False, "allow_page_order_change": False,
             "purpose": "exploratory"}
 
@@ -111,10 +111,9 @@ def _build(tmp_path):
                                        reason="范围撤回",
                                        base_revision=store.load_document()["revision_id"],
                                        operation_id="op-revoke")
-    collaboration.pause_request(project, reason="等确认",
-                                base_revision=store.load_document()["revision_id"],
-                                operation_id="op-pause")
-    # Narrative becomes current content truth, then a page edit moves forward.
+    # Narrative becomes current content truth, then a page edit moves forward;
+    # the pause comes last because a paused request refuses new writes
+    # (CONTRACTS §7.1), and this fixture needs the edit before the stop.
     store = Store(project)
     narrative_ref = store.put_json_object(_narrative_object())
     document = store.load_document()
@@ -131,6 +130,9 @@ def _build(tmp_path):
     entry = next(e for e in document["pages"] if e["page_id"] == "p1")
     edit_page(project, page=_page("p1", "改过的句子。"), base_revision=document["revision_id"],
               page_hash=entry["page"]["sha256"], operation_id="op-edit")
+    collaboration.pause_request(project, reason="等确认",
+                                base_revision=store.load_document()["revision_id"],
+                                operation_id="op-pause")
     return project, Store(project), revisions
 
 

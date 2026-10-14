@@ -43,13 +43,47 @@ def scope_gaps(store, parent, child) -> list[str]:
     return gaps
 
 
+def _future_pages_gap(parent, child) -> str | None:
+    """§3.4: a parent delegate may declare ``future_pages`` — the domain
+    permission to fix a bounded page set later. The Runtime then materializes
+    that selector into a child execute grant whose page_ids are the real Plan
+    pages, so an empty parent page set is *not* a containment failure when the
+    selector and its page bound allow exactly this child.
+
+    Returns a gap name when the child exceeds the declared domain, else None.
+    """
+    future = ((parent.get("constraints") or {}).get("future_pages") or {})
+    if not future:
+        # Without a declared future-pages domain an empty parent page set stays
+        # exactly that: no pages (an empty set is never "all pages").
+        return "scope/page_ids"
+    selector = future.get("selector")
+    if selector != "adopted_plan_for_this_request":
+        return "scope/page_ids"
+    child_pages = list(child.get("scope", {}).get("page_ids") or [])
+    maximum = future.get("max_pages")
+    if maximum is not None and len(child_pages) > int(maximum):
+        return "scope/page_ids"
+    if future.get("max_pages") is None and future.get("max_pages_basis") == "pending":
+        return "scope/page_ids"
+    return None
+
+
 def delegation_gaps(store, parent, child, *, decision=False) -> list[str]:
     """A replacement parent must still cover the original child's authority."""
     gaps = []
     if parent.get("mode") != "delegate":
         gaps.append("delegate_mode")
-    gaps.extend("scope/" + field for field in scope_gaps(
-        store, parent.get("scope") or {}, child.get("scope") or {}))
+    parent_scope = parent.get("scope") or {}
+    child_scope = child.get("scope") or {}
+    for field in scope_gaps(store, parent_scope, child_scope):
+        if field == "page_ids" and not (parent_scope.get("page_ids") or []):
+            future_gap = _future_pages_gap(parent, child)
+            if future_gap is None:
+                continue
+            gaps.append(future_gap)
+            continue
+        gaps.append("scope/" + field)
     topics = [child.get("topic")] if decision else child.get("delegated_topics") or []
     if not set(topics) <= set(parent.get("delegated_topics") or []):
         gaps.append("delegated_topics")

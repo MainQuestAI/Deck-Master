@@ -953,6 +953,110 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
                             result_digest=result_digest, response=response)
 
 
+def _compose_v2_targets(variant, payload: dict, task: dict) -> dict:
+    """The write set one compose.v2 variant would touch (CONTRACTS §11.5).
+
+    The v2 write set lives inside ``payload``; the acceptance gate must see the
+    real pages and layers so its scope check can never go vacuous and a result
+    cannot write beyond the task's bound scope. Unknown layer names are dropped
+    here on purpose — the variant parser refuses them with their own error.
+    """
+    page_ids: list[str] = []
+
+    def add_page(page_id) -> None:
+        if isinstance(page_id, str) and page_id and page_id not in page_ids:
+            page_ids.append(page_id)
+
+    layers: list[str] = []
+    if variant == "page_copy":
+        for page in payload.get("pages") or []:
+            if isinstance(page, dict):
+                add_page(page.get("page_id"))
+        for page_id in payload.get("page_order") or []:
+            add_page(page_id)
+        layers = ["page_copy", "plan"]
+    elif variant == "speech":
+        for update in payload.get("updates") or []:
+            if isinstance(update, dict):
+                add_page(update.get("page_id"))
+        layers = ["speech"]
+    elif variant == "input_revision":
+        for layer in payload.get("changed_layers") or []:
+            if layer in ("narrative", "plan", "page_copy", "speech") and layer not in layers:
+                layers.append(layer)
+        for page_id in ((payload.get("diff") or {}).get("changed_page_ids") or []):
+            add_page(page_id)
+    elif variant == "narrative":
+        layers = ["narrative"] if payload.get("plan") is None else ["narrative", "plan"]
+    elif variant == "framing":
+        layers = ["narrative"]
+    if not page_ids:
+        page_ids = [pid for pid in (task.get("scope_pages") or []) if pid]
+    return {"page_ids": page_ids, "layers": layers}
+
+
+def _accept_targets(envelope: dict, task: dict) -> dict:
+    """The write target an accepted result would touch (page ids + layers).
+
+    A compose result writes page copy; a review result writes review records;
+    artifact specs map onto their layers. Pages come from the envelope and fall
+    back to the task's own scope, so an out-of-scope page can never be adopted
+    silently on an enforced project. compose.v2 keeps its write set inside the
+    variant payload, so it gets its own extraction.
+    """
+    if envelope.get("schema_version") == COMPOSE_V2_SCHEMA:
+        return _compose_v2_targets(envelope.get("variant"), envelope.get("payload") or {}, task)
+    page_ids: list[str] = []
+    content_update = envelope.get("content_update") or {}
+    for page in (envelope.get("pages") or []):
+        if isinstance(page, dict) and page.get("page_id") and page["page_id"] not in page_ids:
+            page_ids.append(page["page_id"])
+    for page_id in content_update.get("page_order") or []:
+        if page_id not in page_ids:
+            page_ids.append(page_id)
+    for page_id in content_update.get("remove_page_ids") or []:
+        if page_id not in page_ids:
+            page_ids.append(page_id)
+    if not page_ids:
+        page_ids = [pid for pid in (task.get("scope_pages") or []) if pid]
+    layers: list[str] = []
+    if envelope.get("pages") or content_update:
+        layers.append("page_copy")
+    if envelope.get("content_plan"):
+        layers.append("plan")
+    if envelope.get("reviews"):
+        layers.append("review")
+    role_layers = {"blueprint": "blueprint", "svg": "svg", "ppt": "output",
+                   "page": "page_copy", "content": "page_copy",
+                   "original_image": "blueprint", "prepared_prompt": "blueprint",
+                   "submitted_prompt": "blueprint"}
+    for spec in envelope.get("artifact_specs") or []:
+        layer = role_layers.get((spec or {}).get("role"))
+        if layer and layer not in layers:
+            layers.append(layer)
+    return {"page_ids": page_ids, "layers": layers}
+
+
+OBSERVATION_TASK_KINDS = ("review", "style_analyze")
+
+
+def _record_only(envelope: dict, task: dict) -> bool:
+    """A result that only records review observations (no production write).
+
+    Recording what was reviewed is a fact about artifacts that already exist, so
+    it stays available to the observation tasks. The exemption is deliberately
+    narrow: the task itself must be a review/analysis task, and the envelope must
+    carry no pages, artifact specs, plan or content update — a production task
+    can never use this door to write state.
+    """
+    if task.get("kind") not in OBSERVATION_TASK_KINDS:
+        return False
+    if envelope.get("pages") or envelope.get("content_update") \
+            or envelope.get("content_plan") or envelope.get("artifact_specs"):
+        return False
+    return bool(envelope.get("reviews"))
+
+
 def accept_result(store: Store, **kwargs) -> dict:
     """Serialize replay detection, call settlement and adoption on one project."""
     with store._locked():
@@ -1111,6 +1215,16 @@ def _accept_result_locked(
         store._commit_locked(blobs=[], base_revision=document["revision_id"], document=settled_doc,
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
+    # The adoption half of accept_result consumes the same judgement as every
+    # other boundary (CONTRACTS §6.1 exception): the call facts above already
+    # settled in their own committed revision, so a refusal here keeps the cost
+    # and leaves the current draft untouched.
+    from . import eligibility
+    adoption = eligibility.evaluate(store, document, document, "task.accept",
+                                    {"task": task, "targets": _accept_targets(envelope, task),
+                                     "record_only": _record_only(envelope, task)})
+    if adoption["enforcement"] == "active" and not adoption["allowed"]:
+        raise eligibility.EligibilityBlocked(adoption)
     if task["kind"] == "style_analyze":
         from .generation import check_host
         check_host(task)
@@ -1387,12 +1501,19 @@ def _project_transaction(function):
     return locked
 
 
-def reserve_allowances(store, document, task, count):
+def reserve_allowances(store, document, task, count, *, action="allowance.allocate"):
     """Build an updated task using the locked current project ledger."""
-    if task.get("kind") == "style_analyze":
-        raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
+    from . import eligibility
     if not isinstance(count, int) or isinstance(count, bool) or count < 1:
         raise EnvelopeError("(allocate)/count", "count must be a positive integer")
+    # The requested amount travels with the unified budget judgement: a batch
+    # request must fit under the bound authorization chain's remaining credit,
+    # not just find the ledger "available" (external review F04).
+    eligibility.guard(store, document, action,
+                      context={"task": task, "count": count,
+                               "targets": {"page_ids": task.get("scope_pages") or []}})
+    if task.get("kind") == "style_analyze":
+        raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
     if task.get("status") not in ("awaiting_host", "running", "queued"):
         raise TaskConflict("(allocate)", "allowances require an active task")
     if task.get("change_binding"):
@@ -1432,6 +1553,10 @@ def allocate_call_allowances(
     """
     document = store.load_document()
     task = _lookup_task(document, task_id, store)
+    from . import eligibility
+    eligibility.guard(store, document, "allowance.allocate",
+                      context={"task": task,
+                               "targets": {"page_ids": task.get("scope_pages") or []}})
     updated_task, allocated_ids = reserve_allowances(store, document, task, count)
     validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
@@ -1473,7 +1598,7 @@ def repair_empty_allowance(store, *, task_id):
         if content_identity(comparable) != content_identity(original):
             raise TaskConflict("(repair)", "stale blueprint inputs")
         task = {**task, "produced_against": content_identity(document)}
-    updated, _ = reserve_allowances(store, document, task, 1)
+    updated, _ = reserve_allowances(store, document, task, 1, action="allowance.repair")
     ref = store.put_json_object(updated)
     bumped = bump_revision(document, {"operation_id": f"repair-allowance-{uuid.uuid4().hex}", "kind": "task_update", "description": "repair empty allowance", "read_set": []})
     bumped = _replace_task_ref(bumped, task, ref, store)
@@ -1498,6 +1623,10 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     task = _lookup_task(document, task_id, store)
     if task.get("kind") == "style_analyze":
         raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
+    from . import eligibility
+    eligibility.guard(store, document, "call.begin",
+                      context={"task": task, "allowance_id": allowance_id,
+                               "targets": {"page_ids": task.get("scope_pages") or []}})
     from .generation import is_new, check_host, begin_attempt
     check_host(task)
     if task.get("status") in ("cancelled", "superseded", "completed"):
@@ -1645,6 +1774,11 @@ def call_settle(
         )
     document = store.load_document()
     task = _lookup_task(document, task_id, store)
+    # Settlement records an already-observed fact: it consumes the decision for
+    # reporting but is never refused (CONTRACTS §7.1 keeps settlement available
+    # while paused or after a withdrawal).
+    from . import eligibility
+    eligibility.guard(store, document, "call.settle", context={"task": task})
     allowances = [dict(entry) for entry in (task.get("call_allowances") or [])]
     target = next((entry for entry in allowances if entry.get("allowance_id") == allowance_id), None)
     if target is None:

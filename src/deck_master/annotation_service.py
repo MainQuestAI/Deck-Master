@@ -85,6 +85,9 @@ def save(project, *, input, base_revision, operation_id):
     store = Store(project_path(project))
     with store._locked():
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "annotation.save",
+                          context={"targets": {"layers": ["review"]}})
         digest = operations.request_digest(document, 'annotations.save', base_revision, input)
         previous = operations.recover(store, operation_id, digest)
         if previous:

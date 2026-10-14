@@ -26,8 +26,12 @@ def _instruction(store, seed="instruction") -> dict:
 
 
 def _scope(**over) -> dict:
+    # A full_deck request carries the layers its flow legitimately writes;
+    # the preproduction review is required for new-argument work (§6.3), so
+    # the review layer sits inside the request scope from the start.
     scope = {"subject": "deck", "page_ids": [], "page_manifest_ref": None,
-             "external_artifact_ref": None, "layers": ["narrative", "plan", "page_copy", "speech"],
+             "external_artifact_ref": None,
+             "layers": ["narrative", "plan", "page_copy", "speech", "review"],
              "allow_page_membership_change": True, "allow_page_order_change": False,
              "purpose": "working"}
     scope.update(over)

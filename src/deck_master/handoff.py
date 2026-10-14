@@ -19,6 +19,12 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
 
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
+    if purpose == "delivery":
+        from . import eligibility
+        decision = eligibility.evaluate(store, document, document, "handoff.delivery",
+                                        {"expected_output_ref": (document.get("outputs") or {}).get("pptx")})
+        if decision["enforcement"] == "active" and not decision["allowed"]:
+            raise eligibility.EligibilityBlocked(decision)
     output_ref = (document.get("outputs") or {}).get("pptx")
     expected_hash = None
     if output_ref:

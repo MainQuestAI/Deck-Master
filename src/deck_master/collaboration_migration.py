@@ -93,6 +93,8 @@ def apply(project, *, base_revision: str, plan_digest: str, operation_id: str) -
     @tasks_mod._project_transaction
     def locked(store: Store):
         document = store.load_document()
+        from . import eligibility
+        eligibility.guard(store, document, "migration.apply")
         digest = collaboration.payload_digest(_MIGRATION_ACTION, {"plan_digest": plan_digest})
         # CONTRACTS §6.1: replay-before-CAS, like every other collaboration write.
         replay = collaboration.replay_or_conflict(store, document, operation_id,

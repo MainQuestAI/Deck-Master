@@ -394,6 +394,17 @@ def create(project, *, purpose="review", revision=None, export_id=None, output_d
         export_id = "export-" + str(uuid.uuid4())
     _id(export_id)
     store, doc, identity = _context(project, revision)
+    if purpose == "delivery":
+        # One delivery judgement for every entry (CONTRACTS §8): the selected
+        # artifact snapshot read under the current control determines whether
+        # this delivery is authorized and professionally evidenced.
+        from . import eligibility
+        action = "delivery.historical" if revision else "export.delivery"
+        control = store.load_document()
+        decision = eligibility.evaluate(store, doc, control, action,
+                                        {"expected_output_ref": (doc.get("outputs") or {}).get("pptx")})
+        if decision["enforcement"] == "active" and not decision["allowed"]:
+            raise eligibility.EligibilityBlocked(decision)
     cache = safe_path(store.project_root, ".deckmaster", "workbench", "exports")
     cache.mkdir(parents=True, exist_ok=True)
     final = safe_path(cache, export_id)

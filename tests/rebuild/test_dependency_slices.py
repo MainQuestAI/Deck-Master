@@ -19,8 +19,10 @@ def _ref(seed: str) -> dict:
 
 
 def _scope(**over) -> dict:
-    scope = {"subject": "pages", "page_ids": [], "page_manifest_ref": None,
-             "external_artifact_ref": None, "layers": ["narrative"],
+    # T04: the fixture's request names the pages/layers its tests actually
+    # edit (a direct page edit now consumes the same eligibility judgement).
+    scope = {"subject": "pages", "page_ids": ["p1", "p2"], "page_manifest_ref": None,
+             "external_artifact_ref": None, "layers": ["narrative", "page_copy"],
              "allow_page_membership_change": False, "allow_page_order_change": False,
              "purpose": "exploratory"}
     scope.update(over)
@@ -128,6 +130,8 @@ def test_audience_change_invalidates_its_dependents_only(tmp_path):
 
 
 def test_single_page_edit_stales_only_that_pages_slice(tmp_path):
+    # T04: a direct page edit is an adoption boundary, so the fixture's work
+    # request (below) authorizes these pages and the page_copy layer.
     project, store = _project(tmp_path)
     p1_basis = _page_slice(store, "p1")
     decision = _record_decision(project, store, basis=[p1_basis])

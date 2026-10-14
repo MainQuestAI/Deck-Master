@@ -162,6 +162,11 @@ def commit(project, *, plan_id, base_revision, operation_id):
             return previous
         if base_revision != doc['revision_id'] or planned != _plan(store, doc, planned['input']):
             fail('base_revision', 'content plan changed; no pages were changed', conflict=True)
+        from . import eligibility
+        eligibility.guard(store, doc, "content.operation", context={
+            "targets": {"page_ids": [item.get('page_id') for item in planned['input'].get('pages') or []
+                                     if isinstance(item, dict) and item.get('page_id')],
+                        "layers": ["page_copy"]}})
         value = planned['input']; action = value['action']; ids = [t['page_id'] for t in value['targets']]
         trial = value.get('mode', 'auto') == 'trial' and action in HOST_ACTIONS
         updated = bump_revision(copy.deepcopy(doc), {'operation_id': operation_id, 'kind': 'content_update', 'description': value['instruction'], 'read_set': []})
