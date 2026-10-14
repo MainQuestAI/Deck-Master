@@ -1,0 +1,480 @@
+{
+  "schema_version": "anonymous_content_judgment_read_log.v1",
+  "created_at_utc": "2026-10-14T15:44:33.260962+00:00",
+  "identity": {
+    "canonical_task_identity": "/root/anchor_judge_b",
+    "evaluator_type": "independent_model_content_evaluator",
+    "human_identity": null,
+    "human_professional_approval_claimed": false,
+    "platform_event_id": "unknown",
+    "platform_signature": "unknown",
+    "model_configuration": {
+      "exact_model_id": "unknown",
+      "temperature": "unknown",
+      "seed": "unknown",
+      "reasoning_effort": "unknown"
+    },
+    "identity_basis": "canonical任务身份来自本轮NEW_TASK；缺失的平台配置不推断。"
+  },
+  "input_file_hashes": [
+    {
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "raw_bytes": 44584,
+      "sha256": "daceb1786003642f7c2c3ce97f882bc294abff31ecd9afc4e1d4a8a2d904f63b",
+      "expected_sha256": "daceb1786003642f7c2c3ce97f882bc294abff31ecd9afc4e1d4a8a2d904f63b",
+      "expected_hash_match": true
+    },
+    {
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/instructions.txt",
+      "raw_bytes": 1660,
+      "sha256": "4aeb60e14cc07e88cf70425c4926314f66408b98dfad19ffee6347c49baae423"
+    }
+  ],
+  "allowed_reads": [
+    "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+    "/workspace/work/rc3/anchor-blind/judge-b/instructions.txt"
+  ],
+  "actual_content_read_files": [
+    "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+    "/workspace/work/rc3/anchor-blind/judge-b/instructions.txt"
+  ],
+  "read_records": [
+    {
+      "read_sequence": 1,
+      "tool": "exec_command",
+      "tool_chunk_id": "3147f0",
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/instructions.txt",
+      "operation": "cat full file",
+      "scope": "全文",
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 2,
+      "tool": "exec_command",
+      "tool_chunk_id": "4abfd1",
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "operation": "read raw bytes; sha256; parse top-level keys/counts",
+      "scope": "原始字节全读；此步骤只展示结构，不当作内容全读",
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 3,
+      "tool": "exec_command",
+      "tool_chunk_id": "96b781",
+      "paths": [
+        "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+        "/workspace/work/rc3/anchor-blind/judge-b/instructions.txt"
+      ],
+      "operation": "instructions raw sha256; packet raw parse; display full schema_version/rubric/reading_rules/output_requirements; context and candidate structures",
+      "scope": [
+        "/schema_version",
+        "/rubric",
+        "/reading_rules",
+        "/output_requirements"
+      ],
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 4,
+      "tool": "exec_command",
+      "tool_chunk_id": "63af3c",
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "operation": "display complete training context",
+      "scope": "/contexts/context-9ddcb48240 全部purpose、S1–S3、shared_visible_footer、P1–P6 visible及speaker_text",
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 5,
+      "tool": "exec_command",
+      "tool_chunk_id": "5be409",
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "operation": "display complete business context including complete original pages JSON string",
+      "scope": "/contexts/context-4186b70348 全部purpose、S1–S3与完整六页title/body_blocks/notes",
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 6,
+      "tool": "exec_command",
+      "tool_chunk_id": "7c9555",
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "operation": "display complete study context",
+      "scope": "/contexts/context-ca8f8d3859 全部purpose、S1–S2与完整P1–P6上屏稿；独立阅读稿无另设speaker_text",
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 7,
+      "tool": "exec_command",
+      "tool_chunk_id": "7b7d0f",
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "operation": "display complete candidates indices 0 through 7",
+      "scope": "/candidates/0–7 所有sample_id/context_id/candidate_segments；包含完整sample-11e006040021六页",
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 8,
+      "tool": "exec_command",
+      "tool_chunk_id": "8aee66",
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "operation": "display complete candidates indices 8 through 15",
+      "scope": "/candidates/8–15 所有sample_id/context_id/candidate_segments；包含完整sample-082c77f056c3六页正文与notes",
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 9,
+      "tool": "exec_command",
+      "tool_chunk_id": "514e18",
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "operation": "reparse permitted packet; exact equality checks and completeness counts",
+      "scope": "四项候选与基准逐字相等校验；三个情境、16候选、17片段覆盖清点。不是替代全文阅读。",
+      "output_truncated": false
+    },
+    {
+      "read_sequence": 10,
+      "tool": "exec_command",
+      "tool_chunk_id": "unknown_at_serialization",
+      "paths": [
+        "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+        "/workspace/work/rc3/anchor-blind/judge-b/instructions.txt"
+      ],
+      "operation": "re-read both raw inputs, verify expected packet hash, parse quote locations, assert all cited excerpts occur, construct and exclusively create only two authorized outputs",
+      "scope": "完整输入原始字节核验；每个引用在对应来源/候选字段匹配；本次输出生成",
+      "output_truncated": false
+    }
+  ],
+  "coverage": {
+    "top_level_fields_all_read": [
+      "schema_version",
+      "rubric",
+      "reading_rules",
+      "contexts",
+      "candidates",
+      "output_requirements"
+    ],
+    "rubric_full_read": true,
+    "reading_rules_full_read": true,
+    "output_requirements_full_read": true,
+    "contexts": [
+      {
+        "context_id": "context-9ddcb48240",
+        "purpose_full_read": true,
+        "materials": [
+          {
+            "source_id": "S1",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S2",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S3",
+            "full_text_read": true
+          }
+        ],
+        "all_baseline_fields_full_read": true,
+        "shared_visible_footer_read": true,
+        "baseline_pages": [
+          {
+            "page_id": "P1",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P2",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P3",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P4",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P5",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P6",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          }
+        ]
+      },
+      {
+        "context_id": "context-4186b70348",
+        "purpose_full_read": true,
+        "materials": [
+          {
+            "source_id": "S1",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S2",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S3",
+            "full_text_read": true
+          }
+        ],
+        "all_baseline_fields_full_read": true,
+        "baseline_pages": [
+          {
+            "page_id": "p1",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p2",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p3",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p4",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p5",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p6",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          }
+        ]
+      },
+      {
+        "context_id": "context-ca8f8d3859",
+        "purpose_full_read": true,
+        "materials": [
+          {
+            "source_id": "S1",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S2",
+            "full_text_read": true
+          }
+        ],
+        "all_baseline_fields_full_read": true,
+        "baseline_pages": [
+          {
+            "page_id": "P1",
+            "complete_visible_content_read": true
+          },
+          {
+            "page_id": "P2",
+            "complete_visible_content_read": true
+          },
+          {
+            "page_id": "P3",
+            "complete_visible_content_read": true
+          },
+          {
+            "page_id": "P4",
+            "complete_visible_content_read": true
+          },
+          {
+            "page_id": "P5",
+            "complete_visible_content_read": true
+          },
+          {
+            "page_id": "P6",
+            "complete_visible_content_read": true
+          }
+        ],
+        "speaker_text": "not present in input; no notes substituted for visible text"
+      }
+    ],
+    "candidates": [
+      {
+        "index": 0,
+        "sample_id": "sample-68feec78e381",
+        "context_id": "context-9ddcb48240",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 2,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 1,
+        "sample_id": "sample-0dc00253f19c",
+        "context_id": "context-9ddcb48240",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 2,
+        "sample_id": "sample-135a4f57c35b",
+        "context_id": "context-ca8f8d3859",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 3,
+        "sample_id": "sample-11e006040021",
+        "context_id": "context-ca8f8d3859",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 4,
+        "sample_id": "sample-eb18b07b7e54",
+        "context_id": "context-4186b70348",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 5,
+        "sample_id": "sample-259f9d58d9f5",
+        "context_id": "context-4186b70348",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 6,
+        "sample_id": "sample-50acef48fae6",
+        "context_id": "context-ca8f8d3859",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 7,
+        "sample_id": "sample-40dea7b4ff07",
+        "context_id": "context-9ddcb48240",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 8,
+        "sample_id": "sample-ae2bc0d20f86",
+        "context_id": "context-4186b70348",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 9,
+        "sample_id": "sample-4290f7688ae8",
+        "context_id": "context-ca8f8d3859",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 10,
+        "sample_id": "sample-b272d28e07fe",
+        "context_id": "context-4186b70348",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 11,
+        "sample_id": "sample-8d47dd9da007",
+        "context_id": "context-4186b70348",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 12,
+        "sample_id": "sample-082c77f056c3",
+        "context_id": "context-4186b70348",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 13,
+        "sample_id": "sample-ae9b716f0829",
+        "context_id": "context-9ddcb48240",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 14,
+        "sample_id": "sample-4f7504f5e1b1",
+        "context_id": "context-4186b70348",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      },
+      {
+        "index": 15,
+        "sample_id": "sample-684abe077770",
+        "context_id": "context-9ddcb48240",
+        "all_fields_full_read": true,
+        "candidate_segment_count": 1,
+        "all_candidate_segments_full_read": true
+      }
+    ],
+    "candidate_count": 16,
+    "candidate_segment_count": 17,
+    "content_output_truncation_encountered": false
+  },
+  "exact_text_checks": {
+    "sample_68_P2_matches_baseline_visible": true,
+    "sample_68_P4_matches_baseline_visible": true,
+    "sample_11_complete_visible_matches_baseline": true,
+    "sample_082_complete_pages_matches_baseline": true,
+    "every_cited_excerpt_matched_to_its_field": true
+  },
+  "exposure_and_contamination": {
+    "public_examples_previously_seen": false,
+    "other_judgments_seen": false,
+    "controller_or_repository_materials_seen": false,
+    "permitted_materials_seen": [
+      "本任务instructions.txt",
+      "本任务packet.json全部内容"
+    ],
+    "non_file_context_seen": [
+      "system/developer行为与工具说明",
+      "用户environment_context",
+      "本轮NEW_TASK中的程序性独立评判要求"
+    ],
+    "contamination_detected": false,
+    "limits": "只报告当前可见任务上下文与本轮实际读取；不声称平台隔离证明或不可观察的底层训练记忆。没有读另一评价、历史锚点、AGENTS、skills或其他文件。"
+  },
+  "freeze_order": "在任何分歧讨论或其他评价读取之前，独立初判与读取日志冻结。",
+  "authorized_outputs": [
+    {
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/output/initial-judgments.json",
+      "raw_bytes": 46536,
+      "sha256": "ca9044289887e75cd056d6f3430cd6d5374dfc9431ee68f2161117e0aa3e4b7b"
+    },
+    {
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/output/read-log.json",
+      "sha256": "自引用hash不写入日志；实际输出原始字节hash在native最终消息报告"
+    }
+  ],
+  "file_write_method": "exclusive create (xb); no input edits; hashes computed from exact serialized byte buffers written, without reading output contents",
+  "missing_configuration_or_event_ids": "unknown；未编造平台签名、人类身份或专业批准"
+}

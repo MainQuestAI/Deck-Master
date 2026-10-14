@@ -1,0 +1,50 @@
+{
+  "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+  "assurance": "host_attested",
+  "observed_at_utc": "2026-10-14T17:14:17.944617+00:00",
+  "spawn": {
+    "tool": "collaboration.spawn_agent",
+    "canonical_task_name": "/root/e1_q2_b_speech",
+    "returned_task_name": "/root/e1_q2_b_speech",
+    "fork_turns": "none",
+    "input_package": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/stages/04-speech"
+  },
+  "completion": {
+    "sender": "/root/e1_q2_b_speech",
+    "message_type": "FINAL_ANSWER",
+    "status_observation_tool": "collaboration.list_agents",
+    "observed_status": "completed",
+    "observed_completed_agents": [
+      "/root/e1_q1_b_speech",
+      "/root/e1_q2_a_speech",
+      "/root/e1_q2_b_speech",
+      "/root/rc3_scope_audit"
+    ],
+    "raw_final_message": "原真实输出的重启后只读核验，额外 verification native turn 1，未重新生成。\n\n真实当前 canonical：`/root/e1_q2_b_speech`\n\n原输出：`/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/stages/04-speech/model-output.json`  \nSHA-256：`6024bf01cbc09cc4b39bfb3352f1af217049b21d336d841fbd71cdb618f0dfae`\n\n方法记录：`/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/stages/04-speech/method-read-record.json`  \nSHA-256：`ada87620ea98152b62a805a814f2d856a2a468410265b8e235f2a44605e9514f`\n\n两项 SHA、原 Task `853fd1df2089`、八页固定 Page Ref 及当前安装方法字节均匹配。方法 basis：`78372f029cf942cc34ab43f48a343a4c753acf87b719bb3bb068bc0809dc06b5`。\n\n本轮仅只读核验；未重新 claim、写文件或 accept/adopt。模型具体配置及实测试讲计时：`unknown`。"
+  },
+  "project_id": "actual-q2",
+  "task_id": "853fd1df2089",
+  "method_release": {
+    "release_id": "1fb3ddacbb75-7a5140186dc3",
+    "methods_sha256": "78372f029cf942cc34ab43f48a343a4c753acf87b719bb3bb068bc0809dc06b5"
+  },
+  "model_output_bytes_sha256": "6024bf01cbc09cc4b39bfb3352f1af217049b21d336d841fbd71cdb618f0dfae",
+  "method_read_record": {
+    "path": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/stages/04-speech/method-read-record.json",
+    "sha256": "ada87620ea98152b62a805a814f2d856a2a468410265b8e235f2a44605e9514f"
+  },
+  "native_configuration": {
+    "model": "unknown",
+    "reasoning": "unknown",
+    "seed": "unknown",
+    "tokens": "unknown"
+  },
+  "limits": "Root directly observed native tool responses; no platform signature or human/verified-user assurance.",
+  "followup": {
+    "tool": "collaboration.followup_task",
+    "target": "/root/e1_q2_b_speech",
+    "purpose": "readonly verification of previously genuine native output after environment restart; previous FINAL received but old roster unknown; original output unchanged; verification native turn1",
+    "original_generation_repeated": false
+  },
+  "followup_event_source_field": "continuation"
+}

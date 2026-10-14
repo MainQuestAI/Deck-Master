@@ -21,6 +21,10 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
     artifacts = {}
     subject_info = {}
     current_refs = {}
+    for role in ('narrative', 'content_plan'):
+        ref = doc.get(role)
+        if ref:
+            current_refs[(ref['path'], ref['sha256'])] = (None, role)
     for entry in doc.get('pages') or []:
         for role in ('page', 'blueprint', 'svg', 'svg_preview', 'ppt_preview'):
             ref = entry.get(role)
@@ -43,6 +47,7 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
                      if (ref := entry.get(role))]
     if pptx_ref:
         subject_refs.append(pptx_ref)
+    subject_refs += [ref for role in ('narrative', 'content_plan') if (ref := doc.get(role))]
     for ref in subject_refs:
         if not isinstance(ref, dict) or 'path' not in ref or 'sha256' not in ref:
             continue
@@ -56,10 +61,49 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
                 content_sha = obj['file']['sha256']
             elif obj.get('schema_version') == 'deck_page_package.v2':
                 role, page_id, content_sha = 'page', obj.get('page_id'), ref['sha256']
+            elif obj.get('schema_version') == 'narrative.v1':
+                role, page_id, content_sha = 'narrative', None, ref['sha256']
+            elif obj.get('schema_version') == 'content_plan.v2':
+                role, page_id, content_sha = 'content_plan', None, ref['sha256']
             else:
                 continue
             info = {'role': role, 'page_id': page_id,
                     'file_sha': content_sha, 'current': key in current_refs}
+            # Ephemeral interpretation of actual immutable manuscript objects.
+            # A deck-level preproduction fix needs changed content, not only a
+            # version/previous_ref or production-note hash change. No extra
+            # state is written to the Store and legacy file hashes stay intact.
+            if role == 'narrative':
+                body = {k: obj.get(k) for k in ('communication_job',
+                        'central_node_id', 'nodes', 'edges', 'issues', 'alternatives')}
+                body['nodes'] = [{k: v for k, v in node.items() if k != 'source_links'}
+                                 for node in obj.get('nodes') or []]
+                body['issues'] = [{k: v for k, v in issue.items()
+                                  if k not in ('resolution', 'resolution_ref')}
+                                 for issue in obj.get('issues') or []]
+            elif role == 'content_plan':
+                plan_input = copy.deepcopy(obj.get('input') or {})
+                for item in plan_input.get('page_roles') or []:
+                    item.pop('source_links', None)
+                for item in plan_input.get('issues') or []:
+                    item.pop('resolution', None)
+                    item.pop('resolution_ref', None)
+                body = {'input': plan_input}
+            elif role == 'page':
+                visual = obj.get('visual_spec') or {}
+                mapping = obj.get('content_mapping') or {}
+                body = {'customer_visible': obj.get('customer_visible'),
+                        'visual_semantics': {k: visual.get(k) for k in ('intent', 'nodes', 'edges')},
+                        'visible_mapping': [{k: v for k, v in link.items() if k != 'source_links'}
+                                            for link in mapping.get('visible_links') or []]}
+            else:
+                body = None
+            if body is not None:
+                info['semantic_sha'] = sha256_bytes(canonical_json_bytes(body))
+                speech_body = ({**body, 'speaker_notes': obj.get('speaker_notes'),
+                                'speech_segments': (obj.get('content_mapping') or {}).get('speech_segments')}
+                               if role == 'page' else body)
+                info['speech_semantic_sha'] = sha256_bytes(canonical_json_bytes(speech_body))
             if role == 'pptx':
                 slide_pages = [dep['identity'] for dep in obj.get('dependencies') or []
                                if dep.get('kind') == 'svg' and dep.get('identity')]

@@ -1,0 +1,44 @@
+{
+  "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+  "assurance": "host_attested",
+  "observed_at_utc": "2026-10-14T18:42:34.973708+00:00",
+  "spawn": {
+    "tool": "collaboration.spawn_agent",
+    "canonical_task_name": "/root/e1_q2_b_final_verify",
+    "returned_task_name": "/root/e1_q2_b_final_verify",
+    "fork_turns": "none",
+    "input_package": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/verification/final-content-verification"
+  },
+  "completion": {
+    "sender": "/root/e1_q2_b_final_verify",
+    "message_type": "FINAL_ANSWER",
+    "status_observation_tool": "collaboration.list_agents",
+    "observed_status": "completed",
+    "observed_completed_agents": [
+      "/root/e1_q1_a_final_verify",
+      "/root/e1_q2_a_final_verify",
+      "/root/e1_q2_b_final_verify"
+    ],
+    "raw_final_message": "已 exclusive 创建本层 `model-output.json`，4 条 Review 均通过提供的 schema 校验。\n\n- 实际身份：`/root/e1_q2_b_final_verify`\n- 结论：argument、page_copy、progression、speech 均为本层 `preproduction/pass`。\n- 原 speech finding：按相同 review_id/kind/stage/finding_id/page_id 和实际旧 Ref，记录为 `accepted_variance`；未改稿、未伪造计时。完整试讲、Owner、听众、桌面及真实使用仍为 **NOT_RUN**。\n- 完整读取：全部指定规则、packet/current 稿、4 份 prior records、9 份 copied evidence、实际安装 5 份方法和返回工作单，以及新增 CAS 映射全文。核对 28 节点、52 关系、134 可见 atom、33 cue 段和 2527 码点；重复字段经等值验证无损展开。\n- 实际模型 ID、推理及采样配置：`unknown`。\n\n输出路径：\n`/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/verification/final-content-verification/model-output.json`\n\nRaw SHA256：\n`ccf6308c06e8c66cc90ab46fcbeab472f89022f15e93e7db16dc9d54c2230a6a`\n\nMethod-read record：\n`/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/verification/final-content-verification/method-read-record.json`\n\nRecord SHA256：\n`8a34b26319cd5e97c15bf3a3e278f508eb66b316935aaa95999b436578af3cde`"
+  },
+  "project_id": "actual-q2",
+  "task_id": "cbb6f8bbf84a",
+  "method_release": {
+    "release_id": "cc6150da513c-d3adf8322b01",
+    "methods_sha256": "59f0e815805fb379f758554d944ce07c9aef27d54a736dabd2eb09e344368fc9"
+  },
+  "model_output_bytes_sha256": "ccf6308c06e8c66cc90ab46fcbeab472f89022f15e93e7db16dc9d54c2230a6a",
+  "method_read_record": {
+    "path": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/verification/final-content-verification/method-read-record.json",
+    "sha256": "8a34b26319cd5e97c15bf3a3e278f508eb66b316935aaa95999b436578af3cde"
+  },
+  "native_configuration": {
+    "model": "unknown",
+    "reasoning": "unknown",
+    "seed": "unknown",
+    "tokens": "unknown"
+  },
+  "actual_event_path": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/verification/final-content-verification/root-actual-event.json",
+  "actual_event_sha256": "b2d741f1a5b4b3b75c00466ce5d06f867d8cc1f0295391e24516de2e74283be4",
+  "limits": "Root directly observed actual native completion; no platform signature/human assurance."
+}

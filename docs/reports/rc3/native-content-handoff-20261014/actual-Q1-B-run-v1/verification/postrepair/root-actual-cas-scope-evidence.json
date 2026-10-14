@@ -1,0 +1,208 @@
+{
+  "classification": "same_already_supplied_scope_bytes_registered_as_CAS; neutral Ref placement clarification",
+  "scope_evidence": [
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/00-ACCEPTANCE.md",
+      "source_path": "/workspace/work/rc3/specs/docs/specs/deck-master-content-collaboration-v1.2/ACCEPTANCE.md",
+      "source_sha256": "7a04df70ac4d90dc253f712a108587a25a69f7cc33526c10874d03b73f64e9d1",
+      "role": "original_spec",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/7a/7a04df70ac4d90dc253f712a108587a25a69f7cc33526c10874d03b73f64e9d1.txt",
+        "sha256": "7a04df70ac4d90dc253f712a108587a25a69f7cc33526c10874d03b73f64e9d1"
+      },
+      "semantic_change": false
+    },
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/01-CONTRACTS.md",
+      "source_path": "/workspace/work/rc3/specs/docs/specs/deck-master-content-collaboration-v1.2/CONTRACTS.md",
+      "source_sha256": "488055f07f512a21721b0b198241808ea108675021a0c485d7c56a52d912deff",
+      "role": "original_spec",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/48/488055f07f512a21721b0b198241808ea108675021a0c485d7c56a52d912deff.txt",
+        "sha256": "488055f07f512a21721b0b198241808ea108675021a0c485d7c56a52d912deff"
+      },
+      "semantic_change": false
+    },
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/02-EXAMPLES.md",
+      "source_path": "/workspace/work/rc3/specs/docs/specs/deck-master-content-collaboration-v1.2/EXAMPLES.md",
+      "source_sha256": "7409f5ee541b73be6b7278810c4e9e45db6837b23a9a11f0342b830a4ec78457",
+      "role": "original_spec",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/74/7409f5ee541b73be6b7278810c4e9e45db6837b23a9a11f0342b830a4ec78457.txt",
+        "sha256": "7409f5ee541b73be6b7278810c4e9e45db6837b23a9a11f0342b830a4ec78457"
+      },
+      "semantic_change": false
+    },
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/03-RC3-01.md",
+      "source_path": "/workspace/work/rc3/specs/docs/specs/deck-master-v1.0.0-rc3/task-cards/RC3-01.md",
+      "source_sha256": "fd76ecef219f2c999073018cc50971562ea2f1626943b45311b05a3f759faedc",
+      "role": "original_spec",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/fd/fd76ecef219f2c999073018cc50971562ea2f1626943b45311b05a3f759faedc.txt",
+        "sha256": "fd76ecef219f2c999073018cc50971562ea2f1626943b45311b05a3f759faedc"
+      },
+      "semantic_change": false
+    },
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/04-rc3-01-preproduction-scope-audit.md",
+      "source_path": "/workspace/work/rc3/reviews/rc3-01-preproduction-scope-audit.md",
+      "source_sha256": "445e272010887fee3c49873870e9fff564b0bc412e043335954a22317731e601",
+      "role": "independent_scope_audit",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/44/445e272010887fee3c49873870e9fff564b0bc412e043335954a22317731e601.txt",
+        "sha256": "445e272010887fee3c49873870e9fff564b0bc412e043335954a22317731e601"
+      },
+      "semantic_change": false
+    },
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/05-actual-user-acceptance-deferral.json",
+      "source_path": "/workspace/work/rc3/actual-content-runner/actual-user-acceptance-deferral.json",
+      "source_sha256": "1285f2361a83091c22b60756706134ff6d6a8d73aa242aa06ea323c2cb0d1a8e",
+      "role": "actual_user_acceptance_deferral",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/12/1285f2361a83091c22b60756706134ff6d6a8d73aa242aa06ea323c2cb0d1a8e.txt",
+        "sha256": "1285f2361a83091c22b60756706134ff6d6a8d73aa242aa06ea323c2cb0d1a8e"
+      },
+      "semantic_change": false
+    },
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/06-root-original-control-projection.json",
+      "source_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/root-original-control-projection.json",
+      "source_sha256": "0cabdcb1f98a54a73a8b93be5248df1323ed206d416f38b0aa57bee70af1c78e",
+      "role": "actual_root_observation",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/0c/0cabdcb1f98a54a73a8b93be5248df1323ed206d416f38b0aa57bee70af1c78e.txt",
+        "sha256": "0cabdcb1f98a54a73a8b93be5248df1323ed206d416f38b0aa57bee70af1c78e"
+      },
+      "semantic_change": false
+    },
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/07-adopted-argument.json",
+      "source_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/adopted-argument.json",
+      "source_sha256": "13b66c8e043c67154e6337721ba85a542fffe17e19d45d7c6747e6c1ed00d7e9",
+      "role": "actual_root_observation",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/13/13b66c8e043c67154e6337721ba85a542fffe17e19d45d7c6747e6c1ed00d7e9.txt",
+        "sha256": "13b66c8e043c67154e6337721ba85a542fffe17e19d45d7c6747e6c1ed00d7e9"
+      },
+      "semantic_change": false
+    },
+    {
+      "copied_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/verification/postrepair/scope-evidence/08-accepted-direction-message.json",
+      "source_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-B-run-v1/accepted-direction-message.json",
+      "source_sha256": "12b2e1750dc0e741ef715be9aebccfe36d22a8697c08955f4fe2a5db62ebfa8f",
+      "role": "actual_root_observation",
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/12/12b2e1750dc0e741ef715be9aebccfe36d22a8697c08955f4fe2a5db62ebfa8f.txt",
+        "sha256": "12b2e1750dc0e741ef715be9aebccfe36d22a8697c08955f4fe2a5db62ebfa8f"
+      },
+      "semantic_change": false
+    }
+  ],
+  "existing_historical_control_objects": [
+    {
+      "actual_store_ref": {
+        "path": ".deckmaster/objects/b1/b1178a49ec26489f30df2dd111cee268a5308f01dcab9ba385f7cff3eeadbde7.json",
+        "sha256": "b1178a49ec26489f30df2dd111cee268a5308f01dcab9ba385f7cff3eeadbde7"
+      },
+      "raw_sha256": "b1178a49ec26489f30df2dd111cee268a5308f01dcab9ba385f7cff3eeadbde7",
+      "object": {
+        "authority_mode": "direct_user",
+        "basis": [
+          {
+            "identity": "audience",
+            "kind": "task_fact",
+            "projection": "value",
+            "ref": null,
+            "sha256": "70d976253483178cb3145ee70210c43d565ecfd20fd4a5d6c395b08f330cfd32"
+          },
+          {
+            "identity": "brief",
+            "kind": "task_fact",
+            "projection": "value",
+            "ref": null,
+            "sha256": "eb8fbdc1cb24d76dbaa256444a31a98296942dd86547af911b61b3b184559e14"
+          }
+        ],
+        "created_at": "2026-10-14T16:13:57Z",
+        "decision_id": "dec-193ceb783fe5",
+        "delegation_ref": null,
+        "disposition": "accepted",
+        "evidence": {
+          "actor_id": "synthetic-scripted-owner-not-human",
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "full frozen synthetic controller message",
+          "source_ref": {
+            "path": ".deckmaster/objects/10/100be63b567e52e82742eb3a56c615824c28fc05738f1b68d8e2b0fe86e0dcd9.txt",
+            "sha256": "100be63b567e52e82742eb3a56c615824c28fc05738f1b68d8e2b0fe86e0dcd9"
+          },
+          "transport_receipt_ref": null
+        },
+        "invalidated_by": null,
+        "project_id": "actual-q1",
+        "replaces": null,
+        "request_id": "req-1fa78dee3c10",
+        "schema_version": "collaboration_decision.v1",
+        "scope": {
+          "allow_page_membership_change": true,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech",
+            "review"
+          ],
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "status": "active",
+        "subject_refs": [
+          {
+            "artifact_kind": "narrative",
+            "artifact_ref": {
+              "path": ".deckmaster/objects/2b/2beab28091fc7c186cad0e19f033668e7fa896c490ee80ed214509af2efa93ba.json",
+              "sha256": "2beab28091fc7c186cad0e19f033668e7fa896c490ee80ed214509af2efa93ba"
+            },
+            "projection": "direction"
+          },
+          {
+            "artifact_kind": "content_plan",
+            "artifact_ref": {
+              "path": ".deckmaster/objects/e4/e4e66cdf6826cb190c230990a6d95cb12b603c2a393091d5408705162a9c1249.json",
+              "sha256": "e4e66cdf6826cb190c230990a6d95cb12b603c2a393091d5408705162a9c1249"
+            },
+            "projection": "page_roles"
+          },
+          {
+            "artifact_kind": "content_plan",
+            "artifact_ref": {
+              "path": ".deckmaster/objects/e4/e4e66cdf6826cb190c230990a6d95cb12b603c2a393091d5408705162a9c1249.json",
+              "sha256": "e4e66cdf6826cb190c230990a6d95cb12b603c2a393091d5408705162a9c1249"
+            },
+            "projection": "page_order"
+          }
+        ],
+        "topic": "direction",
+        "value": {
+          "message": "主线按这个，样页先只做P5。"
+        }
+      },
+      "meaning": "Actual historical synthetic controller decision, not human approval or new production authority."
+    }
+  ],
+  "current_packet_ref": {
+    "path": ".deckmaster/objects/b4/b4544b317d01cc8ff993f30577e31fae9232f204398241cabeddda0121055bd6.json",
+    "sha256": "b4544b317d01cc8ff993f30577e31fae9232f204398241cabeddda0121055bd6"
+  },
+  "human_quality_receipt": null,
+  "no_new_facts_or_target_verdict": true,
+  "project_revision_unchanged_by_registration": true
+}

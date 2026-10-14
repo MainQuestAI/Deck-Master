@@ -1,0 +1,14 @@
+# diff_kind: frozen original raw statement/variant -> actual replacement text and scope
+# Not a product Git diff; no native Writer output or actual PPTX artifact is reconstructed.
+--- AN-Q3-1/frozen-original-error-description-or-text
++++ AN-Q3-1/actual-full-replacement-targets
+@@ -1 +1,8 @@
+-"卡片记忆效果 70% 完胜表格 67%，证明卡片更有效。"
++TARGET: P4 visible study comparison statement with complete retained table/limitations
++P4 标题：两个结果不能放在同一胜负榜上
++表格列：比较项、研究A、研究B。
++表格行：受众、有经验值班人员、新接单员；样本量、12人、20人；案例、A的标准案例、与A不同的案例；任务、定位版本限制、复述处理步骤；观察、8人报告表格更易定位、14人正确复述。
++结论：受众、案例和测量任务同时不同，8/12与14/20不构成表达方式优劣的直接比较。
++正文：两项合成观察分别为：研究 A 的 12 位有经验值班人员中，8 人更容易用表格找到版本限制；研究 B 的另一组 20 位新接单员中，14 人在不同案例的卡片材料后正确复述步骤。它们测的不是记忆效果；受众、案例和任务不同，不能据 8/12 与 14/20 宣布卡片优于表格或哪种方式整体更有效。
++来源：S1-study.txt第1–3行。
++

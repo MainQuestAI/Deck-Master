@@ -1,0 +1,691 @@
+{
+  "kind": "review",
+  "files": [],
+  "pages": [],
+  "page_order": [],
+  "artifact_specs": [],
+  "usage_events": [],
+  "notes": "实际 supplemental independent postrepair，实际canonical /root/e1_q1_a_final_verify。全文读取reviewer-instructions、完整packet/current-manuscript/prior-review-records（用全量无损重复对象定义展开，所有371定义均读取；截断处重新分块补读）、binding/schema/两份shared规则、scope manifest及全部9份copied evidence；九份SHA与manifest逐项一致。按真实身份claim-read，全文读取method-read-record.json全部4份实际安装method bytes和完整work_order，记录SHA=6f913707153c52d087e1859ef0a84062c3a1a4dccefe0c7bda720fca242536d3，method内容各自hash核验匹配。本层自主输出只写review envelope；已授权claim-read领取任务产生的Runtime元数据除外，没有改稿、accept、直接写Store/提交Review、SDK/人类receipt、Writer反馈或下一轮返修。当前page_copy有新开放F2；原三项F2均按当前修订fixed，原控制缺口仅在本轮内容前置范围accepted_variance。原始首稿/首审历史不被覆写，也不是原frozen E1或方法重新运行。AC-U03实际试讲、Owner/受众/视觉/PPTX/桌面均NOT_RUN；具体模型与推理配置未知。",
+  "reviews": [
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "Q1-A-independent-argument-postrepair-v1",
+      "kind": "argument",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+          "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+        },
+        {
+          "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        },
+        {
+          "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P01",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P02",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P03",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P04",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P05",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P06",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        },
+        {
+          "kind": "source",
+          "identity": "src-3b6aa1bf",
+          "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7db53fc5",
+          "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7c6c5ee2",
+          "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q1_a_final_verify",
+        "execution_ref": "/root/e1_q1_a_final_verify",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/18/18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9.json",
+          "sha256": "18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "实际 fresh Native 身份 /root/e1_q1_a_final_verify；未参与任何本稿作者执行或初审，已按实际身份完成本层 claim-read 并全文读取安装方法与工作单。独立身份的受信核验由实际执行观察承担；本条 host_attested 声明不是自造 SDK/人类 receipt。",
+        "完整读完 S1 L1–L3、S2 L1–L7、S3 L1–L2 和21个 Narrative节点/32条关系；当前 central_node_id=handoff-standard，目标是形成可接手记录。五项记录→未知及真实原因→信息状态和紧急条件分开→两条流转→已知/未知/下一步的关系支持新接单员训练任务，不套收益推销。",
+        "S1 只支持100条中38条首次缺版本、38/100=38%样本占比；P01及相应节点保留未测轮次/时长/解决率/其他字段完整情况和合成限定。S3两句是明确不采用的历史反例，未推导38%效率提升或所有请求补齐后才流转。",
+        "S2 L2–L7 支持五项完整记录、取不到版本写未知及具体原因且不猜测、紧急立即流转不等版本、普通未知不自动升级和交接不代表解决。真实条件/入口/岗位/修复动作及受众基础未知保留为明确范围限制；本课为合成规则教学，练习给定紧急状态，不填造操作参数。",
+        "目标/解释/限定的论证成立。page_copy 新 F2 是练习问题未完整执行 exercise-design/observable_success 的一个判断目标，未要求更换论证主线；本 argument pass 不代表全稿已可进入所需用途。",
+        "本次限于当前 preproduction 内容稿的 L3 判断。真实试讲及分项计时 AC-U03、Owner 接受、目标受众验证、真实视觉/PPTX/备注导出/桌面使用均 NOT_RUN；没有人类通过或使用成功。模型具体版本、推理配置、temperature/seed 未向本执行公开。"
+      ],
+      "findings": [],
+      "created_at": "2026-10-14T18:39:07.091108Z",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "Q1-A-independent-page_copy-v1",
+      "kind": "page_copy",
+      "review_stage": "preproduction",
+      "status": "fail",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+          "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+        },
+        {
+          "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        },
+        {
+          "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P01",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P02",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P03",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P04",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P05",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P06",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        },
+        {
+          "kind": "source",
+          "identity": "src-3b6aa1bf",
+          "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7db53fc5",
+          "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7c6c5ee2",
+          "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q1_a_final_verify",
+        "execution_ref": "/root/e1_q1_a_final_verify",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/18/18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9.json",
+          "sha256": "18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "实际 fresh Native 身份 /root/e1_q1_a_final_verify；未参与任何本稿作者执行或初审，已按实际身份完成本层 claim-read 并全文读取安装方法与工作单。独立身份的受信核验由实际执行观察承担；本条 host_attested 声明不是自造 SDK/人类 receipt。",
+        "全文逐页核对 customer_visible 的标题/副标题/正文/清单/labels/脚注/callout、全部 visual_spec、citations、internal_only 与完整 notes。P01/P02/P03/P04/P05/P06 分别8/10/9/10/8/7个可见原子，总52；各有一条实际 visible_link，source_id/原件SHA/extractRef/locator 和引用节点均存在。机械可定位性不代替下面语义判断。",
+        "P01保留样本的分子分母、效益反例与未测量边界；P02较疏五项清单有独立职责并保留“可取得”附件条件；P03把未知+原因和两种错误说明白，虚构原因有标签且真实记录不能照抄。三页不是占位分类页。",
+        "P04五个标签及四条条件边完整表达紧急/普通两条路径，并在可见正文保留既有条件、未知信息状态、不等版本、不自动升级、历史反例和真实操作缺口。P05三项核对整合记录和流转，明确交接并不表示故障解决。实际同屏阅读尚未渲染验证。",
+        "P06原先答案提前可见已实质修复；完整题面和作答后反馈都未删掉。但当前练习任务未要求学员独立判断交接与故障解决的区别，与本稿已声明的练习目标不一致，见新开放F2。",
+        "本次限于当前 preproduction 内容稿的 L3 判断。真实试讲及分项计时 AC-U03、Owner 接受、目标受众验证、真实视觉/PPTX/备注导出/桌面使用均 NOT_RUN；没有人类通过或使用成功。模型具体版本、推理配置、temperature/seed 未向本执行公开。"
+      ],
+      "findings": [
+        {
+          "actual": "当前 P06 customer_visible 只有题目、给定条件、作答要求和合成限定，callouts 为空；不再有 feedback/shared-record/a-feedback/b-feedback/final-check。七条 visible_links 只对应当前七个可见原子。visual_spec.layout_hint 明确静态题面在进入及60秒作答期间不出现答案，作答后答案仅由讲者交付；完整反馈保留在 speaker_notes 的 [208,415) 与 internal_only。",
+          "element_refs": [
+            "atom:P06:block:exercise-task:text",
+            "content_mapping.visible_links",
+            "visual_spec.layout_hint",
+            "speaker_notes:codepoints:208-415",
+            "internal_only.production_notes"
+          ],
+          "evidence": [
+            {
+              "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+              "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+            },
+            {
+              "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+              "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+            },
+            {
+              "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+              "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+            },
+            {
+              "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+              "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+            }
+          ],
+          "expected": "在 60 秒独立作答期间，学员只能看到给定条件与作答要求；作答后再取得反馈。保留合成限定、两条分支和后续完整反馈，继续满足六页范围。",
+          "finding_id": "Q1-A-PC-P06-F2-answer-visible",
+          "impact": "must_fix",
+          "kind": "content",
+          "message": "F2｜错误类型：练习答案提前可见。P06 局部缺陷影响约定的独立作答与理解观察；依据唯一 rubric，可在一页修复且不改变中心主张，因此不定为 F1。",
+          "page_id": "P06",
+          "resolution": "fixed",
+          "resolution_reason": "当前 Page P06 的字节和 Plan P06 role/required_qualifications/density_rationale 已实质修订；按全部可见正文、映射、表达规格与 notes 回读，原答案提前可见的内容规格 F2 已 fixed。没有把未执行的最终渲染当关闭证据；实际视觉生产是否遵守该规格仍需另验。"
+        },
+        {
+          "finding_id": "Q1-A-PC-P06-F2-handoff-boundary-probe-missing",
+          "kind": "content",
+          "impact": "must_fix",
+          "page_id": "P06",
+          "element_refs": [
+            "atom:P06:block:exercise-task:text",
+            "speech_segment:P06-speech-01",
+            "speech_segment:P06-speech-03",
+            "node:exercise-design",
+            "communication_job.observable_success"
+          ],
+          "message": "F2｜练习目标落实不全。当前论证要求学员在练习中辨别交接完成是否表示故障解决，但本页作答任务没有要求学员作这一判断；讲者在作答后直接给出边界，不能据此观察该项独立理解。它是可在一页局部补足的实质检查缺口，不需重建中心主张，也不推定真实学员已经误解。",
+          "expected": "作答前的可见任务与口播应明确要求学员判断交接完成能否证明故障已解决，并给出理由，随后才反馈；保持六页、60秒独立作答、完整反馈和预算一致。该判断应实际对应 Narrative.exercise-design 与 observable_success。",
+          "actual": "exercise-design 明写“并辨别交接完成是否表示故障解决”，observable_success 明写“并说明交接完成不表示故障已解决”。P06 exercise-task 仅要求版本及原因、路径/是否等版本、交接的已知未知下一步；P06-speech-01 [0,163) 重复这份任务后开始作答，没有交接与解决的判断问题。P06-speech-03 [208,415) 才由讲者说“也都不证明故障已解决”。P01/P05 已正确教过该限定，故这里不是事实被删除，而是已声明的观察目标未落实到练习要求。",
+          "evidence": [
+            {
+              "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+              "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+            },
+            {
+              "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+              "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+            },
+            {
+              "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+              "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+            },
+            {
+              "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+              "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+            },
+            {
+              "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+              "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+            }
+          ],
+          "resolution": "open",
+          "resolution_reason": "本次在当前全文中确证该局部缺口，未修改稿件、降低目标或把讲者给出的答案计为学员回答。需在另行获授权的后续工作中补足并复核题面/口播/预算；本次单轮结果保留开放 F2，不向 Writer 反馈或追加返修。"
+        }
+      ],
+      "created_at": "2026-10-14T18:39:07.091108Z",
+      "replaces": {
+        "path": ".deckmaster/objects/5b/5bdb9a499d55e144b962f61f3ab9f0a60d29c1a2bdbecfb6dc0ee4a9297eb7b0.json",
+        "sha256": "5bdb9a499d55e144b962f61f3ab9f0a60d29c1a2bdbecfb6dc0ee4a9297eb7b0"
+      }
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "Q1-A-independent-progression-v1",
+      "kind": "progression",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+          "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+        },
+        {
+          "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        },
+        {
+          "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P01",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P02",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P03",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P04",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P05",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P06",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        },
+        {
+          "kind": "source",
+          "identity": "src-3b6aa1bf",
+          "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7db53fc5",
+          "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7c6c5ee2",
+          "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q1_a_final_verify",
+        "execution_ref": "/root/e1_q1_a_final_verify",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/18/18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9.json",
+          "sha256": "18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "实际 fresh Native 身份 /root/e1_q1_a_final_verify；未参与任何本稿作者执行或初审，已按实际身份完成本层 claim-read 并全文读取安装方法与工作单。独立身份的受信核验由实际执行观察承担；本条 host_attested 声明不是自造 SDK/人类 receipt。",
+        "当前六页顺序与三章一致：目标和数字边界→五项→无法取得版本的写法→条件分流→交接→应用练习。各页保留独特职责和必要解释；notes 中 P01–P05 末句分别引出后页需要回答的问题，未发现需重建章节关系的断裂。",
+        "P06应用与反馈的先后顺序已有可执行的静态题面规格、明确cue及作答后完整口播；原顺序F2 fixed。另有 page_copy 的问题要求漏项，仍需局部补足；本推进结论不将其消除。",
+        "逐页50+60+75+100+65+130=480秒，P06含70秒讲述及60秒作答，页数为6；这些只是估算且无真实余量。确认缺口按原EXAMPLES与实际 content_only范围限定接受，不推定全套视觉或人类已确认。",
+        "本次限于当前 preproduction 内容稿的 L3 判断。真实试讲及分项计时 AC-U03、Owner 接受、目标受众验证、真实视觉/PPTX/备注导出/桌面使用均 NOT_RUN；没有人类通过或使用成功。模型具体版本、推理配置、temperature/seed 未向本执行公开。"
+      ],
+      "findings": [
+        {
+          "actual": "当前 P05 最后一句引向两条给定条件练习；P06 题面只交题目和任务，Plan P06 明确先独立作答再听完整反馈。notes 的三个连续段依次为作答指令 [0,163)、不口播60秒 cue [163,208)、作答后反馈 [208,415)。静态题面不含参考答案，关系不再依赖学员“暂不看”反馈。",
+          "element_refs": [
+            "plan:page_roles:P06",
+            "atom:P06:block:exercise-task:text",
+            "visual_spec.layout_hint",
+            "speech_segment:P06-speech-02",
+            "speech_segment:P06-speech-03",
+            "node:exercise-design"
+          ],
+          "evidence": [
+            {
+              "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+              "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+            },
+            {
+              "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+              "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+            },
+            {
+              "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+              "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+            },
+            {
+              "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+              "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+            },
+            {
+              "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+              "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+            }
+          ],
+          "expected": "P01–P05 的概念和规则讲解之后，P06 应先让学员应用规则形成答案，再提供反馈和自查；该先后关系应由可执行的页面表达和口播共同承担。",
+          "finding_id": "Q1-A-PROG-P06-F2-feedback-sequence",
+          "impact": "must_fix",
+          "kind": "content",
+          "message": "F2｜错误类型：局部教学顺序失效。全套页序可以保留，但当前最后一页把独立应用与反馈同时交付，妨碍从讲解推进到学员自行应用。依唯一 rubric，是一页可修的实质缺陷，不是章节级主线重建。",
+          "page_id": "P06",
+          "resolution": "fixed",
+          "resolution_reason": "已以当前 Page、Plan 及完整 notes 复核 P05→P06 与作答→反馈顺序，原先把应用和答案同时交付的局部教学顺序 F2 已 fixed。page_copy 中另有新发现的边界判断题漏项；本单元 pass 只说明现有页序和先后关系成立，不取消该新问题，也不证明受众效果。"
+        },
+        {
+          "actual": "原 packet 中缺少控制摘要确实不能证明用户确认。补读本层完整 scope evidence 后，原 EXAMPLES §2.1 明确在采用方向后“输出完整稿与审查发现”，满足内容条件才授 P5 视觉试作，之后新的明确指令才扩其他页。真实 copied 控制投影显示原请求 content_only/content_full、只含 narrative/plan/page_copy/speech/review，零视觉授权且所有视觉及输出槽为空；adopted-argument 记录实际方向决定及 c2 当前 Narrative 采用，同时明确 creates_confirmation=false、authorizes_production=false、visual_authorization_issued=false。accepted-direction 原文是合成脚本“主线按这个，样页先只做P5。”，不能算人类批准。",
+          "element_refs": [
+            "task.brief",
+            "task.existing_decisions",
+            "plan:issue:mainline-and-sample-review",
+            "plan:page_roles:P04",
+            "node:training-sequence"
+          ],
+          "evidence": [
+            {
+              "path": ".deckmaster/objects/18/18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9.json",
+              "sha256": "18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9"
+            },
+            {
+              "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+              "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+            },
+            {
+              "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+              "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+            },
+            {
+              "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+              "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+            }
+          ],
+          "expected": "若当前全套制作依赖该条件，应可核验主线和最密样稿对应版本的有效确认，或针对该条件的有效授权变更/委派；作者自身说明不能代替真实决定。",
+          "finding_id": "Q1-A-PROG-confirmation-evidence-gap",
+          "impact": "needs_judgment",
+          "kind": "content",
+          "message": "控制权核验缺口｜不能仅凭缺证直接断言已经发生 F0，也不能把本次内容审阅当作用户确认。原任务的“主线→最密一页样稿→确认后全套”是实质控制条件。",
+          "page_id": "P04",
+          "resolution": "accepted_variance",
+          "resolution_reason": "这是对原 needs_judgment 的本轮适用范围裁定：本轮六页完整内容稿属于主线采用后的前置写稿/独立审查，不是已经先行执行全套视觉制作，因此没有样页确认不阻止完成这个内容子任务。依据已完整读取并校验 SHA 的 scope-evidence/02-EXAMPLES.md §2.1（7409f5ee541b73be6b7278810c4e9e45db6837b23a9a11f0342b830a4ec78457）、06-root-original-control-projection.json（347bcca7f0b3be347b4e1f9a6a72a75a34a8c774427e9d4de8dc943a45c30fdc）、07-adopted-argument.json（37a0200103ebb86c30fa983b24e9a229fbfefdef8422c3ac3bed57fc224e7db5）和08-accepted-direction-message.json（9cb8e95cb5e69a40da41a1ce669741a50bab551df7f48adab23f4e0164853a48）。evidence 数组只用真实当前 CASRef，以上 copied path/SHA 是外部阅读依据，未冒充 CASRef。该接受不创造确认、视觉调用授权或人类认可：未来 P5 样页、余下页扩展和真实 Owner 仍需其实际依据；当前最密 P04 推荐亦不能替换原 P5 范围。独立 scope audit 仅为上下文，我按原条款与实际控制事实自行裁定。"
+        }
+      ],
+      "created_at": "2026-10-14T18:39:07.091108Z",
+      "replaces": {
+        "path": ".deckmaster/objects/ad/ad175c8c85acdb955daca92df240ff70fb20b120e6498aaf72ab6287ca99afb4.json",
+        "sha256": "ad175c8c85acdb955daca92df240ff70fb20b120e6498aaf72ab6287ca99afb4"
+      }
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "Q1-A-independent-speech-v1",
+      "kind": "speech",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+          "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+        },
+        {
+          "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        },
+        {
+          "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P01",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P02",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P03",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P04",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P05",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P06",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        },
+        {
+          "kind": "source",
+          "identity": "src-3b6aa1bf",
+          "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7db53fc5",
+          "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7c6c5ee2",
+          "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q1_a_final_verify",
+        "execution_ref": "/root/e1_q1_a_final_verify",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/18/18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9.json",
+          "sha256": "18182db857cb965f0624fcb4d018d03f077c17a01a22c02063e704e6041a59b9"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "实际 fresh Native 身份 /root/e1_q1_a_final_verify；未参与任何本稿作者执行或初审，已按实际身份完成本层 claim-read 并全文读取安装方法与工作单。独立身份的受信核验由实际执行观察承担；本条 host_attested 声明不是自造 SDK/人类 receipt。",
+        "逐字读取六页完整 notes：234/281/348/461/294/415码点，合计2033；18个segments按顺序连续覆盖[0,len(notes))，无漏段、重叠或越界。P06唯一cue有45码点，17个verbatim合计1988码点；420秒讲述+60秒互动=480秒，与Plan一致。",
+        "口播是完整可说语句，解释五项记录、未知原因、两条条件分支及交接标准，含逐页过渡；未以仅提示讲者的cue替代必要逐字正文。P01数字边界、P03虚构原因限定、P04真实条件未知与紧急不等待、P05/P06交接不等解决均与当前来源一致。",
+        "按文本长度复算verbatim平均约284码点/分钟；P02第二段约387码点/分钟、P06读题约326、反馈约311，短段速度和切换存在需要试讲检验的风险，但无当前分项超限或标签冲突的确证。AC-M03只支持估算结构及初步可行性，不能从此得出AC-U03真实计时通过。",
+        "P06 cue明确不口播、保持题面、完整60秒独立作答后才反馈，原cue-as-verbatim F2 fixed。当前口播的事实/完整性/预算分类通过；page_copy 的独立判断问题漏项仍开放，本pass不表示练习目标全部已被观察。",
+        "本次限于当前 preproduction 内容稿的 L3 判断。真实试讲及分项计时 AC-U03、Owner 接受、目标受众验证、真实视觉/PPTX/备注导出/桌面使用均 NOT_RUN；没有人类通过或使用成功。模型具体版本、推理配置、temperature/seed 未向本执行公开。"
+      ],
+      "findings": [
+        {
+          "actual": "P06-speech-02 当前 kind=cue、estimated_seconds=60，码点 [163,208) 完整内容是“【主持提示（不口播）：停止讲述，保持题面，留60秒独立作答；满60秒后再讲下段反馈。】”及其换行；相邻两段均为 verbatim，分别30/40秒。全部18段连续覆盖六页 notes；verbatim 合计420秒，cue合计60秒，与 Plan 420/60/480 一致。",
+          "element_refs": [
+            "speech_segment:P06-speech-02",
+            "speaker_notes:codepoints:163-208",
+            "plan:speech_policy",
+            "plan:time_budget",
+            "node:exercise-design"
+          ],
+          "evidence": [
+            {
+              "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+              "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+            },
+            {
+              "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+              "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+            },
+            {
+              "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+              "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+            }
+          ],
+          "expected": "全部 notes 应准确区分实际要逐字讲的 verbatim 和不口播的 cue；60 秒独立作答应计入 interaction，讲述估计保持 420 秒，总估计保持 480 秒。估计与实测分别说明。",
+          "finding_id": "Q1-A-SPEECH-P06-F2-cue-as-verbatim",
+          "impact": "must_fix",
+          "kind": "content",
+          "message": "F2｜错误类型：停顿提示被标为逐字口播，讲述/互动预算语义冲突。主持动作已能局部定位和修正，不需要换主线；它影响完整逐字稿与硬用途预算的明确交接，不能当成纯措辞偏好。",
+          "page_id": "P06",
+          "resolution": "fixed",
+          "resolution_reason": "当前 P06 notes 与 speech_segments 已真实修订；cue、完整口播、连续半开码点范围及预算分类均按当前全文复算，原分类/预算交接 F2 已 fixed。这里只关闭该文字与映射缺陷；实际8分钟完整试讲 AC-U03 未执行。"
+        }
+      ],
+      "created_at": "2026-10-14T18:39:07.091108Z",
+      "replaces": {
+        "path": ".deckmaster/objects/46/4619b0c5591f99bf4a0405c25afe1d16fd831b880a2e1aef868cf08de3183a14.json",
+        "sha256": "4619b0c5591f99bf4a0405c25afe1d16fd831b880a2e1aef868cf08de3183a14"
+      }
+    }
+  ]
+}

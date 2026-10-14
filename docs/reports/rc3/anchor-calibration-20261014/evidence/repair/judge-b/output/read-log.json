@@ -1,0 +1,1029 @@
+{
+  "schema_version": "anonymous_repair_rereview_read_log.v1",
+  "created_at_utc": "2026-10-14T16:18:28.511407+00:00",
+  "identity": {
+    "canonical_task_identity": "/root/anchor_judge_b",
+    "execution_role": "same_independent_model_evaluator_repair_rereview",
+    "human_identity": null,
+    "human_professional_approval_claimed": false,
+    "model_configuration": {
+      "exact_model_id": "unknown",
+      "temperature": "unknown",
+      "seed": "unknown",
+      "reasoning_effort": "unknown"
+    },
+    "platform_event_id": "unknown",
+    "platform_signature": "unknown",
+    "identity_basis": "本轮NEW_TASK明确canonical任务身份；未知配置不推断。"
+  },
+  "input_file_hashes": [
+    {
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "raw_bytes": 119412,
+      "sha256": "fbcd6f5a153c72499d022cba56cf4e24c638acf4dd5840bb90eb20b2b102670a",
+      "expected_sha256": "fbcd6f5a153c72499d022cba56cf4e24c638acf4dd5840bb90eb20b2b102670a",
+      "expected_hash_match": true
+    },
+    {
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/instructions.txt",
+      "raw_bytes": 1500,
+      "sha256": "a84c0f861426793e45250e8ee86203584f2ca03ad1df2c0267855ad6d2a25897"
+    }
+  ],
+  "permitted_and_actual_content_read_files": [
+    "/workspace/work/rc3/anchor-blind/repair/judge-b/instructions.txt",
+    "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json"
+  ],
+  "read_records": [
+    {
+      "read_batch": 1,
+      "tool": "exec_command",
+      "tool_chunk_id": "af2757",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/instructions.txt",
+      "operation": "cat full instructions",
+      "scope": "全文完整展示",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 1,
+      "tool": "exec_command",
+      "tool_chunk_id": "0b29ae",
+      "paths": [
+        "/workspace/work/rc3/anchor-blind/repair/judge-b/instructions.txt",
+        "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json"
+      ],
+      "operation": "read raw bytes, record original SHA256, parse packet keys/counts",
+      "scope": "原字节全读用于hash；只展示结构，此步不是全文内容阅读替代",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 2,
+      "tool": "exec_command",
+      "tool_chunk_id": "584b5f",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "display full schema_version, sole rubric, reading_rules, output_requirements; context and candidate structures",
+      "scope": [
+        "/schema_version",
+        "/rubric",
+        "/reading_rules",
+        "/output_requirements"
+      ],
+      "output_truncated": false
+    },
+    {
+      "read_batch": 3,
+      "tool": "exec_command",
+      "tool_chunk_id": "4103ec",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "display full training context",
+      "scope": "/contexts/context-9ddcb48240 全部用途、S1–S3、合成页脚、P1–P6 visible和speaker_text",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 3,
+      "tool": "exec_command",
+      "tool_chunk_id": "fb9dd4",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "display full business context",
+      "scope": "/contexts/context-4186b70348 全部用途、S1–S3和完整6页baseline原JSON字符串；title/body_blocks/notes全读",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 3,
+      "tool": "exec_command",
+      "tool_chunk_id": "855461",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "display full independent-reading study context",
+      "scope": "/contexts/context-ca8f8d3859 全部用途、S1–S2与baseline.complete_visible_copy的全部P1–P6上屏内容",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 4,
+      "tool": "exec_command",
+      "tool_chunk_id": "f1c682",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "display complete candidates indices 0–2",
+      "scope": "所有sample_id、context_id、repair_targets和repaired_candidate；18页全部上屏/口播/notes（按存在的字段）",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 5,
+      "tool": "exec_command",
+      "tool_chunk_id": "283fd6",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "display complete candidates indices 3–5",
+      "scope": "所有字段与18页全部内容，包括完整P4研究不池化解释和训练四组合",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 6,
+      "tool": "exec_command",
+      "tool_chunk_id": "9036d0",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "display complete candidates indices 6–8",
+      "scope": "所有字段与18页全部内容，包括完整未来b6-future、研究比较、p5四节点三边及caption/notes",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 7,
+      "tool": "exec_command",
+      "tool_chunk_id": "373278",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "display complete candidates indices 9–11",
+      "scope": "所有字段与18页全部内容，包括合成页脚/口播、A/B完整比较、P6全部display_phases与条件",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 8,
+      "tool": "exec_command",
+      "tool_chunk_id": "42ddcb",
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "operation": "reparse permitted packet, baseline equality/diff checks, P6 sequence/visibility consistency checks",
+      "scope": "12修订与本次baseline比对，未读取旧初判；不是全文阅读替代",
+      "output_truncated": false
+    },
+    {
+      "read_batch": 9,
+      "tool": "exec_command",
+      "tool_chunk_id": "unknown_at_serialization",
+      "paths": [
+        "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+        "/workspace/work/rc3/anchor-blind/repair/judge-b/instructions.txt"
+      ],
+      "operation": "re-read permitted original bytes/hash; check all citation excerpts against their current fields; confirm output paths absent by metadata check; exclusive create exactly two authorized outputs",
+      "scope": "全文原字节hash核验、逐引用定位、固定输出字节写入；不读取输出内容",
+      "output_truncated": false
+    }
+  ],
+  "coverage": {
+    "all_top_level_fields_full_read": [
+      "schema_version",
+      "rubric",
+      "reading_rules",
+      "contexts",
+      "candidates",
+      "output_requirements"
+    ],
+    "sole_rubric_full_read": true,
+    "reading_rules_full_read": true,
+    "output_requirements_full_read": true,
+    "contexts": [
+      {
+        "context_id": "context-9ddcb48240",
+        "purpose_full_read": true,
+        "materials": [
+          {
+            "source_id": "S1",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S2",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S3",
+            "full_text_read": true
+          }
+        ],
+        "all_baseline_fields_full_read": true,
+        "shared_visible_footer_full_read": true,
+        "baseline_pages": [
+          {
+            "page_id": "P1",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P2",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P3",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P4",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P5",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          },
+          {
+            "page_id": "P6",
+            "visible_full_read": true,
+            "speaker_text_full_read": true
+          }
+        ]
+      },
+      {
+        "context_id": "context-4186b70348",
+        "purpose_full_read": true,
+        "materials": [
+          {
+            "source_id": "S1",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S2",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S3",
+            "full_text_read": true
+          }
+        ],
+        "all_baseline_fields_full_read": true,
+        "baseline_pages": [
+          {
+            "page_id": "p1",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p2",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p3",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p4",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p5",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          },
+          {
+            "page_id": "p6",
+            "title_full_read": true,
+            "all_body_blocks_full_read": true,
+            "notes_full_read": true
+          }
+        ]
+      },
+      {
+        "context_id": "context-ca8f8d3859",
+        "purpose_full_read": true,
+        "materials": [
+          {
+            "source_id": "S1",
+            "full_text_read": true
+          },
+          {
+            "source_id": "S2",
+            "full_text_read": true
+          }
+        ],
+        "all_baseline_fields_full_read": true,
+        "baseline_pages": [
+          {
+            "page_id": "P1",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P2",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P3",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P4",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P5",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P6",
+            "complete_visible_content_full_read": true
+          }
+        ],
+        "speaker_text_or_notes": "not present; no notes automatically treated as visible"
+      }
+    ],
+    "candidates": [
+      {
+        "index": 0,
+        "sample_id": "sample-0dc00253f19c",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "P1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          }
+        ],
+        "shared_visible_footer_full_read": true
+      },
+      {
+        "index": 1,
+        "sample_id": "sample-135a4f57c35b",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "P1",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P2",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P3",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P4",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P5",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P6",
+            "complete_visible_content_full_read": true
+          }
+        ],
+        "notes_or_speaker_text": "not present in this independent reading candidate"
+      },
+      {
+        "index": 2,
+        "sample_id": "sample-eb18b07b7e54",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "p1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "sample_id": "sample-259f9d58d9f5",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "p1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          }
+        ]
+      },
+      {
+        "index": 4,
+        "sample_id": "sample-50acef48fae6",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "P1",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P2",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P3",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P4",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P5",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P6",
+            "complete_visible_content_full_read": true
+          }
+        ],
+        "notes_or_speaker_text": "not present in this independent reading candidate"
+      },
+      {
+        "index": 5,
+        "sample_id": "sample-40dea7b4ff07",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "P1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          }
+        ],
+        "shared_visible_footer_full_read": true
+      },
+      {
+        "index": 6,
+        "sample_id": "sample-ae2bc0d20f86",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "p1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          }
+        ]
+      },
+      {
+        "index": 7,
+        "sample_id": "sample-4290f7688ae8",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "P1",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P2",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P3",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P4",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P5",
+            "complete_visible_content_full_read": true
+          },
+          {
+            "page_id": "P6",
+            "complete_visible_content_full_read": true
+          }
+        ],
+        "notes_or_speaker_text": "not present in this independent reading candidate"
+      },
+      {
+        "index": 8,
+        "sample_id": "sample-b272d28e07fe",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "p1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          }
+        ]
+      },
+      {
+        "index": 9,
+        "sample_id": "sample-ae9b716f0829",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "P1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          }
+        ],
+        "shared_visible_footer_full_read": true
+      },
+      {
+        "index": 10,
+        "sample_id": "sample-4f7504f5e1b1",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "p1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "p6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          }
+        ]
+      },
+      {
+        "index": 11,
+        "sample_id": "sample-684abe077770",
+        "all_fields_full_read": true,
+        "all_repair_targets_full_read": true,
+        "entire_repaired_candidate_full_read": true,
+        "candidate_pages": [
+          {
+            "page_id": "P1",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P2",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P3",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P4",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P5",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": "not present"
+          },
+          {
+            "page_id": "P6",
+            "all_page_fields_full_read": true,
+            "visible_or_all_title_and_body_blocks_full_read": true,
+            "speaker_text_or_notes_full_read": true,
+            "display_phases_full_read": true
+          }
+        ],
+        "shared_visible_footer_full_read": true
+      }
+    ],
+    "material_source_count": 8,
+    "baseline_page_count": 18,
+    "repaired_candidate_count": 12,
+    "repaired_candidate_page_count": 72,
+    "training_candidate_speaker_text_page_count": 24,
+    "business_candidate_notes_page_count": 30,
+    "study_candidate_independent_visible_page_count": 18,
+    "p6_display_phase_count": 3,
+    "p5_diagram_node_count": 4,
+    "p5_diagram_edge_count": 3,
+    "output_truncation_encountered": false
+  },
+  "in_memory_validation": {
+    "baseline_comparison_checks": [
+      {
+        "sample_id": "sample-0dc00253f19c",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": []
+      },
+      {
+        "sample_id": "sample-135a4f57c35b",
+        "entire_visible_copy_equals_current_baseline": true
+      },
+      {
+        "sample_id": "sample-eb18b07b7e54",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": [
+          "p2"
+        ]
+      },
+      {
+        "sample_id": "sample-259f9d58d9f5",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": [
+          "p6"
+        ]
+      },
+      {
+        "sample_id": "sample-50acef48fae6",
+        "entire_visible_copy_equals_current_baseline": false
+      },
+      {
+        "sample_id": "sample-40dea7b4ff07",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": []
+      },
+      {
+        "sample_id": "sample-ae2bc0d20f86",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": [
+          "p6"
+        ]
+      },
+      {
+        "sample_id": "sample-4290f7688ae8",
+        "entire_visible_copy_equals_current_baseline": false
+      },
+      {
+        "sample_id": "sample-b272d28e07fe",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": [
+          "p5"
+        ]
+      },
+      {
+        "sample_id": "sample-ae9b716f0829",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": [
+          "P1"
+        ]
+      },
+      {
+        "sample_id": "sample-4f7504f5e1b1",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": []
+      },
+      {
+        "sample_id": "sample-684abe077770",
+        "page_count": 6,
+        "changed_page_ids_vs_current_baseline": [
+          "P6"
+        ]
+      }
+    ],
+    "p6_sequence_checks": {
+      "sequence": [
+        "question",
+        "learner_response",
+        "explanation"
+      ],
+      "answers_visible": [
+        false,
+        false,
+        true
+      ],
+      "question_and_response_match_visible": true,
+      "response_before_explanation_condition_read": "after collecting learner answers; do not hint or read the explanation before this",
+      "explanation_after_response_condition_read": "only after the response phase"
+    },
+    "cited_excerpt_count": 69,
+    "all_cited_excerpts_matched_their_fields": true,
+    "all_12_sample_ids_judged_once": true
+  },
+  "exposure_and_contamination": {
+    "own_initial_evaluation_remembered": true,
+    "own_initial_evaluation_files_read_during_rereview": false,
+    "own_initial_evaluation_authorization": "本轮NEW_TASK允许记得自己的初判；本次按完整当前修订与唯一rubric复评，不改写原判。",
+    "public_anchor_examples_seen_outside_supplied_packets": false,
+    "other_evaluator_results_seen": false,
+    "controller_rulings_or_mapping_seen": false,
+    "product_tree_or_history_answers_seen": false,
+    "files_read_this_rereview": [
+      "/workspace/work/rc3/anchor-blind/repair/judge-b/instructions.txt",
+      "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json"
+    ],
+    "prior_visible_materials": "此前本评价者曾完整阅读自己judge-b原packet与instructions并生成原初判；本轮没有再读取这些旧文件或输出。",
+    "non_file_context_seen": [
+      "system/developer工具与行为说明",
+      "用户environment_context",
+      "本轮及上一轮任务消息",
+      "自己的既有评判过程与工具输出"
+    ],
+    "contamination_detected": false,
+    "limits": "报告当前可见上下文和实际读取，非平台隔离证明；未观察不可见底层模型训练记忆。"
+  },
+  "freeze_order": "本次两输出在读取其他评价/裁决或讨论彼此结论之前冻结；旧初判未读取、未写入、未覆盖。",
+  "authorized_outputs": [
+    {
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/output/repair-judgments.json",
+      "raw_bytes": 41641,
+      "sha256": "8fe75b34b107508ca40f10152ac17936c602e9f0336cf7f4df915b5b1758fa76"
+    },
+    {
+      "path": "/workspace/work/rc3/anchor-blind/repair/judge-b/output/read-log.json",
+      "sha256": "自引用hash不写入日志；实际写入字节hash在native最终消息报告"
+    }
+  ],
+  "file_write_method": "先检查两输出path不存在；exclusive xb创建固定序列化字节；fsync；输出hash由实际写入字节缓冲区计算，不读取输出内容。",
+  "model_configuration_and_event_ids": "unknown；不制造平台签名、人类身份或专业通过。"
+}

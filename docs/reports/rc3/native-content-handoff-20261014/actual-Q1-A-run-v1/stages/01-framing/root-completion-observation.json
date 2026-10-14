@@ -1,0 +1,40 @@
+{
+  "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+  "assurance": "host_attested",
+  "observed_at_utc": "2026-10-14T15:59:56.854433+00:00",
+  "spawn": {
+    "tool": "collaboration.spawn_agent",
+    "canonical_task_name": "/root/e1_q1_a_framing",
+    "returned_task_name": "/root/e1_q1_a_framing",
+    "fork_turns": "none",
+    "input_package": "/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/01-framing"
+  },
+  "completion": {
+    "sender": "/root/e1_q1_a_framing",
+    "message_type": "FINAL_ANSWER",
+    "status_observation_tool": "collaboration.list_agents",
+    "observed_status": "completed",
+    "observed_completed_agents": [
+      "/root/e1_q1_a_framing"
+    ],
+    "raw_final_message": "已独占创建 framing 原始提案，未执行 accept/adopt 或后续阶段。\n\n- canonical 身份：`/root/e1_q1_a_framing`\n- 输出：`/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/01-framing/model-output.json`\n  SHA-256：`30e2aeeca62ac810869808f8d801b0fc66fff055f46e3fbe97872848170c955e`\n- 方法读取记录：`/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/01-framing/method-read-record.json`\n  SHA-256：`3ea4f85168a92810ed4786e21799542ee25cd962b0f745520c0c14b5f461e58e`\n\n实际读取范围：本阶段指令、工作单、Task、当前 artifacts、metadata；claim-read 返回的三份安装方法全文；S1–S3 原件及 extract 全文（分别 L1–L3、L1–L7、L1–L2）；本阶段相关 schema 与安装 schema 的依赖定义。\n\n结果保留两项候选方向及六项未决问题。受众、用途、紧急条件与路径、练习输入、使用预算和业务效果仍不确定。结构、引用 ID、真实来源版本及 locator 校验通过。\n\n原生运行时的精确模型 ID、推理强度和采样参数均为 unknown；会话指令中的 Codex/GPT-6 声明不作为运行时配置证据。"
+  },
+  "project_id": "actual-q1",
+  "task_id": "893ed880bd49",
+  "method_release": {
+    "release_id": "575eca2c82a5-90a59eec255f",
+    "methods_sha256": "9c5105401194a85a6bf9a7472730925c96b4057086b46d6443fa9c2e564f496b"
+  },
+  "model_output_bytes_sha256": "30e2aeeca62ac810869808f8d801b0fc66fff055f46e3fbe97872848170c955e",
+  "method_read_record": {
+    "path": "/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/01-framing/method-read-record.json",
+    "sha256": "3ea4f85168a92810ed4786e21799542ee25cd962b0f745520c0c14b5f461e58e"
+  },
+  "native_configuration": {
+    "model": "unknown",
+    "reasoning": "unknown",
+    "seed": "unknown",
+    "tokens": "unknown"
+  },
+  "limits": "Root directly observed native tool responses; no platform signature or human/verified-user assurance."
+}

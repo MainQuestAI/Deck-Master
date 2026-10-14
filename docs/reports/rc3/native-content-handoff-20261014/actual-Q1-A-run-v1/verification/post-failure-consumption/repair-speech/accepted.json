@@ -1,0 +1,197 @@
+{
+  "result": {
+    "status": "accepted",
+    "project_id": "actual-q1",
+    "revision_id": "e3f0aac15d814c4dac560f102e5c2b09",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+        "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+      },
+      {
+        "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+        "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+      },
+      {
+        "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+        "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+      },
+      {
+        "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+        "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+      },
+      {
+        "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+        "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+      },
+      {
+        "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+        "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+      },
+      {
+        "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+        "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "speech_review_or_production",
+    "input_alignment": "current",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "e3f0aac15d814c4dac560f102e5c2b09",
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "e3f0aac15d814c4dac560f102e5c2b09",
+      "variant": "speech",
+      "adopted": true,
+      "page_refs": {
+        "P01": {
+          "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        "P02": {
+          "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        "P03": {
+          "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        "P04": {
+          "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        "P05": {
+          "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        "P06": {
+          "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        }
+      },
+      "plan_ref": {
+        "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+        "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+      },
+      "plan_note": null,
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        {
+          "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        {
+          "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        {
+          "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        {
+          "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        {
+          "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+          "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+        },
+        {
+          "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+          "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+        }
+      ],
+      "invalidated_outputs": [
+        "pptx",
+        "render_report",
+        "trace"
+      ],
+      "invalidated_reviews": [
+        {
+          "review_id": "Q1-A-independent-speech-v1",
+          "review_ref": {
+            "path": ".deckmaster/objects/46/4619b0c5591f99bf4a0405c25afe1d16fd831b880a2e1aef868cf08de3183a14.json",
+            "sha256": "4619b0c5591f99bf4a0405c25afe1d16fd831b880a2e1aef868cf08de3183a14"
+          },
+          "reason": "speech dependency changed"
+        }
+      ],
+      "next_action": "speech_review_or_production"
+    },
+    "variant": "speech",
+    "adopted": true,
+    "page_refs": {
+      "P01": {
+        "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+        "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+      },
+      "P02": {
+        "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+        "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+      },
+      "P03": {
+        "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+        "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+      },
+      "P04": {
+        "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+        "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+      },
+      "P05": {
+        "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+        "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+      },
+      "P06": {
+        "path": ".deckmaster/objects/6c/6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f.json",
+        "sha256": "6c2659c07a399f0e065e77a2ed5236500a389f6c52f0c938a2184f734095e79f"
+      }
+    },
+    "plan_ref": {
+      "path": ".deckmaster/objects/12/12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79.json",
+      "sha256": "12190b5b699e536b8ef1a8c5a05563940eb5608519ded723efe77c072a8edc79"
+    },
+    "invalidated_outputs": [
+      "pptx",
+      "render_report",
+      "trace"
+    ],
+    "invalidated_reviews": [
+      {
+        "review_id": "Q1-A-independent-speech-v1",
+        "review_ref": {
+          "path": ".deckmaster/objects/46/4619b0c5591f99bf4a0405c25afe1d16fd831b880a2e1aef868cf08de3183a14.json",
+          "sha256": "4619b0c5591f99bf4a0405c25afe1d16fd831b880a2e1aef868cf08de3183a14"
+        },
+        "reason": "speech dependency changed"
+      }
+    ],
+    "plan_note": null
+  },
+  "actual_native_writer": "/root/e1_q1_a_repair_speech",
+  "raw_output_sha256": "4a229a58dbcf069121d78ee5fcd519068e1fb91280c6a84784b6b47ddd0f5575",
+  "root_observation_sha256": "7425f8860c4ec484d28358858618bc5bbd4f4db13cd4be198a08df84c0415855",
+  "original_stage_path": "/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/repair-speech",
+  "original_refusal_preserved": true,
+  "classification": "supplemental_protocol_repair_not_original_frozen_E1",
+  "not_original_frozen_E1": true,
+  "new_native_output": false,
+  "new_claim": false,
+  "dispatch_method_release": {
+    "methods_sha256": "a69e2588846bcd9288fb594b8c9dcdd7555449ba8877b6c0e5cb961799503358",
+    "release_id": "575eca2c82a5-90a59eec255f"
+  },
+  "current_method_release": {
+    "release_id": "e7acd7740353-a6e03ed8f931",
+    "methods_sha256": "a69e2588846bcd9288fb594b8c9dcdd7555449ba8877b6c0e5cb961799503358"
+  },
+  "method_basis_status": "current",
+  "historical_immutable_native_completion_reused_for_exact_result": true,
+  "accepted_at": "2026-10-14T18:24:50.618240+00:00"
+}

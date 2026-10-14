@@ -1,0 +1,276 @@
+{
+  "schema_version": "synthetic_calibration_exactbyte_copy.v1",
+  "copied_at_utc": "2026-10-14T16:28:43.735907+00:00",
+  "writer": "/root/rc3_00_review",
+  "authorization": "/root expressly approved the exact 38-file proposal, 912285 bytes, at this target; no commit/push",
+  "target_relative_to_repository": "docs/reports/rc3/anchor-calibration-20261014",
+  "approved_proposal": {
+    "source": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-export-proposal.json",
+    "sha256": "919148cea6ba4be3a29b70b6ac3581e192574248886b67a64a3662853c41b339"
+  },
+  "repository_head_at_copy": "1fb3ddacbb75a2d891b5a14d955cf23db9460931",
+  "copied_evidence_file_count": 38,
+  "copied_evidence_total_bytes": 912285,
+  "all_copied_hashes_match_original_bytes": true,
+  "original_source_bytes_unchanged": true,
+  "files": [
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration.md",
+      "bundle_relative_path": "report/rc3-01-anchor-calibration.md",
+      "bytes": 36993,
+      "sha256": "39b0b4472c204e2167b0434f4d85572a779d50cbde3e556ee95de6143106d10b"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration.json",
+      "bundle_relative_path": "report/rc3-01-anchor-calibration.json",
+      "bytes": 174201,
+      "sha256": "6e52ef93295eaa8cf905f5a7dfbd329e34a60fba0b3e24975339bdc099966322"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/controller/initial-freeze-observation.json",
+      "bundle_relative_path": "evidence/controller/initial-freeze-observation.json",
+      "bytes": 4065,
+      "sha256": "544a047326adeef88e52a5b5cedc5861c486c967a51bc1aed965f30d30bfd762"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/controller/mapping-and-seeds.json",
+      "bundle_relative_path": "evidence/controller/mapping-and-seeds.json",
+      "bytes": 12317,
+      "sha256": "7b7ade06cfc8aad7585390ba2f86a30b20e2377a4c4a044af26e22dfffeba822"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/controller/read-ranges.json",
+      "bundle_relative_path": "evidence/controller/read-ranges.json",
+      "bytes": 24178,
+      "sha256": "d7753b70dfeb19891b49a0f15a39a29be158ac81418ce8a9dbd616a9492143bb"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/controller/frozen-packets.json",
+      "bundle_relative_path": "evidence/controller/frozen-packets.json",
+      "bytes": 1119,
+      "sha256": "8240bc279781c0dd22f23cdaf44b79434fc9ee515cc822d0025fcd17050bafc6"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/controller/root-repair-freeze-observation.json",
+      "bundle_relative_path": "evidence/repair/controller/root-repair-freeze-observation.json",
+      "bytes": 1138,
+      "sha256": "8c20f5fa7917c3678bb18fcffdb639df4f72ea6afbf7d5694c2dea58a8cace42"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/controller/adjudication.json",
+      "bundle_relative_path": "evidence/repair/controller/adjudication.json",
+      "bytes": 23819,
+      "sha256": "a478cec50c09a6384273790c22a1f9c87720c74b676ccb8e19bad7cac9474e86"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/controller/historical-q3-2.raw.md",
+      "bundle_relative_path": "evidence/repair/controller/historical-q3-2.raw.md",
+      "bytes": 842,
+      "sha256": "0d95f12a4eeb48e73390e6a4c8d287a2b5d5eaaa3e7a093a1a71e5afa88c57a5"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/controller/frozen-repairs.json",
+      "bundle_relative_path": "evidence/repair/controller/frozen-repairs.json",
+      "bytes": 19569,
+      "sha256": "71f877c643d2ac50d79db992da5c151d4ee3114b3fe44bbf55864211fe4b70f9"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/judge-a/packet.json",
+      "bundle_relative_path": "evidence/judge-a/packet.json",
+      "bytes": 44584,
+      "sha256": "48d6a622147af4038bab6b0f550935ab0a0a4c69c886d163de4ba4b82ac62322"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/judge-a/instructions.txt",
+      "bundle_relative_path": "evidence/judge-a/instructions.txt",
+      "bytes": 1660,
+      "sha256": "c43c354e4a854dfd7e2598c22eb8e5bf230cd40c78e6f2a9548d0866ce0cb237"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/judge-a/output/initial-judgments.json",
+      "bundle_relative_path": "evidence/judge-a/output/initial-judgments.json",
+      "bytes": 47624,
+      "sha256": "1d7e3fe6be9c2ae5785b9e0904528f5d74f414c89702f52ca7387c5cbdfe39c2"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/judge-a/output/read-log.json",
+      "bundle_relative_path": "evidence/judge-a/output/read-log.json",
+      "bytes": 11962,
+      "sha256": "2d863b349a81242304757817ad6c7255d6c6acb62354ad3d72c89147b8866687"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/judge-a/packet.json",
+      "bundle_relative_path": "evidence/repair/judge-a/packet.json",
+      "bytes": 119412,
+      "sha256": "66fd120aac4e80965724d79d6c2e91f7f7115ba78e17af76e6a7e23cd664d6da"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/judge-a/instructions.txt",
+      "bundle_relative_path": "evidence/repair/judge-a/instructions.txt",
+      "bytes": 1500,
+      "sha256": "419999dd3da09b8fdbd495098b8f22d2d119eaa2e4d035d5305ab6c0a5b04abb"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/judge-a/output/repair-judgments.json",
+      "bundle_relative_path": "evidence/repair/judge-a/output/repair-judgments.json",
+      "bytes": 43425,
+      "sha256": "b4b7e2bc3ce7d05637c7cad12342454cd5f763887d50e6db661b931cb39f6830"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/judge-a/output/read-log.json",
+      "bundle_relative_path": "evidence/repair/judge-a/output/read-log.json",
+      "bytes": 15182,
+      "sha256": "921751d055ca99a414d52c1bd9e78382bd065773df7d84c247eac68532b4844c"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/judge-b/packet.json",
+      "bundle_relative_path": "evidence/judge-b/packet.json",
+      "bytes": 44584,
+      "sha256": "daceb1786003642f7c2c3ce97f882bc294abff31ecd9afc4e1d4a8a2d904f63b"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/judge-b/instructions.txt",
+      "bundle_relative_path": "evidence/judge-b/instructions.txt",
+      "bytes": 1660,
+      "sha256": "4aeb60e14cc07e88cf70425c4926314f66408b98dfad19ffee6347c49baae423"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/judge-b/output/initial-judgments.json",
+      "bundle_relative_path": "evidence/judge-b/output/initial-judgments.json",
+      "bytes": 46536,
+      "sha256": "ca9044289887e75cd056d6f3430cd6d5374dfc9431ee68f2161117e0aa3e4b7b"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/judge-b/output/read-log.json",
+      "bundle_relative_path": "evidence/judge-b/output/read-log.json",
+      "bytes": 16120,
+      "sha256": "44046dfa00ae61d343d168969e6cb3d94a0f93d3bc34b1906ef6dd8cc27e3d05"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/judge-b/packet.json",
+      "bundle_relative_path": "evidence/repair/judge-b/packet.json",
+      "bytes": 119412,
+      "sha256": "fbcd6f5a153c72499d022cba56cf4e24c638acf4dd5840bb90eb20b2b102670a"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/judge-b/instructions.txt",
+      "bundle_relative_path": "evidence/repair/judge-b/instructions.txt",
+      "bytes": 1500,
+      "sha256": "a84c0f861426793e45250e8ee86203584f2ca03ad1df2c0267855ad6d2a25897"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/judge-b/output/repair-judgments.json",
+      "bundle_relative_path": "evidence/repair/judge-b/output/repair-judgments.json",
+      "bytes": 41641,
+      "sha256": "8fe75b34b107508ca40f10152ac17936c602e9f0336cf7f4df915b5b1758fa76"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/anchor-blind/repair/judge-b/output/read-log.json",
+      "bundle_relative_path": "evidence/repair/judge-b/output/read-log.json",
+      "bytes": 36340,
+      "sha256": "7adf42eb694e58fbd116833d7a32d984f05b55e139f1e5708341eed7f4eea5e7"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q1-1.diff",
+      "bundle_relative_path": "diffs/AN-Q1-1.diff",
+      "bytes": 1313,
+      "sha256": "1f834d792d1ff3c4d51a7cc85767fe3b02543701d3042f00b51e101b483aa504"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q1-2.diff",
+      "bundle_relative_path": "diffs/AN-Q1-2.diff",
+      "bytes": 1743,
+      "sha256": "a6cd327d94d8441b837825ed754009a526011159f144c930678fe61b4d2c9be1"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q1-3.diff",
+      "bundle_relative_path": "diffs/AN-Q1-3.diff",
+      "bytes": 3551,
+      "sha256": "6cff6b181983d0c07d3b883c693d7434bacef4a41b605e62815191e75707db63"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q1-4.diff",
+      "bundle_relative_path": "diffs/AN-Q1-4.diff",
+      "bytes": 971,
+      "sha256": "753e1192ee6fa1a9a02bf9c377380e94c906657c82f3d0ce0f9418f23a6df79c"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q2-1.diff",
+      "bundle_relative_path": "diffs/AN-Q2-1.diff",
+      "bytes": 1485,
+      "sha256": "ac93c490787b85c40bfd31aaf522b373bb06642572eb0d3b65670cbe37097922"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q2-2.diff",
+      "bundle_relative_path": "diffs/AN-Q2-2.diff",
+      "bytes": 1708,
+      "sha256": "ff4d9a8ea5454414a4a597719b756c60b5e0fd3e69c9f7fa3571831819ea0f6b"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q2-3.diff",
+      "bundle_relative_path": "diffs/AN-Q2-3.diff",
+      "bytes": 1041,
+      "sha256": "01a0ea406481eea0c8a3c359e8ff7df14b892ab194734d686a967eb2667f7085"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q2-4.diff",
+      "bundle_relative_path": "diffs/AN-Q2-4.diff",
+      "bytes": 2577,
+      "sha256": "a257bc7f6817be353f9a17548c46be9807e37b8cdc08953ef4321a83e6097bdd"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q2-5.diff",
+      "bundle_relative_path": "diffs/AN-Q2-5.diff",
+      "bytes": 1224,
+      "sha256": "7d2c6cbeaa2cfccf42a30ff7a6cb29efecfee302bf4c4572d51a9552066abf7a"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q3-1.diff",
+      "bundle_relative_path": "diffs/AN-Q3-1.diff",
+      "bytes": 1340,
+      "sha256": "980fd6261a4cfc0149ffe61a56207febf67536cba214b997be26cb85eb4cf752"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q3-2.diff",
+      "bundle_relative_path": "diffs/AN-Q3-2.diff",
+      "bytes": 2591,
+      "sha256": "e70103aa3b1508f529d83de61ee70e20565d54e3824254910b939ed37e5af2cc"
+    },
+    {
+      "recorded_original_path": "/workspace/work/rc3/reviews/rc3-01-anchor-calibration-diffs/AN-Q3-3.diff",
+      "bundle_relative_path": "diffs/AN-Q3-3.diff",
+      "bytes": 1358,
+      "sha256": "7ffcbbdc6f50ef2a439264e9457f8f9432ba22e6b9d0acdd7c1f0cfa81569d8e"
+    }
+  ],
+  "added_navigation_files": [
+    "README.md",
+    "path-mapping-manifest.json"
+  ],
+  "reference_resolution": "Historical paths inside preserved frozen JSON/Markdown remain unchanged. Resolve the 38 copied originals through this mapping. Complete current candidates are embedded in evidence/repair/judge-{a,b}/packet.json; exact replacements/source quotes are embedded in report/rc3-01-anchor-calibration.json. Historical external case/source/runtime paths are records, not new runnable project objects or files copied outside this whitelist.",
+  "limits": [
+    "synthetic anchor calibration only; not real customer material",
+    "no native Writer generation/effect/E1 claim",
+    "no actual PPTX/render/timing/human/professional acceptance",
+    "no SDK gate/run/.decks/.deckmaster object created",
+    "no canonical method/product code/old evaluation changed",
+    "no git commit or push performed"
+  ],
+  "copy_verification": {
+    "all_38_original_and_destination_sha256_equal": true,
+    "copied_evidence_bytes": 912285,
+    "git_status_only_new_authorized_directory": true,
+    "new_untracked_files": 40,
+    "tracked_changes": false,
+    "staged_changes": false,
+    "git_diff_check_tracked_pass": true,
+    "new_file_no_index_whitespace_findings": [
+      {
+        "file": "evidence/repair/controller/historical-q3-2.raw.md",
+        "message": "/workspace/work/rc3/cards/rc3-01/docs/reports/rc3/anchor-calibration-20261014/evidence/repair/controller/historical-q3-2.raw.md:10: new blank line at EOF.",
+        "exit_code": 3
+      }
+    ],
+    "historical_raw_warning_disposition": "Original frozen historical excerpt ends in a blank line. Preserve exact approved bytes and hash; do not normalize historical evidence."
+  }
+}

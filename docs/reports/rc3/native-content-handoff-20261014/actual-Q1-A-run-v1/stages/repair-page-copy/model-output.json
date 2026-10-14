@@ -1,0 +1,3477 @@
+{
+  "schema_version": "compose_result.v2",
+  "kind": "compose",
+  "variant": "page_copy",
+  "task_id": "e60c791a70ad",
+  "operation_id": "repair-page-copy",
+  "produced_against": "6a9f605d1482cfc9530b0993ff3a3a6b4e4ecb3a9635a1ef1bfb65e09b9fec8d",
+  "eligibility_digest": "8ccbfce047330ae7ecb97834fa006f3b57447bd1fa809e6fa04c6099a90a519d",
+  "usage_events": [],
+  "payload": {
+    "pages": [
+      {
+        "citations": [
+          {
+            "claim_kind": "reported_fact",
+            "id": "sample-fact",
+            "locator": "L1",
+            "source_id": "src-3b6aa1bf",
+            "supports": "100 条教学样本中 38 条首次记录缺设备版本。"
+          },
+          {
+            "claim_kind": "calculation",
+            "expression": "38 / 100 * 100% = 38%",
+            "id": "sample-share",
+            "locator": "L1",
+            "source_id": "src-3b6aa1bf",
+            "supports": "38% 是版本缺失样本占比。"
+          },
+          {
+            "claim_kind": "inference",
+            "id": "measurement-boundary",
+            "locator": "L2",
+            "source_id": "src-3b6aa1bf",
+            "supports": "没有轮次、时长和解决率测量，不能推出效率收益。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "historical-error",
+            "locator": "L1",
+            "source_id": "src-7c6c5ee2",
+            "supports": "未经验证历史草案出现过效率提升说法；引用仅为纠错。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "handoff-limit",
+            "locator": "L7",
+            "source_id": "src-7db53fc5",
+            "supports": "交接目标不代表故障已解决。"
+          }
+        ],
+        "content_mapping": {
+          "narrative_ref": {
+            "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+            "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+          },
+          "plan_role_page_id": "P01",
+          "speech_segments": [
+            {
+              "end_codepoint": 107,
+              "estimated_seconds": 25,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "handoff-standard",
+                "training-boundary",
+                "learning-check"
+              ],
+              "segment_id": "P01-speech-01",
+              "start_codepoint": 0
+            },
+            {
+              "end_codepoint": 234,
+              "estimated_seconds": 25,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "sample-observation",
+                "sample-share",
+                "sample-measurement-limit",
+                "old-efficiency-claim",
+                "efficiency-conflict",
+                "training-sequence"
+              ],
+              "segment_id": "P01-speech-02",
+              "start_codepoint": 107
+            }
+          ],
+          "visible_links": [
+            {
+              "element_ref": "atom:P01:title",
+              "narrative_node_ids": [
+                "handoff-standard"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P01:subtitle",
+              "narrative_node_ids": [
+                "training-boundary"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                },
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P01:block:lesson-goal:text",
+              "narrative_node_ids": [
+                "handoff-standard",
+                "training-sequence",
+                "learning-check"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P01:block:sample-reading:text",
+              "narrative_node_ids": [
+                "sample-observation",
+                "sample-share"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P01:block:measurement-limit:text",
+              "narrative_node_ids": [
+                "sample-measurement-limit",
+                "efficiency-conflict"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P01:block:old-efficiency:text",
+              "narrative_node_ids": [
+                "old-efficiency-claim",
+                "efficiency-conflict"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7c6c5ee2",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/37/375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4.json",
+                      "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+                    },
+                    "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e"
+                  }
+                },
+                {
+                  "locator": "L1",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P01:footnote:teaching-boundary:text",
+              "narrative_node_ids": [
+                "training-boundary",
+                "sample-measurement-limit",
+                "old-efficiency-claim"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-3b6aa1bf",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                      "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                    },
+                    "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+                  }
+                },
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L1",
+                  "source_id": "src-7c6c5ee2",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/37/375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4.json",
+                      "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+                    },
+                    "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P01:callout:handoff-result:text",
+              "narrative_node_ids": [
+                "handoff-standard"
+              ],
+              "source_links": [
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "id": "lesson-goal",
+              "text": "本课练习三件事：首轮信息如实写清；按既有紧急条件流转；交接已知、未知及下一步。",
+              "type": "paragraph"
+            },
+            {
+              "id": "sample-reading",
+              "text": "教学抽样有 100 条售后请求，其中 38 条首次记录缺少设备版本。38 ÷ 100 × 100% = 38%，表示这组样本的版本缺失占比。",
+              "type": "paragraph"
+            },
+            {
+              "id": "measurement-limit",
+              "text": "抽样未记录补问轮次、处理时长、解决率，也未完整记录其他字段；不能据此推算效率提升或节省工时。",
+              "type": "paragraph"
+            },
+            {
+              "id": "old-efficiency",
+              "text": "历史草案的“采集前移能带来38%的效率提升”未经验证，本课不采用这一效果说法。",
+              "type": "paragraph"
+            }
+          ],
+          "callouts": [
+            {
+              "id": "handoff-result",
+              "text": "交接完成不等于故障已经解决。",
+              "tone": "emphasis"
+            }
+          ],
+          "footnotes": [
+            {
+              "id": "teaching-boundary",
+              "text": "材料为合成教学：抽样不代表真实团队统计，SOP 不作为真实业务操作规定。来源：S1，L1–L3；S2，L1、L7；S3，L1。"
+            }
+          ],
+          "labels": [],
+          "subtitle": "合成教学｜新接单员",
+          "title": "首轮接单：留下可接手的记录"
+        },
+        "internal_only": {
+          "production_notes": "本次只提交 page_copy 正文和内容映射；使用已固化的 default 风格。本阶段没有视觉生产、逐字口播或认可结果。",
+          "source_private_refs": [],
+          "unresolved_questions": [
+            "真实业务收益、补问轮次、时长和解决率未知；不作收益承诺。",
+            "受众已有接单经验未知，解释量仍需受众反馈判断。"
+          ]
+        },
+        "page_id": "P01",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "今天我们练习首轮接单怎样留下可接手的记录：如实写清信息，按既有紧急条件流转，让下一位接手者知道已知、未知和下一步。交接完成，不表示故障已经解决。这里使用合成教学材料，不代表真实团队统计，也不是实际业务操作规定。\n\n先看这个数字：一百条教学样本中，三十八条首次记录缺少设备版本。三十八除以一百，是百分之三十八的版本缺失样本占比。材料没有记录补问轮次、处理时长、解决率和其他字段的完整情况，所以历史草案所说的百分之三十八效率提升，本课不采用。下面从首轮记录的五项信息开始。",
+        "visual_spec": {
+          "edges": [],
+          "intent": "建立训练目标，解释样本数字的含义及边界。",
+          "layout_hint": "目标在上，教学样本和数字边界在下；错误收益说法紧邻其纠正，不单独突出 38%。",
+          "nodes": [],
+          "reference_mode": "new_design",
+          "style_ref": "default"
+        }
+      },
+      {
+        "citations": [
+          {
+            "claim_kind": "reported_fact",
+            "id": "five-record-fields",
+            "locator": "L2",
+            "source_id": "src-7db53fc5",
+            "supports": "首轮记录五项：型号、版本、问题、尝试动作及结果、可取得附件。"
+          }
+        ],
+        "content_mapping": {
+          "narrative_ref": {
+            "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+            "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+          },
+          "plan_role_page_id": "P02",
+          "speech_segments": [
+            {
+              "end_codepoint": 152,
+              "estimated_seconds": 40,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "first-record",
+                "training-boundary"
+              ],
+              "segment_id": "P02-speech-01",
+              "start_codepoint": 0
+            },
+            {
+              "end_codepoint": 281,
+              "estimated_seconds": 20,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "first-record",
+                "training-boundary"
+              ],
+              "segment_id": "P02-speech-02",
+              "start_codepoint": 152
+            }
+          ],
+          "visible_links": [
+            {
+              "element_ref": "atom:P02:title",
+              "narrative_node_ids": [
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:subtitle",
+              "narrative_node_ids": [
+                "training-boundary",
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:block:record-list:heading",
+              "narrative_node_ids": [
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:item:model:text",
+              "narrative_node_ids": [
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:item:version:text",
+              "narrative_node_ids": [
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:item:problem:text",
+              "narrative_node_ids": [
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:item:actions-results:text",
+              "narrative_node_ids": [
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:item:attachments:text",
+              "narrative_node_ids": [
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:footnote:source-note:text",
+              "narrative_node_ids": [
+                "training-boundary",
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P02:callout:whole-record:text",
+              "narrative_node_ids": [
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "heading": "逐项核对",
+              "id": "record-list",
+              "items": [
+                {
+                  "id": "model",
+                  "text": "设备型号"
+                },
+                {
+                  "id": "version",
+                  "text": "设备版本"
+                },
+                {
+                  "id": "problem",
+                  "text": "已观察的问题"
+                },
+                {
+                  "id": "actions-results",
+                  "text": "已尝试动作及结果"
+                },
+                {
+                  "id": "attachments",
+                  "text": "可取得的附件"
+                }
+              ],
+              "type": "bullets"
+            }
+          ],
+          "callouts": [
+            {
+              "id": "whole-record",
+              "text": "版本只是其中一项；别漏掉问题、尝试结果和可取得的附件。",
+              "tone": "emphasis"
+            }
+          ],
+          "footnotes": [
+            {
+              "id": "source-note",
+              "text": "合成教学规则，不作为真实业务操作规定。“可取得的附件”不改成必须先取得全部附件。来源：S2，L1–L2。"
+            }
+          ],
+          "labels": [],
+          "subtitle": "合成SOP中的首轮记录",
+          "title": "首轮记录覆盖五项信息"
+        },
+        "internal_only": {
+          "production_notes": "本次只提交 page_copy 正文和内容映射；使用已固化的 default 风格。本阶段没有视觉生产、逐字口播或认可结果。",
+          "source_private_refs": [],
+          "unresolved_questions": []
+        },
+        "page_id": "P02",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "首轮记录要覆盖五项。请顺着清单逐项核对。第一，设备型号。第二，设备版本。这是两个记录对象，不能只关注版本而漏掉型号。第三，已观察的问题，写清已经观察到的内容。第四，已尝试动作及结果，动作和结果要一起记录，不能只留下做过什么。第五，可取得的附件。注意这里的条件是可取得，不能把它改成必须先取得全部附件。\n\n这五项共同组成首轮记录。核对时，不能用版本一项代替整份记录；即使注意到了版本，也要检查问题、尝试结果和可取得的附件有没有写清。再顺着五项看一遍：型号、版本、问题、尝试动作及结果、可取得的附件。接下来，我们专门处理其中一种情况：设备版本暂时取不到，记录怎样写？",
+        "visual_spec": {
+          "edges": [],
+          "intent": "让学员能按五项检查首轮记录，保留“可取得”的附件条件。",
+          "layout_hint": "五项清单依次排列；使用足够行距，将提示放在清单下方，不模拟未提供的系统表单。",
+          "nodes": [],
+          "reference_mode": "new_design",
+          "style_ref": "default"
+        }
+      },
+      {
+        "citations": [
+          {
+            "claim_kind": "reported_fact",
+            "id": "unknown-rule",
+            "locator": "L3",
+            "source_id": "src-7db53fc5",
+            "supports": "取不到版本须写未知及具体原因，禁止推测、伪造或留空不解释。"
+          },
+          {
+            "claim_kind": "design_proposal",
+            "id": "example-design",
+            "locator": "L3",
+            "source_id": "src-7db53fc5",
+            "supports": "虚构原因演示规则的写法，不声称发生过此事件。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "urgency-separation",
+            "locator": "L4",
+            "source_id": "src-7db53fc5",
+            "supports": "版本是否已知不单独决定紧急程度。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "no-auto-upgrade",
+            "locator": "L6",
+            "source_id": "src-7db53fc5",
+            "supports": "普通版本未知不自动触发专家升级。"
+          }
+        ],
+        "content_mapping": {
+          "narrative_ref": {
+            "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+            "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+          },
+          "plan_role_page_id": "P03",
+          "speech_segments": [
+            {
+              "end_codepoint": 136,
+              "estimated_seconds": 30,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "unknown-record",
+                "unknown-is-information",
+                "training-boundary"
+              ],
+              "segment_id": "P03-speech-01",
+              "start_codepoint": 0
+            },
+            {
+              "end_codepoint": 254,
+              "estimated_seconds": 25,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "unknown-example",
+                "unknown-record",
+                "training-boundary"
+              ],
+              "segment_id": "P03-speech-02",
+              "start_codepoint": 136
+            },
+            {
+              "end_codepoint": 348,
+              "estimated_seconds": 20,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "unknown-is-information",
+                "unknown-record"
+              ],
+              "segment_id": "P03-speech-03",
+              "start_codepoint": 254
+            }
+          ],
+          "visible_links": [
+            {
+              "element_ref": "atom:P03:title",
+              "narrative_node_ids": [
+                "unknown-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P03:subtitle",
+              "narrative_node_ids": [
+                "unknown-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P03:block:record-choices:heading",
+              "narrative_node_ids": [
+                "unknown-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P03:item:correct-record:text",
+              "narrative_node_ids": [
+                "unknown-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P03:item:blank-record:text",
+              "narrative_node_ids": [
+                "unknown-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P03:item:guessed-record:text",
+              "narrative_node_ids": [
+                "unknown-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P03:block:fictional-example:text",
+              "narrative_node_ids": [
+                "unknown-example",
+                "unknown-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P03:footnote:source-note:text",
+              "narrative_node_ids": [
+                "training-boundary",
+                "unknown-example",
+                "unknown-is-information"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P03:callout:unknown-meaning:text",
+              "narrative_node_ids": [
+                "unknown-record",
+                "unknown-is-information"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "heading": "怎样写，怎样不写",
+              "id": "record-choices",
+              "items": [
+                {
+                  "id": "correct-record",
+                  "text": "按规则：版本填“未知”，同时说明具体原因。"
+                },
+                {
+                  "id": "blank-record",
+                  "text": "错误：版本栏留空，不解释原因。"
+                },
+                {
+                  "id": "guessed-record",
+                  "text": "错误：凭印象推测版本，或编造一个版本。"
+                }
+              ],
+              "type": "bullets"
+            },
+            {
+              "id": "fictional-example",
+              "text": "虚构练习（非真实事件）\n设定：现场暂无法查看版本标识。\n记录：设备版本：未知；原因：现场暂无法查看版本标识。",
+              "type": "paragraph"
+            }
+          ],
+          "callouts": [
+            {
+              "id": "unknown-meaning",
+              "text": "真实记录应写真实原因。版本未知是一项信息状态，不单独决定紧急程度，也不自动触发专家升级。",
+              "tone": "emphasis"
+            }
+          ],
+          "footnotes": [
+            {
+              "id": "source-note",
+              "text": "示范原因来自虚构练习设定，不是来源中的实际事件。合成教学规则见 S2，L1、L3、L4、L6。"
+            }
+          ],
+          "labels": [],
+          "subtitle": "无法取得版本时的记录规则",
+          "title": "版本取不到：写“未知”，写清原因"
+        },
+        "internal_only": {
+          "production_notes": "本次只提交 page_copy 正文和内容映射；使用已固化的 default 风格。本阶段没有视觉生产、逐字口播或认可结果。",
+          "source_private_refs": [],
+          "unresolved_questions": []
+        },
+        "page_id": "P03",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "版本取不到时，按合成SOP写两个部分：版本填“未知”，同时写清具体原因。只写未知两个字，还没有说明原因；留空不解释，也不符合这条规则。另一种错误是凭印象推测，或者编造一个版本。这会把尚未取得的信息写成已经知道的信息。首轮记录要如实保留已知和未知，不能靠猜测把记录填满。\n\n看下面的虚构示范。题目假定现场暂时无法查看版本标识，因此写成：“设备版本：未知；原因：现场暂无法查看版本标识。”这里的原因由练习设定给出，不是发生过的业务事件。真实记录应写真实原因，不能照抄这个示范，把它当成所有未知情况的统一解释。\n\n写清原因，是让接手者看懂信息状态。版本未知并不单独说明请求有多紧急，也不自动成为专家升级的理由。于是下一步要回答另一个问题：信息仍然未知，这条请求应当怎样流转？判断依据要回到既有紧急条件。",
+        "visual_spec": {
+          "edges": [],
+          "intent": "把未知的记录动作说明白，并区分规则与虚构示范。",
+          "layout_hint": "上方三行规则对照，下方虚构示范单独成区；未知及原因同时可见，不能只突出“未知”。",
+          "nodes": [],
+          "reference_mode": "new_design",
+          "style_ref": "default"
+        }
+      },
+      {
+        "citations": [
+          {
+            "claim_kind": "reported_fact",
+            "id": "urgency-basis",
+            "locator": "L4",
+            "source_id": "src-7db53fc5",
+            "supports": "紧急程度依据既有紧急条件，版本状态不单独决定。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "urgent-condition",
+            "locator": "L5",
+            "source_id": "src-7db53fc5",
+            "supports": "已符合紧急条件时立即走现有紧急路径并带已知信息，不为补版本延误。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "ordinary-condition",
+            "locator": "L6",
+            "source_id": "src-7db53fc5",
+            "supports": "普通版本未知记录原因后走普通路径，不自动紧急或专家升级。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "common-unknown-record",
+            "locator": "L3",
+            "source_id": "src-7db53fc5",
+            "supports": "取不到版本如实写未知及具体原因。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "historical-routing-claim",
+            "locator": "L2",
+            "source_id": "src-7c6c5ee2",
+            "supports": "历史草案曾提出所有请求补齐版本再流转，仅作为错误反例引用。"
+          },
+          {
+            "claim_kind": "inference",
+            "id": "routing-conflict-reason",
+            "locator": "L5",
+            "source_id": "src-7db53fc5",
+            "supports": "全量补齐前置规则与紧急不等待要求冲突。"
+          }
+        ],
+        "content_mapping": {
+          "narrative_ref": {
+            "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+            "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+          },
+          "plan_role_page_id": "P04",
+          "speech_segments": [
+            {
+              "end_codepoint": 95,
+              "estimated_seconds": 20,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "urgency-rule",
+                "unknown-is-information",
+                "routing-conflict"
+              ],
+              "segment_id": "P04-speech-01",
+              "start_codepoint": 0
+            },
+            {
+              "end_codepoint": 211,
+              "estimated_seconds": 25,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "urgent-path",
+                "unknown-record",
+                "urgency-rule"
+              ],
+              "segment_id": "P04-speech-02",
+              "start_codepoint": 95
+            },
+            {
+              "end_codepoint": 321,
+              "estimated_seconds": 25,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "ordinary-path",
+                "unknown-record",
+                "urgency-rule",
+                "unknown-is-information"
+              ],
+              "segment_id": "P04-speech-03",
+              "start_codepoint": 211
+            },
+            {
+              "end_codepoint": 461,
+              "estimated_seconds": 30,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "old-all-first-claim",
+                "routing-conflict",
+                "urgent-path",
+                "ordinary-path",
+                "operational-details",
+                "training-boundary"
+              ],
+              "segment_id": "P04-speech-04",
+              "start_codepoint": 321
+            }
+          ],
+          "visible_links": [
+            {
+              "element_ref": "atom:P04:title",
+              "narrative_node_ids": [
+                "urgency-rule",
+                "routing-conflict"
+              ],
+              "source_links": [
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-7c6c5ee2",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/37/375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4.json",
+                      "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+                    },
+                    "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:subtitle",
+              "narrative_node_ids": [
+                "urgency-rule",
+                "unknown-is-information",
+                "training-boundary"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:block:unknown-in-both:text",
+              "narrative_node_ids": [
+                "unknown-record",
+                "urgent-path",
+                "unknown-is-information"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:label:urgency-check:text",
+              "narrative_node_ids": [
+                "urgency-rule"
+              ],
+              "source_links": [
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:label:urgent-state:text",
+              "narrative_node_ids": [
+                "urgency-rule",
+                "urgent-path"
+              ],
+              "source_links": [
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:label:ordinary-state:text",
+              "narrative_node_ids": [
+                "ordinary-path",
+                "urgency-rule"
+              ],
+              "source_links": [
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:label:urgent-route:text",
+              "narrative_node_ids": [
+                "urgent-path"
+              ],
+              "source_links": [
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:label:ordinary-route:text",
+              "narrative_node_ids": [
+                "ordinary-path"
+              ],
+              "source_links": [
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:footnote:operational-gap:text",
+              "narrative_node_ids": [
+                "training-boundary",
+                "operational-details",
+                "old-all-first-claim"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-7c6c5ee2",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/37/375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4.json",
+                      "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+                    },
+                    "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P04:callout:historical-routing-error:text",
+              "narrative_node_ids": [
+                "old-all-first-claim",
+                "routing-conflict"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7c6c5ee2",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/37/375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4.json",
+                      "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+                    },
+                    "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "id": "unknown-in-both",
+              "text": "两条路径都如实记录版本状态；版本无法取得时写“未知”及具体原因。紧急请求不得为补版本延误流转。",
+              "type": "paragraph"
+            }
+          ],
+          "callouts": [
+            {
+              "id": "historical-routing-error",
+              "text": "历史草案反例（不采用）：“所有请求都先补齐版本，再进入任何路径。”它违背紧急请求不等待、普通版本未知可说明原因后流转的规则。",
+              "tone": "emphasis"
+            }
+          ],
+          "footnotes": [
+            {
+              "id": "operational-gap",
+              "text": "合成规则。实际紧急条件、路径入口及岗位未提供，真实操作须依实际规定。来源：S2，L1、L3–L6；历史反例：S3，L2。"
+            }
+          ],
+          "labels": [
+            {
+              "id": "urgency-check",
+              "text": "依据既有紧急条件判断"
+            },
+            {
+              "id": "urgent-state",
+              "text": "已符合紧急条件"
+            },
+            {
+              "id": "ordinary-state",
+              "text": "普通请求"
+            },
+            {
+              "id": "urgent-route",
+              "text": "立即走现有紧急路径\n带上已知信息，不等补齐版本"
+            },
+            {
+              "id": "ordinary-route",
+              "text": "按普通路径流转\n版本未知不自动变成紧急或专家升级"
+            }
+          ],
+          "subtitle": "合成SOP：信息状态与紧急程度分开判断",
+          "title": "流转看紧急条件，版本补齐不能成为共同门槛"
+        },
+        "internal_only": {
+          "production_notes": "本次只提交 page_copy 正文和内容映射；使用已固化的 default 风格。本阶段没有视觉生产、逐字口播或认可结果。",
+          "source_private_refs": [],
+          "unresolved_questions": [
+            "既有紧急条件的具体阈值、现有紧急和普通路径入口、真实交接岗位未知；不据此提供真实操作授权。",
+            "P04 仍需检验 100 秒内能否清楚讲完全部限定；没有实测或用户确认。"
+          ]
+        },
+        "page_id": "P04",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "这页把信息状态和紧急程度分开。先看中间的判断：依据既有紧急条件。版本已知还是未知，不能单独决定紧急程度。两条分支的条件不同，流转动作也不同，不能给所有请求加上同一个“先补齐版本”的门槛。\n\n第一条，已经符合紧急条件。按现有紧急路径立即流转，带上已知信息，不等补齐版本。版本取不到时，仍然如实写未知及具体原因；这项记录要求不能变成延误紧急流转的理由。请把“已符合紧急条件”和“立即流转”连起来理解，不能只记住立即两个字。\n\n第二条，普通请求。版本未知时，记录具体原因，按普通路径流转。未知不会自动把普通请求改成紧急，也不会自动触发专家升级。因此，两条路径都如实说明版本状态，区别来自依据既有紧急条件作出的判断，而不是来自有没有填出一个版本。\n\n再看历史草案的反例：“所有请求都先补齐版本，再进入任何路径。”本课不采用，因为它同时违背紧急请求不等待，以及普通版本未知说明原因后可以流转的规则。材料没有提供实际紧急条件、路径入口和岗位，本页只讲合成规则；真实操作要依实际规定。路径明确后，还要检查交出去的记录是否便于下一人接手。",
+        "visual_spec": {
+          "edges": [
+            {
+              "direction": "forward",
+              "edge_id": "condition-urgent",
+              "from": "check",
+              "label_ref": null,
+              "relationship": "按既有紧急条件已判定为紧急",
+              "to": "urgent"
+            },
+            {
+              "direction": "forward",
+              "edge_id": "condition-ordinary",
+              "from": "check",
+              "label_ref": null,
+              "relationship": "按既有紧急条件已判定为普通",
+              "to": "ordinary"
+            },
+            {
+              "direction": "forward",
+              "edge_id": "urgent-to-flow",
+              "from": "urgent",
+              "label_ref": null,
+              "relationship": "已符合紧急条件时立即流转，不等待版本补齐",
+              "to": "urgent-flow"
+            },
+            {
+              "direction": "forward",
+              "edge_id": "ordinary-to-flow",
+              "from": "ordinary",
+              "label_ref": null,
+              "relationship": "普通版本未知时记录原因后走普通路径",
+              "to": "ordinary-flow"
+            }
+          ],
+          "intent": "用一个判断与两个分支解释不同流转，保留紧急不等待和普通不自动升级的条件。",
+          "layout_hint": "中央为既有紧急条件判断，左右分支分别展示给定紧急状态及流转；共同未知记录放在分支下，历史反例与真实条件缺口置底。图仅表示教学规则。",
+          "nodes": [
+            {
+              "label_ref": "atom:P04:label:urgency-check:text",
+              "node_id": "check",
+              "status": "unspecified"
+            },
+            {
+              "label_ref": "atom:P04:label:urgent-state:text",
+              "node_id": "urgent",
+              "status": "unspecified"
+            },
+            {
+              "label_ref": "atom:P04:label:ordinary-state:text",
+              "node_id": "ordinary",
+              "status": "unspecified"
+            },
+            {
+              "label_ref": "atom:P04:label:urgent-route:text",
+              "node_id": "urgent-flow",
+              "status": "unspecified"
+            },
+            {
+              "label_ref": "atom:P04:label:ordinary-route:text",
+              "node_id": "ordinary-flow",
+              "status": "unspecified"
+            }
+          ],
+          "reference_mode": "new_design",
+          "style_ref": "default"
+        }
+      },
+      {
+        "citations": [
+          {
+            "claim_kind": "reported_fact",
+            "id": "handoff-output",
+            "locator": "L7",
+            "source_id": "src-7db53fc5",
+            "supports": "交接应让接手者知道已知、未知和下一步，不表示故障解决。"
+          },
+          {
+            "claim_kind": "design_proposal",
+            "id": "known-field-check",
+            "locator": "L2",
+            "source_id": "src-7db53fc5",
+            "supports": "用五项首轮信息检查已知信息的覆盖。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "unknown-reason",
+            "locator": "L3",
+            "source_id": "src-7db53fc5",
+            "supports": "版本无法取得时如实记录未知及原因。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "urgent-next",
+            "locator": "L5",
+            "source_id": "src-7db53fc5",
+            "supports": "给定已符合紧急条件的下一步是立即走现有紧急路径。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "ordinary-next",
+            "locator": "L6",
+            "source_id": "src-7db53fc5",
+            "supports": "普通版本未知说明原因后走普通路径。"
+          }
+        ],
+        "content_mapping": {
+          "narrative_ref": {
+            "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+            "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+          },
+          "plan_role_page_id": "P05",
+          "speech_segments": [
+            {
+              "end_codepoint": 131,
+              "estimated_seconds": 30,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "handoff-goal",
+                "first-record",
+                "unknown-record"
+              ],
+              "segment_id": "P05-speech-01",
+              "start_codepoint": 0
+            },
+            {
+              "end_codepoint": 294,
+              "estimated_seconds": 35,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "handoff-goal",
+                "handoff-standard",
+                "operational-details",
+                "training-boundary"
+              ],
+              "segment_id": "P05-speech-02",
+              "start_codepoint": 131
+            }
+          ],
+          "visible_links": [
+            {
+              "element_ref": "atom:P05:title",
+              "narrative_node_ids": [
+                "handoff-goal",
+                "handoff-standard"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P05:subtitle",
+              "narrative_node_ids": [
+                "handoff-goal"
+              ],
+              "source_links": [
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P05:block:handoff-checks:heading",
+              "narrative_node_ids": [
+                "handoff-goal"
+              ],
+              "source_links": [
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P05:item:known:text",
+              "narrative_node_ids": [
+                "handoff-goal",
+                "first-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P05:item:unknown:text",
+              "narrative_node_ids": [
+                "handoff-goal",
+                "unknown-record"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P05:item:next:text",
+              "narrative_node_ids": [
+                "handoff-standard",
+                "operational-details"
+              ],
+              "source_links": [
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P05:footnote:operational-gap:text",
+              "narrative_node_ids": [
+                "training-boundary",
+                "operational-details"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P05:callout:handoff-not-repair:text",
+              "narrative_node_ids": [
+                "handoff-goal",
+                "handoff-standard"
+              ],
+              "source_links": [
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "heading": "交接时回答三个问题",
+              "id": "handoff-checks",
+              "items": [
+                {
+                  "id": "known",
+                  "text": "已知：用五项首轮记录核对已经取得的信息。"
+                },
+                {
+                  "id": "unknown",
+                  "text": "未知：说明仍取不到什么。版本取不到时，写“未知”及具体原因。"
+                },
+                {
+                  "id": "next",
+                  "text": "下一步：已符合紧急条件的，立即走现有紧急路径；普通请求版本未知的，说明原因后走普通路径。"
+                }
+              ],
+              "type": "bullets"
+            }
+          ],
+          "callouts": [
+            {
+              "id": "handoff-not-repair",
+              "text": "能让下一人接手，不表示故障已经解决。",
+              "tone": "emphasis"
+            }
+          ],
+          "footnotes": [
+            {
+              "id": "operational-gap",
+              "text": "合成教学。材料未提供实际岗位、路径入口或后续修复动作；真实操作须依实际规定。来源：S2，L1–L3、L5–L7。"
+            }
+          ],
+          "labels": [],
+          "subtitle": "目标是让下一位接手者看懂记录",
+          "title": "交接前核对：已知、未知、下一步"
+        },
+        "internal_only": {
+          "production_notes": "本次只提交 page_copy 正文和内容映射；使用已固化的 default 风格。本阶段没有视觉生产、逐字口播或认可结果。",
+          "source_private_refs": [],
+          "unresolved_questions": [
+            "真实交接岗位及路径入口未知；正文下一步仅表达到材料支持的流转。"
+          ]
+        },
+        "page_id": "P05",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "交接前，换成下一位接手者的角度，核对三个问题。第一，已经知道什么？用五项首轮记录检查：设备型号、设备版本、已观察的问题、已尝试动作及结果、可取得的附件，已经取得的信息如实写清。第二，还有什么未知？版本取不到，就写未知及具体原因，让接手者能辨认这一处信息缺口。\n\n第三，下一步是什么？在这份合成材料里，已符合紧急条件的，立即走现有紧急路径；普通请求版本未知的，说明原因后走普通路径。这里不补写材料没有给出的岗位、系统入口或修复动作。交接的目标是让下一人知道已知、未知和下一步，便于接手。达到这个目标，仍然不能证明故障已经解决。最后，我们用两条给定条件的虚构练习，检查能不能把这些规则用起来。",
+        "visual_spec": {
+          "edges": [],
+          "intent": "把记录与流转组合成可接手的交接标准，明确它与故障解决的区别。",
+          "layout_hint": "三项交接核对纵向呈现，末尾突出故障未必已解决；不再复制 P04 的完整分流图。",
+          "nodes": [],
+          "reference_mode": "new_design",
+          "style_ref": "default"
+        }
+      },
+      {
+        "citations": [
+          {
+            "claim_kind": "design_proposal",
+            "id": "exercise-design",
+            "locator": "L3",
+            "source_id": "src-7db53fc5",
+            "supports": "版本未知的虚构练习设计；未知原因是明确给定条件。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "a-rule",
+            "locator": "L5",
+            "source_id": "src-7db53fc5",
+            "supports": "甲已符合紧急条件，立即流转且不为补版本延误。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "b-rule",
+            "locator": "L6",
+            "source_id": "src-7db53fc5",
+            "supports": "乙为普通请求，未知原因记录后普通流转而不自动升级。"
+          },
+          {
+            "claim_kind": "reported_fact",
+            "id": "handoff-check",
+            "locator": "L7",
+            "source_id": "src-7db53fc5",
+            "supports": "交接带已知、未知、下一步，不表示故障已解决。"
+          },
+          {
+            "claim_kind": "design_proposal",
+            "id": "record-check",
+            "locator": "L2",
+            "source_id": "src-7db53fc5",
+            "supports": "收束回扣五项记录核对。"
+          }
+        ],
+        "content_mapping": {
+          "narrative_ref": {
+            "path": ".deckmaster/objects/c2/c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d.json",
+            "sha256": "c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d"
+          },
+          "plan_role_page_id": "P06",
+          "speech_segments": [
+            {
+              "end_codepoint": 155,
+              "estimated_seconds": 30,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "exercise-design",
+                "learning-check",
+                "operational-details",
+                "training-boundary"
+              ],
+              "segment_id": "P06-speech-01",
+              "start_codepoint": 0
+            },
+            {
+              "end_codepoint": 189,
+              "estimated_seconds": 60,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "exercise-design",
+                "learning-check"
+              ],
+              "segment_id": "P06-speech-02",
+              "start_codepoint": 155
+            },
+            {
+              "end_codepoint": 389,
+              "estimated_seconds": 40,
+              "kind": "verbatim",
+              "narrative_node_ids": [
+                "unknown-record",
+                "urgent-path",
+                "ordinary-path",
+                "handoff-goal",
+                "first-record",
+                "learning-check",
+                "exercise-design",
+                "training-boundary",
+                "operational-details"
+              ],
+              "segment_id": "P06-speech-03",
+              "start_codepoint": 189
+            }
+          ],
+          "visible_links": [
+            {
+              "element_ref": "atom:P06:title",
+              "narrative_node_ids": [
+                "exercise-design",
+                "learning-check"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P06:subtitle",
+              "narrative_node_ids": [
+                "exercise-design",
+                "learning-check"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P06:block:given-cases:heading",
+              "narrative_node_ids": [
+                "exercise-design",
+                "training-boundary"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P06:item:case-a:text",
+              "narrative_node_ids": [
+                "exercise-design",
+                "operational-details",
+                "urgent-path"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P06:item:case-b:text",
+              "narrative_node_ids": [
+                "exercise-design",
+                "operational-details",
+                "ordinary-path"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P06:block:exercise-task:text",
+              "narrative_node_ids": [
+                "exercise-design",
+                "learning-check",
+                "operational-details"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:P06:footnote:exercise-boundary:text",
+              "narrative_node_ids": [
+                "training-boundary",
+                "exercise-design",
+                "learning-check",
+                "operational-details"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                },
+                {
+                  "locator": "L7",
+                  "source_id": "src-7db53fc5",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                      "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                    },
+                    "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "heading": "给定条件：两条均为虚构练习",
+              "id": "given-cases",
+              "items": [
+                {
+                  "id": "case-a",
+                  "text": "甲：已判定符合既有紧急条件。版本取不到；练习给定原因是现场暂无法查看版本标识。"
+                },
+                {
+                  "id": "case-b",
+                  "text": "乙：已判定为普通请求。版本取不到；练习给定原因是现场暂无法查看版本标识。"
+                }
+              ],
+              "type": "bullets"
+            },
+            {
+              "id": "exercise-task",
+              "text": "请独立作答 60 秒。分别写下：版本及原因；走哪条路径、是否等补版本；交接的已知、未知和下一步。紧急状态已给定，不必推断阈值。作答结束后由讲者给出完整反馈。",
+              "type": "paragraph"
+            }
+          ],
+          "callouts": [],
+          "footnotes": [
+            {
+              "id": "exercise-boundary",
+              "text": "未知原因由练习设定给出。练习只观察理解与纠错；真实紧急条件和路径入口仍未知，不证明业务资格或故障处理能力。合成规则依据：S2，L1–L7。"
+            }
+          ],
+          "labels": [],
+          "subtitle": "按给定条件独立作答 60 秒，再听讲者反馈",
+          "title": "虚构练习：同样版本未知，流转为什么不同？"
+        },
+        "internal_only": {
+          "production_notes": "本次只提交 page_copy 正文和内容映射；使用已固化的 default 风格。本阶段没有视觉生产、逐字口播或认可结果。\n本轮 page_copy 返修：上屏只保留题目、作答要求和合成限定；移出的参考答案及最终自查由讲者在 60 秒独立作答结束后完整讲述。以下为保留的原文，属于 internal_only，不得制作进题面：\n作答后对照\n两条都写：设备版本：未知；原因：现场暂无法查看版本标识。已知信息照实带上。\n甲：立即走现有紧急路径，不等补齐版本。\n乙：说明未知原因后走普通路径，不因未知自动变紧急或专家升级。\n两条交接都不证明故障已解决。最后自查五项：型号、版本、问题、尝试动作及结果、可取得的附件。\n本层保持 speaker_notes 和全部 speech_segments 原值；停顿段 kind 与口播衔接由后续正式 speech 阶段修复。当前只完成内容提案，未验证真实渲染、演练或认可。",
+          "source_private_refs": [],
+          "unresolved_questions": [
+            "仅为合成练习，没有培训通过率、学员真实操作能力或现场计时的实测。",
+            "P06 静态题面不得提前显示答案；实际成品是否遵守该要求尚未通过视觉生产与渲染核验。"
+          ]
+        },
+        "page_id": "P06",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "先看题目，暂不看反馈。两条都是虚构练习：甲已判定符合既有紧急条件，乙已判定为普通请求；两条版本都取不到，原因都是现场暂无法查看版本标识。请用一分钟分别写版本及原因、流转路径、是否等补版本，以及交接的已知、未知和下一步。紧急状态已给定，不必推断阈值；其他已知信息照实带上，不补造题目没有给出的内容。现在开始。\n\n【主持提示：停止讲述，留60秒独立作答；时间到后再讲下段反馈。】\n\n时间到，请对照反馈。两条都写：“设备版本：未知；原因：现场暂无法查看版本标识。”甲立即走现有紧急路径，带已知信息，不等补齐版本。乙说明未知原因后走普通路径，不因未知自动变成紧急或专家升级。交接都要说明已知、未知和下一步，也都不证明故障已解决。最后自查五项：型号、版本、问题、尝试动作及结果、可取得的附件。若漏了原因或混淆路径，就按反馈修正。这个练习只观察理解与纠错，不证明真实业务资格或故障处理能力。",
+        "visual_spec": {
+          "edges": [],
+          "intent": "观察学员是否能区分记录与流转，给出即时反馈并回扣交接责任。",
+          "layout_hint": "本页采用静态题面：进入 P06 时及 60 秒独立作答期间，只呈现标题、副标题、given-cases 两条给定条件、exercise-task 作答要求和 exercise-boundary 限定。参考答案 feedback（含标题、shared-record、a-feedback、b-feedback）以及 final-check 均不得出现在学员可见画面，也不以分区或“暂不看”提示代替隐藏。60 秒作答结束后，保持这一题面，由讲者给出 speaker_notes 中作答后的完整反馈和五项自查；答案仅作为讲者反馈交付，不增加页面。两条题目的给定紧急状态应醒目，保持虚构练习及真实条件未知的限定，不包装成真实案例或资格考核。",
+          "nodes": [],
+          "reference_mode": "new_design",
+          "style_ref": "default"
+        }
+      }
+    ],
+    "page_order": [
+      "P01",
+      "P02",
+      "P03",
+      "P04",
+      "P05",
+      "P06"
+    ],
+    "plan_input": {
+      "chapters": [
+        {
+          "chapter_id": "aim-and-record",
+          "page_ids": [
+            "P01",
+            "P02",
+            "P03"
+          ],
+          "title": "目标与首轮如实记录"
+        },
+        {
+          "chapter_id": "routing-and-handoff",
+          "page_ids": [
+            "P04",
+            "P05"
+          ],
+          "title": "按条件流转与可接手的交接"
+        },
+        {
+          "chapter_id": "practice-and-feedback",
+          "page_ids": [
+            "P06"
+          ],
+          "title": "给定条件练习与反馈"
+        }
+      ],
+      "issues": [
+        {
+          "affected_page_ids": [
+            "P04",
+            "P05",
+            "P06"
+          ],
+          "impact": "blocker",
+          "issue_id": "plan-routing-details",
+          "question": "真实紧急条件、路径入口、交接岗位及后续处理动作仍未知；P04–P06 仅做合成规则教学，练习直接给定紧急状态。若用于实际岗位操作，必须先取得实际规定。",
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "affected_page_ids": [
+            "P01",
+            "P02",
+            "P03",
+            "P04",
+            "P05",
+            "P06"
+          ],
+          "impact": "needs_judgment",
+          "issue_id": "mainline-and-sample-review",
+          "question": "简述要求先看主线与最密 P04 样稿、确认后全套。本工作单已授权当前 page_copy 全页内容，但输入中没有可核验的人类主线或样稿确认；本提交不宣称用户或专业认可。",
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "affected_page_ids": [
+            "P01",
+            "P02",
+            "P03",
+            "P04",
+            "P05",
+            "P06"
+          ],
+          "impact": "advisory",
+          "issue_id": "eight-minute-rehearsal",
+          "question": "保留 480 秒硬预算：420 秒讲述、60 秒互动；逐页时间仍为估计，当前没有逐字口播、码点计数或实际演练计时。P04 的 100 秒和全套时长需实测。",
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "affected_page_ids": [
+            "P02",
+            "P03",
+            "P04",
+            "P05",
+            "P06"
+          ],
+          "impact": "needs_judgment",
+          "issue_id": "limited-time-tradeoff",
+          "question": "六页、8 分钟保留完整五项记录、未知说明、双分支、交接与一分钟作答。受众经验未知；范围适配仍待判断，不删条件或缩小正文换取篇幅，也不扩展真实阈值、系统演示或故障诊断。",
+          "resolution": "open",
+          "resolution_ref": null
+        }
+      ],
+      "page_budget": {
+        "exact": 6,
+        "max": 6,
+        "target": 6
+      },
+      "page_order": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06"
+      ],
+      "page_roles": [
+        {
+          "audience_question": "本课要产出什么，38% 说明什么？",
+          "content_profile": "mixed",
+          "density_rationale": "50 秒用于目标、一个复算数字及收益反例，不扩展商业收益；数字与未测量限定相邻。删去本页会使学员失去课程目标和数字边界。",
+          "intended_takeaway": "如实记录、按条件流转、交接三项形成训练主线；38% 仅是版本缺失样本占比，历史效率提升说法不采用。",
+          "narrative_node_ids": [
+            "handoff-standard",
+            "training-boundary",
+            "sample-observation",
+            "sample-share",
+            "sample-measurement-limit",
+            "old-efficiency-claim",
+            "efficiency-conflict",
+            "training-sequence",
+            "learning-check"
+          ],
+          "page_id": "P01",
+          "required_qualifications": [
+            "合成教学，不代表真实团队统计或真实业务操作规定。",
+            "38% 为 38/100 的样本占比，未测轮次、时长和解决率。",
+            "交接完成不表示故障解决。"
+          ],
+          "role": "界定可接手的目标，并纠正样本数字的误读",
+          "source_links": [
+            {
+              "locator": "L1",
+              "source_id": "src-3b6aa1bf",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                  "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                },
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+              }
+            },
+            {
+              "locator": "L2",
+              "source_id": "src-3b6aa1bf",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                  "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                },
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+              }
+            },
+            {
+              "locator": "L3",
+              "source_id": "src-3b6aa1bf",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/9a/9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719.json",
+                  "sha256": "9a052b8694b226468432946f9378cc58d530a8ad3ca7ff94e1ca28ed37c82719"
+                },
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8"
+              }
+            },
+            {
+              "locator": "L1",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L2",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L3",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L4",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L5",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L6",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L7",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L1",
+              "source_id": "src-7c6c5ee2",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/37/375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4.json",
+                  "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+                },
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e"
+              }
+            }
+          ],
+          "timing_seconds": 50,
+          "transition_to_next": "先知道交接目标，再看首轮记录应覆盖哪些信息。"
+        },
+        {
+          "audience_question": "首次接单究竟记录哪五项？",
+          "content_profile": "mechanism",
+          "density_rationale": "60 秒呈现五项清单及一条完整性提醒；五行承载五个检查对象，不模拟未提供的系统表单。删去会把首轮记录误缩为版本记录。",
+          "intended_takeaway": "型号、版本、问题、尝试动作及结果、可取得附件逐项核对，版本不替代整份记录。",
+          "narrative_node_ids": [
+            "first-record",
+            "training-boundary"
+          ],
+          "page_id": "P02",
+          "required_qualifications": [
+            "五项来自合成 SOP，不增加源外必填字段。",
+            "保留附件的可取得条件，不要求先取得全部附件。"
+          ],
+          "role": "列出完整首轮五项记录",
+          "source_links": [
+            {
+              "locator": "L1",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L2",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            }
+          ],
+          "timing_seconds": 60,
+          "transition_to_next": "五项中的版本可能取不到，接着学习如何如实说明。"
+        },
+        {
+          "audience_question": "版本取不到，怎样写才保留真实信息？",
+          "content_profile": "mechanism",
+          "density_rationale": "75 秒解释正确写法、两种错误和一条虚构对照；原因与未知同时呈现，不堆积源外案例。删去会缺少信息取不到时的具体动作。",
+          "intended_takeaway": "写未知及具体原因，禁止无解释留空和猜测；虚构对照展示写法，真实记录必须写真实原因。",
+          "narrative_node_ids": [
+            "unknown-record",
+            "unknown-is-information",
+            "unknown-example",
+            "training-boundary"
+          ],
+          "page_id": "P03",
+          "required_qualifications": [
+            "虚构示范不是实际事件，原因是练习设定。",
+            "未知是信息状态，不单独决定紧急程度或自动专家升级。"
+          ],
+          "role": "演示无法取得版本时怎样记录",
+          "source_links": [
+            {
+              "locator": "L1",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L3",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L4",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L6",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            }
+          ],
+          "timing_seconds": 75,
+          "transition_to_next": "记录未知之后，流转仍要依据紧急条件。"
+        },
+        {
+          "audience_question": "版本未知应等待、立即流转还是升级？",
+          "content_profile": "mixed",
+          "density_rationale": "100 秒保留判断节点、两个分支、共同未知记录、旧稿反例及缺口；这是条件关系最密页，需核查同屏可读性和讲述时长。删去会让记录规则与流转脱节；不靠删限定压缩。",
+          "intended_takeaway": "先依据既有紧急条件；已符合紧急条件就立即走现有紧急路径并带已知信息，不等版本。普通版本未知写原因后走普通路径，不自动升级。全量补齐前置规则是反例。",
+          "narrative_node_ids": [
+            "urgency-rule",
+            "urgent-path",
+            "ordinary-path",
+            "unknown-record",
+            "unknown-is-information",
+            "old-all-first-claim",
+            "routing-conflict",
+            "operational-details",
+            "training-boundary"
+          ],
+          "page_id": "P04",
+          "required_qualifications": [
+            "立即流转的前提是已符合既有紧急条件。",
+            "两条分支都如实记录未知原因，不能为补版本延误紧急流转。",
+            "普通版本未知不自动紧急或专家升级。",
+            "真实阈值、路径入口及岗位未提供；只表达教学规则。"
+          ],
+          "role": "说明紧急与普通两个条件分支；保持最密页的职责",
+          "source_links": [
+            {
+              "locator": "L1",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L3",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L4",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L5",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L6",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L2",
+              "source_id": "src-7c6c5ee2",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/37/375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4.json",
+                  "sha256": "375e59cc55b4e74dbbf279d8d69e98d2ce7d0d89b5aae45150c3cbfab19e6da4"
+                },
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e"
+              }
+            }
+          ],
+          "timing_seconds": 100,
+          "transition_to_next": "路径明确后，再检查下一位接手者是否看懂记录。"
+        },
+        {
+          "audience_question": "交出去之前，下一位接手者需要知道什么？",
+          "content_profile": "mechanism",
+          "density_rationale": "65 秒用三项核对整合前页信息，避免再次复制分流图。删去会缺少接单员产出应达到的交接标准。",
+          "intended_takeaway": "交接检查已知、未知及原因、下一步；用五项记录核对已知，用既有条件说明流转，不据交接声称故障已解决。",
+          "narrative_node_ids": [
+            "handoff-goal",
+            "handoff-standard",
+            "first-record",
+            "unknown-record",
+            "operational-details",
+            "training-boundary"
+          ],
+          "page_id": "P05",
+          "required_qualifications": [
+            "不补造接手岗位、入口、修复动作或完成时限。",
+            "下一步仅到材料支持的流转，交接不是解决证明。"
+          ],
+          "role": "把记录与流转合成可接手的交接核对",
+          "source_links": [
+            {
+              "locator": "L1",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L2",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L3",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L5",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L6",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L7",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            }
+          ],
+          "timing_seconds": 65,
+          "transition_to_next": "用两条版本都未知、紧急状态不同的练习检查应用。"
+        },
+        {
+          "audience_question": "同样版本未知，能否解释两条不同流转？",
+          "content_profile": "mixed",
+          "density_rationale": "130 秒包含 70 秒读题与作答后讲者反馈、60 秒独立作答；上屏仅呈现两条给定条件、作答要求和限定，参考答案与最终自查留在作答后的讲者反馈，不同屏交付。只改变给定紧急状态；保留完整反馈与五项核对，不增加页面或诊断场景。删去本页会缺少目标行为的观察；全部秒数仍为估计。",
+          "intended_takeaway": "甲紧急立即流转不等补版本；乙普通流转且不自动升级；两条均写未知及给定原因、交接已知未知下一步，并回扣五项记录。",
+          "narrative_node_ids": [
+            "exercise-design",
+            "learning-check",
+            "unknown-record",
+            "urgency-rule",
+            "urgent-path",
+            "ordinary-path",
+            "handoff-goal",
+            "first-record",
+            "operational-details",
+            "training-boundary"
+          ],
+          "page_id": "P06",
+          "required_qualifications": [
+            "两条明确虚构，紧急状态已给定，不从症状推导未知阈值。",
+            "原因来自题目设定，不是实际业务事件。",
+            "练习观察理解与纠错，没有通过率或真实岗位能力证明。",
+            "先独立作答 60 秒，再由讲者交付完整反馈；题面不出现参考答案或最终自查答案。"
+          ],
+          "role": "先独立作答，再听讲者完整反馈，检查记录、流转及交接",
+          "source_links": [
+            {
+              "locator": "L1",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L2",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L3",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L4",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L5",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L6",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            },
+            {
+              "locator": "L7",
+              "source_id": "src-7db53fc5",
+              "source_version": {
+                "extract": {
+                  "path": ".deckmaster/objects/21/21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727.json",
+                  "sha256": "21c77f3e805492ad2e680bd8fb0b0ee859c6f0f55b4bfcd071ab55c60570c727"
+                },
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d"
+              }
+            }
+          ],
+          "timing_seconds": 130,
+          "transition_to_next": null
+        }
+      ],
+      "schema_version": "content_plan_input.v2",
+      "speech_policy": {
+        "mode": "verbatim",
+        "output": "separate_script",
+        "source": "provided"
+      },
+      "time_budget": {
+        "constraint": "hard",
+        "interaction_seconds": 60,
+        "speaking_seconds": 420,
+        "total_seconds": 480
+      },
+      "tradeoff_issue_ids": [
+        "limited-time-tradeoff"
+      ]
+    }
+  }
+}

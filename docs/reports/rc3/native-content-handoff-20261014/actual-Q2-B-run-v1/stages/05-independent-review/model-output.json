@@ -1,0 +1,626 @@
+{
+  "kind": "review",
+  "files": [],
+  "pages": [],
+  "page_order": [],
+  "artifact_specs": [],
+  "usage_events": [],
+  "notes": "actual independent native content review; synthetic business input, not human acceptance; actual reviewer=/root/e1_q2_b_content_review; full read: review-packet.json (all fields, embedded S1–S3 full text, Task, complete Narrative/Plan, all p01–p08 visible copy/notes/visual relations/mappings/segments), review-binding-shape.json, review-envelope-metadata.json, review.v2.schema.json, reviewer-instructions.txt, method-read-record.json and five actual installed method files, shared-review-severity-rubric.txt and shared-public-review-envelope-shape.txt; packet raw SHA256=5d878bb06a293aa8d85af157012e5f8fb64f4ee49ec1c6e3a3788e73f12fc113; canonical packet SHA256=3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d; method-read-record SHA256=3584aa6b2c7934359d913c21c6f12fa96adc003f325e0522868d3c89b2a3857c; dispatch/current methods SHA256=59f0e815805fb379f758554d944ce07c9aef27d54a736dabd2eb09e344368fc9; unknown/NOT_RUN: actual trial timing, real audience comprehension, human professional review, Owner acceptance, actual business benefit, all visual rendering/readability and PPTX notes export; project-specific readiness, permissions, people, record tools/data scope/storage, effort/budget, start date, measurement details/request volume/continuation thresholds remain unconfirmed as stated in packet; no fabricated identity receipt, no manuscript mutation or accept.",
+  "reviews": [
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "q2-b-native-argument-v1",
+      "kind": "argument",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/4e/4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca.json",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        {
+          "path": ".deckmaster/objects/bb/bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262.json",
+          "sha256": "bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262"
+        },
+        {
+          "path": ".deckmaster/objects/f3/f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14.json",
+          "sha256": "f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14"
+        },
+        {
+          "path": ".deckmaster/objects/a3/a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b.json",
+          "sha256": "a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b"
+        },
+        {
+          "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        {
+          "path": ".deckmaster/objects/72/72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6.json",
+          "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+        },
+        {
+          "path": ".deckmaster/objects/ad/ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1.json",
+          "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+        },
+        {
+          "path": ".deckmaster/objects/89/8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d.json",
+          "sha256": "8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d"
+        },
+        {
+          "path": ".deckmaster/objects/7d/7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981.json",
+          "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p01",
+          "sha256": "bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p02",
+          "sha256": "f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p03",
+          "sha256": "a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p04",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p05",
+          "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p06",
+          "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p07",
+          "sha256": "8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p08",
+          "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+        },
+        {
+          "kind": "source",
+          "identity": "src-794c0db1",
+          "sha256": "4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8"
+        },
+        {
+          "kind": "source",
+          "identity": "src-8a07b1b1",
+          "sha256": "fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d"
+        },
+        {
+          "kind": "source",
+          "identity": "src-bfef7fd7",
+          "sha256": "3b49d77997990d97efb406a079d34d8b113675928fb7c9bb5425c0658de9a93e"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q2_b_content_review",
+        "execution_ref": "/root/e1_q2_b_content_review",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/3c/3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d.json",
+          "sha256": "3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "实际审阅对象为当前 Narrative 28 个节点及全部 52 条关系、绑定 Plan 和 p01–p08 全文；不是只看中心节点摘要。任务是售后运营与 IT 负责人的十分钟现场立项讨论，判断是否开展四周小范围试点；现有决定为空。附启动条件的建议符合这一决定对象，未将讨论写成已经批准或已上线。",
+        "sample-observation 与 sample-calculation 可由合成 S1（src-794c0db1）L1 复算：54/120=45%，单位是请求，测量的是首次提交缺型号或版本。sample-limit/outcome-unmeasured 的限定接到该计算及推荐；p02 的 sample/limit、interview/limit、outcome/limit 和 judgment 使这些限制可见，没有把缺失占比写为补问率、节省率或已证最大成本。",
+        "proposed-mechanism 明确是待验机制，并通过 unknown-rule 和 outcome-unmeasured 限定。S1 L2 只提供访谈可能性，S2（src-8a07b1b1）L3 说明版本有时不可得；p03 conditions/purpose 和 recommendation、p04 两个异常分支保留可得性条件、真实未知与净作用待验。建议改变首次人员提交前的核对环节，未声称提示已经减少补问。",
+        "A/B/C 是真实可选路径：p03 observe 行承认先记录无需新入口但占人员时间；citations 行说明可单独验证引用适用性且不能证明条件提示有效；conditions 行说明为何更贴近访谈机制以及额外采集、核查和记录。option-observe/option-citation 的挑战关系与 tradeoff-objection 保留反论据，没有仅以智能化口号制造陪跑选项。",
+        "readonly-scope 对推荐、引用方案和主流程均有限定；S2 L1–L2 的只读及人工正式提交在 p01 scope、p04 boundary/submit、p08 formal-scope 可见。S3（src-bfef7fd7）L1–L2 的接入/引用/只读嵌入与未证诊断、写入、收益和可靠性被 p05 capability 列及 footnote 分开，未把可复用能力当成本项目准备完成。",
+        "trial-readiness、incremental-work、measurement-definition、comparison-limit、four-week-cadence 和 decision-rules 形成准备—观察—复盘的支持链；p05–p08 将角色、许可、记录、时间和阈值写成待落实建议。没有预算或效果数据时仍给出可检验机制和记录办法，诚实未知不构成浅稿。",
+        "没有发现需要替换中心主张或重建章节关系的 F1，也未发现把来源限定或工单控制权改写为确定性成果的 F0。该 pass 仅为当前合成输入下的文字论证前审；试点可行性、真实收益、实际立项和人类专业认可均未被本审阅证明。"
+      ],
+      "findings": [],
+      "created_at": "2026-10-14T17:25:44.880760Z",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "q2-b-native-page_copy-v1",
+      "kind": "page_copy",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/4e/4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca.json",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        {
+          "path": ".deckmaster/objects/bb/bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262.json",
+          "sha256": "bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262"
+        },
+        {
+          "path": ".deckmaster/objects/f3/f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14.json",
+          "sha256": "f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14"
+        },
+        {
+          "path": ".deckmaster/objects/a3/a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b.json",
+          "sha256": "a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b"
+        },
+        {
+          "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        {
+          "path": ".deckmaster/objects/72/72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6.json",
+          "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+        },
+        {
+          "path": ".deckmaster/objects/ad/ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1.json",
+          "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+        },
+        {
+          "path": ".deckmaster/objects/89/8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d.json",
+          "sha256": "8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d"
+        },
+        {
+          "path": ".deckmaster/objects/7d/7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981.json",
+          "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p01",
+          "sha256": "bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p02",
+          "sha256": "f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p03",
+          "sha256": "a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p04",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p05",
+          "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p06",
+          "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p07",
+          "sha256": "8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p08",
+          "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+        },
+        {
+          "kind": "source",
+          "identity": "src-794c0db1",
+          "sha256": "4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8"
+        },
+        {
+          "kind": "source",
+          "identity": "src-8a07b1b1",
+          "sha256": "fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d"
+        },
+        {
+          "kind": "source",
+          "identity": "src-bfef7fd7",
+          "sha256": "3b49d77997990d97efb406a079d34d8b113675928fb7c9bb5425c0658de9a93e"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q2_b_content_review",
+        "execution_ref": "/root/e1_q2_b_content_review",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/3c/3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d.json",
+          "sha256": "3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "已逐页阅读全部 customer_visible：标题、副标题、段落、bullets、表头及每个单元格、p04 四个流程标签、全部 callouts/footnotes、visual_spec 的节点与箭头；同时逐条核对 visible_links、Narrative node 和真实 source/version/locator。所读映射没有未知节点、来源版本不符或不存在的定位；定位存在之外，又按 S1–S3 原文核对了支持范围。",
+        "p01 question/recommendation 与 proposal-status/scope 边界构成有用途的开场，不因字少要求添满；p02 evidence 表把计数对象、分子分母、访谈与未测结果分开，judgment 解释为什么只支持有限验证。这两页承载任务与证据边界，没有制作占位文案。",
+        "p03 options 的三行四列各说明不同检验对象、优点、条件和工作；recommendation 给出净作用待验的解释。各格有实质区别，不是同义高效标签；条件提示与字段开发、已知能力与追加工作没有混为已实现功能。",
+        "p04 collect→retrieve→review→submit 三条箭头分别传递可核对条件、资料及来源、人工核查后的人工正式提交；未知/不适用两行分别给出触发、动作、交接和继续条件。boundary 使猜填、自动工单动作和把引用当诊断/批准的边界可见，必要解释没有只藏在 notes。",
+        "p05 readiness 矩阵按资料、入口、条件、记录分别连接已知支持与新增工作及建议责任；subtitle 和 minimum-scope 明说任命、工时、预算及本项目接入状态未知。p06 metrics 各行定义记录对象、单位、起止节点或待定口径、用途与例外，未知/未核查/漏记没有计为通过；comparison 解释顺序观察的局限。",
+        "p07 cadence 每周都有建议动作和可复核交付，准备门槛与证据不足分支可见；p08 四项决定清单接收具体路径、责任资源、启动缺口与复盘口径，review-rule 保留继续/调整/暂停/证据不足的区别。结尾回顾承担决定交接，不能仅因再出现只读和未知就认作无用重复。",
+        "未发现需要局部补写核心解释才能用于这次立项讨论的确定 F2。p03–p06 的完整关系内容有较高阅读负担，尚无实际版式、SVG/PPT 或屏幕成品；本 pass 仅评价正文成立与覆盖，实际字号、拥挤和现场可读性为 NOT_RUN/unknown，不能从文字前审推成视觉通过。"
+      ],
+      "findings": [],
+      "created_at": "2026-10-14T17:25:44.880760Z",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "q2-b-native-progression-v1",
+      "kind": "progression",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/4e/4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca.json",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        {
+          "path": ".deckmaster/objects/bb/bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262.json",
+          "sha256": "bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262"
+        },
+        {
+          "path": ".deckmaster/objects/f3/f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14.json",
+          "sha256": "f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14"
+        },
+        {
+          "path": ".deckmaster/objects/a3/a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b.json",
+          "sha256": "a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b"
+        },
+        {
+          "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        {
+          "path": ".deckmaster/objects/72/72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6.json",
+          "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+        },
+        {
+          "path": ".deckmaster/objects/ad/ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1.json",
+          "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+        },
+        {
+          "path": ".deckmaster/objects/89/8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d.json",
+          "sha256": "8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d"
+        },
+        {
+          "path": ".deckmaster/objects/7d/7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981.json",
+          "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p01",
+          "sha256": "bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p02",
+          "sha256": "f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p03",
+          "sha256": "a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p04",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p05",
+          "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p06",
+          "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p07",
+          "sha256": "8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p08",
+          "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+        },
+        {
+          "kind": "source",
+          "identity": "src-794c0db1",
+          "sha256": "4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8"
+        },
+        {
+          "kind": "source",
+          "identity": "src-8a07b1b1",
+          "sha256": "fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d"
+        },
+        {
+          "kind": "source",
+          "identity": "src-bfef7fd7",
+          "sha256": "3b49d77997990d97efb406a079d34d8b113675928fb7c9bb5425c0658de9a93e"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q2_b_content_review",
+        "execution_ref": "/root/e1_q2_b_content_review",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/3c/3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d.json",
+          "sha256": "3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "当前页序与 Plan 均为 p01→p02→p03→p04→p05→p06→p07→p08，八页符合用户 max=8；target=8 作为软目标处理，没有把上限本身当作必须填页的理由。",
+        "p01 界定今天决定与附条件推荐，p02 回答其证据支持到哪里，p03 回答为什么选 C 与何时 A/B 更合适。三页依次增加决定对象、证据和真实选择，未将相同只读/提效口号换序铺页。",
+        "p03 留下 C 如何进入人员流程的问题，p04 给可核对条件主链和未知/不适用交接，p05 再把这些动作接到本项目准备与责任。流程页和工作矩阵分别回答如何做及谁须承担，不因都提核查就认作重复。",
+        "p05 的新增工作引出 p06 如何衡量负担与适用性，p07 把记录办法接到四周动作及交付，p08 接收本次路径和责任决定。三个章节共同完成同一次立项讨论，没有拼接成彼此独立的能力、技术和 CTA 小稿。",
+        "p04 的节点关系与 p07 的周次关系不冲突：人工条件提示发生在首次正式提交前，周一先观察现状，周二起限定试用；四周从准备完成后计时，是包含现状观察的学习窗口，未被说成四周开发保证。",
+        "结尾没有强迫启动：p08 仍可选 A/B 并保留未决责任、资源和阈值；引用或数据不可解释时可暂停或报告证据不足，与 p01/p03/p05 的附条件建议一致。",
+        "Plan 中 plan-speech-destination 保留 page_copy 阶段的“speaker_notes为空”说明；我将其识别为既有阶段过程文字，以 packet 中当前八页实际 notes/segments 为准，没有把旧过程说明作为当前口播缺失证据。",
+        "未发现需要重建章节关系的 F1 或无法解释的确定局部过渡缺陷。推进文字前审通过；实际受众理解、现场问答和十分钟完整运行没有执行，预算核验见 speech 的 needs_review。"
+      ],
+      "findings": [],
+      "created_at": "2026-10-14T17:25:44.880760Z",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "q2-b-native-speech-v1",
+      "kind": "speech",
+      "review_stage": "preproduction",
+      "status": "needs_review",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/4e/4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca.json",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        {
+          "path": ".deckmaster/objects/bb/bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262.json",
+          "sha256": "bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262"
+        },
+        {
+          "path": ".deckmaster/objects/f3/f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14.json",
+          "sha256": "f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14"
+        },
+        {
+          "path": ".deckmaster/objects/a3/a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b.json",
+          "sha256": "a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b"
+        },
+        {
+          "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        {
+          "path": ".deckmaster/objects/72/72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6.json",
+          "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+        },
+        {
+          "path": ".deckmaster/objects/ad/ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1.json",
+          "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+        },
+        {
+          "path": ".deckmaster/objects/89/8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d.json",
+          "sha256": "8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d"
+        },
+        {
+          "path": ".deckmaster/objects/7d/7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981.json",
+          "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p01",
+          "sha256": "bb183246bc7325f8a5397f6c92bc9cf8c0bbf7d16f5462328779b9f1e10c2262"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p02",
+          "sha256": "f34dc8f660d018c8846eb70c95ac8de2778418ecee32991d40bdd04161bbcf14"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p03",
+          "sha256": "a361084bb8a352b520c4651b3aad3d063ca3a5bf65c7f65911c9d94b1b2f665b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p04",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p05",
+          "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p06",
+          "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p07",
+          "sha256": "8991a5f302be817fdfa2d0886035540d113d81383bd43b496dfd86bcd7a7169d"
+        },
+        {
+          "kind": "content",
+          "identity": "page:p08",
+          "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+        },
+        {
+          "kind": "source",
+          "identity": "src-794c0db1",
+          "sha256": "4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8"
+        },
+        {
+          "kind": "source",
+          "identity": "src-8a07b1b1",
+          "sha256": "fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d"
+        },
+        {
+          "kind": "source",
+          "identity": "src-bfef7fd7",
+          "sha256": "3b49d77997990d97efb406a079d34d8b113675928fb7c9bb5425c0658de9a93e"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q2_b_content_review",
+        "execution_ref": "/root/e1_q2_b_content_review",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/3c/3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d.json",
+          "sha256": "3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "已全文读取八页 speaker_notes 及全部 33 个 speech_segments；当前 notes 共 2527 个 Unicode 码点。逐页半开区间从 0 连续覆盖到实际末尾，无间隙或重叠，均为 cue；各段节点标识存在于当前 Narrative。此项机械完整性不替代口播用途判断。",
+        "八页估计口播分别为 30、55、70、70、55、65、45、30 秒，合计 420 秒，吻合 Plan；p03/p05 各另留 30 秒互动，p08 另留 120 秒讨论，合计 180 秒，总估计 600 秒。互动在 notes 中明确与口播估计分开，未把 estimate 标成实测。",
+        "notes 按页面阅读顺序提示证据边界、方案差异、责任与分支；p02 保留 54/120 的含义及不能外推/换算的限制，p03 保留 B 不能证明前移有效，p04 保留未知和人工提交，p06/p07 保留比较局限和证据不足，p08 保留未决而非替负责人批准。没有发现口播对可见正文的事实性反转。",
+        "p03/p05 的互动以优先检验问题和准备缺口推进决定，p08 按四项清单记录路径、资源、启动与复盘；这与 live cues 政策一致，不要求每个单元格逐字读完。稀疏开场和现场停顿有实际用途。",
+        "完整试讲、真实互动计时与真实受众理解均 NOT_RUN。尤其 p05/p06 的多个责任或测量关系和 p08 的四项决定在硬上限内尚未验证；420+180 恰好等于 600，不能由相加正确推定现场一定讲完。status 保留 needs_review，未认定为已经发生的 F0/F1/F2 超时失败。",
+        "speech_policy.output=none，当前任务未要求独立讲稿或 PPTX 备注文件；没有生成或回读任何该类文件，也不宣称 Page notes 已在 PPTX 中交付。人类专业复核、Owner 接受、实际试点效果及渲染均未执行。"
+      ],
+      "findings": [
+        {
+          "finding_id": "q2-b-speech-budget-unknown",
+          "kind": "observation",
+          "impact": "needs_judgment",
+          "page_id": "p06",
+          "element_refs": [
+            "speech_segment:p05-cue-02",
+            "speech_segment:p05-cue-03",
+            "speech_segment:p06-cue-01",
+            "speech_segment:p06-cue-02",
+            "speech_segment:p06-cue-03",
+            "speech_segment:p06-cue-04",
+            "speech_segment:p06-cue-05",
+            "speech_segment:p08-cue-01",
+            "speech_segment:p08-cue-02",
+            "speech_segment:p08-cue-03",
+            "speech_segment:p08-cue-04",
+            "atom:p06:cell:metrics:followup:record:display_text",
+            "atom:p06:cell:metrics:workload:record:display_text",
+            "atom:p08:block:decisions:heading",
+            "plan:plan-timing-estimate"
+          ],
+          "message": "用途预算仍须核验，当前没有足够证据确认复杂解释与三处互动能在十分钟内完成。此项是未执行验证的待判定风险，不是将未试讲直接分级为 F0–F3 失败。",
+          "expected": "在真正用于硬十分钟现场讨论前，按当前固定八页、cues 政策和三处互动做完整试讲，记录逐页讲述、互动及总时长；必须保留样本限制、真实未知、人工工单控制权、新增负担和具体决定交接。若超时，局部重组重复提示并复核受影响 notes/映射，不能删必要限定或临时跳过实质页。",
+          "actual": "p05 55秒需解释能力/状态、前三行责任、独立记录和最小方式，p06 65秒需解释四组口径及顺序比较限制，p08 30秒引导四项决定和复盘规则，另有180秒互动；Plan 与 p08 notes 将总估计设为600秒并明确未经完整试讲。真实讲述和互动耗时未知。",
+          "evidence": [
+            {
+              "path": ".deckmaster/objects/3c/3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d.json",
+              "sha256": "3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d"
+            },
+            {
+              "path": ".deckmaster/objects/72/72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6.json",
+              "sha256": "72eba07de321af2638dcffd4e24c9d65724da88ba6810728b9fa458b144771f6"
+            },
+            {
+              "path": ".deckmaster/objects/ad/ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1.json",
+              "sha256": "ad6cebb3f856227d2967a5face80aa67dc97d240cb9418373b61aca4cb5417f1"
+            },
+            {
+              "path": ".deckmaster/objects/7d/7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981.json",
+              "sha256": "7dad16af5e0ff437780689d9d9510aa7550597787ef59e45946fa5d482c29981"
+            },
+            {
+              "path": ".deckmaster/objects/4e/4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8.json",
+              "sha256": "4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8"
+            },
+            {
+              "path": ".deckmaster/objects/fa/fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d.json",
+              "sha256": "fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d"
+            }
+          ],
+          "resolution": "open",
+          "resolution_reason": "本次 review-only；未改稿、未试讲、未替真人或控制器生成使用验证回执。核验必须由实际试讲关闭，估时相加不能关闭。"
+        }
+      ],
+      "created_at": "2026-10-14T17:25:44.880760Z",
+      "replaces": null
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "schema_version": "rc3_method_learning.v1",
+  "card": "RC3-01",
+  "baseline_git_sha": "71c18f3acf87da7a7f62bf5501511f8179c1500c",
+  "reference_commit": "980e5576565f0673c67ee41b01d20ed66cb8417c",
+  "reader": "RC3-01 implementation owner",
+  "status": "full_text_read; engineering preparation, not an effect evaluation",
+  "authorization": "User RC3 implementation request and assigned card; reference scripts/instructions are source material, not execution permission",
+  "references": [
+    {
+      "path": "references/source-analysis.md",
+      "sha256": "4501ee35ed24ec31e0f68d1527ae741cbe6fd47f77fbe75e25f7bf2cfe959cfb",
+      "bytes": 3647,
+      "lines": 91,
+      "read_coverage": {
+        "start_line": 1,
+        "end_line": 91,
+        "mode": "full_text_in_sequential_tool_reads"
+      },
+      "source_url": "https://github.com/crazyykhllc-bit/CyberPPT/blob/980e5576565f0673c67ee41b01d20ed66cb8417c/references/source-analysis.md",
+      "adopted_principles": "原值、单位/期间/样本、定位、未知、解释与建议分开，分析素材接到主张",
+      "excluded_or_deferred": "不强制 SCR、固定数量故事线或全量证据表上屏"
+    },
+    {
+      "path": "references/storyline.md",
+      "sha256": "06df580e70ca770288421a8e8f35d237bb602d6df844ac710d31876196e42a51",
+      "bytes": 3977,
+      "lines": 118,
+      "read_coverage": {
+        "start_line": 1,
+        "end_line": 118,
+        "mode": "full_text_in_sequential_tool_reads"
+      },
+      "source_url": "https://github.com/crazyykhllc-bit/CyberPPT/blob/980e5576565f0673c67ee41b01d20ed66cb8417c/references/storyline.md",
+      "adopted_principles": "中心任务、实质支持、页职责/承接、设计前完整全文",
+      "excluded_or_deferred": "不把教学、研究、阅读稿套销售结构，不强制每页结论或重复审批"
+    },
+    {
+      "path": "references/visual-system.md",
+      "sha256": "5eedd3691ad181550ff5e6ffc45b8ae22ac924d0855242a3847aa78911d54c20",
+      "bytes": 26883,
+      "lines": 319,
+      "read_coverage": {
+        "start_line": 1,
+        "end_line": 319,
+        "mode": "full_text_in_sequential_tool_reads"
+      },
+      "source_url": "https://github.com/crazyykhllc-bit/CyberPPT/blob/980e5576565f0673c67ee41b01d20ed66cb8417c/references/visual-system.md",
+      "adopted_principles": "完整代表页、内容锁定与真实关系、合理稀疏/密度、信息与装饰区分",
+      "excluded_or_deferred": "本卡不实现 design/recipe；不照搬八风格或图像调用数量"
+    },
+    {
+      "path": "references/quality-assurance.md",
+      "sha256": "a26afa95716661d22ceb14aa6da92d999beb9364bfce9c5f99bcc84a97f74763",
+      "bytes": 35628,
+      "lines": 402,
+      "read_coverage": {
+        "start_line": 1,
+        "end_line": 402,
+        "mode": "full_text_in_sequential_tool_reads"
+      },
+      "source_url": "https://github.com/crazyykhllc-bit/CyberPPT/blob/980e5576565f0673c67ee41b01d20ed66cb8417c/references/quality-assurance.md",
+      "adopted_principles": "真实对象证据、静态与渲染并查、内容薄/关系错/阅读与限定、真实返修",
+      "excluded_or_deferred": "不增加 QA 状态机、不接受手填 true 为证据，不声称实际 Office/人类验收"
+    },
+    {
+      "path": "references/ppt-production.md",
+      "sha256": "b4f9b9ae43519791b930a68aced3cb34cfc65b5c21ad5b165f7d68c2ca8e3e5a",
+      "bytes": 51232,
+      "lines": 679,
+      "read_coverage": {
+        "start_line": 1,
+        "end_line": 679,
+        "mode": "full_text_in_sequential_tool_reads"
+      },
+      "source_url": "https://github.com/crazyykhllc-bit/CyberPPT/blob/980e5576565f0673c67ee41b01d20ed66cb8417c/references/ppt-production.md",
+      "adopted_principles": "主要信息可编辑与视觉语义同时保留、同页归属/箭头、真实 notes/文件回读边界",
+      "excluded_or_deferred": "本卡不改 compiler/notes；不照搬 PptxGenJS 锁、逐页用户确认或合并路线"
+    }
+  ],
+  "extraction_source": {
+    "git_sha": "b00df87",
+    "selected": "Only canonical source-reading/content-methods/content-examples/content-calibration/review-and-repair additions, with corrections and expanded full text; no other code or reports copied"
+  },
+  "reference_license": "CyberPPT contributors, MIT; principles studied, no substantial reference text copied",
+  "limitations": [
+    "This read record is Host attested, not independent evaluation or human acceptance",
+    "Full text returned/consumed does not prove model behavior improves"
+  ]
+}

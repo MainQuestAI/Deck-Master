@@ -471,9 +471,15 @@ def next_phase_task(store, document, *, explicit_speech_mode: str | None = None)
 
 
 def _speech_instruction(kind: str, page_ids) -> str:
+    segment_policy = (
+        "逐字稿的实际口播标 verbatim；停顿、练习等非口播指令保留 cue，不能改标签冒充口播。"
+        "每个更新页必须包含实际逐字口播；完整性与估时仍须内容审阅。"
+        if kind == "verbatim" else "提示稿的各段标 cue，不扩张为逐字稿。"
+    )
     return (
         f"只写口播（{kind}）：对 {sorted(page_ids)} 的固定 Page Ref 提交 speaker_notes 与 speech_segments。"
-        "每段覆盖全部口播文本、标注 kind 与 estimated_seconds（估计值，不得写成实测）。"
+        "各段连续覆盖全部备注文本、标注 kind 与 estimated_seconds（估计值，不得写成实测）。"
+        f"{segment_policy}"
         "不得改上屏正文、页序或视觉配置。"
     )
 
@@ -967,7 +973,8 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
                 "the mapping's speech range must cover the new notes")
         for seg_index, segment in enumerate(segments):
             seg_where = f"{where}/speech_segments[{seg_index}]"
-            if segment.get("kind") != requested_kind:
+            allowed_kinds = ("cue", "verbatim") if requested_kind == "verbatim" else ("cue",)
+            if segment.get("kind") not in allowed_kinds:
                 raise tasks_mod.EnvelopeError(
                     f"{seg_where}/kind",
                     f"this task was dispatched for {requested_kind!r} speech; "
@@ -987,6 +994,19 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
             updated_page = check_page(updated_page)
         except ModelError as exc:
             raise tasks_mod.EnvelopeError(where, str(exc)) from exc
+        # CONTRACTS §11.3 defines kind per segment. A complete verbatim script
+        # can contain honestly labelled non-spoken cues; an all-cue page cannot
+        # satisfy an explicit verbatim request. This structural floor does not
+        # prove the spoken content is complete or its estimated timing feasible.
+        if requested_kind == "verbatim" and not any(
+            segment["kind"] == "verbatim" and
+            notes[segment["start_codepoint"]:segment["end_codepoint"]].strip()
+            for segment in segments
+        ):
+            raise tasks_mod.EnvelopeError(
+                f"{where}/speech_segments",
+                "this task was dispatched for 'verbatim' speech; each updated page must "
+                "contain spoken verbatim content, not only cues")
         # The visible body and the visual configuration are byte-identical:
         # a speech result cannot smuggle a copy or design change.
         assert updated_page["customer_visible"] == current["customer_visible"]

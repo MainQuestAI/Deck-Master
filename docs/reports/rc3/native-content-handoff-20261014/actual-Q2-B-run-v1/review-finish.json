@@ -1,0 +1,325 @@
+{
+  "actual_native_reviewer": "/root/e1_q2_b_content_review",
+  "raw_output_sha256": "23bca703e5698dc4244ebce7cefda7c945454c9ee86bcf76b2b5f6003821cd8c",
+  "root_observation_sha256": "8f9a705605f971f768b8bf9d670f33172c480dc4909735558219c9f3a8558093",
+  "binding": {
+    "project_id": "actual-q2",
+    "request_id": "req-1fa78dee3c10",
+    "task_id": "6c77ad5361b6",
+    "packet_sha256": "3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d",
+    "subjects_sha256": "276d474126a915cb68a935a75a261155ab76c907bad185df2fbdee3ac6fc2427",
+    "author_execution_refs": [
+      "/root/e1_q2_b_argument",
+      "/root/e1_q2_b_speech"
+    ],
+    "write_scope": {
+      "layers": [
+        "review"
+      ],
+      "page_ids": [
+        "p01",
+        "p02",
+        "p03",
+        "p04",
+        "p05",
+        "p06",
+        "p07",
+        "p08"
+      ]
+    },
+    "result_sha256": "5ea9f448171b19c39de35c7c1f2d11c763e6ed4781ca503bfb5bfbc9ebbfbc0d"
+  },
+  "proof": {
+    "adapter_version": "rc3-native-root-controller.actual-content.v1",
+    "authentication": "protected_transport",
+    "claims": {
+      "all_native_writer_execution_refs": [
+        "/root/e1_q2_b_argument",
+        "/root/e1_q2_b_framing",
+        "/root/e1_q2_b_page_copy",
+        "/root/e1_q2_b_speech"
+      ],
+      "assurance": "host_attested",
+      "author_execution_refs": [
+        "/root/e1_q2_b_argument",
+        "/root/e1_q2_b_speech"
+      ],
+      "author_provenance_kind": "actual observed native Writer output on original uploaded synthetic Q facts",
+      "channel": "independent_review_receipts",
+      "controller_observation_sha256": "8f9a705605f971f768b8bf9d670f33172c480dc4909735558219c9f3a8558093",
+      "event_id": "root-transcription-8f9a705605f971f768b8bf9d670f3317",
+      "evidence_scope": "actual synthetic-Q native independent content review; not human/professional or blind evaluation",
+      "executor_ref": "/root/e1_q2_b_content_review",
+      "expires_at": "2026-10-14T18:03:56.015512+00:00",
+      "issued_at": "2026-10-14T17:33:56.015512+00:00",
+      "model_output_bytes_sha256": "23bca703e5698dc4244ebce7cefda7c945454c9ee86bcf76b2b5f6003821cd8c",
+      "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+      "packet_sha256": "3c5b0ceb3130d19718d4510c266568ccb25064085f0dd78c3e33fb1efab4b21d",
+      "project_id": "actual-q2",
+      "provider_id": "rc3-native-root-controller",
+      "request_id": "req-1fa78dee3c10",
+      "result_sha256": "5ea9f448171b19c39de35c7c1f2d11c763e6ed4781ca503bfb5bfbc9ebbfbc0d",
+      "reviewer_id": "/root/e1_q2_b_content_review",
+      "subjects_sha256": "276d474126a915cb68a935a75a261155ab76c907bad185df2fbdee3ac6fc2427",
+      "task_id": "6c77ad5361b6",
+      "write_scope": {
+        "layers": [
+          "review"
+        ],
+        "page_ids": [
+          "p01",
+          "p02",
+          "p03",
+          "p04",
+          "p05",
+          "p06",
+          "p07",
+          "p08"
+        ]
+      }
+    },
+    "provider_id": "rc3-native-root-controller",
+    "raw_event_ref": {
+      "path": ".deckmaster/objects/8f/8f9a705605f971f768b8bf9d670f33172c480dc4909735558219c9f3a8558093.json",
+      "sha256": "8f9a705605f971f768b8bf9d670f33172c480dc4909735558219c9f3a8558093"
+    },
+    "schema_version": "authenticated_review_receipt.v1"
+  },
+  "negative_controls": {
+    "ordinary_json_context": {
+      "refused": true,
+      "reason": "adapter_context: a registered provider must issue an opaque trusted context; JSON/dict is untrusted"
+    },
+    "changed_result_replay": {
+      "refused": true,
+      "reason": "receipt/result_sha256: authenticated event does not bind this exact result_sha256"
+    }
+  },
+  "acceptance": {
+    "status": "accepted",
+    "project_id": "actual-q2",
+    "revision_id": "54ea1b066124451eb06ff9bcf9f9f2c6",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/ff/ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d.json",
+        "sha256": "ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d"
+      },
+      {
+        "path": ".deckmaster/objects/e2/e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339.json",
+        "sha256": "e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339"
+      },
+      {
+        "path": ".deckmaster/objects/ec/ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501.json",
+        "sha256": "ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501"
+      },
+      {
+        "path": ".deckmaster/objects/64/6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343.json",
+        "sha256": "6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343"
+      },
+      {
+        "path": ".deckmaster/objects/6c/6c5efb9a5003645150f2799291e049ee9adcfe412dc2ad7e744e494b16854328.json",
+        "sha256": "6c5efb9a5003645150f2799291e049ee9adcfe412dc2ad7e744e494b16854328"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "continue_production",
+    "input_alignment": "current",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "54ea1b066124451eb06ff9bcf9f9f2c6",
+    "new_page_hashes": {},
+    "work_complete": true,
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "54ea1b066124451eb06ff9bcf9f9f2c6",
+      "new_page_hashes": {},
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/ff/ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d.json",
+          "sha256": "ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d"
+        },
+        {
+          "path": ".deckmaster/objects/e2/e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339.json",
+          "sha256": "e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339"
+        },
+        {
+          "path": ".deckmaster/objects/ec/ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501.json",
+          "sha256": "ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501"
+        },
+        {
+          "path": ".deckmaster/objects/64/6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343.json",
+          "sha256": "6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343"
+        },
+        {
+          "path": ".deckmaster/objects/6c/6c5efb9a5003645150f2799291e049ee9adcfe412dc2ad7e744e494b16854328.json",
+          "sha256": "6c5efb9a5003645150f2799291e049ee9adcfe412dc2ad7e744e494b16854328"
+        }
+      ],
+      "work_complete": true,
+      "next_action": "continue_production"
+    }
+  },
+  "capabilities": {
+    "schema_version": "host_capabilities.v1",
+    "package_version": "1.0.0.dev2",
+    "installation_identity": {
+      "module_path": "/workspace/work/rc3/candidate-01-1fb3/prefix/.deck-master/releases/1fb3ddacbb75-7a5140186dc3/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "module_sha256": "1a880a02d9f145c447043fc9bfc91ed0c228b7714909df20be1f3182f2b8889b",
+      "python_executable": "/workspace/work/rc3/candidate-01-1fb3/prefix/.deck-master/releases/1fb3ddacbb75-7a5140186dc3/venv/bin/python",
+      "python_prefix": "/workspace/work/rc3/candidate-01-1fb3/prefix/.deck-master/releases/1fb3ddacbb75-7a5140186dc3/venv",
+      "method_root": "/workspace/work/rc3/candidate-01-1fb3/prefix/.deck-master/releases/1fb3ddacbb75-7a5140186dc3/venv/lib/python3.12/site-packages/deck_master/resources/skill",
+      "method_source": "packaged",
+      "source": null,
+      "install": {
+        "release_id": "1fb3ddacbb75-7a5140186dc3",
+        "source_sha": "1fb3ddacbb75a2d891b5a14d955cf23db9460931",
+        "source_tree": null,
+        "source_dirty": false,
+        "package_version": "1.0.0.dev2",
+        "wheel_sha256": "7a5140186dc329bb8c8955b93ce9ce42d6aec57f5e5af3afbc218c548da345ed",
+        "status": "candidate_ready"
+      },
+      "metadata_version": "1.0.0.dev2"
+    },
+    "status": "ready",
+    "verified_user_events": false,
+    "independent_review_receipts": true,
+    "human_review_receipts": false,
+    "adapter_version": "rc3-native-root-controller.actual-content.v1",
+    "providers": [
+      {
+        "provider_id": "rc3-native-root-controller",
+        "adapter_version": "rc3-native-root-controller.actual-content.v1",
+        "authentication": "protected_transport",
+        "channels": [
+          "independent_review_receipts"
+        ],
+        "status": "available"
+      }
+    ],
+    "evidence_kinds": [
+      "host_attested_instruction",
+      "independent_execution_receipt"
+    ],
+    "assurance": "host_attested",
+    "methods": [
+      {
+        "id": "visual-reference",
+        "relative_path": "references/visual-reference.md",
+        "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52",
+        "available": true
+      },
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+        "available": true
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+        "available": true
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+        "available": true
+      },
+      {
+        "id": "content-calibration",
+        "relative_path": "references/content-calibration.md",
+        "sha256": "bb672652bf1f0e7c1248a423af8ce432793bc0eb2fd4905c9a423ebea0a9718c",
+        "available": true
+      },
+      {
+        "id": "input-update",
+        "relative_path": "references/input-update.md",
+        "sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6",
+        "available": true
+      },
+      {
+        "id": "blueprint-svg",
+        "relative_path": "references/blueprint-svg.md",
+        "sha256": "4bec6451d6e19deec871f0f7c82bf6b40ac537d8e9fea2f3e1ef3e1ccd8e256c",
+        "available": true
+      },
+      {
+        "id": "review-and-repair",
+        "relative_path": "references/review-and-repair.md",
+        "sha256": "cf66ea3c6ad0c5776ebf8feb409f00530369823368fcb6f44f11c05b93b63f20",
+        "available": true
+      }
+    ],
+    "method_release": {
+      "release_id": "1fb3ddacbb75-7a5140186dc3",
+      "methods_sha256": "e25083bd1fbd61967982e801d6ac5dac5d0396f127d284185771fec553ee6b23"
+    },
+    "review_channel_status": "available",
+    "limitations": [
+      "Host-attested instructions do not verify human identity",
+      "Method availability does not prove a Host read or applied the method",
+      "No strict identity/review channel is implied by a CLI call"
+    ]
+  },
+  "preproduction_status": {
+    "stage": "preproduction",
+    "status": "missing",
+    "requirement": "independent_model_or_human",
+    "requirement_state": {
+      "declared": "independent_model_or_human",
+      "origin": "default_new_argument",
+      "override_decision_ref": null,
+      "effective": "independent_model_or_human",
+      "reasons": []
+    },
+    "units": [
+      "argument",
+      "page_copy",
+      "progression",
+      "speech"
+    ],
+    "satisfied_units": [
+      "argument",
+      "page_copy",
+      "progression"
+    ],
+    "missing_units": [
+      "speech"
+    ],
+    "review_refs": [
+      {
+        "path": ".deckmaster/objects/ff/ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d.json",
+        "sha256": "ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d"
+      },
+      {
+        "path": ".deckmaster/objects/e2/e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339.json",
+        "sha256": "e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339"
+      },
+      {
+        "path": ".deckmaster/objects/ec/ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501.json",
+        "sha256": "ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501"
+      },
+      {
+        "path": ".deckmaster/objects/64/6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343.json",
+        "sha256": "6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343"
+      }
+    ],
+    "blocking_findings": [
+      {
+        "review_id": "q2-b-native-speech-v1",
+        "kind": "speech",
+        "finding_id": "q2-b-speech-budget-unknown",
+        "impact": "needs_judgment",
+        "message": "用途预算仍须核验，当前没有足够证据确认复杂解释与三处互动能在十分钟内完成。此项是未执行验证的待判定风险，不是将未试讲直接分级为 F0–F3 失败。"
+      }
+    ],
+    "next_action": "dispatch_preproduction_review"
+  },
+  "human_acceptance": "NOT_RUN; user deferred",
+  "professional_predicate": "not asserted"
+}

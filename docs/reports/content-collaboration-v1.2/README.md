@@ -1,5 +1,7 @@
 # T00+T01 实施记录：内容协作与交付语义 v1.2（首批两卡）
 
+RC3 历史标记：下列既有 AC 结论属于当时版本，不自动关闭 R2/CQ/RC3 新条件。活动 R2 锚点与旧评价原件的身份见文末及 `evaluation/README.md`。
+
 状态：**T00 与 T01 按 TASKS.md 完成，等待逐条验收核验**。本目录是 T00 的交付证据；T01 的代码与测试在仓库 `src/deck_master/delivery_eligibility.py`、`tests/rebuild/test_delivery_professional_gate.py` 及相关入口。日期：2026-10-12（Asia/Shanghai）。
 
 ## 任务卡提交模板
@@ -36,9 +38,9 @@ Changed paths and resulting behavior:
   - prototype/q1-content-prototype.md：理解稿、两张决定卡、Narrative（N/E）、
     页职责与预算、完整六页逐页稿与 verbatim、口播三分支、设计可行性、真实返修
     演示、篇幅冲突预案
-  - anchors/content-anchors.md：F0/F1 可判定定义、三类任务十二个正反锚点、
+  - anchors/content-anchors.md：当前 R2 统一 F0–F3 适用说明、三类任务十二个正反锚点、
     校准规则
-  - evaluation/：两轮各两位独立评价者完整初判（evaluator-a/b 初审、evaluator-c/d 二轮复核）+ 裁决记录
+  - evaluation/：历史原字节（身份见 evaluation/README.md）；两轮各两位独立评价者完整初判（evaluator-a/b 初审、evaluator-c/d 二轮复核）+ 裁决记录
   - baseline.md：AC-B01 基线记录（SHA、锚点漂移、全量回归、环境差异）
 
 AC IDs and status:
@@ -124,7 +126,7 @@ content-collaboration-v1.2/
 ├── prototype/
 │   └── q1-content-prototype.md  ← 完整专业产物原型（AC-B02）
 ├── anchors/
-│   └── content-anchors.md       ← 三类任务十二个正反锚点 + 可判定等级定义（AC-B03）
+│   └── content-anchors.md       ← 三类任务十二个正反锚点 + 统一分级适用（AC-B03）
 └── evaluation/
     ├── evaluator-a.md   ← 评价者A完整初判（事实/证据视角，PASS-with-repairs）
     ├── evaluator-b.md   ← 评价者B完整初判（可用性/表达视角，PASS-with-repairs）
@@ -138,3 +140,7 @@ content-collaboration-v1.2/
 - 本轮产物未先新增 Runtime 合同（T00 要求）；Narrative/Plan/Page 等对象以可读文档承载，字段化归 T02。
 - Q4 fixtures 是内容级单元 fixture，明确不含伪图片/PPT；工程验收所需的真实 SVG/PPT/回读产物按 TASKS 归 T05/T06/T08，不得用占位文件兜底。
 - 固定样例全部为合成材料；不包含、不引用任何真实客户资料。
+
+## RC3-01 活动规范与历史记录
+
+活动锚点已接收上传 R2 原件 `3f58b739…`，旧 `42774a70…` 原字节保存在 `anchors/history/`。旧五份评价原件保留不变，按历史版本解释；当前引用及历史 SHA 见 `fixtures/manifest.json`。上文既有 AC pass/pass-with-evidence 是当时记录，不自动关闭 R2/CQ/RC3 新条件。两位评价者统一口径的真实重新评价、完整首稿和方法效果，由当前固定执行档案另行记录；未执行层保持 NOT_RUN。

@@ -1,0 +1,306 @@
+{
+  "schema_version": "controller_source_limited_adjudication.v1",
+  "authority": {
+    "proposed_by": "/root/rc3_00_review",
+    "confirmed_by": "/root",
+    "kind": "root/controller source-based adjudication; not revised judge initial judgment",
+    "root_confirmation": "Root independently read complete Q3 source/baseline and both reasons, and confirmed F2/fail for this explicit P2–P5 scope."
+  },
+  "initial_records_verbatim_json_values": {
+    "AN-Q3-2": {
+      "judge-a": {
+        "sample_id": "sample-bfd59063cd27",
+        "context_id": "context-31a4436faf",
+        "observed_scope": "候选明确将 P2–P5 变为标题页，并将全部限定与表格细节移入 speaker notes；P1/P6 与未明示其他内容保留。实际用于独立阅读的正文层与 notes 层分开判断。",
+        "source_and_candidate_quotes": [
+          {
+            "role": "source",
+            "locator": "contexts.context-31a4436faf.materials[S2]/用途",
+            "quote": "用于独立阅读，不要求口播或销售行动号召。以下六页均为完整上屏内容。"
+          },
+          {
+            "role": "baseline_visible",
+            "locator": "contexts.context-31a4436faf.baseline.complete_visible_copy/P2",
+            "quote": "没有测量故障解决率、正式处理时长或长期记忆；不能将8/12解释为一般业务成功率。"
+          },
+          {
+            "role": "baseline_visible",
+            "locator": "contexts.context-31a4436faf.baseline.complete_visible_copy/P3",
+            "quote": "没有给出同一受众使用表格的对照，不能推出卡片优于表格；也未测业务处理效果。"
+          },
+          {
+            "role": "baseline_visible",
+            "locator": "contexts.context-31a4436faf.baseline.complete_visible_copy/P4",
+            "quote": "受众、案例和测量任务同时不同，8/12与14/20不构成表达方式优劣的直接比较。"
+          },
+          {
+            "role": "candidate",
+            "locator": "candidates[sample-bfd59063cd27].candidate_segments[0]",
+            "quote": "P2–P5 压缩成标题页，全部\"限定\"与表格细节移入 speaker notes；宣称\"内容没丢，PPTX 里有 notes\"。"
+          }
+        ],
+        "error_types": [
+          "决定研究结果适用范围的限定退出约定阅读层",
+          "证据及不可比原因的论证关系丢失",
+          "将文件中存有 notes 误当上屏阅读完整"
+        ],
+        "severity_or_none": "F0",
+        "intended_use_status": "fail",
+        "intended_use_basis": "独立阅读上屏层缺少影响结论解释的限定，属于 rubric 的事实完整性失败；notes 中存有原文不能关闭该问题。",
+        "local_vs_mainline_reasoning": {
+          "facts_and_control": "没有捏造新数字，但受众、分母、任务和未测量/无对照的限制从独立阅读正文退出，会改变“8人”“14人”可支持什么的解释范围。P1 合成说明及 P4 非胜负榜标题仍在，也不能代替各研究的限制。",
+          "mainline": "还存在主线层面的损失：读者只有发现标题与不可比标题，无法从正文获得研究条件、可比差异及设计线索之间的论证。需要恢复章节级证据关系，具有 F1 所述用途丧失；最高报告 F0 由结论限定的遗漏决定，并非因为改了四页。",
+          "local_repair_scope": "修复范围是 P2–P5 的可读证据、解释与限定，不能只调整颜色或补一句“详见 notes”。可重排或拆分表格，完整保留适用范围。",
+          "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+        },
+        "proposed_revision": "把两项研究的受众、样本量、案例、任务、观察、来源和未测量/无对照限制恢复到阅读正文；在 P4 恢复不可比原因，在 P5 恢复各自设计线索与不得泛化的结论。notes 可辅助，不能充当唯一承载。",
+        "uncertainties": [
+          "未见最终PPTX；依据明确变体判断，未假定原文从文件中删除。若另行约定交付为连同 notes 一起可直接阅读的文档，其可用性需另评；本任务已确认的是六页上屏独立阅读，不能自行变更用途。"
+        ]
+      },
+      "judge-b": {
+        "sample_id": "sample-135a4f57c35b",
+        "context_id": "context-ca8f8d3859",
+        "observed_scope": "按变体明示范围评P2–P5：压成标题页，表格细节及限定转入speaker notes。未明示改变的P1/P6及其正文保留；不把notes自动算成上屏。",
+        "source_and_candidate_quotes": [
+          {
+            "role": "source",
+            "location": "/contexts/context-ca8f8d3859/materials/0/text",
+            "quote": "两项研究的受众、案例和任务不同，不能比较成表格或卡片整体更有效。"
+          },
+          {
+            "role": "baseline",
+            "location": "/contexts/context-ca8f8d3859/baseline/complete_visible_copy",
+            "quote": "以下六页均为完整上屏内容。"
+          },
+          {
+            "role": "baseline",
+            "location": "/contexts/context-ca8f8d3859/baseline/complete_visible_copy",
+            "quote": "结论：受众、案例和测量任务同时不同，8/12与14/20不构成表达方式优劣的直接比较。"
+          },
+          {
+            "role": "candidate",
+            "location": "/candidates/2/candidate_segments/0/text",
+            "quote": "P2–P5 压缩成标题页，全部\"限定\"与表格细节移入 speaker notes"
+          },
+          {
+            "role": "candidate",
+            "location": "/candidates/2/candidate_segments/0/text",
+            "quote": "内容没丢，PPTX 里有 notes"
+          }
+        ],
+        "error_types": [
+          "独立阅读所需证据离开上屏",
+          "关键解释与适用范围仅在讲稿层"
+        ],
+        "severity_or_none": "F2",
+        "intended_use_status": "fail",
+        "intended_use_basis": "约定用途是六页完整上屏的独立阅读；标题无法提供两研究的受众、样本、任务细节和不可比理由。notes中保留信息不能满足这个用途。",
+        "substantive_observations": {
+          "facts": "不假定数字被篡改或notes被删除；当前明确的问题是关键限定在约定阅读层不可见。",
+          "control": "改变了确认稿的信息呈现层，但未见授权状态、身份或真实执行动作的断言。",
+          "mainline": "P1与P4/P5标题仍保留“分别看发现、不能比较整体优劣、保留适用范围”的中心方向和章节顺序，未变成相反的胜负结论。",
+          "local": "P2/P3缺完整研究条件，P4缺导致不可比的对照证据，P5缺线索与泛化边界；这些明确缺口实质妨碍独立阅读。"
+        },
+        "local_vs_mainline_reasoning": "判F2并要求修复：把原有表格、正文与限定恢复到既定页即可，不需用户重定目标、替换中心结论或重建章节关系。涉及四页并不独立构成F1。若实际变体同时删除/颠倒不可比中心结论，才需另行评主线或F0。",
+        "proposed_revision": "恢复P2–P5原有上屏表格、解释和限定；notes只保留讲者补充。可以调整间距或拆排，但独立阅读所需条件须在正文可见。",
+        "uncertainties": [
+          "“全部限定”是否还跨出P2–P5未明示，初判不补造P1/P6删改；若连全稿合成声明等改变结论的限定也移走，需要另核事实完整性。",
+          "没有实际PPTX或渲染，不能断言notes访问方式或版面读感；文字层的用途不匹配已成立。"
+        ]
+      }
+    },
+    "AN-Q2-5": {
+      "judge-a": {
+        "sample_id": "sample-f06d56163e5a",
+        "context_id": "context-c3a3cbc65c",
+        "observed_scope": "候选只说“后续”自动提交和全流程自动化，没有明示本期立即执行；未说明另案接口、授权、验证或与本次决定的关系。完整只读基准正文及 notes 保留。",
+        "source_and_candidate_quotes": [
+          {
+            "role": "source",
+            "locator": "contexts.context-c3a3cbc65c.materials[S2]",
+            "quote": "本合成一期范围只读，不允许AI自动提交、修改或关闭正式工单。"
+          },
+          {
+            "role": "source",
+            "locator": "contexts.context-c3a3cbc65c.materials[S3]",
+            "quote": "不含已验证的设备诊断能力、自动写入接口、成本节省证据或生产可靠性结论。"
+          },
+          {
+            "role": "baseline_visible",
+            "locator": "contexts.context-c3a3cbc65c.baseline.pages_array_original_json/decoded p6.b5",
+            "quote": "本次请求的决定：是否按「先执行 A、条件验证 B」推进立项。"
+          },
+          {
+            "role": "candidate",
+            "locator": "candidates[sample-f06d56163e5a].candidate_segments[0]",
+            "quote": "后续将自动提交工单，实现全流程自动化。"
+          }
+        ],
+        "error_types": [
+          "未来事项与当前范围的关系不清",
+          "未给定前提的确定性未来交付承诺"
+        ],
+        "severity_or_none": "F2",
+        "intended_use_status": "needs_review",
+        "intended_use_basis": "当前措辞需要澄清才能用于试点决策；不能凭“后续”直接认定本期越权，也不能把未说明授权与能力条件的确定承诺当已满足。",
+        "local_vs_mainline_reasoning": {
+          "facts_and_control": "没有证据表明已经发生自动提交，句子也未明说本期开放写入，故不据此无条件判为已发生的控制权 F0。已知能力不含写入接口，“将实现”的确定性比来源所支持的条件性未来评估更强。",
+          "mainline": "若它只是与本期明确分离的未来设想，可保持先 A、条件验证 B 主线；现有句子没有交代这一点。若它被用来改变本次交付或决定，则会涉及更严重的范围/控制权失败，不能自行假定。",
+          "local_repair_scope": "可局部补明不在本期、另案评估、新增接口与另行授权，避免变更当前主线，因此按局部实质范围表达问题 F2 记录；未澄清前不标用途通过。",
+          "rubric_basis": "仅依据 packet.rubric；错误类型与严重度分开。未以改页比例或预设通过分布判级。"
+        },
+        "proposed_revision": "改为：自动提交仅作为后续另案评估方向，不在本期交付范围；须先确认新增写入接口、控制边界及另行授权，验证后再决定是否采用。删除无条件“实现全流程自动化”的承诺。",
+        "uncertainties": [
+          "位置与“后续”的时间/立项范围未知。若实际语境明确指本次已获准自动写入或保证交付，则为 F0；若另有明确与本期分离且尚待授权的条件，可重新评为无实质缺陷。当前不补造这两类上下文。"
+        ]
+      },
+      "judge-b": {
+        "sample_id": "sample-ae2bc0d20f86",
+        "context_id": "context-4186b70348",
+        "observed_scope": "候选称“后续”将自动提交并全流程自动化。明确是未来语气，没有明示纳入一期，也没有给出另案、接口、授权或验证条件；不补造真实执行。",
+        "source_and_candidate_quotes": [
+          {
+            "role": "source",
+            "location": "/contexts/context-4186b70348/materials/1/text",
+            "quote": "本合成一期范围只读，不允许AI自动提交、修改或关闭正式工单。"
+          },
+          {
+            "role": "source",
+            "location": "/contexts/context-4186b70348/materials/2/text",
+            "quote": "不含已验证的设备诊断能力、自动写入接口、成本节省证据或生产可靠性结论。"
+          },
+          {
+            "role": "candidate",
+            "location": "/candidates/8/candidate_segments/0/text",
+            "quote": "后续将自动提交工单，实现全流程自动化。"
+          }
+        ],
+        "error_types": [
+          "未来交付范围歧义",
+          "无条件自动化承诺缺少接口与授权条件"
+        ],
+        "severity_or_none": "F2",
+        "intended_use_status": "needs_review",
+        "intended_use_basis": "这句不能直接作为当前试点决策中的确定交付承诺：需要确认“后续”是否指本期后段或独立未来方案，并明确未来条件。当前文字不足以断言已经发生一期越权。",
+        "substantive_observations": {
+          "facts": "没有已验证自动写入接口或全流程自动化的来源；未来语气不能当作已具备能力，但也不等于它声称现在已经自动提交。",
+          "control": "一期只读边界是明确的。候选没有另行授权与另案决定限定，范围容易与当前方案混淆；未见实际授权撤销、调用或提交事件。",
+          "mainline": "保留基准A先行/条件B的决策结构时，可用一处未来展望澄清而不必重建推荐。若它替换本期交付主张，则另判。",
+          "local": "可定位的未来段缺范围和依赖解释，需要修补或删除无条件承诺；不是仅措辞偏好。"
+        },
+        "local_vs_mainline_reasoning": "已观察到的问题按F2定位为未来承诺缺关键范围解释，暂不以“后续”自动判成一期写入F0。条件判断：若指一期内自动提交，违反只读范围，应判F0且fail；若仅是另案探索并加接口、授权、验证条件，可无实质缺陷。",
+        "proposed_revision": "明确“后续另行评估自动提交，需要新增写入接口、另行授权及验证，不在本期范围，验证后另案决定”；或删去尚无依据的全流程交付承诺。",
+        "uncertainties": [
+          "“后续”的阶段及承诺依据未知，必须澄清；不假定已有授权，不自行扩张一期范围，也不假定所有未来自动化都被禁止。",
+          "“全流程”涉及哪些动作、诊断与人工确认未定义，不能把未给出的能力当作事实。"
+        ]
+      }
+    }
+  },
+  "initial_raw_evidence": {
+    "judge-a": {
+      "path": "/workspace/work/rc3/anchor-blind/judge-a/output/initial-judgments.json",
+      "sha256": "1d7e3fe6be9c2ae5785b9e0904528f5d74f414c89702f52ca7387c5cbdfe39c2"
+    },
+    "judge-b": {
+      "path": "/workspace/work/rc3/anchor-blind/judge-b/output/initial-judgments.json",
+      "sha256": "ca9044289887e75cd056d6f3430cd6d5374dfc9431ee68f2161117e0aa3e4b7b"
+    }
+  },
+  "historical_q3_2": {
+    "source_path": "/workspace/work/rc3/reviews/anchor-source-audit/preserved-originals/r2-active-upload.md",
+    "source_sha256": "3f58b7392b30ceb4304699071cc12cc6b4eff487af512b48e4121a1e43efb2bc",
+    "start_byte_inclusive": 14524,
+    "end_byte_exclusive": 15366,
+    "raw_excerpt_sha256": "0d95f12a4eeb48e73390e6a4c8d287a2b5d5eaaa3e7a093a1a71e5afa88c57a5",
+    "preserved_grade": "F1",
+    "meaning": "Historical R2 judgment preserved; not the new scoped verdict or consensus evidence."
+  },
+  "rubric": {
+    "raw_text": "### 1.2 统一失败分级\n\n| 级别 | 定义与实例 | 处理 |\n|---|---|---|\n| F0 事实完整性或控制权失败 | 越权开始调用；撤回后采用旧结果；伪造用户/人类身份；旧文件审阅解锁新文件；把缺字段比例写成节省比例；遗漏改变结论的限定 | 必须修复；任何一个未关闭的 F0 都禁止该候选发布。不能用其他高分、用户笼统“继续”或另一案例通过抵消 |\n| F1 任务与主线失败 | 在固定输入和既定目标下，需要用户重定沟通目标、替换中心主张或重建章节级论证关系，才能用于原任务 | 必须回到内容责任修复；代表性用户试用任一出现归因于系统误解的 F1，禁止发布，可以继续开发与复测 |\n| F2 局部实质缺陷 | 可定位的一页缺解释、一个过渡无法讲清、一处密度妨碍阅读；修复不改变主线 | 修复后复核受影响对象。最终约定用途仍受影响时不得标为该用途通过 |\n| F3 局部偏好或润色 | 不改变事实、范围、主线和可用性的措辞、颜色、间距等调整 | 记录具体位置与决定；可由有效委派自主处理，或作为明确接受的局部差异 |\n\n“改了多少页”是负担指标，不是主线重建的独立判据。拆页、合页、用户新增材料或改变目标可能造成高比例改页，必须与系统误解分开归因。不得机械使用“超过 20% 页面改职责”判定所有任务失败，也不得用低改页比例掩盖中心主张错误。\n\n本节是报告、任务卡、内容锚点、审查回执与发布汇总的**唯一 F0–F3 分级来源**。错误类型（如解释缺失、练习泄题、关系错位）与严重度分开记录；任何锚点不得再定义并行的同名 F1。逐项按事实/控制权影响、是否需重建任务主线以及局部修复范围判定，不按旧等级批量升降。分歧统一提交 AC-B03 的裁决记录，引用本节并说明依据；历史评价记录只保留原判，不充当新口径通过证据。F2 虽不必重建主线，影响约定用途时仍须修复，不得以“非 F1”放行。\n\n",
+    "raw_text_sha256": "0e963c224379750a2e642bc144304c5d25e6e56b1fd70d3c28d93c818ab6e83f",
+    "source_range": {
+      "alias": "generic-severity-rubric",
+      "role": "generic_criterion_no_historical_verdict",
+      "source_path": "/workspace/work/rc3-planning/rc3-development-plan-20261014/docs/specs/deck-master-content-collaboration-v1.2/ACCEPTANCE.md",
+      "source_sha256": "7a04df70ac4d90dc253f712a108587a25a69f7cc33526c10874d03b73f64e9d1",
+      "start_byte_inclusive": 3639,
+      "end_byte_exclusive": 5780,
+      "sha256": "0e963c224379750a2e642bc144304c5d25e6e56b1fd70d3c28d93c818ab6e83f",
+      "bytes": 2141
+    }
+  },
+  "AN-Q3-2": {
+    "decision": {
+      "severity": "F2",
+      "intended_use_status": "fail"
+    },
+    "scope": "Only P2–P5 title-only with details/qualifications moved to notes. P1/P6 remain; no invented loss of all-deck synthetic statement or reversed conclusion.",
+    "source_quotes": [
+      {
+        "source_id": "S1",
+        "line_1based": 1,
+        "quote": "合成研究A：12位有经验的值班人员，用同一组标准案例评估两种信息呈现方式；8人更容易在表格中找到版本限制。"
+      },
+      {
+        "source_id": "S1",
+        "line_1based": 2,
+        "quote": "合成研究B：另一组20位新接单员阅读不同案例的卡片；14人正确复述处理步骤。"
+      },
+      {
+        "source_id": "S1",
+        "line_1based": 3,
+        "quote": "两项研究的受众、案例和任务不同，不能比较成表格或卡片整体更有效。"
+      },
+      {
+        "source_id": "S1",
+        "line_1based": 4,
+        "quote": "未测量正式业务处理时间、长期记忆或故障解决率。"
+      }
+    ],
+    "retained_visible_quotes": [
+      "P2 标题：研究A：8位参与者更容易用表格找到版本限制",
+      "P3 标题：研究B：14位新接单员正确复述了步骤",
+      "P4 标题：两个结果不能放在同一胜负榜上",
+      "P5 标题：保留两项发现，同时保留各自的适用范围",
+      "限定：所有样本与结果为合成，不代表真实业务成效。",
+      "限定：这是后续研究设计建议，尚未执行，不是本次已经验证的业务收益。",
+      "页脚：合成研究说明｜两研究不可直接比较整体优劣。"
+    ],
+    "reason": "Missing P2–P5 conditions and argument detail make independent reading unusable. Titles still bind task-specific observed findings; P1 synthetic/separate presentation, P4 no-winner title and P6 not-validated qualification remain. The explicit input does not establish an opposite or generalized business/winner claim requiring F0, nor a changed center or chapter relation requiring F1. Restoring actual existing visible explanations fixes the substantive defect without redefining task/center/order. Four affected pages are not a severity rule.",
+    "unresolved_initial_disagreement": "A remains F0/fail; B remains F2/fail. No assertion that A agreed with this adjudication.",
+    "conditional_upgrade": [
+      "Reassess F0 if actual final content omits/changes a qualification that changes the stated conclusion, removes global synthetic scope, or asserts business effectiveness/overall winner unsupported by sources.",
+      "Reassess F1 if actual task needs user to redefine the goal, replace center, or rebuild chapter-level argument relationships."
+    ],
+    "repair_disposition": "Full literal P2–P5 visible replacement frozen; intended-use pass remains pending independent re-review.",
+    "limits": [
+      "No actual PPTX/notes navigation/render evidence; no claim of actual readability or human comprehension.",
+      "Applies only to this frozen scope, not a general rule that missing limitations are always F2."
+    ]
+  },
+  "AN-Q2-5": {
+    "decision": {
+      "severity": "F2",
+      "intended_use_status": "needs_review"
+    },
+    "basis": "Both frozen judges independently recorded F2/needs_review. Future wording alone does not establish current/一期 execution, but its unconditional promise lacks scope and dependency explanation.",
+    "missing_material_or_conditions": [
+      "Whether 后续 means the current phase later or a separately decided future project; the original has no page/phase placement.",
+      "Which formal actions 全流程 includes, and which remain manual; no supplied action definition.",
+      "Verified write-interface capability/plan; supplied current capabilities explicitly do not include an auto-write interface.",
+      "Independent authority/control boundary, authorization party, validation criteria/results, adoption decision and time; none supplied.",
+      "Any basis for a guaranteed full-process delivery promise or current business approval."
+    ],
+    "conditional_assessment": [
+      "If referring to current-phase automatic formal writes, violates known read-only boundary and must reassess F0/fail.",
+      "If explicitly separate, conditional and awaiting new interface/authority/validation, evaluate the actual conditional text rather than declaring all future automation forbidden."
+    ],
+    "repair_text": "后续仅另案评估自动提交，不在本期交付范围。现有材料未提供已验证的写入接口或全流程自动化依据；须先明确拟执行动作与控制边界，评估新增写入接口，取得另行授权并验证后，再另案决定是否采用。本期正式动作仍由人员在现有系统完成。接口方案、授权方、验证标准与时点目前未给定，保留为待明确事项；不承诺已具备或必定交付全流程自动化。",
+    "prospective_repair_scope": "Original future phrase had no page/phase location. This repair prospectively chooses a separate P6 future paragraph; it does not rewrite initial scope or assert original intent.",
+    "limits": "The added conditions are a proposed future assessment, not fabricated existing facts or a retrospective answer about the ambiguous original."
+  },
+  "distribution_policy": "No fixed 8/2/2 or historical-grade target; actual source/scope/rubric govern each judgment.",
+  "release_and_evidence_limits": "All 12 repaired candidates pending re-review. Synthetic calibration cannot establish product generation quality, E1, engineering file acceptance, human approval or overall RC3 ready."
+}

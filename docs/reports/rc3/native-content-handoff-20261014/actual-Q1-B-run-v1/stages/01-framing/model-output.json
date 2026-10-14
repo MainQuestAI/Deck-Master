@@ -1,0 +1,1103 @@
+{
+  "schema_version": "compose_result.v2",
+  "kind": "compose",
+  "variant": "framing",
+  "task_id": "391a48a2e07e",
+  "operation_id": "actual-framing",
+  "produced_against": "ea33f1e85aed0828767a4f0e5499a267196ba10ba9e5714a325399749ac76792",
+  "eligibility_digest": "6845c4fe12e93aaed4f40823bb08f21d4c884f7ad8a400fe66019bae9ecc2a1d",
+  "usage_events": [],
+  "payload": {
+    "narrative": {
+      "schema_version": "narrative.v1",
+      "narrative_id": "actual-q1-framing",
+      "version": 1,
+      "project_id": "actual-q1",
+      "origin": "host_composed",
+      "maturity": "framing",
+      "input_basis": [
+        {
+          "kind": "task_fact",
+          "identity": "brief",
+          "projection": "value",
+          "ref": null,
+          "sha256": "1dd5f99771a805930a55ffa81fdd980edf8aa3a68d23052f722e8279da384bae"
+        }
+      ],
+      "communication_job": {
+        "mode": "train",
+        "audience_fact_key": "audience",
+        "audience_question": "暂拟训练任务，未获用户选择：若实际受众是 S2 面向的新接单员，首轮记录应交接什么，版本未知时如何如实记录，并依据已经给定的既有紧急条件进入适当路径？受众身份、已有认知与场景均未提供，不能假设他们知道既有条件和路径。",
+        "desired_outcome": "若采用训练方向，让受众能列全首轮记录信息，把版本未知及原因显式交接，将紧急程度判断与版本完整性分开，并说明交接目标和合成38%数字的适用范围；若采用材料解释方向，则以辨清来源用途、口径与冲突为目标。两者均为候选变化，未获确认。",
+        "observable_success": "候选训练验收：给定材料内的规则和已经判定的紧急或普通状态，受众能列出五类首轮信息，写明无法取得版本的具体原因，选择紧急立即带已知流转或普通带未知原因流转，不因未知自动升级；同时能说明38÷100=38%只代表合成样本版本缺失，交接不代表故障解决。此为拟定观察条件，不是已测学习效果。",
+        "use_mode": "live",
+        "primary_use": "live"
+      },
+      "central_node_id": null,
+      "nodes": [
+        {
+          "node_id": "f-request",
+          "role": "explanation",
+          "statement": "用户当前只要求“用这个目录做套 PPT”。工作单未提供受众、具体场景、已有决定或页数上限；现场讲解是默认配置。以下用途与受众变化均为材料驱动的候选 framing，不是用户已作出的选择。",
+          "authority": "instruction",
+          "source_links": [],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": [
+            "i-audience",
+            "i-purpose",
+            "i-format"
+          ]
+        },
+        {
+          "node_id": "f-sample-role",
+          "role": "explanation",
+          "statement": "S1 是教学用合成抽样，可用于说明设备版本首次记录缺失的计数和数字口径；它不是任何真实团队的现状、绩效或项目收益证据。",
+          "authority": "reported_fact",
+          "source_links": [
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "f-version-rate",
+          "role": "evidence",
+          "statement": "在 S1 的 100 条合成售后请求中，38 条首次记录缺少设备版本。该合成样本的版本缺失比例为 38÷100×100%=38%，分子是缺版本的请求数，分母是这 100 条请求。",
+          "authority": "calculation",
+          "source_links": [
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-measurement-limit",
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "f-measurement-limit",
+          "role": "qualification",
+          "statement": "S1 没有记录补问轮次、处理时长、解决率或其他字段的完整情况；“没有记录”不能解释为零，也不能把其余请求说成所有首轮字段均完整。38% 不证明效率提升、时间节省、故障解决比例或缺版本是最大成本来源。",
+          "authority": "inference",
+          "source_links": [
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": [
+            "i-measurement"
+          ]
+        },
+        {
+          "node_id": "f-synthetic-boundary",
+          "role": "qualification",
+          "statement": "S1 明确只用于教学、不代表真实团队业务统计；S2 明确用于新接单员培训、不作为真实业务操作规定。内容必须保留合成教学范围，不把教学规则或数字升格为真实组织的已实施规定与成果。",
+          "authority": "reported_fact",
+          "source_links": [
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "f-sop-role",
+          "role": "explanation",
+          "statement": "S2 在这组材料内承担训练规则的角色：可据此解释首轮记录与版本未知的流转边界。它的规则权威限于这份合成教学情境；本次并没有一份真实业务正式 SOP 可供替代或核验。",
+          "authority": "inference",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-emergency-detail"
+          ]
+        },
+        {
+          "node_id": "f-first-record",
+          "role": "explanation",
+          "statement": "S2 规定首轮记录包括设备型号、设备版本、已观察的问题、已尝试动作及结果、可取得的附件；候选培训需要覆盖这五类信息，不能只讲版本字段。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "f-unknown-record",
+          "role": "explanation",
+          "statement": "在 S2 的训练情境中，设备版本无法取得时填写“未知”并说明具体原因，禁止推测、伪造，或留空而不解释。未知状态应被如实交接。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L3"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "f-urgency-independent",
+          "role": "explanation",
+          "statement": "S2 将紧急程度交由既有紧急条件判断，设备版本是否已知不单独决定紧急程度。信息完整性与紧急程度是两项不同判断，不能用其中一项替代另一项。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L4"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-emergency-detail"
+          ]
+        },
+        {
+          "node_id": "f-urgent-route",
+          "role": "explanation",
+          "statement": "符合既有紧急条件时，S2 要求立即按现有紧急路径流转并带上已知信息，不为补齐版本而延误。材料没有列出紧急条件、具体路径或接手角色，不能自行补成实际操作步骤。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L5"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-emergency-detail"
+          ]
+        },
+        {
+          "node_id": "f-normal-route",
+          "role": "explanation",
+          "statement": "普通请求即使版本未知，S2 仍要求记录未知原因并按普通路径流转；版本未知不自动变成紧急，也不自动触发专家升级。具体普通路径未在材料中展开。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L6"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-emergency-detail"
+          ]
+        },
+        {
+          "node_id": "f-handoff-outcome",
+          "role": "explanation",
+          "statement": "S2 的目标是让下一位接手者知道已知、未知及下一步；完成这项交接不代表当前已解决故障。候选训练应以交接信息可理解为目标，不能以故障已解决作为现有材料证明的结果。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L7"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "f-draft-role",
+          "role": "objection",
+          "statement": "S3 自述为未经验证的历史草案，包含“采集前移能带来38%的效率提升”和“所有请求都应先补齐版本，再进入任何处理路径”两项说法。它可作为待检验或纠错对象，不能按成果证据或现行操作要求采用。",
+          "authority": "reported_fact",
+          "source_links": [
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": [
+            "i-draft-use"
+          ]
+        },
+        {
+          "node_id": "f-effect-conflict",
+          "role": "reasoning",
+          "statement": "S3 的“38%效率提升”缺少对应效率测量；S1 只给出了 38/100 的版本缺失计数，且明确未记录时长等结果指标。这两个 38% 的测量对象不同，不能互换。建议在后续稿中排除已证效率提升的表述；若保留 S3，须同时说明其未经验证和 S1 的真实口径。",
+          "authority": "inference",
+          "source_links": [
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-measurement-limit",
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-measurement",
+            "i-draft-use"
+          ]
+        },
+        {
+          "node_id": "f-route-conflict",
+          "role": "reasoning",
+          "statement": "S3 的“全部补齐后才进入任何路径”与 S2 的紧急不延误、普通请求可带未知原因流转直接冲突。材料内的教学讲解建议按 S2 已列明的分支解释，并把 S3 的绝对前置条件标为未经验证、与 S2 不一致的草案；这一取舍依据用途与具体规则，不依据文件名或新旧排序，也不构成真实组织政策裁决。",
+          "authority": "inference",
+          "source_links": [
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L4"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L5"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L6"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-purpose",
+            "i-draft-use"
+          ]
+        },
+        {
+          "node_id": "f-training-candidate",
+          "role": "recommendation",
+          "statement": "候选方向一：面向新接单员的合成训练。以 S2 的首轮记录、未知的诚实记录、紧急与普通两条流转边界、交接目标建立学习任务；S1 用于解释缺失率口径，S3 可作为纠错讨论素材。选择此方向仍需用户确认受众、场景与已有认知。",
+          "authority": "recommendation",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L4"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L5"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L6"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L7"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-audience",
+            "i-purpose",
+            "i-emergency-detail",
+            "i-format",
+            "i-draft-use"
+          ]
+        },
+        {
+          "node_id": "f-learning-change",
+          "role": "recommendation",
+          "statement": "若选择新接单员训练，候选受众变化是：从已有认知未知，转为能列全首轮记录范围、如实标明版本未知及原因，并在既有紧急条件已经给定时区分紧急立即流转与普通带未知流转；能说明交接不等于故障解决，38% 缺失比例不等于38%效率提升。这是拟定训练目标，尚无学员表现或学习效果证据。",
+          "authority": "target",
+          "source_links": [
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L4"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L5"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L6"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L7"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L1"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-audience",
+            "i-purpose",
+            "i-emergency-detail"
+          ]
+        },
+        {
+          "node_id": "f-analysis-candidate",
+          "role": "recommendation",
+          "statement": "候选方向二：向希望理解这组材料的受众说明合成数字、训练规则与历史草案的关系。目标是让读者能指出每份材料支持什么、哪些说法不能成立、版本未知为何不单独决定紧急程度；它不要求读者已具备接单业务知识，但实际读者及使用场景仍未提供。此方向与训练方向择一还是组合，留待用户确认。",
+          "authority": "recommendation",
+          "source_links": [
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-71378f60",
+              "source_version": {
+                "original_sha256": "aacbe7955a30889edde31c08b973ea248a2385133b7b0f3dedfa028cab84bcd8",
+                "extract": {
+                  "path": ".deckmaster/objects/1c/1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e.json",
+                  "sha256": "1c1a896eae542eee047baa452ca08a7a893a3fa76eeb2a23658c81d27b41947e"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L4"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L5"
+            },
+            {
+              "source_id": "src-51d5e416",
+              "source_version": {
+                "original_sha256": "297d305f8c94f4a3954f87f171797ff49a7cd5acd98563ffba9a061a6817c39d",
+                "extract": {
+                  "path": ".deckmaster/objects/ed/ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a.json",
+                  "sha256": "ed308594f162392fe92316914428d755c27678163f5964616868318dc2af163a"
+                }
+              },
+              "locator": "L6"
+            },
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L1"
+            },
+            {
+              "source_id": "src-42c622cf",
+              "source_version": {
+                "original_sha256": "44b9296071e276cdaa5e4c4647fed0b34e9fa22744d0d0cd1b2df4ef4222025e",
+                "extract": {
+                  "path": ".deckmaster/objects/60/606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408.json",
+                  "sha256": "606b5cbebc5a25b14d101ad530020767f9e1486fa98046754bad328f96f6e408"
+                }
+              },
+              "locator": "L2"
+            }
+          ],
+          "qualification_node_ids": [
+            "f-synthetic-boundary"
+          ],
+          "unresolved_issue_ids": [
+            "i-audience",
+            "i-purpose",
+            "i-format"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-sample-role",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-version-rate",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-sop-role",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-first-record",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-unknown-record",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-urgency-independent",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-urgent-route",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-normal-route",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-handoff-outcome",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-effect-conflict",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-route-conflict",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-training-candidate",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-learning-change",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-synthetic-boundary",
+          "to_node_id": "f-analysis-candidate",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-measurement-limit",
+          "to_node_id": "f-version-rate",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-version-rate",
+          "to_node_id": "f-effect-conflict",
+          "relation": "explains"
+        },
+        {
+          "from_node_id": "f-measurement-limit",
+          "to_node_id": "f-effect-conflict",
+          "relation": "qualifies"
+        },
+        {
+          "from_node_id": "f-route-conflict",
+          "to_node_id": "f-draft-role",
+          "relation": "challenges"
+        },
+        {
+          "from_node_id": "f-effect-conflict",
+          "to_node_id": "f-draft-role",
+          "relation": "challenges"
+        }
+      ],
+      "issues": [
+        {
+          "issue_id": "i-audience",
+          "question": "实际受众是否为 S2 自述的新接单员？他们已经掌握哪些首轮记录要求、紧急条件和流转路径？用户未提供受众及先验知识；该信息决定讲解深度和练习前提，不能把材料的用途说明当作用户选择。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "f-request",
+            "f-training-candidate",
+            "f-learning-change",
+            "f-analysis-candidate"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "i-purpose",
+          "question": "这套 PPT 用于合成接单训练，还是用于说明材料口径与冲突，或有明确的组合用途？用户只指定目录制作，尚无已有决定；先保留两个候选方向，不能默认成效率改进提案或替用户决定主线。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "f-request",
+            "f-route-conflict",
+            "f-training-candidate",
+            "f-learning-change",
+            "f-analysis-candidate"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "i-emergency-detail",
+          "question": "S2 引用的既有紧急条件、紧急路径和普通路径具体是什么？这些细节在获准来源中未展开，受众是否已知也不明。当前可讲已判定为紧急或普通后的规则差异；若目标是独立判断紧急或执行完整业务操作，须补充对应规则与路径，不能自行编造触发条件、责任人或升级方式。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "f-sop-role",
+            "f-urgency-independent",
+            "f-urgent-route",
+            "f-normal-route",
+            "f-training-candidate",
+            "f-learning-change"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "i-measurement",
+          "question": "材料没有补问轮次、处理时长、解决率及其他字段完整性数据，抽样期间和抽取方法也未提供。是否另有获准测量材料支持收益主张？当前 framing 只使用合成样本的38/100，不声称效率收益、真实总体发生率或版本缺失的因果效果；这些缺口不阻止讲清教学口径。",
+          "impact": "advisory",
+          "affected_node_ids": [
+            "f-measurement-limit",
+            "f-effect-conflict"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "i-format",
+          "question": "现场讲解只是默认配置，用户未指定讲述时长、互动安排、独立阅读需求或页数上限。是否沿用该使用方式及篇幅要求？当前按默认 live 描述候选任务，但不据此捏造页数或时长预算。",
+          "impact": "needs_judgment",
+          "affected_node_ids": [
+            "f-request",
+            "f-training-candidate",
+            "f-analysis-candidate"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        },
+        {
+          "issue_id": "i-draft-use",
+          "question": "是否将 S3 保留为对照纠错素材，还是从后续主线中省去？它的两项说法未经验证，其中流程绝对前置条件与 S2 冲突。用户可决定教学素材的取舍；采用为收益事实或真实业务规定仍需要相应证据，现有来源不支持。",
+          "impact": "advisory",
+          "affected_node_ids": [
+            "f-draft-role",
+            "f-effect-conflict",
+            "f-route-conflict",
+            "f-training-candidate"
+          ],
+          "resolution": "open",
+          "resolution_ref": null
+        }
+      ],
+      "alternatives": [
+        {
+          "option_id": "option-training",
+          "description": "合成接单训练：以 S2 为规则素材，S1 为数字口径素材，按用户取舍将 S3 用作纠错素材；训练方向与受众尚待确认。",
+          "benefit": "材料中已有记录范围、未知处理、两条流转边界和交接目标，可形成与新接单员行为直接相关的学习任务；数字与草案的对照有助于澄清容易混淆的规则和结论。",
+          "cost": "需要明确学员先验认知；若要求学员自行判定紧急或执行完整路径，还需提供材料未列出的条件与路径。互动安排、讲述时长和页数均未知，不能给出精确预算。",
+          "affected_node_ids": [
+            "f-training-candidate",
+            "f-learning-change",
+            "f-first-record",
+            "f-unknown-record",
+            "f-urgency-independent",
+            "f-urgent-route",
+            "f-normal-route",
+            "f-handoff-outcome"
+          ]
+        },
+        {
+          "option_id": "option-source-explanation",
+          "description": "合成材料口径与冲突说明：解释 S1 的数字范围、S2 的训练规则、S3 的未经验证说法及其不一致之处；实际受众与场景仍待确认。",
+          "benefit": "可在现有材料范围内完整区分观察、规则与草案，帮助读者核对38%的测量对象及版本未知的处理边界，较少依赖具体组织路径。",
+          "cost": "对实际接单行为的练习较少；若用户需要培训，单独采用此方向不足以检验首轮记录和流转选择。需要确认解释深度及使用方式，不能把材料说明当作业务效率结论。",
+          "affected_node_ids": [
+            "f-analysis-candidate",
+            "f-sample-role",
+            "f-version-rate",
+            "f-measurement-limit",
+            "f-sop-role",
+            "f-draft-role",
+            "f-effect-conflict",
+            "f-route-conflict"
+          ]
+        }
+      ],
+      "previous_ref": null
+    }
+  }
+}

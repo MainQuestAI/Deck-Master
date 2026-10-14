@@ -1,0 +1,525 @@
+{
+  "schema_version": "compose_result.v2",
+  "kind": "compose",
+  "variant": "speech",
+  "task_id": "853fd1df2089",
+  "operation_id": "actual-speech",
+  "produced_against": "25eb5228008465ebdca3f86e24a804b6c1be2e840c3804a8c000bdb997d4c83e",
+  "eligibility_digest": "7b14f3b4280e712938cd79288883892e940ea942fffa3ce786e1cd854081f3be",
+  "usage_events": [],
+  "payload": {
+    "updates": [
+      {
+        "page_id": "p01",
+        "page_ref": {
+          "path": ".deckmaster/objects/d2/d25da7bef0c31616d48dbbebcbf6eaec5530868aee1d1854324c2f34b953dddb.json",
+          "sha256": "d25da7bef0c31616d48dbbebcbf6eaec5530868aee1d1854324c2f34b953dddb"
+        },
+        "speaker_notes": "开场点题：今天决定是否做四周小范围试点，验证设备条件补问变化与新增负担；提案尚未批准。\n指向建议：优先讨论人工条件提示＋只读引用；许可资料、只读入口、核查责任和记录时间落实后启动，未齐先观察。\n强调底部：一期只读、人员在现有系统正式提交，AI不提交、修改或关闭工单；四周不保证开发完成或收益。转到证据。",
+        "speech_segments": [
+          {
+            "segment_id": "p01-cue-01",
+            "start_codepoint": 0,
+            "end_codepoint": 44,
+            "narrative_node_ids": [
+              "task-boundary",
+              "pilot-recommendation",
+              "proposed-mechanism",
+              "tradeoff-objection"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 10
+          },
+          {
+            "segment_id": "p01-cue-02",
+            "start_codepoint": 44,
+            "end_codepoint": 97,
+            "narrative_node_ids": [
+              "pilot-recommendation",
+              "trial-readiness",
+              "option-observe"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 12
+          },
+          {
+            "segment_id": "p01-cue-03",
+            "start_codepoint": 97,
+            "end_codepoint": 151,
+            "narrative_node_ids": [
+              "readonly-scope",
+              "trial-readiness",
+              "outcome-unmeasured",
+              "priority-reasoning"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 8
+          }
+        ]
+      },
+      {
+        "page_id": "p02",
+        "page_ref": {
+          "path": ".deckmaster/objects/58/5879fbe7853bf892d174a9fd771adef0d01b35e7ab363daef2220e0574d174d8.json",
+          "sha256": "5879fbe7853bf892d174a9fd771adef0d01b35e7ab363daef2220e0574d174d8"
+        },
+        "speaker_notes": "先指抽样行：合成抽样120条售后请求，54条首次缺型号或版本，54÷120＝45%，单位是请求。只描述本样本；期间、选取办法和代表性未知，不能外推，也不能推断其余字段完整。\n再指访谈行：缺条件可能带来接单后补问，这是访谈提出的机制。未计轮次、时长和相对其他成本；未证明54条全部发生补问。\n最后指未测结果：新方案的时间、成本、解决率与收益均未测。45%不能换算成补问率、自动解决率或节省比例；生产可靠性也无结论。\n收束判断：已有缺失观察和可检验机制，支持有限验证，尚不能承诺收益或全量上线；原120条不能直接当新试点基线。接着比较验证路径。",
+        "speech_segments": [
+          {
+            "segment_id": "p02-cue-01",
+            "start_codepoint": 0,
+            "end_codepoint": 87,
+            "narrative_node_ids": [
+              "sample-observation",
+              "sample-calculation",
+              "sample-limit"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 18
+          },
+          {
+            "segment_id": "p02-cue-02",
+            "start_codepoint": 87,
+            "end_codepoint": 145,
+            "narrative_node_ids": [
+              "interview-mechanism",
+              "material-authority"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 15
+          },
+          {
+            "segment_id": "p02-cue-03",
+            "start_codepoint": 145,
+            "end_codepoint": 207,
+            "narrative_node_ids": [
+              "outcome-unmeasured",
+              "sample-calculation",
+              "capability-limit"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 12
+          },
+          {
+            "segment_id": "p02-cue-04",
+            "start_codepoint": 207,
+            "end_codepoint": 270,
+            "narrative_node_ids": [
+              "priority-reasoning",
+              "sample-limit",
+              "outcome-unmeasured",
+              "choice-criteria"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 10
+          }
+        ]
+      },
+      {
+        "page_id": "p03",
+        "page_ref": {
+          "path": ".deckmaster/objects/8a/8a4898a0ef553cd900ef4b6f95ac4f9eae43519ec15dc02539d788ec7f0ec351.json",
+          "sha256": "8a4898a0ef553cd900ef4b6f95ac4f9eae43519ec15dc02539d788ec7f0ec351"
+        },
+        "speaker_notes": "按“检验什么、需做什么”横向讲A：先在现状记录条件缺失和实际补问，不必等新入口完成；准备不足时有价值。仍占记录分析时间，也没有新增引用辅助。\n对照B：只读引用试用集中核查资料是否适用，可用已知接入、引用问答与嵌入能力。仍需许可、项目接入和人工核查；条件采集沿现状，B的结果不能证明前移提示有效。\n再讲C的增量：加人工条件提示和真实未知记录，更直接检验访谈中的补问假设；现场可得和不可得分开看。代价是采集、适用性核查与独立记录，净作用待验，不能只看填写率。\n落到附条件推荐：C要准备和记录资源落实；人工提示不表示字段功能已开发，字段或自动校验另行估算。三条路径都守只读与真实未知；没有费用、工期或效果排名。\n【另留30秒互动，不计入口播估时】请负责人指出优先检验的是设备条件补问，还是引用适用性，并点出当前准备缺口。听取并记为意见或未决，最终路径留到结尾确认。转入C的流程。",
+        "speech_segments": [
+          {
+            "segment_id": "p03-cue-01",
+            "start_codepoint": 0,
+            "end_codepoint": 71,
+            "narrative_node_ids": [
+              "choice-criteria",
+              "option-observe",
+              "trial-readiness"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 16
+          },
+          {
+            "segment_id": "p03-cue-02",
+            "start_codepoint": 71,
+            "end_codepoint": 148,
+            "narrative_node_ids": [
+              "option-citation",
+              "available-capabilities",
+              "capability-limit",
+              "trial-readiness"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 16
+          },
+          {
+            "segment_id": "p03-cue-03",
+            "start_codepoint": 148,
+            "end_codepoint": 228,
+            "narrative_node_ids": [
+              "option-condition",
+              "proposed-mechanism",
+              "interview-mechanism",
+              "flow-unknown",
+              "unknown-rule",
+              "tradeoff-objection",
+              "outcome-unmeasured"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 20
+          },
+          {
+            "segment_id": "p03-cue-04",
+            "start_codepoint": 228,
+            "end_codepoint": 303,
+            "narrative_node_ids": [
+              "pilot-recommendation",
+              "trial-readiness",
+              "incremental-work",
+              "capability-limit",
+              "readonly-scope",
+              "unknown-rule",
+              "choice-criteria"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 10
+          },
+          {
+            "segment_id": "p03-cue-05",
+            "start_codepoint": 303,
+            "end_codepoint": 386,
+            "narrative_node_ids": [
+              "choice-criteria",
+              "option-observe",
+              "option-citation",
+              "option-condition",
+              "trial-readiness",
+              "decision-ask"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 8
+          }
+        ]
+      },
+      {
+        "page_id": "p04",
+        "page_ref": {
+          "path": ".deckmaster/objects/8c/8c6e5cd6e7c671fa001888681cb09e79792e0182835ba24839c3295ac0e1f7f1.json",
+          "sha256": "8c6e5cd6e7c671fa001888681cb09e79792e0182835ba24839c3295ac0e1f7f1"
+        },
+        "speaker_notes": "沿四节点讲条件可核对分支：现场提供型号、版本与现象，接单人员核对；只读助手返回许可资料和来源；指定人员核查适用性、记录采用与否及原因；人员在现有系统正式提交。提示在首次提交前，补问是否减少仍待验。\n指第一行异常：型号或版本待补，先保留已知条件、未知字段及原因，能补则请求可核对信息。确实不可得时交指定业务核查人判断；取得可核查条件后再走主链。启动前须明确责任人与恢复规则，不能猜填或强制制造完整性。\n指第二行异常：引用不适用、冲突或无法确认，连同设备条件、来源位置与未决点交核查人。候选引用不能当成可直接采用的结论；无法确认继续标未决，找到资料不等于故障已解决。\n停顿强调边界：引用问答不等于诊断正确或操作获批；AI不自动提交、修改或关闭正式工单，未知不能在交接中消失。下一页落实支持这些动作的准备与责任。",
+        "speech_segments": [
+          {
+            "segment_id": "p04-cue-01",
+            "start_codepoint": 0,
+            "end_codepoint": 99,
+            "narrative_node_ids": [
+              "flow-known",
+              "proposed-mechanism",
+              "readonly-scope",
+              "outcome-unmeasured"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 22
+          },
+          {
+            "segment_id": "p04-cue-02",
+            "start_codepoint": 99,
+            "end_codepoint": 200,
+            "narrative_node_ids": [
+              "flow-unknown",
+              "unknown-rule",
+              "trial-readiness"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 20
+          },
+          {
+            "segment_id": "p04-cue-03",
+            "start_codepoint": 200,
+            "end_codepoint": 282,
+            "narrative_node_ids": [
+              "flow-unknown",
+              "flow-known",
+              "capability-limit"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 18
+          },
+          {
+            "segment_id": "p04-cue-04",
+            "start_codepoint": 282,
+            "end_codepoint": 353,
+            "narrative_node_ids": [
+              "capability-limit",
+              "readonly-scope",
+              "unknown-rule",
+              "trial-readiness"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 10
+          }
+        ]
+      },
+      {
+        "page_id": "p05",
+        "page_ref": {
+          "path": ".deckmaster/objects/0e/0e140f7453323802e8a30633e6d27f993d805cf4a5cd05d4ca4a23f7d03d3220.json",
+          "sha256": "0e140f7453323802e8a30633e6d27f993d805cf4a5cd05d4ca4a23f7d03d3220"
+        },
+        "speaker_notes": "先区分能力和项目状态：已知支持是许可资料接入、引用问答与门户只读嵌入；本项目是否已接入仍未知，字段校验、设备诊断也未被证明。\n按责任读前三行的关键交付：IT与资料核查人确认许可资料及型号／版本适用关系；IT验证只读入口与人工提交边界；运营限定请求、人员和提示方式，安排未知核查人。这里是建议分工，尚无已任命人员。\n指独立记录行：由人员维护，明确工具、许可数据范围、保存位置、口径、漏记检查与记录时间；记录责任人汇总，运营与IT确认可承担的工时和预算。当前配置未知。\n说明最小方式：先用人工提示卡和独立记录，不通过AI改正式工单；门户字段或自动校验另估。准备不足，仍可先A观察或缩到B引用。\n【另留30秒互动，不计入口播估时】请运营与IT各指出目前不能落实的准备项，以及谁应确认。尚未答复的责任、工时和预算记未决；转到如何衡量新增负担。",
+        "speech_segments": [
+          {
+            "segment_id": "p05-cue-01",
+            "start_codepoint": 0,
+            "end_codepoint": 63,
+            "narrative_node_ids": [
+              "available-capabilities",
+              "capability-limit",
+              "trial-readiness"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 8
+          },
+          {
+            "segment_id": "p05-cue-02",
+            "start_codepoint": 63,
+            "end_codepoint": 157,
+            "narrative_node_ids": [
+              "incremental-work",
+              "trial-readiness",
+              "flow-unknown",
+              "readonly-scope",
+              "unknown-rule"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 20
+          },
+          {
+            "segment_id": "p05-cue-03",
+            "start_codepoint": 157,
+            "end_codepoint": 233,
+            "narrative_node_ids": [
+              "incremental-work",
+              "measurement-definition",
+              "trial-readiness"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 12
+          },
+          {
+            "segment_id": "p05-cue-04",
+            "start_codepoint": 233,
+            "end_codepoint": 295,
+            "narrative_node_ids": [
+              "option-condition",
+              "readonly-scope",
+              "capability-limit",
+              "option-observe",
+              "option-citation"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 8
+          },
+          {
+            "segment_id": "p05-cue-05",
+            "start_codepoint": 295,
+            "end_codepoint": 367,
+            "narrative_node_ids": [
+              "trial-readiness",
+              "incremental-work",
+              "decision-ask",
+              "measurement-definition"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 7
+          }
+        ]
+      },
+      {
+        "page_id": "p06",
+        "page_ref": {
+          "path": ".deckmaster/objects/19/194ff3934d3b0c5afffe5970e0e6239896c906c753ae00dd2feedcd56e4b7304.json",
+          "sha256": "194ff3934d3b0c5afffe5970e0e6239896c906c753ae00dd2feedcd56e4b7304"
+        },
+        "speaker_notes": "先说口径均为建议、当前值未知。指条件状态：型号、版本分别记已知／待补／未知，并记原因和后来是否核对成功；按请求计数，现场可得与不可得分开，未知不算补齐。\n指补问：从人员在现有系统首次正式提交到约定接手节点，计设备条件往返次数，单位次／请求；其他原因另列。计次与接手节点先确认，缺字段率不能当补问率。\n连接用时行与标题：按分钟／请求记录提示采集、引用核查的新增用时，以及同一起止点内补问用时，确认漏记处理。少补问也可能只把工作前移；不从轮次换算时间、成本或ROI。\n指引用质量：人工核查的引用按条分适用、不适用、无法确认，保留来源和设备条件；无引用、未核查、漏记单列，不能算通过。引用适用仍不等于故障已解决。\n收束比较办法：同范围同口径先现状后试用，按条件可得性、请求类型和复杂度分组，检查漏记及记录负担。顺序观察受组合、学习和时间变化影响，不证明因果、显著性或生产可靠性；请求量与继续阈值待定。转到四周交付。",
+        "speech_segments": [
+          {
+            "segment_id": "p06-cue-01",
+            "start_codepoint": 0,
+            "end_codepoint": 77,
+            "narrative_node_ids": [
+              "measurement-definition",
+              "unknown-rule",
+              "outcome-unmeasured"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 12
+          },
+          {
+            "segment_id": "p06-cue-02",
+            "start_codepoint": 77,
+            "end_codepoint": 150,
+            "narrative_node_ids": [
+              "measurement-definition",
+              "readonly-scope",
+              "sample-calculation",
+              "proposed-mechanism"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 14
+          },
+          {
+            "segment_id": "p06-cue-03",
+            "start_codepoint": 150,
+            "end_codepoint": 232,
+            "narrative_node_ids": [
+              "measurement-definition",
+              "tradeoff-objection",
+              "outcome-unmeasured"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 14
+          },
+          {
+            "segment_id": "p06-cue-04",
+            "start_codepoint": 232,
+            "end_codepoint": 304,
+            "narrative_node_ids": [
+              "measurement-definition",
+              "flow-known",
+              "capability-limit"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 13
+          },
+          {
+            "segment_id": "p06-cue-05",
+            "start_codepoint": 304,
+            "end_codepoint": 404,
+            "narrative_node_ids": [
+              "comparison-limit",
+              "measurement-definition",
+              "outcome-unmeasured",
+              "decision-rules"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 12
+          }
+        ]
+      },
+      {
+        "page_id": "p07",
+        "page_ref": {
+          "path": ".deckmaster/objects/52/527d9649b84171d8a41834a8048513d342b42cd26964089edc15e1cc4575065d.json",
+          "sha256": "527d9649b84171d8a41834a8048513d342b42cd26964089edc15e1cc4575065d"
+        },
+        "speaker_notes": "先指计时门槛：范围、资料适用关系、只读入口、未知核查和记录资源落实后再安排四周；实际起点待决定。未齐先观察或缩小范围。\n沿周次强调每周交付：第一周观察现状、校准口径，交覆盖和记录缺口；第二周限定启用人工提示与只读引用，留逐条记录和未决信息；第三周继续记录、处理问题，调整留痕，口径或范围变化须分段解释；第四周汇总可比请求、补问变化与新增负担，供负责人选择继续、调整或停止。\n强调允许“证据不足”：请求量或记录质量不够就保留不足，不能强行得出收益。四周是学习节奏，不保证开发完成或收益，也不作为全量上线或生产可靠性验收。转到本次决定清单。",
+        "speech_segments": [
+          {
+            "segment_id": "p07-cue-01",
+            "start_codepoint": 0,
+            "end_codepoint": 60,
+            "narrative_node_ids": [
+              "trial-readiness",
+              "four-week-cadence",
+              "option-observe",
+              "option-citation"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 8
+          },
+          {
+            "segment_id": "p07-cue-02",
+            "start_codepoint": 60,
+            "end_codepoint": 187,
+            "narrative_node_ids": [
+              "four-week-cadence",
+              "measurement-definition",
+              "option-condition",
+              "flow-unknown",
+              "comparison-limit",
+              "decision-rules"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 25
+          },
+          {
+            "segment_id": "p07-cue-03",
+            "start_codepoint": 187,
+            "end_codepoint": 268,
+            "narrative_node_ids": [
+              "four-week-cadence",
+              "comparison-limit",
+              "outcome-unmeasured",
+              "capability-limit",
+              "decision-ask"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 12
+          }
+        ]
+      },
+      {
+        "page_id": "p08",
+        "page_ref": {
+          "path": ".deckmaster/objects/36/36f2f3bec358689e3ba5997dfcd3e5f08929f5a85649fc400d114716b248e930.json",
+          "sha256": "36f2f3bec358689e3ba5997dfcd3e5f08929f5a85649fc400d114716b248e930"
+        },
+        "speaker_notes": "收束推荐：附条件C，或先A观察、缩为B引用。请按四项清单记录具体选择与责任，路径尚待确认。\n点出待定项：范围、人员、工时预算、启动缺口及后续动作、四周起点、口径、复盘日期和继续阈值；未定就记未决，不补造收益目标。\n提醒复盘：守只读和真实未知、引用可核查、数据足够、负担可接受才讨论继续；负担高则调整或缩回B，引用无法核查、猜填或越界先暂停受影响环节并纠正，数据不足记证据不足。\n【另留120秒讨论，不计入口播估时】依四项清单请负责人确认路径范围、责任资源、启动缺口与复盘安排。听取并记录；一般同意不替代具体授权，未回答项保持未决。讲述估420秒、互动180秒，合计600秒；依据是cues解释关键关系与短停顿、不逐格朗读。未经完整试讲，实测unknown。",
+        "speech_segments": [
+          {
+            "segment_id": "p08-cue-01",
+            "start_codepoint": 0,
+            "end_codepoint": 46,
+            "narrative_node_ids": [
+              "pilot-recommendation",
+              "option-condition",
+              "option-observe",
+              "option-citation",
+              "decision-ask"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 8
+          },
+          {
+            "segment_id": "p08-cue-02",
+            "start_codepoint": 46,
+            "end_codepoint": 107,
+            "narrative_node_ids": [
+              "decision-ask",
+              "incremental-work",
+              "trial-readiness",
+              "measurement-definition",
+              "outcome-unmeasured"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 8
+          },
+          {
+            "segment_id": "p08-cue-03",
+            "start_codepoint": 107,
+            "end_codepoint": 189,
+            "narrative_node_ids": [
+              "decision-rules",
+              "readonly-scope",
+              "unknown-rule",
+              "comparison-limit",
+              "option-citation"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 10
+          },
+          {
+            "segment_id": "p08-cue-04",
+            "start_codepoint": 189,
+            "end_codepoint": 328,
+            "narrative_node_ids": [
+              "decision-ask",
+              "trial-readiness",
+              "task-boundary"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 4
+          }
+        ]
+      }
+    ]
+  }
+}

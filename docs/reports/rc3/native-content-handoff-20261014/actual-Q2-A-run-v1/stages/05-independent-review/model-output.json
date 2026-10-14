@@ -1,0 +1,554 @@
+{
+  "kind": "review",
+  "files": [],
+  "pages": [],
+  "page_order": [],
+  "artifact_specs": [],
+  "usage_events": [],
+  "notes": "actual independent native content review; synthetic business input, not human acceptance. Canonical reviewer: /root/e1_q2_a_content_review. Review-only: no manuscript edit, adoption, acceptance or fabricated identity/human receipt. Full review-packet read by top-level materials/task, complete Narrative (all 25 nodes/edges/alternatives/issues), complete bound Plan, and P01–P07 customer-visible content, notes, mappings and visual specifications. Repeated refs/source links were displayed through an exact shared table; normalization/expansion roundtrip equals the full packet; all 437 source-link occurrences match exact current source versions. Original S1/S2/S3 texts read and raw hashes verified. Full installed source-reading.md, content-methods.md, content-examples.md and review-and-repair.md read; bytes match method-read-record.json. Method read record raw SHA256: d7dfcbff82f58a22027c78b6fbe67f553fa36f2f2a54716950847dfb8fc4eb52. No other arm, anchors/prototypes, original planning EXAMPLES, historical scores, controller implementation or other controller files read. Pass scope is preproduction content only. Human acceptance, rendered readability, measured timing and actual business outcomes remain unexecuted. Native model/provider/reasoning/sampling configuration was not disclosed and remains unknown.",
+  "reviews": [
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "actual-q2-a-independent-argument-v1",
+      "kind": "argument",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/d2/d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536.json",
+          "sha256": "d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536"
+        },
+        {
+          "path": ".deckmaster/objects/e6/e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae.json",
+          "sha256": "e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae"
+        },
+        {
+          "path": ".deckmaster/objects/31/317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9.json",
+          "sha256": "317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9"
+        },
+        {
+          "path": ".deckmaster/objects/2f/2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74.json",
+          "sha256": "2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74"
+        },
+        {
+          "path": ".deckmaster/objects/a7/a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002.json",
+          "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+        },
+        {
+          "path": ".deckmaster/objects/c7/c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b.json",
+          "sha256": "c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b"
+        },
+        {
+          "path": ".deckmaster/objects/95/950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876.json",
+          "sha256": "950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876"
+        },
+        {
+          "path": ".deckmaster/objects/4e/4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27.json",
+          "sha256": "4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27"
+        },
+        {
+          "path": ".deckmaster/objects/0a/0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71.json",
+          "sha256": "0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P01",
+          "sha256": "317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P02",
+          "sha256": "2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P03",
+          "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P04",
+          "sha256": "c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P05",
+          "sha256": "950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P06",
+          "sha256": "4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P07",
+          "sha256": "0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71"
+        },
+        {
+          "kind": "source",
+          "identity": "src-781ace7d",
+          "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+        },
+        {
+          "kind": "source",
+          "identity": "src-475bb85b",
+          "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7ef7bfa2",
+          "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q2_a_content_review",
+        "execution_ref": "/root/e1_q2_a_content_review",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/5d/5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110.json",
+          "sha256": "5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "实际阅读全文任务、三份合成来源、25 个 Narrative 节点及全部关系/限定/未决项、完整绑定 Plan 和 P01–P07。评价对象是面向售后运营与 IT 负责人的 10 分钟现场立项讨论，已有决定为空；当前候选稿未将建议写成批准。",
+        "中心节点 decision-proposal 在 P01 atom:P01:block:proposal:text、atom:P01:block:conditions:text 和 atom:P01:callout:decision:text 明确提出有条件验证，而非收益或交付承诺。许可、可得性与新增资源的限制保持可见；其依据是 S1-facts L1–L3 的问题线索与未测效果、S2-scope L1–L3 的范围、S3-capabilities L1–L2 的起点及能力边界。",
+        "sample-observation/sample-share/sample-boundary 在 P02 atom:P02:block:sample:text 和 atom:P02:callout:limits:text 给出 54/120=45%、合成样本身份、抽样配置未知及不可外推限制。interview-clue 与 information-hypothesis 没有把访谈线索升级成因果事实：P03 atom:P03:callout:hypothesis:text 将现场可得、资料适用及可能避免部分相同条件再确认写成待验假设，符合 S1 L2–L3 和 S2 L3。",
+        "workflow-proposal/human-submit/unknown-rule 在 P03 的五个流程 atom 及 visual_spec 的可得/未知分支完整交接到只读引用、人工适用性核对和现有系统正式提交。capability-limit/additional-work 在 atom:P03:block:capability:text 区分既有接入问答嵌入与新增条件交互、未知记录及人工交接，不推定已验证诊断或自动写入能力。",
+        "P04 三路线比较与 selection-reason 提供真实选择：A 适合检索与引用，B 贴合条件前移但增加设计工作，C 前提缺失时先准备并承担延后观察代价。推荐 B 的理由是验证问题匹配，未虚构效率、成本或 ROI 排名。P05–P07 将试点观察与继续判断接回该命题。",
+        "尚未配置的抽样范围、现场可得性、资料许可/适用对应、基线比较设计、具体人员资源、成本、阈值及开展决定被明确保留为未决启动条件；在本次立项讨论用途下，无需改换中心主张或重建章节论证。按共同 F0–F3 原始标准，未发现 F0、F1 或影响该内容用途的 F2。该判断不表示这些业务条件已落实，也不表示人类专业验收。"
+      ],
+      "findings": [],
+      "created_at": "2026-10-14T17:25:06.222947Z",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "actual-q2-a-independent-page_copy-v1",
+      "kind": "page_copy",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/d2/d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536.json",
+          "sha256": "d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536"
+        },
+        {
+          "path": ".deckmaster/objects/e6/e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae.json",
+          "sha256": "e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae"
+        },
+        {
+          "path": ".deckmaster/objects/31/317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9.json",
+          "sha256": "317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9"
+        },
+        {
+          "path": ".deckmaster/objects/2f/2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74.json",
+          "sha256": "2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74"
+        },
+        {
+          "path": ".deckmaster/objects/a7/a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002.json",
+          "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+        },
+        {
+          "path": ".deckmaster/objects/c7/c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b.json",
+          "sha256": "c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b"
+        },
+        {
+          "path": ".deckmaster/objects/95/950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876.json",
+          "sha256": "950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876"
+        },
+        {
+          "path": ".deckmaster/objects/4e/4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27.json",
+          "sha256": "4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27"
+        },
+        {
+          "path": ".deckmaster/objects/0a/0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71.json",
+          "sha256": "0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P01",
+          "sha256": "317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P02",
+          "sha256": "2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P03",
+          "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P04",
+          "sha256": "c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P05",
+          "sha256": "950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P06",
+          "sha256": "4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P07",
+          "sha256": "0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71"
+        },
+        {
+          "kind": "source",
+          "identity": "src-781ace7d",
+          "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+        },
+        {
+          "kind": "source",
+          "identity": "src-475bb85b",
+          "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7ef7bfa2",
+          "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q2_a_content_review",
+        "execution_ref": "/root/e1_q2_a_content_review",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/5d/5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110.json",
+          "sha256": "5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "完整阅读 P01–P07 的所有 customer_visible 字段，包括标题、副标题、段落、表头、单元格、流程标签、脚注和强调文字，以及全部 visible_links/visual_spec。七页各自承担立项命题、证据边界、工作机制、路线取舍、四周节奏、测量判断和责任选择，正文均为可直接使用的具体内容。",
+        "机械核对 92 个可见 atom 与 92 条唯一映射一一覆盖，所有 narrative_node_ids 存在；437 处版本化来源链接只有 8 个实际 source/locator 组合，均与当前 S1–S3 的 extract/original SHA 和存在的行定位一致。定位存在之外，本审阅逐项核对了来源是否支撑正文或作为建议的推导前提。",
+        "必要限定跟随具体主张上屏：P02 的样本/计算与非收益限制同页；P03 atom:P03:block:original:text 区分原始只读要求，atom:P03:item:unknown:text 保留未知及原因，atom:P03:block:capability:text 区分已知能力与新增设计；P04 的推荐条件、P05 的待定可行性、P06 的不可归因和数值门槛未知、P07 的未决配置也可直接看到。",
+        "P06 atom:P06:cell:measurement:state:record:display_text 单列真实取得、未知与未填写，并要求数量和分母；再次确认记录原因/轮次，时间记录新增负担，引用记录人工适用核对。atom:P06:block:comparison:text 限制因果归因，atom:P06:item:continue:text 只建议扩大验证，没有将四周观察当作生产证明。",
+        "P01/P02/P07 保持较少的信息层次，符合现场讲述；P03 和 P06 承担更多机制及测量解释，内容职责成立。此处已审表达内容及结构，没有实际渲染证据，故不宣称字号、投影阅读、表格排版或最终 PPT 已通过。只有一处不改变事实、范围或可用性的文字统一建议，按共同原始标准记 F3。"
+      ],
+      "findings": [
+        {
+          "finding_id": "q2-a-page-copy-f3-script-consistency",
+          "kind": "content",
+          "impact": "advisory",
+          "page_id": "P03",
+          "element_refs": [
+            "atom:P03:block:capability:text",
+            "node:additional-work"
+          ],
+          "message": "F3 局部文字润色：P03 的新增设计列表使用了“适用資料对应”，与整稿其余简体“资料”不一致；含义及能力边界正确，不影响立项判断。",
+          "expected": "该段新增设计的名称与同页、P04 及 S3-capabilities 的简体文字一致。",
+          "actual": "atom:P03:block:capability:text 写为“新增设计：条件交互、适用資料对应、未知记录及人工交接”。",
+          "evidence": [
+            {
+              "path": ".deckmaster/objects/a7/a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002.json",
+              "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+            },
+            {
+              "path": ".deckmaster/objects/5d/5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110.json",
+              "sha256": "5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110"
+            }
+          ],
+          "resolution": "open",
+          "resolution_reason": "建议后续局部编辑仅统一“資料”为“资料”，不改新增设计含义及来源映射；独立 review-only 阶段未修改稿件。"
+        }
+      ],
+      "created_at": "2026-10-14T17:25:06.222947Z",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "actual-q2-a-independent-progression-v1",
+      "kind": "progression",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/d2/d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536.json",
+          "sha256": "d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536"
+        },
+        {
+          "path": ".deckmaster/objects/e6/e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae.json",
+          "sha256": "e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae"
+        },
+        {
+          "path": ".deckmaster/objects/31/317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9.json",
+          "sha256": "317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9"
+        },
+        {
+          "path": ".deckmaster/objects/2f/2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74.json",
+          "sha256": "2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74"
+        },
+        {
+          "path": ".deckmaster/objects/a7/a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002.json",
+          "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+        },
+        {
+          "path": ".deckmaster/objects/c7/c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b.json",
+          "sha256": "c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b"
+        },
+        {
+          "path": ".deckmaster/objects/95/950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876.json",
+          "sha256": "950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876"
+        },
+        {
+          "path": ".deckmaster/objects/4e/4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27.json",
+          "sha256": "4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27"
+        },
+        {
+          "path": ".deckmaster/objects/0a/0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71.json",
+          "sha256": "0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P01",
+          "sha256": "317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P02",
+          "sha256": "2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P03",
+          "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P04",
+          "sha256": "c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P05",
+          "sha256": "950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P06",
+          "sha256": "4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P07",
+          "sha256": "0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71"
+        },
+        {
+          "kind": "source",
+          "identity": "src-781ace7d",
+          "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+        },
+        {
+          "kind": "source",
+          "identity": "src-475bb85b",
+          "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7ef7bfa2",
+          "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q2_a_content_review",
+        "execution_ref": "/root/e1_q2_a_content_review",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/5d/5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110.json",
+          "sha256": "5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "完整阅读 bound Plan 的三章、七个 page_roles、全部 audience_question/required_qualifications/transition_to_next、实际页序与全部 Page refs。实际 P01–P07 次序与 Plan 及 page_links 一致，七页低于上限八页，没有为凑页数添加目录或宣传页。",
+        "P01 先给有条件验证命题，P02 回答凭什么值得检验及证据能支持什么；P03 将线索变成含未知分支的工作链，P04 比较该工作链与 A/C 的真实取舍。P05 回答若考虑 B 如何安排准备与观察，P06 回答记录如何支撑继续判断，P07 回到负责人选择与启动责任，后页均回应前页留下的必要问题。",
+        "工作机制、已知能力和新增设计在 P03 相接，避免另起公司能力小稿；P04 不把 A/C 当陪跑选项。P05 先落实许可再实际读取，准备不足时缩范围或重议时间；P06 再明确比较限制，使 P07 责任与选择具备前文依据。重复的只读/未知/未测限定附着在不同决策职责上，没有替代核心解释。",
+        "Plan 逐页估计 45/65/70/80/90/90/40 秒，合计 480 秒；interaction_seconds 为 120，total_seconds 为 600。P07 用于讨论，不再引入新主张。用途预算在策划层自洽，但没有实测缓冲证据，现场十分钟完成情况尚未验证。",
+        "未发现需要重新安排章节级关系的 F1 或可定位的必要过渡缺失 F2。受众熟悉程度仍未知，当前必要定义保留合理；内容前置 pass 仅针对这份固定候选稿的推进与预算设计，不延伸为真实使用效果认可。"
+      ],
+      "findings": [],
+      "created_at": "2026-10-14T17:25:06.222947Z",
+      "replaces": null
+    },
+    {
+      "schema_version": "deck_review.v2",
+      "review_id": "actual-q2-a-independent-speech-v1",
+      "kind": "speech",
+      "review_stage": "preproduction",
+      "status": "pass",
+      "subjects": [
+        {
+          "path": ".deckmaster/objects/d2/d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536.json",
+          "sha256": "d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536"
+        },
+        {
+          "path": ".deckmaster/objects/e6/e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae.json",
+          "sha256": "e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae"
+        },
+        {
+          "path": ".deckmaster/objects/31/317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9.json",
+          "sha256": "317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9"
+        },
+        {
+          "path": ".deckmaster/objects/2f/2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74.json",
+          "sha256": "2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74"
+        },
+        {
+          "path": ".deckmaster/objects/a7/a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002.json",
+          "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+        },
+        {
+          "path": ".deckmaster/objects/c7/c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b.json",
+          "sha256": "c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b"
+        },
+        {
+          "path": ".deckmaster/objects/95/950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876.json",
+          "sha256": "950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876"
+        },
+        {
+          "path": ".deckmaster/objects/4e/4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27.json",
+          "sha256": "4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27"
+        },
+        {
+          "path": ".deckmaster/objects/0a/0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71.json",
+          "sha256": "0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71"
+        }
+      ],
+      "dependencies": [
+        {
+          "kind": "content",
+          "identity": "narrative",
+          "sha256": "d270599f946eca9636a734a175916b27d3430f11c07907821d4ca4d7a27a0536"
+        },
+        {
+          "kind": "content",
+          "identity": "content_plan",
+          "sha256": "e6852bfc9ad976eb688cdadaaa0175066ea8a8d6b72b1d7ce0c0f47692193dae"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P01",
+          "sha256": "317609c2b474ac1b128657bd1b0faf3012dfc6775a03c09937d216cb7fc814f9"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P02",
+          "sha256": "2f09715e91c2e75b6836f6f01061134ac9c7ff5c5be1925062d6f94c4612ab74"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P03",
+          "sha256": "a77ffdd17c8ace36986fae1a23f8ccbbee8112ec23b655fa2756967ed3b2f002"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P04",
+          "sha256": "c7f5f2d355db46389f9940445ceb64971606e6ac09618604e2a6e555fea62b6b"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P05",
+          "sha256": "950b526c00ad43ca8fab76a64625d8b77bdbb04126f689c881d8c0e2cf099876"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P06",
+          "sha256": "4e8d84b11a43977c19a77eed142b73bf20fbed678db6b32c5942b4744f36df27"
+        },
+        {
+          "kind": "content",
+          "identity": "page:P07",
+          "sha256": "0ae7b193e83ab54e06404c2eb28556ab2e551ce4c9de8bd6dd1225d3d8b28e71"
+        },
+        {
+          "kind": "source",
+          "identity": "src-781ace7d",
+          "sha256": "f6e66322bc97444f9d49e7f216a4550f7fae80553b2f4bc194ec7643e3bdfaf7"
+        },
+        {
+          "kind": "source",
+          "identity": "src-475bb85b",
+          "sha256": "58335e0cc9812b12d1102c76576a3df26be77d31f9abc93ca0b5d45082595339"
+        },
+        {
+          "kind": "source",
+          "identity": "src-7ef7bfa2",
+          "sha256": "409dffde0dc218c648d76e57c23160638054f30b2f766670db396e71295a5f82"
+        }
+      ],
+      "reviewer": {
+        "type": "independent_host",
+        "id": "/root/e1_q2_a_content_review",
+        "execution_ref": "/root/e1_q2_a_content_review",
+        "independence_confirmed": true,
+        "identity_receipt": null,
+        "evidence_ref": {
+          "path": ".deckmaster/objects/5d/5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110.json",
+          "sha256": "5d8fdfd7a89a70c22f877a2d449ab2caa11e34e44d531659d446579c89592110"
+        },
+        "assurance": "host_attested"
+      },
+      "observations": [
+        "完整阅读七页 speaker_notes 及 33 个 speech_segments，并逐段读取实际 start/end_codepoint 对应文本。全部 kind=cue；各页从 0 连续到备注长度 227/246/331/360/337/420/243，覆盖 2164 个码点，无空洞、重叠或遗漏。各段 Narrative 绑定均指向实际存在的节点。",
+        "口播未扩大上屏承诺：P02 说清 54 与 120 及非节省限制；P03-cue-02/03 保留未知、只读、人工核对与人工提交，P03-cue-04 区分能力起点和新增工作；P04 对 A/B/C 均讲实际取舍；P05 不压缩观察凑四周，P06 限制因果和生产结论，P07 明确保留未决状态。",
+        "各页估计时长 45/65/70/80/90/90/40 秒，与 Plan 的页预算一致，总讲述 480 秒。P01 提醒先讲后讨论，P07-cue-04 转入另计的 120 秒讨论；这段注明讨论指令，没有把 120 秒伪计入 8 秒 cue。备注可作为熟悉内容的讲者提示，不要求逐字念完。",
+        "P07 的 40 秒收束含路线、责任、未决配置和讨论转入，估计比前页紧；P06 含四类记录及三条规则，讲者须按 cue 聚焦而非逐字扩写。未观察到确定超时，不能据字符数或预算相加声称实测通过；后续真实讲者试讲应复核收束是否仍留足两分钟讨论。当前按 cues 的策划预算与内容一致性可通过。",
+        "真人试讲、实测计时、录音、渲染、受众理解与专业认可均未执行；本记录不生成这些验证的 receipt。未发现口播改变事实/控制边界的 F0、沟通主线失配 F1 或已证实妨碍约定用途的局部 F2。"
+      ],
+      "findings": [],
+      "created_at": "2026-10-14T17:25:06.222947Z",
+      "replaces": null
+    }
+  ]
+}

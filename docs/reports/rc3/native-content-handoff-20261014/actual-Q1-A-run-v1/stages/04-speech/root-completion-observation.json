@@ -1,0 +1,42 @@
+{
+  "observation_kind": "root_controller_transcription_of_actual_native_tool_response",
+  "assurance": "host_attested",
+  "observed_at_utc": "2026-10-14T16:30:21.054016+00:00",
+  "spawn": {
+    "tool": "collaboration.spawn_agent",
+    "canonical_task_name": "/root/e1_q1_a_speech",
+    "returned_task_name": "/root/e1_q1_a_speech",
+    "fork_turns": "none",
+    "input_package": "/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/04-speech"
+  },
+  "completion": {
+    "sender": "/root/e1_q1_a_speech",
+    "message_type": "FINAL_ANSWER",
+    "status_observation_tool": "collaboration.list_agents",
+    "observed_status": "completed",
+    "observed_completed_agents": [
+      "/root/e1_q1_a_speech",
+      "/root/e1_q2_a_page_copy",
+      "/root/e1_q2_b_page_copy"
+    ],
+    "raw_final_message": "正式 speech envelope 已独占创建；未执行 accept/adopt，未写项目 objects，未生成回执。\n\n- 实际身份：`/root/e1_q1_a_speech`\n- 原始输出：`/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/04-speech/model-output.json`\n- 输出 SHA-256：`e01881d913f23c6ee88ac7ae45eef25f27f137a0968e68630f00b8cf09ad3013`\n- 方法记录：`/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/04-speech/method-read-record.json`\n- 方法记录 SHA-256：`763fbb69d4aca98680c2d833b9abee0fa8457b4204cc7a8132351cf25d0663e1`\n\n六页共 16 段，全部 speaker_notes 以 Unicode 半开区间连续覆盖。口播为 verbatim；P06 单独保留 60 秒停讲作答 cue，之后提供完整反馈。口播估计 420 秒，互动估计 60 秒；实测计时 `unknown`。公共 schema、固定 Page Ref 哈希、当前 Plan 节点映射、Narrative 来源版本与 locator、预算核验均通过。\n\n完整读取范围：\n\n- 本阶段 `instructions.txt`、`work-order.json`、`task.json`、`envelope-metadata.json`。\n- claim-read 返回的全部工作单与两个同 arm 安装方法：`content-methods.md`、`content-examples.md`。\n- `current-artifacts.json` 中当前采用的 Narrative、bound Plan、全部六页完整 Page，包括正文、图标签、脚注、映射、备注及视觉说明；机械核验亦读取这些固定对象：\n  - Narrative：`c2d02f0a070f905f398e5e8662c7e74cbc46164a41a3145d65f807574c825a5d`\n  - Plan：`1c4fd3b3e7e3b6329a8e3608317196374be9eb6d390f23bf54ca54f3629fea7b`\n  - P01：`e6e555e0e289e88cf99fdc05905a3a1a4310d39988599c395f046f4bb71897b5`\n  - P02：`44ebed44853413b503478aef51dcf0bdeb11d593069c511efad918c2c3d1fcc8`\n  - P03：`5256d2358f5dc8714e0de9536598532cc7cdc7983fbe646701de5262e65edb14`\n  - P04：`047a8df0f5d09c838812f466dd1ee4796a5371b629bac095655ee6cdcce7c4b6`\n  - P05：`1c3483f2c35560b015b3fbd6568933b1c54183f4cc6851dcc04dc8c0c353aa21`\n  - P06：`02c9d27757b61e63255f2f3e308038f86092c69a0cb61175ee00b1b6a8c5f535`\n- S1/S2/S3 三个 `original-sources` 原件、对应工作单指定的 original object 与 extract 全文。\n- 当前公共合同：`compose-result.v2.schema.json`、`page.v2.schema.json`、`collaboration.v1.schema.json`、`text-range.v1.schema.json`；root 提供的 update 字段机械说明。\n\n读取偏差已报告：首次直接读取 `current-artifacts.json` 时工具截断，显示了少量 `prior_actual_proposals` 尾部。未继续读取或作为创作依据；之后仅选择当前对象读取。\n\n原生精确 model ID、reasoning 配置及采样参数均未暴露，记为 `unknown`。"
+  },
+  "project_id": "actual-q1",
+  "task_id": "7bbf6e3fe2e3",
+  "method_release": {
+    "release_id": "575eca2c82a5-90a59eec255f",
+    "methods_sha256": "a69e2588846bcd9288fb594b8c9dcdd7555449ba8877b6c0e5cb961799503358"
+  },
+  "model_output_bytes_sha256": "e01881d913f23c6ee88ac7ae45eef25f27f137a0968e68630f00b8cf09ad3013",
+  "method_read_record": {
+    "path": "/workspace/work/rc3/actual-content-runner/actual-Q1-A-run-v1/stages/04-speech/method-read-record.json",
+    "sha256": "763fbb69d4aca98680c2d833b9abee0fa8457b4204cc7a8132351cf25d0663e1"
+  },
+  "native_configuration": {
+    "model": "unknown",
+    "reasoning": "unknown",
+    "seed": "unknown",
+    "tokens": "unknown"
+  },
+  "limits": "Root directly observed native tool responses; no platform signature or human/verified-user assurance."
+}

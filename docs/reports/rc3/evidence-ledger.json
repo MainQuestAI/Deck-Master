@@ -47,14 +47,52 @@
         "RC3-00",
         "RC3-01"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "input_hashes": [
+        {
+          "ref": "B supplemental installation manifest (candidate-01-s01-b/manifest.json)",
+          "sha256": "475e9c6355cde08f157446061b78782dff4135718f53da710a30f55707a12d63"
+        },
+        {
+          "ref": "B supplemental wheel",
+          "sha256": "d3adf8322b01e1c765d744f93bf313bb05e09edfe94843fd1924729cd87ddbfe"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Q1-B verification/postrepair/owner-draft.json",
+          "sha256": "9b340208d9b01c66560370121e8da57d0883b8d117328a2410166d348148cdb7"
+        },
+        {
+          "ref": "Q2-B verification/final-content-verification/owner-draft.json",
+          "sha256": "a896400e76584478c6f45e6230ec72066bc8c935e1f398f97efc08320eb8bff9"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-01-METHODS.md",
+        "docs/reports/rc3/RC3-01-HANDOFF.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "findings": [
+        "Current B Q1/Q2 complete manuscript/Plan/mapping/notes are frozen after exact installed-method workflow and accepted fresh independent Review/gate pass; engineering input can go to RC3-02/03. Three qualified owner-draft snapshots are first-for-Owner, not actual human acceptance.",
+        "Original complete prototypes/evaluations remain historical; full Q1-Q4/profile/effect scope requires later evidence."
+      ],
+      "limitations": [
+        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
+        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
+        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
+        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
+        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
+        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
+      ],
       "signed_by": null
     },
     {
@@ -65,14 +103,45 @@
         "RC3-00",
         "RC3-01"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L0",
+        "L3"
+      ],
+      "input_hashes": [
+        {
+          "ref": "uploaded R2 active anchor",
+          "sha256": "3f58b7392b30ceb4304699071cc12cc6b4eff487af512b48e4121a1e43efb2bc"
+        },
+        {
+          "ref": "unique ACCEPTANCE 1.2 rubric bytes",
+          "sha256": "0e963c224379750a2e642bc144304c5d25e6e56b1fd70d3c28d93c818ab6e83f"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.json",
+          "sha256": "6e52ef93295eaa8cf905f5a7dfbd329e34a60fba0b3e24975339bdc099966322"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.md",
+        "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.json",
+        "docs/reports/rc3/anchor-calibration-20261014/path-mapping-manifest.json"
+      ],
+      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "findings": [
+        "Scoped synthetic anchor calibration: 16 initial judgments per fresh native judge (12 negatives/4 controls), source-bound adjudication, 12 substantive repairs, 24 repair none/pass. Four controls passed only in original initial judgments.",
+        "AN-Q3-2 original A F0/fail, B F2/fail, root F2/fail; historical R2 F1 preserved. No forced distribution or rewritten original judgment."
+      ],
+      "limitations": [
+        "Final scoped synthetic calibration conclusion only; content engineering handoff is a separate B-current result. Current document-head CI pending; no human/release PASS.",
+        "Actual E1 content runs are original uploaded synthetic Q1/Q2, seen_example=true; not the original twelve full Host sessions, unseen transfer or blinded method-effect evaluation.",
+        "Human Owner/listeners/full live timing/desktop acceptance explicitly deferred by user and NOT_RUN; signed_by remains null until final owner conclusion.",
+        "PASS applies only to the synthetic anchor-calibration cycle/card item 5, not RC3-01 overall handoff, actual Native Writer effect or all six shallow-copy pairs.",
+        "A repair canonical FINAL observed but roster list completed was not observed before eviction; B both observed. Host-attested native trace, platform signature/configuration unknown; no SDK receipt or human acceptance asserted.",
+        "Q1-A page_copy repair author observed cross-arm FINAL summaries via unnecessary list_agents; claimed no use is unprovable. Local engineering handoff can be inspected, but not a clean blinded A/B repair-effect sample."
+      ],
       "signed_by": null
     },
     {
@@ -218,14 +287,52 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "input_hashes": [
+        {
+          "ref": "B supplemental installation manifest (candidate-01-s01-b/manifest.json)",
+          "sha256": "475e9c6355cde08f157446061b78782dff4135718f53da710a30f55707a12d63"
+        },
+        {
+          "ref": "B supplemental wheel",
+          "sha256": "d3adf8322b01e1c765d744f93bf313bb05e09edfe94843fd1924729cd87ddbfe"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Q1-B verification/postrepair/owner-draft.json",
+          "sha256": "9b340208d9b01c66560370121e8da57d0883b8d117328a2410166d348148cdb7"
+        },
+        {
+          "ref": "Q2-B verification/final-content-verification/owner-draft.json",
+          "sha256": "a896400e76584478c6f45e6230ec72066bc8c935e1f398f97efc08320eb8bff9"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-01-METHODS.md",
+        "docs/reports/rc3/RC3-01-HANDOFF.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "findings": [
+        "Actual four content workflows preserve original native output and first SDK-adopted snapshots separately; B current Q1/Q2 all content units pass and source/claim/Page mappings are fixed.",
+        "Q1-A original page_copy answer-visible F2 was real and repaired; new exercise boundary-probe F2 keeps A blocked. Q1 speech initial native cue was correct; adopted-snapshot speech F2 was controller/protocol caused. Q3/final effect coverage pending."
+      ],
+      "limitations": [
+        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
+        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
+        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
+        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
+        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
+        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
+      ],
       "signed_by": null
     },
     {
@@ -238,14 +345,52 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "input_hashes": [
+        {
+          "ref": "B supplemental installation manifest (candidate-01-s01-b/manifest.json)",
+          "sha256": "475e9c6355cde08f157446061b78782dff4135718f53da710a30f55707a12d63"
+        },
+        {
+          "ref": "B supplemental wheel",
+          "sha256": "d3adf8322b01e1c765d744f93bf313bb05e09edfe94843fd1924729cd87ddbfe"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Q1-B verification/postrepair/owner-draft.json",
+          "sha256": "9b340208d9b01c66560370121e8da57d0883b8d117328a2410166d348148cdb7"
+        },
+        {
+          "ref": "Q2-B verification/final-content-verification/owner-draft.json",
+          "sha256": "a896400e76584478c6f45e6230ec72066bc8c935e1f398f97efc08320eb8bff9"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-01-METHODS.md",
+        "docs/reports/rc3/RC3-01-HANDOFF.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "findings": [
+        "S01 now permits honest nonspoken cue within requested verbatim; original Q1 native cue was refused by old SDK, then controller relabeled kinds. Original refusals/raw/extra turns preserved. Fresh Q1-B closes speech F2 after three original cue kinds restored with identical text/mapping/20-30-10 timing.",
+        "Live cues/verbatim actual current paths evidenced; read_alone/none, mixed and expressly requested dual-version snapshots/exports still require appropriate later evidence."
+      ],
+      "limitations": [
+        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
+        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
+        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
+        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
+        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
+        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
+      ],
       "signed_by": null
     },
     {
@@ -258,14 +403,52 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "input_hashes": [
+        {
+          "ref": "B supplemental installation manifest (candidate-01-s01-b/manifest.json)",
+          "sha256": "475e9c6355cde08f157446061b78782dff4135718f53da710a30f55707a12d63"
+        },
+        {
+          "ref": "B supplemental wheel",
+          "sha256": "d3adf8322b01e1c765d744f93bf313bb05e09edfe94843fd1924729cd87ddbfe"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Q1-B verification/postrepair/owner-draft.json",
+          "sha256": "9b340208d9b01c66560370121e8da57d0883b8d117328a2410166d348148cdb7"
+        },
+        {
+          "ref": "Q2-B verification/final-content-verification/owner-draft.json",
+          "sha256": "a896400e76584478c6f45e6230ec72066bc8c935e1f398f97efc08320eb8bff9"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-01-METHODS.md",
+        "docs/reports/rc3/RC3-01-HANDOFF.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "findings": [
+        "Current estimated speaking/interaction budgets remain distinct from real timing. Q1-B cue/interaction classification has been accepted and independently verified; Q1-A old classification F2 fixed but new exercise F2 remains.",
+        "Q2-B scope-specific content accepted_variance is formal and current gate pass, not AC-M03 overall PASS or a measured ten-minute trial. Actual AC-U03 timing and Q2 five-minute-change/tradeoff are pending."
+      ],
+      "limitations": [
+        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
+        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
+        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
+        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
+        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
+        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
+      ],
       "signed_by": null
     },
     {
@@ -278,14 +461,52 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "input_hashes": [
+        {
+          "ref": "B supplemental installation manifest (candidate-01-s01-b/manifest.json)",
+          "sha256": "475e9c6355cde08f157446061b78782dff4135718f53da710a30f55707a12d63"
+        },
+        {
+          "ref": "B supplemental wheel",
+          "sha256": "d3adf8322b01e1c765d744f93bf313bb05e09edfe94843fd1924729cd87ddbfe"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Q1-B verification/postrepair/owner-draft.json",
+          "sha256": "9b340208d9b01c66560370121e8da57d0883b8d117328a2410166d348148cdb7"
+        },
+        {
+          "ref": "Q2-B verification/final-content-verification/owner-draft.json",
+          "sha256": "a896400e76584478c6f45e6230ec72066bc8c935e1f398f97efc08320eb8bff9"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-01-METHODS.md",
+        "docs/reports/rc3/RC3-01-HANDOFF.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "findings": [
+        "B Q1/Q2 current complete visible copy/progression are fresh-reviewed pass with current fixed snapshots. Q1-A old answer-visible/feedback-order findings are fixed through real Page/Plan change and current explicit review closure.",
+        "Q1-A fresh review found NEW page-copy exercise boundary-probe F2; current gate stays blocked. This retained negative is not repaired with a second experimental feedback."
+      ],
+      "limitations": [
+        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
+        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
+        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
+        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
+        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
+        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
+      ],
       "signed_by": null
     },
     {
@@ -298,14 +519,52 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
-      "input_hashes": [],
-      "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "status": "BLOCKED",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "input_hashes": [
+        {
+          "ref": "B supplemental installation manifest (candidate-01-s01-b/manifest.json)",
+          "sha256": "475e9c6355cde08f157446061b78782dff4135718f53da710a30f55707a12d63"
+        },
+        {
+          "ref": "B supplemental wheel",
+          "sha256": "d3adf8322b01e1c765d744f93bf313bb05e09edfe94843fd1924729cd87ddbfe"
+        }
+      ],
+      "output_hashes": [
+        {
+          "ref": "Q1-B verification/postrepair/owner-draft.json",
+          "sha256": "9b340208d9b01c66560370121e8da57d0883b8d117328a2410166d348148cdb7"
+        },
+        {
+          "ref": "Q2-B verification/final-content-verification/owner-draft.json",
+          "sha256": "a896400e76584478c6f45e6230ec72066bc8c935e1f398f97efc08320eb8bff9"
+        }
+      ],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-01-METHODS.md",
+        "docs/reports/rc3/RC3-01-HANDOFF.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+      ],
+      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "findings": [
+        "Four fresh native verifiers differ from all actual manuscript authors and previous reviewers; formal registered-provider SDK acceptance binds Task/packet/subjects/authors/scope/result. All author, JSON-context, changed-result and foreign-Task controls refuse. B Q1/Q2 gate passes via genuine fixed/accepted_variance chains.",
+        "S01 exact cc6150d passes third independent core review (first two REQUEST_CHANGES retained). Page/null-deck central finding_closed/replaces consumed, including stale prior blockers; fresh pass alone cannot erase findings. Confirmed/exploratory/read-only profiles and six-pair actual coverage require later full evidence."
+      ],
+      "limitations": [
+        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
+        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
+        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
+        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
+        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
+        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
+      ],
       "signed_by": null
     },
     {
@@ -756,18 +1015,35 @@
       "parent_ac": "AC-M01",
       "capability_owner": "T03",
       "execution_card": "RC3-01",
-      "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "status": "BLOCKED",
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-01-METHODS.md",
+        "docs/reports/rc3/RC3-01-HANDOFF.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+      ],
+      "findings": [
+        "Content engineering B Q1/Q2 current handoff ready; final parent AC/CQ effect coverage still incomplete. No overall candidate/release PASS.",
+        "Four full self-contained positive/negative method pages implemented/reviewed; real B current complete drafts/visible relationships/Plan/notes accepted and independently verified. Q1-A new local exercise F2 is retained negative; broader applicable generator/use evidence pending."
+      ]
     },
     {
       "cq_id": "CQ-02",
       "parent_ac": "AC-M05",
       "capability_owner": "T03",
       "execution_card": "RC3-01",
-      "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "status": "BLOCKED",
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-01-METHODS.md",
+        "docs/reports/rc3/RC3-01-HANDOFF.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+      ],
+      "findings": [
+        "Content engineering B Q1/Q2 current handoff ready; final parent AC/CQ effect coverage still incomplete. No overall candidate/release PASS.",
+        "Six paired shallow-copy examples installed/read; twelve old-anchor actual repair cycle and real four-run reviews do not automatically cover each of those six paired new cases. Per-pair independent identification/substantive repair/sparse-uncertain-positive coverage awaits exact inventory.",
+        "Protocol-imposed Q1 speech relabeling is distinct from author quality; current B closure real, A new content F2 remains. Supplemental verification is not frozen E1 effect; future fair common-fix A/B/blinded evaluation required."
+      ]
     },
     {
       "cq_id": "CQ-03",
@@ -846,9 +1122,16 @@
       "parent_ac": "AC-B03",
       "capability_owner": "T00",
       "execution_card": "RC3-01",
-      "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "status": "PASS",
+      "evidence_refs": [
+        "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.md",
+        "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.json",
+        "docs/reports/rc3/anchor-calibration-20261014/path-mapping-manifest.json"
+      ],
+      "findings": [
+        "Final scoped synthetic recalibration: PASS only this cycle; no overall content/human/release claim. Preserve A F0/B F2/root F2, historical grades and missing A roster-completed observation.",
+        "Scoped actual native synthetic recalibration only: original A/B differences, source-bound root F2, historical grades and A repair completion-observation limitation preserved; 12 substantive repairs/24 none-pass, no blanket downgrading or F2 exemption."
+      ]
     },
     {
       "cq_id": "CQ-12",

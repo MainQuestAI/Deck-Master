@@ -1,0 +1,383 @@
+{
+  "schema_version": "compose_result.v2",
+  "kind": "compose",
+  "variant": "speech",
+  "task_id": "19afcbdd8a25",
+  "operation_id": "repair-speech",
+  "produced_against": "13e291e9178895693919517e64736750c36312fabd2f5e1512c4e5ee41b3b723",
+  "eligibility_digest": "522a7b742e0111cd9b307f6f220b7c1d0e6301da73c2145e8310f8459073ff9d",
+  "usage_events": [],
+  "payload": {
+    "updates": [
+      {
+        "page_id": "P01",
+        "page_ref": {
+          "path": ".deckmaster/objects/60/6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841.json",
+          "sha256": "6066ac98d0817f2cd69d609c9b5b7697311262eac8d94f115c3c64657d223841"
+        },
+        "speaker_notes": "各位，今天用合成材料练习首轮接单：记录信息，写清版本未知的原因，再按给定的紧急或普通状态流转。交接要让下一位知道已知、未知和下一步；信息交清楚，不代表故障已解决。\n教学样本有一百条请求，三十八条首次记录缺版本，所以缺失比例是三十八除以一百，等于百分之三十八。历史草案的“效率提升百分之三十八”未经验证，不能用缺失比例代替。\n补问、时长、解决率及其他字段完整性未记录，期间和方法未知；未记录不等于零。样本和SOP只供教学。下面展开五类记录。",
+        "speech_segments": [
+          {
+            "end_codepoint": 82,
+            "estimated_seconds": 19,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-learning",
+              "n-central",
+              "n-handoff",
+              "n-synthetic"
+            ],
+            "segment_id": "P01-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 162,
+            "estimated_seconds": 18,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-sample",
+              "n-old-effect",
+              "n-correct-effect",
+              "n-measurement-limit",
+              "n-synthetic"
+            ],
+            "segment_id": "P01-speech-02",
+            "start_codepoint": 82
+          },
+          {
+            "end_codepoint": 219,
+            "estimated_seconds": 13,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-unmeasured",
+              "n-measurement-limit",
+              "n-synthetic",
+              "n-first-record"
+            ],
+            "segment_id": "P01-speech-03",
+            "start_codepoint": 162
+          }
+        ]
+      },
+      {
+        "page_id": "P02",
+        "page_ref": {
+          "path": ".deckmaster/objects/49/497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1.json",
+          "sha256": "497159889f51463b30fe35602c1d645108c15dad1ef0e183b901685a81846ea1"
+        },
+        "speaker_notes": "先看左列，首轮记录有五类。型号告诉接手者请求对应什么设备；版本交出当前取得的信息，取不到就写“未知”和具体原因。版本只是其中一类，不能让它替代整份记录。\n第三类是已观察的问题，要交代现场观察到什么。第四类是已尝试动作及结果，要分别交代做过什么、得到什么结果。这两类分开，接手者才能看懂现场报告和已有动作；观察现象也不能直接写成故障原因。\n第五类是可取得的附件，随信息一起交接，让下一位知道现在能查看什么。这里依据合成SOP说明用途，真实系统格式和必填规则没有提供。五类范围明确后，下一页专门看版本取不到时怎样写。",
+        "speech_segments": [
+          {
+            "end_codepoint": 77,
+            "estimated_seconds": 22,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-first-record",
+              "n-unknown",
+              "n-handoff",
+              "n-synthetic"
+            ],
+            "segment_id": "P02-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 169,
+            "estimated_seconds": 27,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-first-record",
+              "n-handoff",
+              "n-synthetic"
+            ],
+            "segment_id": "P02-speech-02",
+            "start_codepoint": 77
+          },
+          {
+            "end_codepoint": 256,
+            "estimated_seconds": 21,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-first-record",
+              "n-handoff",
+              "n-unknown",
+              "n-synthetic",
+              "n-operating-gap"
+            ],
+            "segment_id": "P02-speech-03",
+            "start_codepoint": 169
+          }
+        ]
+      },
+      {
+        "page_id": "P03",
+        "page_ref": {
+          "path": ".deckmaster/objects/cc/ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9.json",
+          "sha256": "ccd7812bdd6ee959166a2f2f28f5a0b26b11e53e135e861927c20386e68c92b9"
+        },
+        "speaker_notes": "这里用作者设计的合成示例说明写法：型号已知，现场照片遮挡版本字段，当前无法核对。成立的记录是：“版本：未知。原因：照片遮挡版本字段，当前无法核对。”\n“未知”交代当前的信息状态，后面的原因交代为什么取不到。只留空，或者只写“未知”不解释，都没有交出具体原因。看外观猜一个版本再写成已知，则把猜测当事实，违反禁止推测和伪造的要求。\n照片遮挡是虚构情境，来源并没有规定必须用照片取得版本，也没有“未知就必须升级”的规则。如实写出缺口后，接下来还要分别看信息状态和紧急程度。",
+        "speech_segments": [
+          {
+            "end_codepoint": 75,
+            "estimated_seconds": 22,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-unknown-example",
+              "n-unknown",
+              "n-synthetic"
+            ],
+            "segment_id": "P03-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 165,
+            "estimated_seconds": 26,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-unknown",
+              "n-unknown-example",
+              "n-handoff",
+              "n-synthetic"
+            ],
+            "segment_id": "P03-speech-02",
+            "start_codepoint": 75
+          },
+          {
+            "end_codepoint": 234,
+            "estimated_seconds": 17,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-unknown-example",
+              "n-unknown",
+              "n-urgency",
+              "n-ordinary",
+              "n-synthetic"
+            ],
+            "segment_id": "P03-speech-03",
+            "start_codepoint": 165
+          }
+        ]
+      },
+      {
+        "page_id": "P04",
+        "page_ref": {
+          "path": ".deckmaster/objects/bd/bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36.json",
+          "sha256": "bd454617fffebf347a23ecc671e31d659c3a9773cba0b92159a7358b42180e36"
+        },
+        "speaker_notes": "请把上面两个问题分开。信息记录问：已知什么、未知什么、为什么未知？紧急判断问：是否符合既有紧急条件？版本是否已知，不单独决定紧急程度；不能把补版本排成流转前必须完成的一步。\n看第一行，前提是已经符合既有紧急条件，版本仍可能未知。这时立即按现有紧急路径流转，带上已知信息；版本取不到，就把“未知”和具体原因交代清楚。不能为了补齐版本而延误，更不能把补齐版本设成进入紧急路径的门槛。\n第二行已经判定为普通请求，版本未知。记录具体原因，带已知信息按普通路径流转。缺版本本身不会自动把普通请求变为紧急，也不会自动触发专家升级。两行都要交清信息，路径的差别来自已给定的状态。\n历史草案“所有请求先补齐版本再进入任何路径”未经验证，还取消了SOP这两条分支，所以这里只作纠错。本材料没有具体紧急条件、路径责任人和操作步骤，我们不补造。下一页根据给定状态练习。",
+        "speech_segments": [
+          {
+            "end_codepoint": 87,
+            "estimated_seconds": 25,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-unknown",
+              "n-urgency",
+              "n-central",
+              "n-correct-route",
+              "n-synthetic",
+              "n-operating-gap"
+            ],
+            "segment_id": "P04-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 190,
+            "estimated_seconds": 30,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-urgent",
+              "n-unknown",
+              "n-handoff",
+              "n-synthetic",
+              "n-operating-gap"
+            ],
+            "segment_id": "P04-speech-02",
+            "start_codepoint": 87
+          },
+          {
+            "end_codepoint": 283,
+            "estimated_seconds": 27,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-ordinary",
+              "n-unknown",
+              "n-urgency",
+              "n-handoff",
+              "n-synthetic",
+              "n-operating-gap"
+            ],
+            "segment_id": "P04-speech-03",
+            "start_codepoint": 190
+          },
+          {
+            "end_codepoint": 373,
+            "estimated_seconds": 23,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-old-route",
+              "n-correct-route",
+              "n-operating-gap",
+              "n-synthetic",
+              "n-practice"
+            ],
+            "segment_id": "P04-speech-04",
+            "start_codepoint": 283
+          }
+        ]
+      },
+      {
+        "page_id": "P05",
+        "page_ref": {
+          "path": ".deckmaster/objects/dd/dda4a823a6249a2bab7b27e065886df2e7504f64685090b45e441deb5269ddce.json",
+          "sha256": "dda4a823a6249a2bab7b27e065886df2e7504f64685090b45e441deb5269ddce"
+        },
+        "speaker_notes": "这两题是合成练习，信息相同，只有给定状态不同：A普通，B已符合紧急条件。请读共同信息，不从启动报错自行重判。用二十秒按屏上三问写记录、选路径、列交接，说明是否等补版本或自动升级。\n【停留本页20秒，让学员独立写答案；不提示答案，不切到反馈页。】\n请一位同学报A的答案，另一位报B的答案，每位十五秒，包括记录、路径和交接信息。\n【用30秒收取两题回应，每题15秒；只听取作答，不预设回应，不在本页公布或核对答案。】\n保留自己的答案，下一页核对。\n【留10秒整理答案并切换到P06，开始反馈。】",
+        "speech_segments": [
+          {
+            "end_codepoint": 90,
+            "estimated_seconds": 22,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-practice",
+              "n-case-ordinary",
+              "n-case-urgent",
+              "n-operating-gap",
+              "n-synthetic"
+            ],
+            "segment_id": "P05-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 123,
+            "estimated_seconds": 20,
+            "kind": "cue",
+            "narrative_node_ids": [
+              "n-practice"
+            ],
+            "segment_id": "P05-speech-02",
+            "start_codepoint": 90
+          },
+          {
+            "end_codepoint": 163,
+            "estimated_seconds": 9,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-practice",
+              "n-case-ordinary",
+              "n-case-urgent"
+            ],
+            "segment_id": "P05-speech-03",
+            "start_codepoint": 123
+          },
+          {
+            "end_codepoint": 207,
+            "estimated_seconds": 30,
+            "kind": "cue",
+            "narrative_node_ids": [
+              "n-practice",
+              "n-case-ordinary",
+              "n-case-urgent"
+            ],
+            "segment_id": "P05-speech-04",
+            "start_codepoint": 163
+          },
+          {
+            "end_codepoint": 222,
+            "estimated_seconds": 4,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-practice",
+              "n-feedback"
+            ],
+            "segment_id": "P05-speech-05",
+            "start_codepoint": 207
+          },
+          {
+            "end_codepoint": 245,
+            "estimated_seconds": 10,
+            "kind": "cue",
+            "narrative_node_ids": [
+              "n-practice",
+              "n-feedback"
+            ],
+            "segment_id": "P05-speech-06",
+            "start_codepoint": 222
+          }
+        ]
+      },
+      {
+        "page_id": "P06",
+        "page_ref": {
+          "path": ".deckmaster/objects/32/327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950.json",
+          "sha256": "327083bef9738c4d28dc0d583c6917549cdbede5267df3a79c681929ed49a950"
+        },
+        "speaker_notes": "现在对照自己的答案。两题共同记录相同：型号M-01；版本“未知”，原因是照片遮挡版本字段、当前无法核对；观察是启动时报错；题目明确给定未尝试处置；附件是这张照片。\nA已经给定普通，带上已知信息和未知原因，按普通路径流转；不能仅因未知改为紧急或专家升级。B已经给定紧急，立即带已知信息和版本缺口按现有紧急路径流转，不能等版本补齐。信息相同，路径因给定状态不同。\n以后用四项自检：五类信息是否都交代；版本取不到是否写未知和具体原因；路径是否依据既有紧急条件；下一位是否看懂已知、未知和下一步。交接完成不能写成故障已解决。\n最后记住，三十八除以一百等于百分之三十八，只是合成样本首次记录缺版本比例，未测出效率收益。这次反馈依据给定分类和合成SOP；真实路径细节仍未知，不能据此认定已经掌握真实业务操作。",
+        "speech_segments": [
+          {
+            "end_codepoint": 82,
+            "estimated_seconds": 22,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-feedback",
+              "n-case-ordinary",
+              "n-case-urgent",
+              "n-first-record",
+              "n-unknown",
+              "n-synthetic"
+            ],
+            "segment_id": "P06-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 180,
+            "estimated_seconds": 26,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-feedback",
+              "n-ordinary",
+              "n-urgent",
+              "n-urgency",
+              "n-synthetic",
+              "n-operating-gap"
+            ],
+            "segment_id": "P06-speech-02",
+            "start_codepoint": 82
+          },
+          {
+            "end_codepoint": 259,
+            "estimated_seconds": 23,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-first-record",
+              "n-unknown",
+              "n-urgency",
+              "n-ordinary",
+              "n-urgent",
+              "n-handoff",
+              "n-central",
+              "n-synthetic"
+            ],
+            "segment_id": "P06-speech-03",
+            "start_codepoint": 180
+          },
+          {
+            "end_codepoint": 348,
+            "estimated_seconds": 24,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "n-sample",
+              "n-unmeasured",
+              "n-correct-effect",
+              "n-measurement-limit",
+              "n-feedback",
+              "n-operating-gap",
+              "n-synthetic"
+            ],
+            "segment_id": "P06-speech-04",
+            "start_codepoint": 259
+          }
+        ]
+      }
+    ]
+  }
+}

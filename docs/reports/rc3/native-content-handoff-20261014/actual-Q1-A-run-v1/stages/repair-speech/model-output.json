@@ -1,0 +1,277 @@
+{
+  "schema_version": "compose_result.v2",
+  "kind": "compose",
+  "variant": "speech",
+  "task_id": "bc18536d4eac",
+  "operation_id": "repair-speech",
+  "produced_against": "0943b783c4cc3455be8788da38b8193cdc04077b5e7fdaa0f8fecb6e956c63d8",
+  "eligibility_digest": "e701ef28e5b857aeb97bf2bfe6d0b1a80b2f897dd4a55099174cf842d13adedb",
+  "usage_events": [],
+  "payload": {
+    "updates": [
+      {
+        "page_id": "P01",
+        "page_ref": {
+          "path": ".deckmaster/objects/7a/7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6.json",
+          "sha256": "7a7d8364468091b7ae788438cf6f42d56bf587d01dac67fa8bb6c68cab9a55c6"
+        },
+        "speaker_notes": "今天我们练习首轮接单怎样留下可接手的记录：如实写清信息，按既有紧急条件流转，让下一位接手者知道已知、未知和下一步。交接完成，不表示故障已经解决。这里使用合成教学材料，不代表真实团队统计，也不是实际业务操作规定。\n\n先看这个数字：一百条教学样本中，三十八条首次记录缺少设备版本。三十八除以一百，是百分之三十八的版本缺失样本占比。材料没有记录补问轮次、处理时长、解决率和其他字段的完整情况，所以历史草案所说的百分之三十八效率提升，本课不采用。下面从首轮记录的五项信息开始。",
+        "speech_segments": [
+          {
+            "end_codepoint": 107,
+            "estimated_seconds": 25,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "handoff-standard",
+              "training-boundary",
+              "learning-check"
+            ],
+            "segment_id": "P01-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 234,
+            "estimated_seconds": 25,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "sample-observation",
+              "sample-share",
+              "sample-measurement-limit",
+              "old-efficiency-claim",
+              "efficiency-conflict",
+              "training-sequence"
+            ],
+            "segment_id": "P01-speech-02",
+            "start_codepoint": 107
+          }
+        ]
+      },
+      {
+        "page_id": "P02",
+        "page_ref": {
+          "path": ".deckmaster/objects/e9/e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173.json",
+          "sha256": "e9ca550b3eba66e0d52a955eda9cec6ba6953dd61796998e0fef374c5b988173"
+        },
+        "speaker_notes": "首轮记录要覆盖五项。请顺着清单逐项核对。第一，设备型号。第二，设备版本。这是两个记录对象，不能只关注版本而漏掉型号。第三，已观察的问题，写清已经观察到的内容。第四，已尝试动作及结果，动作和结果要一起记录，不能只留下做过什么。第五，可取得的附件。注意这里的条件是可取得，不能把它改成必须先取得全部附件。\n\n这五项共同组成首轮记录。核对时，不能用版本一项代替整份记录；即使注意到了版本，也要检查问题、尝试结果和可取得的附件有没有写清。再顺着五项看一遍：型号、版本、问题、尝试动作及结果、可取得的附件。接下来，我们专门处理其中一种情况：设备版本暂时取不到，记录怎样写？",
+        "speech_segments": [
+          {
+            "end_codepoint": 152,
+            "estimated_seconds": 40,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "first-record",
+              "training-boundary"
+            ],
+            "segment_id": "P02-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 281,
+            "estimated_seconds": 20,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "first-record",
+              "training-boundary"
+            ],
+            "segment_id": "P02-speech-02",
+            "start_codepoint": 152
+          }
+        ]
+      },
+      {
+        "page_id": "P03",
+        "page_ref": {
+          "path": ".deckmaster/objects/4c/4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a.json",
+          "sha256": "4cd006c5f51291983b3f020686b538fd4eebb309a235745397f63fd142f3177a"
+        },
+        "speaker_notes": "版本取不到时，按合成SOP写两个部分：版本填“未知”，同时写清具体原因。只写未知两个字，还没有说明原因；留空不解释，也不符合这条规则。另一种错误是凭印象推测，或者编造一个版本。这会把尚未取得的信息写成已经知道的信息。首轮记录要如实保留已知和未知，不能靠猜测把记录填满。\n\n看下面的虚构示范。题目假定现场暂时无法查看版本标识，因此写成：“设备版本：未知；原因：现场暂无法查看版本标识。”这里的原因由练习设定给出，不是发生过的业务事件。真实记录应写真实原因，不能照抄这个示范，把它当成所有未知情况的统一解释。\n\n写清原因，是让接手者看懂信息状态。版本未知并不单独说明请求有多紧急，也不自动成为专家升级的理由。于是下一步要回答另一个问题：信息仍然未知，这条请求应当怎样流转？判断依据要回到既有紧急条件。",
+        "speech_segments": [
+          {
+            "end_codepoint": 136,
+            "estimated_seconds": 30,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "unknown-record",
+              "unknown-is-information",
+              "training-boundary"
+            ],
+            "segment_id": "P03-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 254,
+            "estimated_seconds": 25,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "unknown-example",
+              "unknown-record",
+              "training-boundary"
+            ],
+            "segment_id": "P03-speech-02",
+            "start_codepoint": 136
+          },
+          {
+            "end_codepoint": 348,
+            "estimated_seconds": 20,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "unknown-is-information",
+              "unknown-record"
+            ],
+            "segment_id": "P03-speech-03",
+            "start_codepoint": 254
+          }
+        ]
+      },
+      {
+        "page_id": "P04",
+        "page_ref": {
+          "path": ".deckmaster/objects/0c/0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865.json",
+          "sha256": "0cdfeca712857ffd205ad86129354776aa61548c5930ceee09e8fbca38fd2865"
+        },
+        "speaker_notes": "这页把信息状态和紧急程度分开。先看中间的判断：依据既有紧急条件。版本已知还是未知，不能单独决定紧急程度。两条分支的条件不同，流转动作也不同，不能给所有请求加上同一个“先补齐版本”的门槛。\n\n第一条，已经符合紧急条件。按现有紧急路径立即流转，带上已知信息，不等补齐版本。版本取不到时，仍然如实写未知及具体原因；这项记录要求不能变成延误紧急流转的理由。请把“已符合紧急条件”和“立即流转”连起来理解，不能只记住立即两个字。\n\n第二条，普通请求。版本未知时，记录具体原因，按普通路径流转。未知不会自动把普通请求改成紧急，也不会自动触发专家升级。因此，两条路径都如实说明版本状态，区别来自依据既有紧急条件作出的判断，而不是来自有没有填出一个版本。\n\n再看历史草案的反例：“所有请求都先补齐版本，再进入任何路径。”本课不采用，因为它同时违背紧急请求不等待，以及普通版本未知说明原因后可以流转的规则。材料没有提供实际紧急条件、路径入口和岗位，本页只讲合成规则；真实操作要依实际规定。路径明确后，还要检查交出去的记录是否便于下一人接手。",
+        "speech_segments": [
+          {
+            "end_codepoint": 95,
+            "estimated_seconds": 20,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "urgency-rule",
+              "unknown-is-information",
+              "routing-conflict"
+            ],
+            "segment_id": "P04-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 211,
+            "estimated_seconds": 25,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "urgent-path",
+              "unknown-record",
+              "urgency-rule"
+            ],
+            "segment_id": "P04-speech-02",
+            "start_codepoint": 95
+          },
+          {
+            "end_codepoint": 321,
+            "estimated_seconds": 25,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "ordinary-path",
+              "unknown-record",
+              "urgency-rule",
+              "unknown-is-information"
+            ],
+            "segment_id": "P04-speech-03",
+            "start_codepoint": 211
+          },
+          {
+            "end_codepoint": 461,
+            "estimated_seconds": 30,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "old-all-first-claim",
+              "routing-conflict",
+              "urgent-path",
+              "ordinary-path",
+              "operational-details",
+              "training-boundary"
+            ],
+            "segment_id": "P04-speech-04",
+            "start_codepoint": 321
+          }
+        ]
+      },
+      {
+        "page_id": "P05",
+        "page_ref": {
+          "path": ".deckmaster/objects/3c/3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998.json",
+          "sha256": "3c69bfd6ede84c31a86edb8158a63837015188d35096d607b22f5a1399465998"
+        },
+        "speaker_notes": "交接前，换成下一位接手者的角度，核对三个问题。第一，已经知道什么？用五项首轮记录检查：设备型号、设备版本、已观察的问题、已尝试动作及结果、可取得的附件，已经取得的信息如实写清。第二，还有什么未知？版本取不到，就写未知及具体原因，让接手者能辨认这一处信息缺口。\n\n第三，下一步是什么？在这份合成材料里，已符合紧急条件的，立即走现有紧急路径；普通请求版本未知的，说明原因后走普通路径。这里不补写材料没有给出的岗位、系统入口或修复动作。交接的目标是让下一人知道已知、未知和下一步，便于接手。达到这个目标，仍然不能证明故障已经解决。最后，我们用两条给定条件的虚构练习，检查能不能把这些规则用起来。",
+        "speech_segments": [
+          {
+            "end_codepoint": 131,
+            "estimated_seconds": 30,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "handoff-goal",
+              "first-record",
+              "unknown-record"
+            ],
+            "segment_id": "P05-speech-01",
+            "start_codepoint": 0
+          },
+          {
+            "end_codepoint": 294,
+            "estimated_seconds": 35,
+            "kind": "verbatim",
+            "narrative_node_ids": [
+              "handoff-goal",
+              "handoff-standard",
+              "operational-details",
+              "training-boundary"
+            ],
+            "segment_id": "P05-speech-02",
+            "start_codepoint": 131
+          }
+        ]
+      },
+      {
+        "page_id": "P06",
+        "page_ref": {
+          "path": ".deckmaster/objects/48/48a09175a2779a930dd2fca9061430cdbcccea56463ea88888f2a1feb3bd1023.json",
+          "sha256": "48a09175a2779a930dd2fca9061430cdbcccea56463ea88888f2a1feb3bd1023"
+        },
+        "speaker_notes": "先按题目独立作答，一分钟后再听我反馈。两条都是虚构练习：甲已判定符合既有紧急条件，乙已判定为普通请求；两条版本都取不到，原因都是现场暂无法查看版本标识。请用一分钟分别写版本及原因、流转路径、是否等补版本，以及交接的已知、未知和下一步。紧急状态已给定，不必推断阈值；其他已知信息照实带上，不补造题目没有给出的内容。现在开始。\n\n【主持提示（不口播）：停止讲述，保持题面，留60秒独立作答；满60秒后再讲下段反馈。】\n\n时间到，请听反馈并核对自己的答案。两条都写：“设备版本：未知；原因：现场暂无法查看版本标识。”甲立即走现有紧急路径，带已知信息，不等补齐版本。乙说明未知原因后走普通路径，不因未知自动变成紧急或专家升级。交接都要说明已知、未知和下一步，也都不证明故障已解决。最后自查五项：型号、版本、问题、尝试动作及结果、可取得的附件。若漏了原因或混淆路径，就按反馈修正。这个练习只观察理解与纠错，不证明真实业务资格或故障处理能力。",
+        "speech_segments": [
+          {
+            "segment_id": "P06-speech-01",
+            "start_codepoint": 0,
+            "end_codepoint": 163,
+            "narrative_node_ids": [
+              "exercise-design",
+              "learning-check",
+              "operational-details",
+              "training-boundary"
+            ],
+            "kind": "verbatim",
+            "estimated_seconds": 30
+          },
+          {
+            "segment_id": "P06-speech-02",
+            "start_codepoint": 163,
+            "end_codepoint": 208,
+            "narrative_node_ids": [
+              "exercise-design",
+              "learning-check"
+            ],
+            "kind": "cue",
+            "estimated_seconds": 60
+          },
+          {
+            "segment_id": "P06-speech-03",
+            "start_codepoint": 208,
+            "end_codepoint": 415,
+            "narrative_node_ids": [
+              "unknown-record",
+              "urgent-path",
+              "ordinary-path",
+              "handoff-goal",
+              "first-record",
+              "learning-check",
+              "exercise-design",
+              "training-boundary",
+              "operational-details"
+            ],
+            "kind": "verbatim",
+            "estimated_seconds": 40
+          }
+        ]
+      }
+    ]
+  }
+}
