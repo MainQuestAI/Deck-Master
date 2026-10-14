@@ -1,5 +1,5 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 4,
   "purpose": "T00 固定样例 manifest：EXAMPLES.md 固定源文本与任务答案的可重用合成输入。行号 locator 对应本目录实际保存内容。",
   "synthetic": true,
   "golden_truth_note": "文本候选不是 golden truth；实现必须依据源材料与评价锚点复核，不得逐字模仿示例当作通过。",
@@ -55,29 +55,6 @@
       "lines": 205
     }
   },
-  "reviewed_inputs": {
-    "note": "二轮独立复核（evaluator-c/d，commit 6e26176a）的输入哈希；本轮复核后修订的版本以 manifest_version 3 的哈希为准，供后续复核引用。manifest 自身不计入。",
-    "prototype/q1-content-prototype.md": {
-      "sha256": "6f6091d881fe050245d6dcc954c6cdc7763d8fd61378af31b139fc9c3884e9ce",
-      "bytes": 22121,
-      "lines": 242
-    },
-    "anchors/content-anchors.md": {
-      "sha256": "42774a7006dec5e8e319cfbd9c58d0cf9c3cc52f1e67793d81cfb9133643ad4c",
-      "bytes": 16130,
-      "lines": 188
-    },
-    "fixtures/q4/q4a-pages.json": {
-      "sha256": "e61b4d566995d2470570a46c442c9097e9d9c4c43a3323f02204a09ced78fb61",
-      "bytes": 7679,
-      "lines": 222
-    },
-    "fixtures/q4/q4b-pages.json": {
-      "sha256": "2eb0454cb12fad8fa732b33cc40cad282b16d4199559fabe33bb65197ad566b3",
-      "bytes": 7519,
-      "lines": 205
-    }
-  },
   "locators": {
     "q1/S1-sample.txt": {
       "第1行": "38/100 首次记录缺设备版本（E1 证据边界）",
@@ -128,7 +105,7 @@
       "p5/b2": "F0：本期即由 AI 在人员确认后自动提交（确定承诺）",
       "p1/b2": "F0：本期试点即由 AI 自动提交（确定承诺；局改 P5 后仍违背）",
       "p6/b2": "F0：本期已具备自动提交能力（确定承诺；局改 P5 后仍违背）",
-      "future_proposal_pair": "AN-Q2-5 成对校准（定为 F1 的缺前提未来承诺 vs 不得判 F0 的合法未来建议）"
+      "future_proposal_pair": "AN-Q2-5 当前统一分级：局部未来建议缺实施前提为 F2，影响用途须修；构造核心推荐须重建为 F1；实际断言本期能力/批准为 F0；完整合法未来建议不是事实错误。旧评价原件使用旧口径，见 historical_artifacts。"
     }
   },
   "expected_behaviors": {
@@ -137,5 +114,77 @@
     "V07 只试样页": "输入 q4-a + 「只做第五页的样页」→ 初始设计入口，1页/1候选/1调用",
     "V09 局部修改": "输入 q4-b + 「P5 改回人工确认，其他页先别动」→ 只改 P5；P1/P6 的本期自动提交承诺仍为开放的边界违背，影响报告必须标记全稿不一致，不静默改"
   },
-  "control_variants_todo": "无 ContentPlan 旧项目、existing_decisions 旧项目、1次调用额度、in-flight/unknown call、host_self professional_use/pass、PPT-only not_evaluated、当前文件人类审阅证据：由 T02–T04 的 Runtime 测试fixture构造，本 manifest 只登记需求（EXAMPLES §1 Q4）。"
+  "control_variants_todo": "无 ContentPlan 旧项目、existing_decisions 旧项目、1次调用额度、in-flight/unknown call、host_self professional_use/pass、PPT-only not_evaluated、当前文件人类审阅证据：由 T02–T04 的 Runtime 测试fixture构造，本 manifest 只登记需求（EXAMPLES §1 Q4）。",
+  "historical_reviewed_inputs": {
+    "note": "历史两轮评价输入/当时修订清单；保留当时 hash，不是 RC3/R2 统一分级下重新评价的证据。旧锚点原字节见 anchors/history/pre-r2-42774a70-content-anchors.md。",
+    "prototype/q1-content-prototype.md": {
+      "sha256": "6f6091d881fe050245d6dcc954c6cdc7763d8fd61378af31b139fc9c3884e9ce",
+      "bytes": 22121,
+      "lines": 242
+    },
+    "anchors/content-anchors.md": {
+      "sha256": "42774a7006dec5e8e319cfbd9c58d0cf9c3cc52f1e67793d81cfb9133643ad4c",
+      "bytes": 16130,
+      "lines": 188,
+      "archived_path": "anchors/history/pre-r2-42774a70-content-anchors.md"
+    },
+    "fixtures/q4/q4a-pages.json": {
+      "sha256": "e61b4d566995d2470570a46c442c9097e9d9c4c43a3323f02204a09ced78fb61",
+      "bytes": 7679,
+      "lines": 222
+    },
+    "fixtures/q4/q4b-pages.json": {
+      "sha256": "2eb0454cb12fad8fa732b33cc40cad282b16d4199559fabe33bb65197ad566b3",
+      "bytes": 7519,
+      "lines": 205
+    }
+  },
+  "current_inputs": {
+    "note": "当前活动原件；导入 R2 统一 F0–F3 规范不表示两位评价者已重跑或产品效果已通过。",
+    "anchors/content-anchors.md": {
+      "sha256": "3f58b7392b30ceb4304699071cc12cc6b4eff487af512b48e4121a1e43efb2bc",
+      "bytes": 17776,
+      "lines": 199,
+      "source": "uploaded R2 active original",
+      "evaluation_status_at_import": "NOT_RUN"
+    }
+  },
+  "historical_artifacts": {
+    "anchors/history/pre-r2-42774a70-content-anchors.md": {
+      "sha256": "42774a7006dec5e8e319cfbd9c58d0cf9c3cc52f1e67793d81cfb9133643ad4c",
+      "bytes": 16130,
+      "lines": 188,
+      "role": "pre-R2 anchor original; historical grading"
+    },
+    "evaluation/evaluator-a.md": {
+      "sha256": "2f54746075e7e960b1ab7063739c129c5e23c9afafeb3d53884a07a00b3b03d9",
+      "bytes": 17124,
+      "lines": 153,
+      "role": "historical evaluation original; not a RC3 recalibration"
+    },
+    "evaluation/evaluator-b.md": {
+      "sha256": "25c8ae255c44a7f67499055de14df68037cae04adca07b7ef0b00f1f1342ab88",
+      "bytes": 18813,
+      "lines": 147,
+      "role": "historical evaluation original; not a RC3 recalibration"
+    },
+    "evaluation/evaluator-c.md": {
+      "sha256": "acce344fd1c007b654a821ae6e2c4c202c70d24b092af1badcaff473051415e1",
+      "bytes": 29537,
+      "lines": 182,
+      "role": "historical evaluation original; not a RC3 recalibration"
+    },
+    "evaluation/evaluator-d.md": {
+      "sha256": "e41b78cb648693595880e67a86947a68237b37a7fc820eee90ef04533cf2392b",
+      "bytes": 19400,
+      "lines": 143,
+      "role": "historical evaluation original; not a RC3 recalibration"
+    },
+    "evaluation/adjudication.md": {
+      "sha256": "b75a1df7ed1b10dfbe0f4065980d0bfcfcbd52e2480090f97c0ee0fda7d31f41",
+      "bytes": 10206,
+      "lines": 105,
+      "role": "historical evaluation original; not a RC3 recalibration"
+    }
+  }
 }

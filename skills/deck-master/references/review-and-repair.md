@@ -1,6 +1,6 @@
 # 实际审阅与返修
 
-本草案只调整任务方法与交接。保留现有 PR33 的逐 finding 关闭、同页产物检查、原图来源、实际读回以及取消/晚到结果保护。
+本方法指导实际审阅与返修。保留现有 PR33 的逐 finding 关闭、同页产物检查、原图来源、实际读回以及取消/晚到结果保护。
 
 ## 工作单就是本次审阅范围
 
@@ -31,3 +31,23 @@ accepted_variance：原来需要判断的差异，经具体解释、观察和证
 只有这两种关闭方式。输入更新让原要求失效时，按 input-update 的方法处理，不新增第三种关闭方式。
 
 没有执行阅读就是未评估，不能填默认高分或两套 reviewer 名称。工具可报告真实机械检查，但不能替用户提供专业认可或独立审查身份。
+
+## RC3 内容前审
+
+preproduction 工作单给出 source-reading、content-methods、content-examples 与 content-calibration 的实际文件和 hash。读取完整材料、任务、Narrative、Plan、全部正文与 notes，再按六组校准检查：只有标签、页间重复、空矩阵、侧栏复述、无收益数据时造数/留空、以拥挤替代完整。合理留白、不确定性、教学复习和示意要结合用途判断。
+
+问题定位到 Page/atom/关系、来源和用途影响；提交具体原句、改句与受影响页，不以加 observation/证据编号代替返修。保留首稿、首次 Owner 稿和后续修订；F0/F1 不能用最后精修覆盖，影响用途的 F2 也须修。
+
+先读 `deck-master capabilities`。默认独立前审没有实际独立执行或可信人类通道就记 needs_reviewer；用户明确接受的 host_self 降级只在所绑定范围/原因内适用，不满足交付人类专业政策，不能换名字、声明已独立或自动降级。方法 identity 漂移（method_basis_status=basis_changed）时重核实际消费版本，旧记录保留原身份；`methods --kind review --intent preproduction --read` 可读当前安装的真实文本。
+
+### 实际读取、判断与返修证据
+
+先用工作单 task_id 读取 `deck-master methods --project … --task-id …` 返回的真实全文/hash，核对 dispatch/current 方法身份；再打开 packet 的相关完整来源、Task 事实、Narrative、Plan、每页全部可见 atom 与 speaker_notes。截图/摘要/locator 存在不能代替已读内容，材料含图时同时检查原图。Review 绑定当前被审产物及依赖；未知或未执行的维度保留 not_evaluated，不由通过的机械检查补齐。
+
+每项 finding 写明 Page/atom 或关系、原句/实际结构、所读来源位置、期待、实际、用途影响与 F0–F3 依据；返修给出实际改句/单元格/分支与 diff，复读受影响的总结、引用和 notes。若修改超出 Scope，先报告范围缺口，不静默全稿改写。六组校准中的正对照同样核查，不能为凑密度删诚实限制、教学停顿或合理留白。
+
+事实/批准/授权/改变结论的限定失真按 F0；需用户重建用途、中心论证或章节关系按 F1；局部实质问题影响用途按 F2，修复前不能通过该用途；F3 才是偏好微调。唯一等级依据仍是内容协作 v1.2 `ACCEPTANCE §1.2`，不另设同名 F1。平均分不抵消开放 F0/F1 或影响用途的 F2。
+
+真实非作者 Host controller 观察 native 独立执行的身份、固定工作单和完成输出，并经当前 Runtime 已注册 provider 核对，可诚实取得 host_attested 独立回执；普通模型前审不硬加平台密码学签名。作者提交 JSON、执行 ID、hash 或换 reviewer.id 不能生成该证明。人类专业复核、Owner 接受、听众理解和完整试讲各自留证，没有对应人或环境就 NOT_RUN，模型不扮演人类。
+
+按时间点保存：原始完整生成稿 → 至多一次同口径独立审阅/自主返修后的首次 Owner 完整稿 → Owner 后改稿；方法修改后的原输入复跑另存方法版本和首稿。当前稿修好可以关闭该缺陷，不能回写首次 Owner F1 失败为 PASS，也不能把人工精修旧稿改名为新方法首稿。

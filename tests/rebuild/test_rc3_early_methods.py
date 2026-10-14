@@ -96,7 +96,7 @@ def test_real_host_work_order_method_read_and_basis_changed(tmp_path, capsys, mo
 
 def test_preproduction_methods_and_default_capabilities(capsys):
     assert method_resources.method_ids_for("review", intent="preproduction") == (
-        "source-reading", "content-methods", "content-examples", "review-and-repair")
+        "source-reading", "content-methods", "content-examples", "content-calibration", "review-and-repair")
     assert cli.main(["capabilities"]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["review_channel_status"] == "needs_reviewer"

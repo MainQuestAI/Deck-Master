@@ -24,6 +24,7 @@ RELATIVE_PATHS = {
     "source-reading": "references/source-reading.md",
     "content-methods": "references/content-methods.md",
     "content-examples": "references/content-examples.md",
+    "content-calibration": "references/content-calibration.md",
     "input-update": "references/input-update.md",
     "blueprint-svg": "references/blueprint-svg.md",
     "review-and-repair": "references/review-and-repair.md",
@@ -81,7 +82,7 @@ def resolve_root() -> Path:
 def method_ids_for(kind: str, *, intent: str | None = None,
                    phase: str | None = None) -> tuple[str, ...]:
     if kind == "review" and intent == "preproduction":
-        return ("source-reading", "content-methods", "content-examples", "review-and-repair")
+        return ("source-reading", "content-methods", "content-examples", "content-calibration", "review-and-repair")
     if kind == "style_analyze":
         return ("visual-reference",)
     if kind == "compose":
