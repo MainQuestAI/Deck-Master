@@ -798,7 +798,7 @@
       ],
       "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
       "findings": [
-        "Notes implementation/native file engineering ready on ca035 after independent code and regression round3 FINAL PASS. First two REQUEST_CHANGES and mixed-source test observation preserved; final professional/desktop/use/integration acceptance remains BLOCKED."
+        "Runtime notes/native engineering has independent ca035 code/regression FINAL PASS. Original 0d12 four unit CI matrices failed due unmarked real-render fixtures; test-only bc0b39 repair has round4 code/regression FINAL PASS and pure local1847 unit/57render. New exact final-head CI/docs audit pending. Original failures/reviews remain immutable. Final professional/desktop/use/integration acceptance stays BLOCKED."
       ],
       "limitations": [
         "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
@@ -846,7 +846,7 @@
       ],
       "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
       "findings": [
-        "Notes implementation/native file engineering ready on ca035 after independent code and regression round3 FINAL PASS. First two REQUEST_CHANGES and mixed-source test observation preserved; final professional/desktop/use/integration acceptance remains BLOCKED."
+        "Runtime notes/native engineering has independent ca035 code/regression FINAL PASS. Original 0d12 four unit CI matrices failed due unmarked real-render fixtures; test-only bc0b39 repair has round4 code/regression FINAL PASS and pure local1847 unit/57render. New exact final-head CI/docs audit pending. Original failures/reviews remain immutable. Final professional/desktop/use/integration acceptance stays BLOCKED."
       ],
       "limitations": [
         "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
@@ -894,7 +894,7 @@
       ],
       "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
       "findings": [
-        "Notes implementation/native file engineering ready on ca035 after independent code and regression round3 FINAL PASS. First two REQUEST_CHANGES and mixed-source test observation preserved; final professional/desktop/use/integration acceptance remains BLOCKED."
+        "Runtime notes/native engineering has independent ca035 code/regression FINAL PASS. Original 0d12 four unit CI matrices failed due unmarked real-render fixtures; test-only bc0b39 repair has round4 code/regression FINAL PASS and pure local1847 unit/57render. New exact final-head CI/docs audit pending. Original failures/reviews remain immutable. Final professional/desktop/use/integration acceptance stays BLOCKED."
       ],
       "limitations": [
         "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
@@ -942,7 +942,7 @@
       ],
       "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
       "findings": [
-        "Notes implementation/native file engineering ready on ca035 after independent code and regression round3 FINAL PASS. First two REQUEST_CHANGES and mixed-source test observation preserved; final professional/desktop/use/integration acceptance remains BLOCKED."
+        "Runtime notes/native engineering has independent ca035 code/regression FINAL PASS. Original 0d12 four unit CI matrices failed due unmarked real-render fixtures; test-only bc0b39 repair has round4 code/regression FINAL PASS and pure local1847 unit/57render. New exact final-head CI/docs audit pending. Original failures/reviews remain immutable. Final professional/desktop/use/integration acceptance stays BLOCKED."
       ],
       "limitations": [
         "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
@@ -1195,7 +1195,7 @@
         "docs/reports/rc3/notes-engineering-20261014/manifest.json"
       ],
       "findings": [
-        "Notes/native/final export full text, none/original preservation, stable identity and privacy have reviewed engineering evidence. Current ca035 independent code/regression FINAL PASS; parent AC target desktop/use/current integration and human acceptance remain BLOCKED/NOT_RUN."
+        "Reviewed runtime file engineering retained under ca035; original 0d12 real CI failures and bc0b39 renderer-test boundary repair recorded separately. Round4 impact code/regression FINAL PASS and pure local1847/57 verified; new final fixed-head CI/audit pending. Parent desktop/use/current integration and human acceptance remain BLOCKED/NOT_RUN."
       ]
     },
     {

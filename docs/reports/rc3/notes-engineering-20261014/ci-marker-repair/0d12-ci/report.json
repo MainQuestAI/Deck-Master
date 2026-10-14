@@ -1,0 +1,856 @@
+{
+  "schema": "rc3_card_ci_guard.v1",
+  "card": "RC3-02",
+  "verdict": "FAIL_ENGINEERING_CI",
+  "repository": "MainQuestAI/Deck-Master",
+  "pr_number": 117,
+  "pr_url": "https://github.com/MainQuestAI/Deck-Master/pull/117",
+  "source_head_sha": "0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e",
+  "source_tree_sha": "24d1bed45b9c42824d8068edec7e03860355aa9f",
+  "observed_pr_head_sha": "0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e",
+  "base_sha": "8e274576e7a93de7d10c054558991878501fff0c",
+  "checkout_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+  "workflow": {
+    "name": "Rebuilt Core Gate",
+    "run_id": 38639118685,
+    "run_number": 489,
+    "status": "in_progress",
+    "conclusion": null,
+    "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38639118685"
+  },
+  "expected_job_count": 7,
+  "observed_at": "2026-10-14 21:23:49 UTC",
+  "jobs": [
+    {
+      "id": 116109825222,
+      "name": "Required browser and installed UI (Python 3.12, Node 22)",
+      "status": "in_progress",
+      "conclusion": null,
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38639118685/job/116109825222",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install toolchain for the installed export fixture",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install build backend",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Install rebuilt core with dev dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Install Chromium",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Required production design regressions (skips fail)",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 9
+        },
+        {
+          "name": "Build and install the wheel (no editable resource borrowing)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 10
+        },
+        {
+          "name": "Offline installed UI and fixed-version downloads",
+          "status": "pending",
+          "conclusion": null,
+          "number": 11
+        },
+        {
+          "name": "Installed recovery boundaries (runtime paths audited)",
+          "status": "pending",
+          "conclusion": null,
+          "number": 12
+        },
+        {
+          "name": "Preserve installed UI evidence",
+          "status": "pending",
+          "conclusion": null,
+          "number": 13
+        },
+        {
+          "name": "Post Run actions/setup-node@v7",
+          "status": "pending",
+          "conclusion": null,
+          "number": 24
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "pending",
+          "conclusion": null,
+          "number": 25
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null,
+          "number": 26
+        }
+      ],
+      "checkout_sha": null,
+      "log_timestamp_start_utc": null,
+      "log_timestamp_end_utc": null,
+      "log_summary_lines": []
+    },
+    {
+      "id": 116109825406,
+      "name": "Real rendering chain (Python 3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38639118685/job/116109825406",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Install renderer toolchain",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install build backend",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install rebuilt core with dev dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Renderer-dependent tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        }
+      ],
+      "checkout_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+      "log_timestamp_start_utc": "2026-10-14T21:17:44.4880544Z",
+      "log_timestamp_end_utc": "2026-10-14T21:20:23.4428804Z",
+      "log_summary_lines": [
+        "2026-10-14T21:20:22.9193141Z 53 passed, 2254 deselected, 22 warnings in 95.54s (0:01:35)"
+      ]
+    },
+    {
+      "id": 116109825642,
+      "name": "Unit (Python 3.11, Node 24)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38639118685/job/116109825642",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install build backend",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install rebuilt core with dev dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Ruff (rebuilt core and its tests)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Unit suite (browser and renderer have separate gates)",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8
+        },
+        {
+          "name": "Post Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 15
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "checkout_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+      "log_timestamp_start_utc": "2026-10-14T21:17:44.6974797Z",
+      "log_timestamp_end_utc": "2026-10-14T21:22:03.6839444Z",
+      "log_summary_lines": [
+        "2026-10-14T21:22:03.1911169Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 238.65s (0:03:58)"
+      ]
+    },
+    {
+      "id": 116109825671,
+      "name": "Unit (Python 3.12, Node 24)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38639118685/job/116109825671",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install build backend",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install rebuilt core with dev dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Ruff (rebuilt core and its tests)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Unit suite (browser and renderer have separate gates)",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8
+        },
+        {
+          "name": "Post Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 15
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "checkout_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+      "log_timestamp_start_utc": "2026-10-14T21:17:43.7848327Z",
+      "log_timestamp_end_utc": "2026-10-14T21:21:27.1508716Z",
+      "log_summary_lines": [
+        "2026-10-14T21:21:26.4540278Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 197.56s (0:03:17)"
+      ]
+    },
+    {
+      "id": 116109825796,
+      "name": "Unit (Python 3.12, Node 22)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38639118685/job/116109825796",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install build backend",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install rebuilt core with dev dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Ruff (rebuilt core and its tests)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Unit suite (browser and renderer have separate gates)",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8
+        },
+        {
+          "name": "Post Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 15
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "checkout_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+      "log_timestamp_start_utc": "2026-10-14T21:17:44.4885299Z",
+      "log_timestamp_end_utc": "2026-10-14T21:22:49.4719358Z",
+      "log_summary_lines": [
+        "2026-10-14T21:22:48.8563459Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 272.56s (0:04:32)"
+      ]
+    },
+    {
+      "id": 116109826700,
+      "name": "Unit (Python 3.11, Node 22)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38639118685/job/116109826700",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Install build backend",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Install rebuilt core with dev dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Ruff (rebuilt core and its tests)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Unit suite (browser and renderer have separate gates)",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8
+        },
+        {
+          "name": "Post Run actions/setup-node@v7",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 15
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ],
+      "checkout_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+      "log_timestamp_start_utc": "2026-10-14T21:17:44.1081841Z",
+      "log_timestamp_end_utc": "2026-10-14T21:21:50.1893930Z",
+      "log_summary_lines": [
+        "2026-10-14T21:21:49.6428420Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 222.75s (0:03:42)"
+      ]
+    }
+  ],
+  "pass_counts": [
+    {
+      "job_id": 116109825406,
+      "job": "Real rendering chain (Python 3.12)",
+      "failed": 0,
+      "passed": 53,
+      "skipped": 0,
+      "deselected": 2254,
+      "warnings": 22,
+      "pytest_duration_seconds": 95.54,
+      "summary": "2026-10-14T21:20:22.9193141Z 53 passed, 2254 deselected, 22 warnings in 95.54s (0:01:35)"
+    },
+    {
+      "job_id": 116109825642,
+      "job": "Unit (Python 3.11, Node 24)",
+      "failed": 3,
+      "passed": 1845,
+      "skipped": 3,
+      "deselected": 456,
+      "warnings": 0,
+      "pytest_duration_seconds": 238.65,
+      "summary": "2026-10-14T21:22:03.1911169Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 238.65s (0:03:58)"
+    },
+    {
+      "job_id": 116109825671,
+      "job": "Unit (Python 3.12, Node 24)",
+      "failed": 3,
+      "passed": 1845,
+      "skipped": 3,
+      "deselected": 456,
+      "warnings": 0,
+      "pytest_duration_seconds": 197.56,
+      "summary": "2026-10-14T21:21:26.4540278Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 197.56s (0:03:17)"
+    },
+    {
+      "job_id": 116109825796,
+      "job": "Unit (Python 3.12, Node 22)",
+      "failed": 3,
+      "passed": 1845,
+      "skipped": 3,
+      "deselected": 456,
+      "warnings": 0,
+      "pytest_duration_seconds": 272.56,
+      "summary": "2026-10-14T21:22:48.8563459Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 272.56s (0:04:32)"
+    },
+    {
+      "job_id": 116109826700,
+      "job": "Unit (Python 3.11, Node 22)",
+      "failed": 3,
+      "passed": 1845,
+      "skipped": 3,
+      "deselected": 456,
+      "warnings": 0,
+      "pytest_duration_seconds": 222.75,
+      "summary": "2026-10-14T21:21:49.6428420Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 222.75s (0:03:42)"
+    }
+  ],
+  "observations": [
+    {
+      "observed_at": "2026-10-14 21:18:15 UTC",
+      "jobs": [
+        {
+          "id": 116109825222,
+          "name": "Required browser and installed UI (Python 3.12, Node 22)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Install toolchain for the installed export fixture"
+          ]
+        },
+        {
+          "id": 116109825406,
+          "name": "Real rendering chain (Python 3.12)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Install renderer toolchain"
+          ]
+        },
+        {
+          "id": 116109825642,
+          "name": "Unit (Python 3.11, Node 24)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Unit suite (browser and renderer have separate gates)"
+          ]
+        },
+        {
+          "id": 116109825671,
+          "name": "Unit (Python 3.12, Node 24)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Unit suite (browser and renderer have separate gates)"
+          ]
+        },
+        {
+          "id": 116109825796,
+          "name": "Unit (Python 3.12, Node 22)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Unit suite (browser and renderer have separate gates)"
+          ]
+        },
+        {
+          "id": 116109826700,
+          "name": "Unit (Python 3.11, Node 22)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Unit suite (browser and renderer have separate gates)"
+          ]
+        }
+      ]
+    },
+    {
+      "observed_at": "2026-10-14 21:21:12 UTC",
+      "jobs": [
+        {
+          "id": 116109825222,
+          "name": "Required browser and installed UI (Python 3.12, Node 22)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Required production design regressions (skips fail)"
+          ]
+        },
+        {
+          "id": 116109825406,
+          "name": "Real rendering chain (Python 3.12)",
+          "status": "completed",
+          "conclusion": "success",
+          "active": []
+        },
+        {
+          "id": 116109825642,
+          "name": "Unit (Python 3.11, Node 24)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Unit suite (browser and renderer have separate gates)"
+          ]
+        },
+        {
+          "id": 116109825671,
+          "name": "Unit (Python 3.12, Node 24)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Unit suite (browser and renderer have separate gates)"
+          ]
+        },
+        {
+          "id": 116109825796,
+          "name": "Unit (Python 3.12, Node 22)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Unit suite (browser and renderer have separate gates)"
+          ]
+        },
+        {
+          "id": 116109826700,
+          "name": "Unit (Python 3.11, Node 22)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Unit suite (browser and renderer have separate gates)"
+          ]
+        }
+      ]
+    },
+    {
+      "observed_at": "2026-10-14 21:23:49 UTC",
+      "jobs": [
+        {
+          "id": 116109825222,
+          "name": "Required browser and installed UI (Python 3.12, Node 22)",
+          "status": "in_progress",
+          "conclusion": null,
+          "active": [
+            "Required production design regressions (skips fail)"
+          ]
+        },
+        {
+          "id": 116109825406,
+          "name": "Real rendering chain (Python 3.12)",
+          "status": "completed",
+          "conclusion": "success",
+          "active": []
+        },
+        {
+          "id": 116109825642,
+          "name": "Unit (Python 3.11, Node 24)",
+          "status": "completed",
+          "conclusion": "failure",
+          "active": []
+        },
+        {
+          "id": 116109825671,
+          "name": "Unit (Python 3.12, Node 24)",
+          "status": "completed",
+          "conclusion": "failure",
+          "active": []
+        },
+        {
+          "id": 116109825796,
+          "name": "Unit (Python 3.12, Node 22)",
+          "status": "completed",
+          "conclusion": "failure",
+          "active": []
+        },
+        {
+          "id": 116109826700,
+          "name": "Unit (Python 3.11, Node 22)",
+          "status": "completed",
+          "conclusion": "failure",
+          "active": []
+        }
+      ]
+    }
+  ],
+  "excluded_evidence": [
+    "Previous RC3-01 runs and daily/source/mixed PR113 are not evidence for this RC3-02 head.",
+    "Local unit1851/render53 counts are not CI counts."
+  ],
+  "limitations": [
+    "Engineering CI only; not content-effect, professional, desktop or human acceptance.",
+    "Doc final review is independently pending; this guard cannot close its review.",
+    "No edits, push, merge, rerun, comment or cancellation performed."
+  ],
+  "pr_merge_commit_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+  "source_sha_binding": "PR metadata head/base exactly match requested source; actual render/unit checkout logs point to PR merge_commit_sha.",
+  "failures": [
+    {
+      "job_id": 116109825642,
+      "job": "Unit (Python 3.11, Node 24)",
+      "step": "Unit suite (browser and renderer have separate gates)",
+      "failing_tests": [
+        "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger"
+      ],
+      "observed_cause": "_completed_visual helper indexes service.continue_project(project)['pending_tasks'][0]; list is empty; raises IndexError at test_rc3_notes_transactions.py:35.",
+      "root_cause_status": "Owner diagnosis required. Possible renderer-dependent fixture in unit job is a hypothesis, not proven by CI trace.",
+      "trace_file": "raw/job-116109825642-failure-trace.txt"
+    },
+    {
+      "job_id": 116109825671,
+      "job": "Unit (Python 3.12, Node 24)",
+      "step": "Unit suite (browser and renderer have separate gates)",
+      "failing_tests": [
+        "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger"
+      ],
+      "observed_cause": "_completed_visual helper indexes service.continue_project(project)['pending_tasks'][0]; list is empty; raises IndexError at test_rc3_notes_transactions.py:35.",
+      "root_cause_status": "Owner diagnosis required. Possible renderer-dependent fixture in unit job is a hypothesis, not proven by CI trace.",
+      "trace_file": "raw/job-116109825671-failure-trace.txt"
+    },
+    {
+      "job_id": 116109825796,
+      "job": "Unit (Python 3.12, Node 22)",
+      "step": "Unit suite (browser and renderer have separate gates)",
+      "failing_tests": [
+        "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger"
+      ],
+      "observed_cause": "_completed_visual helper indexes service.continue_project(project)['pending_tasks'][0]; list is empty; raises IndexError at test_rc3_notes_transactions.py:35.",
+      "root_cause_status": "Owner diagnosis required. Possible renderer-dependent fixture in unit job is a hypothesis, not proven by CI trace.",
+      "trace_file": "raw/job-116109825796-failure-trace.txt"
+    },
+    {
+      "job_id": 116109826700,
+      "job": "Unit (Python 3.11, Node 22)",
+      "step": "Unit suite (browser and renderer have separate gates)",
+      "failing_tests": [
+        "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger"
+      ],
+      "observed_cause": "_completed_visual helper indexes service.continue_project(project)['pending_tasks'][0]; list is empty; raises IndexError at test_rc3_notes_transactions.py:35.",
+      "root_cause_status": "Owner diagnosis required. Possible renderer-dependent fixture in unit job is a hypothesis, not proven by CI trace.",
+      "trace_file": "raw/job-116109826700-failure-trace.txt"
+    }
+  ],
+  "skips": {
+    "observed_count_per_unit": 3,
+    "reason_evidence": "pytest -q CI logs only provide total skipped count; skipped test IDs/reasons are not emitted. Cannot claim skipped tests passed or assign exact reasons from these logs."
+  },
+  "guard_pass_conditions": {
+    "exact_requested_head": true,
+    "actual_tested_merge_matches_pr_metadata": true,
+    "all_seven_jobs_completed_success": false
+  },
+  "no_merge": true
+}

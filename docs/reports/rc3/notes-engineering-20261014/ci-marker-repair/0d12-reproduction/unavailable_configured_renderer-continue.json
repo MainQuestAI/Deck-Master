@@ -1,0 +1,16 @@
+{
+  "status": "needs_tool",
+  "project_id": "unavailable_configured_renderer",
+  "revision_id": "544635a70a7f4a0987404cd191003d47",
+  "requested_action": "continue",
+  "result_refs": [],
+  "pending_tasks": [],
+  "findings": [
+    "rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT"
+  ],
+  "next_action": "configure_reported_tool",
+  "input_alignment": "current",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering"
+}

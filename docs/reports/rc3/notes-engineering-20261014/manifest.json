@@ -849,6 +849,156 @@
       "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round3-ca035.md",
       "sha256": "46097afa155d7c02e4649872ad3ec02d7545dc558f01b16a378b5a71dd65c3b9",
       "bytes": 9357
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/probe.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/probe.py",
+      "sha256": "2df18dd5cddc17c11ecb3728cb71606b09db1fdb2688cd216e786e7b42e3e5a3",
+      "bytes": 3442
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/probe.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/probe.log",
+      "sha256": "1ba656ac905b7b782eef1f6b069e650d89f2349bb9af49535a0cdd93d0a467c3",
+      "bytes": 1709
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/reproduction.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/reproduction.json",
+      "sha256": "1ba656ac905b7b782eef1f6b069e650d89f2349bb9af49535a0cdd93d0a467c3",
+      "bytes": 1709
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/unavailable_configured_renderer-continue.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/unavailable_configured_renderer-continue.json",
+      "sha256": "4fc7e8e3b26457a76aca78b9f1ad75f551b595956e02e7b4006e75add6f9fc26",
+      "bytes": 480
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/unavailable_configured_renderer-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/unavailable_configured_renderer-document.json",
+      "sha256": "5452d7bbf13fc1ef58519c0422573eff51796f2da9c60afbb6b1eba9a2c357d1",
+      "bytes": 4623
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/actual_available_renderer-continue.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/actual_available_renderer-continue.json",
+      "sha256": "7c3575795ab64226ce9bb5a40b4bc472aaa936e108feca3c0ae85c0d7b4ed638",
+      "bytes": 11140
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/actual_available_renderer-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/actual_available_renderer-document.json",
+      "sha256": "c3fd16c527b8215a43996e1c507dbb03ba70b511f670248fc33c220677fadb46",
+      "bytes": 4630
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/three-tests-missing-renderer-before.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/three-tests-missing-renderer-before.log",
+      "sha256": "7710627f595afbd4b437c5ba1be9d839240bb8bab3bfad3e7cfa049f8b9bd887",
+      "bytes": 5953
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/report.md",
+      "sha256": "238d1809a780bb20113f46feda84ef3fe7c38ff5e72bcb20d7166da4a9c15900",
+      "bytes": 1796
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/report.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/report.json",
+      "sha256": "5553a885f0d333ea3f3c61d9cb4fe7dc34f7709352a75501e54896782300c060",
+      "bytes": 27638
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/jobs.failure-observed.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/jobs.failure-observed.json",
+      "sha256": "6c3e6bd27a3dbc4e9c08778da11c8512f478e0427f65246aa64641e50bcb7f5f",
+      "bytes": 13329
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/pr-source-binding.first.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/pr-source-binding.first.json",
+      "sha256": "e02633d9df42f7ed951bbbf28f3469ceff1f08295d431953c14f0f4b1b8bab28",
+      "bytes": 397
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/job-116109825642-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/job-116109825642-failure-trace.txt",
+      "sha256": "54f8cb5d089d3973820306695b90d4bb14f58e454bb2aa5ca6500fc082c423c6",
+      "bytes": 9149
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/job-116109825671-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/job-116109825671-failure-trace.txt",
+      "sha256": "dbfd2b14a811362691538b44ac60240308cc040b0f145d4091cfb0ee8d8ea4e4",
+      "bytes": 9149
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/job-116109825796-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/job-116109825796-failure-trace.txt",
+      "sha256": "5fab843bb83f7149778fb6743e836dc6c741ee72d9f8a376ab4c10ef3d2f84a5",
+      "bytes": 9149
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/job-116109826700-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/job-116109826700-failure-trace.txt",
+      "sha256": "af26d491766e876b3bb61f77a5451b07c6f2f822341159a929e08e626371f772",
+      "bytes": 9149
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-ci-marker-repair-unit-no-renderer.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-marker-repair-unit-no-renderer.log",
+      "sha256": "a2e9348d52d7ad76366eda31cff7b5d14b79991e63de8dc8fab878e12d8f702b",
+      "bytes": 113
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-ci-marker-repair-render.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-marker-repair-render.log",
+      "sha256": "54db724f2c9ec0268de083cb001ab38c38dda07a1d6eebb03e166b0fff1ad486",
+      "bytes": 113
+    },
+    {
+      "file": "delivery-review/phase3-final-0d12/report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase3-final-0d12/report.md",
+      "sha256": "8007eeeb0ed6e92e3e79d3db632f115bc2c54b7ed6690265019a72030f18c1b6",
+      "bytes": 7703
+    },
+    {
+      "file": "delivery-review/phase3-final-0d12/decision.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase3-final-0d12/decision.json",
+      "sha256": "dc36376c2e60c0e0d348d944131d6c89c087600decaad63aa2694a078a643f43",
+      "bytes": 1027
+    },
+    {
+      "file": "delivery-review/phase3-final-0d12/freeze.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase3-final-0d12/freeze.json",
+      "sha256": "a9a5f4d0492c282cb18a3b0a0da58ee7263a3d82599c69aa89699f7826cc7c3e",
+      "bytes": 2400
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-owner-pure-bc0b3-unit.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-owner-pure-bc0b3-unit.log",
+      "sha256": "c5b92ecd366a424ac43e6b2ece21c964dbb8096a98111a6ca1d98eb458d3ab92",
+      "bytes": 2129
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-owner-pure-bc0b3-render.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-owner-pure-bc0b3-render.log",
+      "sha256": "c9a5ba7ff71523118e9816f8fd10b8124840084038e7b697c8009e811a275da5",
+      "bytes": 2451
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-independent-code-review-round4-bc0b3.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round4-bc0b3.md",
+      "sha256": "8213121426d5db1b276b018ff5d67174ccf84e95bbda0d3243dfb6367c4dda31",
+      "bytes": 5933
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-independent-regression-round4-bc0b3.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round4-bc0b3.md",
+      "sha256": "b5e046851a19d79624b6846c393c6586dc07a74f61bc14b8eff8bc0cc3f9facd",
+      "bytes": 5851
     }
   ],
   "second_review_sha": "0b0ed2a85581652fc63ebcbe95bec6fc7fb3f343",
@@ -858,10 +1008,11 @@
     "code_report": "rc3-02-independent-code-review-round3-ca035.md",
     "regression": "PASS",
     "regression_report": "rc3-02-independent-regression-round3-ca035.md",
-    "delivery_docs": "PENDING final exact documentation SHA/tree",
-    "engineering_handoff": "READY pending root final docs audit and required CI",
+    "delivery_docs": "Historical 0d12 FINAL PASS; new fixed docs audit pending",
+    "engineering_handoff": "READY after round4 CI classification code/regression FINAL PASS; root new fixed docs audit and new exact-head seven CI pending",
     "final_ac_cq": "BLOCKED (desktop/use/current integration scope)",
-    "merge_performed": false
+    "merge_performed": false,
+    "current_test_boundary": "bc0b39fd9265d3408f69e95bc09047bf59a802d4, runtime product bytes equal ca035"
   },
   "mixed_live_unit": {
     "file": "rc3-02-unit-0b0ed2a.log",
@@ -880,6 +1031,50 @@
     "human": "NOT_RUN"
   },
   "current_suites": {
+    "head": "bc0b39fd9265d3408f69e95bc09047bf59a802d4",
+    "tree": "6f860d74e88543e965023b36ca0ee25ed4884f53",
+    "source": "/workspace/work/rc3/reviews/rc3-02-code-snapshot-bc0b3",
+    "python": "/workspace/work/rc3/reviews/env-02-snapshot-bc0b3/bin/python",
+    "unit": {
+      "status": "PASS",
+      "result": "1847 passed, 460 deselected in 210.51s",
+      "file": "ci-marker-repair/rc3-02-owner-pure-bc0b3-unit.log"
+    },
+    "render": {
+      "status": "PASS",
+      "result": "57 passed, 2250 deselected, 22 warnings in 73.20s",
+      "file": "ci-marker-repair/rc3-02-owner-pure-bc0b3-render.log"
+    },
+    "remote_ci": "PENDING exact new final head; local results do not supply CI skip identities/counts"
+  },
+  "current_n08": {
+    "trace": "ca035-speech-native/trace-catalog.json",
+    "source_sha": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+    "status": "BOUND_AND_IMPORTED_NULL_NARRATIVE_FILE_ENGINEERING_PASS",
+    "quality": "Synthetic L1 authority/review only; desktop/human/importE2E NOT_RUN",
+    "initial_compile_before_current_missing_reviews": "Observed execution; original immutable-history artifacts and later successful qualification/compile remain separate. This is not a claimed guard refusal."
+  },
+  "ci_marker_repair": {
+    "test_commit": "bc0b39fd9265d3408f69e95bc09047bf59a802d4",
+    "test_tree": "6f860d74e88543e965023b36ca0ee25ed4884f53",
+    "old_ci_head": "0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e",
+    "old_run": 38639118685,
+    "old_pr_merge_checkout": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+    "old_ci_result": "Four unit matrices each 3 failed, 1845 passed, 3 skipped, 456 deselected. Original observation/FAIL not overwritten.",
+    "actual_root_cause": "Normal continue needs actual rsvg-convert to render SVG preview before actual PageVisual dispatch; unavailable tool returns needs_tool/0 pending. Helper assumed pending[0].",
+    "repair_scope": "Four real-render fixture users are render-marked; helper asserts actual routing/real preview; src/skills/pyproject byte unchanged. No fake review, tool fallback, skip or weakened product guard.",
+    "focused_no_renderer": "15 passed, 4 deselected in 1.19s",
+    "focused_real_render": "4 passed, 15 deselected in 2.31s",
+    "new_pure_suites": "PASS: exact immutable bc0b snapshot unit1847/render57; 2307 collected cases preserved, four renderer users exactly once in render, zero in unit, no added skip.",
+    "new_ci": "PENDING exact new final head; old run not reused",
+    "impact_review": {
+      "code": "PASS",
+      "code_report": "ci-marker-repair/rc3-02-independent-code-review-round4-bc0b3.md",
+      "regression": "PASS",
+      "regression_report": "ci-marker-repair/rc3-02-independent-regression-round4-bc0b3.md"
+    }
+  },
+  "prior_ca035_suites": {
     "head": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
     "tree": "05191deede70f26e661b28f4221c3c0d00ef2ecf",
     "source": "/workspace/work/rc3/reviews/rc3-02-code-snapshot-ca035",
@@ -895,12 +1090,5 @@
       "file": "rc3-02-owner-pure-ca035-render.log"
     },
     "browser_ci": "NOT_RUN at owner handoff; root required final CI pending"
-  },
-  "current_n08": {
-    "trace": "ca035-speech-native/trace-catalog.json",
-    "source_sha": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
-    "status": "BOUND_AND_IMPORTED_NULL_NARRATIVE_FILE_ENGINEERING_PASS",
-    "quality": "Synthetic L1 authority/review only; desktop/human/importE2E NOT_RUN",
-    "initial_compile_before_current_missing_reviews": "Observed execution; original immutable-history artifacts and later successful qualification/compile remain separate. This is not a claimed guard refusal."
   }
 }

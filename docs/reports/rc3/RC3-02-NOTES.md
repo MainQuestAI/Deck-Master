@@ -1,6 +1,6 @@
 # RC3-02 notes 与实际文件工程交接
 
-RC3-02 已实现当前 Page notes → native PPTX → 选定容器导出 → 最终客户文件完整回读的路线，并修复 notes-only 的视觉复用、Plan links、最低 writer 与旧协议隔离。当前代码 `ca0351d2397ba154e9f77363bd0f325629eb0ebd` / tree `05191deede70f26e661b28f4221c3c0d00ef2ecf` 第三轮独立 code/regression 均 FINAL PASS，已具备工程交接条件；最终固定 docs audit 与当前 head 七项 CI 待root执行，未推送、未合并。目标桌面备注视图/编辑保存重开、真实 Owner/受众和专业使用验收仍 NOT_RUN，最终 N01–N04/CQ-06 保持 BLOCKED。
+RC3-02 已实现当前 Page notes → native PPTX → 选定容器导出 → 最终客户文件完整回读的路线，并修复 notes-only 的视觉复用、Plan links、最低 writer 与旧协议隔离。当前代码 `ca0351d2397ba154e9f77363bd0f325629eb0ebd` / tree `05191deede70f26e661b28f4221c3c0d00ef2ecf` 第三轮独立 code/regression 均 FINAL PASS；原0d12固定文档 audit FINAL PASS 后，实际PR117四组unit CI暴露测试渲染依赖分界错误，已做bc0b39测试修复且第4轮code/regression影响复审均FINAL PASS，等待新固定文档审查/准确新head全部七项CI。当前尚未合并。目标桌面备注视图/编辑保存重开、真实 Owner/受众和专业使用验收仍 NOT_RUN，最终 N01–N04/CQ-06 保持 BLOCKED。
 
 本卡基线 main `8e274576e7a93de7d10c054558991878501fff0c`。当前工程输入是明确合成三页与真实不可变文件；fixture 的权限、Review、native observation、费用是 L1 协议证据。实际 native PPTX、完整回读、LibreOffice/PDF/PNG 是 L6 文件工程证据，不等于目标 PowerPoint 或人类验收。RC3-01 的 Q1-B/Q2-B qualified owner-draft 可以供后续原稿实际交接，但本卡合成包不能替代它们或原 E1 公平效果结论，也没有新增视觉授权。
 
@@ -66,4 +66,16 @@ RC3-03/04 必须直接消费以上 getter/slice/Plan/policy/floor，不能重新
 
 [证据清单](notes-engineering-20261014/manifest.json) 精确指向选择的原字节/hash/原路径；不复制运行项目/缓存/安装树或可编辑内容真源。最终唯一 ledger 只回填本卡 N01–N04/CQ-06 的工程观察与待执行项，原 T06 Owner/signed_by 及整体 release gate 不变。
 
-第三轮 [regression 原报告](notes-engineering-20261014/rc3-02-independent-regression-round3-ca035.md) 的77定向PASS、实际Chromium legacy/v3连接能力正反、真实冻结A两项目26拒写及已消费费用不变归独立reviewer执行；[code 原报告](notes-engineering-20261014/rc3-02-independent-code-review-round3-ca035.md) 只签固定 ca035 工程；[交付phase1](notes-engineering-20261014/delivery-review/phase1-report.md) 与 [phase2草稿预检](notes-engineering-20261014/delivery-review/phase2-preflight-report.md) 原件保留。phase2 的历史0b provenance缺项已补件独立核关闭，仍不冒称最终文档 audit 或专业验收 PASS；最终docs固定后由root独立终审，再跑准确最终head的全部必要CI；产品src/skills/tests/pyproject与已审ca035零delta。
+第三轮 [regression 原报告](notes-engineering-20261014/rc3-02-independent-regression-round3-ca035.md) 的77定向PASS、实际Chromium legacy/v3连接能力正反、真实冻结A两项目26拒写及已消费费用不变归独立reviewer执行；[code 原报告](notes-engineering-20261014/rc3-02-independent-code-review-round3-ca035.md) 只签固定 ca035 工程；[交付phase1](notes-engineering-20261014/delivery-review/phase1-report.md) 与 [phase2草稿预检](notes-engineering-20261014/delivery-review/phase2-preflight-report.md) 原件保留。phase2 的历史0b provenance缺项已补件独立核关闭，仍不冒称最终文档 audit 或专业验收 PASS；最终docs固定后由root独立终审，再跑准确最终head的全部必要CI；原0d12的src/skills/tests/pyproject与ca035零delta；bc0b39只有下述测试分界与helper真实状态断言delta，runtime src/skills/pyproject仍零delta。
+
+## 追加：真实 CI 工具条件与测试分界修复
+
+原 PR117 source `0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e`、实际 PR merge checkout `2b6764d91afecaa5765c4379f39772e2b735ef64`、run `38639118685` 的四组 unit 矩阵各 **3 FAIL /1845 PASS /3 SKIP /456 deselected**；原 [CI守门观察](notes-engineering-20261014/ci-marker-repair/0d12-ci/report.md) 与四份完整失败trace按当时观察原字节保留，观察时browser尚在运行。不是A不存在的skip造成这三项失败，也不能用本地1851数字覆盖CI。
+
+`_completed_visual` 在正式SVG accept后通过正常continue调用真实rsvg-convert生成SVGpreview，才能获得PageVisual任务。unit CI没有安装这条渲染工具链。Owner在准确0d源、固定0d测试fixture下做 [缺工具/有工具实际对照](notes-engineering-20261014/ci-marker-repair/0d12-reproduction/reproduction.json)：使用受支持的配置指向真实不存在的renderer时，continue正确返回needs_tool、0pending、preview=null；恢复真实renderer后实际生成PNG并派发1个PageVisual。无mock renderer/待办。三原测试的缺工具复现同样3FAIL，错误是helper无条件索引空pending。
+
+修复提交 `bc0b39fd9265d3408f69e95bc09047bf59a802d4` / tree `6f860d74e88543e965023b36ca0ee25ed4884f53` 仅改一份测试：四个真实渲染fixture调用者归render，包括CI三失败与同依赖的真实冻结A SDK测试。helper显式检查实际continue的status、单个PageVisual、非空真实preview；不fake任务，不降级review，不偷偷给unit工作流安装renderer，不增加skip。剩余unit在缺renderer配置下15PASS/4deselected；四项在真实renderer下4PASS/15deselected。[完整纯bc0b unit](notes-engineering-20261014/ci-marker-repair/rc3-02-owner-pure-bc0b3-unit.log) 1847PASS/460deselected/210.51s，[render](notes-engineering-20261014/ci-marker-repair/rc3-02-owner-pure-bc0b3-render.log) 57PASS/2250deselected/22warnings/73.20s。2307个case集合保持不变，4个真实预览调用者在render各恰一次、unit中为0；实际总unit+render仍1904，不删用例/不新增skip。原ca035的1851/53只归原观察，不误作新分组数字；新remote七项CI必须另据准确最终head执行，不能由本地4项全跑推断远端执行或skip原因，原-q的3skip具体原因未知。
+
+[0d12文档最终审查](notes-engineering-20261014/delivery-review/phase3-final-0d12/report.md) 的FINAL PASS只归准确0d文档/证据/ledger；不能替代随后真实CI或新固定文档审查。既有140份历史原件/旧报告没有重写，新修复证据是追加导航。当前真实installed/native包再验证仍准确归ca035（runtime产品字节未变），不倒签为bc0b的新wheel构建。最终N01–N04/CQ06及人类/桌面/04/05总验收状态不改变。
+
+第4轮 [code影响复审](notes-engineering-20261014/ci-marker-repair/rc3-02-independent-code-review-round4-bc0b3.md) FINAL PASS只签准确bc0b的renderer测试分界与实际断言；[regression影响复审](notes-engineering-20261014/ci-marker-repair/rc3-02-independent-regression-round4-bc0b3.md) 也FINAL PASS；新固定docs audit/准确新head七项CI待root执行。

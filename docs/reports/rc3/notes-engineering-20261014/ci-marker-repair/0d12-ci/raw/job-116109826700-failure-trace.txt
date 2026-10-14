@@ -1,0 +1,104 @@
+2026-10-14T21:17:44.1110321Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-14T21:17:49.1430403Z HEAD is now at 2b6764d Merge 0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e into 8e274576e7a93de7d10c054558991878501fff0c
+2026-10-14T21:17:49.1499637Z [command]/usr/bin/git log -1 --format=%H
+2026-10-14T21:17:49.1529259Z 2b6764d91afecaa5765c4379f39772e2b735ef64
+2026-10-14T21:18:06.2629539Z ##[group]Run python -m pytest -q tests/rebuild -m "not render and not browser"
+2026-10-14T21:18:06.2630101Z [36;1mpython -m pytest -q tests/rebuild -m "not render and not browser"[0m
+2026-10-14T21:21:49.6362887Z =================================== FAILURES ===================================
+2026-10-14T21:21:49.6364459Z ______ test_notes_edit_preserves_completed_visual_and_actual_review_bytes ______
+2026-10-14T21:21:49.6364908Z 
+2026-10-14T21:21:49.6365446Z tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_notes_edit_preserves_comp0')
+2026-10-14T21:21:49.6366445Z 
+2026-10-14T21:21:49.6366919Z     def test_notes_edit_preserves_completed_visual_and_actual_review_bytes(tmp_path):
+2026-10-14T21:21:49.6367646Z >       project, store = _completed_visual(tmp_path)
+2026-10-14T21:21:49.6368146Z                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-14T21:21:49.6368439Z 
+2026-10-14T21:21:49.6368755Z tests/rebuild/test_rc3_notes_transactions.py:52: 
+2026-10-14T21:21:49.6369481Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+2026-10-14T21:21:49.6369871Z 
+2026-10-14T21:21:49.6370438Z tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_notes_edit_preserves_comp0')
+2026-10-14T21:21:49.6371355Z finding = False
+2026-10-14T21:21:49.6371559Z 
+2026-10-14T21:21:49.6371834Z     def _completed_visual(tmp_path, *, finding=False):
+2026-10-14T21:21:49.6372395Z         project = tmp_path / 'project'
+2026-10-14T21:21:49.6373342Z         page = _draft_page('p-a', '记录未知', '54/120＝45%，不是节约率。')
+2026-10-14T21:21:49.6374105Z         page['speaker_notes'] = '原有讲者备注。\n末段。\n'
+2026-10-14T21:21:49.6375011Z         service.create(project, brief='Synthetic notes engineering fixture', draft={'pages': [page]})
+2026-10-14T21:21:49.6375867Z         task, svg = _start(project, 'p-a')
+2026-10-14T21:21:49.6376498Z         page_ref = Store(project).load_document()['pages'][0]['page']
+2026-10-14T21:21:49.6377123Z         envelope = _svg_envelope('p-a')
+2026-10-14T21:21:49.6377938Z         envelope['artifact_specs'][0]['provenance']['generated_from_page'] = page_ref
+2026-10-14T21:21:49.6379183Z         envelope['artifact_specs'][0]['dependencies'] = [{'kind': 'content', 'identity': 'page:p-a', 'sha256': page_ref['sha256']}]
+2026-10-14T21:21:49.6380200Z         _accept(project, task, envelope, file_name='page.svg', data=svg)
+2026-10-14T21:21:49.6380740Z >       review = service.continue_project(project)['pending_tasks'][0]
+2026-10-14T21:21:49.6381373Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-14T21:21:49.6381744Z E       IndexError: list index out of range
+2026-10-14T21:21:49.6381940Z 
+2026-10-14T21:21:49.6382184Z tests/rebuild/test_rc3_notes_transactions.py:35: IndexError
+2026-10-14T21:21:49.6382712Z _________________ test_visual_open_finding_not_fixed_by_notes __________________
+2026-10-14T21:21:49.6383000Z 
+2026-10-14T21:21:49.6383636Z tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_visual_open_finding_not_f0')
+2026-10-14T21:21:49.6384191Z 
+2026-10-14T21:21:49.6384530Z     def test_visual_open_finding_not_fixed_by_notes(tmp_path):
+2026-10-14T21:21:49.6385308Z >       project, store = _completed_visual(tmp_path, finding=True)
+2026-10-14T21:21:49.6386332Z                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-14T21:21:49.6386670Z 
+2026-10-14T21:21:49.6386992Z tests/rebuild/test_rc3_notes_transactions.py:80: 
+2026-10-14T21:21:49.6387734Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+2026-10-14T21:21:49.6388125Z 
+2026-10-14T21:21:49.6388682Z tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_visual_open_finding_not_f0')
+2026-10-14T21:21:49.6389384Z finding = True
+2026-10-14T21:21:49.6389587Z 
+2026-10-14T21:21:49.6389862Z     def _completed_visual(tmp_path, *, finding=False):
+2026-10-14T21:21:49.6390424Z         project = tmp_path / 'project'
+2026-10-14T21:21:49.6391710Z         page = _draft_page('p-a', '记录未知', '54/120＝45%，不是节约率。')
+2026-10-14T21:21:49.6392448Z         page['speaker_notes'] = '原有讲者备注。\n末段。\n'
+2026-10-14T21:21:49.6393353Z         service.create(project, brief='Synthetic notes engineering fixture', draft={'pages': [page]})
+2026-10-14T21:21:49.6394226Z         task, svg = _start(project, 'p-a')
+2026-10-14T21:21:49.6394877Z         page_ref = Store(project).load_document()['pages'][0]['page']
+2026-10-14T21:21:49.6395518Z         envelope = _svg_envelope('p-a')
+2026-10-14T21:21:49.6396260Z         envelope['artifact_specs'][0]['provenance']['generated_from_page'] = page_ref
+2026-10-14T21:21:49.6397778Z         envelope['artifact_specs'][0]['dependencies'] = [{'kind': 'content', 'identity': 'page:p-a', 'sha256': page_ref['sha256']}]
+2026-10-14T21:21:49.6398885Z         _accept(project, task, envelope, file_name='page.svg', data=svg)
+2026-10-14T21:21:49.6399723Z >       review = service.continue_project(project)['pending_tasks'][0]
+2026-10-14T21:21:49.6400432Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-14T21:21:49.6401258Z E       IndexError: list index out of range
+2026-10-14T21:21:49.6401605Z 
+2026-10-14T21:21:49.6402014Z tests/rebuild/test_rc3_notes_transactions.py:35: IndexError
+2026-10-14T21:21:49.6402976Z _____ test_actual_completed_visual_notes_assembly_export_zero_image_ledger _____
+2026-10-14T21:21:49.6403485Z 
+2026-10-14T21:21:49.6404045Z tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_actual_completed_visual_n0')
+2026-10-14T21:21:49.6404620Z 
+2026-10-14T21:21:49.6405122Z     def test_actual_completed_visual_notes_assembly_export_zero_image_ledger(tmp_path):
+2026-10-14T21:21:49.6405951Z         from deck_master import pipeline, exports
+2026-10-14T21:21:49.6406610Z         from deck_master.compiler.native import notes_records
+2026-10-14T21:21:49.6407325Z >       project, store = _completed_visual(tmp_path)
+2026-10-14T21:21:49.6407890Z                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-14T21:21:49.6408207Z 
+2026-10-14T21:21:49.6408537Z tests/rebuild/test_rc3_notes_transactions.py:284: 
+2026-10-14T21:21:49.6409289Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+2026-10-14T21:21:49.6409699Z 
+2026-10-14T21:21:49.6410261Z tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_actual_completed_visual_n0')
+2026-10-14T21:21:49.6411238Z finding = False
+2026-10-14T21:21:49.6411454Z 
+2026-10-14T21:21:49.6411742Z     def _completed_visual(tmp_path, *, finding=False):
+2026-10-14T21:21:49.6412317Z         project = tmp_path / 'project'
+2026-10-14T21:21:49.6413064Z         page = _draft_page('p-a', '记录未知', '54/120＝45%，不是节约率。')
+2026-10-14T21:21:49.6413771Z         page['speaker_notes'] = '原有讲者备注。\n末段。\n'
+2026-10-14T21:21:49.6414781Z         service.create(project, brief='Synthetic notes engineering fixture', draft={'pages': [page]})
+2026-10-14T21:21:49.6415658Z         task, svg = _start(project, 'p-a')
+2026-10-14T21:21:49.6416315Z         page_ref = Store(project).load_document()['pages'][0]['page']
+2026-10-14T21:21:49.6416951Z         envelope = _svg_envelope('p-a')
+2026-10-14T21:21:49.6417714Z         envelope['artifact_specs'][0]['provenance']['generated_from_page'] = page_ref
+2026-10-14T21:21:49.6418926Z         envelope['artifact_specs'][0]['dependencies'] = [{'kind': 'content', 'identity': 'page:p-a', 'sha256': page_ref['sha256']}]
+2026-10-14T21:21:49.6420366Z         _accept(project, task, envelope, file_name='page.svg', data=svg)
+2026-10-14T21:21:49.6421576Z >       review = service.continue_project(project)['pending_tasks'][0]
+2026-10-14T21:21:49.6422281Z                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-14T21:21:49.6422681Z E       IndexError: list index out of range
+2026-10-14T21:21:49.6422894Z 
+2026-10-14T21:21:49.6423145Z tests/rebuild/test_rc3_notes_transactions.py:35: IndexError
+2026-10-14T21:21:49.6423646Z =========================== short test summary info ============================
+2026-10-14T21:21:49.6424667Z FAILED tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes - IndexError: list index out of range
+2026-10-14T21:21:49.6425785Z FAILED tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes - IndexError: list index out of range
+2026-10-14T21:21:49.6426889Z FAILED tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger - IndexError: list index out of range
+2026-10-14T21:21:49.6428420Z 3 failed, 1845 passed, 3 skipped, 456 deselected in 222.75s (0:03:42)
