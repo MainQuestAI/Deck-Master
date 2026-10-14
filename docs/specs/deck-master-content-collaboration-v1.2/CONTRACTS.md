@@ -511,6 +511,27 @@ initial_design 允许 `reference_refs=[]`、目标 `blueprint_ref=null`，但必
 
 纯 design-only 方案请求仍使用 `request.intent=design_trial`，但 `max_external_calls=0/max_candidate_count=0`、Scope.layers=[design]、actions 只含 `design.feasibility/design.propose`。UI 显示“只出设计方案”；不得在显示名称中误称“已生成样页”。有 1–2 张样页授权时才开放真实 trial 入口。
 
+### 11.4.1 内容密度到生产请求的最小接口约定（2026-10-13 修订）
+
+本节固定 I04 的接口设计；是待实现合同，不声明现有运行时已接通。本次只修改文档，JSON schema 与产品代码保持原状。
+
+| 项目 | 唯一约定 |
+|---|---|
+| 输入 | 同一选定快照中的当前 Page Ref、对应 Plan 页级条目（允许 fidelity 路径缺省）、有效 recipe Ref 与适用设计决定 Ref。T03 提交内容与 Plan；T05 的 service 解析器负责读取、校验和投影，不由调用 Agent 自由拼接 |
+| 派生位置 | 在 service 构建 generation input、调用 `project_prompt` 之前派生 `resolved_design_context.content_requirements`。冻结到既有 `generation_input.design_context.content_requirements`；`project_prompt` 将同一结果完整映射到 `projection.content_requirements` 并序列化进入实际 prompt。不得仅写 `layout_hint` 摘要，也不得把派生值回写为另一份可编辑的 Plan/Page |
+| 内容投影 | 版本标识 `content_requirements.v1`；`mode=planned|fidelity`、page_id、page_role（role/audience_question/intended_takeaway/transition_to_next）、content_profile、density_rationale、required_qualifications、structure_refs（现有 atom/node/edge 身份）、Page 的 visual_intent/layout_hint。取实际输入原值，不补论据、不润色或概括密度理由；真正表格和正文仍只来自 Page |
+| 依据投影 | 同一 design_context 中保存 `content_basis`：Page/Plan/recipe/适用决定的实际 Ref 与被消费页级切片摘要。该内部依据用于追踪和失效，不进入图像 prompt，也不成为客户可见文字。Ref 用于追溯，失效依据用切片；不得因无关 Plan 页变化使全稿失效 |
+| 权威与冲突 | Page 的事实、限定、职责、比较对象及因果/业务关系不可被 recipe 或布局指令覆盖。Plan 与当前 Page 映射过期、版本混用或语义冲突时拒绝冻结并指出对象和冲突。设计取舍不能静默改变内容；recipe 仍是视觉参数的唯一来源 |
+| 依赖与失效 | 消费该页可见内容及视觉语义、Plan 该页实际消费字段、有效 recipe 参数和适用决定切片；全局设计变化只影响适用页。无关页、未消费的 Plan 字段或仅审计 Ref 外壳变化不触发全稿重生。沿现有 registered slices 实施，不引入第二套缓存或批准状态 |
+| 无完整 Plan | 已确认稿/导入稿沿 fidelity 路径：mode=fidelity；缺少的 page_role/profile/rationale 明确为 null，保留 Page 全部可见结构、限定和既有有效设计。不强迫新建 Narrative，不伪造历史决定；必要新冲突按现有范围处理。应有 Plan 的新论证流程不能借 fidelity 绕过要求 |
+| 历史请求 | 旧冻结请求按旧版本只读与回放，不补写或重新解释；新请求登记此投影版本。既有 generation input 的 design_context 对象可承载派生项；实施时补语义校验/允许键合同，若实际兼容检查证明需升版则先显式修订合同与迁移，不静默接受未知键 |
+
+`content_basis` 的页级消费切片至少包括：Page 的 customer_visible 和与意义有关的 nodes/edges/标签归属/visual intent，Plan 对应 page_role 中上述实际投影字段，以及该页适用的 recipe/决定。纯几何字段与业务关系字段分别比较；不能只比较文本 hash。来源变化若经内容影响分析改变了判断，先更新内容再投影，不让设计解析器重新解释来源。
+
+边界用例：仅将相同节点、边方向和归属整体从左右排列改为上下排列，是设计修改；文字全部保留但把“人工确认后提交”变成“模型直接提交”，或交换表格两主体的单元格归属，是语义修改，必须回内容责任与审查。必要字段变更后，旧设计请求及相关产物/复核失效；仅 notes 修改沿 T06 规则处理，不重生未变视觉。
+
+数量判断缺必要数据时回到内容阶段处理；有依据的定性关系可用机制图。仅在稿件明确需要教学示意且不会制造量化印象时保留示意图，不自动生成装饰性“示意数据”。
+
 ### 11.5 Compose v2 结果 variant 与原子写集合
 
 当前 compose.v1 把 Page 与 ContentPlan 同步接纳；不能把空 Page 塞进旧信封来模拟前置步骤。拟新增 Task `protocol_version=compose.v2`、`required_capabilities=[compose.v2,collaboration.v1]`，结果 schema `compose_result.v2`，按 task 上的 protocol/version/phase 选择解析器。旧 compose.v1 仅用于历史读取/收据回放与旧调用结算，不派发新生产。

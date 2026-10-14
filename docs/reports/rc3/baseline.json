@@ -1,0 +1,157 @@
+{
+  "baseline_sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+  "baseline_tree": "3079209b8a9b2e75cb38dc0baa1f7489916d90e2",
+  "integration_sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+  "same_tree": true,
+  "prs": [
+    {
+      "number": 110,
+      "merged": true,
+      "merged_at": "2026-10-14T06:20:11Z",
+      "head_sha": "0cde6ce9d8b7d09b2f6bdca75093fff845fe9d6a",
+      "merge_commit_sha": "23419d2eab0bf398a52bf9b858d934dc8d75b0c4",
+      "url": "https://github.com/MainQuestAI/Deck-Master/pull/110"
+    },
+    {
+      "number": 111,
+      "merged": true,
+      "merged_at": "2026-10-14T07:09:50Z",
+      "head_sha": "fe8c2a8c6bbbbeaffd78a0761fa351aeb07b7286",
+      "merge_commit_sha": "f18a43d24520bfc34a510f1a1786687af5bb6f4d",
+      "url": "https://github.com/MainQuestAI/Deck-Master/pull/111"
+    },
+    {
+      "number": 112,
+      "merged": true,
+      "merged_at": "2026-10-14T07:10:45Z",
+      "head_sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+      "merge_commit_sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+      "url": "https://github.com/MainQuestAI/Deck-Master/pull/112"
+    }
+  ],
+  "main_ci": [
+    {
+      "name": "Group report",
+      "sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38526664280/job/115742897226"
+    },
+    {
+      "name": "Unit (Python 3.12, Node 24)",
+      "sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38526664280/job/115728762478"
+    },
+    {
+      "name": "Real rendering chain (Python 3.12)",
+      "sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38526664280/job/115728762445"
+    },
+    {
+      "name": "Unit (Python 3.12, Node 22)",
+      "sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38526664280/job/115728762369"
+    },
+    {
+      "name": "Unit (Python 3.11, Node 24)",
+      "sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38526664280/job/115728762262"
+    },
+    {
+      "name": "Required browser and installed UI (Python 3.12, Node 22)",
+      "sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38526664280/job/115728762225"
+    },
+    {
+      "name": "Unit (Python 3.11, Node 22)",
+      "sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38526664280/job/115728762196"
+    }
+  ],
+  "integration_ci": [
+    {
+      "name": "Group report",
+      "sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38516398999/job/115707583967"
+    },
+    {
+      "name": "Unit (Python 3.12, Node 22)",
+      "sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38516398999/job/115696171198"
+    },
+    {
+      "name": "Unit (Python 3.11, Node 24)",
+      "sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38516398999/job/115696171137"
+    },
+    {
+      "name": "Unit (Python 3.12, Node 24)",
+      "sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38516398999/job/115696171116"
+    },
+    {
+      "name": "Required browser and installed UI (Python 3.12, Node 22)",
+      "sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38516398999/job/115696171106"
+    },
+    {
+      "name": "Unit (Python 3.11, Node 22)",
+      "sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38516398999/job/115696171057"
+    },
+    {
+      "name": "Real rendering chain (Python 3.12)",
+      "sha": "db7bd664a97f5b63c5ac3ffaeebfae09f1220dea",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38516398999/job/115696170951"
+    }
+  ],
+  "review_evidence": [
+    {
+      "url": "https://github.com/MainQuestAI/Deck-Master/pull/112#issuecomment-6161548066",
+      "body": "## 独立复验完成：F01–F06 全部 pass；三项 P2 残留的处置\n\n独立 code-reviewer 对修复轮（head `df32510c`）完成复验：**六项修复语义全部满足，无偷换或弱化；测试为真实路径、无恒真断言；单卡回填与联合树逐行一致；`git diff ba334309 b36745cb` 为空属实；全套 1638 passed、ruff clean 复核通过。**\n\n复验同时发现三项 P2 残留，处置如下（如实披露，不构成批准结论）：\n\n- **N1（已修，`db7bd664`）**：continue 的输入协调恢复路径（`_recover_input_revision`）可绕过 gate 在暂停下新增任务。恢复派发现已同样消费 `dispatch.compose`；无生产逃逸（暂停期间任务本就不可领取）。\n- **N2（列为 #112 跟进项）**：accept 侧撤回检查只看绑定授权自身、不显式上溯父链；对不要求授权的 `dispatch.host_task` 绑定 execute 子授权场景，撤回 delegate 父授权后晚到结果仍被接纳。无\"必需检查\"被绕过，属纵深防御缺口，不在本轮扩大范围。\n- **N3（已修）**：修复记录对\"旧通过后出现新失败\"的测试映射已更正，并补 `test_a_new_failing_review_on_the_same_manuscript_reblocks_production` 钉住该反例。\n\n复验后最终 head：`db7bd664`，回归 **1639 passed / 455 deselected、ruff clean**（本会话实际执行）。逐项证据与复验记录见 `docs/reports/content-collaboration-v1.2/external-review-fix-round-20261014.md`。\n\n**当前状态：Open/Draft，未合并。技术上到达可提请用户合并授权的状态（含上述披露）；合并须用户明确授权。**\n",
+      "created_at": "2026-10-14T05:23:53Z",
+      "updated_at": "2026-10-14T05:23:53Z"
+    },
+    {
+      "url": "https://github.com/MainQuestAI/Deck-Master/pull/112#issuecomment-6162950847",
+      "body": "<!-- codex-pull-request-review-summary -->\n\n## Codex Review Summary\n\nThis comment shows the latest Codex review activity on this pull request.\n\n| Review | Status | Commit | Review trigger |\n| --- | --- | --- | --- |\n| 📝 **Code Review** | ✅ **Completed** <relative-time datetime=\"2026-10-14T07:11:51.164106Z\">2026-10-14T07:11:51.164106Z</relative-time> | `db7bd66` | Draft marked ready |\n\n\n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\" or \"@codex security review\".\n\nCodex reacts with 👀 while any review is running, comments if it has suggestions, and reacts with 👍 once all reviews finish with no findings.\n\n</details>",
+      "created_at": "2026-10-14T07:10:50Z",
+      "updated_at": "2026-10-14T07:11:52Z"
+    }
+  ],
+  "rf_results": "RF01–RF06 independently reverified per upstream evidence; final tree contains N1 fix and N3 regression; local 99 regression cases passed",
+  "followup": {
+    "id": "N2",
+    "owner": "RC3-04",
+    "status": "OPEN",
+    "description": "Check effective parent authorization chain during acceptance and keep late-call facts when refusing adoption."
+  },
+  "ready_for_rc3_implementation": true,
+  "professional_acceptance": "NOT_RUN"
+}
