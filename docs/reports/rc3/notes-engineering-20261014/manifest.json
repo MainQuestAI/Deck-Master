@@ -1,8 +1,8 @@
 {
   "evidence_scope": "Synthetic L1 protocol fixtures and actual native/PPTX L6 file engineering; real human/desktop NOT_RUN",
   "base_sha": "8e274576e7a93de7d10c054558991878501fff0c",
-  "implementation_sha": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
-  "implementation_tree": "05191deede70f26e661b28f4221c3c0d00ef2ecf",
+  "implementation_sha": "acf2b2edd4a88f74e8b671a18e32eb74b780eb84",
+  "implementation_tree": "0d3ce4982e24a081cbf964259ea85891cd713aed",
   "first_review_sha": "27823c5c3e52a50201569e1d087406ddeff3832f",
   "first_review_status": "REQUEST_CHANGES (preserved)",
   "original_pack_build_identity": "Original pack was built before final source was frozen; current revalidation is a separate observation and does not retroactively bind that build.",
@@ -999,6 +999,450 @@
       "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round4-bc0b3.md",
       "sha256": "b5e046851a19d79624b6846c393c6586dc07a74f61bc14b8eff8bc0cc3f9facd",
       "bytes": 5851
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/wheel-build.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/wheel-build.log",
+      "sha256": "383bec85bb0d87a14ba69db61aef846cb7b45df899fac02beac11cbbf205df69",
+      "bytes": 736
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/install.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/install.log",
+      "sha256": "30e19d125c3b1f8bf81a10297d5eb5f026a2563fc688c0a3d01fe8ea0df0d6a9",
+      "bytes": 4188
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/w12-old.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/w12-old.log",
+      "sha256": "e131d0cbfda3b6eb5ae2e0816e53ed5e8a54f9701ef8f9a6a1142ddd462d765b",
+      "bytes": 250
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/w12-old-r2.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/w12-old-r2.log",
+      "sha256": "43ec7ad8c542a972b7013b2a21065b9ff3ea49cdd62d32d0558819cea71b60bc",
+      "bytes": 904
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/w12-old-r3.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/w12-old-r3.log",
+      "sha256": "d8db9104b6cdbf40d2e3d6779ab108aedfbf15924ba26a405ea2d8217e6b89af",
+      "bytes": 1516
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/run-fixed.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/run-fixed.py",
+      "sha256": "5813fa0e7b672d177f9c5fc073593042eb76e3c2b0f6a2388bbc0f42ce9f3e65",
+      "bytes": 2281
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/run-fixed-r3.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/run-fixed-r3.py",
+      "sha256": "9b5a7d4df4480ec9085e0a1efcd9464c2117c543253abe5b8d8b544469f5239b",
+      "bytes": 2317
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/installed-source-provenance-r3.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/installed-source-provenance-r3.json",
+      "sha256": "8373b344ee5121621691a11d4c7eec9bbe77b30fcd0708d6fec12741c7ef45d1",
+      "bytes": 36741
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/actual-module-origins-r3.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/actual-module-origins-r3.json",
+      "sha256": "5eadca31265eee47113e4797d5258e8bc003aafb5e9e53249bd9448fc8791cf3",
+      "bytes": 6723
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/precommit-new-fixture.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/precommit-new-fixture.py",
+      "sha256": "bd56b0d702ff53c4962a14e5ccfdc8526af8af151174e9f5c521f45a3f886924",
+      "bytes": 1420
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/precommit-new-fixture.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/precommit-new-fixture.log",
+      "sha256": "6ae922d02533839dfa0028365d2b7a5fdd633ec206871607cd66d33a78b4c7aa",
+      "bytes": 101
+    },
+    {
+      "file": "installed-fixture-repair/53f4-ci/report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/53f4ab335d4bacb0862d810cf8acf55eeba7e744/report.md",
+      "sha256": "f28e117a1bc6d9e6c388c2697fe863ae5cfbe266c1e4c41eae269f58f77e9230",
+      "bytes": 2836
+    },
+    {
+      "file": "installed-fixture-repair/53f4-ci/report.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/53f4ab335d4bacb0862d810cf8acf55eeba7e744/report.json",
+      "sha256": "517259dde97c5bc929d3acd00023b4d3462c837696f4ea003aff4e905374ff52",
+      "bytes": 27334
+    },
+    {
+      "file": "installed-fixture-repair/53f4-ci/raw/job-116120840984-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/53f4ab335d4bacb0862d810cf8acf55eeba7e744/raw/job-116120840984-failure-trace.txt",
+      "sha256": "972ae3db0a6f808523b6dfdaa6bb77a4e64292dfd67078eeb4742941e03631df",
+      "bytes": 2122
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/wheel-build.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/wheel-build.log",
+      "sha256": "778758dfbe49c1673def14efa0f3fc09f7ea4789a9dad933ee8d5cff69e56ea9",
+      "bytes": 736
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/install.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/install.log",
+      "sha256": "b08d3469fc4673ddb7e830ff4479302b8b4cfdb76db080e05768b5a822f6636d",
+      "bytes": 4187
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/run-fixed-installed.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/run-fixed-installed.py",
+      "sha256": "2d4f1280d28e93bd98c159b0960c40fa45d4a1fbc737c5445a333b0aed251a35",
+      "bytes": 2668
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/run-fixed-installed-r2.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/run-fixed-installed-r2.py",
+      "sha256": "5db0b49b7c2e658c03dc94d334dcf0185f35fd8f8585e8ddad4441f744ffd7dc",
+      "bytes": 2833
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-installed-provenance.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-installed-provenance.json",
+      "sha256": "ef2ee2686a353652e84bfdf7c9cd5375184829bf7ddca5f845435c4a4be3f86d",
+      "bytes": 37060
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-module-origins.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-module-origins.json",
+      "sha256": "b114e73e0e036f2217eef319f2b2edb7af11fcdee6ea79b150232520d6c3dcc2",
+      "bytes": 8360
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete.log",
+      "sha256": "be7d18160b161ac4154ea5ab3d785b94672a4a7e59b994485aa4fe6f61cf858d",
+      "bytes": 36
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete/checks.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete/checks.json",
+      "sha256": "c6460b8c772b08c79b58f6ecb25e3cfed832179c1181688db69b19475b67feb6",
+      "bytes": 8866
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete/readback.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete/readback.json",
+      "sha256": "da477effd77ef48db71fd53d74d7bd61dd6a39793cb82a2d51913a48ed619f6c",
+      "bytes": 420
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete/notes-body-mismatch-readback.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete/notes-body-mismatch-readback.json",
+      "sha256": "8f976abe7749dea6f7d6260f17aca6fb969710867b4cd2aa638eb1e3092635b2",
+      "bytes": 527
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete/compiled/compile-input.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete/compiled/compile-input.json",
+      "sha256": "c84bc9d2e7633cad04cf90d27837431e160df29dd91e8b069437f3e620dae7de",
+      "bytes": 1903
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/recovery-installed-provenance.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/recovery-installed-provenance.json",
+      "sha256": "ef2ee2686a353652e84bfdf7c9cd5375184829bf7ddca5f845435c4a4be3f86d",
+      "bytes": 37060
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/recovery-installed-provenance-r2.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/recovery-installed-provenance-r2.json",
+      "sha256": "1671738bfcab580309c451d6c37dbc891a6790bf8091026ac593051f11db47f6",
+      "bytes": 37321
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/recovery-module-origins.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/recovery-module-origins.json",
+      "sha256": "f1183b30fb769b76ccd731d383de9e124ba660720a8bcd2f7a6f4c74cf6190d5",
+      "bytes": 8845
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/installed-recovery.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/installed-recovery.log",
+      "sha256": "fd9a3558d8464935067c169dee6760e7bff353f5cd63fd10a6d9142e1fe76ad5",
+      "bytes": 1115147
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/short-tmp-same-browser-launch.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/short-tmp-same-browser-launch.json",
+      "sha256": "98558e6450fef3c2b61f9419aca1231cf00fba5ecf2538cc6d21c009aa7689f4",
+      "bytes": 348
+    },
+    {
+      "file": "installed-fixture-repair/rc3-02-independent-code-review-round5-65d82.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round5-65d82.md",
+      "sha256": "8eca8ac4fe684a4d6cdd2bdff3f10c9ad092a1fa8a62a16f97cd22a8ac3bd3c2",
+      "bytes": 6856
+    },
+    {
+      "file": "installed-fixture-repair/rc3-02-independent-regression-round5-65d82.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round5-65d82.md",
+      "sha256": "bfbc210a58fc814c5478e04ab3b9ec8f6ec67b18756c9e9cd415d1040cfe18ea",
+      "bytes": 6866
+    },
+    {
+      "file": "delivery-review/phase4-final-53f4a/report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase4-final-53f4a/report.md",
+      "sha256": "19e9b7c36ff545809a40e5753e3ac3a3629cf6b94bfc65ef5d4b507f6dda83df",
+      "bytes": 6755
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/installed-recovery-r2.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/installed-recovery-r2.log",
+      "sha256": "ff8c97a0ccae850696bc45f5f1cbeb86d5c8cba246dddc641e66069f04c4e1cf",
+      "bytes": 1774
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/installed-recovery-r2.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/installed-recovery-r2.json",
+      "sha256": "f196e461ddbb5e0b45e9c403a191bb217e181e77e892e925d2805d639d04ad9b",
+      "bytes": 10966
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/recovery-module-origins-r2.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/recovery-module-origins-r2.json",
+      "sha256": "c7aaacb83f46a37c59ae7604d3eaa2de9f02fc179f600391c95deea00e793021",
+      "bytes": 10688
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/probe-mobile-case.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/probe-mobile-case.py",
+      "sha256": "7561f1e484a3d5f6a410560534c102794e83db60bcbc2f26e8b40f3d597a5783",
+      "bytes": 1999
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-system-r1.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-system-r1.log",
+      "sha256": "c60acd2195b777ef5b3551bd768b70c075c5b367b1a41951ddab598efd1cca0c",
+      "bytes": 12858
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/probe-mobile-case-r2.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/probe-mobile-case-r2.py",
+      "sha256": "169c7a05fa46221578a56b9dedc20cbe8ce6327badd59736e74eecc573c59994",
+      "bytes": 2879
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-system-r2.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-system-r2.log",
+      "sha256": "129d6bf5db5a76730f76f2745a6a72aa2915246d2366bdcaa01c99a0d9b8cc1b",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-system-r2/case-result.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-system-r2/case-result.json",
+      "sha256": "38d3fed0249a27483d1b9c730ac88147d6e5f897a9a09461905f34adc5a90e78",
+      "bytes": 1619
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-system-r2/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-system-r2/execution.json",
+      "sha256": "665469da34f36755516990e19ea1d87d53c3ddea489cfe86567164f4a4873e8e",
+      "bytes": 8136
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle.py",
+      "sha256": "0a1001fd8cb4ba2c9a5a91a2362cb2314dccf8f6985cc1c9aba0402ae8d76fb0",
+      "bytes": 2632
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control.log",
+      "sha256": "2c42cadfe8cbfa2f0a7d5d108b81f7348ebe192dd350256a5108a99be6e85413",
+      "bytes": 879
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle-r2.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-r2.py",
+      "sha256": "f6667c97862dd83f63e611a9d0ebd370378fd0c9392fca356b804b99352fd722",
+      "bytes": 2687
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r2.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r2.log",
+      "sha256": "117fc97efab587b02a2738f5b524caed8febb1be274d8e11bdb4e245c4ebed78",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r2/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r2/execution.json",
+      "sha256": "4fe968cf846efb934acc013b20acca29fb2ea060b8ee8416c91740323efb9a6a",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle-r3.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-r3.py",
+      "sha256": "e49c55a8ac1607251eef4f2518d4767ea76944d04641ae7cf1e821e8be38d39b",
+      "bytes": 2760
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r3.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r3.log",
+      "sha256": "117fc97efab587b02a2738f5b524caed8febb1be274d8e11bdb4e245c4ebed78",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r3/observations.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r3/observations.json",
+      "sha256": "ecf40ca8071c8b6e991b84fb3fe949916695a23e2d3eb9de9e76f9f9aceec9f1",
+      "bytes": 1158
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r3/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r3/execution.json",
+      "sha256": "4fe968cf846efb934acc013b20acca29fb2ea060b8ee8416c91740323efb9a6a",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle-r4.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-r4.py",
+      "sha256": "5d736375714eaf5470f6309bf92438e89ddb7e93d40b70d1a9a8fd884d0c746b",
+      "bytes": 3571
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r4.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r4.log",
+      "sha256": "80f878abea1975bdf94853b925b5bd216c7bb801107ad91a882c07f48eedaf52",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r4/observations.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r4/observations.json",
+      "sha256": "a719126ab9c8088050a0811402899b30180fbe217948d1656a46eb0fc8f47e76",
+      "bytes": 1212
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r4/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r4/execution.json",
+      "sha256": "4fe968cf846efb934acc013b20acca29fb2ea060b8ee8416c91740323efb9a6a",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle-r5.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-r5.py",
+      "sha256": "ed759ec6341d584e89e1b7579c21bcfe39428aeedd67fddbfe98d07dc181ed7f",
+      "bytes": 3575
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r5.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r5.log",
+      "sha256": "a4f4eee5c3cfd4d66ed0e5640986e5fdcdc04bcae931e493f824f1968c722867",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r5/observations.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r5/observations.json",
+      "sha256": "abad801e2d3fc71a2861893fcb9bc71d9cc4313b5149b602ae4ef0e19ede6236",
+      "bytes": 3523
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r5/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r5/execution.json",
+      "sha256": "4fe968cf846efb934acc013b20acca29fb2ea060b8ee8416c91740323efb9a6a",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/probe-fixed-acf-three-viewports.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/probe-fixed-acf-three-viewports.py",
+      "sha256": "f86b431df41c8ac33cba0183ff027e9fe78cdbea16ea02bcbff691f869756077",
+      "bytes": 2976
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports.log",
+      "sha256": "edb7f69a302587b2065eed81dd2236f3129c22d0a41f1652aba2e2f30eefcd07",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports/execution.json",
+      "sha256": "b0461a96b3cd5791a7706f39ca710f24223720f22889eba9a029935b1c649984",
+      "bytes": 8136
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports/case-result-390-844.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports/case-result-390-844.json",
+      "sha256": "58e7657a81b8849aae2a4a9fde51612ddfd29e4a2119447580dc33ff280b1e31",
+      "bytes": 1619
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports/case-result-1280-800.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports/case-result-1280-800.json",
+      "sha256": "27327ac9cff2ff0e7a34b7c2c126d79c1a335b3ebaf260b835eefd3a94811071",
+      "bytes": 1815
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports/case-result-1440-900.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports/case-result-1440-900.json",
+      "sha256": "34fa2fa4220fecf5355352a31d4ea63e89582e4b5f45828023e4a520924f77f9",
+      "bytes": 1823
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/controlled-mobile-lifecycle-acf.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-acf.py",
+      "sha256": "af992c1eb9f1334602191ab318377f7e0b11e9d9dd82e5b110181bd95ce147e4",
+      "bytes": 3575
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-lifecycle-control.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-lifecycle-control.log",
+      "sha256": "b3c21efd16219be28a52a0dcc580ff27440f51697f2aceac9c53dfe2425dcae3",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-lifecycle-control/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-lifecycle-control/execution.json",
+      "sha256": "e7e384d4c1b883dce7d9362e0fa6609f374471bb3ccf19675a59dc596c94730f",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-lifecycle-control/observations.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-lifecycle-control/observations.json",
+      "sha256": "3702e5bd9e989698912bab1b610bc0972ed52752f21bd68b30f849778a9c058b",
+      "bytes": 4764
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/verify-acf-test-installed65-provenance.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/verify-acf-test-installed65-provenance.py",
+      "sha256": "963bdde43766d165c5d7779df1bbc367b7c4a2bfe1aeafb5fa4d854650f5e53d",
+      "bytes": 2918
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-scoped-provenance.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-scoped-provenance.json",
+      "sha256": "703228bef994dda945637c065e3cb870b7ecba68d031af02a585291eb161fdbb",
+      "bytes": 39211
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-scoped-provenance.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-scoped-provenance.log",
+      "sha256": "aadaf7fdc3d4ab28d7e70ffea670608b2e7ab8709ea36213592c3e130fc03554",
+      "bytes": 458
+    },
+    {
+      "file": "installed-fixture-repair/rc3-02-independent-regression-round6-acf2b.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round6-acf2b.md",
+      "sha256": "fdd27a66691049684172a1627f935a33508df19900c2bb936ee94e0c3afc8263",
+      "bytes": 7858
+    },
+    {
+      "file": "installed-fixture-repair/rc3-02-independent-code-review-round6-acf2b.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round6-acf2b.md",
+      "sha256": "aca6a4b44dde033b76b092043a4bdb4c31326865d12b57e5c9b67979732b4dd4",
+      "bytes": 7065
     }
   ],
   "second_review_sha": "0b0ed2a85581652fc63ebcbe95bec6fc7fb3f343",
@@ -1008,11 +1452,18 @@
     "code_report": "rc3-02-independent-code-review-round3-ca035.md",
     "regression": "PASS",
     "regression_report": "rc3-02-independent-regression-round3-ca035.md",
-    "delivery_docs": "Historical 0d12 FINAL PASS; new fixed docs audit pending",
-    "engineering_handoff": "READY after round4 CI classification code/regression FINAL PASS; root new fixed docs audit and new exact-head seven CI pending",
+    "delivery_docs": "Historical 0d12/53f4 FINAL PASS only at those docs identities; updated exact docs audit pending",
+    "engineering_handoff": "RUNTIME_R3/RENDER_TEST_R4/EXAMPLES_R5/FIT_TEST_R6_FINAL_PASS by exact scoped identities; new fixeddocs/current7CI pending",
     "final_ac_cq": "BLOCKED (desktop/use/current integration scope)",
     "merge_performed": false,
-    "current_test_boundary": "bc0b39fd9265d3408f69e95bc09047bf59a802d4, runtime product bytes equal ca035"
+    "current_test_boundary": "bc0b render classification + acf fitted-reading lifecycle; product bytes equal ca035, examples equal65",
+    "latest_test_impact_review": {
+      "regression": "FINAL PASS",
+      "regression_report": "installed-fixture-repair/rc3-02-independent-regression-round6-acf2b.md",
+      "code": "FINAL PASS",
+      "code_report": "installed-fixture-repair/rc3-02-independent-code-review-round6-acf2b.md",
+      "scope": "Fixed acf single fitted-reading test wait; code reviewer independent actual390case+held-image lifecycle, regression reviewer original3viewport+held-image lifecycle. Original whole65 recoveryFAIL remains immutable; no full239/currentCI claim."
+    }
   },
   "mixed_live_unit": {
     "file": "rc3-02-unit-0b0ed2a.log",
@@ -1090,5 +1541,50 @@
       "file": "rc3-02-owner-pure-ca035-render.log"
     },
     "browser_ci": "NOT_RUN at owner handoff; root required final CI pending"
-  }
+  },
+  "installed_fixture_repair": {
+    "source_sha": "65d8203ec099b0460dbf031b24cf2ea5a02fd0f2",
+    "source_tree": "e4e94f7acc9d9156beeb77fa8ede06cb0a954480",
+    "delta": "w11/w12 examples only; src/skills/pyproject matches ca035, tests matches bc0b.",
+    "original_ci_head": "53f4ab335d4bacb0862d810cf8acf55eeba7e744",
+    "original_ci_run": 38642260224,
+    "original_ci": "5 jobs success, browser/group FAIL; 403 browser PASS then original installed fixture notes mismatch, installed recovery NOT_RUN.",
+    "original_local_reproduction": "Exact53 isolated wheel 139849b1dc8e85f5afd101ce8722de5343284675e2690813468209fe86146657, 246 source/package/install bytes identical; actual same speaker_notes_mismatch. Two initial harness/import-map errors are separate original attempts.",
+    "current_wheel_sha256": "b13629f0f67c17883bcc0a610b7fc2fd0951a1c714b4b3b3f90b616b664265a0",
+    "current_installed_core": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/deck_master",
+    "w12_offline": "PASS 9 checks; exact installed -I/core module provenance, real native/readback, public notes/privacy and engineering original, no source borrowing.",
+    "body_canary_negative": "Actual separate tampered PPTX readback speaker_notes_mismatch retained; no Page-private-data public export bypass.",
+    "initial_local_recovery": "INTERRUPTED:63FAIL/68ERROR/1warning/85.22s; all first browser launch failures showed FATAL Socket path too long under long task TMPDIR. Original log/long paths/modules preserved.",
+    "corrective_environment": "Same /usr/bin/chromium, only TMPDIR=/workspace/work/rc3/t65r; real short-temp launch PASS. No browser/source/product replacement.",
+    "full_recovery_r2": "FAIL: 238 passed, 1 failed in 797.48s; same short TMPDIR/system Chromium. Sole mobile test measured image decoded before reading-controller fit: original y639.805664/h208.999939/bottom848.805603. Original complete suite remains FAIL.",
+    "impact_review": {
+      "code": "FINAL PASS",
+      "regression": "FINAL PASS",
+      "scope": "Exact65 two-example/native/files/negative cases; independent reviewer installed result not Owner full recovery or remote CI."
+    },
+    "new_remote_ci": "PENDING exact final updated docs head; old FAIL retained"
+  },
+  "mobile_fit_test_repair": {
+    "source_sha": "acf2b2edd4a88f74e8b671a18e32eb74b780eb84",
+    "source_tree": "0d3ce4982e24a081cbf964259ea85891cd713aed",
+    "delta": "Only three test lines await existing data-reading-mode=fit before mobile geometry measurement. No product/example/threshold/sleep change.",
+    "diagnostic_source_sha": "65d8203ec099b0460dbf031b24cf2ea5a02fd0f2",
+    "diagnostic_installed_wheel_sha256": "b13629f0f67c17883bcc0a610b7fc2fd0951a1c714b4b3b3f90b616b664265a0",
+    "diagnostic_original_case": "Exact installed65/system Chromium151/shortTMP single original case PASS1/1 in1.84s; transparent original bounding box observed without changing return or waiting.",
+    "controlled_actual_image": "Held actual SVG fetch then continued unchanged; image-ready canvas before fit y639.428528/h209/bottom848.428528/fonts loaded; 11ms later existing reading-controller fit y639.397705/h184.59375/bottom823.991455.",
+    "controlled_observations": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r5/observations.json",
+    "harness_history": "Original observer null-after-content-layer INTERNALERROR and scratch collection FileExistsError retained; r2 scratch result PASS but observer global empty, r3 observations captured, r4 init-script lifecycle null, r5 actual lifecycle captured. These harness errors/observer gaps are not product failures or additional original-suite results.",
+    "scoped_revalidation": "PASS: fixed acf original3viewport cases3/3 in5.07s; controlled real held-SVG lifecycle1/1 in2.03s; 246 acf source/65wheel/install bytes all equal. Runtime/build source65 and test sourceacf tracked separately. Independent R6 code/regression FINAL PASS scoped to this test wait.",
+    "remaining238_reuse": "238 actual installed65 recovery passes retained only for unchanged runtime/examples/non-target tests; original suite FAIL not relabeled PASS. No additional local broad run authorized/needed; required final CI will rerun complete installed recovery.",
+    "scoped_provenance": "installed-fixture-repair/acf-test-fit/acf-scoped-provenance.json",
+    "impact_review": {
+      "regression": "FINAL PASS",
+      "regression_report": "installed-fixture-repair/rc3-02-independent-regression-round6-acf2b.md",
+      "code": "FINAL PASS",
+      "code_report": "installed-fixture-repair/rc3-02-independent-code-review-round6-acf2b.md",
+      "scope": "Fixed acf single fitted-reading test wait; code reviewer independent actual390case+held-image lifecycle, regression reviewer original3viewport+held-image lifecycle. Original whole65 recoveryFAIL remains immutable; no full239/currentCI claim."
+    }
+  },
+  "runtime_implementation_sha": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+  "runtime_implementation_tree": "05191deede70f26e661b28f4221c3c0d00ef2ecf"
 }

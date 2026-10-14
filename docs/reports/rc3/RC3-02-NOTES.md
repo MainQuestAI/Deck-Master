@@ -1,6 +1,6 @@
 # RC3-02 notes 与实际文件工程交接
 
-RC3-02 已实现当前 Page notes → native PPTX → 选定容器导出 → 最终客户文件完整回读的路线，并修复 notes-only 的视觉复用、Plan links、最低 writer 与旧协议隔离。当前代码 `ca0351d2397ba154e9f77363bd0f325629eb0ebd` / tree `05191deede70f26e661b28f4221c3c0d00ef2ecf` 第三轮独立 code/regression 均 FINAL PASS；原0d12固定文档 audit FINAL PASS 后，实际PR117四组unit CI暴露测试渲染依赖分界错误，已做bc0b39测试修复且第4轮code/regression影响复审均FINAL PASS，等待新固定文档审查/准确新head全部七项CI。当前尚未合并。目标桌面备注视图/编辑保存重开、真实 Owner/受众和专业使用验收仍 NOT_RUN，最终 N01–N04/CQ-06 保持 BLOCKED。
+RC3-02 已实现当前 Page notes → native PPTX → 选定容器导出 → 最终客户文件完整回读的路线，并修复 notes-only 的视觉复用、Plan links、最低 writer 与旧协议隔离。Runtime 实现 `ca0351d2397ba154e9f77363bd0f325629eb0ebd` / tree `05191deede70f26e661b28f4221c3c0d00ef2ecf` 第三轮独立 code/regression 均 FINAL PASS；原0d12固定文档 audit FINAL PASS 后，实际PR117四组unit CI暴露测试渲染依赖分界错误，已做bc0b39测试修复且第4轮code/regression影响复审均FINAL PASS，随后53f4真实CI的installed示例又发现正文notes-canary与Page不一致；65d8203已做examples-only修复、第五轮限定复审双FINAL PASS，真实installed w12完整9checks PASS；同版本完整installed recovery238PASS/1FAIL定位为图片decoded与下一帧真实fit的测试测量竞争，已做acf2b2e测试等待修复，准确三viewport/受控加载对照PASS，第六轮code/regression限定复审均FINAL PASS；新固定docs审与七CI仍待。当前完整代码冻结为acf2b2edd4a88f74e8b671a18e32eb74b780eb84，产品字节保持上述Runtime身份，尚未合并。目标桌面备注视图/编辑保存重开、真实 Owner/受众和专业使用验收仍 NOT_RUN，最终 N01–N04/CQ-06 保持 BLOCKED。
 
 本卡基线 main `8e274576e7a93de7d10c054558991878501fff0c`。当前工程输入是明确合成三页与真实不可变文件；fixture 的权限、Review、native observation、费用是 L1 协议证据。实际 native PPTX、完整回读、LibreOffice/PDF/PNG 是 L6 文件工程证据，不等于目标 PowerPoint 或人类验收。RC3-01 的 Q1-B/Q2-B qualified owner-draft 可以供后续原稿实际交接，但本卡合成包不能替代它们或原 E1 公平效果结论，也没有新增视觉授权。
 
@@ -79,3 +79,38 @@ RC3-03/04 必须直接消费以上 getter/slice/Plan/policy/floor，不能重新
 [0d12文档最终审查](notes-engineering-20261014/delivery-review/phase3-final-0d12/report.md) 的FINAL PASS只归准确0d文档/证据/ledger；不能替代随后真实CI或新固定文档审查。既有140份历史原件/旧报告没有重写，新修复证据是追加导航。当前真实installed/native包再验证仍准确归ca035（runtime产品字节未变），不倒签为bc0b的新wheel构建。最终N01–N04/CQ06及人类/桌面/04/05总验收状态不改变。
 
 第4轮 [code影响复审](notes-engineering-20261014/ci-marker-repair/rc3-02-independent-code-review-round4-bc0b3.md) FINAL PASS只签准确bc0b的renderer测试分界与实际断言；[regression影响复审](notes-engineering-20261014/ci-marker-repair/rc3-02-independent-regression-round4-bc0b3.md) 也FINAL PASS；新固定docs audit/准确新head七项CI待root执行。
+
+## 追加：53f4 installed 示例真实失败与65d82文件闭环
+
+[旧53f4 CI](notes-engineering-20261014/installed-fixture-repair/53f4-ci/report.md) run38642260224的全部七job已完成，5success、browser/groupFAIL。403browser实际PASS/1904deselected/1410.49s，wheel build/install成功；w12_offline在w11 fixture真实readback处因speaker_notes_mismatch失败（actual private canary、Page期望无notes），installed recovery尚未运行，不能借旧或本地结果回写为PASS。
+
+Owner以准确53f4 snapshot新建真实isolated wheel/install，246 source/package/install逐字一致，-I预载site-packages core、仅固定example兄弟目录加入import；[实际旧失败复现](notes-engineering-20261014/installed-fixture-repair/original-53f4/w12-old-r3.log) 同一正文notes mismatch。最初直接-I导入example兄弟失败和canonical skill agents映射遗漏都是harness失败，原脚本/log分别保留，未记作额外产品缺陷。预提交live新例子三export正反是带实际example字节/hash的快查，不倒签为固定65执行。
+
+65d8203/tree e4e94f7仅改两个examples：Page声明完整合法合成notes，经SvgInput真实编译并严检；同privacy canary仍在原件private author与notes隐藏shape描述，未删隐私验证。原正文注入canary另存独立真实PPTX，readback必须speaker_notes_mismatch，不能修改Page期望、关闭检查或允许私密Page正文导出。新file deps包含page_notes，rc3 floor与fixture artifacts同CAS。w11/w12共用实际下载检查：公开PPTX逐页完整notes/稳定ID一致且所有parts无canary；engineering实际保留原bytes及author/notes两位置canary。
+
+[当前65安装来源](notes-engineering-20261014/installed-fixture-repair/fixed65/w12-installed-provenance.json) wheel b13629f0f67c17883bcc0a610b7fc2fd0951a1c714b4b3b3f90b616b664265a0、246source/package/install一致；[实际完整w12](notes-engineering-20261014/installed-fixture-repair/fixed65/w12-complete/checks.json) 9checks verified：真实browser三固定下载/完整notes/隐私净化/engineering原件、installed全部static/font/无外部请求与module无src借用。此新安装准确归65新source，不倒签53失败，也不把ca035旧native包重命名成65的新构建。
+
+[第五code](notes-engineering-20261014/installed-fixture-repair/rc3-02-independent-code-review-round5-65d82.md) 与 [第五regression](notes-engineering-20261014/installed-fixture-repair/rc3-02-independent-regression-round5-65d82.md) 限定影响复审均FINAL PASS，独立执行与Owner完整w12/recovery分列。src/skills/pyproject对ca035、tests对bc0b零delta，原软件/分组审查只按这个明确相同范围复用，未把remote全部CI签绿。
+
+本地完整installed recovery首轮因Owner任务TMPDIR过长，所有首批Chromium日志明确FATAL Socket path too long（Unix IPC路径长度），中断时63FAIL/68ERROR/1warning，85.22s。该原log/长路径/harness/module来源保留，不是product/example失败，也不是/usr/bin/chromium无效；早先根据浏览器差异推断的归因已更正。只改短TMPDIR=/workspace/work/rc3/t65r，同一system Chromium真实launch PASS后用新名字执行完整recovery，源码固定且无修改。新轮完整结果为238PASS/1FAIL/797.48s，唯一窄屏case的实际box y639.805664、高208.999939，底848.805603超过844；该原完整suite保留FAIL，不能由w12或独立限定PASS替代。
+
+运行中fixed snapshot出现已知browser生成out，tracked源码/tests/head保持固定；不声称整个worktree无任何生成文件，不删除未知out，不提交运行目录/缓存/安装树。原165份历史证据/报告不改，新的实际失败、复现与修复是追加来源。专业N/CQ、真实Owner/听众/桌面及04/05集成仍按原状态保留。
+
+
+## 追加：真实 installed recovery 的初始图像与 fit 生命周期
+
+[65完整recovery原log](notes-engineering-20261014/installed-fixture-repair/fixed65/installed-recovery-r2.log)及module/provenance均是准确65 installed core、system Chromium151.0.7922.173与短TMPDIR；238项实际PASS和1项FAIL分别保留，未把完整suite改成PASS。同一原测试独立单case真实PASS1/1只是单次观察，透明记录的box原返回不作修改，不能覆盖原FAIL。
+
+[受控实际图像成对观察](notes-engineering-20261014/installed-fixture-repair/fixed65/mobile-lifecycle-control-r5/observations.json)把真实SVG请求暂存后原样继续：fonts始终loaded；图片decoded且canvas刚进入DOM、reading mode仍null时，高209、底848.428528；11ms后原controller在下一RAF设置既有data-reading-mode=fit，高184.59375、底823.991455。没有替换图片、修改geometry、改变用户视口或产品等待。原测量只等待外层可见，能落在这两个状态之间；image ready仅表示解码完成，适应窗口有其明确真实fit状态。
+
+修复提交acf2b2edd4a88f74e8b671a18e32eb74b780eb84/tree0d3ce4982e24a081cbf964259ea85891cd713aed只有测试3行：窄屏量原box前等待既有data-reading-mode=fit；原bottom<844、内容层切换、URL与水平布局断言保持。没有固定sleep、轮询同一个geometry断言、阈值放宽或runtime修改。src/skills/pyproject完全ca035同字节，两个examples完全65同字节，余238项实际观察按相同范围复用，未另跑本地完整suite；最终必要CI会真实重新执行installed recovery。
+
+诊断harness的null-after-content-layer观察hook INTERNALERROR、scratch递归collection FileExistsError以及最初缺失观察字段的各原log/script也分别保留；它们没有额外产品finding，也不能当case结论。当前新固定acf测试源与实际65安装core的来源分别记录，65wheel/build绝不倒签为acf构建；第六限定独立报告已FINAL PASS；新最终docs与准确新head七CI仍待。
+
+
+[准确acf限定来源](notes-engineering-20261014/installed-fixture-repair/acf-test-fit/acf-scoped-provenance.json)记录新固定测试SHA/tree与三份helper hash；实际core仍为65构建wheel b13629…，246份acf源码/65wheel/当前安装逐字一致。原3viewport case真实3PASS/5.07s，受控image loading→decoded-before-fit→实际fit真实1PASS/2.03s。不是新的acf wheel构建，也未重新执行239全套；第六独立限定复审已FINAL PASS，当前必要CI待准确最终head。
+
+
+[第六code原报告](notes-engineering-20261014/installed-fixture-repair/rc3-02-independent-code-review-round6-acf2b.md)与[第六regression原报告](notes-engineering-20261014/installed-fixture-repair/rc3-02-independent-regression-round6-acf2b.md)均FINAL PASS，仅签固定acf这3行等待的限定影响。code reviewer自执行精准390case与actual installed held-image/完整实际628bytes hash对照；regression reviewer自执行原3viewport、held时fit超时负控与actual continued response/fit对照。各自原harness错误也原样留证，不复用Owner执行冒充本人结果，不宣称本地239全套或remoteCI通过。
+
+当前清单239份copied evidence逐字/hash与raw一致；原53f4的165份既有原件/元数据不变。唯一ledger仅N01–N04/CQ06 findings随新增工程历史更新，原Owner/card/各状态/签名/全局release保持。产品src/skills/pyproject/examples/tests与固定acf零delta，最终docs固定后由root做准确限定终审并运行全部7CI；本卡尚未合并。

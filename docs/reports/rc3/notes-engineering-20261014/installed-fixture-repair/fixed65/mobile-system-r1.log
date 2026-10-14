@@ -1,0 +1,121 @@
+INTERNALERROR> Traceback (most recent call last):
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/main.py", line 330, in wrap_session
+INTERNALERROR>     session.exitstatus = doit(config, session) or 0
+INTERNALERROR>                          ^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/main.py", line 384, in _main
+INTERNALERROR>     config.hook.pytest_runtestloop(session=session)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/logging.py", line 816, in pytest_runtestloop
+INTERNALERROR>     return (yield)  # Run all the tests.
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/terminal.py", line 708, in pytest_runtestloop
+INTERNALERROR>     result = yield
+INTERNALERROR>              ^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>           ^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/main.py", line 408, in pytest_runtestloop
+INTERNALERROR>     item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/warnings.py", line 90, in pytest_runtest_protocol
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/assertion/__init__.py", line 205, in pytest_runtest_protocol
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/unittest.py", line 612, in pytest_runtest_protocol
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/faulthandler.py", line 102, in pytest_runtest_protocol
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>           ^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/runner.py", line 118, in pytest_runtest_protocol
+INTERNALERROR>     runtestprotocol(item, nextitem=nextitem)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/runner.py", line 139, in runtestprotocol
+INTERNALERROR>     reports.append(call_and_report(item, "call", log))
+INTERNALERROR>                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/runner.py", line 254, in call_and_report
+INTERNALERROR>     report: TestReport = ihook.pytest_runtest_makereport(item=item, call=call)
+INTERNALERROR>                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/_pytest/tmpdir.py", line 347, in pytest_runtest_makereport
+INTERNALERROR>     rep = yield
+INTERNALERROR>           ^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 43, in run_old_style_hookwrapper
+INTERNALERROR>     teardown.send(result)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-code-snapshot-65d82/tests/rebuild/conftest.py", line 62, in pytest_runtest_makereport
+INTERNALERROR>     report = outcome.get_result()
+INTERNALERROR>              ^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_result.py", line 103, in get_result
+INTERNALERROR>     raise exc.with_traceback(tb)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+INTERNALERROR>     res = yield
+INTERNALERROR>           ^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 152, in _multicall
+INTERNALERROR>     teardown.send(result)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 43, in run_old_style_hookwrapper
+INTERNALERROR>     teardown.send(result)
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/probe-mobile-case.py", line 16, in pytest_runtest_makereport
+INTERNALERROR>     record['geometry_font']=page.evaluate('''() => ({canvas:document.querySelector('.page-image-viewport').getBoundingClientRect().toJSON(), viewport:{width:innerWidth,height:innerHeight},fontsStatus:document.fonts.status, bodyFont:getComputedStyle(document.body).fontFamily, bodyFontSize:getComputedStyle(document.body).fontSize, devicePixelRatio, scrollY})''')
+INTERNALERROR>                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py", line 9413, in evaluate
+INTERNALERROR>     self._sync(
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+INTERNALERROR>     return task.result()
+INTERNALERROR>            ^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/playwright/_impl/_page.py", line 474, in evaluate
+INTERNALERROR>     return await self._main_frame.evaluate(expression, arg)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/playwright/_impl/_frame.py", line 346, in evaluate
+INTERNALERROR>     await self._channel.send(
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/playwright/_impl/_connection.py", line 76, in send
+INTERNALERROR>     return await self._connection.wrap_api_call(
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+INTERNALERROR>     raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+INTERNALERROR> playwright._impl._errors.Error: Page.evaluate: TypeError: Cannot read properties of null (reading 'getBoundingClientRect')
+INTERNALERROR>     at eval (eval at evaluate (:311:30), <anonymous>:1:62)
+INTERNALERROR>     at UtilityScript.evaluate (<anonymous>:318:18)
+INTERNALERROR>     at UtilityScript.<anonymous> (<anonymous>:1:44)
+
+2 warnings in 1.96s

@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/run-fixed-r3.py", line 19, in <module>
+    try:runpy.run_path(str(source/'examples/workbench/w12_offline_browser.py'),run_name='__main__')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/work/rc3/reviews/rc3-02-docs-snapshot-53f4a/examples/workbench/w12_offline_browser.py", line 176, in <module>
+    main()
+  File "/workspace/work/rc3/reviews/rc3-02-docs-snapshot-53f4a/examples/workbench/w12_offline_browser.py", line 37, in main
+    project, store, historical = fixture(root, args.font)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/work/rc3/reviews/rc3-02-docs-snapshot-53f4a/examples/workbench/w11_browser.py", line 92, in fixture
+    assert report["status"] == "pass", report
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'status': 'fail', 'findings': [{'page_id': 'p1', 'code': 'speaker_notes_mismatch'}], 'pages': [{'page_id': 'p1', 'text_runs': 1, 'native_shapes': 2}], 'notes': [{'slide': 1, 'page_id': 'p1', 'notes': '/Users/synthetic/PRIVATE-CANARY', 'notes_sha256': '3a738d5dfffa3522948fc4910e8006055d4bbb4d7fa5be3d751e7958324a7980'}], 'notes_newlines': 'LF', 'visual_review': 'not_evaluated', 'desktop_editing': 'not_evaluated'}

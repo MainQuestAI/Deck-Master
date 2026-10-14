@@ -1,0 +1,50 @@
+{
+  "nodeid": "tests/rebuild/test_workbench_usability_browser.py::test_reading_prioritizes_artwork_and_preserves_fixed_layers[390-844]",
+  "outcome": "passed",
+  "duration": 0.5025974930031225,
+  "observations": [
+    {
+      "original_box": {
+        "x": 16,
+        "y": 639.5987548828125,
+        "width": 358,
+        "height": 184.1875
+      },
+      "locator": "<Locator frame=<Frame name= url='http://127.0.0.1:45265/#project=d160d6199e79ae4cd86898ba15b6c31bb2ea6ab54d4250229248c10e0660429a&surface=page&layer=svg&zoom=1&revision=a4e4e103545d4b8780179f1ea7afd2ef&page=p01'> selector='.page-image-viewport'>",
+      "at_measurement": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "fontsStatus": "loaded",
+        "bodyFont": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "bodyFontSize": "14px",
+        "devicePixelRatio": 1,
+        "scrollY": 0,
+        "canvas": {
+          "x": 16,
+          "y": 639.5987548828125,
+          "width": 358,
+          "height": 184.390625,
+          "top": 639.5987548828125,
+          "right": 374,
+          "bottom": 823.9893798828125,
+          "left": 16
+        }
+      }
+    }
+  ],
+  "browser_version": "151.0.7922.173",
+  "call_end": {
+    "canvas": null,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "fontsStatus": "loaded",
+    "bodyFont": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+    "bodyFontSize": "14px",
+    "devicePixelRatio": 1,
+    "scrollY": 0
+  }
+}

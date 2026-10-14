@@ -1,0 +1,27 @@
+............................F........................................... [ 30%]
+........................................................................ [ 60%]
+........................................................................ [ 90%]
+.......................                                                  [100%]
+=================================== FAILURES ===================================
+_____ test_reading_prioritizes_artwork_and_preserves_fixed_layers[390-844] _____
+
+workbench = (<Page url='http://127.0.0.1:32961/#project=173e78a99094ddb0a1e539dd95bec65949d46bf5018e94fc44391a7cfd733544&surface=p...e.Store object at 0x7f8c1a925cd0>, 'http://127.0.0.1:32961/', <function workbench.<locals>.goto at 0x7f8c183c1e40>, [])
+width = 390, height = 844
+
+    @pytest.mark.parametrize('width,height', [(390, 844), (1280, 800), (1440, 900)])
+    def test_reading_prioritizes_artwork_and_preserves_fixed_layers(workbench, width, height):
+        page, _, store, _, goto, _ = workbench
+        page.set_viewport_size({'width': width, 'height': height})
+        goto()
+        canvas = page.locator('.page-image-viewport')
+        expect(canvas).to_be_visible()
+        if width == 390:
+            box = canvas.bounding_box()
+>           assert box['y'] + box['height'] < height, box
+E           AssertionError: {'x': 16, 'y': 639.8056640625, 'width': 358, 'height': 208.99993896484375}
+E           assert (639.8056640625 + 208.99993896484375) < 844
+
+tests/rebuild/test_workbench_usability_browser.py:19: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_workbench_usability_browser.py::test_reading_prioritizes_artwork_and_preserves_fixed_layers[390-844]
+1 failed, 238 passed in 797.48s (0:13:17)
