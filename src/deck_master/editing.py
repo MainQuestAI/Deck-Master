@@ -69,6 +69,9 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
                 continue
             info = {'role': role, 'page_id': page_id,
                     'file_sha': content_sha, 'current': key in current_refs}
+            if role == 'page':
+                from .visual_dependencies import page_visual_digest
+                info['visual_sha'] = page_visual_digest(obj)
             # Ephemeral interpretation of actual immutable manuscript objects.
             # A deck-level preproduction fix needs changed content, not only a
             # version/previous_ref or production-note hash change. No extra
@@ -119,6 +122,41 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
         except (KeyError, ValueError, StoreError, zipfile.BadZipFile):
             continue
     artifacts['_subjects'] = subject_info
+    # Historical Page references stay historical. Only named visual consumers
+    # may use an actual, schema-valid equivalent Page as their current basis.
+    from .visual_dependencies import page_visual_equivalent
+    visual_aliases = {}
+    notes_aliases = {}
+    for entry in doc.get('pages') or []:
+        current = store.read_object_json(entry['page'])
+        for key, info in subject_info.items():
+            if info.get('role') != 'page' or info.get('page_id') != entry['page_id']:
+                continue
+            prior_ref = {'path': key[0], 'sha256': key[1]}
+            if page_visual_equivalent(store, prior_ref, entry['page'], entry['page_id']):
+                visual_aliases.setdefault(entry['page_id'], set()).add(key)
+            prior = store.read_object_json(prior_ref)
+            if notes_only_change(prior, current):
+                notes_aliases.setdefault(f"content:page:{entry['page_id']}", set()).add(key[1])
+    plan_ref = doc.get('content_plan')
+    if plan_ref:
+        current_plan = store.read_object_json(plan_ref)
+        for key, info in subject_info.items():
+            if info.get('role') != 'content_plan':
+                continue
+            prior_plan = store.read_object_json({'path': key[0], 'sha256': key[1]})
+            fields = ('schema_version', 'project_id', 'plan_id', 'origin', 'mode',
+                      'narrative_ref', 'imported_manuscript', 'input', 'basis')
+            if any(prior_plan.get(field) != current_plan.get(field) for field in fields):
+                continue
+            links = prior_plan.get('page_links') or []
+            if (len(links) == len(doc.get('pages') or []) and
+                    [link.get('page_id') for link in links] == current_plan.get('input', {}).get('page_order') and
+                    all((link.get('page_ref') or {}).get('sha256') in
+                        notes_aliases.get(f"content:page:{link.get('page_id')}", set()) for link in links)):
+                notes_aliases.setdefault('content:content_plan', set()).add(key[1])
+    artifacts['_visual_page_aliases'] = visual_aliases
+    artifacts['_preproduction_notes_aliases'] = notes_aliases
     current_asset_ids = {asset.get('asset_id') for asset in design.get('assets') or []}
     missing_asset_deps = {(dep.get('identity'), dep.get('sha256'))
                           for prior_review in historical_reviews
@@ -163,6 +201,8 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
         page = store.read_object_json(entry['page']) if entry.get('page') else {}
         if entry.get('page'):
             artifacts[f'content:page:{page_id}'] = entry['page']['sha256']
+            notes = str(page.get('speaker_notes') or '').replace('\r\n', '\n').replace('\r', '\n')
+            artifacts[f'content:page_notes:{page_id}'] = sha256_bytes(notes.encode('utf-8'))
         if page:
             from .production import style_font_fingerprint
             _, style = resolve_design(page, design, design.get('assets') or [])
@@ -302,11 +342,19 @@ def _eligibility_guard(store, action, targets=None, context=None):
 
 
 def edit_page(project_dir, *, page, base_revision, page_hash, operation_id):
-    # A direct page edit is an adoption boundary: the edited page must be inside
-    # the request's authorized pages/layers like any other write.
-    _eligibility_guard(Store(Path(project_dir).expanduser()), "page.edit",
-                       {"page_ids": [page.get("page_id")], "layers": ["page_copy"]})
     return _edit(Store(project_dir),page=check_page(page),base_revision=base_revision,page_hash=page_hash,operation_id=operation_id)
+
+
+def notes_only_change(before, after):
+    """Only the actual notes and their codepoint mapping may differ."""
+    def remaining(page):
+        value = copy.deepcopy(page)
+        value.pop('speaker_notes', None)
+        if isinstance(value.get('content_mapping'), dict):
+            value['content_mapping'].pop('speech_segments', None)
+        return value
+    return remaining(before) == remaining(after)
+
 
 @_project_transaction
 def _edit(store, *, page, base_revision, page_hash, operation_id):
@@ -322,21 +370,41 @@ def _edit(store, *, page, base_revision, page_hash, operation_id):
     # Disjoint page edits can rebase, but design changes cannot.
     base=store.load_document(base_revision)
     if base['design_context']!=doc['design_context']:raise ConflictError('design_context','design moved since edit began')
-    updated=bump_revision(doc,{'operation_id':operation_id,'kind':'content_update','description':'edit '+page['page_id'],'read_set':[]})
+    before = store.read_object_json(entry['page'])
+    notes_only = notes_only_change(before, page)
+    _eligibility_guard(store, "page.edit", {
+        "page_ids": [page['page_id']], "layers": ['speech'] if notes_only else ['page_copy']})
+    updated=bump_revision(copy.deepcopy(doc),{'operation_id':operation_id,'kind':'content_update','description':'edit '+page['page_id'],'read_set':[]})
+    if doc.get('collaboration') or notes_only or bool(page.get('speaker_notes')):
+        from .models import require_writer
+        require_writer(updated, 'rc3.v1')
     for e in updated['pages']:
         if e['page_id']==page['page_id']:
             e['page']=store.put_json_object(page)
-            e['svg']=e['svg_preview']=e['ppt_preview']=None
+            e['ppt_preview']=None
+            if not notes_only:
+                e['svg']=e['svg_preview']=None
+    plan_ref = doc.get('content_plan')
+    if plan_ref:
+        plan = store.read_object_json(plan_ref)
+        if (plan.get('schema_version') == 'content_plan.v2' and
+                plan.get('mode') in ('bound', 'imported_mapping')):
+            from .content_plan import attach, refresh_v2_plan_links
+            attach(updated, refresh_v2_plan_links(
+                store, doc, {}, plan, updated['pages'], previous_ref=plan_ref))
     updated['outputs']={key:None for key in doc['outputs']}
+    from .tasks import task_inputs_current
     for i,ref in enumerate(updated['tasks']):
         task=store.read_object_json(ref)
-        if page['page_id'] in task['scope_pages'] and task['status'] in ('awaiting_host','running'):
+        if (page['page_id'] in task['scope_pages'] and
+                task['status'] in ('queued','awaiting_host','running') and
+                (not notes_only or not task_inputs_current(store, updated, task))):
             task['status']='superseded';updated['tasks'][i]=store.put_json_object(task)
     store._commit_locked(base_revision=doc['revision_id'],document=updated,operation_id=operation_id,blobs=[])
     return {'status':'edited','revision_id':updated['revision_id'],'next_action':'continue','preserved_blueprint':entry['blueprint']}
 
 
-def export_project(project_dir, *, output_dir, purpose='working', revision=None, export_id=None):
+def export_project(project_dir, *, output_dir, purpose='working', revision=None, export_id=None, notes_policy=None):
     """Export a frozen public copy or explicitly internal recovery package."""
     from .exports import create
     if purpose == "delivery":
@@ -348,7 +416,8 @@ def export_project(project_dir, *, output_dir, purpose='working', revision=None,
                            {"expected_output_ref": (None if revision else
                                                     (Store(Path(project_dir).expanduser())
                                                      .load_document().get("outputs") or {}).get("pptx"))})
-    return create(project_dir, output_dir=output_dir, purpose=purpose, revision=revision, export_id=export_id)
+    return create(project_dir, output_dir=output_dir, purpose=purpose, revision=revision,
+                  export_id=export_id, notes_policy=notes_policy)
 
 
 def _history_row(document, parent):

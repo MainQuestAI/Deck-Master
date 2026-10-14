@@ -329,10 +329,13 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument('--revision', help='Freeze a committed snapshot; defaults to current at start')
     export.add_argument('--export-id', help='Retry the same frozen export ID and revision')
     export.add_argument('--purpose', choices=['review','working','delivery','engineering'], default='review')
+    export.add_argument('--notes-policy', choices=['pptx_notes', 'separate_script', 'both', 'pure_reading'],
+                        help='Optional delivery container choice; default follows the selected Page/Plan policy')
     handoff = sub.add_parser('handoff-check')
     handoff.add_argument('--project', required=True)
     handoff.add_argument('--file', required=True)
     handoff.add_argument('--purpose', choices=['review','delivery'], default='review')
+    handoff.add_argument('--notes-policy', choices=['pptx_notes', 'separate_script', 'both', 'pure_reading'])
     history = sub.add_parser('history')
     history_sub = history.add_subparsers(dest='history_command', required=True)
     history_list = history_sub.add_parser('list')
@@ -449,13 +452,14 @@ def main(argv: list[str] | None = None) -> int:
             if rejected is not None:
                 return rejected
             from .editing import export_project
-            return _emit(export_project(options.project,output_dir=options.out,purpose=options.purpose,revision=options.revision,export_id=options.export_id))
+            return _emit(export_project(options.project,output_dir=options.out,purpose=options.purpose,revision=options.revision,export_id=options.export_id,notes_policy=options.notes_policy))
         if options.command == 'handoff-check':
             rejected = _reject_legacy_run(options.project)
             if rejected is not None:
                 return rejected
             from .handoff import check_handoff
-            result = check_handoff(options.project, file_path=options.file, purpose=options.purpose)
+            result = check_handoff(options.project, file_path=options.file, purpose=options.purpose,
+                                   notes_policy=options.notes_policy)
             _emit(result)
             return 0 if result['status'] == 'verified' else 3
         if options.command == "create":

@@ -147,6 +147,13 @@ def preview_svg_page(project_dir, page_id):
 def readback(pptx_path,pages,expected_pages):
     ns={'a':'http://schemas.openxmlformats.org/drawingml/2006/main','p':'http://schemas.openxmlformats.org/presentationml/2006/main'}
     findings=[];stats=[]
+    from .compiler.native import notes_records, normalize_notes
+    actual_notes = notes_records(pptx_path)
+    for row, page in zip(actual_notes, expected_pages):
+        if row['page_id'] != page['page_id']:
+            findings.append({'page_id': page['page_id'], 'code': 'notes_page_identity_mismatch'})
+        if row['notes'] != normalize_notes(page.get('speaker_notes', '')):
+            findings.append({'page_id': page['page_id'], 'code': 'speaker_notes_mismatch'})
     normalize=lambda t:''.join(str(t).split())
     with zipfile.ZipFile(pptx_path) as z:
         presentation=ET.fromstring(z.read('ppt/presentation.xml'))
@@ -263,7 +270,9 @@ def readback(pptx_path,pages,expected_pages):
                                                f'd(end,to)={d_end_to**0.5/9525:.1f}px '
                                                f'(tolerance {ENDPOINT_TOLERANCE_PX}px)'})
             stats.append({'page_id':page['page_id'],'text_runs':len(texts),'native_shapes':len(root.findall('.//p:sp',ns))})
-    return {'status':'fail' if findings else 'pass','findings':findings,'pages':stats,'visual_review':'not_evaluated','desktop_editing':'not_evaluated'}
+    return {'status':'fail' if findings else 'pass','findings':findings,'pages':stats,
+            'notes': actual_notes, 'notes_newlines': 'LF',
+            'visual_review':'not_evaluated','desktop_editing':'not_evaluated'}
 
 def output_matches_current_svg(store, document):
     """A retained PPT is usable only when its ordered SVG dependencies match.
@@ -278,7 +287,18 @@ def output_matches_current_svg(store, document):
     dependencies = [(d.get('identity'), d.get('sha256'))
                     for d in artifact.get('dependencies', []) if d.get('kind') == 'svg']
     expected = [(e['page_id'], (e.get('svg') or {}).get('sha256')) for e in document['pages']]
-    return bool(dependencies) and dependencies == expected
+    notes = [(d.get('identity'), d.get('sha256')) for d in artifact.get('dependencies', [])
+             if d.get('kind') == 'content' and str(d.get('identity', '')).startswith('page_notes:')]
+    from .compiler.native import normalize_notes
+    from .models import sha256_bytes
+    expected_notes = [('page_notes:' + e['page_id'], sha256_bytes(normalize_notes(
+        store.read_object_json(e['page']).get('speaker_notes', '')).encode('utf-8')))
+        for e in document['pages']]
+    # Existing pre-RC3 empty-notes outputs remain readable, without claiming
+    # that an old compiler consumed nonempty Page notes.
+    notes_match = notes == expected_notes if notes else all(
+        not store.read_object_json(e['page']).get('speaker_notes') for e in document['pages'])
+    return bool(dependencies) and dependencies == expected and notes_match
 
 
 def produce(project_dir, *, base_revision=None, operation_id=None):
@@ -312,7 +332,7 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
             mapping=page_asset_paths(store,doc,entry,work)
             approved[entry['page_id']]=mapping
             path=work/f'page-{index+1}.svg';path.write_bytes(data)
-            inputs.append(SvgInput(entry['page_id'],path));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
+            inputs.append(SvgInput(entry['page_id'],path,page.get('speaker_notes', '')));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
             preview_path=work/f'preview-input-{index+1}.svg';preview_path.write_bytes(
                 preview_svg_bytes(data, page_id=entry['page_id'], assets=mapping));preview_inputs.append(preview_path)
             expected.append(page)
@@ -324,11 +344,18 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
         report=readback(compiled.pptx_path,parsed,expected)
         report_path=work/'readback.json';report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2))
         deps=[{'kind':'svg','identity':e['page_id'],'sha256':e['svg']['sha256']} for e in doc['pages']]
+        svg_deps = list(deps)
+        from .compiler.native import normalize_notes
+        from .models import sha256_bytes, require_writer
+        deps.extend({'kind': 'content', 'identity': 'page_notes:' + e['page_id'],
+                     'sha256': sha256_bytes(normalize_notes(p.get('speaker_notes', '')).encode('utf-8'))}
+                    for e, p in zip(doc['pages'], expected, strict=True))
         new=bump_revision(doc,{'operation_id':operation_id or 'production-'+uuid.uuid4().hex,'kind':'artifact_adoption','description':'native compile, dual rendering and actual PPT readback','read_set':[]})
+        require_writer(new, 'rc3.v1')
         for i,entry in enumerate(new['pages']):
             preview=work/f'svg-{i+1}.png';run([executable('rsvg-convert'),str(preview_inputs[i]),'-o',str(preview)])
             if not entry.get('svg_preview'):
-                entry['svg_preview']=artifact(store,preview,'svg_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
+                entry['svg_preview']=artifact(store,preview,'svg_preview',page_id=entry['page_id'],dependencies=svg_deps,derived_from=[entry['svg']])
             entry['ppt_preview']=artifact(store,renders[i],'ppt_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
         for i, ref in enumerate(new['tasks']):
             task = store.read_object_json(ref)

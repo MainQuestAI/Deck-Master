@@ -256,8 +256,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path=='/api/exports':
                 from . import exports
                 from .operations import OperationError
-                if set(data)-{'purpose','revision','export_id'}:
-                    raise OperationError('invalid_export_request','body','only purpose, revision and export_id are accepted')
+                if set(data)-{'purpose','revision','export_id','notes_policy'}:
+                    raise OperationError('invalid_export_request','body','only purpose, revision, export_id and notes_policy are accepted')
                 result=exports.create(self.store.project_root,**data)
             elif self.path=='/api/export':
                 import uuid

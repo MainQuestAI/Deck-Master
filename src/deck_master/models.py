@@ -351,7 +351,10 @@ def require_task_binding(document: dict[str, Any], task: dict[str, Any]) -> None
     """MIGRATION §2.2: newly dispatched tasks in a collaboration.v1 project
     must carry a valid collaboration binding (current request, and any bound
     authorization/decision must be referenced by the current region)."""
-    if not writer_at_least(document, "collaboration.v1"):
+    if not collaboration_required(document):
+        if task.get('collaboration_binding') is not None:
+            raise ModelError('task/collaboration_binding',
+                             'a collaboration task needs an actual migrated control region')
         return
     binding = task.get("collaboration_binding")
     if not binding:
@@ -510,7 +513,7 @@ def validate_compose_result_semantics(result: dict[str, Any]) -> None:
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
                "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
-               "collaboration.v1": 11}
+               "collaboration.v1": 11, "rc3.v1": 12}
 
 
 def require_writer(document, minimum):
@@ -530,6 +533,16 @@ def _writer_rank_of(document) -> int:
 
 def writer_at_least(document, minimum: str) -> bool:
     return _writer_rank_of(document) >= WRITER_RANK[minimum]
+
+
+def collaboration_required(document) -> bool:
+    """A feature support floor does not manufacture a historical migration.
+
+    A real region remains mandatory once it exists; the original collaboration
+    writer also keeps its mandatory initial-region contract.
+    """
+    return (document.get('collaboration') is not None or
+            document.get('compatibility', {}).get('minimum_writer') == 'collaboration.v1')
 
 
 # Central registry of accepted proposal projections (CONTRACTS §3.1). A
@@ -674,15 +687,16 @@ def validate_document_structure(document: dict[str, Any]) -> None:
     validate_schema("document", document)
     if document.get("narrative"):
         validate_ref(document["narrative"], where="document/narrative")
-        if not writer_at_least(document, "collaboration.v1"):
+        if (not writer_at_least(document, "collaboration.v1") or
+                document.get('collaboration') is None):
             raise ModelError("document/compatibility",
-                             "a Narrative pointer requires the collaboration.v1 writer boundary")
+                             "a Narrative pointer requires the collaboration.v1 writer boundary and real control region")
     if document.get("collaboration") is not None:
         if not writer_at_least(document, "collaboration.v1"):
             raise ModelError("document/compatibility",
                              "the collaboration region requires the collaboration.v1 writer boundary")
         validate_collaboration_region(document["collaboration"])
-    elif writer_at_least(document, "collaboration.v1"):
+    elif collaboration_required(document):
         raise ModelError("document/collaboration",
                          "the collaboration.v1 writer boundary requires the collaboration region")
     if document.get("content_plan"):

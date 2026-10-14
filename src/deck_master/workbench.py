@@ -242,9 +242,31 @@ def _applicability(ctx, entry, artifact):
     """Report the checks supported by stored bindings, never synthesize a basis."""
     changed, checked, unknown = [], [], []
     generated = (artifact.get("provenance") or {}).get("generated_from_page")
+    visual_role = artifact.get('role') in ('blueprint', 'svg', 'svg_preview')
+    from .visual_dependencies import page_visual_equivalent
+    def page_equivalent(ref, target):
+        return bool(visual_role and target and ref and page_visual_equivalent(
+            ctx.store, ref, target.get('page'), target['page_id']))
+    def historic_page_ref(target, digest):
+        if not target:
+            return None
+        if generated and generated.get('sha256') == digest and target['page_id'] == entry['page_id']:
+            return generated
+        node, seen = ctx.document, set()
+        while node and node['revision_id'] not in seen:
+            seen.add(node['revision_id'])
+            for page_entry in node.get('pages') or []:
+                if page_entry['page_id'] == target['page_id'] and page_entry['page']['sha256'] == digest:
+                    return page_entry['page']
+            parent = node.get('parent_revision_id')
+            try:
+                node = ctx.store.load_document(parent) if parent else None
+            except READ_FAILURES:
+                return None
+        return None
     if generated:
         checked.append("generated_from_page")
-        if generated != entry.get("page"):
+        if generated != entry.get("page") and not page_equivalent(generated, entry):
             changed.append("content")
     for dep in artifact.get("dependencies") or []:
         kind, identity = dep.get("kind"), dep.get("identity", "")
@@ -263,7 +285,8 @@ def _applicability(ctx, entry, artifact):
                 unknown.append(kind)
                 continue
         if dep.get("sha256") not in hashes:
-            changed.append(kind)
+            if role != 'page' or not page_equivalent(historic_page_ref(target, dep.get('sha256')), target):
+                changed.append(kind)
     return {"status": "basis_changed" if changed else "unknown" if unknown or not checked else "current",
             "changed": sorted(set(changed)), "checked": sorted(set(checked)),
             "unverified": sorted(set(unknown)), "source": "stored_bindings"}
@@ -324,11 +347,13 @@ def _deck_output(ctx):
         deps = [d for d in artifact.get("dependencies") or [] if d.get("kind") == "svg"]
         expected = [(e["page_id"], (e.get("svg") or {}).get("sha256")) for e in ctx.document.get("pages") or []]
         recorded = [(d.get("identity"), d.get("sha256")) for d in deps]
+        from .pipeline import output_matches_current_svg
+        matches = bool(deps and recorded == expected and output_matches_current_svg(ctx.store, ctx.document))
         result.update(file=_copy_json(artifact["file"]), file_integrity="checked_on_file_read",
                       ordered_pages=[{"page_id": pid, "svg_sha256": digest} for pid, digest in recorded],
                       relation="known" if deps else "unknown",
-                      applicability="current" if deps and recorded == expected else "basis_changed" if deps else "unknown",
-                      basis="artifact.dependencies in stored order")
+                      applicability="current" if matches else "basis_changed" if deps else "unknown",
+                      basis="ordered SVG and actual Page notes consumption")
     except READ_FAILURES:
         result.update(existence="unreadable", error=object_error())
     return result

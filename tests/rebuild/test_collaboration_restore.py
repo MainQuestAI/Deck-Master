@@ -160,7 +160,7 @@ def test_restore_to_pre_migration_snapshot_preserves_current_control(tmp_path):
     assert after["collaboration"]["request"]["request_id"] == \
         control["collaboration"]["request"]["request_id"]
     assert after["policy"]["user_stop"] is True
-    assert after["compatibility"]["minimum_writer"] == "collaboration.v1"
+    assert after["compatibility"]["minimum_writer"] == "rc3.v1"
     task = store.read_object_json(after["tasks"][0])
     assert task["status"] == "completed"
     assert task["call_allowances"][0]["state"] == "consumed"

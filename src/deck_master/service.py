@@ -28,7 +28,7 @@ from .content import normalize_design_assets, check_page
 from .errors import (ImportRequiresPhasedPath, InputRevisionConflict, SourceUnreadable,
                      SourceUnsupported)
 from .method_resources import method_release, method_resources
-from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics, writer_at_least
+from .models import bump_revision, canonical_json_bytes, compute_input_digest, content_identity, input_alignment, new_document, sha256_bytes, validate_document_semantics, writer_at_least, collaboration_required
 from .sources import discover_sources, read_source_snapshot
 from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
@@ -228,7 +228,7 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     eligibility.guard(store, store_document, "import_draft",
                       context={"targets": {"page_ids": [page.get("page_id") for page in pages],
                                            "layers": ["page_copy"]}})
-    if writer_at_least(store_document, "collaboration.v1"):
+    if collaboration_required(store_document):
         # TASKS T03 item P3-3: never dispatch an unbound legacy compose task on a
         # collaboration.v1 project. The legacy envelope carries no request, no
         # collaboration binding and no write scope, and the frozen page_copy
@@ -279,7 +279,7 @@ def revision_compose_task(store: Store, document, *, operation_id, reason, impac
     its concrete claim/page list travels with the instruction, so the
     revision works against named objects instead of a general "inputs changed".
     """
-    if writer_at_least(document, "collaboration.v1"):
+    if collaboration_required(document):
         from .content_production import build_phase_task
         instruction = (f"输入已更新（operation {operation_id}）：{reason}。读取新输入与 diff，"
                        "提交 compose.v2 input_revision：changed_layers、每个变化层的 proposal Ref 与 diff。")
@@ -344,7 +344,7 @@ def open_compose_task(store: Store, document: dict, *, operation_id: str,
     historical compose.v1 dispatch byte-for-byte.
     """
     eligibility.guard(store, document, "dispatch.compose")
-    if writer_at_least(document, "collaboration.v1") and intent != "import_draft":
+    if collaboration_required(document) and intent != "import_draft":
         # An imported draft is already a complete manuscript: it keeps the
         # historical import envelope instead of entering the phased protocol.
         from .content_production import open_phase_task
@@ -885,7 +885,7 @@ def _continue_project(project_dir: Path | str) -> dict:
             pending_tasks=pending,
             next_action="submit_host_results",
         )
-    if writer_at_least(document, "collaboration.v1"):
+    if collaboration_required(document):
         # Phased content production (CONTRACTS §5/§6.3). This plans content
         # phases only; entry-level eligibility enforcement is T04's card.
         from . import content_production

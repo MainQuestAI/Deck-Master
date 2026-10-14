@@ -10,7 +10,7 @@ from . import changes, operations
 from .local_state import project_path
 from .models import bump_revision, require_writer, sha256_bytes, validate_schema
 from .snapshots import load_snapshot
-from .store import Store
+from .store import Store, StoreError
 
 DEFAULT_DIMENSIONS = {'palette': '借用参考页配色', 'typography': '借用参考页文字层级'}
 DIMENSIONS = {'palette': '配色', 'typography': '文字层级', 'density': '密度', 'lines': '线条', 'composition': '构图'}
@@ -294,7 +294,18 @@ def validate_change(store, document, value):
         anchor = anchors.get(pid); entry = next((e for e in document['pages'] if e['page_id'] == pid), None)
         if anchor is None:
             fail('targets', 'target was not explicitly included in this recipe')
-        if not entry or entry['page'] != anchor['page_ref'] or entry.get('blueprint') != anchor['blueprint_ref']:
+        from .visual_dependencies import page_visual_equivalent, plan_visual_projection
+        equivalent = bool(entry and page_visual_equivalent(store, anchor['page_ref'], entry['page'], pid))
+        try:
+            prior = load_snapshot(store, recipe['base_revision'])
+            role_current = plan_visual_projection(store, prior, [pid]) == plan_visual_projection(store, document, [pid])
+            from .production import resolve_design
+            design_current = bool(entry and resolve_design(
+                store.read_object_json(anchor['page_ref']), prior['design_context'], prior['design_context'].get('assets') or []) == resolve_design(
+                    store.read_object_json(entry['page']), document['design_context'], document['design_context'].get('assets') or []))
+        except (StoreError, OSError, ValueError, KeyError, TypeError):
+            role_current = design_current = False
+        if not entry or not equivalent or not role_current or not design_current or entry.get('blueprint') != anchor['blueprint_ref']:
             conflicts.append({'page_id': pid, 'cause': 'target_basis_changed', 'expected': anchor,
                               'current': {'page_ref': entry['page'], 'blueprint_ref': entry.get('blueprint')} if entry else None})
     if conflicts:

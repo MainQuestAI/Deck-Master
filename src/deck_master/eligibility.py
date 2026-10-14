@@ -622,7 +622,8 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
                     "new_protocol": True, "digest": digest, "expected_digest": expected}
     # Registered slices must still match the current document.
     if isinstance(basis, list) and basis:
-        state = dependency_slices.assess_basis(store, document, basis)
+        from .visual_dependencies import assess_visual_task_basis
+        state = assess_visual_task_basis(store, document, task, basis)
         if not state["current"]:
             return {"status": "stale", "reasons": sorted(
                 [item["key"] for item in state["stale"]] +
@@ -883,7 +884,7 @@ _INTENT_STOPS = {
 }
 
 
-def _intent_allows(spec: ActionSpec, request: dict | None) -> str | None:
+def _intent_allows(spec: ActionSpec, request: dict | None, targets=None) -> str | None:
     """Whether the request's own intent/content_intent reaches this action."""
     if request is None:
         return None
@@ -891,7 +892,8 @@ def _intent_allows(spec: ActionSpec, request: dict | None) -> str | None:
     content_intent = request.get("content_intent")
     if spec.name in _INTENT_BLOCKED_ACTIONS.get(intent, ()):
         return _INTENT_STOPS.get(intent, f"request intent {intent!r} does not reach {spec.name!r}")
-    if spec.name in _CONTENT_INTENT_BLOCKED_ACTIONS.get(content_intent, ()):
+    speech_edit = spec.name == "page.edit" and (targets or {}).get("layers") == ["speech"]
+    if spec.name in _CONTENT_INTENT_BLOCKED_ACTIONS.get(content_intent, ()) and not speech_edit:
         return (f"content_intent {content_intent!r} does not reach {spec.name!r}; "
                 "the request must say it wants that production")
     return None
@@ -1028,7 +1030,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
             if request.get("paused") and (spec.production or spec.writes):
                 block("request_paused",
                       request.get("pause_reason") or "the current request is paused")
-            stop = _intent_allows(spec, request)
+            stop = _intent_allows(spec, request, targets)
             if stop:
                 block("scope_exceeded", stop,
                       request_intent=request.get("intent"),

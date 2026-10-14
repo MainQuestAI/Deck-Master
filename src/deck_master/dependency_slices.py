@@ -142,6 +142,16 @@ def _authorization_projection(store, record) -> dict:
 def build_slice(store, document, *, kind, identity, projection, _seen=frozenset(), now=None):
     """Current value of one registered slice, or None when the target is absent
     or the (kind, projection) pair is not registered."""
+    if kind == "artifact" and projection == "visual_input" and identity.startswith("page:"):
+        entry = _find_page(document, identity.split(":", 1)[1])
+        if not entry or not entry.get("page"):
+            return None
+        from .visual_dependencies import page_visual_digest
+        return {"ref": entry["page"], "sha256": page_visual_digest(store.read_object_json(entry["page"]))}
+    if kind == "artifact" and projection == "visual_role" and identity.startswith("plan:"):
+        from .visual_dependencies import plan_visual_projection
+        value = plan_visual_projection(store, document, [identity.split(":", 1)[1]])
+        return None if value is None else {"ref": document["content_plan"], "sha256": _canonical(value)}
     if kind == "task_fact" and projection == "value" and identity in TASK_FACT_IDENTITIES:
         value = (document.get("task") or {}).get(identity)
         return {"ref": None, "sha256": _canonical({"task_fact": identity, "value": value})}

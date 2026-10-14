@@ -11,6 +11,11 @@ function paint(color,alpha=1){
  throw Error('Unsupported translucent color '+color);
 }
 for(const page of input.pages){
+ if(typeof page.page_id!=='string'||(page.speaker_notes!==undefined&&typeof page.speaker_notes!=='string'))throw Error('Invalid stable page identity or notes');
+ // Drawing-only callers may use the historical SVG IR without notes. The
+ // full compile API always provides them and verifies its notes post-pass.
+ // Full notes and page_id are consumed by the shared native API post-pass;
+ // artifact-tool is responsible only for the SVG-derived editable drawing.
  const slide=pres.slides.add(),k=Math.min(input.width/page.width,input.height/page.height);
  const ox=(input.width-page.width*k)/2,oy=(input.height-page.height*k)/2;
  for(const s of page.shapes){

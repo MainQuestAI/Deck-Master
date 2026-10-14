@@ -823,7 +823,7 @@ def test_restore_is_not_refused_by_the_current_stop(tmp_path):
     assert outcome["status"] in ("edited", "restored")
     after = store.load_document()
     assert after["collaboration"]["request"]["paused"] is True
-    assert after["compatibility"]["minimum_writer"] == "collaboration.v1"
+    assert after["compatibility"]["minimum_writer"] == "rc3.v1"
 
 
 def test_control_plane_writes_still_record_while_paused(tmp_path):

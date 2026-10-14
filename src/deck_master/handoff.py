@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import zipfile
 from pathlib import Path
+from pptx.exc import PackageNotFoundError
+from lxml.etree import XMLSyntaxError
 
 from .editing import check_summary
 from .store import Store
 
 
-def check_handoff(project_dir, *, file_path, purpose="review"):
+def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None):
     if purpose not in ("review", "delivery"):
         raise ValueError("purpose must be review or delivery")
     candidate = Path(file_path).expanduser().resolve()
@@ -19,6 +22,8 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
 
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
+    from .exports import resolve_notes_policy, _page_notes
+    resolved_notes = resolve_notes_policy(store, document, notes_policy)
     if purpose == "delivery":
         from . import eligibility
         decision = eligibility.evaluate(store, document, document, "handoff.delivery",
@@ -40,7 +45,9 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
         from .operations import OperationError
         try:
             original = store.read_object_json(output_ref)['file']
-            sanitized_hash = hashlib.sha256(pptx(store.read_object_bytes(original), 'deck.pptx')).hexdigest()
+            notes = _page_notes(store, document)
+            included = notes if resolved_notes['pptx_notes'] and any(p['notes'] for p in notes) else None
+            sanitized_hash = hashlib.sha256(pptx(store.read_object_bytes(original), 'deck.pptx', notes=included)).hexdigest()
         except OperationError:
             pass
     gaps = []
@@ -48,6 +55,24 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
         gaps.append("missing_current_pptx")
     if actual_hash not in (expected_hash, sanitized_hash):
         gaps.append("candidate_not_current_output")
+    from .compiler.native import notes_records
+    try:
+        actual_notes = notes_records(candidate)
+        page_notes = _page_notes(store, document)
+        expected_text = [p['notes'] if resolved_notes['pptx_notes'] else '' for p in page_notes]
+        artifact = store.read_object_json(output_ref) if output_ref else {}
+        notes_aware = any(d.get('kind') == 'content' and str(d.get('identity', '')).startswith('page_notes:')
+                          for d in artifact.get('dependencies') or [])
+        strict_notes = notes_policy is not None or notes_aware or any(expected_text)
+        if (strict_notes and (len(actual_notes) != len(expected_text) or
+                              [r['notes'] for r in actual_notes] != expected_text)):
+            gaps.append('candidate_notes_policy_mismatch')
+        elif not strict_notes and any(r['notes'] for r in actual_notes):
+            gaps.append('candidate_notes_policy_mismatch')
+        elif any(expected_text) and [r['page_id'] for r in actual_notes] != [p['page_id'] for p in page_notes]:
+            gaps.append('candidate_notes_page_identity_mismatch')
+    except (ValueError, KeyError, zipfile.BadZipFile, PackageNotFoundError, XMLSyntaxError):
+        gaps.append('candidate_notes_unreadable')
     for entry in document.get("pages") or []:
         for slot in ("blueprint", "svg", "svg_preview", "ppt_preview"):
             if not entry.get(slot):
@@ -88,6 +113,7 @@ def check_handoff(project_dir, *, file_path, purpose="review"):
         "project_id": document["project_id"],
         "revision_id": document["revision_id"],
         "purpose": purpose,
+        "notes_policy": resolved_notes,
         "file": str(candidate),
         "file_sha256": actual_hash,
         "current_pptx_sha256": expected_hash,

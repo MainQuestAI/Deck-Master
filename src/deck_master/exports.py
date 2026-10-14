@@ -13,7 +13,7 @@ import zipfile
 
 from . import operations
 from .errors import InputReconciliationPending
-from .export_sanitize import sanitize, text_safe
+from .export_sanitize import sanitize, text_safe, pptx as sanitize_pptx, link_safe
 from .local_state import local_lock, safe_path
 from .models import canonical_json_bytes, input_alignment, page_limit_violation, sha256_bytes, validate_ref, validate_schema
 from .snapshots import load_snapshot, _snapshot
@@ -233,7 +233,64 @@ def _artifact(store, ref, role, page_id):
     return value
 
 
+def resolve_notes_policy(store, document, notes_policy=None):
+    """Resolve a projection choice against this exact selected snapshot."""
+    choices = ('pptx_notes', 'separate_script', 'both', 'pure_reading')
+    if notes_policy is not None and notes_policy not in choices:
+        raise ExportError('invalid_notes_policy', 'choose pptx_notes, separate_script, both or pure_reading',
+                          exit_code=2, http_status=422)
+    plan_ref = document.get('content_plan')
+    plan = store.read_object_json(plan_ref) if plan_ref else {}
+    if plan_ref:
+        from .models import validate_content_plan_semantics
+        validate_content_plan_semantics(plan)
+    speech = (plan.get('input') or {}).get('speech_policy') or plan.get('speech_policy') or {}
+    if speech and plan.get('mode') in ('bound', 'imported_mapping'):
+        links = plan.get('page_links') or []
+        expected_links = {entry['page_id']: entry['page'] for entry in document['pages']}
+        actual_links = {link.get('page_id'): link.get('page_ref') for link in links}
+        if len(actual_links) != len(links) or actual_links != expected_links:
+            raise ExportError('export_notes_mapping_invalid', 'selected Plan does not bind the exact current Page set', exit_code=4)
+    if speech:
+        from .content_production import speech_policy as effective_speech_policy
+        effective = effective_speech_policy(document, plan_input=plan.get('input') or {'speech_policy': speech})
+    else:
+        # A projection of existing notes creates no new speech instruction.
+        effective = {'mode': 'none', 'output': 'none'}
+    mode = effective['mode']
+    selected = notes_policy
+    source = 'explicit' if selected is not None else 'plan' if speech else 'preserve_existing'
+    if selected is None:
+        selected = effective['output'] if mode != 'none' else None
+        if selected not in choices:
+            selected = 'pptx_notes'
+    from .compiler.native import normalize_notes
+    pages = []
+    for entry in document['pages']:
+        page = store.read_object_json(entry['page'])
+        if page['page_id'] != entry['page_id']:
+            raise ExportError('export_notes_mapping_invalid', 'Page identity differs from selected Document', exit_code=4)
+        text = normalize_notes(page.get('speaker_notes', ''))
+        pages.append({'page_id': entry['page_id'], 'page_sha256': entry['page']['sha256'],
+                      'notes_sha256': sha256_bytes(text.encode('utf-8'))})
+    if len({p['page_id'] for p in pages}) != len(pages):
+        raise ExportError('export_notes_mapping_invalid', 'selected Page IDs must be unique', exit_code=4)
+    return {'selection': selected, 'source': source, 'speech_mode': mode,
+            'plan_sha256': plan_ref['sha256'] if plan_ref else None, 'newlines': 'LF',
+            'pptx_notes': selected in ('pptx_notes', 'both'),
+            'separate_script': selected in ('separate_script', 'both'), 'pages': pages}
+
+
+def _page_notes(store, doc):
+    from .compiler.native import normalize_notes
+    return [{'page_id': entry['page_id'],
+             'title': store.read_object_json(entry['page'])['customer_visible'].get('title', ''),
+             'notes': normalize_notes(store.read_object_json(entry['page']).get('speaker_notes', ''))}
+            for entry in doc['pages']]
+
+
 def _write_public(store, doc, target, report):
+    notes_policy = report['notes_policy']
     headings = []
     original_hashes = {}
     for i, entry in enumerate(doc["pages"], 1):
@@ -257,8 +314,24 @@ def _write_public(store, doc, target, report):
     if doc["outputs"].get("pptx"):
         artifact = _artifact(store, doc["outputs"]["pptx"], "pptx", None)
         ref = artifact["file"]
-        (target / "deck.pptx").write_bytes(sanitize(store.read_object_bytes(ref), ".pptx", "deck.pptx"))
+        notes = _page_notes(store, doc)
+        included = notes if notes_policy['pptx_notes'] and any(p['notes'] for p in notes) else None
+        (target / "deck.pptx").write_bytes(sanitize_pptx(store.read_object_bytes(ref), 'deck.pptx', notes=included))
         original_hashes["deck.pptx"] = ref["sha256"]
+    if notes_policy['separate_script']:
+        pages = _page_notes(store, doc)
+        for page in pages:
+            text_safe(page['title'], 'speaker-script/title')
+            text_safe(page['notes'], 'speaker-script/notes')
+            for url in re.findall(r'https?://[^\s<>]+', page['notes'], re.I):
+                link_safe(url, 'speaker-script/notes/link')
+        script = {'schema_version': 'speaker_script_projection.v1', 'revision_id': doc['revision_id'],
+                  'purpose': report['purpose'], 'newlines': 'LF', 'pages': pages}
+        (target / 'speaker-script.json').write_bytes(canonical_json_bytes(script))
+        # A readable view and its exact structured pairing are two projections
+        # of the same Page truth; edits must be written back to Page notes.
+        script_text = '\n\n'.join(f"[{page['page_id']}] {page['title']}\n{page['notes']}" for page in pages)
+        (target / 'speaker-script.txt').write_text(script_text, encoding='utf-8', newline='\n')
     (target / "review.html").write_text(
         '<!doctype html><html lang="en"><meta charset="utf-8"><title>Fixed revision review</title><body><h1>Review '
         + html.escape(doc["revision_id"])
@@ -345,10 +418,14 @@ def variant_metadata(store, doc):
     }
 
 
-def _bundle(store, doc, identity, purpose, export_id, target):
+def _bundle(store, doc, identity, purpose, export_id, target, notes_policy):
     facts = _facts(store, doc)
     _gate(store, doc, facts, purpose)
     report = _public_report(doc, facts, purpose)
+    report['notes_policy'] = notes_policy
+    if purpose != 'engineering':
+        report['package_notice'] = 'Public copy with the recorded presenter-notes policy; internal materials and prompts excluded.'
+        report['metadata_cleanup'] = 'Hidden properties, original notes metadata and comments removed; only selected Page notes are projected.'
     originals = {}
     if purpose == "engineering":
         _write_engineering(store, doc, target)
@@ -370,6 +447,10 @@ def _bundle(store, doc, identity, purpose, export_id, target):
         "files": files,
         "excluded": ["runtime_authentication", "service_state", "locks", "personal_ui_drafts"],
         "metadata_policy": "original_internal" if purpose == "engineering" else "sanitized_public_copy",
+        "notes_policy": notes_policy,
+        "request_sha256": sha256_bytes(canonical_json_bytes({
+            'project_identity': identity, 'revision_id': doc['revision_id'],
+            'purpose': purpose, 'notes_policy': notes_policy})),
     }
     variant = variant_metadata(store, doc)
     if variant is not None:
@@ -385,7 +466,7 @@ def _bundle(store, doc, identity, purpose, export_id, target):
 
 
 @operations.public
-def create(project, *, purpose="review", revision=None, export_id=None, output_dir=None):
+def create(project, *, purpose="review", revision=None, export_id=None, output_dir=None, notes_policy=None):
     if purpose == "working":
         purpose = "review"
     if purpose not in ("review", "delivery", "engineering"):
@@ -394,6 +475,7 @@ def create(project, *, purpose="review", revision=None, export_id=None, output_d
         export_id = "export-" + str(uuid.uuid4())
     _id(export_id)
     store, doc, identity = _context(project, revision)
+    resolved_notes = resolve_notes_policy(store, doc, notes_policy)
     if purpose == "delivery":
         # One delivery judgement for every entry (CONTRACTS §8): the selected
         # artifact snapshot read under the current control determines whether
@@ -411,12 +493,14 @@ def create(project, *, purpose="review", revision=None, export_id=None, output_d
     with local_lock(safe_path(cache, "exports.lock")):
         if final.exists():
             result = _record(store, identity, export_id)
-            if result["revision_id"] != doc["revision_id"] or result["purpose"] != purpose:
+            old_policy = result['manifest'].get('notes_policy')
+            if (result["revision_id"] != doc["revision_id"] or result["purpose"] != purpose
+                    or (old_policy != resolved_notes and (old_policy is not None or notes_policy is not None))):
                 raise ExportError("export_id_conflict", "export ID already belongs to another fixed request", exit_code=5)
         else:
             stage = Path(tempfile.mkdtemp(prefix=".export-", dir=cache))
             try:
-                manifest, filename = _bundle(store, doc, identity, purpose, export_id, stage)
+                manifest, filename = _bundle(store, doc, identity, purpose, export_id, stage, resolved_notes)
                 allowed = {v["path"]: {"sha256": v["sha256"], "size": v["size"]} for v in manifest["files"]}
                 for name in ("manifest.json", filename):
                     raw = (stage / name).read_bytes()
@@ -471,6 +555,12 @@ def _record(store, identity, export_id):
         raise ExportError("export_not_found", "export does not belong to this project", exit_code=2, http_status=404)
     validate_schema("export_manifest", result["manifest"])
     manifest = result["manifest"]
+    if manifest.get('request_sha256') is not None:
+        expected_request = sha256_bytes(canonical_json_bytes({
+            'project_identity': identity, 'revision_id': manifest['revision_id'],
+            'purpose': manifest['purpose'], 'notes_policy': manifest.get('notes_policy')}))
+        if manifest['request_sha256'] != expected_request:
+            raise ExportError('export_file_changed', 'export request differs from its recorded notes policy', exit_code=4)
     for key in ("export_id", "project_identity", "revision_id", "purpose"):
         if result.get(key) != manifest[key]:
             raise ExportError("export_file_changed", "export record differs from its manifest", exit_code=4)

@@ -57,11 +57,12 @@ def prepared_input(store, document, task):
     """A proposal, never an assertion that these inputs were sent to a tool."""
     if not is_new(task):
         return None
-    prepared = next((obj for ref in task.get("inputs") or []
-                     if (obj := store.read_object_json(ref)).get("schema_version") == "deck_blueprint_request.v1"), None)
-    if prepared is None:
-        raise _error("generation_request_invalid", "task/inputs", "stored blueprint preparation is missing")
-    from .production import resolve_design
+    from .production import resolve_design, stored_blueprint_request
+    from .models import ModelError
+    try:
+        prepared, _ = stored_blueprint_request(store, task)
+    except ModelError as exc:
+        raise _error("generation_request_invalid", "task/inputs", exc.detail) from exc
     dispatched = load_snapshot(store, task["dispatch_revision"])
     entry = next(p for p in dispatched["pages"] if p["page_id"] == prepared["page_id"])
     page = store.read_object_json(entry["page"])

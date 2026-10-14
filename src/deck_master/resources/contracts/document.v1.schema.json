@@ -888,7 +888,8 @@
             "content-candidates.v1",
             "icon-quality.v1",
             "workbench-quality.v1",
-            "collaboration.v1"
+            "collaboration.v1",
+            "rc3.v1"
           ]
         }
       },
