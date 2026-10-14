@@ -53,7 +53,7 @@ from dataclasses import dataclass
 
 from . import dependency_slices, models, operations
 from .models import ModelError, canonical_json_bytes, sha256_bytes
-from .store import Store
+from .store import Store, StoreError
 
 SCHEMA_VERSION = "eligibility.v1"
 
@@ -80,6 +80,7 @@ REASON_ORDER = (
     "binding_stale",
     # quality
     "needs_reviewer",
+    "preproduction_blocked",
     "professional_review_required",
     # money
     "budget_unknown",
@@ -102,6 +103,7 @@ REASON_MEANINGS = {
     "binding_invalid": "the task's collaboration binding does not name the current request/records",
     "binding_stale": "the task's recomputed eligibility digest differs from its recorded binding digest",
     "needs_reviewer": "the required independent preproduction content review has no acceptable reviewer; a review draft can still be returned",
+    "preproduction_blocked": "the preproduction content review does not pass on the current manuscript (units missing, open findings, or no manuscript yet); a review draft can still be returned",
     "professional_review_required": "delivery policy requires a verified human professional review that the selected artifact does not have",
     "budget_unknown": "an unsettled external call exists project-wide; resolve it before new calls",
     "budget_exhausted": "the authorization's bounded call ceiling has no remaining credit for a new call",
@@ -111,14 +113,8 @@ REASON_MEANINGS = {
 # Extra (non-contract-named) codes this resolver registers, kept explicit so
 # the entry inventory test can assert the set never grows silently.
 EXTRA_REASON_CODES = ("request_closed", "binding_invalid", "binding_stale",
-                      "budget_unknown", "persistence_none", "user_stop")
-
-# The registered decision topics a preproduction content-review delegation
-# covers (AC-R06 "已有审阅委派可复用"). Authorization.delegated_topics is
-# schema-bound to the registered topic vocabulary, so an existing delegation
-# for the manuscript/direction is what the runtime reuses instead of asking
-# for a second review.
-CONTENT_REVIEW_TOPICS = ("manuscript", "direction")
+                      "budget_unknown", "persistence_none", "user_stop",
+                      "preproduction_blocked")
 
 
 # ---------------------------------------------------------------------------
@@ -366,21 +362,15 @@ def normalize_scope(scope: dict | None) -> dict:
 
 
 def binding_eligibility_digest(phase: str, write_scope: dict | None, basis) -> str:
-    """The T03/T04 shared binding digest.
+    """The T03/T04 shared binding digest — one implementation, no drift.
 
-    sha256 over ``canonical_json_bytes({"phase", "write_scope", "basis"})`` with
-    ``basis`` the slice sha256 list sorted by slice key (CONTRACTS §5, §7).
-    Gates recompute a task binding with this exact formula; T03's compose.v2
-    dispatch writes it.
+    The dispatch-side builder (``collaboration_binding.eligibility_digest``)
+    owns the canonical formula; gates recompute through this wrapper so a
+    stamped binding and its re-check can never disagree about slice ordering
+    or scope canonicalisation (the joint gate caught exactly that drift).
     """
-    digests = sorted(
-        (dep.get("sha256") or "") for dep in (basis or [])
-    )
-    return sha256_bytes(canonical_json_bytes({
-        "phase": phase,
-        "write_scope": normalize_scope(write_scope),
-        "basis": digests,
-    }))
+    from .collaboration_binding import eligibility_digest as _canonical
+    return _canonical(phase=phase, write_scope=write_scope or {}, basis=basis)
 
 
 def eligibility_digest(action: str, scope: dict | None, basis) -> str:
@@ -731,6 +721,53 @@ def _covers(store: Store, scope: dict | None, targets: dict | None) -> bool:
     return True
 
 
+def _page_coverage_from_binding(store: Store, request: dict, wanted: dict, task,
+                                control: dict | None = None) -> bool:
+    """Whether a deck request's planner scope already covers the page target.
+
+    A deck request carries no fixed page set until a plan exists
+    (``page_ids=[]`` with no manifest never means "all pages", CONTRACTS §2.1).
+    The adopted plan is the frozen projection of that page manifest (§2.1), so
+    a target wholly inside the current plan's page set is covered by the
+    request's own production intent — including at dispatch time, before the
+    task exists. A bound task materialises the same set (§3.4), and the
+    plan-creating phase (``page_copy``) fixes the set with its own accepted
+    result under the §11.5 atomic swap. Layers must still sit inside the
+    request scope, and anything outside the frozen set stays refused.
+    """
+    scope = request.get("scope") or {}
+    if scope_page_ids(store, scope) is not None:
+        return False  # a fixed request page set is authoritative on its own
+    wanted_layers = set(wanted.get("layers") or [])
+    if not wanted_layers <= set(scope.get("layers") or []):
+        return False
+    wanted_pages = target_page_ids(store, wanted)
+    if not wanted_pages:
+        return False
+    plan_ref = (control or {}).get("content_plan")
+    if plan_ref:
+        try:
+            plan = store.read_object_json(plan_ref)
+        except StoreError:
+            plan = None
+        if isinstance(plan, dict):
+            order = [link.get("page_id") for link in (plan.get("page_links") or [])
+                     if isinstance(link, dict)]
+            if not order:
+                order = list((plan.get("input") or {}).get("page_order") or [])
+            if order and set(wanted_pages) <= set(order):
+                return True
+    binding = (task or {}).get("collaboration_binding") or {}
+    if not binding or binding.get("request_id") != request.get("request_id"):
+        return False
+    bound_pages = scope_page_ids(store, binding.get("write_scope"))
+    if bound_pages is None:
+        # The plan-creating phase writes the page set its own result fixes;
+        # every page still validates inside the variant acceptance (§11.5).
+        return binding.get("phase") == "page_copy"
+    return set(wanted_pages) <= set(bound_pages)
+
+
 def _effective_targets(spec: ActionSpec, targets: dict) -> dict:
     """The concrete target the action must be covered for: the caller's explicit
     targets, plus the action's own declared layers when the caller names none
@@ -794,6 +831,30 @@ def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
             "mode": record.get("mode"),
         })
     return candidates
+
+
+def covering_authorization_ref(store: Store, document: dict, action: str,
+                                targets: dict | None) -> dict | None:
+    """The effective authorization covering one action's execution.
+
+    The precise Ref a dispatched task carries as its binding's
+    ``authorization_ref``: the first effective, covering candidate the gate
+    itself would choose for this action and target (CONTRACTS §3.2, §6.1.4),
+    so revocation and budget attribution follow the grant the work actually
+    runs under. Pure; ``None`` when no authorization names the action or covers
+    the target — an action that needs no authority stays unbound (F01).
+    """
+    try:
+        spec = action_spec(action)
+    except (ModelError, KeyError):
+        return None
+    candidates = _authority_candidates(store, document, spec, targets or {}, None)
+    for candidate in candidates:
+        if not candidate["effective"] or not candidate["covers"]:
+            continue
+        if candidate["mode"] == "execute" or spec.authority in ("delegate", "either"):
+            return candidate["ref"]
+    return None
 
 
 def _family_match(action: str, actions) -> bool:
@@ -863,58 +924,35 @@ def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpe
 
 
 def preproduction_state(store: Store, document: dict) -> dict:
-    """Independent preproduction review requirement and its satisfaction.
+    """The one preproduction content-review verdict, consumed from T03.
 
-    ``independent_model_or_human`` needs a review record whose reviewer type is
-    an independent model or a human; ``host_self`` is only legitimate through
-    the explicit override decision the region already enforces; a confirmed
-    manuscript mapping is ``fidelity_only`` and requires no new review. An
-    existing delegate covering the review topic is reused (AC-R06).
+    T03's ``content_review`` owns the units, the currency, the reviewer
+    identity, the effective failures and the downgrade semantics (CONTRACTS
+    §6.3, §11.6); this resolver no longer keeps a second, weaker judgement.
+    ``satisfied`` is true only when every required unit is covered by an
+    applicable passing review on the current manuscript. An existing delegate
+    covering the review topics is reused to arrange that review (AC-R06) — it
+    never substitutes the review's result, so it cannot satisfy this state.
     """
-    region = _region(document) or {}
-    profile = region.get("quality_profile") or {}
-    requirement = profile.get("content_review_requirement")
-    result = {"requirement": requirement,
-              "requirement_origin": profile.get("requirement_origin"),
-              "required": requirement == "independent_model_or_human",
-              "satisfied": True, "reviews": [], "via": None, "reasons": []}
-    if requirement in (None, "fidelity_only"):
-        return result
-    acceptable = ({"independent_host", "human_internal", "human_external"}
-                  if requirement == "independent_model_or_human"
-                  else {"host_self", "independent_host", "human_internal", "human_external"})
-    from .editing import _current_artifact_digests
-    from .review import dependency_problems
-    artifacts = _current_artifact_digests(store, document)
-    for ref in document.get("reviews") or []:
-        try:
-            review = store.read_object_json(ref)
-        except Exception:  # noqa: BLE001
-            continue
-        if review.get("review_stage") != "preproduction":
-            continue
-        result["reviews"].append({"ref": ref, "review_id": review.get("review_id"),
-                                  "kind": review.get("kind"),
-                                  "reviewer_type": (review.get("reviewer") or {}).get("type"),
-                                  "status": review.get("status")})
-        if (review.get("status") == "pass"
-                and (review.get("reviewer") or {}).get("type") in acceptable
-                and not dependency_problems(review, artifacts)):
-            result.update(satisfied=True, via="review")
-            return result
-    for ref, record in _authorization_heads(store, document):
-        if record.get("mode") != "delegate":
-            continue
-        if not set(CONTENT_REVIEW_TOPICS) & set(record.get("delegated_topics") or []):
-            continue
-        if dependency_slices.authorization_effectiveness(store, document, ref)["effective"]:
-            result.update(satisfied=True, via="delegate")
-            result.setdefault("delegate_ref", ref)
-            return result
-    result["satisfied"] = False
-    result["reasons"] = ["needs_reviewer"] if requirement == "independent_model_or_human" \
-        else ["host_self_override_missing"]
-    return result
+    from . import content_review
+    status = content_review.preproduction_status(store, document)
+    state = status["requirement_state"]
+    qualified = content_review.qualify_for_production(store, document)
+    return {"requirement": state["effective"],
+            "declared_requirement": state["declared"],
+            "requirement_origin": state["origin"],
+            "requirement_reasons": list(state["reasons"]),
+            "required": status["status"] != "no_manuscript",
+            "satisfied": status["status"] == "pass",
+            "status": status["status"],
+            "units": list(status["units"]),
+            "satisfied_units": list(status["satisfied_units"]),
+            "missing_units": list(status["missing_units"]),
+            "blocking_findings": list(status["blocking_findings"]),
+            "review_refs": list(status["review_refs"]),
+            "needs_reviewer": bool(qualified["needs_reviewer"]),
+            "via": "review" if status["status"] == "pass" else None,
+            "reasons": list(state["reasons"])}
 
 
 # ---------------------------------------------------------------------------
@@ -1000,7 +1038,8 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         wanted = dict(targets or {}) if action in ROUTING_ACTIONS \
             else _effective_targets(spec, targets)
         if (wanted.get("layers") or target_page_ids(store, wanted)) \
-                and not _covers(store, request.get("scope"), wanted):
+                and not _covers(store, request.get("scope"), wanted) \
+                and not _page_coverage_from_binding(store, request, wanted, task, control):
             allowed_pages = scope_page_ids(store, request.get("scope"))
             block("scope_exceeded",
                   "the target is outside the current request scope",
@@ -1203,15 +1242,24 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
             block("input_reconciliation_pending",
                   "inputs changed; reconcile the content against the new inputs first")
 
-    # -- preproduction content review (independent dimension) -------------
+    # -- preproduction content review (one T03 verdict for every entry) ----
     preproduction = None
     if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS:
         preproduction = preproduction_state(store, control)
-        if preproduction["required"] and not preproduction["satisfied"]:
-            block("needs_reviewer",
-                  "the independent preproduction content review is missing; "
-                  "a review draft can still be returned, and 'continue' does not waive it",
-                  requirement=preproduction["requirement"])
+        if not preproduction["satisfied"]:
+            code = "needs_reviewer" if preproduction["needs_reviewer"] \
+                else "preproduction_blocked"
+            detail = {"needs_reviewer": "the required preproduction content review has no "
+                                        "acceptable reviewer; a review draft can still be "
+                                        "returned, and 'continue' does not waive it",
+                      "preproduction_blocked": "the preproduction content review does not "
+                                               "pass on the current manuscript; a review "
+                                               "draft can still be returned"}[code]
+            block(code, detail,
+                  requirement=preproduction["requirement"],
+                  review_status=preproduction["status"],
+                  missing_units=preproduction["missing_units"],
+                  open_findings=len(preproduction["blocking_findings"]))
 
     # -- professional delivery policy (never replaced by the review above) --
     delivery = None
@@ -1375,6 +1423,16 @@ def _next_action(primary: dict | None, spec: ActionSpec, targets: dict) -> str |
     if code == "needs_reviewer":
         return ("dispatch the independent preproduction review (or an explicit host_self downgrade "
                 "decision) — the manuscript/review draft stays available meanwhile")
+    if code == "preproduction_blocked":
+        if primary.get("review_status") == "no_manuscript":
+            return ("write the candidate manuscript first; the preproduction review answers "
+                    "for real pages, not for an empty deck")
+        if primary.get("review_status") == "blocked":
+            return ("resolve the open preproduction review findings on the current manuscript "
+                    "before production; a review draft stays available meanwhile")
+        return (f"complete the missing preproduction review units "
+                f"{primary.get('missing_units') or []} on the current manuscript; a review "
+                "draft stays available meanwhile")
     if code == "professional_review_required":
         return ("arrange a verified human professional review of the exact selected PPTX; "
                 "an independent model or host self-review never satisfies it")

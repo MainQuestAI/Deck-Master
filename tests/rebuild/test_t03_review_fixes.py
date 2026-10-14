@@ -279,8 +279,20 @@ def _draft_payload():
 
 def test_import_draft_on_a_collaboration_project_is_blocked_with_recovery(tmp_path):
     project, store = _deck(tmp_path)
-    with pytest.raises(ImportRequiresPhasedPath) as excinfo:
+    # A draft outside the request scope is refused by the boundary's own scope
+    # judgement first (CONTRACTS §6.1 order: eligibility before the route
+    # check), with the concrete authorized/target page lists.
+    from deck_master import eligibility
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         service.import_draft(project, draft_payload=_draft_payload())
+    assert "scope_exceeded" in excinfo.value.payload()["error"]["reason_codes"]
+    # A draft inside the scope still stops on the writer-boundary route check,
+    # which names both real recovery paths instead of faking authority.
+    inside = _draft_payload()
+    inside["pages"][0]["page_id"] = "p1"
+    inside["page_order"] = ["p1"]
+    with pytest.raises(ImportRequiresPhasedPath) as excinfo:
+        service.import_draft(project, draft_payload=inside)
     error = excinfo.value
     assert error.error_code == "import_requires_phased_path" and error.exit_code == 4
     assert "page_copy" in error.detail and "start_request" in error.detail or \

@@ -10,6 +10,8 @@ import hashlib
 
 import pytest
 
+from test_eligibility_enforcement import _settle_preproduction  # noqa: E402  (shared fixture)
+
 from deck_master import collaboration, eligibility, service
 from deck_master.models import (bump_revision, canonical_json_bytes,
                                 content_identity, require_writer, sha256_bytes)
@@ -509,8 +511,9 @@ def test_delegate_covering_the_topic_satisfies_the_decision(tmp_path):
 
 
 def test_authority_insufficient_then_granted(tmp_path):
-    project, store = _project(tmp_path)
+    project, store = _project(tmp_path, pages=True)
     _start(project, store)
+    _settle_preproduction(store, seed="authority-trial")
     blocked = _evaluate(store, "style.trial",
                         targets={"page_ids": ["p1"], "layers": ["design"]})
     assert "authority_insufficient" in blocked["reason_codes"]
@@ -659,8 +662,29 @@ def test_input_reconciliation_pending_blocks_production(tmp_path):
     assert _evaluate(store, "export.review")["allowed"] is True
 
 
+def _put_preproduction_review(store, kind, review_id, *, reviewer_type="independent_host",
+                              operation_id):
+    """One passing preproduction review on the current page bytes (resolver
+    fixture style: the review records themselves are settled, never a binding)."""
+    document = store.load_document()
+    deps = [{"kind": "content", "identity": f"page:{entry['page_id']}",
+             "sha256": entry["page"]["sha256"]} for entry in document.get("pages") or []]
+    review_ref = store.put_json_object({
+        "schema_version": "deck_review.v1", "review_id": review_id, "kind": kind,
+        "review_stage": "preproduction", "status": "pass",
+        "reviewer": {"type": reviewer_type, "id": "model-b", "assurance": "host_attested"},
+        "subjects": [], "dependencies": deps, "observations": ["independent pass"],
+        "findings": [], "replaces": None})
+    bumped = bump_revision(document, {"operation_id": operation_id, "kind": "review_update",
+                                      "description": f"preproduction {kind} review",
+                                      "read_set": []})
+    bumped["reviews"] = [*(document.get("reviews") or []), review_ref]
+    store.commit_change(base_revision=document["revision_id"], document=bumped,
+                        operation_id=operation_id)
+
+
 def test_needs_reviewer_until_independent_preproduction_review(tmp_path):
-    project, store = _project(tmp_path)
+    project, store = _project(tmp_path, pages=True)
     _set_quality_profile(store, content_review_requirement="independent_model_or_human",
                          requirement_origin="default_new_argument", override_decision_ref=None)
     _start(project, store)
@@ -670,33 +694,60 @@ def test_needs_reviewer_until_independent_preproduction_review(tmp_path):
     assert "needs_reviewer" in blocked["reason_codes"]
     assert blocked["missing_decision_topics"] == []
     assert "review draft" in blocked["next_action"]
-    # An independent preproduction review that passes on current bytes clears it.
-    review_ref = store.put_json_object({
-        "schema_version": "deck_review.v1", "review_id": "review-pre-1", "kind": "argument",
-        "review_stage": "preproduction", "status": "pass",
-        "reviewer": {"type": "independent_host", "id": "model-b", "assurance": "host_attested"},
-        "subjects": [], "dependencies": [], "observations": ["independent pass"],
-        "findings": [], "replaces": None})
-    document = store.load_document()
-    bumped = bump_revision(document, {"operation_id": "review-op-1", "kind": "review_update",
-                                      "description": "preproduction review", "read_set": []})
-    bumped["reviews"] = [*document["reviews"], review_ref]
-    store.commit_change(base_revision=document["revision_id"], document=bumped,
-                        operation_id="review-op-1")
+    # One passing unit is never the whole review: the missing units keep the
+    # gate shut (the T03 verdict, not a single-record shortcut).
+    from deck_master import content_review
+    units = content_review.required_units(store, store.load_document())
+    _put_preproduction_review(store, units[0], f"review-pre-{units[0]}",
+                              operation_id="review-op-partial")
+    partial = _evaluate(store, "dispatch.blueprint")
+    assert "needs_reviewer" in partial["reason_codes"], partial["reason_codes"]
+    # The full unit set on the current bytes clears it.
+    for index, kind in enumerate(units[1:], start=1):
+        _put_preproduction_review(store, kind, f"review-pre-{kind}",
+                                  operation_id=f"review-op-full-{index}")
     allowed = _evaluate(store, "dispatch.blueprint")
     assert "needs_reviewer" not in allowed["reason_codes"], allowed["reason_codes"]
+    assert allowed["preproduction"]["satisfied"] is True
 
 
 def test_host_self_is_only_accepted_through_the_explicit_override(tmp_path):
-    project, store = _project(tmp_path)
+    project, store = _project(tmp_path, pages=True)
+    # A profile naming host_self without an effective downgrade decision is the
+    # independent requirement (T03 requirement_state): the review stays owed.
     _set_quality_profile(store, content_review_requirement="host_self",
                          requirement_origin="explicit_decision",
                          override_decision_ref=_stored_ref(store, "override"))
     _start(project, store)
     _grant(project, store, actions=("dispatch.blueprint",),
            scope=_scope(page_ids=["p1", "p2"], layers=["blueprint"]))
+    blocked = _evaluate(store, "dispatch.blueprint")
+    assert "needs_reviewer" in blocked["reason_codes"]
+    assert blocked["preproduction"]["requirement"] == "independent_model_or_human"
+    # A real accepted policy decision makes the downgrade effective; a
+    # host-self review of the current manuscript then clears the gate.
+    decision = collaboration.record_decision(
+        project, input={"topic": "policy", "disposition": "accepted",
+                        "authority_mode": "direct_user",
+                        "value": {"content_review_requirement": "host_self",
+                                  "scope": "this request", "reason": "合成演练"},
+                        "scope": _scope(page_ids=["p1", "p2"], layers=["review"]),
+                        "instruction_evidence": _declared(store)},
+        base_revision=store.load_document()["revision_id"], operation_id="op-downgrade-1")
+    _set_quality_profile(store, content_review_requirement="host_self",
+                         requirement_origin="explicit_decision",
+                         override_decision_ref=decision["decision_ref"])
+    from deck_master import content_review
+    units = content_review.required_units(store, store.load_document())
+    for index, kind in enumerate(units):
+        _put_preproduction_review(store, kind, f"review-self-{kind}",
+                                  reviewer_type="host_self",
+                                  operation_id=f"review-self-{index}")
     allowed = _evaluate(store, "dispatch.blueprint")
-    assert "needs_reviewer" not in allowed["reason_codes"]
+    assert allowed["preproduction"]["requirement"] == "host_self"
+    assert "needs_reviewer" not in allowed["reason_codes"], allowed["reason_codes"]
+    assert "preproduction_blocked" not in allowed["reason_codes"]
+    assert allowed["allowed"] is True, allowed["reason_codes"]
 
 
 def test_professional_review_required_is_independent_of_preproduction(tmp_path):

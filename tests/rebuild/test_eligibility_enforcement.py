@@ -104,6 +104,44 @@ def _grant(project, store, *, actions, mode="execute", scope=None, operation_id=
                                operation_id=operation_id)
 
 
+def _settle_preproduction(store, *, seed="settle"):
+    """Settle the preproduction review dimension for a draft-pages project.
+
+    Puts one passing preproduction review per required unit on the current
+    page bytes (resolver-fixture style object insertion — this settles the
+    review records themselves, never a task binding). Tests that exercise
+    another dimension (scope, authority, budget, the change flow) call this so
+    the unified T03 verdict stops answering for the review gap and the gate
+    judges the dimension under test.
+    """
+    import uuid
+
+    from deck_master import content_review
+
+    document = store.load_document()
+    units = content_review.required_units(store, document)
+    deps = [{"kind": "content", "identity": key, "sha256": ref["sha256"]}
+            for key, ref in (("narrative", document.get("narrative")),
+                             ("content_plan", document.get("content_plan"))) if ref]
+    deps += [{"kind": "content", "identity": f"page:{entry['page_id']}",
+              "sha256": entry["page"]["sha256"]} for entry in document.get("pages") or []]
+    operation_id = f"review-settle-{seed}-{uuid.uuid4().hex[:6]}"
+    reviews = [store.put_json_object({
+        "schema_version": "deck_review.v1", "review_id": f"review-{seed}-{kind}",
+        "kind": kind, "review_stage": "preproduction", "status": "pass",
+        "reviewer": {"type": "independent_host", "id": "model-b",
+                     "assurance": "host_attested"},
+        "subjects": [], "dependencies": deps,
+        "observations": [f"fixture settlement for the {kind} unit"],
+        "findings": [], "replaces": None}) for kind in units]
+    bumped = bump_revision(document, {"operation_id": operation_id, "kind": "review_update",
+                                      "description": "settle the preproduction reviews",
+                                      "read_set": []})
+    bumped["reviews"] = [*(document.get("reviews") or []), *reviews]
+    store.commit_change(base_revision=document["revision_id"], document=bumped,
+                        operation_id=operation_id)
+
+
 def _task(document, *, task_id="task-1", kind="compose", status="running",
           scope_pages=("p1",), allowances=(), binding=None, protocol=None):
     task = {"schema_version": "deck_task.v1", "task_id": task_id, "operation_id": f"op-{task_id}",
@@ -154,11 +192,11 @@ def _commit_task(store, task, *, operation_id="task-commit"):
 
 def _stamp_binding(store, task_id, *, phase="production", authorization_ref=None,
                    request_id=None):
-    """Stamp a valid collaboration binding on an already dispatched task.
+    """Stamp a collaboration binding on an already committed task.
 
-    Simulates the post-integration state the T03 binding writer produces, so a
-    managed-project test can exercise the positive acceptance path; production
-    dispatch itself stays refused until that writer lands.
+    The real dispatch paths write their own bindings (T03); this helper exists
+    for tests that need to re-bind a hand-committed or mutated task, and for
+    the negative pair of ``_strip_binding`` below.
     """
     import uuid
     from deck_master import tasks as tasks_mod
@@ -182,6 +220,30 @@ def _stamp_binding(store, task_id, *, phase="production", authorization_ref=None
     store.commit_change(base_revision=document["revision_id"], document=bumped,
                         operation_id=operation_id)
     return binding
+
+
+def _strip_binding(store, task_id):
+    """Re-commit a task without its collaboration binding (pre-upgrade shape).
+
+    The unconditional backstop (a task without a binding may only settle the
+    call facts it already has) is exercised through this mutation, the way a
+    task dispatched before the collaboration writer would look (MIGRATION §3.5).
+    """
+    import uuid
+    from deck_master import tasks as tasks_mod
+    document = store.load_document()
+    task = next(store.read_object_json(ref) for ref in document["tasks"]
+                if store.read_object_json(ref).get("task_id") == task_id)
+    updated = {key: value for key, value in task.items() if key != "collaboration_binding"}
+    task_ref = store.put_json_object(updated)
+    operation_id = f"strip-{uuid.uuid4().hex[:8]}"
+    bumped = bump_revision(document, {"operation_id": operation_id, "kind": "task_update",
+                                      "description": "unbound task (pre-upgrade shape)",
+                                      "read_set": []})
+    bumped = tasks_mod._replace_task_ref(bumped, task, task_ref, store)
+    store.commit_change(base_revision=document["revision_id"], document=bumped,
+                        operation_id=operation_id)
+    return updated
 
 
 def _page_hash(store, page_id="p1"):
@@ -219,6 +281,7 @@ def test_continue_reports_a_blocked_dispatch_as_a_decision_card(tmp_path):
 def test_continue_routes_when_the_request_covers_the_work(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store)
+    _settle_preproduction(store, seed="continue-routes")
     # Without the execute grant continue answers with a card (never a side
     # effect), and the card names the blocked dispatch.
     blocked = service.continue_project(project)
@@ -227,11 +290,12 @@ def test_continue_routes_when_the_request_covers_the_work(tmp_path):
     assert blocked["eligibility"]["reason_codes"] == ["authority_insufficient"]
     _grant(project, store, actions=("dispatch.blueprint", "allowance.allocate"))
     outcome = service.continue_project(project)
-    # Until the binding writer lands (T03) the managed project stops here with a
-    # concrete next action instead of dispatching an unaccountable task.
-    assert outcome["status"] == "needs_input"
-    assert outcome["eligibility"]["reason_codes"] == ["decision_needed"]
-    assert "bound task" in outcome["next_action"]
+    # With the binding writer in place (T03) the covered work dispatches: the
+    # phased task goes out through the gated helper and carries its binding.
+    assert outcome["status"] == "awaiting_host"
+    dispatched = [store.read_object_json(ref) for ref in store.load_document()["tasks"]]
+    pending = [task for task in dispatched if task.get("status") == "awaiting_host"]
+    assert pending and pending[0].get("collaboration_binding")
 
 
 def test_review_only_request_refuses_page_import_and_blueprint_dispatch(tmp_path):
@@ -251,6 +315,7 @@ def test_review_only_request_refuses_page_import_and_blueprint_dispatch(tmp_path
 def test_blueprint_dispatch_requires_scope_and_authorization(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
+    _settle_preproduction(store, seed="blueprint-scope")
     entry = next(e for e in store.load_document()["pages"] if e["page_id"] == "p1")
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         service.open_blueprint_task(store, store.load_document(), entry)
@@ -258,18 +323,14 @@ def test_blueprint_dispatch_requires_scope_and_authorization(tmp_path):
     assert "authority_insufficient" in error["reason_codes"]
     assert "grant an execute authorization" in error["next_action"]
     assert error["responsible_role"] == "user"
-    # With the execute grant the scope/authority gap is gone; the dispatch then
-    # stops on the missing collaboration binding (the T03 integration point),
-    # never silently creating a task whose authority cannot be established.
+    # With the execute grant the scope/authority gap is gone; the dispatch goes
+    # out through the gated helper and carries its phase binding (T03), so the
+    # task is accountable instead of stopping on a missing one.
     _grant(project, store, actions=("dispatch.blueprint", "allowance.allocate"))
-    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
-        service.open_blueprint_task(store, store.load_document(), entry)
-    error = _blocked(excinfo)
-    assert error["reason_codes"] == ["decision_needed"]
-    assert "no collaboration binding" in error["message"]
-    assert "bound task" in error["next_action"]
-    tasks = [store.read_object_json(ref) for ref in store.load_document()["tasks"]]
-    assert not any(task["kind"] == "blueprint" for task in tasks)
+    task = service.open_blueprint_task(store, store.load_document(), entry)
+    assert task["collaboration_binding"]["phase"] == "production"
+    assert task["scope_pages"] == ["p1"]
+    assert task["status"] == "awaiting_host"
 
 
 def test_blueprint_dispatch_outside_request_pages_is_refused(tmp_path):
@@ -466,6 +527,7 @@ def test_accept_in_scope_composes_normally(tmp_path):
 def test_change_commit_refuses_pages_outside_the_request(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
+    _settle_preproduction(store, seed="change-scope")
     _grant(project, store, actions=("change.commit",), scope=_scope(page_ids=["p1"]))
     document = store.load_document()
     entry = next(e for e in document["pages"] if e["page_id"] == "p2")
@@ -577,6 +639,7 @@ def test_candidate_adoption_refused_after_withdrawal(tmp_path):
                         operation_id="bootstrap-collaboration")
     scope = _scope(page_ids=["p01", "p02"])
     _start(project, store, scope=scope)
+    _settle_preproduction(store, seed="candidate-withdrawal")
     _grant(project, store, actions=("change.commit",), scope=scope,
            operation_id="op-grant-change")
     task = trial_dispatch(store)                       # real change-plan dispatch

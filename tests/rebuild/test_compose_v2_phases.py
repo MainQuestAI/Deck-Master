@@ -258,8 +258,12 @@ def test_every_task_in_a_collaboration_project_is_gated(tmp_path):
 
 def test_phase_dispatch_requires_an_open_request(tmp_path):
     project, store = _project(tmp_path)
-    with pytest.raises(ModelError, match="current open work request"):
+    # F06: the phase write point consumes the unified gate first, so the
+    # refusal is the typed decision instead of the builder's ModelError.
+    from deck_master import eligibility
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         _dispatch(store, phase="framing")
+    assert "decision_needed" in excinfo.value.decision["reason_codes"]
 
 
 def test_legacy_project_keeps_compose_v1(tmp_path):
@@ -470,7 +474,11 @@ def test_page_copy_keeps_membership_change_behind_the_scope(tmp_path):
         store, document, operation_id="phase-page_copy-2", phase="page_copy",
         adoption_policy="within_scope")
     assert "page_ids" in (new_task["collaboration_binding"]["write_scope"] or {})
-    with pytest.raises(EnvelopeError, match="write scope|membership"):
+    # The acceptance gate consumes the same scope judgement first, so the
+    # out-of-scope page is refused as a typed eligibility decision (the
+    # variant's own write-scope check would refuse it one step later).
+    from deck_master import eligibility
+    with pytest.raises(eligibility.EligibilityBlocked, match="outside the current request scope"):
         _submit(project, narrow, {"pages": [_page(store, document, "p2")], "page_order": ["p2"],
                                   "plan_input": _plan_input(document, ["p2"])}, "page_copy")
 
@@ -647,7 +655,10 @@ def test_input_revision_refusals(tmp_path):
                                 "proposals": [{"layer": "page_copy", "ref": proposal}],
                                 "diff": {"input_digest": "0" * 64, "summary": "x",
                                          "changed_page_ids": []}}, "input_revision")
-    with pytest.raises(EnvelopeError, match="write scope|outside the task scope"):
+    # The page is outside the request scope, so the acceptance gate refuses it
+    # as a typed eligibility decision before the variant's own write-scope check.
+    from deck_master import eligibility
+    with pytest.raises(eligibility.EligibilityBlocked, match="outside the current request scope"):
         _submit(project, task, {"changed_layers": ["page_copy"],
                                 "proposals": [{"layer": "page_copy", "ref": proposal}],
                                 "diff": {"input_digest": task["input_digest"], "summary": "x",

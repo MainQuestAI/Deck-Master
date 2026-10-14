@@ -313,8 +313,17 @@ def delegation_containment(store, parent, child) -> list[str]:
 def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = "host",
                write_scope: dict | None = None, adoption_policy: str = "within_scope",
                authorization_ref: dict | None = None, decision_refs=(),
-               page_ids=None) -> dict:
+               page_ids=None, action: str | None = None,
+               action_targets: dict | None = None) -> dict:
     """Attach the binding to a task about to be dispatched.
+
+    ``action`` names the service action this task executes under. When the
+    caller does not pass an explicit ``authorization_ref``, the covering
+    effective authorization for that action (and ``action_targets``, or the
+    built write scope) is resolved and bound, so revocation and budget
+    attribution follow the grant the work actually runs under (F01). An action
+    no authorization names stays unbound — a checked grant at dispatch time
+    never fabricates authority into the task.
 
     Projects below the collaboration.v1 writer keep their exact old behavior:
     no binding, no gate, byte-identical dispatch.
@@ -326,6 +335,12 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
         return task
     from .content_production import write_scope_for
     scope = write_scope or write_scope_for(store, document, phase, page_ids=page_ids)
+    if authorization_ref is None and action:
+        from . import eligibility
+        targets = action_targets or {"page_ids": scope.get("page_ids") or [],
+                                     "layers": scope.get("layers") or []}
+        authorization_ref = eligibility.covering_authorization_ref(store, document, action,
+                                                                    targets)
     binding = build_binding(store, document, phase=phase, executor_type=executor_type,
                             write_scope=scope, adoption_policy=adoption_policy,
                             authorization_ref=authorization_ref, decision_refs=decision_refs)

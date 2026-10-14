@@ -214,7 +214,18 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     imported copy and Host-composed copy behave identically downstream.
     """
     _validate_draft(draft_payload)
-    if writer_at_least(store.load_document(), "collaboration.v1"):
+    pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
+    page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
+    if not isinstance(pages, list) or not pages:
+        raise ServiceError("(draft)/pages", "draft must carry a non-empty pages array")
+    # The boundary consumes the eligibility resolver first (CONTRACTS §6.1
+    # order): a paused request or an intent that cannot import (review_only)
+    # gets its precise reason before the writer-boundary route check below.
+    store_document = store.load_document()
+    eligibility.guard(store, store_document, "import_draft",
+                      context={"targets": {"page_ids": [page.get("page_id") for page in pages],
+                                           "layers": ["page_copy"]}})
+    if writer_at_least(store_document, "collaboration.v1"):
         # TASKS T03 item P3-3: never dispatch an unbound legacy compose task on a
         # collaboration.v1 project. The legacy envelope carries no request, no
         # collaboration binding and no write scope, and the frozen page_copy
@@ -230,14 +241,6 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
             "(2) record an explicit decision for a confirmed-manuscript mapping (imported_mapping "
             "+ fidelity review) once the unified import routing lands. No page, plan or output was "
             "written by this call")
-    pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
-    page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
-    if not isinstance(pages, list) or not pages:
-        raise ServiceError("(draft)/pages", "draft must carry a non-empty pages array")
-    store_document = store.load_document()
-    eligibility.guard(store, store_document, "import_draft",
-                      context={"targets": {"page_ids": [page.get("page_id") for page in pages],
-                                           "layers": ["page_copy"]}})
     envelope = {
         "kind": "compose",
         "files": [],
@@ -671,7 +674,9 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     from . import collaboration_binding
     collaboration_binding.stamp_task(
         store, document, task, phase="production", executor_type="host",
-        page_ids=[page["page_id"]], adoption_policy="within_scope")
+        page_ids=[page["page_id"]], adoption_policy="within_scope",
+        action="dispatch.blueprint",
+        action_targets={"page_ids": [page["page_id"]], "layers": ["blueprint"]})
     task, _ = tasks_mod.reserve_allowances(store, document, task, 1)
     from .generation import protocol_fields
     task.update(protocol_fields(document))
@@ -833,6 +838,11 @@ def _recover_input_revision(store):
                 and (not valid or task['task_id'] != valid['task_id'])):
             updated['tasks'][index] = store.put_json_object({**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
     if not valid:
+        # The recovery dispatch is a real write, not routing bookkeeping: it
+        # consumes the same gate as every other phased dispatch, so a paused
+        # request gains no reconciliation task through `continue` either
+        # (independent re-review N1, F06's contract).
+        eligibility.guard(store, updated, "dispatch.compose")
         task = revision_compose_task(store, updated, operation_id=change.get('operation_id'),
                                    reason=change.get('description') or 'Resume reconciliation against current inputs')
         updated['tasks'].append(store.put_json_object(task))
@@ -1141,7 +1151,8 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         store, document, task,
         phase=phase or ("review" if kind == "review" else "production"),
         executor_type=executor_type or "host", page_ids=page_ids,
-        adoption_policy="within_scope")
+        adoption_policy="within_scope", action="dispatch.host_task",
+        action_targets={"page_ids": list(page_ids), "layers": host_layers})
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])

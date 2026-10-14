@@ -953,14 +953,59 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
                             result_digest=result_digest, response=response)
 
 
+def _compose_v2_targets(variant, payload: dict, task: dict) -> dict:
+    """The write set one compose.v2 variant would touch (CONTRACTS §11.5).
+
+    The v2 write set lives inside ``payload``; the acceptance gate must see the
+    real pages and layers so its scope check can never go vacuous and a result
+    cannot write beyond the task's bound scope. Unknown layer names are dropped
+    here on purpose — the variant parser refuses them with their own error.
+    """
+    page_ids: list[str] = []
+
+    def add_page(page_id) -> None:
+        if isinstance(page_id, str) and page_id and page_id not in page_ids:
+            page_ids.append(page_id)
+
+    layers: list[str] = []
+    if variant == "page_copy":
+        for page in payload.get("pages") or []:
+            if isinstance(page, dict):
+                add_page(page.get("page_id"))
+        for page_id in payload.get("page_order") or []:
+            add_page(page_id)
+        layers = ["page_copy", "plan"]
+    elif variant == "speech":
+        for update in payload.get("updates") or []:
+            if isinstance(update, dict):
+                add_page(update.get("page_id"))
+        layers = ["speech"]
+    elif variant == "input_revision":
+        for layer in payload.get("changed_layers") or []:
+            if layer in ("narrative", "plan", "page_copy", "speech") and layer not in layers:
+                layers.append(layer)
+        for page_id in ((payload.get("diff") or {}).get("changed_page_ids") or []):
+            add_page(page_id)
+    elif variant == "narrative":
+        layers = ["narrative"] if payload.get("plan") is None else ["narrative", "plan"]
+    elif variant == "framing":
+        layers = ["narrative"]
+    if not page_ids:
+        page_ids = [pid for pid in (task.get("scope_pages") or []) if pid]
+    return {"page_ids": page_ids, "layers": layers}
+
+
 def _accept_targets(envelope: dict, task: dict) -> dict:
     """The write target an accepted result would touch (page ids + layers).
 
     A compose result writes page copy; a review result writes review records;
     artifact specs map onto their layers. Pages come from the envelope and fall
     back to the task's own scope, so an out-of-scope page can never be adopted
-    silently on an enforced project.
+    silently on an enforced project. compose.v2 keeps its write set inside the
+    variant payload, so it gets its own extraction.
     """
+    if envelope.get("schema_version") == COMPOSE_V2_SCHEMA:
+        return _compose_v2_targets(envelope.get("variant"), envelope.get("payload") or {}, task)
     page_ids: list[str] = []
     content_update = envelope.get("content_update") or {}
     for page in (envelope.get("pages") or []):
