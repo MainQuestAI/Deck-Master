@@ -406,3 +406,38 @@ def test_a_membership_scope_may_express_a_real_deletion(tmp_path):
                   "page_copy")
     document = store.load_document()
     assert [e["page_id"] for e in document["pages"]] == ["p1"]
+
+
+# ---------------------------------------------------------------------------
+# External review F04: a batch request answers to the remaining credit
+
+
+def test_a_batch_request_larger_than_the_remaining_credit_gets_zero(tmp_path):
+    """F04: with one call left on the bound grant's chain, a batch request of
+    two is refused with zero allocations and an unchanged ledger; a request of
+    one still succeeds against the same remaining slot."""
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=["p1"], layers=["page_copy", "review", "svg"]))
+    _grant(project, store,
+           actions=("dispatch.host_task", "allowance.allocate", "call.begin"),
+           scope=_scope(page_ids=["p1"]), max_external_calls=2)
+    task = service.open_host_task(store, kind="repair", page_ids=["p1"],
+                                  instruction="batch the calls under the grant")
+    task_id = task["task_id"]
+    from deck_master import tasks as tasks_mod
+    first = tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
+    assert first["status"] == "allocated"
+
+    def held():
+        current = next(store.read_object_json(ref) for ref in store.load_document()["tasks"]
+                       if store.read_object_json(ref)["task_id"] == task_id)
+        return [entry["state"] for entry in current["call_allowances"]]
+
+    assert held() == ["reserved"]
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        tasks_mod.allocate_call_allowances(store, task_id=task_id, count=2)
+    assert "budget_exhausted" in excinfo.value.payload()["error"]["reason_codes"]
+    assert held() == ["reserved"], "a refused batch leaves zero allocations"
+    second = tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
+    assert second["status"] == "allocated"
+    assert held() == ["reserved", "reserved"]
