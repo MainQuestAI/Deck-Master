@@ -19,7 +19,7 @@ RC3-00 工程接收通过；接收只允许后续实施，不代表 RC3 专业�
 
 ## 接口与移交
 
-沿用 Page v2 / Narrative v1 / ContentPlan v3、Store/CAS、compose.v2、collaboration.v1、generation.v1；新的允许键/结构显式更新 schema 与 writer/兼容边界。
+沿用 Page v2 / Narrative v1 / ContentPlan v2、Store/CAS、compose.v2、collaboration.v1、generation.v1；新的允许键/结构显式更新 schema 与 writer/兼容边界。
 
 RC3-01：完整页例、浅稿校准、实际消费和内容验效。RC3-02：notes 编译/回读及依赖。RC3-03：content_requirements/content_basis、初始设计与关系保真。RC3-04：N2 父链、确认稿导入、只读外部报告、可信来源/审查能力、三入口与四 Skill、默认 writer/迁移/安装统一。RC3-05：真实 Host、Owner/听众与桌面证据，当前未运行。既有 L1 仅按准确依赖复用，不提前关闭新增 CQ 或真实效果。
 
