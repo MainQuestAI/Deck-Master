@@ -1124,7 +1124,7 @@ def _accept_result_locked(
     journal = read_operation_journal(store, operation_id)
     if journal is not None:
         if (journal.get('status') == 'late_result_settled' and
-                document.get('compatibility', {}).get('project_format') == 'workbench.v3'):
+                store.workbench_protocol_required(document)):
             raise TaskConflict(f'(task {task_id})', 'late result call facts were settled; cancelled output was not adopted')
         if task.get("status") == "superseded":
             raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")

@@ -87,7 +87,7 @@ def import_reference(project, *, data=None, file=None, base_revision, operation_
             return recovered
         if doc['revision_id'] != base_revision:
             fail('base_revision', 'project changed; preserve selected file and reload', conflict=True)
-        if doc.get('compatibility', {}).get('project_format') != 'workbench.v3':
+        if not store.workbench_protocol_required(doc):
             fail('project', 'screenshot references require workbench.v3')
         if len(doc.get('style_references', [])) >= 100:
             fail('references', 'this project already has 100 reference versions')

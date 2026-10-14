@@ -92,7 +92,7 @@ def save(project, *, input, base_revision, operation_id):
         previous = operations.recover(store, operation_id, digest)
         if previous:
             return previous
-        if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
+        if not store.workbench_protocol_required(document):
             invalid('project', 'new opinion writes require an explicit workbench.v3 project')
         if document['revision_id'] != base_revision:
             raise operations.OperationError('conflict', 'base_revision', 'project changed; reload before saving', exit_code=5)

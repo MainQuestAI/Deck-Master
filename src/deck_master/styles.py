@@ -55,7 +55,7 @@ def _sources(store, reference):
 
 def _proposal(store, document, value):
     validate_schema('style_input', value)
-    if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
+    if not store.workbench_protocol_required(document):
         fail('project', 'style calibration requires a workbench.v3 project')
     if value['project_id'] != document['project_id']:
         fail('project_id', 'input belongs to another project')

@@ -212,7 +212,7 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
     commit the task themselves; nothing here writes project state.
     """
     from . import collaboration_binding
-    if document.get("compatibility", {}).get("project_format") != "workbench.v3":
+    if not store.workbench_protocol_required(document):
         raise ModelError("(task)/protocol_version",
                          "compose.v2 requires an explicit workbench.v3 project")
     if intent == "input_revision":

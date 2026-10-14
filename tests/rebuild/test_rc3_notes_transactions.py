@@ -344,3 +344,94 @@ print(json.dumps(out))
     assert len(outcomes) == 6 and all(item['refused'] for item in outcomes.values())
     assert all('minimum writer' in (item['reason'] + item['cause']) for item in outcomes.values())
     assert store.load_document() == protected
+
+
+@pytest.mark.parametrize('original_format', [None, 'workbench.v3'])
+@pytest.mark.parametrize('action', ['reorder', 'edit'])
+def test_formal_notes_write_preserves_content_ops_and_ui_protocol_qualification(tmp_path, original_format, action):
+    from uuid import uuid4
+    from deck_master import content_ops, ui_journal
+    from deck_master.operations import OperationError
+    project = tmp_path / 'project'
+    service.create(project, brief='Synthetic origin contrast', project_format=original_format,
+                   draft={'pages': [_draft_page(pid, pid, '正文') for pid in ('p-a', 'p-b')]})
+    store = Store(project)
+    for phase in ('before_notes', 'after_notes'):
+        before = store.load_document(); entry = before['pages'][0]
+        if phase == 'after_notes':
+            page = store.read_object_json(entry['page']); page['speaker_notes'] = '真实正式notes-only写入。'
+            editing.edit_page(project, page=page, base_revision=before['revision_id'],
+                              page_hash=entry['page']['sha256'], operation_id='origin-notes')
+        current = store.load_document()
+        request = {'schema_version': 'content_operation_input.v1', 'project_id': current['project_id'],
+                   'base_revision': current['revision_id'], 'content_plan_ref': current.get('content_plan'),
+                   'action': 'reorder', 'instruction': 'Synthetic explicit reorder', 'targets': [],
+                   'page_order': list(reversed([e['page_id'] for e in current['pages']]))}
+        if action == 'edit':
+            request.pop('page_order')
+            target = current['pages'][0]
+            visible = deepcopy(store.read_object_json(target['page'])['customer_visible'])
+            visible['title'] += ' Synthetic edit'
+            request.update(action='edit', targets=[{'page_id': target['page_id'], 'page_ref': target['page']}],
+                           customer_visible=visible)
+        if original_format is None:
+            with pytest.raises(OperationError, match='require a workbench.v3'):
+                content_ops.plan(project, input=request)
+            assert store.load_document() == current
+        else:
+            preview = content_ops.plan(project, input=request)
+            content_ops.commit(project, plan_id=preview['plan_id'], base_revision=current['revision_id'],
+                               operation_id=str(uuid4()))
+            adopted = store.load_document()
+            if action == 'reorder':
+                assert [e['page_id'] for e in adopted['pages']] == request['page_order']
+            else:
+                assert store.read_object_json(adopted['pages'][0]['page'])['customer_visible'] == visible
+        actions = ui_journal.project_info(project)['effective_actions']
+        assert all(a['writable'] is (original_format == 'workbench.v3')
+                   for a in actions if a['action'] in ui_journal.FORMAT_GATED)
+    assert store.load_document()['compatibility']['minimum_writer'] == 'rc3.v1'
+
+
+def test_legacy_notes_floor_does_not_enable_annotation_style_or_icon_writes(tmp_path):
+    from uuid import uuid4
+    from deck_master import annotation_service, icons, styles, visual_styles
+    from deck_master.operations import OperationError
+    from test_service_flow import _png_bytes
+    project = tmp_path / 'project'
+    service.create(project, brief='Synthetic remaining origin gates',
+                   draft={'pages': [_draft_page('p1', '标题', '正文')]})
+    store = Store(project)
+    for phase in ('before_notes', 'after_notes'):
+        before = store.load_document(); entry = before['pages'][0]
+        if phase == 'after_notes':
+            page = store.read_object_json(entry['page']); page['speaker_notes'] = '仅正式备注变更。'
+            editing.edit_page(project, page=page, base_revision=before['revision_id'],
+                              page_hash=entry['page']['sha256'], operation_id='residual-origin-notes')
+        doc = store.load_document(); entry = doc['pages'][0]; ref = entry['page']
+        identity = {'project_id': doc['project_id'], 'base_revision': doc['revision_id']}
+        note = {**identity, 'schema_version': 'annotation.v1', 'scope': 'page', 'page_id': 'p1',
+                'page_ref': ref, 'intent': 'clarify', 'body': 'Synthetic opinion', 'status': 'open',
+                'location': {'kind': 'whole'}}
+        with pytest.raises(OperationError, match='explicit workbench.v3'):
+            annotation_service.save(project, input={'schema_version': 'annotation_batch.v1',
+                'project_id': doc['project_id'], 'annotations': [note]},
+                base_revision=doc['revision_id'], operation_id=str(uuid4()))
+        with pytest.raises(OperationError, match='require workbench.v3'):
+            visual_styles.import_reference(project, data=_png_bytes(),
+                base_revision=doc['revision_id'], operation_id=str(uuid4()))
+        with pytest.raises(OperationError, match='requires a workbench.v3'):
+            styles.propose(project, input={**identity, 'schema_version': 'style_input.v1',
+                 'reference': {'page_id': 'p1', 'revision_id': doc['revision_id'],
+                               'artifact_ref': ref, 'role': 'reference'},
+                 'target_page_ids': ['p1'], 'instruction': 'Synthetic palette request'})
+        region = {'x': .1, 'y': .1, 'width': .1, 'height': .1}
+        with pytest.raises(OperationError, match='icons require workbench.v3'):
+            icons.propose(project, input={**identity, 'schema_version': 'icon_input.v1',
+                'instruction': 'Synthetic icon request', 'annotation_refs': [],
+                'targets': [{'page_id': 'p1', 'page_ref': ref, 'svg_ref': ref, 'blueprint_ref': ref,
+                 'icons': [{'label': 'Synthetic', 'semantic_key': 'cross',
+                  'original_region': region, 'svg_region': region,
+                  'objects': [{'path': '0', 'sha256': ref['sha256']}], 'method': 'redraw',
+                  'style': {'color': '#1478ff', 'stroke_width': 2}}]}]})
+        assert store.load_document() == doc

@@ -274,7 +274,7 @@ def _sample(store,doc,icon,require_current=True):
 
 def _proposal(store,doc,value):
     validate_schema('icon_input',value)
-    if doc.get('compatibility',{}).get('project_format')!='workbench.v3':fail('project','icons require workbench.v3; no implicit migration')
+    if not store.workbench_protocol_required(doc):fail('project','icons require workbench.v3; no implicit migration')
     if value['project_id']!=doc['project_id'] or value['base_revision']!=doc['revision_id']:fail('base_revision','read the current project and propose again',True)
     if not value['instruction'].strip():fail('instruction','provide a concrete requirement')
     cat=catalog(); ids={a['id'] for a in cat['icons']}; seen=set()

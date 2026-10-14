@@ -22,7 +22,7 @@ def fail(field, message, *, conflict=False):
 
 def _check(store, doc, value):
     validate_schema('content_operation_input', value)
-    if doc.get('compatibility', {}).get('project_format') != 'workbench.v3':
+    if not store.workbench_protocol_required(doc):
         fail('project', 'content operations require a workbench.v3 project')
     if value['project_id'] != doc['project_id']:
         fail('project_id', 'request belongs to another project')
