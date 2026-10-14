@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from synthetic_review_provider import synthetic_context, accept_with_synthetic_provider
+from synthetic_review_provider import synthetic_context, accept_with_synthetic_provider, dispatch_with_synthetic_provider
 from deck_master.review_evidence import EvidenceRejected
 
 from test_eligibility_enforcement import (  # noqa: E402  (shared fixtures)
@@ -258,7 +258,7 @@ def _accept_preproduction_reviews(project, store, *, findings_by_kind=None):
     optional map carries open must-fix findings per review kind."""
     document = store.load_document()
     adapter = _independent_adapter(store, document)
-    outcome = content_review.dispatch_preproduction_review(project, adapter_context=adapter)
+    outcome = dispatch_with_synthetic_provider(project, adapter_context=adapter)
     assert outcome["status"] == "review_dispatched"
     task = outcome["task"]
     document = store.load_document()

@@ -8,7 +8,7 @@ import hashlib
 
 import pytest
 
-from synthetic_review_provider import synthetic_user_context
+from synthetic_review_provider import synthetic_user_context, synthetic_runtime_call
 
 from deck_master import collaboration, collaboration_migration, dependency_slices, service
 from deck_master.dependency_slices import (authorization_effectiveness,
@@ -216,7 +216,7 @@ def test_verified_event_replay_across_actions_downgrades(tmp_path):
                    "scope": _scope()}
     binding = collaboration.write_digest(collaboration.ACTION_REQUEST_START, start_input)
     adapter = synthetic_user_context(store, store.load_document(), action_binding=binding, declared=start_input["instruction_evidence"])
-    started = collaboration.start_request(
+    started = synthetic_runtime_call(collaboration.start_request,
         project, input=start_input, base_revision=store.load_document()["revision_id"],
         operation_id="op-start-verified", adapter_context=adapter)
     assert started["assurance"] == "verified_user"
@@ -224,7 +224,7 @@ def test_verified_event_replay_across_actions_downgrades(tmp_path):
     decision_input = _decision_input(store, authority_mode="direct_user",
                                      instruction_evidence=_declared(
                                          store, "user_event", transport_receipt_ref=receipt))
-    recorded = collaboration.record_decision(
+    recorded = synthetic_runtime_call(collaboration.record_decision,
         project, input=decision_input, base_revision=store.load_document()["revision_id"],
         operation_id="op-dec-replay", adapter_context=adapter)
     assert recorded["assurance"] == "host_attested"

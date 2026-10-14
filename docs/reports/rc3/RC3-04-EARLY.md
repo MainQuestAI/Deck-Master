@@ -15,13 +15,13 @@ RC3-01 可从真实 `create --project-format workbench.v3` 开始，显式 migra
 
 ## 受信 provider 边界
 
-`review_evidence.ProviderRegistry` 仅由受信服务启动代码注册 `ReceiptProvider` 实例；没有默认 provider，不从请求 JSON、CLI flag、环境变量模块路径动态载入 provider。注册代码属于部署信任边界，运行任意 Python 的调用者不能因此被当成人类。当前环境不存在可直接核验 collaboration 平台收据的适配器，故三个能力默认 false，审查稿保持可读取并返回 `needs_reviewer`。
+`review_evidence.ProviderRegistry` 仅由受信服务启动代码注册 `ReceiptProvider` 实例；没有默认 provider，不从请求 JSON、CLI flag、环境变量模块路径动态载入 provider。注册代码属于部署信任边界，运行任意 Python 的调用者不能因此被当成人类。`ProviderRuntime(registry).bound()` 在受信服务初始化域绑定并封存该实例的 issuer；普通 new registry/register/mint 不改变当前 Runtime，foreign context 被拒绝。请求处理器不能从 JSON 选择 Runtime 配置。该边界不承诺抵御同权限代码重新配置可信 bootstrap。当前环境不存在可直接核验 collaboration 平台收据的适配器，故三个能力默认 false，审查稿保持可读取并返回 `needs_reviewer`。
 
 provider 实现 `health/fetch/verify`；其 `verify` 必须通过受信的非作者 Host controller 直接观察 native spawn/canonical sender/完成状态/固定输入与输出，或受信传输/外部签发者验签，验证真实执行身份/完成事实及作者来源，不接受作者自报或同 Host 改 ID。普通独立模型前审不要求平台密码学签名；真实 native controller 路径可以明确保留 host_attested 保证。CLI/HTTP 提供的 JSON、哈希、TTY、截图、本地同权限密钥不建立身份隔离。本模块只在 provider 完成认证后检查 Runtime 精确绑定：project、request、Task、完整 packet、subjects、作者执行身份、只写 Review 的范围、规范化结果 hash、事件和有效期。真实 native 观察、签名算法/传输与身份核验由实际 provider 集成提供，不能把该 SDK 接口的存在当成已有真实认证能力。
 
-通道健康能派发，完成回执才能接纳；能力 context 中没有未来回执。完成 receipt 经选择器 `provider_id/event_id` 查询、认证后产生 opaque `TrustedContext`；JSON、普通 dict、拷贝或直接创建同名对象不能生成它。Python SDK 可调用 registry.review_context 后传入 service.accept_result。实际集成将自己的 provider 注册到服务所用 registry；CLI `task accept --review-receipt-selector FILE` 只接收选择器，没有 provider 时诚实拒绝。
+通道健康能派发，完成回执才能接纳；能力 context 中没有未来回执。完成 receipt 经选择器 `provider_id/event_id` 查询、认证后产生 opaque `TrustedContext`；JSON、普通 dict、拷贝或直接创建同名对象不能生成它。Python SDK 可调用 registry.review_context 后传入 service.accept_result。实际集成在受信 bootstrap 注册 provider，并在 `ProviderRuntime(registry).bound()` 域内调用服务；CLI `task accept --review-receipt-selector FILE` 只接收选择器，没有 provider 时诚实拒绝。
 
-完成审查的原始认证事件和绑定 proof 进入不可变 Store，并随 Task result_refs 在接纳事务中引用。结果费用结算仍先于内容接纳；已提交相同结果的幂等重放不要求 provider 再在线，不会再次执行或恢复权限。既有 synthetic dict adapter_context 的 Python 调用必须迁移到明确的、测试目录内的 provider double；生产不继续把裸 dict 当受信 context。普通 `host_attested_instruction` 不依赖受信 provider，保持原保证等级和可用性。
+完成审查的原始认证事件和绑定 proof 进入不可变 Store，并随 Task result_refs 在接纳事务中引用。user_event 的认证原始 bytes 必须与已有 transport_receipt_ref 存储的 bytes 完全一致；不同认证原件被拒绝，不改变 source_ref，也不把仅存hash当成认证审计。缓存 context 在消费时重查当前 Runtime issuer、对应 provider/channel 健康与 issued/expires；过期或离线的用户事件不升级 verified_user，按 traceable 保持真实 Host 转述等级。结果费用结算仍先于内容接纳；已提交相同结果的幂等重放不要求 provider 再在线，不会再次执行或恢复权限。既有 synthetic dict adapter_context 的 Python 调用必须迁移到明确的、测试目录内的 provider double；生产不继续把裸 dict 当受信 context。普通 `host_attested_instruction` 不依赖受信 provider，保持原保证等级和可用性。
 
 ## 证据限制
 
@@ -37,18 +37,20 @@ from deck_master.store import Store
 
 registry = review_evidence.ProviderRegistry()
 registry.register(native_controller_provider)  # 受信非作者 controller 初始化
-work = content_review.dispatch_preproduction_review(
-    project, adapter_context=registry.channel_context())
-task = work["task"]
-# controller 真正派发独立执行，实际完成后才有 event_id / result_payload
-store = Store(project)
-context = registry.review_context(
-    store, store.load_document(), task, result_payload,
-    {"provider_id": native_controller_provider.provider_id, "event_id": event_id})
-service.accept_result(
-    project, task_id=task["task_id"], operation_id=task["operation_id"],
-    produced_against=task["produced_against"], result_payload=result_payload,
-    adapter_context=context)
+runtime = review_evidence.ProviderRuntime(registry)  # 封存当前服务的 issuer
+with runtime.bound():
+    work = content_review.dispatch_preproduction_review(
+        project, adapter_context=registry.channel_context())
+    task = work["task"]
+    # controller 真正派发独立执行，实际完成后才有 event_id / result_payload
+    store = Store(project)
+    context = registry.review_context(
+        store, store.load_document(), task, result_payload,
+        {"provider_id": native_controller_provider.provider_id, "event_id": event_id})
+    service.accept_result(
+        project, task_id=task["task_id"], operation_id=task["operation_id"],
+        produced_against=task["produced_against"], result_payload=result_payload,
+        adapter_context=context)
 ```
 
 `ReceiptProvider` 的属性为 `provider_id/adapter_version/authentication/channels`，方法签名为 `health() -> bool`、`fetch(event_id: str) -> bytes`、`verify(raw: bytes) -> dict`。实际独立 controller 只注册 `channels=("independent_review_receipts",)` 和 `authentication="protected_transport"`，不因观察到模型运行就开放 verified_user/human。`review_evidence.review_binding(store,document,task,envelope)` 给出应由真实事件绑定的 project/request/task/packet/subjects/authors/write_scope/result 字段；verify 返回这些经过观察核对的字段，加 provider_id/event_id/channel/executor_ref/issued_at/expires_at。request/author/结果不能由作者声明改写。只写 Review 的任务限制仍由原 accept 路径校验。

@@ -5,7 +5,7 @@ import hashlib
 
 import pytest
 
-from synthetic_review_provider import synthetic_user_context
+from synthetic_review_provider import synthetic_user_context, synthetic_runtime_call
 
 from deck_master import collaboration, service
 from deck_master.models import ModelError, bump_revision, require_writer
@@ -81,9 +81,9 @@ def test_assurance_is_never_client_settable(tmp_path):
     store = Store(tmp_path / "scratch")
     store.ensure_layout()
     with pytest.raises(ModelError, match="never client-settable"):
-        collaboration.resolve_evidence({**_declared(store), "assurance": "verified_user"})
+        synthetic_runtime_call(collaboration.resolve_evidence, {**_declared(store), "assurance": "verified_user"})
     # An unverified user_event claim is honestly downgraded, not upgraded.
-    downgraded = collaboration.resolve_evidence(_declared(store, "user_event"))
+    downgraded = synthetic_runtime_call(collaboration.resolve_evidence, _declared(store, "user_event"))
     assert downgraded["kind"] == "host_attested_instruction"
     assert downgraded["assurance"] == "host_attested"
 
@@ -95,19 +95,19 @@ def test_verified_user_event_requires_receipt_and_action_binding(tmp_path):
     declared = _declared(store, "user_event", transport_receipt_ref=receipt)
     binding = collaboration.write_digest(collaboration.ACTION_REQUEST_START, {"intent": "content_only"})
     adapter = synthetic_user_context(store, {"project_id": "scratch"}, action_binding=binding, declared=declared, actor_id="u-123")
-    evidence = collaboration.resolve_evidence(declared, adapter, action_binding=binding, project_id="scratch")
+    evidence = synthetic_runtime_call(collaboration.resolve_evidence, declared, adapter_context=adapter, action_binding=binding, project_id="scratch")
     assert evidence["assurance"] == "verified_user" and evidence["actor_id"] == "u-123"
     # The same verified event replayed for a different write payload downgrades.
     other_binding = collaboration.write_digest(collaboration.ACTION_REQUEST_START,
                                                {"intent": "full_deck"})
-    evidence = collaboration.resolve_evidence(declared, adapter, action_binding=other_binding, project_id="scratch")
+    evidence = synthetic_runtime_call(collaboration.resolve_evidence, declared, adapter_context=adapter, action_binding=other_binding, project_id="scratch")
     assert evidence["assurance"] == "host_attested"
     # A different receipt does not verify.
     declared = _declared(store, "user_event", transport_receipt_ref=_stored_ref(store, "other-receipt"))
-    evidence = collaboration.resolve_evidence(declared, adapter, action_binding=binding, project_id="scratch")
+    evidence = synthetic_runtime_call(collaboration.resolve_evidence, declared, adapter_context=adapter, action_binding=binding, project_id="scratch")
     assert evidence["assurance"] == "host_attested"
     # Without a transport receipt a source match alone never upgrades.
-    evidence = collaboration.resolve_evidence(_declared(store, "user_event"), adapter,
+    evidence = synthetic_runtime_call(collaboration.resolve_evidence, _declared(store, "user_event"), adapter_context=adapter,
                                               action_binding=binding, project_id="scratch")
     assert evidence["assurance"] == "host_attested"
 

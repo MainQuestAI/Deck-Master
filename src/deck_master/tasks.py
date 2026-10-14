@@ -17,7 +17,10 @@ import uuid
 from functools import wraps
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .review_evidence import TrustedContext
 
 from .content import check_page
 from .models import (
@@ -1070,7 +1073,7 @@ def _accept_result_locked(
     operation_id: str,
     produced_against: str,
     envelope_raw: dict[str, Any],
-    adapter_context: dict | None = None,
+    adapter_context: TrustedContext | None = None,
     review_receipt_selector: dict | None = None,
 ) -> dict:
     """Validate a Host result envelope and adopt it atomically (spec 09.7).
@@ -1280,8 +1283,8 @@ def _accept_result_locked(
         # coverage and subject/dependency binding for the preproduction review.
         from .content_review import validate_preproduction_result
         if review_receipt_selector is not None:
-            from .review_evidence import DEFAULT_REGISTRY
-            adapter_context = DEFAULT_REGISTRY.review_context(store, document, task, envelope, review_receipt_selector)
+            from .review_evidence import current_registry
+            adapter_context = current_registry().review_context(store, document, task, envelope, review_receipt_selector)
         posture = validate_preproduction_result(store, document, task, envelope,
                                                adapter_context=adapter_context)
         preproduction_receipts = [item['receipt']['receipt_ref'] for item in posture['reviewers']

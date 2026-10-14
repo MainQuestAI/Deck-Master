@@ -16,7 +16,7 @@ from . import __version__
 from .content_review import reviewer_capabilities
 from .method_resources import RELATIVE_PATHS, resolve_root, method_release
 from .models import sha256_bytes
-from .review_evidence import context_payload, DEFAULT_REGISTRY
+from .review_evidence import context_payload, current_registry
 
 
 def installation_identity():
@@ -72,7 +72,8 @@ def describe(adapter_context=None):
         kinds.append("independent_execution_receipt")
     if available["human_review_receipts"]:
         kinds.append("human_identity_receipt")
-    context = context_payload(DEFAULT_REGISTRY.channel_context() if adapter_context is None else adapter_context)
+    registry = current_registry()
+    context = context_payload(registry.channel_context() if adapter_context is None else adapter_context)
     return {
         "schema_version": "host_capabilities.v1",
         "package_version": __version__,
@@ -80,7 +81,7 @@ def describe(adapter_context=None):
         "status": "ready" if all(r["available"] for r in resources) else "needs_tool",
         **available,
         "adapter_version": context.get("adapter_version"),
-        "providers": DEFAULT_REGISTRY.describe()["providers"] if adapter_context is None else [],
+        "providers": registry.describe()["providers"],
         "evidence_kinds": kinds,
         "assurance": "host_attested",
         "methods": resources,

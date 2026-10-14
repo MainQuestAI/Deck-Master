@@ -9,7 +9,7 @@ import pathlib
 
 import pytest
 
-from synthetic_review_provider import synthetic_context, accept_with_synthetic_provider
+from synthetic_review_provider import synthetic_context, accept_with_synthetic_provider, dispatch_with_synthetic_provider
 from deck_master.review_evidence import EvidenceRejected
 
 from deck_master import collaboration, content_production, content_review, models, service
@@ -267,7 +267,7 @@ def test_review_packet_carries_materials_task_and_the_complete_manuscript(tmp_pa
 def test_dispatched_review_task_references_the_packet(tmp_path):
     project, store = _deck(tmp_path)
     document = store.load_document()
-    outcome = content_review.dispatch_preproduction_review(
+    outcome = dispatch_with_synthetic_provider(
         project, adapter_context=_independent_adapter(store, document))
     assert outcome["status"] == "review_dispatched"
     task = outcome["task"]
@@ -285,7 +285,7 @@ def test_dispatched_review_task_references_the_packet(tmp_path):
 
 def test_missing_reviewer_capability_returns_needs_reviewer_with_the_draft(tmp_path):
     project, store = _deck(tmp_path)
-    outcome = content_review.dispatch_preproduction_review(project)
+    outcome = dispatch_with_synthetic_provider(project)
     assert outcome["status"] == "needs_reviewer"
     assert outcome["requirement"] == "independent_model_or_human"
     assert outcome["review_draft"]["manuscript"]["pages"]
@@ -301,7 +301,7 @@ def test_missing_reviewer_capability_returns_needs_reviewer_with_the_draft(tmp_p
 
 
 def _dispatch_and_reviews(store, document, adapter):
-    outcome = content_review.dispatch_preproduction_review(
+    outcome = dispatch_with_synthetic_provider(
         store.project_root, adapter_context=adapter)
     assert outcome["status"] == "review_dispatched"
     task = outcome["task"]
@@ -396,7 +396,7 @@ def test_the_author_cannot_be_the_independent_reviewer(tmp_path):
 def test_human_review_needs_a_verifiable_receipt(tmp_path):
     project, store = _deck(tmp_path)
     document = store.load_document()
-    outcome = content_review.dispatch_preproduction_review(
+    outcome = dispatch_with_synthetic_provider(
         project, adapter_context=_independent_adapter(store, document))
     task = outcome["task"]
     kinds = ("argument", "page_copy", "progression", "speech")
@@ -490,7 +490,7 @@ def test_host_self_needs_an_explicit_effective_downgrade_decision(tmp_path):
     state = content_review.requirement_state(store, document)
     assert state["effective"] == "host_self" and not state["reasons"]
     # With host_self, the review is accepted without an independence receipt...
-    outcome = content_review.dispatch_preproduction_review(project)
+    outcome = dispatch_with_synthetic_provider(project)
     assert outcome["status"] == "review_dispatched"
     assert outcome["task"]["collaboration_binding"]["executor_type"] == "host"
     kinds = ("argument", "page_copy", "progression", "speech")

@@ -12,6 +12,8 @@ an authentication. This module checks exact runtime bindings after that step.
 from __future__ import annotations
 
 from copy import deepcopy
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from typing import Protocol
 import re
@@ -72,15 +74,22 @@ def context_payload(context=None) -> dict:
     if not isinstance(context, TrustedContext) or context not in _CONTEXTS:
         raise EvidenceRejected("adapter_context", "a registered provider must issue an opaque trusted context; JSON/dict is untrusted")
     registry, payload = _CONTEXTS[context]
+    if registry is not current_registry():
+        raise EvidenceRejected("adapter_context/issuer", "context issuer is not registered in this Runtime's trusted bootstrap")
     # Health is not a permanent grant. Receipts remain independently bound.
     result = deepcopy(payload)
     result["capabilities"] = registry.capabilities()
+    now = datetime.now(timezone.utc)
+    for channel in CAPABILITIES:
+        result[channel] = [event for event in result.get(channel) or []
+                           if registry.channel_ready(event["provider_id"], channel)
+                           and _time(event["issued_at"]) <= now < _time(event["expires_at"])]
     return result
 
 
 def reviewer_capabilities(context=None) -> dict:
     if context is None:
-        return DEFAULT_REGISTRY.capabilities()
+        return current_registry().capabilities()
     payload = context_payload(context)
     return {key: bool((payload.get("capabilities") or {}).get(key)) for key in CAPABILITIES}
 
@@ -132,8 +141,11 @@ class ProviderRegistry:
     def __init__(self):
         self._providers = {}
         self._seen = {}
+        self._sealed = False
 
     def register(self, provider: ReceiptProvider):
+        if self._sealed:
+            raise EvidenceRejected("provider", "Runtime provider registration is sealed; configure a new trusted Runtime")
         identity = provider.provider_id
         if (not isinstance(identity, str) or not _ID.fullmatch(identity)
                 or identity in self._providers or not provider.adapter_version
@@ -155,6 +167,15 @@ class ProviderRegistry:
                 for key in provider.channels:
                     ready[key] = True
         return ready
+
+    def channel_ready(self, provider_id, channel):
+        provider = self._providers.get(provider_id)
+        if provider is None or channel not in provider.channels:
+            return False
+        try:
+            return provider.health() is True
+        except Exception:  # noqa: BLE001 - cached events do not survive a failed channel check
+            return False
 
     def describe(self):
         values = []
@@ -249,6 +270,8 @@ class ProviderRegistry:
                     "action_binding": action_binding, "source_ref": source_ref, "presentation_ref": presentation_ref,
                     "receipt_ref": receipt_ref, "transport_record_sha256": sha256_bytes(store.read_object_bytes(receipt_ref))}
         provider, raw, claims = self._resolve(selector, "verified_user_events", expected)
+        if raw != store.read_object_bytes(receipt_ref):
+            raise EvidenceRejected("receipt/transport_receipt_ref", "authenticated original bytes must be the persisted transport receipt bytes")
         if not claims.get("actor_id"):
             raise EvidenceRejected("receipt/actor_id", "authenticated user event requires an actual actor")
         return _mint(self, {"adapter_version": provider.adapter_version,
@@ -260,6 +283,35 @@ class ProviderRegistry:
 # Empty by design. A real integration registers its authenticated provider at
 # service bootstrap, never from an environment-variable module path or JSON.
 DEFAULT_REGISTRY = ProviderRegistry()
+DEFAULT_REGISTRY._sealed = True
+_RUNTIME_REGISTRY = ContextVar("deck_master_review_runtime_registry", default=DEFAULT_REGISTRY)
+
+
+def current_registry():
+    return _RUNTIME_REGISTRY.get()
+
+
+class ProviderRuntime:
+    """Configure a trusted SDK/service instance, never from project JSON.
+
+    Provider registration alone does not authorize contexts in other Runtime
+    instances. A service controller configures this scope at bootstrap; request
+    handlers cannot choose another registry. Arbitrary same-permission Python
+    can reconfigure bootstrap, which is outside this transport trust promise.
+    """
+    def __init__(self, registry: ProviderRegistry):
+        if not isinstance(registry, ProviderRegistry):
+            raise EvidenceRejected("provider", "trusted bootstrap requires a provider registry")
+        registry._sealed = True
+        self._registry = registry
+
+    @contextmanager
+    def bound(self):
+        token = _RUNTIME_REGISTRY.set(self._registry)
+        try:
+            yield self
+        finally:
+            _RUNTIME_REGISTRY.reset(token)
 
 
 def validate_review_context(context, store, document, task, envelope):

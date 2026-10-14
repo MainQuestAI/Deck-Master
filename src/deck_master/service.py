@@ -17,7 +17,10 @@ import json
 import re
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .review_evidence import TrustedContext
 
 from . import eligibility
 from . import tasks as tasks_mod
@@ -1622,7 +1625,7 @@ def accept_result(
     produced_against: str,
     result_path: Path | str | None = None,
     result_payload: dict | None = None,
-    adapter_context: dict | None = None,
+    adapter_context: TrustedContext | None = None,
     review_receipt_selector: dict | None = None,
 ) -> dict:
     """Receive one Host result envelope; prevalidation is all-or-nothing."""
