@@ -371,6 +371,9 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 
 def task_inputs_current(store, document, task):
+    from .visual_dependencies import is_visual_task, visual_task_inputs_current
+    if is_visual_task(task):
+        return visual_task_inputs_current(store, document, task)
     if task.get("kind") == "style_analyze":
         from .visual_styles import inputs_current as analysis_current
         return analysis_current(store, document, task)
@@ -1121,7 +1124,7 @@ def _accept_result_locked(
     journal = read_operation_journal(store, operation_id)
     if journal is not None:
         if (journal.get('status') == 'late_result_settled' and
-                document.get('compatibility', {}).get('project_format') == 'workbench.v3'):
+                store.workbench_protocol_required(document)):
             raise TaskConflict(f'(task {task_id})', 'late result call facts were settled; cancelled output was not adopted')
         if task.get("status") == "superseded":
             raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")
@@ -1344,6 +1347,19 @@ def _accept_result_locked(
             adopted_pages.append(check_page(page))
         except ModelError as exc:
             raise EnvelopeError(f'(result)/pages[{index}]', str(exc)) from exc
+    from .visual_dependencies import is_visual_task
+    if is_visual_task(task):
+        # A still-usable old visual request never grants a write over current
+        # presenter text. Old frozen inputs remain old; adopt only the visual
+        # result or an explicitly current Page supplied by the executor.
+        current_entries = {entry['page_id']: entry for entry in document['pages']}
+        for page in adopted_pages:
+            if page['page_id'] not in current_entries:
+                raise EnvelopeError('(result)/pages', 'visual result requires an existing scoped Page')
+            current = store.read_object_json(current_entries[page['page_id']]['page'])
+            if (page.get('speaker_notes') != current.get('speaker_notes')
+                    or (page.get('content_mapping') or {}).get('speech_segments') != (current.get('content_mapping') or {}).get('speech_segments')):
+                raise EnvelopeError('(result)/pages', 'visual result cannot overwrite current speech or notes')
     artifacts = []
     existing_page_ids = {entry.get("page_id") for entry in document.get("pages") or []} | {
         page["page_id"] for page in adopted_pages

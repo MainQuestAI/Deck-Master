@@ -327,7 +327,7 @@ def test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays(store,
     assert response['operation_result']['status'] == 'assembled'
     after = store.load_document()
     assert all(e['ppt_preview'] for e in after['pages']) and after['outputs']['pptx']
-    assert after['compatibility']['minimum_writer'] == 'workbench-quality.v1'
+    assert after['compatibility']['minimum_writer'] == 'rc3.v1'
     assert response['operation_result']['final_review'] == 'required'
     def unexpected(*args, **kwargs): raise AssertionError('replay must not compile again')
     monkeypatch.setattr(pipeline, 'compile_deck', unexpected)

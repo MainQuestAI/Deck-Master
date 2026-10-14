@@ -15,6 +15,9 @@ def test_reading_prioritizes_artwork_and_preserves_fixed_layers(workbench, width
     canvas = page.locator('.page-image-viewport')
     expect(canvas).to_be_visible()
     if width == 390:
+        # Image decoding and the reading controller's next-frame fit are distinct.
+        # Measure the actual fitted canvas, after the controller reports its mode.
+        expect(canvas).to_have_attribute('data-reading-mode', 'fit')
         box = canvas.bounding_box()
         assert box['y'] + box['height'] < height, box
         layers = page.get_by_label('查看制作图层', exact=True)

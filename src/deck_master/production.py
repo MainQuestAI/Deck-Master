@@ -14,6 +14,49 @@ from typing import Any
 from .models import ModelError, canonical_json_bytes, sha256_bytes
 
 
+def stored_blueprint_request(store, task):
+    """Return the unique actual immutable preparation and its Task.inputs Ref.
+
+    The request is never regenerated from current Pages or cached on the Task.
+    Legacy tasks may have no request; generation.v1 tasks may not.
+    """
+    from .store import StoreError
+    found = []
+    for ref in task.get("inputs") or []:
+        try:
+            value = store.read_object_json(ref)
+        except (StoreError, OSError, ValueError, TypeError) as exc:
+            raise ModelError("task/inputs", "unreadable immutable task input") from exc
+        if not isinstance(value, dict) or value.get("schema_version") != "deck_blueprint_request.v1":
+            continue
+        projection = value.get("projection")
+        if (value.get("page_id") not in (task.get("scope_pages") or [])
+                or task.get("scope_pages") != [value.get("page_id")]
+                or not isinstance(value.get("prompt"), str) or not value["prompt"]
+                or not isinstance(value.get("projection"), dict)
+                or value["projection"].get("page_id") != value["page_id"]
+                or value.get("prompt_sha256") != sha256_bytes(value["prompt"].encode("utf-8"))
+                or value.get("projection_sha256") != sha256_bytes(canonical_json_bytes(value["projection"]))):
+            raise ModelError("task/inputs", "invalid blueprint preparation identity or hashes")
+        if (value.get("host") != "codex_imagegen"
+                or not isinstance(value.get("requires"), list)
+                or not all(isinstance(item, str) for item in value["requires"])
+                or not {"image_generation", "image_inspection", "local_file_access"} <= set(value["requires"])
+                or not all(isinstance(projection.get(key), dict) for key in ("canvas", "style", "customer_visible", "visual_spec"))
+                or not all(isinstance(projection.get(key), list) for key in ("fonts", "permitted_assets"))
+                or not isinstance(projection.get("language"), str)
+                or not projection["customer_visible"].get("title")):
+            raise ModelError("task/inputs", "incomplete stored blueprint preparation")
+        found.append((value, ref))
+    if len(found) > 1 and any(item[0] != found[0][0] for item in found[1:]):
+        raise ModelError("task/inputs", "conflicting immutable blueprint preparations")
+    if not found:
+        if task.get("protocol_version") == "generation.v1":
+            raise ModelError("task/inputs", "stored blueprint preparation is missing")
+        return None, None
+    return found[0]
+
+
 def _visible_block(block: dict[str, Any]) -> dict[str, Any]:
     """Keep the complete customer-visible block, including nested items/cells."""
     return json.loads(json.dumps(block, ensure_ascii=False))

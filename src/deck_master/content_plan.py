@@ -17,7 +17,9 @@ class ContentPlanError(TypedServiceError):
     error_code = "content_plan_invalid"
 
 
-def protocol_fields(document, intent):
+def protocol_fields(document, intent, *, store=None):
+    if store is not None and not store.workbench_protocol_required(document):
+        return {}
     if document.get("compatibility", {}).get("project_format") != "workbench.v3" or intent == "import_draft":
         return {}
     return {"protocol_version": PROTOCOL, "required_capabilities": CAPABILITIES.copy()}
@@ -50,7 +52,7 @@ def bind_result(store, document, task, value, pages):
         if required:
             _fail("input", "compose.v1 requires a content_plan with explicit unresolved facts")
         return None
-    if task.get("kind") != "compose" or document.get("compatibility", {}).get("project_format") != "workbench.v3":
+    if task.get("kind") != "compose" or not store.workbench_protocol_required(document):
         _fail("input", "only compose in an explicit workbench.v3 project can adopt a plan")
     previous_ref, previous = validate_input(store, document, value, pages)
     goals = value["goals"]
@@ -234,13 +236,29 @@ def refresh_v2_plan_links(store, document, task, plan: dict, page_refs: list[dic
     rebinds page_links, so the plan's mapping stays current without touching
     page_order, roles or budgets.
     """
-    if plan.get("schema_version") != "content_plan.v2" or plan.get("mode") != "bound":
-        _fail("page_links", "only a bound content_plan.v2 carries page_links to rebind")
+    if (plan.get("schema_version") != "content_plan.v2" or
+            plan.get("mode") not in ("bound", "imported_mapping")):
+        _fail("page_links", "only bound or imported_mapping content_plan.v2 carries page_links to rebind")
+    from .models import validate_content_plan_semantics
+    validate_content_plan_semantics(plan)
+    if plan.get("project_id") != document.get("project_id"):
+        _fail("project_id", "plan belongs to another project")
+    before_entries = document.get("pages") or []
+    before = {entry["page_id"]: entry["page"] for entry in before_entries}
+    after_ids = [entry["page_id"] for entry in page_refs]
+    _unique(after_ids, "page_links")
     by_page = {entry["page_id"]: entry["page"] for entry in page_refs}
     order = plan["input"]["page_order"]
-    missing = sorted(set(order) - set(by_page))
-    if missing:
-        _fail("page_links", f"cannot rebind links for absent pages: {missing}")
+    if (len(before) != len(before_entries) or list(before) != order or after_ids != order):
+        _fail("page_links", "notes refresh preserves the complete current page membership and order")
+    links = plan.get("page_links") or []
+    if any(link["page_ref"] != before.get(link["page_id"]) for link in links):
+        _fail("page_links", "the existing mapping is stale; refresh cannot repair an unrelated old link")
+    for page_id, ref in by_page.items():
+        page = store.read_object_json(ref)
+        validate_schema("page", page)
+        if page.get("page_id") != page_id:
+            _fail("page_links", "page Ref belongs to another stable page identity")
     refreshed = {
         **copy.deepcopy(plan),
         "version": plan["version"] + 1,
@@ -251,7 +269,6 @@ def refresh_v2_plan_links(store, document, task, plan: dict, page_refs: list[dic
                         "plan_role_page_id": link["plan_role_page_id"]}
                        for link in plan["page_links"]],
     }
-    from .models import validate_content_plan_semantics
     validate_content_plan_semantics(refreshed)
     return store.put_json_object(refreshed)
 

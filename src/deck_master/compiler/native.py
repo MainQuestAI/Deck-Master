@@ -10,6 +10,45 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Pt
+import io
+import hashlib
+
+
+def normalize_notes(text):
+    """Normalize transport newlines only; never trim speech or blank paragraphs."""
+    if not isinstance(text, str):
+        raise ValueError('speaker_notes must be a string')
+    return text.replace('\r\n', '\n').replace('\r', '\n')
+
+
+def notes_records(data):
+    """Read complete body-placeholder notes in actual presentation relationship order."""
+    deck = Presentation(io.BytesIO(data) if isinstance(data, bytes) else data)
+    rows = []
+    for index, slide in enumerate(deck.slides, 1):
+        text = ''
+        if slide.has_notes_slide:
+            frame = slide.notes_slide.notes_text_frame
+            if frame is not None:
+                text = normalize_notes(frame.text)
+        rows.append({'slide': index, 'page_id': slide.name or None, 'notes': text,
+                     'notes_sha256': hashlib.sha256(text.encode('utf-8')).hexdigest()})
+    return rows
+
+
+def attach_notes(data, records):
+    """Attach trusted Page text to a notes-free presentation, including stable IDs."""
+    deck = Presentation(io.BytesIO(data))
+    if len(deck.slides) != len(records):
+        raise ValueError('notes page count differs from actual slides')
+    for slide, record in zip(deck.slides, records, strict=True):
+        slide.name = record['page_id']
+        text = normalize_notes(record['notes'])
+        if text:
+            slide.notes_slide.notes_text_frame.text = text
+    result = io.BytesIO()
+    deck.save(result)
+    return result.getvalue()
 
 
 def paint(parent, color, alpha):
@@ -43,6 +82,9 @@ def emit(pages, width, height, fonts, output):
     pres=Presentation();pres.slide_width=round(width*9525);pres.slide_height=round(height*9525)
     for page in pages:
         slide=pres.slides.add_slide(pres.slide_layouts[6]); k=min(width/page['width'],height/page['height'])
+        slide.name = page['page_id']
+        if page.get('speaker_notes'):
+            slide.notes_slide.notes_text_frame.text = normalize_notes(page['speaker_notes'])
         ox=(width-page['width']*k)/2;oy=(height-page['height']*k)/2
         def X(x):return round((ox+x*k)*9525)
         def Y(y):return round((oy+y*k)*9525)

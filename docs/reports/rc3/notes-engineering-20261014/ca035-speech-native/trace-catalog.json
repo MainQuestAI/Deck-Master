@@ -1,0 +1,181 @@
+{
+  "fixed_source": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+  "fixed_tree": "05191deede70f26e661b28f4221c3c0d00ef2ecf",
+  "installed_wheel_sha256": "17a3bb5c40bdec788548fe17a3906e40524b41378f27d6ac77bc9c65bd543182",
+  "origin": "run-final/fixed-execution-origin.json",
+  "exact_product_bytes_before_after": true,
+  "product_file_count": 246,
+  "frozen_fixture_source": "/workspace/work/rc3/reviews/rc3-02-code-snapshot-ca035/tests/rebuild",
+  "pytest_dependency_source": "Independent scratch fixture-deps, not installed into or changing isolated candidate",
+  "quality_claim": "No real model, Human, Owner, desktop or professional acceptance. Imported initial state is schema-valid fixture, not RC3-04 import E2E.",
+  "variants": {
+    "bound": {
+      "status": "PASS",
+      "classification": "Synthetic L1 authority/review + real native file engineering only",
+      "initial_projectionmetadata": {
+        "plan_mode": "bound",
+        "collaboration": {
+          "authority_policy": "traceable",
+          "authorizations": [],
+          "decisions": [
+            {
+              "path": ".deckmaster/objects/41/415e445a4e1747d71f8d3326caf7c977dd4dcc667b920749d50eeab4bc916a4d.json",
+              "sha256": "415e445a4e1747d71f8d3326caf7c977dd4dcc667b920749d50eeab4bc916a4d"
+            }
+          ],
+          "quality_profile": {
+            "content_review_requirement": "independent_model_or_human",
+            "override_decision_ref": null,
+            "requirement_origin": "default_new_argument"
+          },
+          "request": {
+            "background_request_ids": [],
+            "closed": false,
+            "closed_reason": null,
+            "content_intent": null,
+            "instruction_evidence": {
+              "actor_id": null,
+              "assurance": "host_attested",
+              "kind": "host_attested_instruction",
+              "presentation_ref": null,
+              "source_locator": "chat:explicit-synthetic-full-engineering-request",
+              "source_ref": {
+                "path": ".deckmaster/objects/0e/0eac8cb49fa58842122212f13738a184a463fe285b5a542bbde12a76e4e40937.json",
+                "sha256": "0eac8cb49fa58842122212f13738a184a463fe285b5a542bbde12a76e4e40937"
+              },
+              "transport_receipt_ref": null
+            },
+            "intent": "full_deck",
+            "pause_reason": null,
+            "paused": false,
+            "request_id": "req-1defde7e342d",
+            "scope": {
+              "allow_page_membership_change": true,
+              "allow_page_order_change": false,
+              "external_artifact_ref": null,
+              "layers": [
+                "narrative",
+                "plan",
+                "page_copy",
+                "speech",
+                "design",
+                "blueprint",
+                "svg",
+                "review",
+                "output"
+              ],
+              "page_ids": [],
+              "page_manifest_ref": null,
+              "purpose": "working",
+              "subject": "deck"
+            },
+            "variant": null
+          },
+          "schema_version": "collaboration.v1"
+        },
+        "before_document": "run-final/bound/before-document.json"
+      },
+      "current_preproduction_before_recheck": {
+        "status": "missing",
+        "missing_units": [
+          "speech"
+        ],
+        "original_status_json": "run-final/bound/post-speech-before-review-status.json"
+      },
+      "first_compile_before_recheck_observation": {
+        "blocked": false
+      },
+      "formally_requalified_then_recompiled_and_exported": true,
+      "desktop": "NOT_RUN",
+      "human": "NOT_RUN",
+      "final_pptx_sha256": "2b2bf06042a259072c24be99bc4bca8114eea808146ebfb17809c1842773fa03",
+      "audit": "run-final/bound/supplemental-audit.json",
+      "projectionmetadata": "run-final/bound/projectionmetadata.json",
+      "original_first_compile_report": "run-final/bound/first-compile-before-recheck-original-native-report.json"
+    },
+    "imported_mapping_null_narrative": {
+      "status": "PASS",
+      "classification": "Synthetic L1 authority/review + real native file engineering only",
+      "initial_projectionmetadata": {
+        "plan_mode": "imported_mapping",
+        "collaboration": {
+          "authority_policy": "traceable",
+          "authorizations": [],
+          "decisions": [],
+          "quality_profile": {
+            "content_review_requirement": "fidelity_only",
+            "override_decision_ref": null,
+            "requirement_origin": "confirmed_manuscript"
+          },
+          "request": {
+            "background_request_ids": [],
+            "closed": false,
+            "closed_reason": null,
+            "content_intent": null,
+            "instruction_evidence": {
+              "actor_id": null,
+              "assurance": "host_attested",
+              "kind": "host_attested_instruction",
+              "presentation_ref": null,
+              "source_locator": "chat:explicit-synthetic-full-engineering-request",
+              "source_ref": {
+                "path": ".deckmaster/objects/0e/0eac8cb49fa58842122212f13738a184a463fe285b5a542bbde12a76e4e40937.json",
+                "sha256": "0eac8cb49fa58842122212f13738a184a463fe285b5a542bbde12a76e4e40937"
+              },
+              "transport_receipt_ref": null
+            },
+            "intent": "full_deck",
+            "pause_reason": null,
+            "paused": false,
+            "request_id": "req-1defde7e342d",
+            "scope": {
+              "allow_page_membership_change": true,
+              "allow_page_order_change": false,
+              "external_artifact_ref": null,
+              "layers": [
+                "narrative",
+                "plan",
+                "page_copy",
+                "speech",
+                "design",
+                "blueprint",
+                "svg",
+                "review",
+                "output"
+              ],
+              "page_ids": [
+                "p1",
+                "p2"
+              ],
+              "page_manifest_ref": null,
+              "purpose": "working",
+              "subject": "deck"
+            },
+            "variant": null
+          },
+          "schema_version": "collaboration.v1"
+        },
+        "before_document": "run-final/imported_mapping_null_narrative/before-document.json"
+      },
+      "current_preproduction_before_recheck": {
+        "status": "missing",
+        "missing_units": [
+          "page_copy",
+          "progression"
+        ],
+        "original_status_json": "run-final/imported_mapping_null_narrative/post-speech-before-review-status.json"
+      },
+      "first_compile_before_recheck_observation": {
+        "blocked": false
+      },
+      "formally_requalified_then_recompiled_and_exported": true,
+      "desktop": "NOT_RUN",
+      "human": "NOT_RUN",
+      "final_pptx_sha256": "f0c63d91efe72f49aa2e14a2cf222aeab1df27372522039d64771f91dcfa12d1",
+      "audit": "run-final/imported_mapping_null_narrative/supplemental-audit.json",
+      "projectionmetadata": "run-final/imported_mapping_null_narrative/projectionmetadata.json",
+      "original_first_compile_report": "run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-native-report.json"
+    }
+  },
+  "historical_attempts": "0b0ed sibling retains all mixed-source failed and exact-installed runs; no rewrite."
+}

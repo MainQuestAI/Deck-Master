@@ -1,0 +1,2499 @@
+{
+  "files": [
+    {
+      "path": "audit.log",
+      "sha256": "35010a076efbf1c4cdd63b46e3ca36756a723f3f049d298df09bce932f5b805b",
+      "bytes": 101
+    },
+    {
+      "path": "audit.py",
+      "sha256": "d5fcccd5a5fc0ae8cdbb1a569e18138fba09d65384e0caccda8a8290a249027a",
+      "bytes": 3281
+    },
+    {
+      "path": "capture-first-compile.log",
+      "sha256": "eac2f3be0009ad15caa39caa8539203cf9974da6c6ae8b5d68aec00531148f48",
+      "bytes": 137
+    },
+    {
+      "path": "capture-first-compile.py",
+      "sha256": "1436740dbd2491397201e3af0c82c412d0a9c4d93e77e331216a6505e82e3a58",
+      "bytes": 2355
+    },
+    {
+      "path": "capture-projection-metadata.py",
+      "sha256": "dcadf86725e756b95d4c6c127dcbba96aa47aad9aafd36a160befa3394b741ea",
+      "bytes": 1280
+    },
+    {
+      "path": "first-compile-original-artifact-recovery.json",
+      "sha256": "ad2da9055cacd21093a0cfaa09c275fa14fa2a45b6373e27c15685721f5e435f",
+      "bytes": 2051
+    },
+    {
+      "path": "fixed-installed-final-audit.json",
+      "sha256": "e80d67068998f5ad0e0c920512e420d4628e5e8eb11469da93e4afb0205751bb",
+      "bytes": 10873
+    },
+    {
+      "path": "run-final/bound/actual-export.json",
+      "sha256": "dd33cf8f70da9c05c4966417d34ef6019cf42daa95250f3be28a574776a1665c",
+      "bytes": 7106
+    },
+    {
+      "path": "run-final/bound/actual-speech-task.json",
+      "sha256": "e504ecafe0cd0ef78a273ef9d8b719ec88b6e2af69bf6a0946a11ab2e3b28337",
+      "bytes": 3413
+    },
+    {
+      "path": "run-final/bound/after-speech-document.json",
+      "sha256": "1feccda03e3324699e8765ae1332e0d00e3f0433df9b89a5bc288a0e2088f0e4",
+      "bytes": 14217
+    },
+    {
+      "path": "run-final/bound/after-speech-review-accepted.json",
+      "sha256": "24b7fd14821b4e7e21cfc4a0c336e8f125b6e65ef4e24dd3b113833afe43c534",
+      "bytes": 2828
+    },
+    {
+      "path": "run-final/bound/after-speech-review-dispatch.json",
+      "sha256": "0f598eb87ff8c56bf4832e0638c33cbd84d798013c419030beac034e5f94deeb",
+      "bytes": 7159
+    },
+    {
+      "path": "run-final/bound/after-speech-review-status.json",
+      "sha256": "b12fa395b6466be3cab676e7dcb446676a1861f43428b7ec1f35d10116b6177c",
+      "bytes": 2052
+    },
+    {
+      "path": "run-final/bound/after_speech-original-plan.json",
+      "sha256": "218b985ba841b410181423efe6883c32e0f6a0c5bd81b61aa8165a81dcb9bae0",
+      "bytes": 3022
+    },
+    {
+      "path": "run-final/bound/before-document.json",
+      "sha256": "c4ecfb3944b92d7b9b96b8fd5ae46c531a9fab34e3ddb4fadc4f48d7e19976ce",
+      "bytes": 12757
+    },
+    {
+      "path": "run-final/bound/before-original-plan.json",
+      "sha256": "37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d",
+      "bytes": 2847
+    },
+    {
+      "path": "run-final/bound/before-review-accepted.json",
+      "sha256": "690469d67cf74c2fc81761130d17b0b35de414e9c4ea9c27da0faab857cb0383",
+      "bytes": 2828
+    },
+    {
+      "path": "run-final/bound/before-review-dispatch.json",
+      "sha256": "649df79e5921f20d9f953c958dfb9f6c69871dafca8dafe91a486b45c27b0f69",
+      "bytes": 4805
+    },
+    {
+      "path": "run-final/bound/before-review-status.json",
+      "sha256": "44992a0714021834ba7383c93b502207ead23f9f5829beb1606b6d3a9a90dcb9",
+      "bytes": 1434
+    },
+    {
+      "path": "run-final/bound/downloaded.pptx",
+      "sha256": "2b2bf06042a259072c24be99bc4bca8114eea808146ebfb17809c1842773fa03",
+      "bytes": 30745
+    },
+    {
+      "path": "run-final/bound/explicit-synthetic-execute-grant.json",
+      "sha256": "85a9355e5d4dc93b290000a65b9132fb37272f5687b9f3acf0ae38f0bc1ca684",
+      "bytes": 375
+    },
+    {
+      "path": "run-final/bound/final-native-compile.json",
+      "sha256": "e0f9057d0dfd0256735f3557862a21c1597e7a4fd41ffe5845de071b707d07be",
+      "bytes": 801
+    },
+    {
+      "path": "run-final/bound/final-original-plan.json",
+      "sha256": "218b985ba841b410181423efe6883c32e0f6a0c5bd81b61aa8165a81dcb9bae0",
+      "bytes": 3022
+    },
+    {
+      "path": "run-final/bound/final-readback.json",
+      "sha256": "6bcaf7c445d9ab750ede2de46329ab433f7a2de66e974ec2e9bc611f7935b823",
+      "bytes": 439
+    },
+    {
+      "path": "run-final/bound/first-compile-before-recheck-original-document.json",
+      "sha256": "5100b33059282a046a806438717ac7c9dab3d9ad1f4d320f4cddea7deecf808b",
+      "bytes": 10613
+    },
+    {
+      "path": "run-final/bound/first-compile-before-recheck-original-native-report.json",
+      "sha256": "2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a",
+      "bytes": 800
+    },
+    {
+      "path": "run-final/bound/first-compile-before-recheck-original-provenance.json",
+      "sha256": "21418ea0fb7ae345fbdf8f064de119ac30387bc3f2e94c606a9f331c3b18338a",
+      "bytes": 972
+    },
+    {
+      "path": "run-final/bound/honest-current-qualification-block.json",
+      "sha256": "b181ce67f54dde9900acf62f7f536e1ce0d93a6ccbd01bf62a4694a96d52c955",
+      "bytes": 23
+    },
+    {
+      "path": "run-final/bound/initial-control.json",
+      "sha256": "f1d4e8b09bc3b8fb4333743b77e0c8eb5921d661517d138af627db42dd52a62a",
+      "bytes": 1721
+    },
+    {
+      "path": "run-final/bound/initial-native-compile.json",
+      "sha256": "460320bfbfe88ce4a3abcfa9461b8b61e6e7b4450db88eba8e2689cdc9caa184",
+      "bytes": 741
+    },
+    {
+      "path": "run-final/bound/original-legacy-task-cancelled.json",
+      "sha256": "ce331488913d068dad70f9a946ffe583901018950fe928644353b034641afe9a",
+      "bytes": 370
+    },
+    {
+      "path": "run-final/bound/original.pptx",
+      "sha256": "cac0f01ea62a59d0cc481bfb7915f243c605d014367e582fa364da6f07b07bdd",
+      "bytes": 35572
+    },
+    {
+      "path": "run-final/bound/p1-actual-blueprint-task.json",
+      "sha256": "7de16e9a041982f34e6e2379021ff2b933cf6cd89591ff1eb0b1f67b54441640",
+      "bytes": 4658
+    },
+    {
+      "path": "run-final/bound/p1-actual-normal-continue.json",
+      "sha256": "39bd845da33dbf8ae0e8dee80b76dd6c25fcd52e7ee3d79c9963eff344aea326",
+      "bytes": 14399
+    },
+    {
+      "path": "run-final/bound/p1-actual-pagevisual-L1-fixture.json",
+      "sha256": "c02128a2ee3f4b96f079a0722b69b0cd9bb9d8f633076d46193647735a68d9f7",
+      "bytes": 6188
+    },
+    {
+      "path": "run-final/bound/p1-actual-pagevisual-public-task.json",
+      "sha256": "3d50e86f744e658e8356a735e99ba307688d2d6da7b16425d041408a5886ff87",
+      "bytes": 11770
+    },
+    {
+      "path": "run-final/bound/p2-actual-blueprint-task.json",
+      "sha256": "e6b60ba3e92787e65eaed950c170c78d618feb784265d06861c1c7f58e8a35e6",
+      "bytes": 4658
+    },
+    {
+      "path": "run-final/bound/p2-actual-normal-continue.json",
+      "sha256": "1eaabc60ce216524eb55c9f910ed1c2d965dc21116f7268d88c3a7d48c8e7fe6",
+      "bytes": 14399
+    },
+    {
+      "path": "run-final/bound/p2-actual-pagevisual-L1-fixture.json",
+      "sha256": "e0d44fdc3e240c95d2629a16df4f55cad9e1b5111379dadab43056da25198ab5",
+      "bytes": 6188
+    },
+    {
+      "path": "run-final/bound/p2-actual-pagevisual-public-task.json",
+      "sha256": "ebb479ebccb12c63fb34c0e5c018b0641448a6e98685beffbcc419ba7fd7e017",
+      "bytes": 11770
+    },
+    {
+      "path": "run-final/bound/post-speech-before-review-status.json",
+      "sha256": "9f126154126b76574234d527a6dfec547251372e586b553ea5ffae3dfcc5404a",
+      "bytes": 1234
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/current.json",
+      "sha256": "a13443cbdd51aac2b85734022b5763ce6f889dee1bed7a9581c175876f18bd7d",
+      "bytes": 109
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/01/018035e56f0b846bb74d2ce9079d6dd9bf60df919a670aad49e8197fb0b4ddea.json",
+      "sha256": "018035e56f0b846bb74d2ce9079d6dd9bf60df919a670aad49e8197fb0b4ddea",
+      "bytes": 1615
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/02/0298403246ba0dc29084884e15d0fa13743ce8c33180b59639f89ca68c311a0b.json",
+      "sha256": "0298403246ba0dc29084884e15d0fa13743ce8c33180b59639f89ca68c311a0b",
+      "bytes": 954
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/02/02f97500c0b4449910bc517289d1adcdc28136cbc8fc247ae48d9a1a011e4122.json",
+      "sha256": "02f97500c0b4449910bc517289d1adcdc28136cbc8fc247ae48d9a1a011e4122",
+      "bytes": 3200
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/0b/0b4cf6c5a787f4232d8a3aabd59045de7865ae56e8018c41dd68a2bdcc324f55.json",
+      "sha256": "0b4cf6c5a787f4232d8a3aabd59045de7865ae56e8018c41dd68a2bdcc324f55",
+      "bytes": 1036
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/0e/0e0398817812c7fa84ea398c9bcf9bf76cf411c0fa8cab2ba098b3ef25d6fda3.json",
+      "sha256": "0e0398817812c7fa84ea398c9bcf9bf76cf411c0fa8cab2ba098b3ef25d6fda3",
+      "bytes": 4401
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/0e/0eac8cb49fa58842122212f13738a184a463fe285b5a542bbde12a76e4e40937.json",
+      "sha256": "0eac8cb49fa58842122212f13738a184a463fe285b5a542bbde12a76e4e40937",
+      "bytes": 57
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/10/10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae.txt",
+      "sha256": "10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae",
+      "bytes": 156
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/11/114f8ec5304cfc1b80cef94592b0c5053d13481ba6b4b4f12a1225ad017cc437.json",
+      "sha256": "114f8ec5304cfc1b80cef94592b0c5053d13481ba6b4b4f12a1225ad017cc437",
+      "bytes": 57
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/15/15ed081cec0d44beb8640b7ef84becc5177823bfa5e18aad80d132476ecc4403.json",
+      "sha256": "15ed081cec0d44beb8640b7ef84becc5177823bfa5e18aad80d132476ecc4403",
+      "bytes": 1603
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/20/2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a.json",
+      "sha256": "2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a",
+      "bytes": 800
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/21/218b985ba841b410181423efe6883c32e0f6a0c5bd81b61aa8165a81dcb9bae0.json",
+      "sha256": "218b985ba841b410181423efe6883c32e0f6a0c5bd81b61aa8165a81dcb9bae0",
+      "bytes": 3022
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/22/227eda4a43faae41d0411b4aed753c606ec1c8302403742558bace3a3b736082.json",
+      "sha256": "227eda4a43faae41d0411b4aed753c606ec1c8302403742558bace3a3b736082",
+      "bytes": 3801
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/22/229f84ca19a0306fdf38106c6822265428703ac671c6fa5a55a87d08cf11d560.json",
+      "sha256": "229f84ca19a0306fdf38106c6822265428703ac671c6fa5a55a87d08cf11d560",
+      "bytes": 5180
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/23/231a0fc65c4d802c7e9dcfb22bbf7001568d6ef8a3e6df6ecdf22fa01800505d.json",
+      "sha256": "231a0fc65c4d802c7e9dcfb22bbf7001568d6ef8a3e6df6ecdf22fa01800505d",
+      "bytes": 1615
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/23/236f371a1b362289458b1055148acdaad6c05befdb755a706f9a1e1ed8dd9095.json",
+      "sha256": "236f371a1b362289458b1055148acdaad6c05befdb755a706f9a1e1ed8dd9095",
+      "bytes": 1079
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/2a/2a34ef9b0a25fdd6984a00e3165526def22670d7bd65d561f1bfa1ab73ed7b1d.json",
+      "sha256": "2a34ef9b0a25fdd6984a00e3165526def22670d7bd65d561f1bfa1ab73ed7b1d",
+      "bytes": 4095
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/2f/2f55a9f9bb716518b668d76dbe737dda77ad7222a115dacb88124acf18552f90.json",
+      "sha256": "2f55a9f9bb716518b668d76dbe737dda77ad7222a115dacb88124acf18552f90",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/34/341cc5550424ed54b01a336d1fde4778fb3cc17822355197d8e7aa72086ef94a.json",
+      "sha256": "341cc5550424ed54b01a336d1fde4778fb3cc17822355197d8e7aa72086ef94a",
+      "bytes": 1310
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/35/35b74c83e2ebdd38b718f2b860bfbec1f343c3d3649734d142d32c5e1d4a4440.json",
+      "sha256": "35b74c83e2ebdd38b718f2b860bfbec1f343c3d3649734d142d32c5e1d4a4440",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/37/37ae4cbf01f52c5cbb57cd2ec9bad26d02c800a84f0471c79be112a4c08a3aa1.json",
+      "sha256": "37ae4cbf01f52c5cbb57cd2ec9bad26d02c800a84f0471c79be112a4c08a3aa1",
+      "bytes": 1119
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/37/37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d.json",
+      "sha256": "37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d",
+      "bytes": 2847
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/37/37c476e3f1c7ed0b4fba2f8b830eef1bb0fa00c4852994f74f97a349436cd293.json",
+      "sha256": "37c476e3f1c7ed0b4fba2f8b830eef1bb0fa00c4852994f74f97a349436cd293",
+      "bytes": 4547
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/37/37f6c0fb27e942cb67d7f7c552f9327275eeabd229dab463cbaa0f6306a83fb8.png",
+      "sha256": "37f6c0fb27e942cb67d7f7c552f9327275eeabd229dab463cbaa0f6306a83fb8",
+      "bytes": 8564
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/38/3873455829a1fbb63ee3f222badcff7168af34f14054778564d56d2b85421f55.json",
+      "sha256": "3873455829a1fbb63ee3f222badcff7168af34f14054778564d56d2b85421f55",
+      "bytes": 3117
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/38/38a65635023b9e80e86a47b0e9052bcdc5a75046912ea8314d875d95843dd7b8.json",
+      "sha256": "38a65635023b9e80e86a47b0e9052bcdc5a75046912ea8314d875d95843dd7b8",
+      "bytes": 4401
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/38/38e459fac2e01d722fc5f3c67da06c4d16e12c1b0c34ba7b2f26fe0e60286b7d.json",
+      "sha256": "38e459fac2e01d722fc5f3c67da06c4d16e12c1b0c34ba7b2f26fe0e60286b7d",
+      "bytes": 931
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/39/3957104421e609baf7dd9b0018d29c16d82aadaff986d730051810d1205e3276.json",
+      "sha256": "3957104421e609baf7dd9b0018d29c16d82aadaff986d730051810d1205e3276",
+      "bytes": 1036
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/3a/3a694ed401c40dc98f8f367e56a7655ad37f2571bad5181cbe259ae54fdf9613.json",
+      "sha256": "3a694ed401c40dc98f8f367e56a7655ad37f2571bad5181cbe259ae54fdf9613",
+      "bytes": 1134
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/3d/3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589.json",
+      "sha256": "3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589",
+      "bytes": 772
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/40/405ff3443316b03462eb6222ae23e8252b586e45e732fd3fd1bd5a32b511a4aa.json",
+      "sha256": "405ff3443316b03462eb6222ae23e8252b586e45e732fd3fd1bd5a32b511a4aa",
+      "bytes": 954
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/40/40688a168da41b6da877062152884c7c795f0f7d8eaa8a6a9be8505e17c7caf8.svg",
+      "sha256": "40688a168da41b6da877062152884c7c795f0f7d8eaa8a6a9be8505e17c7caf8",
+      "bytes": 379
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/41/415e445a4e1747d71f8d3326caf7c977dd4dcc667b920749d50eeab4bc916a4d.json",
+      "sha256": "415e445a4e1747d71f8d3326caf7c977dd4dcc667b920749d50eeab4bc916a4d",
+      "bytes": 1545
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/43/43cd528e2fee9751c48a7c11483de9c425857539b7f9b0b666f0c7cc921696ee.json",
+      "sha256": "43cd528e2fee9751c48a7c11483de9c425857539b7f9b0b666f0c7cc921696ee",
+      "bytes": 9636
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/48/48f681cd574acc20cbc672a2dc6026e3139b9ebbc2834085e150ba34e62ba9c7.json",
+      "sha256": "48f681cd574acc20cbc672a2dc6026e3139b9ebbc2834085e150ba34e62ba9c7",
+      "bytes": 23
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/4f/4f1cf98472472dd2c008071e67d28b110e456fcfb827f7efea044c71ffcd9c2e.json",
+      "sha256": "4f1cf98472472dd2c008071e67d28b110e456fcfb827f7efea044c71ffcd9c2e",
+      "bytes": 1970
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/51/5103f1641846d43e5a36dff0c13a72e6da1ec8dab665b36517a896b457c46e59.json",
+      "sha256": "5103f1641846d43e5a36dff0c13a72e6da1ec8dab665b36517a896b457c46e59",
+      "bytes": 1617
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/52/526cb47d37ad4110d31f554a2f773f383ddfd51a6aff59350f6293bcb3f02d12.json",
+      "sha256": "526cb47d37ad4110d31f554a2f773f383ddfd51a6aff59350f6293bcb3f02d12",
+      "bytes": 4111
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/54/54dc0217301c9f0d33f568b43c8a5b54b8968e5e578ede2d053a626b9099488c.json",
+      "sha256": "54dc0217301c9f0d33f568b43c8a5b54b8968e5e578ede2d053a626b9099488c",
+      "bytes": 3117
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/59/59d4ce37f64139b66d303868a2ab35dc8e0503595cc97b0feb827c376b3ba0c6.json",
+      "sha256": "59d4ce37f64139b66d303868a2ab35dc8e0503595cc97b0feb827c376b3ba0c6",
+      "bytes": 4797
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/5b/5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03.json",
+      "sha256": "5b955c56a77458d29fe9a9d461f9a8612a65c3d30579ce93869e2fd45ef2fd03",
+      "bytes": 1235
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/5c/5c247a2546b1cc0de73e29afa7c2a7dd4f33d59bba9a5922101de1d4847dd033.json",
+      "sha256": "5c247a2546b1cc0de73e29afa7c2a7dd4f33d59bba9a5922101de1d4847dd033",
+      "bytes": 1295
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/5f/5f1c61957b9a74ed51de3bb27324961497de56567a12b3c118539763e8531ef6.json",
+      "sha256": "5f1c61957b9a74ed51de3bb27324961497de56567a12b3c118539763e8531ef6",
+      "bytes": 2684
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/65/654c54a205d0afbf91f111f097c71e6bc0890a18e3b49fb9dffccbd984b5debe.json",
+      "sha256": "654c54a205d0afbf91f111f097c71e6bc0890a18e3b49fb9dffccbd984b5debe",
+      "bytes": 4218
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/66/66a532454e5f720ff8a5762c2d703e6818c772ac180f048002a77ba615c32f9a.json",
+      "sha256": "66a532454e5f720ff8a5762c2d703e6818c772ac180f048002a77ba615c32f9a",
+      "bytes": 772
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/66/66dc15152ee76003de78d55b88d7964aa5c9832902805f11e25d0ae375864043.json",
+      "sha256": "66dc15152ee76003de78d55b88d7964aa5c9832902805f11e25d0ae375864043",
+      "bytes": 4797
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/67/679aef9c932bf831d94221fa963ed0eee956ead5eb95fe34d6a31ca53dcda4f4.txt",
+      "sha256": "679aef9c932bf831d94221fa963ed0eee956ead5eb95fe34d6a31ca53dcda4f4",
+      "bytes": 2520
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/68/684738825c3484ba92428103c813129f54f4898d1414d5b0b1634e579e4d8a7b.json",
+      "sha256": "684738825c3484ba92428103c813129f54f4898d1414d5b0b1634e579e4d8a7b",
+      "bytes": 4978
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/6a/6a07946b62d575f0ebf312ec318116f54bdba015aa3dcbfa120690872a451e44.json",
+      "sha256": "6a07946b62d575f0ebf312ec318116f54bdba015aa3dcbfa120690872a451e44",
+      "bytes": 33
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/6a/6a86c5c4f34b60505997bd057b1a0e7fec981ee3ad0eb7933cb0e45f5da9b801.json",
+      "sha256": "6a86c5c4f34b60505997bd057b1a0e7fec981ee3ad0eb7933cb0e45f5da9b801",
+      "bytes": 4897
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/70/70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488.json",
+      "sha256": "70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488",
+      "bytes": 821
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/72/72a9e0ec8f4c48864e2ff1dd4b42767fe90e564adbe1c7bf0a23762d7305bf23.json",
+      "sha256": "72a9e0ec8f4c48864e2ff1dd4b42767fe90e564adbe1c7bf0a23762d7305bf23",
+      "bytes": 1961
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/75/7504662b53dd6ab013941e6afa819e6a21a251779a60528cb48633a177da9945.json",
+      "sha256": "7504662b53dd6ab013941e6afa819e6a21a251779a60528cb48633a177da9945",
+      "bytes": 4290
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/75/750ceafa2ac95b09703dfe66827cb1a5f18f969415c96fecb90d05b7d3cd0bb2.json",
+      "sha256": "750ceafa2ac95b09703dfe66827cb1a5f18f969415c96fecb90d05b7d3cd0bb2",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/76/7637eea15f3ebc263afd393d518b0051290735c65bf8dc95689fdc11d1ea4e06.json",
+      "sha256": "7637eea15f3ebc263afd393d518b0051290735c65bf8dc95689fdc11d1ea4e06",
+      "bytes": 956
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/78/7856ccd1a74bdd471df71dd07a66e5afbb9c82b41e67c6d168a21e3266102290.json",
+      "sha256": "7856ccd1a74bdd471df71dd07a66e5afbb9c82b41e67c6d168a21e3266102290",
+      "bytes": 9401
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/78/78d71236036b529a2bd52ec3f28fbd500283a7eedaed3af94a160a51a444af8b.json",
+      "sha256": "78d71236036b529a2bd52ec3f28fbd500283a7eedaed3af94a160a51a444af8b",
+      "bytes": 956
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/79/79ad1c1e92e16f4b29f2f06a288ed7649252cca0bd2398e966c449760dfb119a.json",
+      "sha256": "79ad1c1e92e16f4b29f2f06a288ed7649252cca0bd2398e966c449760dfb119a",
+      "bytes": 4218
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/7b/7bf9e37b2aab40ea48c569e54a3bbcd0f7ae0a992d97442c1223f6b81cf3d022.json",
+      "sha256": "7bf9e37b2aab40ea48c569e54a3bbcd0f7ae0a992d97442c1223f6b81cf3d022",
+      "bytes": 1976
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/82/824176f7e5ad0219042d24035ea3d25fc625a61d38a3515d26c38ac6514e38c1.json",
+      "sha256": "824176f7e5ad0219042d24035ea3d25fc625a61d38a3515d26c38ac6514e38c1",
+      "bytes": 1376
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/85/858ac22cc8241b781727315881789f13c6447e69205dac734c5c53187e72424b.json",
+      "sha256": "858ac22cc8241b781727315881789f13c6447e69205dac734c5c53187e72424b",
+      "bytes": 4290
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/86/860a0e3797ddd4d471808d2facde4864cef281611433add70a6382e98f36c7ab.json",
+      "sha256": "860a0e3797ddd4d471808d2facde4864cef281611433add70a6382e98f36c7ab",
+      "bytes": 1235
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/89/898c9d603b7600bd0f26b7b4e0974ddc6cc0d2c6d16afecd05f1892163ec2292.json",
+      "sha256": "898c9d603b7600bd0f26b7b4e0974ddc6cc0d2c6d16afecd05f1892163ec2292",
+      "bytes": 3371
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/8b/8b6924b6506ef19680edc6d7a6c3ef4defb99956ec5334d090fbf12875243fbf.json",
+      "sha256": "8b6924b6506ef19680edc6d7a6c3ef4defb99956ec5334d090fbf12875243fbf",
+      "bytes": 547
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/95/95cbb0a646a3b84347f94a56bfd1e804e94121930842d54e3a9e75210caa352e.json",
+      "sha256": "95cbb0a646a3b84347f94a56bfd1e804e94121930842d54e3a9e75210caa352e",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/95/95df4fc1a622e7e7ad00868692f3010b7a5d2967618ce12eabd1ecbcb5ef76cb.json",
+      "sha256": "95df4fc1a622e7e7ad00868692f3010b7a5d2967618ce12eabd1ecbcb5ef76cb",
+      "bytes": 4957
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/95/95f3781cbb2d24de2d117c576331501baf8886a226431b215367f94d8aef1390.json",
+      "sha256": "95f3781cbb2d24de2d117c576331501baf8886a226431b215367f94d8aef1390",
+      "bytes": 956
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/96/96a82b74f556d3af41b888e2f107b16dabfefd1c31284dac93dd55bc14dd578b.json",
+      "sha256": "96a82b74f556d3af41b888e2f107b16dabfefd1c31284dac93dd55bc14dd578b",
+      "bytes": 2775
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/9b/9b8a64dc14a5b9fc6b6162ad87937fbbb0904d3a3ab6801bff9d1ac87ebb9df8.json",
+      "sha256": "9b8a64dc14a5b9fc6b6162ad87937fbbb0904d3a3ab6801bff9d1ac87ebb9df8",
+      "bytes": 547
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a1/a1379b2a8b183734dd6c7633b5b8f914290b8278e33f656e8662399ddcd9e22a.json",
+      "sha256": "a1379b2a8b183734dd6c7633b5b8f914290b8278e33f656e8662399ddcd9e22a",
+      "bytes": 3219
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a2/a25a47f290746074ff7ee31642872eb10537afdf6df2afb46e2362a4f4986e2b.json",
+      "sha256": "a25a47f290746074ff7ee31642872eb10537afdf6df2afb46e2362a4f4986e2b",
+      "bytes": 821
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a3/a32e63ff774431e72386cbd4453c3cd328628de4bfd0073784d320824153a08d.json",
+      "sha256": "a32e63ff774431e72386cbd4453c3cd328628de4bfd0073784d320824153a08d",
+      "bytes": 60
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a4/a42c7de25fd87f8daead3be15aa99752e5ae1be5d5b128a19c3e9f2c3439cc0f.json",
+      "sha256": "a42c7de25fd87f8daead3be15aa99752e5ae1be5d5b128a19c3e9f2c3439cc0f",
+      "bytes": 1967
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a4/a4333b084a62f0c5e0a753313d8b5f9c629d9cb73da840bf4a2b1c90a3cb0d21.json",
+      "sha256": "a4333b084a62f0c5e0a753313d8b5f9c629d9cb73da840bf4a2b1c90a3cb0d21",
+      "bytes": 4111
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a4/a436da667e4074ac6ca9f1113958fea3f093baf63f494ee66e4c46ed33f40f25.json",
+      "sha256": "a436da667e4074ac6ca9f1113958fea3f093baf63f494ee66e4c46ed33f40f25",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a7/a722c4c79289478c0fbd2a8735b4ddab90bb5cc42091cf50d9359b1df7493907.json",
+      "sha256": "a722c4c79289478c0fbd2a8735b4ddab90bb5cc42091cf50d9359b1df7493907",
+      "bytes": 1336
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a7/a738d6cce32c2381163d7966a4b67213bdefa5983ee419fa54aca36338e015bb.json",
+      "sha256": "a738d6cce32c2381163d7966a4b67213bdefa5983ee419fa54aca36338e015bb",
+      "bytes": 3371
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a8/a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/a9/a9441bf9e3f9d09df6d7f9b077063469d81b758b153bc57158ed99107ca5c253.json",
+      "sha256": "a9441bf9e3f9d09df6d7f9b077063469d81b758b153bc57158ed99107ca5c253",
+      "bytes": 1617
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ab/ab6ec985160a447ff1c3396fc3853e0cda584a84378cc8fe0d7cb8590dc41e1a.txt",
+      "sha256": "ab6ec985160a447ff1c3396fc3853e0cda584a84378cc8fe0d7cb8590dc41e1a",
+      "bytes": 2520
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ae/ae02b0a82d6c1e1ef4a5e819317da72e7e4dd62faf426cb4578d3e3876cdde51.json",
+      "sha256": "ae02b0a82d6c1e1ef4a5e819317da72e7e4dd62faf426cb4578d3e3876cdde51",
+      "bytes": 1967
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ae/ae3b76578857856a376f460a8240ab827c4a2d65958a8c75e4253eac7e44493f.json",
+      "sha256": "ae3b76578857856a376f460a8240ab827c4a2d65958a8c75e4253eac7e44493f",
+      "bytes": 4273
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/b3/b33a27301ffcb8f6a2b3add2bd58a0fe48c17036f44929d58e5fb1c6d1329b43.json",
+      "sha256": "b33a27301ffcb8f6a2b3add2bd58a0fe48c17036f44929d58e5fb1c6d1329b43",
+      "bytes": 1961
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/b5/b579e5abee9b73125efca800f313a526cb19fd7e6d9abe1bbbd68d3e218986ed.json",
+      "sha256": "b579e5abee9b73125efca800f313a526cb19fd7e6d9abe1bbbd68d3e218986ed",
+      "bytes": 3292
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/b6/b6dadf2beda041fc3f9cccc66cec826b777dd2adc13732f261e362c2aea341d2.json",
+      "sha256": "b6dadf2beda041fc3f9cccc66cec826b777dd2adc13732f261e362c2aea341d2",
+      "bytes": 20
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/b7/b79e5a5a29ad9e4bbdafe4a6cecd9fb6d2c5e946593f504e112361a7a94acdd0.json",
+      "sha256": "b79e5a5a29ad9e4bbdafe4a6cecd9fb6d2c5e946593f504e112361a7a94acdd0",
+      "bytes": 740
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/b9/b9c3b7e9284bb456b024243231d98ca0386d47f5df2787f17103eda96298b789.json",
+      "sha256": "b9c3b7e9284bb456b024243231d98ca0386d47f5df2787f17103eda96298b789",
+      "bytes": 772
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/b9/b9d0adaacc5d1ea0de239360c2dad90cf503edaf2359f03579ed4c6f37cfaeaa.json",
+      "sha256": "b9d0adaacc5d1ea0de239360c2dad90cf503edaf2359f03579ed4c6f37cfaeaa",
+      "bytes": 1036
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ba/ba508d0fb752c66a8e99c65d9accf4919bcff13dc5f27a05c8eff6d66a3356a5.json",
+      "sha256": "ba508d0fb752c66a8e99c65d9accf4919bcff13dc5f27a05c8eff6d66a3356a5",
+      "bytes": 58
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/bc/bc0ca5365d8e9ed7cbe0f4a5c5bd27b1525887e0fe61a9a3c8c009abc17ed35c.json",
+      "sha256": "bc0ca5365d8e9ed7cbe0f4a5c5bd27b1525887e0fe61a9a3c8c009abc17ed35c",
+      "bytes": 2088
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/bf/bfe4f7454950c3d332f5fc755df86f0cc0e08144e1e1107881013695b8cf7963.json",
+      "sha256": "bfe4f7454950c3d332f5fc755df86f0cc0e08144e1e1107881013695b8cf7963",
+      "bytes": 3906
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/bf/bfefdb67a06967df13c26397cd192579e3c7586ba31756346808dd78a9e16351.json",
+      "sha256": "bfefdb67a06967df13c26397cd192579e3c7586ba31756346808dd78a9e16351",
+      "bytes": 3906
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/c0/c02069d3a590a420307c208601094ea4214feabb8dc2c9119b07deefb483788b.json",
+      "sha256": "c02069d3a590a420307c208601094ea4214feabb8dc2c9119b07deefb483788b",
+      "bytes": 757
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/c1/c18dae44f38f6743a009f9a09aed5e69cfe214544694ce271b899caf81a07b11.json",
+      "sha256": "c18dae44f38f6743a009f9a09aed5e69cfe214544694ce271b899caf81a07b11",
+      "bytes": 1079
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/c2/c2f1695cef2f2404e4fc31472c8ab2907ef3078219117972a9579238e6a90a4a.json",
+      "sha256": "c2f1695cef2f2404e4fc31472c8ab2907ef3078219117972a9579238e6a90a4a",
+      "bytes": 3292
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/c4/c417f3d19bf26b9a72108c6b7f1afce86e7f78ef9abb8e787a0a23fe37a00d71.json",
+      "sha256": "c417f3d19bf26b9a72108c6b7f1afce86e7f78ef9abb8e787a0a23fe37a00d71",
+      "bytes": 4547
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ca/cac0f01ea62a59d0cc481bfb7915f243c605d014367e582fa364da6f07b07bdd.pptx",
+      "sha256": "cac0f01ea62a59d0cc481bfb7915f243c605d014367e582fa364da6f07b07bdd",
+      "bytes": 35572
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/cc/cc20a3ff153b5bf2198e3af0305e077619e4f3037ac842a57890c91afa233eea.json",
+      "sha256": "cc20a3ff153b5bf2198e3af0305e077619e4f3037ac842a57890c91afa233eea",
+      "bytes": 3801
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/d1/d1ca43cd39256e490f72e3102252fa22b1b4e8bbb3c2752f79c813c301fc2478.json",
+      "sha256": "d1ca43cd39256e490f72e3102252fa22b1b4e8bbb3c2752f79c813c301fc2478",
+      "bytes": 1970
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/d3/d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4.json",
+      "sha256": "d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4",
+      "bytes": 1376
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/d6/d6298263e04b0e9633f8ce68860038ef3cece336d0a42768bf421dda01a4fe54.svg",
+      "sha256": "d6298263e04b0e9633f8ce68860038ef3cece336d0a42768bf421dda01a4fe54",
+      "bytes": 379
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/d8/d8e6a39b47f095db91a749f0b7b3a413c5af1fa1858bdc8e6a11ece5ecc2ee53.json",
+      "sha256": "d8e6a39b47f095db91a749f0b7b3a413c5af1fa1858bdc8e6a11ece5ecc2ee53",
+      "bytes": 1340
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/db/dba24b872a278e0252720336df0057c676967c9f4b98f2fa09eb031ee85f3fa9.png",
+      "sha256": "dba24b872a278e0252720336df0057c676967c9f4b98f2fa09eb031ee85f3fa9",
+      "bytes": 45825
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/e2/e28317fa2f6436dc4d85d0a7ef27694c0302845035ddf0a39b226324bdae5932.json",
+      "sha256": "e28317fa2f6436dc4d85d0a7ef27694c0302845035ddf0a39b226324bdae5932",
+      "bytes": 1976
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/e3/e36812f07ce6f966cc3940b5c51941bde086ba68180e8e463a2c8748a31e5ce7.json",
+      "sha256": "e36812f07ce6f966cc3940b5c51941bde086ba68180e8e463a2c8748a31e5ce7",
+      "bytes": 55
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/e9/e9290f282886a4f8624fa114ea7b2c68a8d8884d4ebc2db12f6d7d71f9277033.json",
+      "sha256": "e9290f282886a4f8624fa114ea7b2c68a8d8884d4ebc2db12f6d7d71f9277033",
+      "bytes": 3130
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ea/ea8a2bf69c2c6f1be0988b67d39eb14285df17994b2e42618b8405771091769f.json",
+      "sha256": "ea8a2bf69c2c6f1be0988b67d39eb14285df17994b2e42618b8405771091769f",
+      "bytes": 6075
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ec/ec6735bf2d3d1d763187ce9d308f4ac0fc943ad63c6403c2567620d48400a9d5.json",
+      "sha256": "ec6735bf2d3d1d763187ce9d308f4ac0fc943ad63c6403c2567620d48400a9d5",
+      "bytes": 4978
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ef/efd04397c817c679dd96d175c5b5146c3717e68dee5e8eb4aa6795825559429f.json",
+      "sha256": "efd04397c817c679dd96d175c5b5146c3717e68dee5e8eb4aa6795825559429f",
+      "bytes": 4272
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/f0/f03c2e88c5a61ac4cb972fc030225c7f57587a72027bd0b35ffa64e2000fa37b.json",
+      "sha256": "f03c2e88c5a61ac4cb972fc030225c7f57587a72027bd0b35ffa64e2000fa37b",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/f0/f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/f0/f0b20308aeff05facabb5e89a783ff989d25e0025bf3cc0050bd6366e895a65d.json",
+      "sha256": "f0b20308aeff05facabb5e89a783ff989d25e0025bf3cc0050bd6366e895a65d",
+      "bytes": 954
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/f2/f2116fb97dab835cf5c3491c82cd1bcf46b86cbec68cb6ae8f8fc522109e487e.json",
+      "sha256": "f2116fb97dab835cf5c3491c82cd1bcf46b86cbec68cb6ae8f8fc522109e487e",
+      "bytes": 1553
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/f6/f6cae507d474ae53c396848be29b1b790b9273b6bce5745de96bcd1f89aa2a85.pptx",
+      "sha256": "f6cae507d474ae53c396848be29b1b790b9273b6bce5745de96bcd1f89aa2a85",
+      "bytes": 35645
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ff/ff11e5c76547c33a80c746cb8a6dffadfb030fad62f1d455a633c47d8e327278.json",
+      "sha256": "ff11e5c76547c33a80c746cb8a6dffadfb030fad62f1d455a633c47d8e327278",
+      "bytes": 2263
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/objects/ff/ffb1e27168a6cebf4023bca387cd506cbc931ac889a5fafa8327461e0be62f19.json",
+      "sha256": "ffb1e27168a6cebf4023bca387cd506cbc931ac889a5fafa8327461e0be62f19",
+      "bytes": 1603
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/argument.json",
+      "sha256": "2e3097dd5fd301a38d70a0017a25dc6f4ad81a0ebed8d64afcbb06fd40ea03c6",
+      "bytes": 324
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/blueprint-bf5b047dec97.json",
+      "sha256": "d35734fddf258580dd328d7d1815b00d83d8179e1097093a0575c381338149ad",
+      "bytes": 340
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/blueprint-f083694653d5.json",
+      "sha256": "bf9be1db8a963c52af1c2515de424a209fc02453e3cc4958075dbdf103905a4f",
+      "bytes": 340
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/page-copy.json",
+      "sha256": "edd70c80f31cbbff4ef2347be3ab338d56d63b6250670bfacc3d25b483fdfbe3",
+      "bytes": 325
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/reconstruct-1fd5231d9c71.json",
+      "sha256": "84e894352fa4ac86048eb837d276b095f9c5bc1711d0a5d3ea4b82bde93813ce",
+      "bytes": 344
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/reconstruct-593ef152ef9c.json",
+      "sha256": "de02fd8ce320940341da91eff0bfeea02bfcb6f398d24f435c5de27295e8ba34",
+      "bytes": 344
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/review-1584d0219487.json",
+      "sha256": "e674d2f5c283844af3a7f714aa74edba4d9f760f4a521631416545cc1ea348af",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/review-289c33342abd.json",
+      "sha256": "eea019b179f669c556ea9dcfd886ac16d300df8640e3c0aa9764eeb6eda36070",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/review-8464df92114d.json",
+      "sha256": "41122944d15b87591d135a6f300fce98523e4a76936e3bb7ae10dff8bd12b868",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/review-a339584bbeb2.json",
+      "sha256": "f766d2c9537154a161e3f91eaeab7f107727cdde6c1e4925595f853c76fc8815",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/operations/speech-update.json",
+      "sha256": "cd6238191b2986b081dbf6e7f31f6bf76de8a6e5b8df67f8efc4c8d20d69ad35",
+      "bytes": 329
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/013d63cf0df74d0991e0f37ccd7e48a7.json",
+      "sha256": "1fcae709c3fed9405375373d3d2783b9082bd401423c410d647375a53815c453",
+      "bytes": 2740
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/05d488abda8c41b2b7120608d759fd33.json",
+      "sha256": "52b93e5e33640201edddb6b981302accbb00ed8820daaf1fa980335f9b5bf733",
+      "bytes": 11404
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/11350a2f37564a25b6a356f2e8a7bc4e.json",
+      "sha256": "92fd306389dddc55669aa790dc2b9382e592c91a5475ec599958e21e76b35924",
+      "bytes": 8081
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/15ec8d15049a4141ac03cfe6bdd1bd76.json",
+      "sha256": "8a4b5214c29f9e888e1ee98b58eda6c1a90035ba0aebb138ef29b3ff2d101fa4",
+      "bytes": 4975
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/18f69e696023441a9643021fdcf3f1ef.json",
+      "sha256": "5100b33059282a046a806438717ac7c9dab3d9ad1f4d320f4cddea7deecf808b",
+      "bytes": 10613
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/1c20f2d80415463a8d8250678d2005ec.json",
+      "sha256": "ff70695236f1cea5037a6cd940719106088050dbe24a337bf513edc89cf190b5",
+      "bytes": 12867
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/1d0a15ecedec4dad99ae0710cd97f31e.json",
+      "sha256": "c07956a367411b54091f17fbf2ac3a2b3b2306a9bc8e6a0bf1354f1ced254856",
+      "bytes": 12753
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/1f00b69827ca45c0a251219d5a94e85e.json",
+      "sha256": "b959e0949c4c1527ecbda8320143ca18c01bdc18fb749dc3e674e36306c5c780",
+      "bytes": 8104
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/255cdb7797494cd6981c86f9bf4cfba3.json",
+      "sha256": "c5cb6d75e6caf6cdf1cecdcfe0a878c7469c2d2bc846ad42e307b80c322e8cc6",
+      "bytes": 8881
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/41c00bb9256e40f9b5a78c3e474f8a1f.json",
+      "sha256": "421d97a2855ee1de8f7e2e92f3893c21c4a04160f018999d01069bb1eebf50bd",
+      "bytes": 6476
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/42ec816ed12a43089d6527ba9290758b.json",
+      "sha256": "0fd80ecdfa9ea5f42eeae9ded3b1647d4e3c55aea99e2800fead9f506a953cfa",
+      "bytes": 11046
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/45e5afdc76204868be26e1b0a5b1d5f9.json",
+      "sha256": "214434c17fa963eb4fb32ab0d9fb98ca726508e7703abb3ee54110d57c1119f4",
+      "bytes": 4245
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/4bea1d0e79834ec1bbd4d32f972fb64e.json",
+      "sha256": "5ce4340255f5f2fcb076ba19973e14eb8f5386bf616870d3ec13fbd3c3d7f898",
+      "bytes": 11513
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/4c0324d5c59e4fb698468eea559eac37.json",
+      "sha256": "21e9ad43409c73db1650933d850c5b01cf12eea83a1945f00d5c3b44cfb4393b",
+      "bytes": 4760
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/508c84788aa74896927d5b7c910eab12.json",
+      "sha256": "1762f516833b0fc11995d847756f506557939c9e0a644d9b392514fa17c98540",
+      "bytes": 10433
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/518d2e96b1c641a2aa9cea5eff77bd82.json",
+      "sha256": "9cb4e2b231d561b018dc73277ab49dfe33e629e90cc2fbd26f7bf0063ecae0b3",
+      "bytes": 6499
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/51f3e393576e450b837d57f321668bf8.json",
+      "sha256": "624074e0585714745703a38801bb2a9387db8f5acaf5a5885d1addcb85315af0",
+      "bytes": 3684
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/543678bb93294cba8318e6e4da97090a.json",
+      "sha256": "c8a5d7c807817c5ca5fa186a741851adea8c84d7105b13285ec271e049ba4839",
+      "bytes": 11148
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/57bd9441d27b475084af6d37de952a06.json",
+      "sha256": "780f7fed9d60990d4dc9b602e900dfd5ccf3ac127bb24ffdbe52ebd53ea9b768",
+      "bytes": 10569
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/5b32a0e6fc514c41b9a6b30ec105e745.json",
+      "sha256": "8d6d430d6111348070021893d0027d1d3303377b6fd16e25c155d72dbfcdd547",
+      "bytes": 7702
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/5d39f47e94834e36bc0d606ffb121e76.json",
+      "sha256": "341ca15d8be1cb588bed7476191f3712713da69dbf3a2983b0f5792401e86791",
+      "bytes": 4343
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/6c493f07ee784ae5a98d27edf80d0d14.json",
+      "sha256": "48b383aa1a36019b19a04ac052660e1c915dacd72b7fa8e02239306be4707ae8",
+      "bytes": 5971
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/6d0b7fe0665d43619b20f41eedbfa43b.json",
+      "sha256": "27b911482f0e7751548e93c61770e1a085917c69ecbfc9de09866d65c1268672",
+      "bytes": 6798
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/71ebf3b8b7314700b42092cd45be31ab.json",
+      "sha256": "2733253084c2e93225f2bfb833636c8cf07547a0df9d3ea3a5ef08459a49cd0e",
+      "bytes": 8059
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/7246bda64b1a4b858f5accce7a7da750.json",
+      "sha256": "877247bc50c8c58ca40389aba8286ea3424e7e38b138b561feefe7873a428c5a",
+      "bytes": 7201
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/75ed13c7d93e42bf885e188c4a1db397.json",
+      "sha256": "e7498a305456cab37ae9b570dae230e59a21460dab71a7f05c7f84902a9965d7",
+      "bytes": 9238
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/7629734a53e34e078e5a840f3ed395d3.json",
+      "sha256": "0f5d630e0368eea82b0ccee61ebda33ef21cddebbb6f95a105e0725d65037c48",
+      "bytes": 2150
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/7d33421cf38f41ffb51d828615ef9322.json",
+      "sha256": "468238bc802dea522986eecf3982fc364509f64fe1bdd7b1eb3fe2090d607fc9",
+      "bytes": 8880
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/7e0d565beaaf47eca37a685885549045.json",
+      "sha256": "7f7796ec34f4d9a965471348dc5b73bd95f80971960afa55ef75f96a6984fc0c",
+      "bytes": 7276
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/82fc6e721c5d4bfa9f7b2b359aca1a1e.json",
+      "sha256": "71d18b6c97dceb29f55e171ab8061d26152f18239cda3d1cad9ab99df2632820",
+      "bytes": 10485
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/99210e143d2f44f5bee52637d905ce11.json",
+      "sha256": "af28bde4d0f808796900408a283821ca01e4788e07ac1996d60c054a1ae4bc03",
+      "bytes": 8465
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/9ba01719839443c4b432d21e5bdfb9bf.json",
+      "sha256": "fd295de693bb5f8c8cc9eb735584eda2ba2a3fdf150c8949b2d984a2f5ae841f",
+      "bytes": 8094
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/9d07bf903de9411ba3c8439e45f210c2.json",
+      "sha256": "e029ba94e9f35bc68e390d529f2327e720509ae8f0ab8f36c3135a89a61a4d20",
+      "bytes": 5882
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/a67751df3e3a4d0da15710ad63d5d89b.json",
+      "sha256": "6cf186520d04acf9891bec5446dbb1c4a20d1d3ca76eb6733ade951746f5f015",
+      "bytes": 3792
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/a6e6b03c711e4e9ab19edb302df1784d.json",
+      "sha256": "535f15fc692772a8333fa2ce30c46ee856205d50f81fbc6132b7b9797f6485af",
+      "bytes": 7633
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/aa0d742ec62040c5bc3f887e2a9eb45e.json",
+      "sha256": "c6de6d9560126cb80de4682ef3913ac21397949fbd303403d69f9f3bf8f6db14",
+      "bytes": 2434
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/c6d865439fc5441cb753bcb5a06a214c.json",
+      "sha256": "bf6fbf0ce1bc01cecfbd12a3db7e997a51431405545645015598751cafdc8a52",
+      "bytes": 9398
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/cefae7261e424e7f9161f2409748eae5.json",
+      "sha256": "143d17fd9cb0423cc06f625ec4d3c84a4d3fceb8af54a5ec0229355dd7b2ac55",
+      "bytes": 4541
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/dc13b4f57ec34f569ac70799b798ff06.json",
+      "sha256": "8bf164314477a71ef92066bb0758d7c787b832638058d1cd07cbe1298968b2c4",
+      "bytes": 6489
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/df7ac761dc754e40b4575d65a250fe19.json",
+      "sha256": "df9b230594ebbf5af5e60eade8dcaf27efd27711448baa5f57d1d63925f3484d",
+      "bytes": 6454
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/e3f89b5c4183420aaa4b4a8e82ffe222.json",
+      "sha256": "1d5b42d530fa1ba38c861c7824217912d7c3d0e4b51d94da368867d432ebeacd",
+      "bytes": 7793
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/fa71fabd16ea4c16ba95208f4976d306.json",
+      "sha256": "81baab96abe0613085f802303dc8b23983cf8db507a75e8cbf2af4129df3eff1",
+      "bytes": 6860
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/revisions/fb975811951740f1b70093618da287a6.json",
+      "sha256": "aa44eabbf1a008a55dda5f8c4eb8226ced1f3ce90c721e0fd3822923b51e9698",
+      "bytes": 8806
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/staging/blueprint-bf5b047dec97/candidate.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/staging/blueprint-f083694653d5/candidate.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/staging/reconstruct-1fd5231d9c71/page.svg",
+      "sha256": "d6298263e04b0e9633f8ce68860038ef3cece336d0a42768bf421dda01a4fe54",
+      "bytes": 379
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/staging/reconstruct-593ef152ef9c/page.svg",
+      "sha256": "40688a168da41b6da877062152884c7c795f0f7d8eaa8a6a9be8505e17c7caf8",
+      "bytes": 379
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/deck-review-4bea1d0e.zip",
+      "sha256": "bd09ac861eae67cd728d67d7eda25edf27cbb62ea2d7d5cf518084b9436ba1e6",
+      "bytes": 157757
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/deck.pptx",
+      "sha256": "2b2bf06042a259072c24be99bc4bca8114eea808146ebfb17809c1842773fa03",
+      "bytes": 30745
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/delivery.json",
+      "sha256": "8a365c0b767abba7298086afdf4a183564fb62f52113c7451b9945dfeb198a07",
+      "bytes": 3420
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/export-record.json",
+      "sha256": "2edb4d4457b90928ade6d2a566875facbd07c2d4a6c691de87ee155fa35d1124",
+      "bytes": 5447
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/manifest.json",
+      "sha256": "c7e715c67f38e11db331a6adf46e2124a185f6cde1735616263ed1f7cb94cfe3",
+      "bytes": 3462
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-001/blueprint.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-001/content.txt",
+      "sha256": "bd54729005c2ca272872a1dd690666f7c07538e682e4c90a630b049056fbfbed",
+      "bytes": 66
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-001/ppt_preview.png",
+      "sha256": "dba24b872a278e0252720336df0057c676967c9f4b98f2fa09eb031ee85f3fa9",
+      "bytes": 45825
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-001/svg.svg",
+      "sha256": "3ae10a90c9adfd8c5559234a4c8f2731dc327a64f7aec79e0543fdc8b7c71524",
+      "bytes": 329
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-001/svg_preview.png",
+      "sha256": "ee7af1e246791ae0b3d7dd9ac7b77438453ee7dfb6b12273f019f046c3de5e1b",
+      "bytes": 8546
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-002/blueprint.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-002/content.txt",
+      "sha256": "bd54729005c2ca272872a1dd690666f7c07538e682e4c90a630b049056fbfbed",
+      "bytes": 66
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-002/ppt_preview.png",
+      "sha256": "dba24b872a278e0252720336df0057c676967c9f4b98f2fa09eb031ee85f3fa9",
+      "bytes": 45825
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-002/svg.svg",
+      "sha256": "3ae10a90c9adfd8c5559234a4c8f2731dc327a64f7aec79e0543fdc8b7c71524",
+      "bytes": 329
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/page-002/svg_preview.png",
+      "sha256": "ee7af1e246791ae0b3d7dd9ac7b77438453ee7dfb6b12273f019f046c3de5e1b",
+      "bytes": 8546
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/export-84f4bc4c-46e7-449a-bb70-0a8d798aabea/review.html",
+      "sha256": "815dd48a78ebeaa4ed95762f0a4f08a09411a325ac93c3cfbddbe58d2aac31a8",
+      "bytes": 453
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/workbench/exports/exports.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "run-final/bound/project/.deckmaster/write.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "run-final/bound/projectionmetadata.json",
+      "sha256": "3758f33b7f1a664d2233c04e7b434b2d3b1e992b0402bb5fef026e6f632e90b5",
+      "bytes": 37352
+    },
+    {
+      "path": "run-final/bound/public/deck-review-4bea1d0e.zip",
+      "sha256": "bd09ac861eae67cd728d67d7eda25edf27cbb62ea2d7d5cf518084b9436ba1e6",
+      "bytes": 157757
+    },
+    {
+      "path": "run-final/bound/public/deck.pptx",
+      "sha256": "2b2bf06042a259072c24be99bc4bca8114eea808146ebfb17809c1842773fa03",
+      "bytes": 30745
+    },
+    {
+      "path": "run-final/bound/public/delivery.json",
+      "sha256": "8a365c0b767abba7298086afdf4a183564fb62f52113c7451b9945dfeb198a07",
+      "bytes": 3420
+    },
+    {
+      "path": "run-final/bound/public/manifest.json",
+      "sha256": "c7e715c67f38e11db331a6adf46e2124a185f6cde1735616263ed1f7cb94cfe3",
+      "bytes": 3462
+    },
+    {
+      "path": "run-final/bound/public/page-001/blueprint.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/bound/public/page-001/content.txt",
+      "sha256": "bd54729005c2ca272872a1dd690666f7c07538e682e4c90a630b049056fbfbed",
+      "bytes": 66
+    },
+    {
+      "path": "run-final/bound/public/page-001/ppt_preview.png",
+      "sha256": "dba24b872a278e0252720336df0057c676967c9f4b98f2fa09eb031ee85f3fa9",
+      "bytes": 45825
+    },
+    {
+      "path": "run-final/bound/public/page-001/svg.svg",
+      "sha256": "3ae10a90c9adfd8c5559234a4c8f2731dc327a64f7aec79e0543fdc8b7c71524",
+      "bytes": 329
+    },
+    {
+      "path": "run-final/bound/public/page-001/svg_preview.png",
+      "sha256": "ee7af1e246791ae0b3d7dd9ac7b77438453ee7dfb6b12273f019f046c3de5e1b",
+      "bytes": 8546
+    },
+    {
+      "path": "run-final/bound/public/page-002/blueprint.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/bound/public/page-002/content.txt",
+      "sha256": "bd54729005c2ca272872a1dd690666f7c07538e682e4c90a630b049056fbfbed",
+      "bytes": 66
+    },
+    {
+      "path": "run-final/bound/public/page-002/ppt_preview.png",
+      "sha256": "dba24b872a278e0252720336df0057c676967c9f4b98f2fa09eb031ee85f3fa9",
+      "bytes": 45825
+    },
+    {
+      "path": "run-final/bound/public/page-002/svg.svg",
+      "sha256": "3ae10a90c9adfd8c5559234a4c8f2731dc327a64f7aec79e0543fdc8b7c71524",
+      "bytes": 329
+    },
+    {
+      "path": "run-final/bound/public/page-002/svg_preview.png",
+      "sha256": "ee7af1e246791ae0b3d7dd9ac7b77438453ee7dfb6b12273f019f046c3de5e1b",
+      "bytes": 8546
+    },
+    {
+      "path": "run-final/bound/public/review.html",
+      "sha256": "815dd48a78ebeaa4ed95762f0a4f08a09411a325ac93c3cfbddbe58d2aac31a8",
+      "bytes": 453
+    },
+    {
+      "path": "run-final/bound/source.txt",
+      "sha256": "10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae",
+      "bytes": 156
+    },
+    {
+      "path": "run-final/bound/speech-accepted.json",
+      "sha256": "307dc536ed3bda270d625645ad788b6685b839c96daf7747872f270503e1e05a",
+      "bytes": 3400
+    },
+    {
+      "path": "run-final/bound/summary.json",
+      "sha256": "d09ac6ce654deaf6470e2e8a2cdf692aee39dac5a319f888a46663a28af3f284",
+      "bytes": 532
+    },
+    {
+      "path": "run-final/bound/supplemental-audit.json",
+      "sha256": "20a239a8f7c18b4ed6376d1342ae0554317665aef860d529cbca44cba89bf04a",
+      "bytes": 5165
+    },
+    {
+      "path": "run-final/bound/synthetic-runtime/generated_images/11111111-1111-7111-8111-111111111111/exec-6f0fed50-44d1-42e4-ac0c-be6b55a4c19d.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/bound/synthetic-runtime/generated_images/11111111-1111-7111-8111-111111111111/exec-d1d5768c-f4c8-4b7e-9001-173048a9f670.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/bound/synthetic-runtime/sessions/2026/09/29/rollout-2026-09-29T00-00-00-11111111-1111-7111-8111-111111111111.jsonl",
+      "sha256": "05b11e947f41e3a6ac467fc098913520ba4ceeac8f0bf2e390b89c0bd6d33e93",
+      "bytes": 142481
+    },
+    {
+      "path": "run-final/bound/zero-additional-image-ledger.json",
+      "sha256": "bcfa8fa87f7d26ea50bb17073d28041edced02b1f5782dfbad44220b3b5a0902",
+      "bytes": 3937
+    },
+    {
+      "path": "run-final/fixed-execution-origin.json",
+      "sha256": "72b0918e94448b653e0f05d88c69496484d02ae6cbb4576482d5ca3d62167fcf",
+      "bytes": 622
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/actual-export.json",
+      "sha256": "b041050caf1f0d14a70168c72e86696ee798b5a3bbcccced79df13133eb13283",
+      "bytes": 7132
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/actual-speech-task.json",
+      "sha256": "0ecad9be1112934ae578f599456954bbcb4337f3791ae35e084ce7a573aa687e",
+      "bytes": 2988
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/after-speech-document.json",
+      "sha256": "5b00658422579d65f0806d7e87736e9daeb8b2eeeaf984f9633f616aff5d2c33",
+      "bytes": 12643
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/after-speech-review-accepted.json",
+      "sha256": "3292c07d7551813cff5edb4df5ab4e752c53d546c437b1c9155d08348bebb369",
+      "bytes": 1568
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/after-speech-review-dispatch.json",
+      "sha256": "188c34da27543dfe36e7e0c67866707d280797e2031fe79bdf5587d41032ae23",
+      "bytes": 6601
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/after-speech-review-status.json",
+      "sha256": "ed2607c4a7df8d8c37737545b7802fad1b0259fc2ee18e8387e9f5fa1ff2b028",
+      "bytes": 923
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/after_speech-original-plan.json",
+      "sha256": "cbefe1cf91580bde9eaa7d87ca3ec15dde397ada71ba8947eca20d53e08b629c",
+      "bytes": 2682
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/before-document.json",
+      "sha256": "5bcba973b5891c08b0305add5824dec6279b42902c96ca7bed5cbbee5d904540",
+      "bytes": 11557
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/before-original-plan.json",
+      "sha256": "7c53a4fd88d56ff6a537e3ee420365759a226b6e3720e817a8671c74bc9ab178",
+      "bytes": 2497
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/before-review-accepted.json",
+      "sha256": "921c78c7630aa055c6453081251c3e1f2c6a8c7c798a073b868c36a0d38e987a",
+      "bytes": 1568
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/before-review-dispatch.json",
+      "sha256": "d49b8bb325e82e39d930aa6b107590bc1fec428a0bea6d6fe8af19df92412917",
+      "bytes": 4247
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/before-review-status.json",
+      "sha256": "535fee68bc3a263979e3b644af59d9e902253b8d6ee2d8c3cfbb4221d7ab4198",
+      "bytes": 923
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/downloaded.pptx",
+      "sha256": "f0c63d91efe72f49aa2e14a2cf222aeab1df27372522039d64771f91dcfa12d1",
+      "bytes": 30724
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/explicit-synthetic-execute-grant.json",
+      "sha256": "f182c2d3671f434a2d9ee3ac3cd8549040d4c2b880b0dc082780434c0e9ec6c1",
+      "bytes": 375
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/final-native-compile.json",
+      "sha256": "e0f9057d0dfd0256735f3557862a21c1597e7a4fd41ffe5845de071b707d07be",
+      "bytes": 801
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/final-original-plan.json",
+      "sha256": "cbefe1cf91580bde9eaa7d87ca3ec15dde397ada71ba8947eca20d53e08b629c",
+      "bytes": 2682
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/final-readback.json",
+      "sha256": "6bcaf7c445d9ab750ede2de46329ab433f7a2de66e974ec2e9bc611f7935b823",
+      "bytes": 439
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-document.json",
+      "sha256": "86290496a467477d706811c076aabc8b15ef166d119beecda44dfadadb2d9452",
+      "bytes": 9544
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-native-report.json",
+      "sha256": "2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a",
+      "bytes": 800
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-provenance.json",
+      "sha256": "b42efbb5a4b8b2add3b962f906fde514b739ce1795085061146191544f5f33eb",
+      "bytes": 998
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/honest-current-qualification-block.json",
+      "sha256": "b181ce67f54dde9900acf62f7f536e1ce0d93a6ccbd01bf62a4694a96d52c955",
+      "bytes": 23
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/initial-control.json",
+      "sha256": "d55a3c155d6acb2c1b5a2edd5ea69a0e6cce4f62a7bd03fced261e5442fa448c",
+      "bytes": 1534
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/initial-native-compile.json",
+      "sha256": "460320bfbfe88ce4a3abcfa9461b8b61e6e7b4450db88eba8e2689cdc9caa184",
+      "bytes": 741
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/original.pptx",
+      "sha256": "768fa7ab558bfd14ae890102c08fed6cb1324ee02fc6bf7838f10b7b70909d82",
+      "bytes": 35549
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/p1-actual-blueprint-task.json",
+      "sha256": "661041bfda56e68bc284f8312c277d8cce22408b7988c046df1471f98db040cd",
+      "bytes": 4233
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/p1-actual-normal-continue.json",
+      "sha256": "91e29baae27187033cfe6185e54bad34247f1d72eff2dadb3092508bdce92d51",
+      "bytes": 14563
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/p1-actual-pagevisual-L1-fixture.json",
+      "sha256": "2a78cae31a2bdaa0c825b324783065440b46deeda92815298930067230afc050",
+      "bytes": 6188
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/p1-actual-pagevisual-public-task.json",
+      "sha256": "cec734c9b4d226f09c1fc73cbcab24a8cb53d67d1aeef1be37ed5911fc21c0e4",
+      "bytes": 11900
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/p2-actual-blueprint-task.json",
+      "sha256": "70d4af9f8b10aa7ff4fa41964ffe433ccc0150629418d0fef43f75af99816829",
+      "bytes": 4233
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/p2-actual-normal-continue.json",
+      "sha256": "18de81b04c2cd6b2952879eae7755fbcfd2854382d36a929038778529a310c0c",
+      "bytes": 14563
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/p2-actual-pagevisual-L1-fixture.json",
+      "sha256": "2edbd288c955320f9e18fca761798ca3b592114b6e011fb45ff52affb67d0471",
+      "bytes": 6188
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/p2-actual-pagevisual-public-task.json",
+      "sha256": "f3a514aeb65c2322ce3dfa87d37ed6198f2db6d17d216c2dd56b8d2831403f7b",
+      "bytes": 11900
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/post-speech-before-review-status.json",
+      "sha256": "04143822b8ccf16ae745fc6b0708f584ad677d9f01e6ded0dd227ace607394fd",
+      "bytes": 513
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/current.json",
+      "sha256": "acbadfe7bfd4d31b9e797890c7709de10847120cee56e188f67f7c41c02ff0fd",
+      "bytes": 109
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/01/01b1b809ae1750d313f020107695f818b2df7a259106b11471a7a52ec461c7e5.json",
+      "sha256": "01b1b809ae1750d313f020107695f818b2df7a259106b11471a7a52ec461c7e5",
+      "bytes": 757
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/09/09b6e18501143cac7a29c4192c4b35e5786909b67b613cce96084b286186357e.json",
+      "sha256": "09b6e18501143cac7a29c4192c4b35e5786909b67b613cce96084b286186357e",
+      "bytes": 1104
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/0e/0eac8cb49fa58842122212f13738a184a463fe285b5a542bbde12a76e4e40937.json",
+      "sha256": "0eac8cb49fa58842122212f13738a184a463fe285b5a542bbde12a76e4e40937",
+      "bytes": 57
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/10/10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae.txt",
+      "sha256": "10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae",
+      "bytes": 156
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/14/148a28e9e32f716f758f576e1c2a7d36dc866ef67bfb767b6f6c382c6ba4f15c.json",
+      "sha256": "148a28e9e32f716f758f576e1c2a7d36dc866ef67bfb767b6f6c382c6ba4f15c",
+      "bytes": 954
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/14/14ede94d279fa13144a322844c557955cf47a5aea4b7e2286251b8a9213e663d.json",
+      "sha256": "14ede94d279fa13144a322844c557955cf47a5aea4b7e2286251b8a9213e663d",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/18/188814e1c41381cc7ebf0970dfcde292eee010617de4fb8b5fb871bc509dbbe4.json",
+      "sha256": "188814e1c41381cc7ebf0970dfcde292eee010617de4fb8b5fb871bc509dbbe4",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/1b/1bbdd343f6f96a91ce748f84af4b4c632e47079124c4ef25c439eb219133b660.json",
+      "sha256": "1bbdd343f6f96a91ce748f84af4b4c632e47079124c4ef25c439eb219133b660",
+      "bytes": 547
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/1b/1bc124dacc1f7f1e7e9bc8997be44890da9431a6935bcb7a7497e479284527cf.json",
+      "sha256": "1bc124dacc1f7f1e7e9bc8997be44890da9431a6935bcb7a7497e479284527cf",
+      "bytes": 956
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/1c/1c23757eb2951ee42375d08129b6cd487ac0304be9461cab75356664fbf99a41.json",
+      "sha256": "1c23757eb2951ee42375d08129b6cd487ac0304be9461cab75356664fbf99a41",
+      "bytes": 3783
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/1c/1c8b0b2d01d1faec1cc9b4e0090a96ab5541a919f360be17b993b89e181ba5e3.json",
+      "sha256": "1c8b0b2d01d1faec1cc9b4e0090a96ab5541a919f360be17b993b89e181ba5e3",
+      "bytes": 1678
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/1f/1f05ccba4f0f187e65974bce7dbe0e7c3da8fab52c4daf8d497bd2a9595f799c.json",
+      "sha256": "1f05ccba4f0f187e65974bce7dbe0e7c3da8fab52c4daf8d497bd2a9595f799c",
+      "bytes": 1603
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/20/2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a.json",
+      "sha256": "2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a",
+      "bytes": 800
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/22/229c1032c90f034998e9c1b3ed589d957358c510663ff123488e6997e920b73b.json",
+      "sha256": "229c1032c90f034998e9c1b3ed589d957358c510663ff123488e6997e920b73b",
+      "bytes": 2490
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/23/23d4b3f31d5f9590867c50be4d863c3e2e81c0e7d5c15feea285611b32a1e470.json",
+      "sha256": "23d4b3f31d5f9590867c50be4d863c3e2e81c0e7d5c15feea285611b32a1e470",
+      "bytes": 2447
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/25/2521f52cb70dfe9841b3c5d303cfa31225aac8dfabeb7e584d7d21b846a1c5e9.json",
+      "sha256": "2521f52cb70dfe9841b3c5d303cfa31225aac8dfabeb7e584d7d21b846a1c5e9",
+      "bytes": 742
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/27/273e88be2f282f7d2ddbb3af9b3c1c539af426bdef520489e439976e3e74bc2a.json",
+      "sha256": "273e88be2f282f7d2ddbb3af9b3c1c539af426bdef520489e439976e3e74bc2a",
+      "bytes": 2789
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/29/2981949baf78c9c7ebc60d71568d9e37c38d3ed1414365684761a8fe76a28eed.json",
+      "sha256": "2981949baf78c9c7ebc60d71568d9e37c38d3ed1414365684761a8fe76a28eed",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/32/329dd7d783a69a4e9a4603db0da82f2448d3e454ea2edfd9f2734d557f545e08.svg",
+      "sha256": "329dd7d783a69a4e9a4603db0da82f2448d3e454ea2edfd9f2734d557f545e08",
+      "bytes": 361
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/35/359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140.json",
+      "sha256": "359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140",
+      "bytes": 772
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/36/3613fb069bb1de2bbec836c9fd5579aade67f9f2ac80c437b206b77d056d5f5a.png",
+      "sha256": "3613fb069bb1de2bbec836c9fd5579aade67f9f2ac80c437b206b77d056d5f5a",
+      "bytes": 6627
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/38/3808a3b5ff667ccd7e7269640f690e42a78eed945502f42ce9bdb8dd485c4ad1.json",
+      "sha256": "3808a3b5ff667ccd7e7269640f690e42a78eed945502f42ce9bdb8dd485c4ad1",
+      "bytes": 4650
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/39/39262501edc2192c64ec89b194c9db14004279b1f5b65c525022045214daff81.json",
+      "sha256": "39262501edc2192c64ec89b194c9db14004279b1f5b65c525022045214daff81",
+      "bytes": 1036
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/3b/3b8f491cffd689706c9f366001591ef8f7ab424618537da6d93b7bc11e7fbfdf.json",
+      "sha256": "3b8f491cffd689706c9f366001591ef8f7ab424618537da6d93b7bc11e7fbfdf",
+      "bytes": 4469
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/3e/3ea83a5095368193659ff45e1d542c36f50821213f48dbbd34e498cf880d4436.json",
+      "sha256": "3ea83a5095368193659ff45e1d542c36f50821213f48dbbd34e498cf880d4436",
+      "bytes": 1672
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/40/40d6f195fd95084f39223e0717704bf52e0d911a842b17f6cf81e525a4ee7986.json",
+      "sha256": "40d6f195fd95084f39223e0717704bf52e0d911a842b17f6cf81e525a4ee7986",
+      "bytes": 1672
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/42/425f9c21b91697a466ec275a5dfc327b9db2e86d03cd3619005c009e2f4bfde2.json",
+      "sha256": "425f9c21b91697a466ec275a5dfc327b9db2e86d03cd3619005c009e2f4bfde2",
+      "bytes": 3196
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/43/43d1cc5053fa5d256b7f61c7b1c1c24737c065c5c7be99a6da378f836e7ba3f7.txt",
+      "sha256": "43d1cc5053fa5d256b7f61c7b1c1c24737c065c5c7be99a6da378f836e7ba3f7",
+      "bytes": 2497
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/4a/4a828f8055629d71995a96ae4a64d2cb62679cf42426476b4d66e6698db4877e.json",
+      "sha256": "4a828f8055629d71995a96ae4a64d2cb62679cf42426476b4d66e6698db4877e",
+      "bytes": 954
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/4a/4aa5795cb2ca0b83dc79fd0a735766b3636bd151753580da6e766faca2d2c849.json",
+      "sha256": "4aa5795cb2ca0b83dc79fd0a735766b3636bd151753580da6e766faca2d2c849",
+      "bytes": 956
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/55/5515c1b7bd4f73ef9c7746ba9bf63972f190d9ff5084ad9b67846f2abec8c1b3.json",
+      "sha256": "5515c1b7bd4f73ef9c7746ba9bf63972f190d9ff5084ad9b67846f2abec8c1b3",
+      "bytes": 2964
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/57/574f325be4d9955e89b24173034eac5e04a6878f9820ba481266a3501b5dc2fc.json",
+      "sha256": "574f325be4d9955e89b24173034eac5e04a6878f9820ba481266a3501b5dc2fc",
+      "bytes": 1036
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/59/5922a0c41f93a621c7eb916c8fdebf3cb6b357126974f2b97fb03fd2777abdee.json",
+      "sha256": "5922a0c41f93a621c7eb916c8fdebf3cb6b357126974f2b97fb03fd2777abdee",
+      "bytes": 1245
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/59/59b031d063db7c6b221d4f7f5032acdf5f96a9428e2bcb8551fd760b6b966071.json",
+      "sha256": "59b031d063db7c6b221d4f7f5032acdf5f96a9428e2bcb8551fd760b6b966071",
+      "bytes": 3962
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/5c/5c977243e2885305bb1f43291e9f077c54a711a402e6509324c0767593e569e6.json",
+      "sha256": "5c977243e2885305bb1f43291e9f077c54a711a402e6509324c0767593e569e6",
+      "bytes": 309
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/5d/5db43b45f80c7af7adf30c7d66e5781454d2debf44941b4125fbfd77d1bd2471.json",
+      "sha256": "5db43b45f80c7af7adf30c7d66e5781454d2debf44941b4125fbfd77d1bd2471",
+      "bytes": 3473
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/64/649bfa6a88038843559301308e591c30a2331bc6757c4c59bb21ee4bb0c842b5.json",
+      "sha256": "649bfa6a88038843559301308e591c30a2331bc6757c4c59bb21ee4bb0c842b5",
+      "bytes": 5176
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/64/64e4c58729ce94e59a2acffb94b131e29ce8708b165f8df688f2c4734833887a.json",
+      "sha256": "64e4c58729ce94e59a2acffb94b131e29ce8708b165f8df688f2c4734833887a",
+      "bytes": 772
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/66/66068c068b48839c251b0cd0b813a321fe980b15bc34ef4a3c8a396489336774.json",
+      "sha256": "66068c068b48839c251b0cd0b813a321fe980b15bc34ef4a3c8a396489336774",
+      "bytes": 4650
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/66/660914f1c4ed9ac31a82f98259c72b2123e925397095c088b4622f89f0319b09.json",
+      "sha256": "660914f1c4ed9ac31a82f98259c72b2123e925397095c088b4622f89f0319b09",
+      "bytes": 547
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/66/66b2973a4f512846985aa733484f6c4b793aa0d49a42fb3cea7f4b129692627f.json",
+      "sha256": "66b2973a4f512846985aa733484f6c4b793aa0d49a42fb3cea7f4b129692627f",
+      "bytes": 1617
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/6a/6a07946b62d575f0ebf312ec318116f54bdba015aa3dcbfa120690872a451e44.json",
+      "sha256": "6a07946b62d575f0ebf312ec318116f54bdba015aa3dcbfa120690872a451e44",
+      "bytes": 33
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/6d/6d77daa03348a538a7c8f11fc96f53ec4906b8f036c38b170da42d4d20fa8f15.json",
+      "sha256": "6d77daa03348a538a7c8f11fc96f53ec4906b8f036c38b170da42d4d20fa8f15",
+      "bytes": 2789
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/6d/6dfcd9c78bb1feb848ac6ead4d54c4f09923feb27c6b3673e4cab0749bf30be2.json",
+      "sha256": "6dfcd9c78bb1feb848ac6ead4d54c4f09923feb27c6b3673e4cab0749bf30be2",
+      "bytes": 749
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/73/737c15dd92e732128d84a7f6288cd29096f54938722c85fa9506d9bef17d415c.json",
+      "sha256": "737c15dd92e732128d84a7f6288cd29096f54938722c85fa9506d9bef17d415c",
+      "bytes": 821
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/76/768fa7ab558bfd14ae890102c08fed6cb1324ee02fc6bf7838f10b7b70909d82.pptx",
+      "sha256": "768fa7ab558bfd14ae890102c08fed6cb1324ee02fc6bf7838f10b7b70909d82",
+      "bytes": 35549
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/7b/7b0aa3e3c278d8fcc72123d2ccf4a6905c3308234a87910f6823cb31dbf16464.json",
+      "sha256": "7b0aa3e3c278d8fcc72123d2ccf4a6905c3308234a87910f6823cb31dbf16464",
+      "bytes": 1615
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/7c/7c53a4fd88d56ff6a537e3ee420365759a226b6e3720e817a8671c74bc9ab178.json",
+      "sha256": "7c53a4fd88d56ff6a537e3ee420365759a226b6e3720e817a8671c74bc9ab178",
+      "bytes": 2497
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/7e/7e6141bfc2064cf849b1148f6f5927aedae2dd665e20c3f4e9bd1845d232e319.json",
+      "sha256": "7e6141bfc2064cf849b1148f6f5927aedae2dd665e20c3f4e9bd1845d232e319",
+      "bytes": 4821
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/7f/7fe6655af93324f969c3c0e4b15715212956ffddd7b8f0fce1b5eddd1ef52ecb.json",
+      "sha256": "7fe6655af93324f969c3c0e4b15715212956ffddd7b8f0fce1b5eddd1ef52ecb",
+      "bytes": 3043
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/80/80fec4fee41d56de9ffdb46f8a7d14991117a9c13e08867b1716b93791f5c9a2.json",
+      "sha256": "80fec4fee41d56de9ffdb46f8a7d14991117a9c13e08867b1716b93791f5c9a2",
+      "bytes": 2802
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/81/813b0a0e4ae46ec4e59d9dc945ad8d2c5129177ff030d334345910b492a25e04.json",
+      "sha256": "813b0a0e4ae46ec4e59d9dc945ad8d2c5129177ff030d334345910b492a25e04",
+      "bytes": 4379
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/84/84912665074d53f881c0d031b23f77475538175e3345ee175aa01ab77a6f6a8d.json",
+      "sha256": "84912665074d53f881c0d031b23f77475538175e3345ee175aa01ab77a6f6a8d",
+      "bytes": 1079
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/89/8968213a9a3ef317e86f1057b7cff5ad645b9d9a48f9ed93492f55168c9d73cf.png",
+      "sha256": "8968213a9a3ef317e86f1057b7cff5ad645b9d9a48f9ed93492f55168c9d73cf",
+      "bytes": 34275
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/8a/8a725256c841a48a5bd550a2e26b49bc6e3fde30cd2edca792276cfc97278ff5.json",
+      "sha256": "8a725256c841a48a5bd550a2e26b49bc6e3fde30cd2edca792276cfc97278ff5",
+      "bytes": 3578
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/8b/8b0b845c4f30f9e63d0b94b7c0962410ecafd8fc2094ac08c1c2054e0337b771.json",
+      "sha256": "8b0b845c4f30f9e63d0b94b7c0962410ecafd8fc2094ac08c1c2054e0337b771",
+      "bytes": 954
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/92/92af8f89e21829af6800320714addbc3492de539cc017fe40beeda547b7ad946.json",
+      "sha256": "92af8f89e21829af6800320714addbc3492de539cc017fe40beeda547b7ad946",
+      "bytes": 4378
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/92/92c3d617b7b2fb791071c6090ce766da5802d3046f69a608d503616c6bddeabe.json",
+      "sha256": "92c3d617b7b2fb791071c6090ce766da5802d3046f69a608d503616c6bddeabe",
+      "bytes": 1600
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/93/937ac33ef6b2ee2d42bc0f5bc541e395dbb0d7ba10c66ab3287c1202b3004153.json",
+      "sha256": "937ac33ef6b2ee2d42bc0f5bc541e395dbb0d7ba10c66ab3287c1202b3004153",
+      "bytes": 1553
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/96/961d658d2cb5d946e64721b66eb5b1ea20baab27a5c1e3d046fb628ac159a793.json",
+      "sha256": "961d658d2cb5d946e64721b66eb5b1ea20baab27a5c1e3d046fb628ac159a793",
+      "bytes": 1615
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/99/99c27e13b6ffab1bba721dffded08f0d507d9d22cff22e4cf25cd98fd7bd8cd5.png",
+      "sha256": "99c27e13b6ffab1bba721dffded08f0d507d9d22cff22e4cf25cd98fd7bd8cd5",
+      "bytes": 36307
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/9a/9a2b65ee7abcbe63c8d2b44d999aed4431924710fda6b86df76d3ef395b7308e.json",
+      "sha256": "9a2b65ee7abcbe63c8d2b44d999aed4431924710fda6b86df76d3ef395b7308e",
+      "bytes": 3473
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/9c/9c941064d691644d7069a9bac91c2bd0862c942bc802c2458ce621ca63a2eb73.json",
+      "sha256": "9c941064d691644d7069a9bac91c2bd0862c942bc802c2458ce621ca63a2eb73",
+      "bytes": 3783
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/9c/9cbc15c699412f22dade89a8553b8455611883559e9e30ac66d616d94b44a9ff.json",
+      "sha256": "9cbc15c699412f22dade89a8553b8455611883559e9e30ac66d616d94b44a9ff",
+      "bytes": 1603
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/9d/9d4ac4699310a577d4da2be4ed056337b82d38ca4421dedced0725da59c780ef.png",
+      "sha256": "9d4ac4699310a577d4da2be4ed056337b82d38ca4421dedced0725da59c780ef",
+      "bytes": 6682
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/9f/9f092303c528c10b17221f3a13eb56a2eaf4a5279f1450c8546120e7d3f28801.json",
+      "sha256": "9f092303c528c10b17221f3a13eb56a2eaf4a5279f1450c8546120e7d3f28801",
+      "bytes": 1119
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/a1/a1d6963d5450f35b7887de6cdc362db3fb78da9978edc9055e415b30e97f7260.json",
+      "sha256": "a1d6963d5450f35b7887de6cdc362db3fb78da9978edc9055e415b30e97f7260",
+      "bytes": 3043
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/a3/a32e63ff774431e72386cbd4453c3cd328628de4bfd0073784d320824153a08d.json",
+      "sha256": "a32e63ff774431e72386cbd4453c3cd328628de4bfd0073784d320824153a08d",
+      "bytes": 60
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/a6/a62e4f3eb8ff89314cbe763e4d134c05ad6c25fd322f4e5ebfb1ea50057a50c1.json",
+      "sha256": "a62e4f3eb8ff89314cbe763e4d134c05ad6c25fd322f4e5ebfb1ea50057a50c1",
+      "bytes": 956
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/a7/a70132067402c68e6cacb820e14f859c1ae7dfdc090134b14663e8388396535c.svg",
+      "sha256": "a70132067402c68e6cacb820e14f859c1ae7dfdc090134b14663e8388396535c",
+      "bytes": 362
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/a8/a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/aa/aa9f2b71ab5ccd78456282c6f42783266c901bfc5de98d9de6e5007b8672c17d.json",
+      "sha256": "aa9f2b71ab5ccd78456282c6f42783266c901bfc5de98d9de6e5007b8672c17d",
+      "bytes": 4250
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/ad/ad503ccc1d44a0f3b9ed9145625a39afb68eb8d545bba179bd83013ee56fdad7.json",
+      "sha256": "ad503ccc1d44a0f3b9ed9145625a39afb68eb8d545bba179bd83013ee56fdad7",
+      "bytes": 4250
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/ae/ae14691613e0bd88cca766efeb8b79bf2c64abdbdc3cb055cff650676203120f.json",
+      "sha256": "ae14691613e0bd88cca766efeb8b79bf2c64abdbdc3cb055cff650676203120f",
+      "bytes": 1036
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/af/afd11a53f99bfd5342e6a6d94ccde14860cb97d4e2ca252a9f32d486f0b1cfae.json",
+      "sha256": "afd11a53f99bfd5342e6a6d94ccde14860cb97d4e2ca252a9f32d486f0b1cfae",
+      "bytes": 1376
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/b1/b14a73e1ea8ed69c019f442f32b1b197cba88cd6576fa2ae47bf78c3ef0d3679.json",
+      "sha256": "b14a73e1ea8ed69c019f442f32b1b197cba88cd6576fa2ae47bf78c3ef0d3679",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/b3/b3b18d3626eb907faf0ed91bf8ffda1b3552b0d267a9cd7f2e362ab8b7d36654.json",
+      "sha256": "b3b18d3626eb907faf0ed91bf8ffda1b3552b0d267a9cd7f2e362ab8b7d36654",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/b5/b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e.json",
+      "sha256": "b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e",
+      "bytes": 1376
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/b5/b541a124c3f6d95058fdde0a4ad166c78800dbadc73a08a3c0e13e67e31d7c93.json",
+      "sha256": "b541a124c3f6d95058fdde0a4ad166c78800dbadc73a08a3c0e13e67e31d7c93",
+      "bytes": 3962
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/b6/b60bc2946012e6b0ae4610be0f27b87941fa0d19a741717c9bbd0a3042cbdff4.json",
+      "sha256": "b60bc2946012e6b0ae4610be0f27b87941fa0d19a741717c9bbd0a3042cbdff4",
+      "bytes": 4174
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/b6/b6dadf2beda041fc3f9cccc66cec826b777dd2adc13732f261e362c2aea341d2.json",
+      "sha256": "b6dadf2beda041fc3f9cccc66cec826b777dd2adc13732f261e362c2aea341d2",
+      "bytes": 20
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/b7/b79e5a5a29ad9e4bbdafe4a6cecd9fb6d2c5e946593f504e112361a7a94acdd0.json",
+      "sha256": "b79e5a5a29ad9e4bbdafe4a6cecd9fb6d2c5e946593f504e112361a7a94acdd0",
+      "bytes": 740
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/ba/ba508d0fb752c66a8e99c65d9accf4919bcff13dc5f27a05c8eff6d66a3356a5.json",
+      "sha256": "ba508d0fb752c66a8e99c65d9accf4919bcff13dc5f27a05c8eff6d66a3356a5",
+      "bytes": 58
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/bc/bc573cd059b06e433b7ba5be60bcd2f95a4ca01257875647c7c6c009596a0c32.json",
+      "sha256": "bc573cd059b06e433b7ba5be60bcd2f95a4ca01257875647c7c6c009596a0c32",
+      "bytes": 5933
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/bd/bd2432fec0a73a1395ca59a95a7986b8f0074fce25758009514bf6a635b076b1.json",
+      "sha256": "bd2432fec0a73a1395ca59a95a7986b8f0074fce25758009514bf6a635b076b1",
+      "bytes": 2841
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/c1/c1c622756fc4a83c16227b55d605f6de1f4e62c35ecbe4bfd3e0cb4218448461.json",
+      "sha256": "c1c622756fc4a83c16227b55d605f6de1f4e62c35ecbe4bfd3e0cb4218448461",
+      "bytes": 3578
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/c4/c41267a8311eec056b07862ae2381a3b3a291ff5287210d742765b7d5a0cf8ac.json",
+      "sha256": "c41267a8311eec056b07862ae2381a3b3a291ff5287210d742765b7d5a0cf8ac",
+      "bytes": 4172
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/cb/cbefe1cf91580bde9eaa7d87ca3ec15dde397ada71ba8947eca20d53e08b629c.json",
+      "sha256": "cbefe1cf91580bde9eaa7d87ca3ec15dde397ada71ba8947eca20d53e08b629c",
+      "bytes": 2682
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/cc/cc59999879dc2415b973d0b7a180a71ca14e7cd70339097ffce88013b8bc391f.json",
+      "sha256": "cc59999879dc2415b973d0b7a180a71ca14e7cd70339097ffce88013b8bc391f",
+      "bytes": 55
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/ce/cea1aa38c4b244097c272a012f488e8b067ebda0ae2fd89515303aa535ddb7f7.json",
+      "sha256": "cea1aa38c4b244097c272a012f488e8b067ebda0ae2fd89515303aa535ddb7f7",
+      "bytes": 1079
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/cf/cf6f478b3a4d49a5dc0dae1832e13b8fe4da52c8f2729d8e13c85ff7c0393665.json",
+      "sha256": "cf6f478b3a4d49a5dc0dae1832e13b8fe4da52c8f2729d8e13c85ff7c0393665",
+      "bytes": 4862
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/d1/d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28.json",
+      "sha256": "d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28",
+      "bytes": 821
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/d1/d171ca312d043202d2ab88c9c61be842a9c247d0703bb3edaf7361306c3cbf4c.json",
+      "sha256": "d171ca312d043202d2ab88c9c61be842a9c247d0703bb3edaf7361306c3cbf4c",
+      "bytes": 6534
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/d9/d9a89ecc76297d4ac6688bfee5450bbc85f3310a02796ba877ae01276d7f550a.json",
+      "sha256": "d9a89ecc76297d4ac6688bfee5450bbc85f3310a02796ba877ae01276d7f550a",
+      "bytes": 1123
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/de/de373a885ddf9726b095439270eaed28325c2c6e00fb5bd071d733e1ee8e5748.json",
+      "sha256": "de373a885ddf9726b095439270eaed28325c2c6e00fb5bd071d733e1ee8e5748",
+      "bytes": 1678
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/df/dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015.json",
+      "sha256": "dfc00721d065ff719c14e4993f209cb49db05a8015846d5c1fc832a74f66a015",
+      "bytes": 310
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/e3/e3a0cbef5ea405a1271cae2cfb69fb15583e29f07a431aa0f7fa60704e337662.json",
+      "sha256": "e3a0cbef5ea405a1271cae2cfb69fb15583e29f07a431aa0f7fa60704e337662",
+      "bytes": 957
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/e6/e62ac4635f362fe877dbce376ecad3d0759923300b3ae964d03cb76a6d89b23b.json",
+      "sha256": "e62ac4635f362fe877dbce376ecad3d0759923300b3ae964d03cb76a6d89b23b",
+      "bytes": 1617
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/eb/ebaaab89bd915d977a45f3a9ef41d4dbd8a371119663402b61100c6a96eb6700.json",
+      "sha256": "ebaaab89bd915d977a45f3a9ef41d4dbd8a371119663402b61100c6a96eb6700",
+      "bytes": 2964
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/f0/f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/f2/f2fea843e6c1eb4bbc230f05912aa14f2207ec480662fc68411a652585ffeea8.txt",
+      "sha256": "f2fea843e6c1eb4bbc230f05912aa14f2207ec480662fc68411a652585ffeea8",
+      "bytes": 2498
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/f6/f6a140e25adf272bff118de78284279bc3505669e29e16e858558f8230680238.json",
+      "sha256": "f6a140e25adf272bff118de78284279bc3505669e29e16e858558f8230680238",
+      "bytes": 4922
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/f7/f761bc29f757d21193b968bb00ed50432d555d0787ed6dfae1e515660f89bfeb.pptx",
+      "sha256": "f761bc29f757d21193b968bb00ed50432d555d0787ed6dfae1e515660f89bfeb",
+      "bytes": 35622
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/f9/f999609fa451a13d04aa41c3ce7e34bf5f127f279cdbb85588f1367ea0011fec.json",
+      "sha256": "f999609fa451a13d04aa41c3ce7e34bf5f127f279cdbb85588f1367ea0011fec",
+      "bytes": 4469
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/f9/f9ef0580f45679b1319ed53e1253605d74e0400122106a3f34d09b4fcfb550af.json",
+      "sha256": "f9ef0580f45679b1319ed53e1253605d74e0400122106a3f34d09b4fcfb550af",
+      "bytes": 4219
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/objects/fb/fbf0d879ad3804ef9f873e5bafddf077bb5de982001a7778e12c5a24df5e11e9.json",
+      "sha256": "fbf0d879ad3804ef9f873e5bafddf077bb5de982001a7778e12c5a24df5e11e9",
+      "bytes": 4219
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/blueprint-cf3db4c1e6a6.json",
+      "sha256": "856c68a885a96b6e8ffcf9911e117a56d01f95bb0af8a0cd8301cfdb06dceccf",
+      "bytes": 340
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/blueprint-df855980d2da.json",
+      "sha256": "924e6d071f16607d29589e3fa067b55140e59f648a2ea476243239fb7fe19820",
+      "bytes": 340
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/draft-c986fd5e9af5.json",
+      "sha256": "6d0cad348ef4d23d261a4659ed40ed73af9322a37e68ae3767a936662c519fb2",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/reconstruct-44e11cfa2ba2.json",
+      "sha256": "710749d1bc6a37931fe8044a68be55c00f7e865e52729340d5fe31da86eb6c32",
+      "bytes": 344
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/reconstruct-b14ae036efe5.json",
+      "sha256": "2920227e8a719edebd83702a5bcec6818ea40ab28b8183e735561948a89867e4",
+      "bytes": 344
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/review-08be8bbb3a4b.json",
+      "sha256": "7ebabcb6bda801c129dc2015f19eed2f35a7ed8150b448a55062db3afef72134",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/review-35591e65811f.json",
+      "sha256": "970dc3d24bcf2b2da4c9a1afb0be22f73a74cccaff0378ac3ad85fbdbbdb1baf",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/review-40a37b30372f.json",
+      "sha256": "84580d43ccaaf68bb0aef640e9f000836ee2077c91f622fd6651367c49acfa8a",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/review-a3d6f417624c.json",
+      "sha256": "982951ebdaef4ea504a9728509bca407641c4f7f43a206dc7f60c9d7f4ab2a20",
+      "bytes": 334
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/operations/speech-update.json",
+      "sha256": "611921d3d31997ac389d8b27a6a0febf24b9eea25a0cdd00cc329d148645c5de",
+      "bytes": 329
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/0bb9cb44eb6448d499679799f8eec726.json",
+      "sha256": "87e895a49cd092f109aee608f67a0759a07acfe9e93186ec85e55fb1a07ca6b1",
+      "bytes": 6574
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/23bd1bac054f46779acbbae50bd89785.json",
+      "sha256": "3c5772ef705560561d633b0bd61706864ac189602cbbb1dd3aa1a7a43be54558",
+      "bytes": 10079
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/26ecefd65e7b48148b9400e323afce56.json",
+      "sha256": "adb667ed2c0de5b01020431b08bbfadfb39ca9551ede26d551075daa31e298b7",
+      "bytes": 7821
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/28a6baf2a3f14606a22461ea616f1ded.json",
+      "sha256": "6d1b3d1ff277f3e25b468af4a2079874f0ad49a3cf4b16620ba8fc0172cdd2b2",
+      "bytes": 4977
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/300d65b91aeb4c70b02e16b96a21ba6e.json",
+      "sha256": "8b182e4c16330bee8dae6c4c649ecaf407175f0fceb4b771bc8fe819afe58c44",
+      "bytes": 8179
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/394384b27cb643d59b2114a7e6fa1741.json",
+      "sha256": "32ad8579870f8935d67248d79f85e7423e120c89aea53d88b5d2b7c95c10ef5e",
+      "bytes": 5417
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/3a106df54f474a049ce8ea07f0fb0e21.json",
+      "sha256": "25f969623e480b4d4993ae93c3c2d78a4452831c0cc48a611d8b2cd9223b31f1",
+      "bytes": 2460
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/4684c922787e45d486c98aa69cb21dea.json",
+      "sha256": "bf558aa47538da5bb4bc3773f16912075628224cfb3316ecdb83ee76fdda3a55",
+      "bytes": 7035
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/4bfffaaea8cb4fb283a9f341f5eee8a0.json",
+      "sha256": "ecd9ce52bc279b9f872646c4f15161143756515815bb2e10e624475ca08754b0",
+      "bytes": 9364
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/59ee75ed873747019d5eff07def7125e.json",
+      "sha256": "282e0db5101d4da09a117307d91bf55485663a569741d91c40a38ad4b6cc32d6",
+      "bytes": 6217
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/5f2f97040aed4262b2cc877d955c8de6.json",
+      "sha256": "1b7e6536096e8eabdc284cca18c4f905d1244f09f547ffd6698ce553ca540704",
+      "bytes": 10898
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/64a6f3a900ab47f58009c61fbf47cae7.json",
+      "sha256": "d0bb407de425e0f8494012ca85ab30d9830f2fa74d6f8846f341fc36c37bb900",
+      "bytes": 4528
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/7ea435db96e441c1997687495de1d9a2.json",
+      "sha256": "038a5b8fc36fd9c4239a74ab31e06ac8075b8da46439f946c787324ad4525977",
+      "bytes": 3454
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/874e89fd763046f186f4558ccc2ade1f.json",
+      "sha256": "4aa1988f58f04efbeb84cf072700a9ab24ba9e7915d89f71817e5ebb0d95e18b",
+      "bytes": 10067
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/8d1a56a287174fd181bc42ec8c34cedc.json",
+      "sha256": "770c6cc6f1ced70e9db9eb0c114d2ff05ab6cd28769bdbea388ce5b76e8b0ce8",
+      "bytes": 7747
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/924b090157c0455bb7826d5646acbb3d.json",
+      "sha256": "544ea5984e847b2006e214bd1fcf122a26eacad26130030bdcece14d72371a89",
+      "bytes": 6103
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/93b5ba5b2a0d41c8ab4b16ac00c78ac5.json",
+      "sha256": "367184f28ea684f656d0cbfaf927a024b3bbdc8189f7f1d3faa8815662a49171",
+      "bytes": 5165
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/9567bface2164d86ad72ed235bcac924.json",
+      "sha256": "afb535724239c34963b49d558815f3b71ce698cb1774425aca646c610d2f2a72",
+      "bytes": 6734
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/990c1bc0da9b47818649dab29790b570.json",
+      "sha256": "30affbf4e9898892fd7f46030721827f9c8200af88e4416a037a3fa9a3beade3",
+      "bytes": 9500
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/a0f3ff73c2a54ac6811246497b732152.json",
+      "sha256": "27306acdcc0d276edad8e6eaad39643d85fd1db949ec2c3faf479a5053084c59",
+      "bytes": 4109
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/a5d1f27cfaac4c77ae7286ca05d3ea55.json",
+      "sha256": "0e03639f12625c80de9640656a882ef4b954dcf8894881865e8db98a5d5e4155",
+      "bytes": 5272
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/ad24123972d54034b5de4fae311547ba.json",
+      "sha256": "e91faa80681e073787dc24e56b8f0b41a61717b1e94211f382977a34ccc82023",
+      "bytes": 5440
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/b2b2e56f21f4409eb5231183fb9db8e4.json",
+      "sha256": "869f693f902315b73f9b9f7b46bb05ceca5f8d9eb9104bffdb15d8ee7937a7f2",
+      "bytes": 9426
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/baca5684a5de4a38b45cbe77b497e152.json",
+      "sha256": "dd8776541604429475fd0261e7e3fb320f5a0a6d0dd59a4ce77fb762bb403b2d",
+      "bytes": 5430
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/bb0455564b4448e98687b9b365b17ecb.json",
+      "sha256": "86290496a467477d706811c076aabc8b15ef166d119beecda44dfadadb2d9452",
+      "bytes": 9544
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/bb5f8389f8f5408bb1b6ec59ffaf35ec.json",
+      "sha256": "413d8301e974ee612235839d7a6b44dd388def0e12e5f61eaeaf53e145bb5c30",
+      "bytes": 7045
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/bf05b30e7be44b52b8bb3c35783f36f5.json",
+      "sha256": "6a73c05c826b6ae6e0cf9a526954a449b14cf53c39c21f24c295af449298d1a9",
+      "bytes": 7000
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/c6414019748c433baf5ba75a648f8052.json",
+      "sha256": "8cdf09888297755d82085cb07607e1a84b5e9652ccf64a58ccb4d675112fa36d",
+      "bytes": 2176
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/c6ce06c8c7fe48f98c04e716155d8960.json",
+      "sha256": "b14fa1ee2c9fcdfdd89a5cfc29bb0d81285a76c3158e00be30a2c80f7098bf51",
+      "bytes": 10084
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/c8b401284f344d268af250810c558b69.json",
+      "sha256": "5089522c12c2d04235a140377d3f5a777a97d65d5a48dfcfefea324da9df44fc",
+      "bytes": 4540
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/ca0cd0271f974ac9a529e3699db18f09.json",
+      "sha256": "fa03285a6535aa9c98c8e2d162453b903c1f9f8cf53bf93975456c41b8115fff",
+      "bytes": 5395
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/ce33c039ec9d45dbb498f83d32a15c07.json",
+      "sha256": "98e48672cd0e0f59b2dcf6c0b9eb13dea68302fc724d2087c8d8ed99dfc3d6e9",
+      "bytes": 8339
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/ceabd0d93e0f41a689841ba4231cdbd6.json",
+      "sha256": "3aa4e9837e2d49cc881e5f56c76991a34e3f7c7ffea9199b9ca95ccf6b09de2c",
+      "bytes": 7406
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/cfe45e9e85d245a7bb53c157caf631d8.json",
+      "sha256": "9047c75fb1512d1d1a98612084bfb6fd028db87d76ae53aa20adad9324b4c69c",
+      "bytes": 11671
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/d75d77cd3d914d45b6848f10909f4dfe.json",
+      "sha256": "0425630366e7454d2a7f6e3efbfbae695bee21650ac0ba9b7c4758758ed979d9",
+      "bytes": 7022
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/d916d75c39194d1ca3dd30db7cabb2b8.json",
+      "sha256": "2128000456aa91bcb37f0314d8255de4178190a9a457e13f3157fca3a55913ad",
+      "bytes": 6142
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/dc50cbf4c1b24cefa1030c1d3f0fe181.json",
+      "sha256": "1461d6f3856893faddfe91a7ee2a35da4800bafbf4adb483773ff841cd640557",
+      "bytes": 7822
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/e282fb8c060f4b25aa1773b6153004a4.json",
+      "sha256": "209f311571bb8c0376852abdf42de7aec57303f96dfaec04b0941b46b58584a8",
+      "bytes": 9959
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/revisions/ff26ecf92bcc42d19b8c161f3b16bf0d.json",
+      "sha256": "3134c943407252893e9005b1d863972c009f06ba511218b0d64069f9a0fc8923",
+      "bytes": 5801
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/staging/blueprint-cf3db4c1e6a6/candidate.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/staging/blueprint-df855980d2da/candidate.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/staging/reconstruct-44e11cfa2ba2/page.svg",
+      "sha256": "a70132067402c68e6cacb820e14f859c1ae7dfdc090134b14663e8388396535c",
+      "bytes": 362
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/staging/reconstruct-b14ae036efe5/page.svg",
+      "sha256": "329dd7d783a69a4e9a4603db0da82f2448d3e454ea2edfd9f2734d557f545e08",
+      "bytes": 361
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/deck-review-c6ce06c8.zip",
+      "sha256": "2f16b2df670d25717e4d34ec1d724fa50ef8f03f3e6d78ac06a7807135492c78",
+      "bytes": 136058
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/deck.pptx",
+      "sha256": "f0c63d91efe72f49aa2e14a2cf222aeab1df27372522039d64771f91dcfa12d1",
+      "bytes": 30724
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/delivery.json",
+      "sha256": "e68ff25aa2ece175e51da09d61b2505bb9f53b9d11db59595daf49de6ddf96d2",
+      "bytes": 3420
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/export-record.json",
+      "sha256": "9d48f6cce02b092dfd0784f888d9c8ed3cd4346a810d2b0b2a891395bd77b94f",
+      "bytes": 5447
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/manifest.json",
+      "sha256": "040b50e49b89bf52a394552b33608187ba19f22a9fd3cd726f0dbe39a7320a02",
+      "bytes": 3462
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-001/blueprint.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-001/content.txt",
+      "sha256": "c9d4d1a04b433533e8d7e101709f46682f2249516b4cc18b32f01857ffef1bdd",
+      "bytes": 49
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-001/ppt_preview.png",
+      "sha256": "8968213a9a3ef317e86f1057b7cff5ad645b9d9a48f9ed93492f55168c9d73cf",
+      "bytes": 34275
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-001/svg.svg",
+      "sha256": "c267a57367e883ec651d9cdf0ee855e44022e541a83ddf6cdedd5ef4329c8598",
+      "bytes": 312
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-001/svg_preview.png",
+      "sha256": "eae2293010e62473de24639a877b3803eba081542e4b071c9d4a4731fa095035",
+      "bytes": 6609
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-002/blueprint.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-002/content.txt",
+      "sha256": "97917880d31840fc0261aef44a92822ff20b0dc11f80002d4dde63f103c810af",
+      "bytes": 48
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-002/ppt_preview.png",
+      "sha256": "99c27e13b6ffab1bba721dffded08f0d507d9d22cff22e4cf25cd98fd7bd8cd5",
+      "bytes": 36307
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-002/svg.svg",
+      "sha256": "ba63bfde5fbb5eb1045b729cfa1171f63bfb9bf127bcefc2d9ebf06950e997e9",
+      "bytes": 311
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/page-002/svg_preview.png",
+      "sha256": "9210570168a1e7fb03a8db1e35b4cb2afda734c663fa596d86ce3a53f8373a76",
+      "bytes": 6664
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/export-ae29649d-faa4-4e65-b841-f0cb306a3b42/review.html",
+      "sha256": "34f4b86354c3c001d53c48b88dd1f4d6013f72dd3f82125b003d6badc565fcfa",
+      "bytes": 418
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/workbench/exports/exports.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/project/.deckmaster/write.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/projectionmetadata.json",
+      "sha256": "4e151cb250731f9801077023d458f4e476ae1a444f5632c9ebdedf98cf3749af",
+      "bytes": 35624
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/deck-review-c6ce06c8.zip",
+      "sha256": "2f16b2df670d25717e4d34ec1d724fa50ef8f03f3e6d78ac06a7807135492c78",
+      "bytes": 136058
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/deck.pptx",
+      "sha256": "f0c63d91efe72f49aa2e14a2cf222aeab1df27372522039d64771f91dcfa12d1",
+      "bytes": 30724
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/delivery.json",
+      "sha256": "e68ff25aa2ece175e51da09d61b2505bb9f53b9d11db59595daf49de6ddf96d2",
+      "bytes": 3420
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/manifest.json",
+      "sha256": "040b50e49b89bf52a394552b33608187ba19f22a9fd3cd726f0dbe39a7320a02",
+      "bytes": 3462
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-001/blueprint.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-001/content.txt",
+      "sha256": "c9d4d1a04b433533e8d7e101709f46682f2249516b4cc18b32f01857ffef1bdd",
+      "bytes": 49
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-001/ppt_preview.png",
+      "sha256": "8968213a9a3ef317e86f1057b7cff5ad645b9d9a48f9ed93492f55168c9d73cf",
+      "bytes": 34275
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-001/svg.svg",
+      "sha256": "c267a57367e883ec651d9cdf0ee855e44022e541a83ddf6cdedd5ef4329c8598",
+      "bytes": 312
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-001/svg_preview.png",
+      "sha256": "eae2293010e62473de24639a877b3803eba081542e4b071c9d4a4731fa095035",
+      "bytes": 6609
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-002/blueprint.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-002/content.txt",
+      "sha256": "97917880d31840fc0261aef44a92822ff20b0dc11f80002d4dde63f103c810af",
+      "bytes": 48
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-002/ppt_preview.png",
+      "sha256": "99c27e13b6ffab1bba721dffded08f0d507d9d22cff22e4cf25cd98fd7bd8cd5",
+      "bytes": 36307
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-002/svg.svg",
+      "sha256": "ba63bfde5fbb5eb1045b729cfa1171f63bfb9bf127bcefc2d9ebf06950e997e9",
+      "bytes": 311
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/page-002/svg_preview.png",
+      "sha256": "9210570168a1e7fb03a8db1e35b4cb2afda734c663fa596d86ce3a53f8373a76",
+      "bytes": 6664
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/public/review.html",
+      "sha256": "34f4b86354c3c001d53c48b88dd1f4d6013f72dd3f82125b003d6badc565fcfa",
+      "bytes": 418
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/source.txt",
+      "sha256": "10ae71300e61228eec799a5269cdc5b276d5de60a2022f6d340b6eeac96164ae",
+      "bytes": 156
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/speech-accepted.json",
+      "sha256": "4130898699ddfee6f615152bb6dbfcbd7ef2105f56b4d85443ba9f3262a1bcc4",
+      "bytes": 2742
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/summary.json",
+      "sha256": "954532442daf8a0da350de84d2c8ba1b363fe6e47e41cc120491fcc62c1b22a6",
+      "bytes": 551
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/supplemental-audit.json",
+      "sha256": "da603266c6d4e51b81ac41f3ce161d23e18144096bed9ecc713b1cab08fb1c1a",
+      "bytes": 5191
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/synthetic-runtime/generated_images/11111111-1111-7111-8111-111111111111/exec-50b381db-992b-4995-9501-81c2c8d99e4e.png",
+      "sha256": "a8665392a96a2b1143758a2be4fed4aa0a5d035c3decda6c98f4537ae2e9a78f",
+      "bytes": 23673
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/synthetic-runtime/generated_images/11111111-1111-7111-8111-111111111111/exec-f6ea426d-a4d1-4145-8d71-2f336b8f7503.png",
+      "sha256": "f0485c6484074efb12cd85cb7fb01350887511b0c3302696e61c9737e35dab46",
+      "bytes": 24140
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/synthetic-runtime/sessions/2026/09/29/rollout-2026-09-29T00-00-00-11111111-1111-7111-8111-111111111111.jsonl",
+      "sha256": "94ffd3ff9b65f215a15e6c71ab372decf20742ca8a306333c94971e9b0a971a1",
+      "bytes": 142296
+    },
+    {
+      "path": "run-final/imported_mapping_null_narrative/zero-additional-image-ledger.json",
+      "sha256": "77864cc296bc767f300f58f424ce1f7027c9703d4b5056ebbc7face57930ebd8",
+      "bytes": 3937
+    },
+    {
+      "path": "run-final/installed-product-bytes-after.json",
+      "sha256": "54eb0e070e9d40a2195a8b4bf4e260805244005f5a464b9ad8f4e3be1156149e",
+      "bytes": 26973
+    },
+    {
+      "path": "run-final/installed-product-bytes-before.json",
+      "sha256": "54eb0e070e9d40a2195a8b4bf4e260805244005f5a464b9ad8f4e3be1156149e",
+      "bytes": 26973
+    },
+    {
+      "path": "run-final/summary.json",
+      "sha256": "938eaf42f8f9a63b8febe4f820e98fdf02240872db3457ff2d8b3d72d70beedd",
+      "bytes": 1144
+    },
+    {
+      "path": "run-final.log",
+      "sha256": "938eaf42f8f9a63b8febe4f820e98fdf02240872db3457ff2d8b3d72d70beedd",
+      "bytes": 1144
+    },
+    {
+      "path": "run.py",
+      "sha256": "30d450677e1f1047982657dd637a510d346ff0cb0a4c600ad4217e74357c3c85",
+      "bytes": 14766
+    },
+    {
+      "path": "trace-catalog.json",
+      "sha256": "ed7224e901e3b55c3e872fe21ab9622d67316548faba854f5bdec3202e4326da",
+      "bytes": 7379
+    }
+  ]
+}

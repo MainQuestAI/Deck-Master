@@ -45,9 +45,7 @@ CURRENT_FORMAT = "deckmaster-current.v1"
 WORKBENCH_FORMAT = "deckmaster-current.v2"
 # Writers this core can read from a pointer and advance to (single source for
 # the store gate and the UI's effective-action projection).
-SUPPORTED_WRITERS = ("generation.v1", "content-plan.v1", "changes.v1", "candidates.v1",
-                     "run-desk.v1", "style-recipes.v1", "content-ops.v1", "content-candidates.v1",
-                     "icon-quality.v1", "workbench-quality.v1", "collaboration.v1")
+SUPPORTED_WRITERS = tuple(writer for writer in WRITER_RANK if writer is not None)
 DECKMASTER_DIR = ".deckmaster"
 OPERATION_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 _OBJECT_PATH = re.compile(r"\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\.[a-z0-9]+")
@@ -244,6 +242,30 @@ class Store:
             raise StoreError("current.json", "unsupported minimum writer; use the matching core")
         return pointer
 
+    def workbench_protocol_required(self, document: dict[str, Any]) -> bool:
+        """Derive original protocol facts without turning a notes floor into migration.
+
+        Explicit assembly still requires its own gate. New collaboration projects
+        always use workbench rules. A legacy project's first rc3.v1 notes write
+        only changes the supported writer; its committed earlier format remains
+        readable evidence of the original protocol.
+        """
+        if document.get('collaboration') is not None:
+            return True
+        node, seen = document, set()
+        while node:
+            if node['revision_id'] in seen:
+                raise StoreError('history', 'cyclic original protocol history')
+            seen.add(node['revision_id'])
+            compatibility = node.get('compatibility') or {}
+            if compatibility.get('minimum_writer') != 'rc3.v1':
+                return compatibility.get('project_format') == 'workbench.v3'
+            parent = node.get('parent_revision_id')
+            if not parent:
+                return True  # no provable earlier legacy protocol: fail closed
+            node = self.load_document(parent)
+        return True
+
     def load_document(self, revision_id: str | None = None) -> dict[str, Any]:
         revision_id = revision_id or self.current_revision_id()
         if revision_id is None:
@@ -360,6 +382,9 @@ class Store:
             )
         if current and current.get("format") == WORKBENCH_FORMAT and not document.get("compatibility"):
             raise StoreError("compatibility", "a workbench project cannot drop its writer boundary")
+        if (current and current_document and current_document.get('collaboration') is not None
+                and document.get('collaboration') is None):
+            raise StoreError('collaboration', 'a migrated project cannot drop its collaboration control')
         if (current and WRITER_RANK.get(current.get("minimum_writer"), 99)
                 > WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), 0)):
             raise StoreError("compatibility", "minimum writer cannot be downgraded")

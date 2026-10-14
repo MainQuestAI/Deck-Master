@@ -103,9 +103,14 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
             if not before or before.get('page_id') != page_id or before.get('role') not in ('page', 'svg', 'ppt_preview'):
                 continue
             for after in new:
+                hash_key = ('visual_sha' if owner.get('review_stage') == 'page_visual'
+                            else 'speech_semantic_sha' if owner.get('kind') == 'speech'
+                            else 'semantic_sha' if owner.get('review_stage') == 'preproduction'
+                            else 'file_sha') if before.get('role') == 'page' else 'file_sha'
                 if (after and after.get('current') and after.get('page_id') == page_id and
                         after.get('role') == before.get('role') and
-                        after.get('file_sha') != before.get('file_sha')):
+                        before.get(hash_key) and after.get(hash_key) and
+                        after[hash_key] != before[hash_key]):
                     return True
         for before in old:
             if not before or before.get('role') != 'pptx' or page_id not in before.get('slides', {}):
@@ -118,6 +123,8 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         # Synthetic fixtures have no Store metadata, and owners may cite only
         # the Page. The same page's dependency must still prove an actual
         # digest change to a current product cited by the candidate.
+        if subjects and owner.get('review_stage') in ('page_visual', 'preproduction'):
+            return False
         old_deps = {_dependency_key(d): d.get('sha256') for d in owner.get('dependencies') or []}
         new_deps = {_dependency_key(d): d.get('sha256') for d in candidate.get('dependencies') or []}
         for key in (f'content:page:{page_id}', f'artifact:svg:{page_id}',
@@ -311,14 +318,21 @@ def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
                              f'artifact:svg:{page_id}', f'style:{page_id}'}
     required_dependencies.update(f'asset:{asset_id}' for asset_id in allowed_asset_ids)
     current = {}
+    aliases = (artifacts.get('_visual_page_aliases') or {}).get(page_id, set())
+    page_key = _ref_key(entry['page'])
     for review in reviews:
         if review.get('review_stage') != 'page_visual' or review.get('kind') not in PAGE_VISUAL_KINDS:
             continue
         subjects = {_ref_key(ref) for ref in review.get('subjects') or []}
-        if not required_subjects <= subjects:
+        non_page_subjects = required_subjects - {page_key}
+        if not non_page_subjects <= subjects or not ({page_key, *aliases} & subjects):
             continue
         deps = {_dependency_key(dep): dep['sha256'] for dep in review.get('dependencies') or []}
-        if not required_dependencies <= deps.keys() or any(artifacts.get(key) != sha for key, sha in deps.items()):
+        def matches(key, sha):
+            if key == f'content:page:{page_id}':
+                return artifacts.get(key) == sha or any(ref_key[1] == sha for ref_key in aliases)
+            return artifacts.get(key) == sha
+        if not required_dependencies <= deps.keys() or any(not matches(key, sha) for key, sha in deps.items()):
             continue
         current.setdefault(review['kind'], []).append(review)
     missing = [kind for kind in PAGE_VISUAL_KINDS if kind not in current]

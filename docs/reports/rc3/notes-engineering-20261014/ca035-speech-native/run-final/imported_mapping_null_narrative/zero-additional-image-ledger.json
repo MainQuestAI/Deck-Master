@@ -1,0 +1,111 @@
+{
+  "before": {
+    "image_tasks": [
+      "1c7278789b2d",
+      "18c53f917243"
+    ],
+    "allowances": [
+      {
+        "task_id": "1c7278789b2d",
+        "values": [
+          {
+            "allowance_id": "call-1",
+            "evidence": [
+              {
+                "path": ".deckmaster/objects/aa/aa9f2b71ab5ccd78456282c6f42783266c901bfc5de98d9de6e5007b8672c17d.json",
+                "sha256": "aa9f2b71ab5ccd78456282c6f42783266c901bfc5de98d9de6e5007b8672c17d"
+              }
+            ],
+            "evidence_level": "tool_observed",
+            "execution_ref": "codex:11111111-1111-7111-8111-111111111111:22222222-2222-7222-8222-222222222222",
+            "invocation_ref": "exec-50b381db-992b-4995-9501-81c2c8d99e4e",
+            "state": "consumed"
+          }
+        ]
+      },
+      {
+        "task_id": "18c53f917243",
+        "values": [
+          {
+            "allowance_id": "call-1",
+            "evidence": [
+              {
+                "path": ".deckmaster/objects/ad/ad503ccc1d44a0f3b9ed9145625a39afb68eb8d545bba179bd83013ee56fdad7.json",
+                "sha256": "ad503ccc1d44a0f3b9ed9145625a39afb68eb8d545bba179bd83013ee56fdad7"
+              }
+            ],
+            "evidence_level": "tool_observed",
+            "execution_ref": "codex:11111111-1111-7111-8111-111111111111:22222222-2222-7222-8222-222222222222",
+            "invocation_ref": "exec-f6ea426d-a4d1-4145-8d71-2f336b8f7503",
+            "state": "consumed"
+          }
+        ]
+      }
+    ],
+    "attempts": [
+      {
+        "path": ".deckmaster/objects/84/84912665074d53f881c0d031b23f77475538175e3345ee175aa01ab77a6f6a8d.json",
+        "sha256": "84912665074d53f881c0d031b23f77475538175e3345ee175aa01ab77a6f6a8d"
+      },
+      {
+        "path": ".deckmaster/objects/ce/cea1aa38c4b244097c272a012f488e8b067ebda0ae2fd89515303aa535ddb7f7.json",
+        "sha256": "cea1aa38c4b244097c272a012f488e8b067ebda0ae2fd89515303aa535ddb7f7"
+      }
+    ]
+  },
+  "after": {
+    "image_tasks": [
+      "1c7278789b2d",
+      "18c53f917243"
+    ],
+    "allowances": [
+      {
+        "task_id": "1c7278789b2d",
+        "values": [
+          {
+            "allowance_id": "call-1",
+            "evidence": [
+              {
+                "path": ".deckmaster/objects/aa/aa9f2b71ab5ccd78456282c6f42783266c901bfc5de98d9de6e5007b8672c17d.json",
+                "sha256": "aa9f2b71ab5ccd78456282c6f42783266c901bfc5de98d9de6e5007b8672c17d"
+              }
+            ],
+            "evidence_level": "tool_observed",
+            "execution_ref": "codex:11111111-1111-7111-8111-111111111111:22222222-2222-7222-8222-222222222222",
+            "invocation_ref": "exec-50b381db-992b-4995-9501-81c2c8d99e4e",
+            "state": "consumed"
+          }
+        ]
+      },
+      {
+        "task_id": "18c53f917243",
+        "values": [
+          {
+            "allowance_id": "call-1",
+            "evidence": [
+              {
+                "path": ".deckmaster/objects/ad/ad503ccc1d44a0f3b9ed9145625a39afb68eb8d545bba179bd83013ee56fdad7.json",
+                "sha256": "ad503ccc1d44a0f3b9ed9145625a39afb68eb8d545bba179bd83013ee56fdad7"
+              }
+            ],
+            "evidence_level": "tool_observed",
+            "execution_ref": "codex:11111111-1111-7111-8111-111111111111:22222222-2222-7222-8222-222222222222",
+            "invocation_ref": "exec-f6ea426d-a4d1-4145-8d71-2f336b8f7503",
+            "state": "consumed"
+          }
+        ]
+      }
+    ],
+    "attempts": [
+      {
+        "path": ".deckmaster/objects/84/84912665074d53f881c0d031b23f77475538175e3345ee175aa01ab77a6f6a8d.json",
+        "sha256": "84912665074d53f881c0d031b23f77475538175e3345ee175aa01ab77a6f6a8d"
+      },
+      {
+        "path": ".deckmaster/objects/ce/cea1aa38c4b244097c272a012f488e8b067ebda0ae2fd89515303aa535ddb7f7.json",
+        "sha256": "cea1aa38c4b244097c272a012f488e8b067ebda0ae2fd89515303aa535ddb7f7"
+      }
+    ]
+  },
+  "equal": true
+}

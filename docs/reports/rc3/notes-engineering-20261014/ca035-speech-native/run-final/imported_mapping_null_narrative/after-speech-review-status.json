@@ -1,0 +1,33 @@
+{
+  "stage": "preproduction",
+  "status": "pass",
+  "requirement": "fidelity_only",
+  "requirement_state": {
+    "declared": "fidelity_only",
+    "origin": "confirmed_manuscript",
+    "override_decision_ref": null,
+    "effective": "fidelity_only",
+    "reasons": []
+  },
+  "units": [
+    "page_copy",
+    "progression"
+  ],
+  "satisfied_units": [
+    "page_copy",
+    "progression"
+  ],
+  "missing_units": [],
+  "review_refs": [
+    {
+      "path": ".deckmaster/objects/40/40d6f195fd95084f39223e0717704bf52e0d911a842b17f6cf81e525a4ee7986.json",
+      "sha256": "40d6f195fd95084f39223e0717704bf52e0d911a842b17f6cf81e525a4ee7986"
+    },
+    {
+      "path": ".deckmaster/objects/de/de373a885ddf9726b095439270eaed28325c2c6e00fb5bd071d733e1ee8e5748.json",
+      "sha256": "de373a885ddf9726b095439270eaed28325c2c6e00fb5bd071d733e1ee8e5748"
+    }
+  ],
+  "blocking_findings": [],
+  "next_action": "proceed_to_visual_production"
+}

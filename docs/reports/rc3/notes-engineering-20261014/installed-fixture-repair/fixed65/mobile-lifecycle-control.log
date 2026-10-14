@@ -1,0 +1,13 @@
+
+==================================== ERRORS ====================================
+_ ERROR collecting rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle.py _
+../rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle.py:10: in <module>
+    root=Path(sys.argv[1]);root.mkdir()
+                           ^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1311: in mkdir
+    os.mkdir(self, mode)
+E   FileExistsError: [Errno 17] File exists: '/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control'
+=========================== short test summary info ============================
+ERROR ../rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.09s

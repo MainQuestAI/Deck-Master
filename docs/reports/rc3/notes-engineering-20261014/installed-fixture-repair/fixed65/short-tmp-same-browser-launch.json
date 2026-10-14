@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "tmpdir": "/workspace/work/rc3/t65r",
+  "executable": "/usr/bin/chromium",
+  "resolved": "/usr/bin/chromium",
+  "launcher_sha256": "2c8d32d29dc6781c35ae196ea83299d507ac88fc339301abe74672feda299779",
+  "chromium_version": "151.0.7922.173",
+  "change": "Only short TMPDIR; same system Chromium selected as failed recovery."
+}

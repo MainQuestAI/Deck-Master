@@ -1,0 +1,424 @@
+....................FFFF.............................                    [100%]
+=================================== FAILURES ===================================
+____________ test_revised_deck_recompiles_real_slide_order[reorder] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-115/test_revised_deck_recompiles_r0')
+resolvable_font_family = 'Noto Sans CJK SC', mode = 'reorder'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+    def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+        import io
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from PIL import Image
+        from page_visual_helpers import pass_page_review
+        from deck_master.pipeline import artifact, produce
+        from deck_master.editing import export_project
+        from deck_master.handoff import check_handoff
+        from deck_master.store import StoreError
+    
+        def page(pid):
+            return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                    'customer_visible': {'title': pid, 'body_blocks': []},
+                    'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+    
+        project = tmp_path / 'real-deck'
+        service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+        store = Store(project)
+        png = tmp_path / 'reference.png'
+        Image.new('RGB', (960, 540), 'white').save(png)
+    
+        def attach_missing_svgs(doc):
+            for entry in doc['pages']:
+                if entry.get('svg'):
+                    continue
+                content = store.read_object_json(entry['page'])
+                svg = tmp_path / (entry['page_id'] + '.svg')
+                svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                               f'<rect width="960" height="540" fill="#ffffff"/>'
+                               f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                               f'{content["customer_visible"]["title"]}</text></svg>')
+                if not entry.get('blueprint'):
+                    entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+                entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+    
+        _raw_commit(store, attach_missing_svgs)
+        assert produce(project)['status'] == 'pass'
+        before = store.load_document()
+        old_file = tmp_path / 'old.pptx'
+        old_file.write_bytes(store.read_object_bytes(store.read_object_json(before['outputs']['pptx'])['file']))
+>       update = service.inputs_update(project, patch={'reason': 'revised deck', 'task_patch': {'audience': 'new audience'}},
+                                       base_revision=before['revision_id'], operation_id='render-update')
+
+tests/rebuild/test_flow_quality.py:1417: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/service.py:1555: in inputs_update
+    task = revision_compose_task(store, new_document, operation_id=operation_id,
+src/deck_master/service.py:292: in revision_compose_task
+    return _input_compose_task(document, operation_id=operation_id, reason=reason)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+document = {'change': {'operation_id': 'render-update', 'kind': 'input_update', 'description': 'revised deck', 'read_set': []}, '...c5c261d', 'input_revision_id': None, 'resolved_by_task_id': '719cd01c3eee'}, 'created_at': '2026-10-14T20:36:08Z', ...}
+operation_id = 'render-update', reason = 'revised deck'
+
+    def _input_compose_task(document, *, operation_id, reason):
+        pages = document.get("pages") or []
+        if pages:
+            intent = "input_revision"
+            scope = [entry["page_id"] for entry in pages]
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{reason}。"
+                "读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，"
+                "只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。"
+            )
+        else:
+            intent = "initial"
+            scope = []
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{reason}。"
+                "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
+            )
+        methods = method_resources("compose", intent=intent)
+        task = tasks_mod.new_task(
+            task_id=uuid.uuid4().hex[:12],
+            operation_id=_new_operation_id("compose"),
+            kind="compose",
+            intent=intent,
+            input_digest=compute_input_digest(document),
+            input_revision_id=operation_id,
+            method_release=method_release(methods),
+            scope_pages=scope,
+            instruction=instruction,
+            inputs=[],
+            dependencies=[{"kind": "content",
+                           "identity": f"document-revision:{document['revision_id']}",
+                           "sha256": content_identity(document)}],
+            dispatch_revision=document["revision_id"],
+            produced_against=content_identity(document),
+        )
+        from .content_plan import protocol_fields
+>       task.update(protocol_fields(document, intent, store=store))
+                                                            ^^^^^
+E       NameError: name 'store' is not defined
+
+src/deck_master/service.py:331: NameError
+____________ test_revised_deck_recompiles_real_slide_order[remove] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-115/test_revised_deck_recompiles_r1')
+resolvable_font_family = 'Noto Sans CJK SC', mode = 'remove'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+    def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+        import io
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from PIL import Image
+        from page_visual_helpers import pass_page_review
+        from deck_master.pipeline import artifact, produce
+        from deck_master.editing import export_project
+        from deck_master.handoff import check_handoff
+        from deck_master.store import StoreError
+    
+        def page(pid):
+            return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                    'customer_visible': {'title': pid, 'body_blocks': []},
+                    'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+    
+        project = tmp_path / 'real-deck'
+        service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+        store = Store(project)
+        png = tmp_path / 'reference.png'
+        Image.new('RGB', (960, 540), 'white').save(png)
+    
+        def attach_missing_svgs(doc):
+            for entry in doc['pages']:
+                if entry.get('svg'):
+                    continue
+                content = store.read_object_json(entry['page'])
+                svg = tmp_path / (entry['page_id'] + '.svg')
+                svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                               f'<rect width="960" height="540" fill="#ffffff"/>'
+                               f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                               f'{content["customer_visible"]["title"]}</text></svg>')
+                if not entry.get('blueprint'):
+                    entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+                entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+    
+        _raw_commit(store, attach_missing_svgs)
+        assert produce(project)['status'] == 'pass'
+        before = store.load_document()
+        old_file = tmp_path / 'old.pptx'
+        old_file.write_bytes(store.read_object_bytes(store.read_object_json(before['outputs']['pptx'])['file']))
+>       update = service.inputs_update(project, patch={'reason': 'revised deck', 'task_patch': {'audience': 'new audience'}},
+                                       base_revision=before['revision_id'], operation_id='render-update')
+
+tests/rebuild/test_flow_quality.py:1417: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/service.py:1555: in inputs_update
+    task = revision_compose_task(store, new_document, operation_id=operation_id,
+src/deck_master/service.py:292: in revision_compose_task
+    return _input_compose_task(document, operation_id=operation_id, reason=reason)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+document = {'change': {'operation_id': 'render-update', 'kind': 'input_update', 'description': 'revised deck', 'read_set': []}, '...c5c261d', 'input_revision_id': None, 'resolved_by_task_id': '7b3047850455'}, 'created_at': '2026-10-14T20:36:09Z', ...}
+operation_id = 'render-update', reason = 'revised deck'
+
+    def _input_compose_task(document, *, operation_id, reason):
+        pages = document.get("pages") or []
+        if pages:
+            intent = "input_revision"
+            scope = [entry["page_id"] for entry in pages]
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{reason}。"
+                "读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，"
+                "只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。"
+            )
+        else:
+            intent = "initial"
+            scope = []
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{reason}。"
+                "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
+            )
+        methods = method_resources("compose", intent=intent)
+        task = tasks_mod.new_task(
+            task_id=uuid.uuid4().hex[:12],
+            operation_id=_new_operation_id("compose"),
+            kind="compose",
+            intent=intent,
+            input_digest=compute_input_digest(document),
+            input_revision_id=operation_id,
+            method_release=method_release(methods),
+            scope_pages=scope,
+            instruction=instruction,
+            inputs=[],
+            dependencies=[{"kind": "content",
+                           "identity": f"document-revision:{document['revision_id']}",
+                           "sha256": content_identity(document)}],
+            dispatch_revision=document["revision_id"],
+            produced_against=content_identity(document),
+        )
+        from .content_plan import protocol_fields
+>       task.update(protocol_fields(document, intent, store=store))
+                                                            ^^^^^
+E       NameError: name 'store' is not defined
+
+src/deck_master/service.py:331: NameError
+______________ test_revised_deck_recompiles_real_slide_order[add] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-115/test_revised_deck_recompiles_r2')
+resolvable_font_family = 'Noto Sans CJK SC', mode = 'add'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+    def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+        import io
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from PIL import Image
+        from page_visual_helpers import pass_page_review
+        from deck_master.pipeline import artifact, produce
+        from deck_master.editing import export_project
+        from deck_master.handoff import check_handoff
+        from deck_master.store import StoreError
+    
+        def page(pid):
+            return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                    'customer_visible': {'title': pid, 'body_blocks': []},
+                    'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+    
+        project = tmp_path / 'real-deck'
+        service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+        store = Store(project)
+        png = tmp_path / 'reference.png'
+        Image.new('RGB', (960, 540), 'white').save(png)
+    
+        def attach_missing_svgs(doc):
+            for entry in doc['pages']:
+                if entry.get('svg'):
+                    continue
+                content = store.read_object_json(entry['page'])
+                svg = tmp_path / (entry['page_id'] + '.svg')
+                svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                               f'<rect width="960" height="540" fill="#ffffff"/>'
+                               f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                               f'{content["customer_visible"]["title"]}</text></svg>')
+                if not entry.get('blueprint'):
+                    entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+                entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+    
+        _raw_commit(store, attach_missing_svgs)
+        assert produce(project)['status'] == 'pass'
+        before = store.load_document()
+        old_file = tmp_path / 'old.pptx'
+        old_file.write_bytes(store.read_object_bytes(store.read_object_json(before['outputs']['pptx'])['file']))
+>       update = service.inputs_update(project, patch={'reason': 'revised deck', 'task_patch': {'audience': 'new audience'}},
+                                       base_revision=before['revision_id'], operation_id='render-update')
+
+tests/rebuild/test_flow_quality.py:1417: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/service.py:1555: in inputs_update
+    task = revision_compose_task(store, new_document, operation_id=operation_id,
+src/deck_master/service.py:292: in revision_compose_task
+    return _input_compose_task(document, operation_id=operation_id, reason=reason)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+document = {'change': {'operation_id': 'render-update', 'kind': 'input_update', 'description': 'revised deck', 'read_set': []}, '...c5c261d', 'input_revision_id': None, 'resolved_by_task_id': '9ade944f0ffd'}, 'created_at': '2026-10-14T20:36:10Z', ...}
+operation_id = 'render-update', reason = 'revised deck'
+
+    def _input_compose_task(document, *, operation_id, reason):
+        pages = document.get("pages") or []
+        if pages:
+            intent = "input_revision"
+            scope = [entry["page_id"] for entry in pages]
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{reason}。"
+                "读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，"
+                "只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。"
+            )
+        else:
+            intent = "initial"
+            scope = []
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{reason}。"
+                "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
+            )
+        methods = method_resources("compose", intent=intent)
+        task = tasks_mod.new_task(
+            task_id=uuid.uuid4().hex[:12],
+            operation_id=_new_operation_id("compose"),
+            kind="compose",
+            intent=intent,
+            input_digest=compute_input_digest(document),
+            input_revision_id=operation_id,
+            method_release=method_release(methods),
+            scope_pages=scope,
+            instruction=instruction,
+            inputs=[],
+            dependencies=[{"kind": "content",
+                           "identity": f"document-revision:{document['revision_id']}",
+                           "sha256": content_identity(document)}],
+            dispatch_revision=document["revision_id"],
+            produced_against=content_identity(document),
+        )
+        from .content_plan import protocol_fields
+>       task.update(protocol_fields(document, intent, store=store))
+                                                            ^^^^^
+E       NameError: name 'store' is not defined
+
+src/deck_master/service.py:331: NameError
+_____________ test_revised_deck_recompiles_real_slide_order[edit] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-115/test_revised_deck_recompiles_r3')
+resolvable_font_family = 'Noto Sans CJK SC', mode = 'edit'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+    def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+        import io
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from PIL import Image
+        from page_visual_helpers import pass_page_review
+        from deck_master.pipeline import artifact, produce
+        from deck_master.editing import export_project
+        from deck_master.handoff import check_handoff
+        from deck_master.store import StoreError
+    
+        def page(pid):
+            return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                    'customer_visible': {'title': pid, 'body_blocks': []},
+                    'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+    
+        project = tmp_path / 'real-deck'
+        service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+        store = Store(project)
+        png = tmp_path / 'reference.png'
+        Image.new('RGB', (960, 540), 'white').save(png)
+    
+        def attach_missing_svgs(doc):
+            for entry in doc['pages']:
+                if entry.get('svg'):
+                    continue
+                content = store.read_object_json(entry['page'])
+                svg = tmp_path / (entry['page_id'] + '.svg')
+                svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                               f'<rect width="960" height="540" fill="#ffffff"/>'
+                               f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                               f'{content["customer_visible"]["title"]}</text></svg>')
+                if not entry.get('blueprint'):
+                    entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+                entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+    
+        _raw_commit(store, attach_missing_svgs)
+        assert produce(project)['status'] == 'pass'
+        before = store.load_document()
+        old_file = tmp_path / 'old.pptx'
+        old_file.write_bytes(store.read_object_bytes(store.read_object_json(before['outputs']['pptx'])['file']))
+>       update = service.inputs_update(project, patch={'reason': 'revised deck', 'task_patch': {'audience': 'new audience'}},
+                                       base_revision=before['revision_id'], operation_id='render-update')
+
+tests/rebuild/test_flow_quality.py:1417: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/service.py:1555: in inputs_update
+    task = revision_compose_task(store, new_document, operation_id=operation_id,
+src/deck_master/service.py:292: in revision_compose_task
+    return _input_compose_task(document, operation_id=operation_id, reason=reason)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+document = {'change': {'operation_id': 'render-update', 'kind': 'input_update', 'description': 'revised deck', 'read_set': []}, '...c5c261d', 'input_revision_id': None, 'resolved_by_task_id': 'a13c5d5def0b'}, 'created_at': '2026-10-14T20:36:11Z', ...}
+operation_id = 'render-update', reason = 'revised deck'
+
+    def _input_compose_task(document, *, operation_id, reason):
+        pages = document.get("pages") or []
+        if pages:
+            intent = "input_revision"
+            scope = [entry["page_id"] for entry in pages]
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{reason}。"
+                "读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，"
+                "只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。"
+            )
+        else:
+            intent = "initial"
+            scope = []
+            instruction = (
+                f"输入已更新（operation {operation_id}）：{reason}。"
+                "读取全部来源与任务事实，按方法写完整 Page v2 正文与页序。"
+            )
+        methods = method_resources("compose", intent=intent)
+        task = tasks_mod.new_task(
+            task_id=uuid.uuid4().hex[:12],
+            operation_id=_new_operation_id("compose"),
+            kind="compose",
+            intent=intent,
+            input_digest=compute_input_digest(document),
+            input_revision_id=operation_id,
+            method_release=method_release(methods),
+            scope_pages=scope,
+            instruction=instruction,
+            inputs=[],
+            dependencies=[{"kind": "content",
+                           "identity": f"document-revision:{document['revision_id']}",
+                           "sha256": content_identity(document)}],
+            dispatch_revision=document["revision_id"],
+            produced_against=content_identity(document),
+        )
+        from .content_plan import protocol_fields
+>       task.update(protocol_fields(document, intent, store=store))
+                                                            ^^^^^
+E       NameError: name 'store' is not defined
+
+src/deck_master/service.py:331: NameError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[reorder]
+FAILED tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[remove]
+FAILED tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[add]
+FAILED tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[edit]
+4 failed, 49 passed, 2226 deselected, 22 warnings in 59.25s

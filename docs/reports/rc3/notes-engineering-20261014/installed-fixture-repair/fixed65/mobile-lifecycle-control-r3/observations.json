@@ -1,0 +1,50 @@
+{
+  "loading": {
+    "box": {
+      "x": 16,
+      "y": 642.375,
+      "width": 358,
+      "height": 69.796875,
+      "top": 642.375,
+      "right": 374,
+      "bottom": 712.171875,
+      "left": 16
+    },
+    "fontsStatus": "loaded",
+    "readingMode": null,
+    "inlineHeight": "",
+    "imageState": "loading",
+    "canvasPresent": false,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollY": 0
+  },
+  "held_requests": [
+    "http://127.0.0.1:44163/api/file?path=.deckmaster%2Fobjects%2F55%2F557276c02680634ab6c0a8169e397fc70e792e5308a6e41b66ff184340d003ae.svg&sha256=557276c02680634ab6c0a8169e397fc70e792e5308a6e41b66ff184340d003ae"
+  ],
+  "ready": {
+    "box": {
+      "x": 16,
+      "y": 639.488037109375,
+      "width": 358,
+      "height": 184.5,
+      "top": 639.488037109375,
+      "right": 374,
+      "bottom": 823.988037109375,
+      "left": 16
+    },
+    "fontsStatus": "loaded",
+    "readingMode": "fit",
+    "inlineHeight": "184.512px",
+    "imageState": "ready",
+    "canvasPresent": true,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollY": 0
+  },
+  "browser_version": "151.0.7922.173"
+}

@@ -1,0 +1,258 @@
+[
+  {
+    "case": "bound",
+    "status": "PASS",
+    "fixed_source": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+    "same_completed_image_task_refs": {
+      "3efb0849cfae": {
+        "path": ".deckmaster/objects/ec/ec6735bf2d3d1d763187ce9d308f4ac0fc943ad63c6403c2567620d48400a9d5.json",
+        "sha256": "ec6735bf2d3d1d763187ce9d308f4ac0fc943ad63c6403c2567620d48400a9d5"
+      },
+      "f6252398d567": {
+        "path": ".deckmaster/objects/68/684738825c3484ba92428103c813129f54f4898d1414d5b0b1634e579e4d8a7b.json",
+        "sha256": "684738825c3484ba92428103c813129f54f4898d1414d5b0b1634e579e4d8a7b"
+      }
+    },
+    "same_original_visual_reviews": [
+      {
+        "path": ".deckmaster/objects/23/231a0fc65c4d802c7e9dcfb22bbf7001568d6ef8a3e6df6ecdf22fa01800505d.json",
+        "sha256": "231a0fc65c4d802c7e9dcfb22bbf7001568d6ef8a3e6df6ecdf22fa01800505d"
+      },
+      {
+        "path": ".deckmaster/objects/a9/a9441bf9e3f9d09df6d7f9b077063469d81b758b153bc57158ed99107ca5c253.json",
+        "sha256": "a9441bf9e3f9d09df6d7f9b077063469d81b758b153bc57158ed99107ca5c253"
+      },
+      {
+        "path": ".deckmaster/objects/15/15ed081cec0d44beb8640b7ef84becc5177823bfa5e18aad80d132476ecc4403.json",
+        "sha256": "15ed081cec0d44beb8640b7ef84becc5177823bfa5e18aad80d132476ecc4403"
+      },
+      {
+        "path": ".deckmaster/objects/01/018035e56f0b846bb74d2ce9079d6dd9bf60df919a670aad49e8197fb0b4ddea.json",
+        "sha256": "018035e56f0b846bb74d2ce9079d6dd9bf60df919a670aad49e8197fb0b4ddea"
+      },
+      {
+        "path": ".deckmaster/objects/51/5103f1641846d43e5a36dff0c13a72e6da1ec8dab665b36517a896b457c46e59.json",
+        "sha256": "5103f1641846d43e5a36dff0c13a72e6da1ec8dab665b36517a896b457c46e59"
+      },
+      {
+        "path": ".deckmaster/objects/ff/ffb1e27168a6cebf4023bca387cd506cbc931ac889a5fafa8327461e0be62f19.json",
+        "sha256": "ffb1e27168a6cebf4023bca387cd506cbc931ac889a5fafa8327461e0be62f19"
+      }
+    ],
+    "visual_refs_and_applicable_reviews": [
+      {
+        "page_id": "p1",
+        "same_actual_refs": {
+          "blueprint": {
+            "path": ".deckmaster/objects/82/824176f7e5ad0219042d24035ea3d25fc625a61d38a3515d26c38ac6514e38c1.json",
+            "sha256": "824176f7e5ad0219042d24035ea3d25fc625a61d38a3515d26c38ac6514e38c1"
+          },
+          "svg": {
+            "path": ".deckmaster/objects/a2/a25a47f290746074ff7ee31642872eb10537afdf6df2afb46e2362a4f4986e2b.json",
+            "sha256": "a25a47f290746074ff7ee31642872eb10537afdf6df2afb46e2362a4f4986e2b"
+          },
+          "svg_preview": {
+            "path": ".deckmaster/objects/b9/b9c3b7e9284bb456b024243231d98ca0386d47f5df2787f17103eda96298b789.json",
+            "sha256": "b9c3b7e9284bb456b024243231d98ca0386d47f5df2787f17103eda96298b789"
+          }
+        },
+        "pagevisual_summary": {
+          "status": "pass",
+          "page_id": "p1",
+          "missing_dimensions": [],
+          "open_must_fix": {},
+          "pending_judgments": [],
+          "unclosed_prior_findings": []
+        }
+      },
+      {
+        "page_id": "p2",
+        "same_actual_refs": {
+          "blueprint": {
+            "path": ".deckmaster/objects/d3/d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4.json",
+            "sha256": "d333ee3ab9ee3caf944a1c6ce302e01ead8875064ba3039205fa42141d87ccc4"
+          },
+          "svg": {
+            "path": ".deckmaster/objects/70/70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488.json",
+            "sha256": "70b8f9e0d9c53cad0542acb529157351f20e9f1b13b257782a5fd70e6d2f9488"
+          },
+          "svg_preview": {
+            "path": ".deckmaster/objects/3d/3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589.json",
+            "sha256": "3d00fb1bcc067c26ee238bc33723494c1568697a587a0964bcfe174544faa589"
+          }
+        },
+        "pagevisual_summary": {
+          "status": "pass",
+          "page_id": "p2",
+          "missing_dimensions": [],
+          "open_must_fix": {},
+          "pending_judgments": [],
+          "unclosed_prior_findings": []
+        }
+      }
+    ],
+    "current_preproduction_pass": true,
+    "same_quality_profile_request_authorizations": true,
+    "original_notes_full_readback": [
+      {
+        "slide": 1,
+        "page_id": "p1",
+        "notes": "用户原注：p1\n\n末段原注。\n",
+        "notes_sha256": "30ad3ae285bf27c889019b0fe3c362dfd9a51d8b542e8566a2597dbe073155a0"
+      },
+      {
+        "slide": 2,
+        "page_id": "p2",
+        "notes": "用户原注：p2\n\n末段原注。\n",
+        "notes_sha256": "3f0398dec00c28ae6a19aa93f90d586e24ca368baa772b446c2a99d48cb51e33"
+      }
+    ],
+    "final_notes_full_readback": [
+      {
+        "slide": 1,
+        "page_id": "p1",
+        "notes": "口播：54/120=45%，不是节约率。\n\n\n交接完成不等于解决。\n末段新讲稿。\n",
+        "notes_sha256": "0f1db0aeecb2c98af2dae90c84d222e8c98f840da1b7e7bc7e65de3f3c56b9e6"
+      },
+      {
+        "slide": 2,
+        "page_id": "p2",
+        "notes": "用户原注：p2\n\n末段原注。\n",
+        "notes_sha256": "3f0398dec00c28ae6a19aa93f90d586e24ca368baa772b446c2a99d48cb51e33"
+      }
+    ],
+    "old_actual_pptx_immutable": true,
+    "old_current_output_invalidated_by_speech": true,
+    "desktop": "NOT_RUN",
+    "human": "NOT_RUN",
+    "quality_claim": "Only synthetic L1 review/authorization and actual native file engineering"
+  },
+  {
+    "case": "imported_mapping_null_narrative",
+    "status": "PASS",
+    "fixed_source": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+    "same_completed_image_task_refs": {
+      "1c7278789b2d": {
+        "path": ".deckmaster/objects/66/66068c068b48839c251b0cd0b813a321fe980b15bc34ef4a3c8a396489336774.json",
+        "sha256": "66068c068b48839c251b0cd0b813a321fe980b15bc34ef4a3c8a396489336774"
+      },
+      "18c53f917243": {
+        "path": ".deckmaster/objects/38/3808a3b5ff667ccd7e7269640f690e42a78eed945502f42ce9bdb8dd485c4ad1.json",
+        "sha256": "3808a3b5ff667ccd7e7269640f690e42a78eed945502f42ce9bdb8dd485c4ad1"
+      }
+    },
+    "same_original_visual_reviews": [
+      {
+        "path": ".deckmaster/objects/7b/7b0aa3e3c278d8fcc72123d2ccf4a6905c3308234a87910f6823cb31dbf16464.json",
+        "sha256": "7b0aa3e3c278d8fcc72123d2ccf4a6905c3308234a87910f6823cb31dbf16464"
+      },
+      {
+        "path": ".deckmaster/objects/66/66b2973a4f512846985aa733484f6c4b793aa0d49a42fb3cea7f4b129692627f.json",
+        "sha256": "66b2973a4f512846985aa733484f6c4b793aa0d49a42fb3cea7f4b129692627f"
+      },
+      {
+        "path": ".deckmaster/objects/1f/1f05ccba4f0f187e65974bce7dbe0e7c3da8fab52c4daf8d497bd2a9595f799c.json",
+        "sha256": "1f05ccba4f0f187e65974bce7dbe0e7c3da8fab52c4daf8d497bd2a9595f799c"
+      },
+      {
+        "path": ".deckmaster/objects/96/961d658d2cb5d946e64721b66eb5b1ea20baab27a5c1e3d046fb628ac159a793.json",
+        "sha256": "961d658d2cb5d946e64721b66eb5b1ea20baab27a5c1e3d046fb628ac159a793"
+      },
+      {
+        "path": ".deckmaster/objects/e6/e62ac4635f362fe877dbce376ecad3d0759923300b3ae964d03cb76a6d89b23b.json",
+        "sha256": "e62ac4635f362fe877dbce376ecad3d0759923300b3ae964d03cb76a6d89b23b"
+      },
+      {
+        "path": ".deckmaster/objects/9c/9cbc15c699412f22dade89a8553b8455611883559e9e30ac66d616d94b44a9ff.json",
+        "sha256": "9cbc15c699412f22dade89a8553b8455611883559e9e30ac66d616d94b44a9ff"
+      }
+    ],
+    "visual_refs_and_applicable_reviews": [
+      {
+        "page_id": "p1",
+        "same_actual_refs": {
+          "blueprint": {
+            "path": ".deckmaster/objects/b5/b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e.json",
+            "sha256": "b50e5a97318cbc55ba9ff71179df3ef0c8bb6c4891d91824beda30405337898e"
+          },
+          "svg": {
+            "path": ".deckmaster/objects/d1/d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28.json",
+            "sha256": "d12d4b5fa8b7e562e31e60b6aae62f87656c5b45a1a9e0ddb27d7971da74ad28"
+          },
+          "svg_preview": {
+            "path": ".deckmaster/objects/35/359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140.json",
+            "sha256": "359d38ae01ef20041b80bca3d49575a8d07be9709390e80c389117db09d89140"
+          }
+        },
+        "pagevisual_summary": {
+          "status": "pass",
+          "page_id": "p1",
+          "missing_dimensions": [],
+          "open_must_fix": {},
+          "pending_judgments": [],
+          "unclosed_prior_findings": []
+        }
+      },
+      {
+        "page_id": "p2",
+        "same_actual_refs": {
+          "blueprint": {
+            "path": ".deckmaster/objects/af/afd11a53f99bfd5342e6a6d94ccde14860cb97d4e2ca252a9f32d486f0b1cfae.json",
+            "sha256": "afd11a53f99bfd5342e6a6d94ccde14860cb97d4e2ca252a9f32d486f0b1cfae"
+          },
+          "svg": {
+            "path": ".deckmaster/objects/73/737c15dd92e732128d84a7f6288cd29096f54938722c85fa9506d9bef17d415c.json",
+            "sha256": "737c15dd92e732128d84a7f6288cd29096f54938722c85fa9506d9bef17d415c"
+          },
+          "svg_preview": {
+            "path": ".deckmaster/objects/64/64e4c58729ce94e59a2acffb94b131e29ce8708b165f8df688f2c4734833887a.json",
+            "sha256": "64e4c58729ce94e59a2acffb94b131e29ce8708b165f8df688f2c4734833887a"
+          }
+        },
+        "pagevisual_summary": {
+          "status": "pass",
+          "page_id": "p2",
+          "missing_dimensions": [],
+          "open_must_fix": {},
+          "pending_judgments": [],
+          "unclosed_prior_findings": []
+        }
+      }
+    ],
+    "current_preproduction_pass": true,
+    "same_quality_profile_request_authorizations": true,
+    "original_notes_full_readback": [
+      {
+        "slide": 1,
+        "page_id": "p1",
+        "notes": "用户原注：p1\n\n末段原注。\n",
+        "notes_sha256": "30ad3ae285bf27c889019b0fe3c362dfd9a51d8b542e8566a2597dbe073155a0"
+      },
+      {
+        "slide": 2,
+        "page_id": "p2",
+        "notes": "用户原注：p2\n\n末段原注。\n",
+        "notes_sha256": "3f0398dec00c28ae6a19aa93f90d586e24ca368baa772b446c2a99d48cb51e33"
+      }
+    ],
+    "final_notes_full_readback": [
+      {
+        "slide": 1,
+        "page_id": "p1",
+        "notes": "口播：54/120=45%，不是节约率。\n\n\n交接完成不等于解决。\n末段新讲稿。\n",
+        "notes_sha256": "0f1db0aeecb2c98af2dae90c84d222e8c98f840da1b7e7bc7e65de3f3c56b9e6"
+      },
+      {
+        "slide": 2,
+        "page_id": "p2",
+        "notes": "用户原注：p2\n\n末段原注。\n",
+        "notes_sha256": "3f0398dec00c28ae6a19aa93f90d586e24ca368baa772b446c2a99d48cb51e33"
+      }
+    ],
+    "old_actual_pptx_immutable": true,
+    "old_current_output_invalidated_by_speech": true,
+    "desktop": "NOT_RUN",
+    "human": "NOT_RUN",
+    "quality_claim": "Only synthetic L1 review/authorization and actual native file engineering"
+  }
+]

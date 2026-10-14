@@ -1,0 +1,1590 @@
+{
+  "evidence_scope": "Synthetic L1 protocol fixtures and actual native/PPTX L6 file engineering; real human/desktop NOT_RUN",
+  "base_sha": "8e274576e7a93de7d10c054558991878501fff0c",
+  "implementation_sha": "acf2b2edd4a88f74e8b671a18e32eb74b780eb84",
+  "implementation_tree": "0d3ce4982e24a081cbf964259ea85891cd713aed",
+  "first_review_sha": "27823c5c3e52a50201569e1d087406ddeff3832f",
+  "first_review_status": "REQUEST_CHANGES (preserved)",
+  "original_pack_build_identity": "Original pack was built before final source was frozen; current revalidation is a separate observation and does not retroactively bind that build.",
+  "original_pack_pptx_sha256": "7446e7b505139505bd8853b2e74a19eaa77d9f386f30a4871fffdd3871c06c45",
+  "original_pack_zip_sha256": "b431e5ce983fc242901f23c0079fe8e32a42c143cc6404bf5e1b683c6a9c0ef2",
+  "original_pack_render_scope": "Original 3 render PNGs represent internal native PPTX, not final sanitized public PPTX; exact-source final-public render is a separate new evidence set.",
+  "files": [
+    {
+      "file": "rc3-02-unit-first.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-unit-first.log",
+      "sha256": "3b92de3be4d6a39e19cafaa3ceabbd983b33775a4ccaff5caad5b64b741a96df",
+      "bytes": 30881
+    },
+    {
+      "file": "rc3-02-unit-final.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-unit-final.log",
+      "sha256": "bbd4219ca74e6f12b536614aca7a3cd411d5c818e05d2675b66f6698f09c9c90",
+      "bytes": 2129
+    },
+    {
+      "file": "rc3-02-render-final.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-render-final.log",
+      "sha256": "a926412ac7fe6d5e762d069303874d188b0dbc3dc3248f6f2c3c9c6535f98160",
+      "bytes": 57285
+    },
+    {
+      "file": "rc3-02-render-final-origin-preserved.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-render-final-origin-preserved.log",
+      "sha256": "302c2a94f1b210dd281688a1dc6d547c1523e12ff56854d70091c408403b48ff",
+      "bytes": 23362
+    },
+    {
+      "file": "rc3-02-render-protocol-repair-final.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-render-protocol-repair-final.log",
+      "sha256": "f3abcd6a7e81f40352cadc2e67436cef94fa934b45528ea0f6bc0c68673fd6a0",
+      "bytes": 113
+    },
+    {
+      "file": "rc3-02-origin-entry-gates-final.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-origin-entry-gates-final.log",
+      "sha256": "70275be42c1a1bf4c5561cd7639dc0934dc9826bce3a5750e340771cdc7de499",
+      "bytes": 99
+    },
+    {
+      "file": "rc3-02-origin-entry-gates-recheck.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-origin-entry-gates-recheck.log",
+      "sha256": "5cb2ee1172de7420febe1b20d9f47143fbb4b4c68d71c3b76e1468a4b01c2ffd",
+      "bytes": 3952
+    },
+    {
+      "file": "rc3-02-origin-entry-gates-complete.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-origin-entry-gates-complete.log",
+      "sha256": "b6ff2f41a725df5802e3db8e52cfef506504b7cb4ea33c6b2df42b86e155af2e",
+      "bytes": 194
+    },
+    {
+      "file": "rc3-02-files-independent-rq-fix.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-files-independent-rq-fix.json",
+      "sha256": "6ee630a664cd9c2f3db82b48d06ef8e9891725eb2bfce95d337c33393130ba14",
+      "bytes": 2265
+    },
+    {
+      "file": "rc3-02-files-empty-identity-privacy-fix-final.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-files-empty-identity-privacy-fix-final.log",
+      "sha256": "f22e721657e51e7e7d9734ab492708ce66d6d521195e34cea67cb6f3f30aa903",
+      "bytes": 179
+    },
+    {
+      "file": "rc3-02-files-owner-n03-supplement.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-files-owner-n03-supplement.json",
+      "sha256": "3680ca4a09c444ede44d67a6d0221e6e6cf950d4fc154e0da43b53cbf4ee0ae9",
+      "bytes": 1528
+    },
+    {
+      "file": "rc3-02-files-n03-formal-round1.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-files-n03-formal-round1.log",
+      "sha256": "c8452f887e70d72b13b29705838ad49753c7fa362ff435c9db565356b2a36689",
+      "bytes": 113
+    },
+    {
+      "file": "rc3-02-frozen-a-refusals.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-frozen-a-refusals.py",
+      "sha256": "aed0bf06041988c80e936873993db15c2245477dc080629a55bbf9c1d05ad6cf",
+      "bytes": 3485
+    },
+    {
+      "file": "rc3-02-frozen-a-refusals.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-frozen-a-refusals.json",
+      "sha256": "fca5c72de0d0a6dc81e1cc0c8562ed7b2b6acd22173aaae526d6709b0022e3e2",
+      "bytes": 5768
+    },
+    {
+      "file": "rc3-02-independent-code-review-round1-27823.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round1-27823.md",
+      "sha256": "37e9d155ddff439f6af5b2ee0142b476ddfd303c6e8c2928559d35d2bd2f67ee",
+      "bytes": 8626
+    },
+    {
+      "file": "rc3-02-independent-regression-round1-27823.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round1-27823.md",
+      "sha256": "73d1a69862eac9af94246c57e52efa1ba6bfec19e15310088588b9577c8fc0c8",
+      "bytes": 12721
+    },
+    {
+      "file": "rc3-02-notes-local-pack-build.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-notes-local-pack-build.log",
+      "sha256": "fe96e29071ac59d2b5d31412e314532781b10da535e8d0b9b608ef6f02ddb870",
+      "bytes": 369
+    },
+    {
+      "file": "rc3-02-render-0b0ed2a.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-render-0b0ed2a.log",
+      "sha256": "c73c61ac8854754fb730f9652a3575981e089696d8aa68465d4a5ce9a143b1ad",
+      "bytes": 2385
+    },
+    {
+      "file": "rc3-02-wheel-build-0b0ed.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-wheel-build-0b0ed.log",
+      "sha256": "23b4c557c292b51195f17e66f495ce89fafdf8c48430c7ed6316a4879d7a9383",
+      "bytes": 31668
+    },
+    {
+      "file": "rc3-02-isolated-install-0b0ed.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-isolated-install-0b0ed.log",
+      "sha256": "237f72f4c9e2c12d5584692a5bb0ddfd98f11f7c1d90f473de1d2363c2782d20",
+      "bytes": 265
+    },
+    {
+      "file": "original-pack-compile-input.json",
+      "original_path": "/workspace/work/rc3/notes-local-acceptance/compile-input.json",
+      "sha256": "fc9cfddd34be85deedd65d48cfbd7e31da06b15b5053c2b0d21d42ecee5c2543",
+      "bytes": 9816
+    },
+    {
+      "file": "original-pack-full-notes-readback.json",
+      "original_path": "/workspace/work/rc3/notes-local-acceptance/full-notes-readback.json",
+      "sha256": "5ac6eaca3d38191cc801c418021800fd4e180d814b8d376b1a86c6939434907a",
+      "bytes": 978
+    },
+    {
+      "file": "original-pack-manifest.json",
+      "original_path": "/workspace/work/rc3/notes-local-acceptance/manifest.json",
+      "sha256": "b1535218d697c36963c96fd1e8061c1ea298e21384597879933b19221902ad1a",
+      "bytes": 3575
+    },
+    {
+      "file": "original-pack-SHA256SUMS.json",
+      "original_path": "/workspace/work/rc3/notes-local-acceptance/SHA256SUMS.json",
+      "sha256": "aba0c3ef2e247e80777c88874fa97c710c9be812695c32e3146736be2e9054bd",
+      "bytes": 3702
+    },
+    {
+      "file": "original-pack-桌面验收回传表.json",
+      "original_path": "/workspace/work/rc3/notes-local-acceptance/桌面验收回传表.json",
+      "sha256": "fa7142ec46fab4e46368ea802057ce37ef46093a09e0e7dfa9273409bf834318",
+      "bytes": 1043
+    },
+    {
+      "file": "original-pack-本地验收说明.txt",
+      "original_path": "/workspace/work/rc3/notes-local-acceptance/本地验收说明.txt",
+      "sha256": "bbc9c6a8f125c77ea2d8f9f50f389bb48ad3d2125836671813b03f1407773ef3",
+      "bytes": 1692
+    },
+    {
+      "file": "isolated-install-manifest-0b0ed.json",
+      "original_path": "/workspace/work/rc3/candidate-02-0b0ed/manifest.json",
+      "sha256": "e04ee93a52e23393d6dd39a709a7df2f360a142cd4c2569c29909987690ddae6",
+      "bytes": 8117
+    },
+    {
+      "file": "rc3-02-unit-0b0ed2a.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-unit-0b0ed2a.log",
+      "sha256": "9c3f3d7581a30b0be72e37283664b54fc893fe176fd2c137d5317c961d1a6a8c",
+      "bytes": 2129
+    },
+    {
+      "file": "rc3-02-all-origin-gates-round3.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-all-origin-gates-round3.log",
+      "sha256": "7268fbe2cb54f4f2adce8b9764a520ea59c1dfd7f261160626e87fb5de560327",
+      "bytes": 275
+    },
+    {
+      "file": "rc3-02-origin-reorder-edit-contrasts-round3.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-origin-reorder-edit-contrasts-round3.log",
+      "sha256": "a9dc2576ead5054d749d397cd3b191a7dd0c779dca9a15d6c9fef50f0da708d7",
+      "bytes": 99
+    },
+    {
+      "file": "rc3-02-independent-regression-round2-0b0ed.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round2-0b0ed.md",
+      "sha256": "b0c1aa7281731820ddd77443456f68f94362c4a4519aa8bf3eba9fc0ba9a73f4",
+      "bytes": 8666
+    },
+    {
+      "file": "isolated-install-manifest-ca035.json",
+      "original_path": "/workspace/work/rc3/candidate-02-ca035/manifest.json",
+      "sha256": "1085ec1051ca8d66e73d7fdacc51e3593425a05e2b7138a29d51afdd7b34925f",
+      "bytes": 8117
+    },
+    {
+      "file": "ca035-installed-revalidation/revalidate.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/revalidate.py",
+      "sha256": "c7e48da7840e2ec90b82e79a034c99c1a21bda199d6cba9530202fe3b254e41b",
+      "bytes": 12985
+    },
+    {
+      "file": "ca035-installed-revalidation/revalidation.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/revalidation.json",
+      "sha256": "8e9d98d4d19ca305c4c473462750e46980fdd9beb5dc90194fccc4adb7a76e61",
+      "bytes": 145585
+    },
+    {
+      "file": "ca035-installed-revalidation/invocation-observation.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/invocation-observation.json",
+      "sha256": "706fa3c35259395243c7f428211a59d922abd46a345ac8b3e8ddc18d022e4ade",
+      "bytes": 419
+    },
+    {
+      "file": "ca035-installed-revalidation/controller-index.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/controller-index.json",
+      "sha256": "0da55f60fd483a18e3aba884ffc18619992e95a8bd1abe738e2f04a0ca7b0b97",
+      "bytes": 20632
+    },
+    {
+      "file": "ca035-installed-revalidation/actual-execution.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/actual-execution.log",
+      "sha256": "0f5fb6ebdd317eb072c359f8b4ee31df7456d828f168fee9fc00da15157fabc2",
+      "bytes": 484
+    },
+    {
+      "file": "ca035-installed-revalidation/final-public-full-readback.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/final-public-full-readback.json",
+      "sha256": "1466c6028f7ad7cf51850441aa9cb605aea7bd8bdb5ff8d03ef387b943014d7e",
+      "bytes": 1329
+    },
+    {
+      "file": "ca035-installed-revalidation/native-readback.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/native-readback.json",
+      "sha256": "1466c6028f7ad7cf51850441aa9cb605aea7bd8bdb5ff8d03ef387b943014d7e",
+      "bytes": 1329
+    },
+    {
+      "file": "ca035-installed-revalidation/final-public-page-1.png",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/final-public-actual-render/page-1.png",
+      "sha256": "2da7e04de190e07aaf5817be934d6f4921d56efb04b2f1b144ae62df43ca995a",
+      "bytes": 45015
+    },
+    {
+      "file": "ca035-installed-revalidation/final-public-page-2.png",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/final-public-actual-render/page-2.png",
+      "sha256": "d150ae46ae2f4d6094cb1bd0244b812164d7be00371d4cb1bdf8edb61f61a388",
+      "bytes": 43762
+    },
+    {
+      "file": "ca035-installed-revalidation/final-public-page-3.png",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-ca035/final-public-actual-render/page-3.png",
+      "sha256": "c7829ae1956acfb8c45f72c63f875a120fb1d548eecf6b29960f424b81567114",
+      "bytes": 52503
+    },
+    {
+      "file": "rc3-02-independent-code-review-round2-0b0ed.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round2-0b0ed.md",
+      "sha256": "c637c05ef3257060f4ef487b5c21b44015296ed9c1416769e1b715cc20e19c45",
+      "bytes": 8889
+    },
+    {
+      "file": "rc3-02-owner-pure-ca035-unit.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-owner-pure-ca035-unit.log",
+      "sha256": "f4dc8c216221d283028619fbc35b635ee4e07e0e06c303285a73675fd8b01e83",
+      "bytes": 2129
+    },
+    {
+      "file": "rc3-02-owner-pure-ca035-render.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-owner-pure-ca035-render.log",
+      "sha256": "363bc40f057f49dd7911cf08e73078b03547d0b912e5f6811df8265c0e845914",
+      "bytes": 2451
+    },
+    {
+      "file": "historical-0b0ed-revalidation/controller-index.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-0b0ed2a/controller-index.json",
+      "sha256": "a3f1b8a005e621b9b0d932dfd9826ebe160a91a27ce8d1f61b9bacf380277c85",
+      "bytes": 109693
+    },
+    {
+      "file": "historical-0b0ed-revalidation/isolated-wheel-r4/revalidation.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-0b0ed2a/isolated-wheel-r4/revalidation.json",
+      "sha256": "cd002fabee44cc0caa13f575b2a546bff57210f8805c11db1c5a685c6a3a997a",
+      "bytes": 145821
+    },
+    {
+      "file": "historical-0b0ed-revalidation/isolated-wheel-r4/actual-execution.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-0b0ed2a/isolated-wheel-r4/actual-execution.log",
+      "sha256": "ac0026460d137c3acc7e3af58620ccf0336150272feaf4063aafd45828d8eb3d",
+      "bytes": 504
+    },
+    {
+      "file": "historical-0b0ed-revalidation/isolated-wheel-r4/invocation-observation.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-pack-revalidation-0b0ed2a/isolated-wheel-r4/invocation-observation.json",
+      "sha256": "fda0ed39a112a560da4b5e459a0bf32b5d85073c298094c9ba812229d4304e42",
+      "bytes": 419
+    },
+    {
+      "file": "ca035-speech-native/run.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run.py",
+      "sha256": "30d450677e1f1047982657dd637a510d346ff0cb0a4c600ad4217e74357c3c85",
+      "bytes": 14766
+    },
+    {
+      "file": "ca035-speech-native/audit.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/audit.py",
+      "sha256": "d5fcccd5a5fc0ae8cdbb1a569e18138fba09d65384e0caccda8a8290a249027a",
+      "bytes": 3281
+    },
+    {
+      "file": "ca035-speech-native/run-final.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final.log",
+      "sha256": "938eaf42f8f9a63b8febe4f820e98fdf02240872db3457ff2d8b3d72d70beedd",
+      "bytes": 1144
+    },
+    {
+      "file": "ca035-speech-native/audit.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/audit.log",
+      "sha256": "35010a076efbf1c4cdd63b46e3ca36756a723f3f049d298df09bce932f5b805b",
+      "bytes": 101
+    },
+    {
+      "file": "ca035-speech-native/trace-catalog.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/trace-catalog.json",
+      "sha256": "ed7224e901e3b55c3e872fe21ab9622d67316548faba854f5bdec3202e4326da",
+      "bytes": 7379
+    },
+    {
+      "file": "ca035-speech-native/fixed-installed-final-audit.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/fixed-installed-final-audit.json",
+      "sha256": "e80d67068998f5ad0e0c920512e420d4628e5e8eb11469da93e4afb0205751bb",
+      "bytes": 10873
+    },
+    {
+      "file": "ca035-speech-native/first-compile-original-artifact-recovery.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/first-compile-original-artifact-recovery.json",
+      "sha256": "ad2da9055cacd21093a0cfaa09c275fa14fa2a45b6373e27c15685721f5e435f",
+      "bytes": 2051
+    },
+    {
+      "file": "ca035-speech-native/evidence-file-manifest.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/evidence-file-manifest.json",
+      "sha256": "a3474cefca12adb3d810b3f70a6b241b3f2b31a0cf91ae78030f5d78c851aa6f",
+      "bytes": 117945
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/actual-export.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/actual-export.json",
+      "sha256": "dd33cf8f70da9c05c4966417d34ef6019cf42daa95250f3be28a574776a1665c",
+      "bytes": 7106
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/actual-speech-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/actual-speech-task.json",
+      "sha256": "e504ecafe0cd0ef78a273ef9d8b719ec88b6e2af69bf6a0946a11ab2e3b28337",
+      "bytes": 3413
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/after-speech-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/after-speech-document.json",
+      "sha256": "1feccda03e3324699e8765ae1332e0d00e3f0433df9b89a5bc288a0e2088f0e4",
+      "bytes": 14217
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/after-speech-review-accepted.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/after-speech-review-accepted.json",
+      "sha256": "24b7fd14821b4e7e21cfc4a0c336e8f125b6e65ef4e24dd3b113833afe43c534",
+      "bytes": 2828
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/after-speech-review-dispatch.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/after-speech-review-dispatch.json",
+      "sha256": "0f598eb87ff8c56bf4832e0638c33cbd84d798013c419030beac034e5f94deeb",
+      "bytes": 7159
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/after-speech-review-status.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/after-speech-review-status.json",
+      "sha256": "b12fa395b6466be3cab676e7dcb446676a1861f43428b7ec1f35d10116b6177c",
+      "bytes": 2052
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/after_speech-original-plan.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/after_speech-original-plan.json",
+      "sha256": "218b985ba841b410181423efe6883c32e0f6a0c5bd81b61aa8165a81dcb9bae0",
+      "bytes": 3022
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/before-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/before-document.json",
+      "sha256": "c4ecfb3944b92d7b9b96b8fd5ae46c531a9fab34e3ddb4fadc4f48d7e19976ce",
+      "bytes": 12757
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/before-original-plan.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/before-original-plan.json",
+      "sha256": "37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d",
+      "bytes": 2847
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/before-review-accepted.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/before-review-accepted.json",
+      "sha256": "690469d67cf74c2fc81761130d17b0b35de414e9c4ea9c27da0faab857cb0383",
+      "bytes": 2828
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/before-review-dispatch.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/before-review-dispatch.json",
+      "sha256": "649df79e5921f20d9f953c958dfb9f6c69871dafca8dafe91a486b45c27b0f69",
+      "bytes": 4805
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/before-review-status.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/before-review-status.json",
+      "sha256": "44992a0714021834ba7383c93b502207ead23f9f5829beb1606b6d3a9a90dcb9",
+      "bytes": 1434
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/explicit-synthetic-execute-grant.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/explicit-synthetic-execute-grant.json",
+      "sha256": "85a9355e5d4dc93b290000a65b9132fb37272f5687b9f3acf0ae38f0bc1ca684",
+      "bytes": 375
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/final-native-compile.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/final-native-compile.json",
+      "sha256": "e0f9057d0dfd0256735f3557862a21c1597e7a4fd41ffe5845de071b707d07be",
+      "bytes": 801
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/final-original-plan.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/final-original-plan.json",
+      "sha256": "218b985ba841b410181423efe6883c32e0f6a0c5bd81b61aa8165a81dcb9bae0",
+      "bytes": 3022
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/final-readback.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/final-readback.json",
+      "sha256": "6bcaf7c445d9ab750ede2de46329ab433f7a2de66e974ec2e9bc611f7935b823",
+      "bytes": 439
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/first-compile-before-recheck-original-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/first-compile-before-recheck-original-document.json",
+      "sha256": "5100b33059282a046a806438717ac7c9dab3d9ad1f4d320f4cddea7deecf808b",
+      "bytes": 10613
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/first-compile-before-recheck-original-native-report.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/first-compile-before-recheck-original-native-report.json",
+      "sha256": "2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a",
+      "bytes": 800
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/first-compile-before-recheck-original-provenance.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/first-compile-before-recheck-original-provenance.json",
+      "sha256": "21418ea0fb7ae345fbdf8f064de119ac30387bc3f2e94c606a9f331c3b18338a",
+      "bytes": 972
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/honest-current-qualification-block.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/honest-current-qualification-block.json",
+      "sha256": "b181ce67f54dde9900acf62f7f536e1ce0d93a6ccbd01bf62a4694a96d52c955",
+      "bytes": 23
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/initial-control.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/initial-control.json",
+      "sha256": "f1d4e8b09bc3b8fb4333743b77e0c8eb5921d661517d138af627db42dd52a62a",
+      "bytes": 1721
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/initial-native-compile.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/initial-native-compile.json",
+      "sha256": "460320bfbfe88ce4a3abcfa9461b8b61e6e7b4450db88eba8e2689cdc9caa184",
+      "bytes": 741
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/original-legacy-task-cancelled.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/original-legacy-task-cancelled.json",
+      "sha256": "ce331488913d068dad70f9a946ffe583901018950fe928644353b034641afe9a",
+      "bytes": 370
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/p1-actual-blueprint-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/p1-actual-blueprint-task.json",
+      "sha256": "7de16e9a041982f34e6e2379021ff2b933cf6cd89591ff1eb0b1f67b54441640",
+      "bytes": 4658
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/p1-actual-normal-continue.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/p1-actual-normal-continue.json",
+      "sha256": "39bd845da33dbf8ae0e8dee80b76dd6c25fcd52e7ee3d79c9963eff344aea326",
+      "bytes": 14399
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/p1-actual-pagevisual-L1-fixture.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/p1-actual-pagevisual-L1-fixture.json",
+      "sha256": "c02128a2ee3f4b96f079a0722b69b0cd9bb9d8f633076d46193647735a68d9f7",
+      "bytes": 6188
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/p1-actual-pagevisual-public-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/p1-actual-pagevisual-public-task.json",
+      "sha256": "3d50e86f744e658e8356a735e99ba307688d2d6da7b16425d041408a5886ff87",
+      "bytes": 11770
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/p2-actual-blueprint-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/p2-actual-blueprint-task.json",
+      "sha256": "e6b60ba3e92787e65eaed950c170c78d618feb784265d06861c1c7f58e8a35e6",
+      "bytes": 4658
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/p2-actual-normal-continue.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/p2-actual-normal-continue.json",
+      "sha256": "1eaabc60ce216524eb55c9f910ed1c2d965dc21116f7268d88c3a7d48c8e7fe6",
+      "bytes": 14399
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/p2-actual-pagevisual-L1-fixture.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/p2-actual-pagevisual-L1-fixture.json",
+      "sha256": "e0d44fdc3e240c95d2629a16df4f55cad9e1b5111379dadab43056da25198ab5",
+      "bytes": 6188
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/p2-actual-pagevisual-public-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/p2-actual-pagevisual-public-task.json",
+      "sha256": "ebb479ebccb12c63fb34c0e5c018b0641448a6e98685beffbcc419ba7fd7e017",
+      "bytes": 11770
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/post-speech-before-review-status.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/post-speech-before-review-status.json",
+      "sha256": "9f126154126b76574234d527a6dfec547251372e586b553ea5ffae3dfcc5404a",
+      "bytes": 1234
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/projectionmetadata.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/projectionmetadata.json",
+      "sha256": "3758f33b7f1a664d2233c04e7b434b2d3b1e992b0402bb5fef026e6f632e90b5",
+      "bytes": 37352
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/speech-accepted.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/speech-accepted.json",
+      "sha256": "307dc536ed3bda270d625645ad788b6685b839c96daf7747872f270503e1e05a",
+      "bytes": 3400
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/summary.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/summary.json",
+      "sha256": "d09ac6ce654deaf6470e2e8a2cdf692aee39dac5a319f888a46663a28af3f284",
+      "bytes": 532
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/supplemental-audit.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/supplemental-audit.json",
+      "sha256": "20a239a8f7c18b4ed6376d1342ae0554317665aef860d529cbca44cba89bf04a",
+      "bytes": 5165
+    },
+    {
+      "file": "ca035-speech-native/run-final/bound/zero-additional-image-ledger.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/bound/zero-additional-image-ledger.json",
+      "sha256": "bcfa8fa87f7d26ea50bb17073d28041edced02b1f5782dfbad44220b3b5a0902",
+      "bytes": 3937
+    },
+    {
+      "file": "ca035-speech-native/run-final/fixed-execution-origin.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/fixed-execution-origin.json",
+      "sha256": "72b0918e94448b653e0f05d88c69496484d02ae6cbb4576482d5ca3d62167fcf",
+      "bytes": 622
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/actual-export.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/actual-export.json",
+      "sha256": "b041050caf1f0d14a70168c72e86696ee798b5a3bbcccced79df13133eb13283",
+      "bytes": 7132
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/actual-speech-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/actual-speech-task.json",
+      "sha256": "0ecad9be1112934ae578f599456954bbcb4337f3791ae35e084ce7a573aa687e",
+      "bytes": 2988
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/after-speech-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/after-speech-document.json",
+      "sha256": "5b00658422579d65f0806d7e87736e9daeb8b2eeeaf984f9633f616aff5d2c33",
+      "bytes": 12643
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/after-speech-review-accepted.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/after-speech-review-accepted.json",
+      "sha256": "3292c07d7551813cff5edb4df5ab4e752c53d546c437b1c9155d08348bebb369",
+      "bytes": 1568
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/after-speech-review-dispatch.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/after-speech-review-dispatch.json",
+      "sha256": "188c34da27543dfe36e7e0c67866707d280797e2031fe79bdf5587d41032ae23",
+      "bytes": 6601
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/after-speech-review-status.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/after-speech-review-status.json",
+      "sha256": "ed2607c4a7df8d8c37737545b7802fad1b0259fc2ee18e8387e9f5fa1ff2b028",
+      "bytes": 923
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/after_speech-original-plan.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/after_speech-original-plan.json",
+      "sha256": "cbefe1cf91580bde9eaa7d87ca3ec15dde397ada71ba8947eca20d53e08b629c",
+      "bytes": 2682
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/before-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/before-document.json",
+      "sha256": "5bcba973b5891c08b0305add5824dec6279b42902c96ca7bed5cbbee5d904540",
+      "bytes": 11557
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/before-original-plan.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/before-original-plan.json",
+      "sha256": "7c53a4fd88d56ff6a537e3ee420365759a226b6e3720e817a8671c74bc9ab178",
+      "bytes": 2497
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/before-review-accepted.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/before-review-accepted.json",
+      "sha256": "921c78c7630aa055c6453081251c3e1f2c6a8c7c798a073b868c36a0d38e987a",
+      "bytes": 1568
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/before-review-dispatch.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/before-review-dispatch.json",
+      "sha256": "d49b8bb325e82e39d930aa6b107590bc1fec428a0bea6d6fe8af19df92412917",
+      "bytes": 4247
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/before-review-status.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/before-review-status.json",
+      "sha256": "535fee68bc3a263979e3b644af59d9e902253b8d6ee2d8c3cfbb4221d7ab4198",
+      "bytes": 923
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/explicit-synthetic-execute-grant.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/explicit-synthetic-execute-grant.json",
+      "sha256": "f182c2d3671f434a2d9ee3ac3cd8549040d4c2b880b0dc082780434c0e9ec6c1",
+      "bytes": 375
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/final-native-compile.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/final-native-compile.json",
+      "sha256": "e0f9057d0dfd0256735f3557862a21c1597e7a4fd41ffe5845de071b707d07be",
+      "bytes": 801
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/final-original-plan.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/final-original-plan.json",
+      "sha256": "cbefe1cf91580bde9eaa7d87ca3ec15dde397ada71ba8947eca20d53e08b629c",
+      "bytes": 2682
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/final-readback.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/final-readback.json",
+      "sha256": "6bcaf7c445d9ab750ede2de46329ab433f7a2de66e974ec2e9bc611f7935b823",
+      "bytes": 439
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-document.json",
+      "sha256": "86290496a467477d706811c076aabc8b15ef166d119beecda44dfadadb2d9452",
+      "bytes": 9544
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-native-report.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-native-report.json",
+      "sha256": "2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a",
+      "bytes": 800
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-provenance.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/first-compile-before-recheck-original-provenance.json",
+      "sha256": "b42efbb5a4b8b2add3b962f906fde514b739ce1795085061146191544f5f33eb",
+      "bytes": 998
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/honest-current-qualification-block.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/honest-current-qualification-block.json",
+      "sha256": "b181ce67f54dde9900acf62f7f536e1ce0d93a6ccbd01bf62a4694a96d52c955",
+      "bytes": 23
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/initial-control.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/initial-control.json",
+      "sha256": "d55a3c155d6acb2c1b5a2edd5ea69a0e6cce4f62a7bd03fced261e5442fa448c",
+      "bytes": 1534
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/initial-native-compile.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/initial-native-compile.json",
+      "sha256": "460320bfbfe88ce4a3abcfa9461b8b61e6e7b4450db88eba8e2689cdc9caa184",
+      "bytes": 741
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/p1-actual-blueprint-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/p1-actual-blueprint-task.json",
+      "sha256": "661041bfda56e68bc284f8312c277d8cce22408b7988c046df1471f98db040cd",
+      "bytes": 4233
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/p1-actual-normal-continue.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/p1-actual-normal-continue.json",
+      "sha256": "91e29baae27187033cfe6185e54bad34247f1d72eff2dadb3092508bdce92d51",
+      "bytes": 14563
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/p1-actual-pagevisual-L1-fixture.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/p1-actual-pagevisual-L1-fixture.json",
+      "sha256": "2a78cae31a2bdaa0c825b324783065440b46deeda92815298930067230afc050",
+      "bytes": 6188
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/p1-actual-pagevisual-public-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/p1-actual-pagevisual-public-task.json",
+      "sha256": "cec734c9b4d226f09c1fc73cbcab24a8cb53d67d1aeef1be37ed5911fc21c0e4",
+      "bytes": 11900
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/p2-actual-blueprint-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/p2-actual-blueprint-task.json",
+      "sha256": "70d4af9f8b10aa7ff4fa41964ffe433ccc0150629418d0fef43f75af99816829",
+      "bytes": 4233
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/p2-actual-normal-continue.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/p2-actual-normal-continue.json",
+      "sha256": "18de81b04c2cd6b2952879eae7755fbcfd2854382d36a929038778529a310c0c",
+      "bytes": 14563
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/p2-actual-pagevisual-L1-fixture.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/p2-actual-pagevisual-L1-fixture.json",
+      "sha256": "2edbd288c955320f9e18fca761798ca3b592114b6e011fb45ff52affb67d0471",
+      "bytes": 6188
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/p2-actual-pagevisual-public-task.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/p2-actual-pagevisual-public-task.json",
+      "sha256": "f3a514aeb65c2322ce3dfa87d37ed6198f2db6d17d216c2dd56b8d2831403f7b",
+      "bytes": 11900
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/post-speech-before-review-status.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/post-speech-before-review-status.json",
+      "sha256": "04143822b8ccf16ae745fc6b0708f584ad677d9f01e6ded0dd227ace607394fd",
+      "bytes": 513
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/projectionmetadata.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/projectionmetadata.json",
+      "sha256": "4e151cb250731f9801077023d458f4e476ae1a444f5632c9ebdedf98cf3749af",
+      "bytes": 35624
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/speech-accepted.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/speech-accepted.json",
+      "sha256": "4130898699ddfee6f615152bb6dbfcbd7ef2105f56b4d85443ba9f3262a1bcc4",
+      "bytes": 2742
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/summary.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/summary.json",
+      "sha256": "954532442daf8a0da350de84d2c8ba1b363fe6e47e41cc120491fcc62c1b22a6",
+      "bytes": 551
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/supplemental-audit.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/supplemental-audit.json",
+      "sha256": "da603266c6d4e51b81ac41f3ce161d23e18144096bed9ecc713b1cab08fb1c1a",
+      "bytes": 5191
+    },
+    {
+      "file": "ca035-speech-native/run-final/imported_mapping_null_narrative/zero-additional-image-ledger.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/imported_mapping_null_narrative/zero-additional-image-ledger.json",
+      "sha256": "77864cc296bc767f300f58f424ce1f7027c9703d4b5056ebbc7face57930ebd8",
+      "bytes": 3937
+    },
+    {
+      "file": "ca035-speech-native/run-final/installed-product-bytes-after.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/installed-product-bytes-after.json",
+      "sha256": "54eb0e070e9d40a2195a8b4bf4e260805244005f5a464b9ad8f4e3be1156149e",
+      "bytes": 26973
+    },
+    {
+      "file": "ca035-speech-native/run-final/installed-product-bytes-before.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/installed-product-bytes-before.json",
+      "sha256": "54eb0e070e9d40a2195a8b4bf4e260805244005f5a464b9ad8f4e3be1156149e",
+      "bytes": 26973
+    },
+    {
+      "file": "ca035-speech-native/run-final/summary.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-speech-native-ca035/run-final/summary.json",
+      "sha256": "938eaf42f8f9a63b8febe4f820e98fdf02240872db3457ff2d8b3d72d70beedd",
+      "bytes": 1144
+    },
+    {
+      "file": "rc3-02-independent-code-review-round3-ca035.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round3-ca035.md",
+      "sha256": "02d71f73aa5f4fee934c32e9914eee3be3940d0222790edfefd740b3d5fe898c",
+      "bytes": 9491
+    },
+    {
+      "file": "delivery-review/phase1-report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase1-report.md",
+      "sha256": "7f397a3ec8a1a15981b482bfd294435e7eb44e4b3d82a5f6decc5c1e80f5299c",
+      "bytes": 7078
+    },
+    {
+      "file": "delivery-review/phase1-freeze.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase1-freeze.json",
+      "sha256": "ee9d28ef1fbcac6d3acd636e0cbb76ed6958077ebafad47bef41fb1b0e298593",
+      "bytes": 2463
+    },
+    {
+      "file": "delivery-review/phase2-preflight-report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/report.md",
+      "sha256": "e1fca5dea99bc5128dcb330da86ec2dce5a666dd2019f7ae7cc87840d143bd53",
+      "bytes": 7061
+    },
+    {
+      "file": "delivery-review/phase2-preflight-freeze.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/freeze.json",
+      "sha256": "7e0444bae867cd76cc29fd70ca072368b87dfbbaa7cb00c7eb26910778c62ee0",
+      "bytes": 16665
+    },
+    {
+      "file": "rc3-02-independent-regression-round3-ca035.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round3-ca035.md",
+      "sha256": "46097afa155d7c02e4649872ad3ec02d7545dc558f01b16a378b5a71dd65c3b9",
+      "bytes": 9357
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/probe.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/probe.py",
+      "sha256": "2df18dd5cddc17c11ecb3728cb71606b09db1fdb2688cd216e786e7b42e3e5a3",
+      "bytes": 3442
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/probe.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/probe.log",
+      "sha256": "1ba656ac905b7b782eef1f6b069e650d89f2349bb9af49535a0cdd93d0a467c3",
+      "bytes": 1709
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/reproduction.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/reproduction.json",
+      "sha256": "1ba656ac905b7b782eef1f6b069e650d89f2349bb9af49535a0cdd93d0a467c3",
+      "bytes": 1709
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/unavailable_configured_renderer-continue.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/unavailable_configured_renderer-continue.json",
+      "sha256": "4fc7e8e3b26457a76aca78b9f1ad75f551b595956e02e7b4006e75add6f9fc26",
+      "bytes": 480
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/unavailable_configured_renderer-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/unavailable_configured_renderer-document.json",
+      "sha256": "5452d7bbf13fc1ef58519c0422573eff51796f2da9c60afbb6b1eba9a2c357d1",
+      "bytes": 4623
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/actual_available_renderer-continue.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/actual_available_renderer-continue.json",
+      "sha256": "7c3575795ab64226ce9bb5a40b4bc472aaa936e108feca3c0ae85c0d7b4ed638",
+      "bytes": 11140
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/actual_available_renderer-document.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/actual_available_renderer-document.json",
+      "sha256": "c3fd16c527b8215a43996e1c507dbb03ba70b511f670248fc33c220677fadb46",
+      "bytes": 4630
+    },
+    {
+      "file": "ci-marker-repair/0d12-reproduction/three-tests-missing-renderer-before.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-toolchain-0d12-reproduction/three-tests-missing-renderer-before.log",
+      "sha256": "7710627f595afbd4b437c5ba1be9d839240bb8bab3bfad3e7cfa049f8b9bd887",
+      "bytes": 5953
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/report.md",
+      "sha256": "238d1809a780bb20113f46feda84ef3fe7c38ff5e72bcb20d7166da4a9c15900",
+      "bytes": 1796
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/report.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/report.json",
+      "sha256": "5553a885f0d333ea3f3c61d9cb4fe7dc34f7709352a75501e54896782300c060",
+      "bytes": 27638
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/jobs.failure-observed.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/jobs.failure-observed.json",
+      "sha256": "6c3e6bd27a3dbc4e9c08778da11c8512f478e0427f65246aa64641e50bcb7f5f",
+      "bytes": 13329
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/pr-source-binding.first.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/pr-source-binding.first.json",
+      "sha256": "e02633d9df42f7ed951bbbf28f3469ceff1f08295d431953c14f0f4b1b8bab28",
+      "bytes": 397
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/job-116109825642-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/job-116109825642-failure-trace.txt",
+      "sha256": "54f8cb5d089d3973820306695b90d4bb14f58e454bb2aa5ca6500fc082c423c6",
+      "bytes": 9149
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/job-116109825671-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/job-116109825671-failure-trace.txt",
+      "sha256": "dbfd2b14a811362691538b44ac60240308cc040b0f145d4091cfb0ee8d8ea4e4",
+      "bytes": 9149
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/job-116109825796-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/job-116109825796-failure-trace.txt",
+      "sha256": "5fab843bb83f7149778fb6743e836dc6c741ee72d9f8a376ab4c10ef3d2f84a5",
+      "bytes": 9149
+    },
+    {
+      "file": "ci-marker-repair/0d12-ci/raw/job-116109826700-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e/raw/job-116109826700-failure-trace.txt",
+      "sha256": "af26d491766e876b3bb61f77a5451b07c6f2f822341159a929e08e626371f772",
+      "bytes": 9149
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-ci-marker-repair-unit-no-renderer.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-marker-repair-unit-no-renderer.log",
+      "sha256": "a2e9348d52d7ad76366eda31cff7b5d14b79991e63de8dc8fab878e12d8f702b",
+      "bytes": 113
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-ci-marker-repair-render.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-ci-marker-repair-render.log",
+      "sha256": "54db724f2c9ec0268de083cb001ab38c38dda07a1d6eebb03e166b0fff1ad486",
+      "bytes": 113
+    },
+    {
+      "file": "delivery-review/phase3-final-0d12/report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase3-final-0d12/report.md",
+      "sha256": "8007eeeb0ed6e92e3e79d3db632f115bc2c54b7ed6690265019a72030f18c1b6",
+      "bytes": 7703
+    },
+    {
+      "file": "delivery-review/phase3-final-0d12/decision.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase3-final-0d12/decision.json",
+      "sha256": "dc36376c2e60c0e0d348d944131d6c89c087600decaad63aa2694a078a643f43",
+      "bytes": 1027
+    },
+    {
+      "file": "delivery-review/phase3-final-0d12/freeze.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase3-final-0d12/freeze.json",
+      "sha256": "a9a5f4d0492c282cb18a3b0a0da58ee7263a3d82599c69aa89699f7826cc7c3e",
+      "bytes": 2400
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-owner-pure-bc0b3-unit.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-owner-pure-bc0b3-unit.log",
+      "sha256": "c5b92ecd366a424ac43e6b2ece21c964dbb8096a98111a6ca1d98eb458d3ab92",
+      "bytes": 2129
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-owner-pure-bc0b3-render.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-owner-pure-bc0b3-render.log",
+      "sha256": "c9a5ba7ff71523118e9816f8fd10b8124840084038e7b697c8009e811a275da5",
+      "bytes": 2451
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-independent-code-review-round4-bc0b3.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round4-bc0b3.md",
+      "sha256": "8213121426d5db1b276b018ff5d67174ccf84e95bbda0d3243dfb6367c4dda31",
+      "bytes": 5933
+    },
+    {
+      "file": "ci-marker-repair/rc3-02-independent-regression-round4-bc0b3.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round4-bc0b3.md",
+      "sha256": "b5e046851a19d79624b6846c393c6586dc07a74f61bc14b8eff8bc0cc3f9facd",
+      "bytes": 5851
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/wheel-build.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/wheel-build.log",
+      "sha256": "383bec85bb0d87a14ba69db61aef846cb7b45df899fac02beac11cbbf205df69",
+      "bytes": 736
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/install.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/install.log",
+      "sha256": "30e19d125c3b1f8bf81a10297d5eb5f026a2563fc688c0a3d01fe8ea0df0d6a9",
+      "bytes": 4188
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/w12-old.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/w12-old.log",
+      "sha256": "e131d0cbfda3b6eb5ae2e0816e53ed5e8a54f9701ef8f9a6a1142ddd462d765b",
+      "bytes": 250
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/w12-old-r2.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/w12-old-r2.log",
+      "sha256": "43ec7ad8c542a972b7013b2a21065b9ff3ea49cdd62d32d0558819cea71b60bc",
+      "bytes": 904
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/w12-old-r3.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/w12-old-r3.log",
+      "sha256": "d8db9104b6cdbf40d2e3d6779ab108aedfbf15924ba26a405ea2d8217e6b89af",
+      "bytes": 1516
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/run-fixed.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/run-fixed.py",
+      "sha256": "5813fa0e7b672d177f9c5fc073593042eb76e3c2b0f6a2388bbc0f42ce9f3e65",
+      "bytes": 2281
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/run-fixed-r3.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/run-fixed-r3.py",
+      "sha256": "9b5a7d4df4480ec9085e0a1efcd9464c2117c543253abe5b8d8b544469f5239b",
+      "bytes": 2317
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/installed-source-provenance-r3.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/installed-source-provenance-r3.json",
+      "sha256": "8373b344ee5121621691a11d4c7eec9bbe77b30fcd0708d6fec12741c7ef45d1",
+      "bytes": 36741
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/actual-module-origins-r3.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/actual-module-origins-r3.json",
+      "sha256": "5eadca31265eee47113e4797d5258e8bc003aafb5e9e53249bd9448fc8791cf3",
+      "bytes": 6723
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/precommit-new-fixture.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/precommit-new-fixture.py",
+      "sha256": "bd56b0d702ff53c4962a14e5ccfdc8526af8af151174e9f5c521f45a3f886924",
+      "bytes": 1420
+    },
+    {
+      "file": "installed-fixture-repair/original-53f4/precommit-new-fixture.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-53f4-reproduction/precommit-new-fixture.log",
+      "sha256": "6ae922d02533839dfa0028365d2b7a5fdd633ec206871607cd66d33a78b4c7aa",
+      "bytes": 101
+    },
+    {
+      "file": "installed-fixture-repair/53f4-ci/report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/53f4ab335d4bacb0862d810cf8acf55eeba7e744/report.md",
+      "sha256": "f28e117a1bc6d9e6c388c2697fe863ae5cfbe266c1e4c41eae269f58f77e9230",
+      "bytes": 2836
+    },
+    {
+      "file": "installed-fixture-repair/53f4-ci/report.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/53f4ab335d4bacb0862d810cf8acf55eeba7e744/report.json",
+      "sha256": "517259dde97c5bc929d3acd00023b4d3462c837696f4ea003aff4e905374ff52",
+      "bytes": 27334
+    },
+    {
+      "file": "installed-fixture-repair/53f4-ci/raw/job-116120840984-failure-trace.txt",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-final-head-ci/53f4ab335d4bacb0862d810cf8acf55eeba7e744/raw/job-116120840984-failure-trace.txt",
+      "sha256": "972ae3db0a6f808523b6dfdaa6bb77a4e64292dfd67078eeb4742941e03631df",
+      "bytes": 2122
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/wheel-build.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/wheel-build.log",
+      "sha256": "778758dfbe49c1673def14efa0f3fc09f7ea4789a9dad933ee8d5cff69e56ea9",
+      "bytes": 736
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/install.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/install.log",
+      "sha256": "b08d3469fc4673ddb7e830ff4479302b8b4cfdb76db080e05768b5a822f6636d",
+      "bytes": 4187
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/run-fixed-installed.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/run-fixed-installed.py",
+      "sha256": "2d4f1280d28e93bd98c159b0960c40fa45d4a1fbc737c5445a333b0aed251a35",
+      "bytes": 2668
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/run-fixed-installed-r2.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/run-fixed-installed-r2.py",
+      "sha256": "5db0b49b7c2e658c03dc94d334dcf0185f35fd8f8585e8ddad4441f744ffd7dc",
+      "bytes": 2833
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-installed-provenance.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-installed-provenance.json",
+      "sha256": "ef2ee2686a353652e84bfdf7c9cd5375184829bf7ddca5f845435c4a4be3f86d",
+      "bytes": 37060
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-module-origins.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-module-origins.json",
+      "sha256": "b114e73e0e036f2217eef319f2b2edb7af11fcdee6ea79b150232520d6c3dcc2",
+      "bytes": 8360
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete.log",
+      "sha256": "be7d18160b161ac4154ea5ab3d785b94672a4a7e59b994485aa4fe6f61cf858d",
+      "bytes": 36
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete/checks.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete/checks.json",
+      "sha256": "c6460b8c772b08c79b58f6ecb25e3cfed832179c1181688db69b19475b67feb6",
+      "bytes": 8866
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete/readback.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete/readback.json",
+      "sha256": "da477effd77ef48db71fd53d74d7bd61dd6a39793cb82a2d51913a48ed619f6c",
+      "bytes": 420
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete/notes-body-mismatch-readback.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete/notes-body-mismatch-readback.json",
+      "sha256": "8f976abe7749dea6f7d6260f17aca6fb969710867b4cd2aa638eb1e3092635b2",
+      "bytes": 527
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/w12-complete/compiled/compile-input.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/w12-complete/compiled/compile-input.json",
+      "sha256": "c84bc9d2e7633cad04cf90d27837431e160df29dd91e8b069437f3e620dae7de",
+      "bytes": 1903
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/recovery-installed-provenance.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/recovery-installed-provenance.json",
+      "sha256": "ef2ee2686a353652e84bfdf7c9cd5375184829bf7ddca5f845435c4a4be3f86d",
+      "bytes": 37060
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/recovery-installed-provenance-r2.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/recovery-installed-provenance-r2.json",
+      "sha256": "1671738bfcab580309c451d6c37dbc891a6790bf8091026ac593051f11db47f6",
+      "bytes": 37321
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/recovery-module-origins.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/recovery-module-origins.json",
+      "sha256": "f1183b30fb769b76ccd731d383de9e124ba660720a8bcd2f7a6f4c74cf6190d5",
+      "bytes": 8845
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/installed-recovery.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/installed-recovery.log",
+      "sha256": "fd9a3558d8464935067c169dee6760e7bff353f5cd63fd10a6d9142e1fe76ad5",
+      "bytes": 1115147
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/short-tmp-same-browser-launch.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/short-tmp-same-browser-launch.json",
+      "sha256": "98558e6450fef3c2b61f9419aca1231cf00fba5ecf2538cc6d21c009aa7689f4",
+      "bytes": 348
+    },
+    {
+      "file": "installed-fixture-repair/rc3-02-independent-code-review-round5-65d82.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round5-65d82.md",
+      "sha256": "8eca8ac4fe684a4d6cdd2bdff3f10c9ad092a1fa8a62a16f97cd22a8ac3bd3c2",
+      "bytes": 6856
+    },
+    {
+      "file": "installed-fixture-repair/rc3-02-independent-regression-round5-65d82.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round5-65d82.md",
+      "sha256": "bfbc210a58fc814c5478e04ab3b9ec8f6ec67b18756c9e9cd415d1040cfe18ea",
+      "bytes": 6866
+    },
+    {
+      "file": "delivery-review/phase4-final-53f4a/report.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase4-final-53f4a/report.md",
+      "sha256": "19e9b7c36ff545809a40e5753e3ac3a3629cf6b94bfc65ef5d4b507f6dda83df",
+      "bytes": 6755
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/installed-recovery-r2.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/installed-recovery-r2.log",
+      "sha256": "ff8c97a0ccae850696bc45f5f1cbeb86d5c8cba246dddc641e66069f04c4e1cf",
+      "bytes": 1774
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/installed-recovery-r2.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/installed-recovery-r2.json",
+      "sha256": "f196e461ddbb5e0b45e9c403a191bb217e181e77e892e925d2805d639d04ad9b",
+      "bytes": 10966
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/recovery-module-origins-r2.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/recovery-module-origins-r2.json",
+      "sha256": "c7aaacb83f46a37c59ae7604d3eaa2de9f02fc179f600391c95deea00e793021",
+      "bytes": 10688
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/probe-mobile-case.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/probe-mobile-case.py",
+      "sha256": "7561f1e484a3d5f6a410560534c102794e83db60bcbc2f26e8b40f3d597a5783",
+      "bytes": 1999
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-system-r1.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-system-r1.log",
+      "sha256": "c60acd2195b777ef5b3551bd768b70c075c5b367b1a41951ddab598efd1cca0c",
+      "bytes": 12858
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/probe-mobile-case-r2.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/probe-mobile-case-r2.py",
+      "sha256": "169c7a05fa46221578a56b9dedc20cbe8ce6327badd59736e74eecc573c59994",
+      "bytes": 2879
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-system-r2.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-system-r2.log",
+      "sha256": "129d6bf5db5a76730f76f2745a6a72aa2915246d2366bdcaa01c99a0d9b8cc1b",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-system-r2/case-result.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-system-r2/case-result.json",
+      "sha256": "38d3fed0249a27483d1b9c730ac88147d6e5f897a9a09461905f34adc5a90e78",
+      "bytes": 1619
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-system-r2/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-system-r2/execution.json",
+      "sha256": "665469da34f36755516990e19ea1d87d53c3ddea489cfe86567164f4a4873e8e",
+      "bytes": 8136
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle.py",
+      "sha256": "0a1001fd8cb4ba2c9a5a91a2362cb2314dccf8f6985cc1c9aba0402ae8d76fb0",
+      "bytes": 2632
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control.log",
+      "sha256": "2c42cadfe8cbfa2f0a7d5d108b81f7348ebe192dd350256a5108a99be6e85413",
+      "bytes": 879
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle-r2.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-r2.py",
+      "sha256": "f6667c97862dd83f63e611a9d0ebd370378fd0c9392fca356b804b99352fd722",
+      "bytes": 2687
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r2.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r2.log",
+      "sha256": "117fc97efab587b02a2738f5b524caed8febb1be274d8e11bdb4e245c4ebed78",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r2/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r2/execution.json",
+      "sha256": "4fe968cf846efb934acc013b20acca29fb2ea060b8ee8416c91740323efb9a6a",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle-r3.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-r3.py",
+      "sha256": "e49c55a8ac1607251eef4f2518d4767ea76944d04641ae7cf1e821e8be38d39b",
+      "bytes": 2760
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r3.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r3.log",
+      "sha256": "117fc97efab587b02a2738f5b524caed8febb1be274d8e11bdb4e245c4ebed78",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r3/observations.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r3/observations.json",
+      "sha256": "ecf40ca8071c8b6e991b84fb3fe949916695a23e2d3eb9de9e76f9f9aceec9f1",
+      "bytes": 1158
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r3/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r3/execution.json",
+      "sha256": "4fe968cf846efb934acc013b20acca29fb2ea060b8ee8416c91740323efb9a6a",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle-r4.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-r4.py",
+      "sha256": "5d736375714eaf5470f6309bf92438e89ddb7e93d40b70d1a9a8fd884d0c746b",
+      "bytes": 3571
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r4.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r4.log",
+      "sha256": "80f878abea1975bdf94853b925b5bd216c7bb801107ad91a882c07f48eedaf52",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r4/observations.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r4/observations.json",
+      "sha256": "a719126ab9c8088050a0811402899b30180fbe217948d1656a46eb0fc8f47e76",
+      "bytes": 1212
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r4/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r4/execution.json",
+      "sha256": "4fe968cf846efb934acc013b20acca29fb2ea060b8ee8416c91740323efb9a6a",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/controlled-mobile-lifecycle-r5.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-r5.py",
+      "sha256": "ed759ec6341d584e89e1b7579c21bcfe39428aeedd67fddbfe98d07dc181ed7f",
+      "bytes": 3575
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r5.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r5.log",
+      "sha256": "a4f4eee5c3cfd4d66ed0e5640986e5fdcdc04bcae931e493f824f1968c722867",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r5/observations.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r5/observations.json",
+      "sha256": "abad801e2d3fc71a2861893fcb9bc71d9cc4313b5149b602ae4ef0e19ede6236",
+      "bytes": 3523
+    },
+    {
+      "file": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r5/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/mobile-lifecycle-control-r5/execution.json",
+      "sha256": "4fe968cf846efb934acc013b20acca29fb2ea060b8ee8416c91740323efb9a6a",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/probe-fixed-acf-three-viewports.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/probe-fixed-acf-three-viewports.py",
+      "sha256": "f86b431df41c8ac33cba0183ff027e9fe78cdbea16ea02bcbff691f869756077",
+      "bytes": 2976
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports.log",
+      "sha256": "edb7f69a302587b2065eed81dd2236f3129c22d0a41f1652aba2e2f30eefcd07",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports/execution.json",
+      "sha256": "b0461a96b3cd5791a7706f39ca710f24223720f22889eba9a029935b1c649984",
+      "bytes": 8136
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports/case-result-390-844.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports/case-result-390-844.json",
+      "sha256": "58e7657a81b8849aae2a4a9fde51612ddfd29e4a2119447580dc33ff280b1e31",
+      "bytes": 1619
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports/case-result-1280-800.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports/case-result-1280-800.json",
+      "sha256": "27327ac9cff2ff0e7a34b7c2c126d79c1a335b3ebaf260b835eefd3a94811071",
+      "bytes": 1815
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-three-viewports/case-result-1440-900.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-three-viewports/case-result-1440-900.json",
+      "sha256": "34fa2fa4220fecf5355352a31d4ea63e89582e4b5f45828023e4a520924f77f9",
+      "bytes": 1823
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/controlled-mobile-lifecycle-acf.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/controlled-mobile-lifecycle-acf.py",
+      "sha256": "af992c1eb9f1334602191ab318377f7e0b11e9d9dd82e5b110181bd95ce147e4",
+      "bytes": 3575
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-lifecycle-control.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-lifecycle-control.log",
+      "sha256": "b3c21efd16219be28a52a0dcc580ff27440f51697f2aceac9c53dfe2425dcae3",
+      "bytes": 98
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-lifecycle-control/execution.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-lifecycle-control/execution.json",
+      "sha256": "e7e384d4c1b883dce7d9362e0fa6609f374471bb3ccf19675a59dc596c94730f",
+      "bytes": 8026
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-lifecycle-control/observations.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-lifecycle-control/observations.json",
+      "sha256": "3702e5bd9e989698912bab1b610bc0972ed52752f21bd68b30f849778a9c058b",
+      "bytes": 4764
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/verify-acf-test-installed65-provenance.py",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/verify-acf-test-installed65-provenance.py",
+      "sha256": "963bdde43766d165c5d7779df1bbc367b7c4a2bfe1aeafb5fa4d854650f5e53d",
+      "bytes": 2918
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-scoped-provenance.json",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-scoped-provenance.json",
+      "sha256": "703228bef994dda945637c065e3cb870b7ecba68d031af02a585291eb161fdbb",
+      "bytes": 39211
+    },
+    {
+      "file": "installed-fixture-repair/acf-test-fit/acf-scoped-provenance.log",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/acf-scoped-provenance.log",
+      "sha256": "aadaf7fdc3d4ab28d7e70ffea670608b2e7ab8709ea36213592c3e130fc03554",
+      "bytes": 458
+    },
+    {
+      "file": "installed-fixture-repair/rc3-02-independent-regression-round6-acf2b.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-regression-round6-acf2b.md",
+      "sha256": "fdd27a66691049684172a1627f935a33508df19900c2bb936ee94e0c3afc8263",
+      "bytes": 7858
+    },
+    {
+      "file": "installed-fixture-repair/rc3-02-independent-code-review-round6-acf2b.md",
+      "original_path": "/workspace/work/rc3/reviews/rc3-02-independent-code-review-round6-acf2b.md",
+      "sha256": "aca6a4b44dde033b76b092043a4bdb4c31326865d12b57e5c9b67979732b4dd4",
+      "bytes": 7065
+    }
+  ],
+  "second_review_sha": "0b0ed2a85581652fc63ebcbe95bec6fc7fb3f343",
+  "second_review_status": "REQUEST_CHANGES (preserved)",
+  "current_independent_review": {
+    "code": "PASS",
+    "code_report": "rc3-02-independent-code-review-round3-ca035.md",
+    "regression": "PASS",
+    "regression_report": "rc3-02-independent-regression-round3-ca035.md",
+    "delivery_docs": "Historical 0d12/53f4 FINAL PASS only at those docs identities; updated exact docs audit pending",
+    "engineering_handoff": "RUNTIME_R3/RENDER_TEST_R4/EXAMPLES_R5/FIT_TEST_R6_FINAL_PASS by exact scoped identities; new fixeddocs/current7CI pending",
+    "final_ac_cq": "BLOCKED (desktop/use/current integration scope)",
+    "merge_performed": false,
+    "current_test_boundary": "bc0b render classification + acf fitted-reading lifecycle; product bytes equal ca035, examples equal65",
+    "latest_test_impact_review": {
+      "regression": "FINAL PASS",
+      "regression_report": "installed-fixture-repair/rc3-02-independent-regression-round6-acf2b.md",
+      "code": "FINAL PASS",
+      "code_report": "installed-fixture-repair/rc3-02-independent-code-review-round6-acf2b.md",
+      "scope": "Fixed acf single fitted-reading test wait; code reviewer independent actual390case+held-image lifecycle, regression reviewer original3viewport+held-image lifecycle. Original whole65 recoveryFAIL remains immutable; no full239/currentCI claim."
+    }
+  },
+  "mixed_live_unit": {
+    "file": "rc3-02-unit-0b0ed2a.log",
+    "result": "1846 passed, 456 deselected in 164.49s",
+    "exact_head": false,
+    "provenance": "MIXED_LIVE_SOURCE: activity started before source was changed for the third fix; not admissible as a pure-head full suite."
+  },
+  "current_installed_file_revalidation": {
+    "status": "PASS (engineering only)",
+    "source_sha": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+    "source_tree": "05191deede70f26e661b28f4221c3c0d00ef2ecf",
+    "wheel_sha256": "17a3bb5c40bdec788548fe17a3906e40524b41378f27d6ac77bc9c65bd543182",
+    "metadata_file": "ca035-installed-revalidation/revalidation.json",
+    "final_public_pptx_sha256": "7446e7b505139505bd8853b2e74a19eaa77d9f386f30a4871fffdd3871c06c45",
+    "desktop": "NOT_RUN",
+    "human": "NOT_RUN"
+  },
+  "current_suites": {
+    "head": "bc0b39fd9265d3408f69e95bc09047bf59a802d4",
+    "tree": "6f860d74e88543e965023b36ca0ee25ed4884f53",
+    "source": "/workspace/work/rc3/reviews/rc3-02-code-snapshot-bc0b3",
+    "python": "/workspace/work/rc3/reviews/env-02-snapshot-bc0b3/bin/python",
+    "unit": {
+      "status": "PASS",
+      "result": "1847 passed, 460 deselected in 210.51s",
+      "file": "ci-marker-repair/rc3-02-owner-pure-bc0b3-unit.log"
+    },
+    "render": {
+      "status": "PASS",
+      "result": "57 passed, 2250 deselected, 22 warnings in 73.20s",
+      "file": "ci-marker-repair/rc3-02-owner-pure-bc0b3-render.log"
+    },
+    "remote_ci": "PENDING exact new final head; local results do not supply CI skip identities/counts"
+  },
+  "current_n08": {
+    "trace": "ca035-speech-native/trace-catalog.json",
+    "source_sha": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+    "status": "BOUND_AND_IMPORTED_NULL_NARRATIVE_FILE_ENGINEERING_PASS",
+    "quality": "Synthetic L1 authority/review only; desktop/human/importE2E NOT_RUN",
+    "initial_compile_before_current_missing_reviews": "Observed execution; original immutable-history artifacts and later successful qualification/compile remain separate. This is not a claimed guard refusal."
+  },
+  "ci_marker_repair": {
+    "test_commit": "bc0b39fd9265d3408f69e95bc09047bf59a802d4",
+    "test_tree": "6f860d74e88543e965023b36ca0ee25ed4884f53",
+    "old_ci_head": "0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e",
+    "old_run": 38639118685,
+    "old_pr_merge_checkout": "2b6764d91afecaa5765c4379f39772e2b735ef64",
+    "old_ci_result": "Four unit matrices each 3 failed, 1845 passed, 3 skipped, 456 deselected. Original observation/FAIL not overwritten.",
+    "actual_root_cause": "Normal continue needs actual rsvg-convert to render SVG preview before actual PageVisual dispatch; unavailable tool returns needs_tool/0 pending. Helper assumed pending[0].",
+    "repair_scope": "Four real-render fixture users are render-marked; helper asserts actual routing/real preview; src/skills/pyproject byte unchanged. No fake review, tool fallback, skip or weakened product guard.",
+    "focused_no_renderer": "15 passed, 4 deselected in 1.19s",
+    "focused_real_render": "4 passed, 15 deselected in 2.31s",
+    "new_pure_suites": "PASS: exact immutable bc0b snapshot unit1847/render57; 2307 collected cases preserved, four renderer users exactly once in render, zero in unit, no added skip.",
+    "new_ci": "PENDING exact new final head; old run not reused",
+    "impact_review": {
+      "code": "PASS",
+      "code_report": "ci-marker-repair/rc3-02-independent-code-review-round4-bc0b3.md",
+      "regression": "PASS",
+      "regression_report": "ci-marker-repair/rc3-02-independent-regression-round4-bc0b3.md"
+    }
+  },
+  "prior_ca035_suites": {
+    "head": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+    "tree": "05191deede70f26e661b28f4221c3c0d00ef2ecf",
+    "source": "/workspace/work/rc3/reviews/rc3-02-code-snapshot-ca035",
+    "python": "/workspace/work/rc3/reviews/env-02-snapshot-ca035/bin/python",
+    "unit": {
+      "status": "PASS",
+      "result": "1851 passed, 456 deselected in 212.91s",
+      "file": "rc3-02-owner-pure-ca035-unit.log"
+    },
+    "render": {
+      "status": "PASS",
+      "result": "53 passed, 2254 deselected, 22 warnings in 71.73s",
+      "file": "rc3-02-owner-pure-ca035-render.log"
+    },
+    "browser_ci": "NOT_RUN at owner handoff; root required final CI pending"
+  },
+  "installed_fixture_repair": {
+    "source_sha": "65d8203ec099b0460dbf031b24cf2ea5a02fd0f2",
+    "source_tree": "e4e94f7acc9d9156beeb77fa8ede06cb0a954480",
+    "delta": "w11/w12 examples only; src/skills/pyproject matches ca035, tests matches bc0b.",
+    "original_ci_head": "53f4ab335d4bacb0862d810cf8acf55eeba7e744",
+    "original_ci_run": 38642260224,
+    "original_ci": "5 jobs success, browser/group FAIL; 403 browser PASS then original installed fixture notes mismatch, installed recovery NOT_RUN.",
+    "original_local_reproduction": "Exact53 isolated wheel 139849b1dc8e85f5afd101ce8722de5343284675e2690813468209fe86146657, 246 source/package/install bytes identical; actual same speaker_notes_mismatch. Two initial harness/import-map errors are separate original attempts.",
+    "current_wheel_sha256": "b13629f0f67c17883bcc0a610b7fc2fd0951a1c714b4b3b3f90b616b664265a0",
+    "current_installed_core": "/workspace/work/rc3/reviews/rc3-02-installed-fixture-65d82-validation/venv/lib/python3.12/site-packages/deck_master",
+    "w12_offline": "PASS 9 checks; exact installed -I/core module provenance, real native/readback, public notes/privacy and engineering original, no source borrowing.",
+    "body_canary_negative": "Actual separate tampered PPTX readback speaker_notes_mismatch retained; no Page-private-data public export bypass.",
+    "initial_local_recovery": "INTERRUPTED:63FAIL/68ERROR/1warning/85.22s; all first browser launch failures showed FATAL Socket path too long under long task TMPDIR. Original log/long paths/modules preserved.",
+    "corrective_environment": "Same /usr/bin/chromium, only TMPDIR=/workspace/work/rc3/t65r; real short-temp launch PASS. No browser/source/product replacement.",
+    "full_recovery_r2": "FAIL: 238 passed, 1 failed in 797.48s; same short TMPDIR/system Chromium. Sole mobile test measured image decoded before reading-controller fit: original y639.805664/h208.999939/bottom848.805603. Original complete suite remains FAIL.",
+    "impact_review": {
+      "code": "FINAL PASS",
+      "regression": "FINAL PASS",
+      "scope": "Exact65 two-example/native/files/negative cases; independent reviewer installed result not Owner full recovery or remote CI."
+    },
+    "new_remote_ci": "PENDING exact final updated docs head; old FAIL retained"
+  },
+  "mobile_fit_test_repair": {
+    "source_sha": "acf2b2edd4a88f74e8b671a18e32eb74b780eb84",
+    "source_tree": "0d3ce4982e24a081cbf964259ea85891cd713aed",
+    "delta": "Only three test lines await existing data-reading-mode=fit before mobile geometry measurement. No product/example/threshold/sleep change.",
+    "diagnostic_source_sha": "65d8203ec099b0460dbf031b24cf2ea5a02fd0f2",
+    "diagnostic_installed_wheel_sha256": "b13629f0f67c17883bcc0a610b7fc2fd0951a1c714b4b3b3f90b616b664265a0",
+    "diagnostic_original_case": "Exact installed65/system Chromium151/shortTMP single original case PASS1/1 in1.84s; transparent original bounding box observed without changing return or waiting.",
+    "controlled_actual_image": "Held actual SVG fetch then continued unchanged; image-ready canvas before fit y639.428528/h209/bottom848.428528/fonts loaded; 11ms later existing reading-controller fit y639.397705/h184.59375/bottom823.991455.",
+    "controlled_observations": "installed-fixture-repair/fixed65/mobile-lifecycle-control-r5/observations.json",
+    "harness_history": "Original observer null-after-content-layer INTERNALERROR and scratch collection FileExistsError retained; r2 scratch result PASS but observer global empty, r3 observations captured, r4 init-script lifecycle null, r5 actual lifecycle captured. These harness errors/observer gaps are not product failures or additional original-suite results.",
+    "scoped_revalidation": "PASS: fixed acf original3viewport cases3/3 in5.07s; controlled real held-SVG lifecycle1/1 in2.03s; 246 acf source/65wheel/install bytes all equal. Runtime/build source65 and test sourceacf tracked separately. Independent R6 code/regression FINAL PASS scoped to this test wait.",
+    "remaining238_reuse": "238 actual installed65 recovery passes retained only for unchanged runtime/examples/non-target tests; original suite FAIL not relabeled PASS. No additional local broad run authorized/needed; required final CI will rerun complete installed recovery.",
+    "scoped_provenance": "installed-fixture-repair/acf-test-fit/acf-scoped-provenance.json",
+    "impact_review": {
+      "regression": "FINAL PASS",
+      "regression_report": "installed-fixture-repair/rc3-02-independent-regression-round6-acf2b.md",
+      "code": "FINAL PASS",
+      "code_report": "installed-fixture-repair/rc3-02-independent-code-review-round6-acf2b.md",
+      "scope": "Fixed acf single fitted-reading test wait; code reviewer independent actual390case+held-image lifecycle, regression reviewer original3viewport+held-image lifecycle. Original whole65 recoveryFAIL remains immutable; no full239/currentCI claim."
+    }
+  },
+  "runtime_implementation_sha": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+  "runtime_implementation_tree": "05191deede70f26e661b28f4221c3c0d00ef2ecf"
+}

@@ -1,0 +1,24 @@
+{
+  "stage": "preproduction",
+  "status": "missing",
+  "requirement": "fidelity_only",
+  "requirement_state": {
+    "declared": "fidelity_only",
+    "origin": "confirmed_manuscript",
+    "override_decision_ref": null,
+    "effective": "fidelity_only",
+    "reasons": []
+  },
+  "units": [
+    "page_copy",
+    "progression"
+  ],
+  "satisfied_units": [],
+  "missing_units": [
+    "page_copy",
+    "progression"
+  ],
+  "review_refs": [],
+  "blocking_findings": [],
+  "next_action": "dispatch_preproduction_review"
+}

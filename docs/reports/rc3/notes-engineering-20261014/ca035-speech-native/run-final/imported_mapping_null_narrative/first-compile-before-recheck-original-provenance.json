@@ -1,0 +1,19 @@
+{
+  "case": "imported_mapping_null_narrative",
+  "source": "actual immutable Store revision and artifact bytes; no rerun",
+  "revision_id": "bb0455564b4448e98687b9b365b17ecb",
+  "parent_revision_id": "23bd1bac054f46779acbbae50bd89785",
+  "operation_id": "production-ddb50eb3fce64053a6eea7864e11d446",
+  "render_report_artifact_ref": {
+    "path": ".deckmaster/objects/1b/1bc124dacc1f7f1e7e9bc8997be44890da9431a6935bcb7a7497e479284527cf.json",
+    "sha256": "1bc124dacc1f7f1e7e9bc8997be44890da9431a6935bcb7a7497e479284527cf"
+  },
+  "render_report_file_ref": {
+    "path": ".deckmaster/objects/20/2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a.json",
+    "sha256": "2090623992db3e7335fc252d95cb6cf8445f62bf308d0d305f2a992689b2101a"
+  },
+  "report_status": "pass",
+  "preproduction_state_before_this_first_compile": "post-speech-before-review-status.json",
+  "subsequent_formal_qualification": "after-speech-review-status.json",
+  "subsequent_compile": "final-native-compile.json"
+}

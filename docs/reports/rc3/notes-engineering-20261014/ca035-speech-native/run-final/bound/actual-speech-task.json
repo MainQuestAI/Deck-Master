@@ -1,0 +1,98 @@
+{
+  "schema_version": "deck_task.v1",
+  "task_id": "da4d38be0d45",
+  "operation_id": "speech-update",
+  "kind": "compose",
+  "status": "awaiting_host",
+  "scope_pages": [
+    "p1"
+  ],
+  "instruction": "只写口播：payload.updates 对固定 Page Ref 提交 speaker_notes 与 speech_segments（覆盖全部口播文本、标注 estimated_seconds 与 narrative 节点）。不得改上屏正文、页序或视觉配置。",
+  "inputs": [],
+  "dependencies": [
+    {
+      "kind": "content",
+      "identity": "document-revision:508c84788aa74896927d5b7c910eab12",
+      "sha256": "4e647cfb97d1a9a2c339dff7c7affe26c0bf08d03b329ffdc84878b4e0f88e44"
+    }
+  ],
+  "dispatch_revision": "508c84788aa74896927d5b7c910eab12",
+  "produced_against": "4e647cfb97d1a9a2c339dff7c7affe26c0bf08d03b329ffdc84878b4e0f88e44",
+  "result_refs": [],
+  "error": null,
+  "execution_ref": null,
+  "created_at": "2026-10-14T21:04:14Z",
+  "updated_at": "2026-10-14T21:04:14Z",
+  "cost_class": "host_reasoning",
+  "usage": {
+    "source": "not_reported",
+    "external_calls": null
+  },
+  "call_allowances": [],
+  "intent": "initial",
+  "input_digest": "ec4ab368e3b53365c30d0da64a33ade5f2eaf21eeb1bf8fe39246ff95362774f",
+  "method_release": {
+    "release_id": "ca0351d2397b-17a3bb5c40bd",
+    "methods_sha256": "78372f029cf942cc34ab43f48a343a4c753acf87b719bb3bb068bc0809dc06b5"
+  },
+  "protocol_version": "compose.v2",
+  "required_capabilities": [
+    "compose.v2",
+    "collaboration.v1"
+  ],
+  "collaboration_binding": {
+    "request_id": "req-1defde7e342d",
+    "phase": "speech",
+    "executor_type": "host",
+    "authorization_ref": null,
+    "decision_refs": [],
+    "write_scope": {
+      "subject": "deck",
+      "page_ids": [
+        "p1"
+      ],
+      "page_manifest_ref": {
+        "path": ".deckmaster/objects/37/37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d.json",
+        "sha256": "37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d"
+      },
+      "external_artifact_ref": null,
+      "layers": [
+        "speech"
+      ],
+      "allow_page_membership_change": false,
+      "allow_page_order_change": false,
+      "purpose": "working"
+    },
+    "adoption_policy": "within_scope",
+    "eligibility_basis": [
+      {
+        "kind": "task_fact",
+        "identity": "presentation_mode",
+        "projection": "value",
+        "ref": null,
+        "sha256": "ed89d5658dde7643a1fa67f7656ba1b4c151acc6ed85fd851f5ec942329d007a"
+      },
+      {
+        "kind": "artifact",
+        "identity": "narrative",
+        "projection": "content",
+        "ref": {
+          "path": ".deckmaster/objects/34/341cc5550424ed54b01a336d1fde4778fb3cc17822355197d8e7aa72086ef94a.json",
+          "sha256": "341cc5550424ed54b01a336d1fde4778fb3cc17822355197d8e7aa72086ef94a"
+        },
+        "sha256": "341cc5550424ed54b01a336d1fde4778fb3cc17822355197d8e7aa72086ef94a"
+      },
+      {
+        "kind": "artifact",
+        "identity": "content_plan",
+        "projection": "content",
+        "ref": {
+          "path": ".deckmaster/objects/37/37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d.json",
+          "sha256": "37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d"
+        },
+        "sha256": "37c2533f03fd276bc1d8af7e6bbf358e05990110444f0233d22e5fa9414f001d"
+      }
+    ],
+    "eligibility_digest": "61b60049ab60512bf20fe62a770217168e56778d379d38d5097bb3775cbdb63a"
+  }
+}

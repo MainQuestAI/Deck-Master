@@ -185,7 +185,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             # existing service-layer stage_format_required error, not masked here.
             if self.path in ('/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision'):
                 document = self.store.load_document()
-                if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
+                if not self.store.workbench_protocol_required(document):
                     self._send_json({'error': {'code': 'unsupported_project_format', 'message': 'this action requires a workbench.v3 project'}}, 409)
                     return
             from . import editing, service
@@ -256,8 +256,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path=='/api/exports':
                 from . import exports
                 from .operations import OperationError
-                if set(data)-{'purpose','revision','export_id'}:
-                    raise OperationError('invalid_export_request','body','only purpose, revision and export_id are accepted')
+                if set(data)-{'purpose','revision','export_id','notes_policy'}:
+                    raise OperationError('invalid_export_request','body','only purpose, revision, export_id and notes_policy are accepted')
                 result=exports.create(self.store.project_root,**data)
             elif self.path=='/api/export':
                 import uuid

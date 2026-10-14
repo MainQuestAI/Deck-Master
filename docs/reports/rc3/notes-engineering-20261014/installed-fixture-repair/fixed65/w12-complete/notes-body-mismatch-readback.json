@@ -1,0 +1,27 @@
+{
+  "status": "fail",
+  "findings": [
+    {
+      "page_id": "p1",
+      "code": "speaker_notes_mismatch"
+    }
+  ],
+  "pages": [
+    {
+      "page_id": "p1",
+      "text_runs": 1,
+      "native_shapes": 2
+    }
+  ],
+  "notes": [
+    {
+      "slide": 1,
+      "page_id": "p1",
+      "notes": "/Users/synthetic/PRIVATE-CANARY",
+      "notes_sha256": "3a738d5dfffa3522948fc4910e8006055d4bbb4d7fa5be3d751e7958324a7980"
+    }
+  ],
+  "notes_newlines": "LF",
+  "visual_review": "not_evaluated",
+  "desktop_editing": "not_evaluated"
+}

@@ -26,7 +26,7 @@ from pathlib import Path
 from . import dependency_slices, models, tasks as tasks_mod
 from .collaboration_scope import scope_gaps
 from .content import atom_ids, check_page
-from .models import ModelError, bump_revision, writer_at_least
+from .models import ModelError, bump_revision, collaboration_required
 from .store import Store, StoreError
 
 FRAMING = "framing"
@@ -212,7 +212,7 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
     commit the task themselves; nothing here writes project state.
     """
     from . import collaboration_binding
-    if document.get("compatibility", {}).get("project_format") != "workbench.v3":
+    if not store.workbench_protocol_required(document):
         raise ModelError("(task)/protocol_version",
                          "compose.v2 requires an explicit workbench.v3 project")
     if intent == "input_revision":
@@ -376,10 +376,14 @@ def _phased_content_active(store, document) -> bool:
     A migrated project that already has Pages is never dragged into a new
     Narrative cycle by `continue`; its legacy path stays exactly as it was.
     """
-    if not writer_at_least(document, "collaboration.v1"):
+    if not collaboration_required(document):
         return False
     if not document.get("pages"):
         return True
+    if document.get('content_plan'):
+        plan = store.read_object_json(document['content_plan'])
+        if plan.get('schema_version') == 'content_plan.v2' and plan.get('mode') == 'imported_mapping':
+            return True
     for ref in document.get("tasks") or []:
         try:
             task = store.read_object_json(ref)
@@ -401,6 +405,24 @@ def content_phase_status(store, document, *, explicit_speech_mode: str | None = 
     """
     if not _phased_content_active(store, document):
         return {"action": "inactive", "phase": None, "reason": "legacy or non-content project"}
+    initial_plan = (store.read_object_json(document['content_plan'])
+                    if document.get('content_plan') else None)
+    if initial_plan and initial_plan.get('mode') == 'imported_mapping':
+        models.validate_content_plan_semantics(initial_plan)
+        entries = document.get('pages') or []
+        if (initial_plan.get('project_id') != document['project_id'] or
+                initial_plan['input']['page_order'] != [entry['page_id'] for entry in entries] or
+                {link['page_id']: link['page_ref'] for link in initial_plan['page_links']} !=
+                {entry['page_id']: entry['page'] for entry in entries}):
+            return {'action': 'blocked', 'phase': None, 'reason': 'imported manuscript mapping is stale'}
+        kind = effective_speech_kind(store, document, explicit_mode=explicit_speech_mode)
+        missing = [entry['page_id'] for entry in entries
+                   if not (store.read_object_json(entry['page']).get('speaker_notes') or '').strip()]
+        if kind and missing:
+            return {'action': 'dispatch', 'phase': SPEECH, 'page_ids': sorted(missing),
+                    'speech_kind': kind, 'speech_mode': 'verbatim' if kind == 'verbatim' else 'cues',
+                    'reason': 'current imported manuscript needs only its requested speaking notes'}
+        return {'action': 'complete', 'phase': None, 'reason': 'imported manuscript retained without new argument'}
     narrative_ref = document.get("narrative")
     narrative = None
     if narrative_ref:
@@ -861,6 +883,7 @@ def _accept_page_copy(store, *, document, task, envelope, payload, produced_agai
     updated = bump_revision(document, {
         "operation_id": task["operation_id"], "kind": "content_update",
         "description": envelope.get("notes") or "page copy adopted", "read_set": []})
+    models.require_writer(updated, "rc3.v1")
     updated["pages"] = [
         {"page_id": page_id, "page": page_refs[page_id], "blueprint": None,
          "svg": None, "svg_preview": None, "ppt_preview": None}
@@ -926,7 +949,13 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
         where = f"(result)/payload/updates[{index}]"
         if not isinstance(update, dict):
             raise tasks_mod.EnvelopeError(where, "update must be an object")
+        unknown_fields = sorted(set(update) - {
+            "page_id", "page_ref", "speaker_notes", "speech_segments"})
+        if unknown_fields:
+            raise tasks_mod.EnvelopeError(where, f"refusing unknown speech update fields: {unknown_fields}")
         page_id = update.get("page_id")
+        if page_id in new_pages:
+            raise tasks_mod.EnvelopeError(f"{where}/page_id", "duplicate speech update identity")
         entry = entries.get(page_id)
         if entry is None:
             raise tasks_mod.EnvelopeError(f"{where}/page_id", "page not present in the current deck")
@@ -949,14 +978,26 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
         mapping = copy.deepcopy(current.get("content_mapping"))
         segments = update.get("speech_segments")
         if mapping is None:
-            # CONTRACTS §11.3: every non-empty speaking text is covered by a
-            # speech segment, and a page without a mapping cannot express that
-            # coverage. Writing notes here would create exactly that defect.
-            raise tasks_mod.EnvelopeError(
-                f"{where}/speaker_notes",
-                "this Page has no content_mapping, so new speech cannot be covered by segments; "
-                "re-run the page_copy phase for this page (atom/narrative/source mapping) and then "
-                "write the speech phase")
+            plan = (store.read_object_json(document['content_plan'])
+                    if document.get('content_plan') else {})
+            if (plan.get('mode') != 'imported_mapping' or narrative_ref is not None or
+                    plan.get('narrative_ref') is not None):
+                raise tasks_mod.EnvelopeError(
+                    f"{where}/speaker_notes",
+                    "this Page has no content_mapping; a new argument needs page_copy mapping before speech")
+            # A source-bound imported manuscript can honestly have unknown
+            # argument links. Do not invent a Narrative to add notes. Preserve
+            # every real visible atom and reuse only the stored page-role sources.
+            models.validate_content_plan_semantics(plan)
+            role = next((role for role in plan['input']['page_roles']
+                         if role['page_id'] == page_id), None)
+            if role is None:
+                raise tasks_mod.EnvelopeError(where, "imported page has no current role mapping")
+            mapping = {'narrative_ref': None, 'plan_role_page_id': page_id,
+                       'visible_links': [{'element_ref': atom, 'narrative_node_ids': [],
+                                         'source_links': copy.deepcopy(role.get('source_links') or [])}
+                                        for atom in sorted(atom_ids(current))],
+                       'speech_segments': []}
         if mapping.get("narrative_ref") != narrative_ref:
             # The page's visible copy is mapped to a different argument than the
             # current one. A silent rebind would leave every visible_links entry
@@ -1017,6 +1058,7 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
     updated = bump_revision(document, {
         "operation_id": task["operation_id"], "kind": "content_update",
         "description": envelope.get("notes") or "speech notes adopted", "read_set": []})
+    models.require_writer(updated, "rc3.v1")
     refreshed_entries = []
     for entry in updated.get("pages") or []:
         page_id = entry["page_id"]
@@ -1024,7 +1066,7 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
             refreshed_entries.append(entry)
             continue
         refreshed_entries.append({**entry, "page": new_page_refs[page_id],
-                                  "svg_preview": None, "ppt_preview": None})
+                                  "ppt_preview": None})
     updated["pages"] = refreshed_entries
     updated["outputs"] = dict.fromkeys(updated["outputs"])
     plan_ref = None
@@ -1032,7 +1074,8 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
     plan_source_ref = document.get("content_plan")
     if plan_source_ref:
         plan = store.read_object_json(plan_source_ref)
-        if plan.get("schema_version") == "content_plan.v2" and plan.get("mode") == "bound":
+        if (plan.get("schema_version") == "content_plan.v2" and
+                plan.get("mode") in ("bound", "imported_mapping")):
             plan_ref = refresh_v2_plan_links(
                 store, document, task, plan,
                 [{"page_id": e["page_id"], "page": e["page"]} for e in refreshed_entries],
@@ -1373,6 +1416,9 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
             if document.get("content_plan") and document["content_plan"] != proposal_ref:
                 invalidated.append({"ref": document["content_plan"], "reason": "plan_replaced"})
             updated["content_plan"] = proposal_ref
+            if (proposal.get('input') or {}).get('speech_policy', {}).get('output') in (
+                    'pptx_notes', 'separate_script', 'both'):
+                models.require_writer(updated, 'rc3.v1')
         models.validate_document_semantics(updated)
         return collaboration.commit_collaboration_change(
             store, document, operation_id=operation_id, action=action, digest=digest,

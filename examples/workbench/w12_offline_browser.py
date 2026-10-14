@@ -18,7 +18,7 @@ from playwright.sync_api import sync_playwright, expect
 import deck_master
 from deck_master import ui_journal
 from deck_master.web import WorkbenchServer
-from w11_browser import fixture
+from w11_browser import fixture, verify_download_notes
 
 
 def main():
@@ -98,8 +98,10 @@ def main():
                     assert manifest["purpose"] == purpose and manifest["revision_id"] == revision
                     for item in manifest["files"]:
                         assert hashlib.sha256(archive.read(item["path"])).hexdigest() == item["sha256"]
+                    verify_download_notes(archive, manifest, store)
                 downloads.append({"purpose": purpose, "revision": revision, "sha256": digest, "files": len(manifest["files"])})
             checks["three_fixed_offline_downloads_hash_verified"] = True
+            checks["public_notes_complete_privacy_scrub_and_engineering_original_preserved"] = True
             static = files("deck_master").joinpath("resources/static/v2")
 
             def public_assets(directory, prefix=""):

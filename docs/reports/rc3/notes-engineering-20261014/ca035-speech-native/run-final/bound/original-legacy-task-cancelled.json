@@ -1,0 +1,14 @@
+{
+  "status": "cancelled",
+  "project_id": "project",
+  "revision_id": "51f3e393576e450b837d57f321668bf8",
+  "requested_action": "task update",
+  "result_refs": [],
+  "pending_tasks": [],
+  "findings": [],
+  "next_action": null,
+  "input_alignment": "no_content",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering"
+}

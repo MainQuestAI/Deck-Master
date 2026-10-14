@@ -1,0 +1,43 @@
+{
+  "status": "accepted",
+  "project_id": "project",
+  "revision_id": "924b090157c0455bb7826d5646acbb3d",
+  "requested_action": "task accept",
+  "result_refs": [
+    {
+      "path": ".deckmaster/objects/3e/3ea83a5095368193659ff45e1d542c36f50821213f48dbbd34e498cf880d4436.json",
+      "sha256": "3ea83a5095368193659ff45e1d542c36f50821213f48dbbd34e498cf880d4436"
+    },
+    {
+      "path": ".deckmaster/objects/1c/1c8b0b2d01d1faec1cc9b4e0090a96ab5541a919f360be17b993b89e181ba5e3.json",
+      "sha256": "1c8b0b2d01d1faec1cc9b4e0090a96ab5541a919f360be17b993b89e181ba5e3"
+    }
+  ],
+  "pending_tasks": [],
+  "findings": [],
+  "next_action": "continue_production",
+  "input_alignment": "current",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering",
+  "current_revision_id": "924b090157c0455bb7826d5646acbb3d",
+  "new_page_hashes": {},
+  "work_complete": true,
+  "operation_result": {
+    "status": "accepted",
+    "revision_id": "924b090157c0455bb7826d5646acbb3d",
+    "new_page_hashes": {},
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/3e/3ea83a5095368193659ff45e1d542c36f50821213f48dbbd34e498cf880d4436.json",
+        "sha256": "3ea83a5095368193659ff45e1d542c36f50821213f48dbbd34e498cf880d4436"
+      },
+      {
+        "path": ".deckmaster/objects/1c/1c8b0b2d01d1faec1cc9b4e0090a96ab5541a919f360be17b993b89e181ba5e3.json",
+        "sha256": "1c8b0b2d01d1faec1cc9b4e0090a96ab5541a919f360be17b993b89e181ba5e3"
+      }
+    ],
+    "work_complete": true,
+    "next_action": "continue_production"
+  }
+}

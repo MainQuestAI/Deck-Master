@@ -296,7 +296,7 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
 
     store = Store(Path(project).expanduser())
     document = store.load_document()
-    if not models.writer_at_least(document, "collaboration.v1"):
+    if not models.collaboration_required(document):
         raise ModelError("content_review",
                          "migration_required: preproduction review needs the collaboration.v1 writer")
     state = requirement_state(store, document)
@@ -499,13 +499,16 @@ def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict
         records = _preproduction_reviews(store, document)
     for item in records:
         review = item["review"]
+        notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' else {}
         deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
                 for dep in review.get("dependencies") or []}
         stale = [key for key, value in deps.items()
-                 if key in digests and digests[key] != value]
+                 if key in digests and digests[key] != value and value not in notes_aliases.get(key, set())]
         if document.get("narrative") and deps.get("content:narrative") != document["narrative"]["sha256"]:
             stale.append("content:narrative")
-        if document.get("content_plan") and deps.get("content:content_plan") != document["content_plan"]["sha256"]:
+        if (document.get("content_plan") and
+                deps.get("content:content_plan") != document["content_plan"]["sha256"] and
+                deps.get("content:content_plan") not in notes_aliases.get('content:content_plan', set())):
             stale.append("content:content_plan")
         if page_ids and not set(page_ids) <= {str(dep.get("identity", "")).split(":", 1)[-1]
                                              for dep in review.get("dependencies") or []

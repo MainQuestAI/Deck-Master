@@ -14,6 +14,7 @@ from .svg import parse_svg
 class SvgInput:
     page_id: str
     path: Path
+    speaker_notes: str = ''
 
 @dataclass(frozen=True)
 class CompileOptions:
@@ -46,10 +47,18 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         raise ValueError("slide dimensions must be positive")
     asset_hashes = {path: hashlib.sha256(Path(path).read_bytes()).hexdigest() for mapping in options.assets.values() for path in mapping.values()}
     pages = []
+    if any(not isinstance(item.page_id, str) or not item.page_id for item in inputs):
+        raise ValueError('SVG page_id must be a nonempty string')
+    if len({item.page_id for item in inputs}) != len(inputs):
+        raise ValueError('SVG page_id must be unique')
     for item in inputs:
         data = Path(item.path).read_bytes()
         page = parse_svg(data, page_id=item.page_id, assets=options.assets.get(item.page_id, {}))
         page['sha256'] = hashlib.sha256(data).hexdigest()
+        from .native import normalize_notes
+        page['speaker_notes'] = normalize_notes(item.speaker_notes)
+        page['notes_sha256'] = hashlib.sha256(page['speaker_notes'].encode('utf-8')).hexdigest()
+        page['slide_index'] = len(pages) + 1
         pages.append(page)
     icon_license = any(b'data-icon-license="lucide-1.49.0"' in Path(item.path).read_bytes() for item in inputs)
     diagnostics = []
@@ -66,6 +75,11 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         candidate = Path(temporary) / 'candidate.pptx'
         if options.node_executable:
             subprocess.run([options.node_executable, str(script), options.artifact_module, str(manifest), str(candidate)], check=True, timeout=options.timeout_seconds)
+            # The shared native notes writer makes both compiler exits obey
+            # the same full-text and stable-page identity contract.
+            from .native import attach_notes
+            candidate.write_bytes(attach_notes(candidate.read_bytes(), [
+                {'page_id': p['page_id'], 'notes': p['speaker_notes']} for p in pages]))
         else:
             from .native import emit
             emit(pages, options.width_px, options.height_px, options.fonts, candidate)
@@ -142,6 +156,11 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         for path, digest in asset_hashes.items():
             if hashlib.sha256(Path(path).read_bytes()).hexdigest() != digest:
                 raise ValueError('approved asset changed during compilation')
+        from .native import notes_records
+        actual = notes_records(patched)
+        if any(row['page_id'] != page['page_id'] or row['notes'] != page['speaker_notes']
+               for row, page in zip(actual, pages, strict=True)):
+            raise ValueError('actual PPTX notes differ from compile input')
         # Exclusive publication also protects against a competing output writer.
         import os
         os.link(patched, target)

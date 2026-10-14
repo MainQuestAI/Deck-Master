@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from . import dependency_slices, models
 from .collaboration_scope import delegation_gaps, scope_gaps
-from .models import ModelError, canonical_json_bytes, sha256_bytes, writer_at_least
+from .models import ModelError, canonical_json_bytes, sha256_bytes
 
 PHASES = ("framing", "argument", "page_copy", "speech", "design", "production",
           "review", "delivery")
@@ -84,7 +84,7 @@ def eligibility_digest(*, phase: str, write_scope: dict, basis) -> str:
     return sha256_bytes(canonical_json_bytes(payload))
 
 
-def binding_basis(store, document, *, phase: str, provided=None) -> list[dict]:
+def binding_basis(store, document, *, phase: str, provided=None, page_ids=None) -> list[dict]:
     """Registered minimum slices for the phase, plus the current pointers.
 
     ``merge_required_basis`` completes the registered minimum so a caller can
@@ -95,6 +95,14 @@ def binding_basis(store, document, *, phase: str, provided=None) -> list[dict]:
     basis = dependency_slices.merge_required_basis(
         store, document, family="task", key=phase, provided=list(provided or []))
     for identity in ("narrative", "content_plan"):
+        if identity == "content_plan" and phase in ("design", "production") and page_ids:
+            for page_id in page_ids:
+                basis.append(dependency_slices.make_dependency_slice(
+                    store, document, kind="artifact", identity=f"page:{page_id}", projection="visual_input"))
+                if document.get("content_plan"):
+                    basis.append(dependency_slices.make_dependency_slice(
+                        store, document, kind="artifact", identity=f"plan:{page_id}", projection="visual_role"))
+            continue
         probe = dependency_slices.build_slice(store, document, kind="artifact",
                                               identity=identity, projection="content")
         if probe is None:
@@ -130,7 +138,8 @@ def build_binding(store, document, *, phase: str, executor_type: str, write_scop
         raise ModelError("task/collaboration_binding/request_id",
                          "a collaboration.v1 task needs the current open work request")
     scope = canonical_scope(write_scope)
-    resolved_basis = binding_basis(store, document, phase=phase, provided=basis)
+    resolved_basis = binding_basis(store, document, phase=phase, provided=basis,
+                                   page_ids=scope.get("page_ids"))
     binding = {
         "request_id": current["request_id"],
         "phase": phase,
@@ -328,7 +337,7 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
     Projects below the collaboration.v1 writer keep their exact old behavior:
     no binding, no gate, byte-identical dispatch.
     """
-    if not writer_at_least(document, "collaboration.v1"):
+    if not models.collaboration_required(document):
         return task
     if task.get("collaboration_binding"):
         require_binding(document, task)

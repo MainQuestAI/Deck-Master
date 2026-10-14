@@ -139,7 +139,7 @@ def resolve_evidence(declared: dict, adapter_context=None, *, where: str = "evid
 
 
 def _require_region(store, document) -> dict:
-    if not models.writer_at_least(document, "collaboration.v1"):
+    if not models.collaboration_required(document):
         raise ModelError(
             "collaboration",
             "migration_required: this project predates the collaboration writer; "

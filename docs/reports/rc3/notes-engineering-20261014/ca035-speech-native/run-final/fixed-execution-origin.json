@@ -1,0 +1,8 @@
+{
+  "python": "/workspace/work/rc3/candidate-02-ca035/prefix/.deck-master/releases/ca0351d2397b-17a3bb5c40bd/venv/bin/python",
+  "deck_master": "/workspace/work/rc3/candidate-02-ca035/prefix/.deck-master/releases/ca0351d2397b-17a3bb5c40bd/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "fixture_snapshot": "/workspace/work/rc3/reviews/rc3-02-code-snapshot-ca035",
+  "source_sha": "ca0351d2397ba154e9f77363bd0f325629eb0ebd",
+  "tree": "05191deede70f26e661b28f4221c3c0d00ef2ecf",
+  "public_subjects": "Actual normal continue rendered SVG preview and dispatched review; no omitted subject or reduced check."
+}

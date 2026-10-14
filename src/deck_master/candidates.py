@@ -55,6 +55,9 @@ def generation_basis(store, document, page_id, stage, *, preserve_blueprint=Fals
 
 
 def inputs_current(store, document, task):
+    from .visual_dependencies import is_visual_task, visual_task_inputs_current
+    if is_visual_task(task):
+        return visual_task_inputs_current(store, document, task)
     target_reference = task.get('stage_request', {}).get('target_reference_ref')
     if target_reference:
         if len(task['scope_pages']) != 1:
@@ -200,6 +203,24 @@ def _state(store, document, candidate, task=None):
                 # adopted sample remains usable for further style expansion.
                 basis = {**basis, 'blueprint_ref':target_reference}
         changed = ['page_membership'] if basis is None else [key for key in basis if basis[key] != expected[key]]
+        if (basis is not None and task is not None and 'page_ref' in changed):
+            from .visual_dependencies import page_visual_equivalent
+            if page_visual_equivalent(store, expected['page_ref'], basis['page_ref'], candidate['page_id']):
+                changed.remove('page_ref')
+        if task is not None:
+            # A candidate also retains the dispatched Plan role and actual
+            # immutable request. Its own adoption may change the output slot,
+            # never the consumed Page/Plan/style context.
+            from .visual_dependencies import plan_visual_projection
+            dispatched = load_snapshot(store, task['dispatch_revision'])
+            try:
+                if plan_visual_projection(store, document, [candidate['page_id']]) != plan_visual_projection(store, dispatched, [candidate['page_id']]):
+                    changed.append('content_plan_role')
+                if task.get('kind') == 'blueprint':
+                    from .production import stored_blueprint_request
+                    stored_blueprint_request(store, task)
+            except (StoreError, OSError, ValueError, KeyError, TypeError):
+                changed.append('unverifiable_visual_inputs')
     return {'generation_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
             'adoption_target': {'status': 'missing_page' if entry is None else 'unchanged' if target == candidate['target_ref'] else 'changed',
                                 'original_ref': candidate['target_ref'], 'current_ref': target},
@@ -264,10 +285,10 @@ def _changeset_projection(store, document, candidate, task):
     return {'changeset': changeset, 'upserts': upserts, 'mapping': mapping}
 
 
-def _require_workbench(document):
+def _require_workbench(store, document):
     """G54: candidates are a workbench.v3 family; the gate lives at the service
     layer so CLI and HTTP share one truth (web.py keeps a defensive copy)."""
-    if document.get('compatibility', {}).get('project_format') != 'workbench.v3':
+    if not store.workbench_protocol_required(document):
         raise operations.OperationError('unsupported_project_format', 'project',
                                         'candidate planning, adoption and decisions require a workbench.v3 project',
                                         http_status=409)
@@ -592,7 +613,7 @@ def _plan(store, document, candidate_ids):
 def plan(project, *, input):
     validate_schema('candidate_selection', input)
     store = Store(project_path(project)); document = load_snapshot(store)
-    _require_workbench(document)
+    _require_workbench(store, document)
     if input['project_id'] != document['project_id'] or input['base_revision'] != document['revision_id']:
         raise operations.OperationError('conflict', 'base_revision', 'read current state and preview adoption again', exit_code=5)
     value = _plan(store, document, input['candidate_ids']); ref = store.put_json_object(value)
@@ -674,7 +695,7 @@ def adopt(project, *, input, base_revision, operation_id):
     store = Store(project_path(project))
     with store._locked():
         document = store.load_document()
-        _require_workbench(document)
+        _require_workbench(store, document)
         digest = operations.request_digest(document, 'candidates.adopt', base_revision, input)
         previous = operations.recover(store, operation_id, digest)
         if previous:
@@ -737,6 +758,23 @@ def adopt(project, *, input, base_revision, operation_id):
         # changed; a no-op adoption keeps exports usable
         updated['candidate_adoptions'] = adoptions
         require_writer(updated, CONTENT_WRITER if content else WRITER)
+        if content:
+            # Protect the first adoption of presenter text or a notes/script
+            # delivery policy in the same CAS as its current Page/Plan. Merely
+            # recording a trial or adopting an image does not use that writer.
+            notes_written = False
+            for item in input['selections']:
+                kind = item.get('result_kind', 'artifact')
+                result_object = store.read_object_json(item['result_ref'])
+                if kind == 'page':
+                    notes_written |= bool(result_object.get('speaker_notes'))
+                elif kind == 'content_update':
+                    notes_written |= any(bool(page.get('speaker_notes'))
+                                         for page in result_object.get('upsert_pages') or [])
+            plan = store.read_object_json(updated['content_plan']) if updated.get('content_plan') else {}
+            output = ((plan.get('input') or {}).get('speech_policy') or {}).get('output')
+            if notes_written or output in ('pptx_notes', 'both', 'separate_script'):
+                require_writer(updated, 'rc3.v1')
         icon_checks = {}
         for item in input['selections']:
             if records[item['candidate_id']][2].get('stage_request', {}).get('icon_recipe_ref'):
@@ -820,7 +858,7 @@ def decide(project, *, input, base_revision, operation_id):
     store = Store(project_path(project))
     with store._locked():
         document = store.load_document()
-        _require_workbench(document)
+        _require_workbench(store, document)
         digest = operations.request_digest(document, 'candidates.decide', base_revision, input)
         previous = operations.recover(store, operation_id, digest)
         if previous:

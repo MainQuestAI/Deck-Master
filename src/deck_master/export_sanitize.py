@@ -12,7 +12,7 @@ from urllib.parse import urlparse, parse_qs
 from .operations import OperationError
 
 PRIVATE = re.compile(
-    r"(?:file://|/(?:Users|home|private/tmp|tmp)/|[A-Za-z]:\\|\bBearer\s+[A-Za-z0-9_.-]{8,}|\bsk-[A-Za-z0-9_-]{16,})", re.I
+    r"(?:file://|/(?:Users|home|workspace|codex|root|mnt|opt|etc|var|private/tmp|tmp)/|[A-Za-z]:\\|\bBearer\s+[A-Za-z0-9_.-]{8,}|\bsk-[A-Za-z0-9_-]{16,})", re.I
 )
 
 
@@ -33,9 +33,24 @@ def link_safe(value, where):
     if (
         parsed.username
         or parsed.password
-        or set(parse_qs(parsed.query)) & {"token", "access_token", "api_key", "signature", "authorization"}
+        or {key.lower() for key in parse_qs(parsed.query)} & {"token", "access_token", "api_key", "signature", "authorization"}
     ):
         reject(where, "external link contains authentication data")
+
+
+def public_projection_safe(value, where):
+    """Scan every string in a public projection, including identity metadata."""
+    if isinstance(value, str):
+        text_safe(value, where)
+        for url in re.findall(r'https?://[^\s<>]+', value, re.I):
+            link_safe(url, where + '/link')
+    elif isinstance(value, dict):
+        for key, child in value.items():
+            text_safe(str(key), where + '/key')
+            public_projection_safe(child, where + '/' + str(key))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            public_projection_safe(child, where + '/' + str(index))
 
 
 def png(data, where):
@@ -287,7 +302,39 @@ def svg(data, where, depth=0):
     return cleaned
 
 
-def pptx(data, where):
+def pptx(data, where, *, notes=None, include_notes=True):
+    """Build a public copy from trusted, already-compiled Page notes only.
+
+    The default remains a pure reading copy. Original notes parts are always
+    discarded; allowed body text is reconstructed, not copied with metadata.
+    """
+    from .compiler.native import attach_notes, notes_records, normalize_notes
+    if notes is not None:
+        actual = notes_records(data)
+        if len(actual) != len(notes):
+            reject(where, 'actual PPTX notes page count differs from selected Pages')
+        for row, record in zip(actual, notes, strict=True):
+            text = normalize_notes(record['notes'])
+            if include_notes:
+                text_safe(text, where + '/notes')
+                for url in re.findall(r'https?://[^\s<>]+', text, re.I):
+                    link_safe(url, where + '/notes/link')
+            if row['notes'] != text or row['page_id'] != record['page_id']:
+                reject(where, 'actual PPTX notes differ from selected Page text or stable identity')
+    clean = _clean_pptx(data, where)
+    if notes is not None:
+        projected = [{**record, 'notes': record['notes'] if include_notes else ''} for record in notes]
+        rebuilt = attach_notes(clean, projected)
+        clean = _clean_pptx(rebuilt, where, keep_notes=True, page_ids=[r['page_id'] for r in notes])
+        actual = notes_records(clean)
+        if len(actual) != len(notes) or any(
+                row['page_id'] != record['page_id'] or row['notes'] != normalize_notes(record['notes'])
+                for row, record in zip(actual, projected, strict=True)):
+            reject(where, 'final public PPTX failed full notes readback')
+    return clean
+
+
+def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
     import posixpath
 
     try:
@@ -308,8 +355,6 @@ def pptx(data, where):
         if n.startswith(
             (
                 "docProps/",
-                "ppt/notesSlides/",
-                "ppt/notesMasters/",
                 "ppt/comments/",
                 "ppt/commentAuthors",
                 "customXml/",
@@ -318,6 +363,8 @@ def pptx(data, where):
             )
         )
     }
+    if not keep_notes:
+        removed.update(n for n in names if n.startswith(('ppt/notesSlides/', 'ppt/notesMasters/')))
     if icon_license: removed.discard('docProps/core.xml')
     output = io.BytesIO()
     with source, zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as target:
@@ -342,7 +389,12 @@ def pptx(data, where):
                             parent.attrib.pop(key, None)
                         parent.set("name", "Shape " + parent.get("id", ""))
                     if local == "cSld":
+                        stable_name = parent.get('name')
                         parent.attrib.pop("name", None)
+                        if keep_notes and re.fullmatch(r'ppt/slides/slide[0-9]+\.xml', name):
+                            if stable_name not in page_ids:
+                                reject(where, 'rebuilt notes lost stable Page identity')
+                            parent.set('name', stable_name)
                     for child in list(parent):
                         local = child.tag.rsplit("}", 1)[-1]
                         if local == "Override" and child.get("PartName", "").lstrip("/") in removed:
@@ -356,7 +408,7 @@ def pptx(data, where):
                                 resolved = posixpath.normpath(posixpath.join(base, uri)).lstrip("/")
                                 if resolved in removed:
                                     parent.remove(child)
-                        elif local in ("notesMasterIdLst", "notesMasterId"):
+                        elif not keep_notes and local in ("notesMasterIdLst", "notesMasterId"):
                             parent.remove(child)
                     text_safe(parent.text, where + "/" + name)
                     text_safe(parent.tail, where + "/" + name)

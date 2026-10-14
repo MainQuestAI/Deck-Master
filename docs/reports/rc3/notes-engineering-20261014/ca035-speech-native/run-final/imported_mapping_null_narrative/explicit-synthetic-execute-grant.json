@@ -1,0 +1,10 @@
+{
+  "status": "accepted",
+  "authorization_ref": {
+    "path": ".deckmaster/objects/93/937ac33ef6b2ee2d42bc0f5bc541e395dbb0d7ba10c66ab3287c1202b3004153.json",
+    "sha256": "937ac33ef6b2ee2d42bc0f5bc541e395dbb0d7ba10c66ab3287c1202b3004153"
+  },
+  "authorization_id": "authz-6b6cde66af92",
+  "assurance": "host_attested",
+  "revision_id": "a5d1f27cfaac4c77ae7286ca05d3ea55"
+}

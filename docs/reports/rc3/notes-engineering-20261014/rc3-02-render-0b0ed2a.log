@@ -1,0 +1,26 @@
+.....................................................                    [100%]
+=============================== warnings summary ===============================
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]
+  /workspace/work/rc3/cards/rc3-02/tests/rebuild/test_deep_quality_render.py:37: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+    def count(image,predicate):return sum(predicate(p) for p in image.getdata())
+
+tests/rebuild/test_external_review_render.py: 10 warnings
+  /workspace/work/rc3/cards/rc3-02/tests/rebuild/test_external_review_render.py:43: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+    dark=sum(max(pixel)<180 for pixel in crop.getdata())
+
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]
+  /workspace/work/rc3/cards/rc3-02/tests/rebuild/test_gradient_readability.py:73: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+    counts[image_name]=sum(max(pixel)<250 for pixel in crop.getdata())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+53 passed, 2249 deselected, 22 warnings in 63.27s (0:01:03)

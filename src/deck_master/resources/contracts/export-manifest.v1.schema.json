@@ -92,7 +92,7 @@
         },
         {
           "type": "object",
-          "description": "live/read variant metadata (CONTRACTS \u00a711.7): labels and fixed refs only; never a second content truth.",
+          "description": "live/read variant metadata (CONTRACTS §11.7): labels and fixed refs only; never a second content truth.",
           "additionalProperties": false,
           "required": [
             "group_id",
@@ -137,6 +137,95 @@
           }
         }
       ]
+    },
+    "notes_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection",
+        "source",
+        "speech_mode",
+        "plan_sha256",
+        "newlines",
+        "pptx_notes",
+        "separate_script",
+        "pages"
+      ],
+      "properties": {
+        "selection": {
+          "enum": [
+            "pptx_notes",
+            "separate_script",
+            "both",
+            "pure_reading"
+          ]
+        },
+        "source": {
+          "enum": [
+            "explicit",
+            "plan",
+            "preserve_existing"
+          ]
+        },
+        "speech_mode": {
+          "enum": [
+            "none",
+            "cues",
+            "verbatim"
+          ]
+        },
+        "plan_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "newlines": {
+          "const": "LF"
+        },
+        "pptx_notes": {
+          "type": "boolean"
+        },
+        "separate_script": {
+          "type": "boolean"
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "page_id",
+              "page_sha256",
+              "notes_sha256"
+            ],
+            "properties": {
+              "page_id": {
+                "type": "string"
+              },
+              "page_sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "notes_sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "request_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   }
 }

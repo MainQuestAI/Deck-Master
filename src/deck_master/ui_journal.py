@@ -73,7 +73,8 @@ def _capabilities(server_capabilities):
     return set(server_capabilities)
 
 
-def _effective_actions(*, project_format, sample_readonly, server_capabilities=None):
+def _effective_actions(*, project_format, sample_readonly, server_capabilities=None,
+                       workbench_protocol=None):
     """Project-level availability, truthful to the real write gates.
 
     reason_code is a projection vocabulary, not the endpoints' error-envelope
@@ -84,6 +85,8 @@ def _effective_actions(*, project_format, sample_readonly, server_capabilities=N
     never by the server.
     """
     capabilities = _capabilities(server_capabilities)
+    if workbench_protocol is None:
+        workbench_protocol = project_format == "workbench.v3"
     actions = []
     for action, capability in PROJECT_ACTIONS:
         supported = capability in capabilities
@@ -92,7 +95,7 @@ def _effective_actions(*, project_format, sample_readonly, server_capabilities=N
             writable = False
         elif sample_readonly:
             writable, reason = False, "sample_readonly"
-        elif action in FORMAT_GATED and project_format != "workbench.v3":
+        elif action in FORMAT_GATED and not workbench_protocol:
             writable, reason = False, "unsupported_project_format"
         actions.append({"action": action, "supported": supported,
                         "writable": writable, "reason_code": reason})
@@ -147,6 +150,7 @@ def project_info(project, *, server_capabilities=None):
             "host_execution": "handoff_required", "draft_journal": "ui_draft.v1",
             "sample": sample,
             "effective_actions": _effective_actions(project_format=project_format,
+                                                    workbench_protocol=store.workbench_protocol_required(doc),
                                                     sample_readonly=bool(sample and sample.get("readonly")),
                                                     server_capabilities=server_capabilities)}
 

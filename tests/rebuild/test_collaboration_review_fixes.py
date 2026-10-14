@@ -370,4 +370,5 @@ def test_task_binding_gate_for_collaboration_projects(tmp_path):
     # Legacy projects (no collaboration writer) are unaffected.
     legacy = dict(document)
     legacy["compatibility"] = {"project_format": "workbench.v3", "minimum_writer": "workbench-quality.v1"}
+    legacy.pop('collaboration')
     require_task_binding(legacy, {k: v for k, v in task.items() if k != "collaboration_binding"})

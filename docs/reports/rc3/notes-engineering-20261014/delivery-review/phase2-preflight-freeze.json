@@ -1,0 +1,316 @@
+{
+  "scope": "phase2 live-draft preflight observations, no final docs/code PASS",
+  "frozen_at": "2026-10-14T21:12:20.614499+00:00",
+  "files": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/historical-and-originals-probe.json",
+      "sha256": "43c12ba8caedf83bf6d1f73402d7dbcb24dfa33614d43756a77ea53fb3a25867",
+      "size": 61937
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/independent-import-observation.json",
+      "sha256": "a877f5aba06f7d035941a07ee1e721b8fa2eb4a0d0da42ce802c24678b1d0d05",
+      "size": 2835
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/native-zip-byte-difference.json",
+      "sha256": "5c60c5260f05f510e4c5d0613c2b0ef8618094a4e388a82e37fa745393d67c94",
+      "size": 339
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/RC3-02-NOTES.md",
+      "sha256": "8c8c2f0790f2f5d7f308e683f1f0daac2461bf41e29e1e7e6f412e224635bc81",
+      "size": 13170
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/evidence-ledger.json",
+      "sha256": "069990f712d8e164a693be903b8ae6eee711b33202ff2b38aa0180c76889a826",
+      "size": 50061
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/historical-0b0ed-revalidation/controller-index.json",
+      "sha256": "a3f1b8a005e621b9b0d932dfd9826ebe160a91a27ce8d1f61b9bacf380277c85",
+      "size": 109693
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/historical-0b0ed-revalidation/isolated-wheel-r4/actual-execution.log",
+      "sha256": "ac0026460d137c3acc7e3af58620ccf0336150272feaf4063aafd45828d8eb3d",
+      "size": 504
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/historical-0b0ed-revalidation/isolated-wheel-r4/invocation-observation.json",
+      "sha256": "fda0ed39a112a560da4b5e459a0bf32b5d85073c298094c9ba812229d4304e42",
+      "size": 419
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/historical-0b0ed-revalidation/isolated-wheel-r4/revalidation.json",
+      "sha256": "cd002fabee44cc0caa13f575b2a546bff57210f8805c11db1c5a685c6a3a997a",
+      "size": 145821
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/manifest.json",
+      "sha256": "05bb0fccd72f6d6b5ef333ba3cb648e21369c8c699fe38d54b0020fc9e5bc32b",
+      "size": 45890
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/observation.json",
+      "sha256": "8612f9a960f28ecaaf34b39cfd3e2fd49e6c86b6f689750c320cd06db532add7",
+      "size": 31237
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/rc3-02-owner-pure-ca035-render.log",
+      "sha256": "363bc40f057f49dd7911cf08e73078b03547d0b912e5f6811df8265c0e845914",
+      "size": 2451
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/post-feedback-docs/rc3-02-owner-pure-ca035-unit.log",
+      "sha256": "f4dc8c216221d283028619fbc35b635ee4e07e0e06c303285a73675fd8b01e83",
+      "size": 2129
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/probe.json",
+      "sha256": "a69d6448f173ef7d3b1e4c4c50d25a5be7f6d38536b8cd984c475bfb03d7686d",
+      "size": 341536
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/RC3-02-NOTES.md",
+      "sha256": "c643bd05e45ed46f97a040d24a445828c5d403bb9e445bf5726105715a311d12",
+      "size": 11294
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/evidence-ledger.json",
+      "sha256": "069990f712d8e164a693be903b8ae6eee711b33202ff2b38aa0180c76889a826",
+      "size": 50061
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/actual-execution.log",
+      "sha256": "0f5fb6ebdd317eb072c359f8b4ee31df7456d828f168fee9fc00da15157fabc2",
+      "size": 484
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/controller-index.json",
+      "sha256": "0da55f60fd483a18e3aba884ffc18619992e95a8bd1abe738e2f04a0ca7b0b97",
+      "size": 20632
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/final-public-full-readback.json",
+      "sha256": "1466c6028f7ad7cf51850441aa9cb605aea7bd8bdb5ff8d03ef387b943014d7e",
+      "size": 1329
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/final-public-page-1.png",
+      "sha256": "2da7e04de190e07aaf5817be934d6f4921d56efb04b2f1b144ae62df43ca995a",
+      "size": 45015
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/final-public-page-2.png",
+      "sha256": "d150ae46ae2f4d6094cb1bd0244b812164d7be00371d4cb1bdf8edb61f61a388",
+      "size": 43762
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/final-public-page-3.png",
+      "sha256": "c7829ae1956acfb8c45f72c63f875a120fb1d548eecf6b29960f424b81567114",
+      "size": 52503
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/invocation-observation.json",
+      "sha256": "706fa3c35259395243c7f428211a59d922abd46a345ac8b3e8ddc18d022e4ade",
+      "size": 419
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/native-readback.json",
+      "sha256": "1466c6028f7ad7cf51850441aa9cb605aea7bd8bdb5ff8d03ef387b943014d7e",
+      "size": 1329
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/revalidate.py",
+      "sha256": "c7e48da7840e2ec90b82e79a034c99c1a21bda199d6cba9530202fe3b254e41b",
+      "size": 12985
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/ca035-installed-revalidation/revalidation.json",
+      "sha256": "8e9d98d4d19ca305c4c473462750e46980fdd9beb5dc90194fccc4adb7a76e61",
+      "size": 145585
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/isolated-install-manifest-0b0ed.json",
+      "sha256": "e04ee93a52e23393d6dd39a709a7df2f360a142cd4c2569c29909987690ddae6",
+      "size": 8117
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/isolated-install-manifest-ca035.json",
+      "sha256": "1085ec1051ca8d66e73d7fdacc51e3593425a05e2b7138a29d51afdd7b34925f",
+      "size": 8117
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/manifest.json",
+      "sha256": "6a27d917acb4c85de0b6333d792200ee7764fcaba5a015f0fadff1f52091bd28",
+      "size": 13249
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/original-pack-SHA256SUMS.json",
+      "sha256": "aba0c3ef2e247e80777c88874fa97c710c9be812695c32e3146736be2e9054bd",
+      "size": 3702
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/original-pack-compile-input.json",
+      "sha256": "fc9cfddd34be85deedd65d48cfbd7e31da06b15b5053c2b0d21d42ecee5c2543",
+      "size": 9816
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/original-pack-full-notes-readback.json",
+      "sha256": "5ac6eaca3d38191cc801c418021800fd4e180d814b8d376b1a86c6939434907a",
+      "size": 978
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/original-pack-manifest.json",
+      "sha256": "b1535218d697c36963c96fd1e8061c1ea298e21384597879933b19221902ad1a",
+      "size": 3575
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/original-pack-本地验收说明.txt",
+      "sha256": "bbc9c6a8f125c77ea2d8f9f50f389bb48ad3d2125836671813b03f1407773ef3",
+      "size": 1692
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/original-pack-桌面验收回传表.json",
+      "sha256": "fa7142ec46fab4e46368ea802057ce37ef46093a09e0e7dfa9273409bf834318",
+      "size": 1043
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-all-origin-gates-round3.log",
+      "sha256": "7268fbe2cb54f4f2adce8b9764a520ea59c1dfd7f261160626e87fb5de560327",
+      "size": 275
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-files-empty-identity-privacy-fix-final.log",
+      "sha256": "f22e721657e51e7e7d9734ab492708ce66d6d521195e34cea67cb6f3f30aa903",
+      "size": 179
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-files-independent-rq-fix.json",
+      "sha256": "6ee630a664cd9c2f3db82b48d06ef8e9891725eb2bfce95d337c33393130ba14",
+      "size": 2265
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-files-n03-formal-round1.log",
+      "sha256": "c8452f887e70d72b13b29705838ad49753c7fa362ff435c9db565356b2a36689",
+      "size": 113
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-files-owner-n03-supplement.json",
+      "sha256": "3680ca4a09c444ede44d67a6d0221e6e6cf950d4fc154e0da43b53cbf4ee0ae9",
+      "size": 1528
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-frozen-a-refusals.json",
+      "sha256": "fca5c72de0d0a6dc81e1cc0c8562ed7b2b6acd22173aaae526d6709b0022e3e2",
+      "size": 5768
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-frozen-a-refusals.py",
+      "sha256": "aed0bf06041988c80e936873993db15c2245477dc080629a55bbf9c1d05ad6cf",
+      "size": 3485
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-independent-code-review-round1-27823.md",
+      "sha256": "37e9d155ddff439f6af5b2ee0142b476ddfd303c6e8c2928559d35d2bd2f67ee",
+      "size": 8626
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-independent-regression-round1-27823.md",
+      "sha256": "73d1a69862eac9af94246c57e52efa1ba6bfec19e15310088588b9577c8fc0c8",
+      "size": 12721
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-independent-regression-round2-0b0ed.md",
+      "sha256": "b0c1aa7281731820ddd77443456f68f94362c4a4519aa8bf3eba9fc0ba9a73f4",
+      "size": 8666
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-isolated-install-0b0ed.log",
+      "sha256": "237f72f4c9e2c12d5584692a5bb0ddfd98f11f7c1d90f473de1d2363c2782d20",
+      "size": 265
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-notes-local-pack-build.log",
+      "sha256": "fe96e29071ac59d2b5d31412e314532781b10da535e8d0b9b608ef6f02ddb870",
+      "size": 369
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-origin-entry-gates-complete.log",
+      "sha256": "b6ff2f41a725df5802e3db8e52cfef506504b7cb4ea33c6b2df42b86e155af2e",
+      "size": 194
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-origin-entry-gates-final.log",
+      "sha256": "70275be42c1a1bf4c5561cd7639dc0934dc9826bce3a5750e340771cdc7de499",
+      "size": 99
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-origin-entry-gates-recheck.log",
+      "sha256": "5cb2ee1172de7420febe1b20d9f47143fbb4b4c68d71c3b76e1468a4b01c2ffd",
+      "size": 3952
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-origin-reorder-edit-contrasts-round3.log",
+      "sha256": "a9dc2576ead5054d749d397cd3b191a7dd0c779dca9a15d6c9fef50f0da708d7",
+      "size": 99
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-render-0b0ed2a.log",
+      "sha256": "c73c61ac8854754fb730f9652a3575981e089696d8aa68465d4a5ce9a143b1ad",
+      "size": 2385
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-render-final-origin-preserved.log",
+      "sha256": "302c2a94f1b210dd281688a1dc6d547c1523e12ff56854d70091c408403b48ff",
+      "size": 23362
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-render-final.log",
+      "sha256": "a926412ac7fe6d5e762d069303874d188b0dbc3dc3248f6f2c3c9c6535f98160",
+      "size": 57285
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-render-protocol-repair-final.log",
+      "sha256": "f3abcd6a7e81f40352cadc2e67436cef94fa934b45528ea0f6bc0c68673fd6a0",
+      "size": 113
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-unit-0b0ed2a.log",
+      "sha256": "9c3f3d7581a30b0be72e37283664b54fc893fe176fd2c137d5317c961d1a6a8c",
+      "size": 2129
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-unit-final.log",
+      "sha256": "bbd4219ca74e6f12b536614aca7a3cd411d5c818e05d2675b66f6698f09c9c90",
+      "size": 2129
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-unit-first.log",
+      "sha256": "3b92de3be4d6a39e19cafaa3ceabbd983b33775a4ccaff5caad5b64b741a96df",
+      "size": 30881
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/read-docs/notes-engineering-20261014/rc3-02-wheel-build-0b0ed.log",
+      "sha256": "23b4c557c292b51195f17e66f495ce89fafdf8c48430c7ed6316a4879d7a9383",
+      "size": 31668
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight/report.md",
+      "sha256": "e1fca5dea99bc5128dcb330da86ec2dce5a666dd2019f7ae7cc87840d143bd53",
+      "size": 7061
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/probe_phase2_preflight.py",
+      "sha256": "f044d3202c6103aa37fcaf9bd9b4f2a3f87c64e268ad82604798b79692e691cc",
+      "size": 11340
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-02-delivery-review/phase2-preflight-run.log",
+      "sha256": "5a1e19ac885ddc0910d44a993d613ba4fc3e8430ad3029742e6116d272e282a5",
+      "size": 649
+    }
+  ]
+}

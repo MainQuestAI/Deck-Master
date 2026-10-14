@@ -1,0 +1,130 @@
+{
+  "change": {
+    "description": "实际打开本页 Page、原始蓝图、SVG 预览，核对正文、数字、模块、图标语义、连线方向和遮挡；提交 blueprint_content、blueprint_fidelity、readability 三类记录。关闭旧发现时，replaces 必须保持同一 review_id、finding_id、page_id、kind 和 review_stage。must_fix 需本页新产物与复核证据；needs_judgment 可用具体理由、观察与证据接受合理差异。不得把原图文字当事实源。",
+    "kind": "task_update",
+    "operation_id": "dispatch-f52cb5796329",
+    "read_set": []
+  },
+  "content_basis": {
+    "input_digest": "37c3316fcce8ce58055c4a38ddee2d14073a999c28909254fb58b518cfab1904",
+    "input_revision_id": null,
+    "resolved_by_task_id": "d989010c820f"
+  },
+  "created_at": "2026-10-14T21:27:18Z",
+  "design_context": {
+    "allowed_asset_ids": [],
+    "assets": [],
+    "canvas": {
+      "fit": "contain",
+      "height_px": 900,
+      "slide_height_in": 7.5,
+      "slide_width_in": 13.333333333333334,
+      "width_px": 1600
+    },
+    "default_style_id": "default",
+    "fonts": [
+      {
+        "asset_id": null,
+        "face": "Regular",
+        "fallback_font_ids": [],
+        "family": "Noto Sans CJK SC",
+        "font_id": "body",
+        "weight": 400
+      },
+      {
+        "asset_id": null,
+        "face": "Bold",
+        "fallback_font_ids": [],
+        "family": "Noto Sans CJK SC",
+        "font_id": "heading",
+        "weight": 700
+      }
+    ],
+    "language": "zh-CN",
+    "styles": [
+      {
+        "colors": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+        "style_id": "default",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      }
+    ]
+  },
+  "outputs": {
+    "pptx": null,
+    "render_report": null,
+    "trace": null
+  },
+  "pages": [
+    {
+      "blueprint": {
+        "path": ".deckmaster/objects/5e/5eef91859c0784d9877c5316e500026ff08e42a26b148692f5dffbffd128155c.json",
+        "sha256": "5eef91859c0784d9877c5316e500026ff08e42a26b148692f5dffbffd128155c"
+      },
+      "page": {
+        "path": ".deckmaster/objects/9f/9fe57b9283d5efe09eeb77fc03f73358f023f644af6347c3393a013b774123b4.json",
+        "sha256": "9fe57b9283d5efe09eeb77fc03f73358f023f644af6347c3393a013b774123b4"
+      },
+      "page_id": "p-a",
+      "ppt_preview": null,
+      "svg": {
+        "path": ".deckmaster/objects/d0/d07fb29f1fe55a9383a78d41a4ee7ae25debea9ea6950fd9b6ea07a9795d644c.json",
+        "sha256": "d07fb29f1fe55a9383a78d41a4ee7ae25debea9ea6950fd9b6ea07a9795d644c"
+      },
+      "svg_preview": {
+        "path": ".deckmaster/objects/15/1555b0fb997e862c6e831c6f8b08fe7a7b184a24601b802a98206c043a842803.json",
+        "sha256": "1555b0fb997e862c6e831c6f8b08fe7a7b184a24601b802a98206c043a842803"
+      }
+    }
+  ],
+  "parent_revision_id": "49e554a976a149bbb21ff7a27ccfb975",
+  "policy": {
+    "authoring_mode": "image_blueprint",
+    "external_call_limit": null,
+    "professional_review_required_for_delivery": false,
+    "user_stop": false
+  },
+  "project_id": "actual_available_renderer",
+  "reviews": [],
+  "revision_id": "1811d186aa4d4ddda937d53cd04ba2d3",
+  "schema_version": "deck_document.v1",
+  "sources": [],
+  "task": {
+    "audience": "",
+    "brief": "Synthetic exact CI renderer dependency contrast",
+    "existing_decisions": [],
+    "page_limit": null,
+    "presentation_mode": "live",
+    "presentation_mode_source": "default",
+    "scenario": "",
+    "title": "Deck task"
+  },
+  "tasks": [
+    {
+      "path": ".deckmaster/objects/89/893cfc5105e44d72b3f1a75018b6470b7b23df542e9836da81510365a3f45d6a.json",
+      "sha256": "893cfc5105e44d72b3f1a75018b6470b7b23df542e9836da81510365a3f45d6a"
+    },
+    {
+      "path": ".deckmaster/objects/64/646e77010764bfeff58b8b56a1e7dce309633287f8924a4e2105c64b0b7e58de.json",
+      "sha256": "646e77010764bfeff58b8b56a1e7dce309633287f8924a4e2105c64b0b7e58de"
+    },
+    {
+      "path": ".deckmaster/objects/fe/fe712a41174e106361a22988fb873f51d94b486b1e6655e6badb0ed1a8fa122b.json",
+      "sha256": "fe712a41174e106361a22988fb873f51d94b486b1e6655e6badb0ed1a8fa122b"
+    },
+    {
+      "path": ".deckmaster/objects/ab/ab982fb9e97a1738395417ad00914bd71a7eaf1b272ec85b02fca8eab52e051c.json",
+      "sha256": "ab982fb9e97a1738395417ad00914bd71a7eaf1b272ec85b02fca8eab52e051c"
+    }
+  ]
+}
