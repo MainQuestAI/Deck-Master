@@ -1,15 +1,15 @@
 {
   "target_version": "V1.0.0-RC3",
-  "candidate_id": null,
-  "candidate_sha": null,
-  "candidate_tree": null,
+  "candidate_id": "rc3-dev1-b00df873",
+  "candidate_sha": "b00df8730b3254b43a7ce3b5fe8c085d47ac4132",
+  "candidate_tree": "1ee9abc0e5254ce7c3348f5e980b2721b2db133b",
   "baseline_sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
   "specification_ref": {
     "archive_sha256": "3b97b4f22c68a980b212512f1aad4d11789b602b434bedd9a607fe8e9e0493fe",
     "entry": "docs/specs/deck-master-v1.0.0-rc3/README.md"
   },
-  "method_manifest": null,
-  "package_manifest": null,
+  "method_manifest": "docs/reports/rc3/candidate-install.json",
+  "package_manifest": "docs/reports/rc3/candidate-install.json",
   "note": "Active RC3 implementation ledger. Current engineering evidence does not close absent L2–L6 evidence; preserve prior candidate and first-draft failures.",
   "ac_results": [
     {
@@ -875,5 +875,7 @@
     "repaired_current": null,
     "method_rerun": null
   },
-  "release_conclusion": "NOT_RUN"
+  "release_conclusion": "NOT_RUN",
+  "candidate_stage": "development/in_progress",
+  "engineering_verification": "docs/reports/rc3/engineering-verification.json"
 }

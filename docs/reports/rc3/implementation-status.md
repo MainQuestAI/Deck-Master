@@ -24,6 +24,15 @@ checks. A report import remains tool/needs_review even if its untrusted payload
 claims a human pass. Capabilities return needs_reviewer until a real trusted
 review adapter is present. CLI JSON cannot supply adapter context.
 
+Current verification: **1669** non-browser/non-render tests passed; the focused
+75-test note-link fix regression passed. The existing rendering suite passed
+52 tests. The existing browser suite passed 399 tests and had four service
+startup timeouts; all four passed in a fresh retry. New Studio collaboration
+controls still require implementation and their own browser checks. Ruff and
+diff checks passed. `candidate-install.json` records the exact wheel/source,
+all packaged contract hashes, shared-method reads and four Skill hashes from
+the isolated installation and temporary registry. No real HOME was changed.
+
 ## Remaining full implementation and acceptance
 
 1. RC3-01: preserve/fix the twelve anchor inputs and first drafts; execute the
