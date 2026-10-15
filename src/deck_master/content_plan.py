@@ -152,7 +152,7 @@ def validate_source_links(store, document, links, where: str, _cache: dict | Non
             _fail(f"{where}[{index}]/locator", "locator does not exist in this stored source version")
 
 
-def validate_plan_input_v2(store, document, value: dict) -> None:
+def validate_plan_input_v2(store, document, value: dict, *, mode="planned", imported_manuscript=None) -> None:
     """Structural input validation before any Page/Plan object is written."""
     from .models import validate_content_plan_semantics
     shell = {
@@ -160,10 +160,10 @@ def validate_plan_input_v2(store, document, value: dict) -> None:
         "project_id": document["project_id"], "task_id": None, "origin": "host_composed",
         "basis": {"revision_id": document["revision_id"],
                   "input_digest": compute_input_digest(document)}, "previous_ref": None,
-        "mode": "planned", "narrative_ref": None, "imported_manuscript": None,
+        "mode": mode, "narrative_ref": None, "imported_manuscript": imported_manuscript,
         "input": value, "page_links": [],
     }
-    validate_content_plan_semantics(shell)
+    validate_content_plan_semantics(shell, require_page_links=False)
     cache: dict = {}
     for role in value.get("page_roles") or []:
         validate_source_links(store, document, role.get("source_links"),
@@ -179,7 +179,9 @@ def build_v2_plan(store, document, task, plan_input: dict, page_refs: list[dict]
     plan links every real Page hash exactly once — ghost pages and partial links
     are impossible by construction.
     """
-    validate_plan_input_v2(store, document, plan_input)
+    validate_plan_input_v2(store, document, plan_input,
+                           mode="imported_mapping" if mode == "imported_mapping" else "planned",
+                           imported_manuscript=imported_manuscript)
     previous_ref = document.get("content_plan")
     previous = None
     if previous_ref:
@@ -204,7 +206,7 @@ def build_v2_plan(store, document, task, plan_input: dict, page_refs: list[dict]
             for page_id in plan_input.get("page_order") or []
         ]
         unknown = sorted(set(by_page) - set(roles_by_page))
-        if unknown:
+        if unknown and mode != "imported_mapping":
             _fail("input/page_roles", f"every bound page needs exactly one role; missing: {unknown}")
     record = {
         "schema_version": "content_plan.v2",

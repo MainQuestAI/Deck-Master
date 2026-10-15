@@ -491,6 +491,53 @@ def _preproduction_reviews(store, document) -> list[dict]:
     return records
 
 
+def _unit_dependency_equivalent(store, document, review, key, digest):
+    """Interpret real immutable subjects through this unit's editorial inputs.
+
+    This never changes a review or promotes its assurance. Visual bytes and
+    speech retain their own checks; design-only layout does not change copy.
+    """
+    import copy
+    from .design_requirements import page_semantic_projection, plan_global_projection
+    from .models import canonical_json_bytes, sha256_bytes
+    from .store import StoreError
+    if not isinstance(digest, str) or len(digest) != 64:
+        return False
+    old_ref = {"path": f".deckmaster/objects/{digest[:2]}/{digest}.json", "sha256": digest}
+    try:
+        before = store.read_object_json(old_ref)
+        if key == 'content:content_plan' and document.get('content_plan'):
+            after = store.read_object_json(document['content_plan'])
+            if before.get('schema_version') != after.get('schema_version'):
+                return False
+            if before.get('schema_version') != 'content_plan.v2':
+                return False
+            ids = {dep['identity'].split(':', 1)[1] for dep in review.get('dependencies', [])
+                   if dep.get('kind') == 'content' and dep.get('identity', '').startswith('page:')}
+            def projected(plan):
+                roles = copy.deepcopy([item for item in plan['input']['page_roles'] if item['page_id'] in ids])
+                for role in roles:
+                    role.pop('content_profile', None); role.pop('density_rationale', None)
+                    if review.get('kind') != 'speech': role.pop('timing_seconds', None)
+                return {'global': plan_global_projection(plan), 'roles': roles,
+                        'issues': plan['input']['issues'], 'tradeoff_issue_ids': plan['input']['tradeoff_issue_ids']}
+            return projected(before) == projected(after)
+        if key.startswith('content:page:'):
+            pid = key.split(':', 2)[2]
+            entry = next(item for item in document['pages'] if item['page_id'] == pid)
+            after = store.read_object_json(entry['page'])
+            def projected(page):
+                mapping = copy.deepcopy(page.get('content_mapping'))
+                if mapping is not None and review.get('kind') != 'speech': mapping.pop('speech_segments', None)
+                result = {'page': page_semantic_projection(page), 'content_mapping': mapping}
+                if review.get('kind') == 'speech': result['speaker_notes'] = page.get('speaker_notes')
+                return result
+            return before.get('page_id') == pid and projected(before) == projected(after)
+    except (StoreError, OSError, ValueError, KeyError, TypeError, StopIteration):
+        return False
+    return False
+
+
 def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict]:
     """Preproduction reviews that can satisfy a current manuscript unit."""
     digests = _current_artifact_digests(store, document)
@@ -503,12 +550,14 @@ def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict
         deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
                 for dep in review.get("dependencies") or []}
         stale = [key for key, value in deps.items()
-                 if key in digests and digests[key] != value and value not in notes_aliases.get(key, set())]
+                 if key in digests and digests[key] != value and value not in notes_aliases.get(key, set())
+                 and not _unit_dependency_equivalent(store, document, review, key, value)]
         if document.get("narrative") and deps.get("content:narrative") != document["narrative"]["sha256"]:
             stale.append("content:narrative")
         if (document.get("content_plan") and
                 deps.get("content:content_plan") != document["content_plan"]["sha256"] and
-                deps.get("content:content_plan") not in notes_aliases.get('content:content_plan', set())):
+                deps.get("content:content_plan") not in notes_aliases.get('content:content_plan', set()) and
+                not _unit_dependency_equivalent(store, document, review, 'content:content_plan', deps.get('content:content_plan'))):
             stale.append("content:content_plan")
         if page_ids and not set(page_ids) <= {str(dep.get("identity", "")).split(":", 1)[-1]
                                              for dep in review.get("dependencies") or []

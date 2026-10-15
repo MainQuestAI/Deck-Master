@@ -139,10 +139,10 @@ def test_encoding_vector_and_freeze_replay_preserve_exact_input(flow):
     project, store, task, _ = flow
     start(flow)
     base, op = store.current_revision_id(), str(uuid.uuid4())
-    value = {**task["generation_input"], "prompt": "保留  事实\n", "parameters": {"transparent_background": False}}
+    value = {**task["generation_input"], "parameters": {"transparent_background": False}}
     args = dict(task_id=task["task_id"], input=value, base_revision=base, operation_id=op)
     first = generation.freeze(project, **args)
-    other = freeze(flow, prompt="another frozen input")
+    other = freeze(flow, parameters={"transparent_background": True})
     replay = generation.freeze(project, **args)
     assert replay["input"] == value and replay["input_hash"] == sha256_bytes(canonical_json_bytes(value))
     assert replay["revision_id"] == first["revision_id"]

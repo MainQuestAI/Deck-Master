@@ -652,7 +652,8 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
             return existing
     page_ref = page_entry["page"]
     page = store.read_object_json(page_ref)
-    design = document.get("design_context") or {}
+    from .production import resolve_generation_design
+    design = resolve_generation_design(store, document, page_entry)
     request = project_prompt(page, design, design.get("assets") or [])
     request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
@@ -698,6 +699,8 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
         },
     )
     bumped["tasks"] = list(document.get("tasks") or []) + [task_ref]
+    from .models import require_writer
+    require_writer(bumped, "rc3.v1")
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"],
         document=bumped,

@@ -113,7 +113,10 @@
         ],
         "properties": {
           "collector": {
-            "const": "codex-session-image.v1"
+            "enum": [
+              "codex-session-image.v1",
+              "native-host-image.v1"
+            ]
           },
           "submitted": {
             "type": "object",

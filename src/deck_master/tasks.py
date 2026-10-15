@@ -1716,6 +1716,9 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
         },
     )
     new_document = _replace_task_ref(new_document, task, task_ref, store)
+    if is_new(task):
+        from .models import require_writer
+        require_writer(new_document, "rc3.v1")
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=new_document, operation_id=begin_operation_id
     )
@@ -1795,6 +1798,7 @@ def call_settle(
     report_ext: str = "json",
     invocation_ref: str | None = None,
     attempt_id: str | None = None,
+    adapter_context=None,
 ) -> dict:
     """Record a real call observation; the report is not a permanent sixth object."""
     if outcome not in CALL_OUTCOMES:
@@ -1820,8 +1824,17 @@ def call_settle(
     updated_task = task
     if is_new(task):
         updated_task, settled, ref = settle_attempt(store, document, task, target, attempt_id=attempt_id,
-                                                   outcome=outcome, report_bytes=report_bytes, invocation_ref=invocation_ref)
+                                                   outcome=outcome, report_bytes=report_bytes, invocation_ref=invocation_ref,
+                                                   adapter_context=adapter_context)
         extra = {"attempt_id": attempt_id, "attempt_ref": ref}
+        report = json.loads(report_bytes) if report_bytes else {}
+        if isinstance(report, dict) and report.get("source") == "native_host_image.v1":
+            observed_attempt = store.read_object_json(ref)
+            observation = store.read_object_json(observed_attempt["observations"][-1])
+            extra["native_observation_status"] = ("accepted" if observation["observer"] == "tool_observed" else "rejected")
+            rejection = (observation.get("reported") or {}).get("native_observation_rejected")
+            if rejection:
+                extra["observation_rejection"] = rejection
     else:
         if attempt_id is not None:
             raise EnvelopeError("attempt_id", "old tasks cannot bind generation attempts")
@@ -1848,6 +1861,9 @@ def call_settle(
         },
     )
     new_document = _replace_task_ref(new_document, task, task_ref, store)
+    if extra.get("native_observation_status") is not None:
+        from .models import require_writer
+        require_writer(new_document, "rc3.v1")
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=new_document, operation_id=settle_operation_id
     )

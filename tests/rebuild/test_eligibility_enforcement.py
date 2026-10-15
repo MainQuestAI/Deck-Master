@@ -280,6 +280,8 @@ def test_continue_reports_a_blocked_dispatch_as_a_decision_card(tmp_path):
 
 def test_continue_routes_when_the_request_covers_the_work(tmp_path):
     project, store = _project(tmp_path)
+    from test_rc3_notes_visual_inputs import _seed_imported_plan
+    _seed_imported_plan(store)
     _start(project, store)
     _settle_preproduction(store, seed="continue-routes")
     # Without the execute grant continue answers with a card (never a side
@@ -314,6 +316,8 @@ def test_review_only_request_refuses_page_import_and_blueprint_dispatch(tmp_path
 
 def test_blueprint_dispatch_requires_scope_and_authorization(tmp_path):
     project, store = _project(tmp_path)
+    from test_rc3_notes_visual_inputs import _seed_imported_plan
+    _seed_imported_plan(store)
     _start(project, store, scope=_scope(page_ids=["p1"]))
     _settle_preproduction(store, seed="blueprint-scope")
     entry = next(e for e in store.load_document()["pages"] if e["page_id"] == "p1")

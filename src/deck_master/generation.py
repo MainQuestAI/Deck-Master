@@ -14,7 +14,7 @@ from .snapshots import load_snapshot
 from .store import ConflictError, Store, _validate_operation_id
 
 PROTOCOL = "generation.v1"
-CAPABILITIES = ["generation_request_freeze", "attempt_binding", "native_tool_observation"]
+CAPABILITIES = ["generation_request_freeze", "attempt_binding", "native_tool_observation", "content_requirements_v1"]
 
 
 class GenerationError(TypedServiceError):
@@ -68,10 +68,13 @@ def prepared_input(store, document, task):
     dispatched = load_snapshot(store, task["dispatch_revision"])
     entry = next(p for p in dispatched["pages"] if p["page_id"] == prepared["page_id"])
     page = store.read_object_json(entry["page"])
-    design, _ = resolve_design(page, dispatched["design_context"], dispatched["design_context"].get("assets") or [])
+    design = copy.deepcopy(prepared.get("resolved_design_context"))
+    if design is None:
+        design, _ = resolve_design(page, dispatched["design_context"], dispatched["design_context"].get("assets") or [])
     result = {"schema_version": "generation_input.v1", "prompt": prepared["prompt"],
             "page": {"page_id": entry["page_id"], "page_ref": entry["page"]}, "design_context": design,
-            "template_ref": None, "references": copy.deepcopy(task.get("stage_request", {}).get("references", [])), "parameters": {}, "constraints": {},
+            "template_ref": None, "references": copy.deepcopy(task.get("stage_request", {}).get("references", [])),
+            "parameters": {"transparent_background": False} if design.get("content_requirements") else {}, "constraints": {},
             "basis": {"project_id": document["project_id"], "revision_id": dispatched["revision_id"],
                       "produced_against": task["produced_against"]}}
     recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
@@ -79,6 +82,8 @@ def prepared_input(store, document, task):
         result["style_recipe_ref"] = copy.deepcopy(recipe_ref)
         result["constraints"] = {"preserve_target_content": True, "style_recipe_ref": copy.deepcopy(recipe_ref)}
         recipe = store.read_object_json(recipe_ref)
+        if recipe['schema_version'] == 'style_recipe.v3':
+            result['constraints']['recipe_parameters'] = copy.deepcopy(design['recipe_parameters'])
         if recipe['schema_version'] == 'style_recipe.v2':
             result['constraints']['visual_style_ref'] = recipe['input']['visual_style_ref']
             from .styles import effective_spec
@@ -135,7 +140,7 @@ def _validate_input(store, document, task, value):
     if value.get("style_recipe_ref") != expected.get("style_recipe_ref") or (expected.get("style_recipe_ref") and value["constraints"] != expected["constraints"]):
         raise _error("generation_binding_conflict", "input/style_recipe_ref", "preserve the dispatched recipe and content constraints", conflict=True)
     allowed = set()
-    if task.get('stage_request'):
+    if task.get('stage_request') or expected["design_context"].get("content_requirements"):
         for key in ('prompt', 'references'):
             if value[key] != expected[key]:
                 raise _error('generation_binding_conflict', 'input/' + key, 'input differs from the committed stage request', conflict=True)
@@ -224,12 +229,15 @@ def begin_attempt(store, document, task, allowance_id, execution_ref, request_id
                "task_id": task["task_id"], "project_id": document["project_id"], "request_ref": request_ref,
                "allowance_id": allowance_id, "execution_ref": execution_ref, "started_at_ms": time.time_ns() // 1000000,
                "previous_ref": None, "observations": [], "output_refs": []}
+    from .native_image_evidence import execution_installation_identity
+    attempt["execution_identity"] = execution_installation_identity()
     validate_schema("generation_attempt", attempt)
     ref = store.put_json_object(attempt)
     return {**task, "generation_attempts": [*(task.get("generation_attempts") or []), ref]}, attempt, ref
 
 
-def settle_attempt(store, document, task, target, *, attempt_id, outcome, report_bytes, invocation_ref):
+def settle_attempt(store, document, task, target, *, attempt_id, outcome, report_bytes, invocation_ref,
+                   adapter_context=None):
     if not attempt_id:
         raise _error("generation_attempt_required", "attempt_id", "settlement must name its begun attempt")
     attempt, prior_ref = _read_owned(store, task, "generation_attempts", attempt_id)
@@ -239,7 +247,31 @@ def settle_attempt(store, document, task, target, *, attempt_id, outcome, report
     if not isinstance(report, dict):
         raise _error("generation_request_invalid", "report", "observation report must be a JSON object")
     output_ref = None
-    if report.get("source") == "codex_session.v1":
+    if report.get("source") == "native_host_image.v1":
+        from .native_image_evidence import (NativeObservationRejected, consume_image_context,
+                                            unusable_receipt_ref)
+        selector = {key: report.get(key) for key in ("provider_id", "event_id")}
+        try:
+            if set(report) != {"source", "provider_id", "event_id"}:
+                raise NativeObservationRejected("report", "native selectors cannot carry self-reported claims")
+            if outcome != "consumed":
+                raise NativeObservationRejected("outcome", "a successful native completion is a consumed call")
+            metadata, output = consume_image_context(adapter_context, store, document, task, attempt, selector)
+            if invocation_ref and invocation_ref != metadata["invocation_ref"]:
+                raise NativeObservationRejected("invocation_ref", "native invocation differs from the supplied identity")
+            invocation_ref = metadata["invocation_ref"]
+            output_ref = store.put_blob(output, ext="png")
+        except Exception as exc:  # proof admission never rolls back an already sent call
+            # Proof rejection must not roll back an already sent call's facts.
+            # The report stays Host-attested and cannot satisfy image adoption.
+            metadata = {"schema_version": "tool_observation.v1", "observer": "host_reported", "collector": None,
+                        "submitted": None, "coverage": {}, "output": None, "invocation_ref": invocation_ref,
+                        "reported": {"selector": report, "native_observation_rejected": {
+                            "code": getattr(exc, "error_code", "native_image_observation_rejected"),
+                            "field": getattr(exc, "path", "adapter_context"),
+                            "message": getattr(exc, "detail", "native observation provider validation failed")},
+                            "unusable_receipt_ref": unusable_receipt_ref(adapter_context)}}
+    elif report.get("source") == "codex_session.v1":
         if outcome != "consumed":
             raise _error("generation_binding_conflict", "outcome", "a completed native output is a consumed call", conflict=True)
         if attempt["execution_ref"] != f"codex:{report.get('thread_id')}:{report.get('turn_id')}":

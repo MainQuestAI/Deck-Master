@@ -26,7 +26,7 @@ def fail(field, message, *, conflict=False):
                                     exit_code=5 if conflict else 2)
 
 
-def _reference_files(store, document, references):
+def _reference_files(store, document, references, *, original=False):
     files = []
     for reference in references:
         if reference.get('kind') == 'external':
@@ -34,7 +34,7 @@ def _reference_files(store, document, references):
             record, _ = owned(store, document, reference['reference_id'])
             if record['artifact_ref'] != reference['artifact_ref'] or reference['role'] != 'reference':
                 fail('references', 'external reference bytes differ from the imported version')
-            artifact = store.read_object_json(record['preview_ref'])
+            artifact = store.read_object_json(record['artifact_ref'] if original else record['preview_ref'])
             store.read_object_bytes(artifact['file'])
             files.append({'file': artifact['file'], 'role': 'reference'})
             continue
@@ -207,6 +207,9 @@ def commit(project, *, plan_id, base_revision, operation_id):
         for task_id, action in zip(task_ids, record['actions']):
             task = _new_task(store, updated, document, record, change_ref, task_id, action)
             updated['tasks'].append(store.put_json_object(task))
+        if any(action['kind'] == 'blueprint' for action in record['actions']):
+            from .models import require_writer
+            require_writer(updated, 'rc3.v1')
         result = {'status': 'awaiting_host', 'revision_id': updated['revision_id'], 'change_id': change_id,
                   'change_ref': change_ref, 'task_ids': task_ids, 'max_calls': record['max_calls']}
         return operations.commit_locked(store, document=updated, base_revision=base_revision,
@@ -219,9 +222,13 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
     protocol = {'protocol_version': 'changes.v1', 'required_capabilities': ['change_plan']}
     if action['kind'] == 'blueprint':
         from .generation import protocol_fields
-        from .production import project_prompt
+        from .production import project_prompt, resolve_generation_design
         from .service import _resolve_permitted_asset_files
-        design = basis['design_context']
+        recipe_ref = plan['input'].get('style_recipe_ref')
+        recipe = store.read_object_json(recipe_ref) if recipe_ref else None
+        # Historical v1/v2 style execution keeps its original contract.
+        compiled_ref = recipe_ref
+        design = resolve_generation_design(store, basis, entry, recipe_ref=compiled_ref)
         request = project_prompt(store.read_object_json(entry['page']), design, design.get('assets') or [])
         if plan['input'].get('style_recipe_ref'):
             from .styles import apply_request
@@ -258,13 +265,17 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
     task.update(protocol, change_binding={'change_ref': change_ref, 'action_id': action['action_id']})
     if 'mode' in action:
         stage = 'content' if action['write_slots'] == ['page'] and action['mode'] == 'trial' else action['stage']
+        v3 = bool(plan['input'].get('style_recipe_ref') and store.read_object_json(plan['input']['style_recipe_ref'])['schema_version'] == 'style_recipe.v3')
         task['stage_request'] = {'mode': action['mode'], 'stage': stage,
-                                 'references': _reference_files(store, basis, plan['input'].get('references', []))}
+                                 'references': _reference_files(store, basis, plan['input'].get('references', []), original=v3)}
         if plan['input'].get('style_recipe_ref'):
             task['stage_request']['style_recipe_ref'] = plan['input']['style_recipe_ref']
             task['inputs'].append(plan['input']['style_recipe_ref'])
             task['required_capabilities'].append('style_recipe')
-            if store.read_object_json(plan['input']['style_recipe_ref'])['schema_version'] == 'style_recipe.v2':
+            selected_recipe = store.read_object_json(plan['input']['style_recipe_ref'])
+            if selected_recipe['schema_version'] == 'style_recipe.v3':
+                task['required_capabilities'].append('style_recipe_v3')
+            if selected_recipe['schema_version'] == 'style_recipe.v2' or (selected_recipe['schema_version'] == 'style_recipe.v3' and selected_recipe['intent'] == 'restyle'):
                 task['required_capabilities'].append('visual_reference')
                 # The target image anchors all explicitly preserved dimensions.
                 original = store.read_object_json(entry['blueprint'])

@@ -47,6 +47,18 @@ def stored_blueprint_request(store, task):
                 or not isinstance(projection.get("language"), str)
                 or not projection["customer_visible"].get("title")):
             raise ModelError("task/inputs", "incomplete stored blueprint preparation")
+        resolved = value.get("resolved_design_context")
+        if resolved is not None:
+            from .models import validate_schema
+            validate_schema("content_requirements", resolved.get("content_requirements"))
+            validate_schema("content_basis", resolved.get("content_basis"))
+            page_ref = resolved["content_basis"]["page_ref"]
+            if page_ref not in task.get("inputs", []):
+                raise ModelError("task/inputs", "requirements Page is outside actual immutable task inputs")
+            page = store.read_object_json(page_ref)
+            actual = project_prompt(page, resolved, resolved.get("assets") or [])
+            if projection != actual["projection"] or not value["prompt"].endswith(actual["prompt"]):
+                raise ModelError("task/inputs", "requirements/design projection differs from its actual prompt")
         found.append((value, ref))
     if len(found) > 1 and any(item[0] != found[0][0] for item in found[1:]):
         raise ModelError("task/inputs", "conflicting immutable blueprint preparations")
@@ -96,6 +108,63 @@ def resolve_design(page, design, permitted_assets):
     effective["allowed_asset_ids"] = sorted(page_ids)
     effective["assets"] = [a for a in permitted_assets if a["asset_id"] in page_ids]
     return effective, style
+
+
+def resolve_generation_design(store, document, page_entry, *, recipe_ref=None):
+    """Resolve the exact current Page/Plan/recipe consumption before prompting."""
+    from .design_requirements import resolve_content_requirements
+    page = store.read_object_json(page_entry["page"])
+    design = document["design_context"]
+    if recipe_ref is not None:
+        recipe = store.read_object_json(recipe_ref)
+    else:
+        recipe = None
+    if recipe and recipe.get("schema_version") == "style_recipe.v3":
+        from .design_recipe import compile_design
+        resolved = compile_design(page, design, recipe, page_entry["page_id"])
+    else:
+        resolved, _ = resolve_design(page, design, design.get("assets") or [])
+        if recipe:
+            # Old executable recipes retain their actual selected rule contract.
+            if recipe.get("schema_version") == "style_recipe.v2":
+                from .styles import effective_spec
+                resolved["recipe_parameters"] = effective_spec(recipe)
+            else:
+                resolved["recipe_parameters"] = deepcopy(recipe["dimensions"])
+    # Only used fonts and their explicitly registered fallback closure enter
+    # this consumer; changing an unused registered face cannot stale it.
+    fonts = {font["font_id"]: font for font in resolved.get("fonts") or []}
+    typography = resolved["styles"][0]["typography"]
+    used = {typography["body_font_id"], typography["heading_font_id"]}
+    pending = list(used)
+    while pending:
+        font = fonts[pending.pop()]
+        for fallback in font.get("fallback_font_ids") or []:
+            if fallback not in fonts:
+                raise ModelError("fonts/fallback_font_ids", "fallback is not registered")
+            if fallback not in used:
+                used.add(fallback); pending.append(fallback)
+    resolved["fonts"] = [font for font in resolved.get("fonts") or [] if font["font_id"] in used]
+    from .dependency_slices import accepted_decision
+    decisions = []
+    for ref in (document.get("collaboration") or {}).get("decisions", []):
+        decision = store.read_object_json(ref)
+        if (decision.get("topic") in ("style", "tradeoff")
+                and page_entry["page_id"] in decision.get("scope", {}).get("page_ids", [])
+                and accepted_decision(store, document, ref)):
+            decisions.append(ref)
+    resolved.update(resolve_content_requirements(
+        store, document, page_entry["page"], recipe_ref=recipe_ref,
+        decision_refs=decisions, recipe_parameters=resolved.get("recipe_parameters")))
+    return resolved
+
+
+def consumed_design(resolved):
+    """Audit Refs stay recorded; freshness compares the actual consumed values."""
+    result = {key: value for key, value in resolved.items() if key != "content_basis"}
+    if resolved.get("content_basis"):
+        result["consumed_basis"] = resolved["content_basis"]["consumed"]
+    return result
 
 
 def style_font_fingerprint(design, style, asset_sha):
@@ -160,6 +229,9 @@ def project_prompt(
             "style_ref": visual.get("style_ref") or resolved_design_context.get("default_style_id"),
         },
     }
+    for key in ("content_requirements", "recipe_parameters", "recipe_overrides"):
+        if key in resolved_design_context:
+            projection[key] = deepcopy(resolved_design_context[key])
     payload = json.dumps(projection, ensure_ascii=False, indent=2, sort_keys=True)
     prompt = (
         "Use case: productivity-visual\n"
@@ -177,7 +249,7 @@ def project_prompt(
         "use only permitted assets; no watermark; no internal notes\n"
         "Structured input:\n" + payload
     )
-    return {
+    result = {
         "schema_version": "deck_blueprint_request.v1",
         "page_id": page.get("page_id"),
         "prompt": prompt,
@@ -187,3 +259,6 @@ def project_prompt(
         "host": "codex_imagegen",
         "requires": ["image_generation", "image_inspection", "local_file_access"],
     }
+    if "content_requirements" in resolved_design_context:
+        result["resolved_design_context"] = deepcopy(resolved_design_context)
+    return result

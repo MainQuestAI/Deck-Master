@@ -37,13 +37,19 @@ def result_kind(candidate):
     return candidate.get('result_kind', 'artifact')
 
 
-def generation_basis(store, document, page_id, stage, *, preserve_blueprint=False):
+def generation_basis(store, document, page_id, stage, *, preserve_blueprint=False, task=None):
     from .production import resolve_design
     entry = next((e for e in document['pages'] if e['page_id'] == page_id), None)
     if entry is None:
         return None
     page = store.read_object_json(entry['page'])
     design, _ = resolve_design(page, document['design_context'], document['design_context'].get('assets') or [])
+    if stage != 'content' and task and task.get('kind') == 'blueprint':
+        from .production import stored_blueprint_request, resolve_generation_design, consumed_design
+        prepared, _ = stored_blueprint_request(store, task)
+        if prepared and prepared.get('resolved_design_context'):
+            design = consumed_design(resolve_generation_design(store, document, entry,
+                       recipe_ref=task.get('stage_request', {}).get('style_recipe_ref')))
     if stage == 'content':
         # Precise single-page scope: the Page identity decides adoption
         # concurrency; the digests stay recorded dispatch facts, not gates.
@@ -191,7 +197,7 @@ def _state(store, document, candidate, task=None):
         target = entry.get(candidate['stage']) if entry else None
         target_reference = (task or {}).get('stage_request', {}).get('target_reference_ref')
         preserve_blueprint = candidate['stage'] == 'blueprint' and bool(target_reference)
-        basis = generation_basis(store, document, candidate['page_id'], candidate['stage'], preserve_blueprint=preserve_blueprint)
+        basis = generation_basis(store, document, candidate['page_id'], candidate['stage'], preserve_blueprint=preserve_blueprint, task=task)
         expected = candidate['generation_basis']
         if preserve_blueprint:
             # Earlier v2 candidates stored a null blueprint basis. Their exact
@@ -326,7 +332,7 @@ def record_result(store, *, document, task, updated_task, artifacts, artifact_re
                  'created_at': tasks._utc_now_iso(), 'page_id': page_id, 'stage': stage,
                  'base_revision': task['dispatch_revision'],
                  'generation_basis': generation_basis(store, dispatched, page_id, stage,
-                     preserve_blueprint=bool(task.get('stage_request', {}).get('target_reference_ref'))),
+                     preserve_blueprint=bool(task.get('stage_request', {}).get('target_reference_ref')), task=task),
                  'request_ref': generation_binding['request_ref'] if generation_binding else None,
                  'attempt_ref': generation_binding['attempt_ref'] if generation_binding else None,
                  'target_ref': entry.get(stage), 'result_ref': artifact_refs[0], 'status': 'available'}

@@ -42,4 +42,14 @@ generatedImage(result);
 
 观察层级由核心确定。Host JSON 即使填写 `provider_receipt`、provider 或 signature，也只作为 Host 申报。这个采集器基于当前用户的 Codex 本地运行时记录，不是供应商签名验证。
 
+## RC3 受信 SDK 原生图像观察
+
+当前宿主的真实 `image_gen__imagegen` 事件若没有 Desktop session 文件，不能造 JSONL 或把输出复制成 Desktop 完成事件。受信 Host controller 可在 Python SDK 启动时配置 `NativeImageRegistry` 和 `NativeImageRuntime`，通过 protected_transport 的 provider 验证真实工具参数、原始 PNG 与完成观察。公开 JSON 只选择 `{source:"native_host_image.v1",provider_id,event_id}`，不能自报信任。
+
+先按工作单实际 required_capabilities 领取、冻结并 begin。新 preparation 的 parameters 显式为 `{"transparent_background":false}`；只冻结本次工具可实际接收的参数。controller 绑定 `image_binding` 的 exact Task/Request/Attempt/allowance、prompt、参数、ordered refs、control 和真实 execution/install identity 与 settlement reader identity。provider 完成记录同时绑定原始 PNG hash、真实开始/完成时间和有效期；未知 platform invocation/model/seed/费用保持 null/unknown/not_reported。SDK 发行的 opaque image context 仅在同一 Runtime 内作为 `tasks.call_settle(..., adapter_context=context)` 参数，不能从 JSON 反序列化。
+
+该保证是实际 controller 观察的 host_attested，没有不存在的供应商签名，也不防共同权限的恶意 Host。SDK 记录原始观察、proof 和 output；普通 Host JSON 保持 host_reported。缺失、过期、外来或控制变化后的 proof 会被拒绝赋级与接纳，但 consumed/unknown 已发调用仍结算，预算不恢复。受信观察不是恢复执行或采用权限。Desktop 原采集版本和历史记录保持原样；所有候选仍需显式采用与当前资格检查。
+
+native SVG/readback 的正式 Page 原子绑定同时检查表格行列归属和节点责任实际几何。合法整体平移/缩放保留关系；同文字换归属或反箭头不能仅凭文字集合通过。工程编译检查与真实非作者模型阅图、人类验收分别记录。
+
 可运行两阶段样例：`examples/workbench/w02_host_roundtrip.py`。prepare 只建立隔离合成项目并返回真实 ID；Host 在两阶段间执行真实 ImageGen；complete 采集、结算、采用并核对唯一调用账。它不替代 SVG/PPT、内容专业或用户验收。

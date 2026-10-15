@@ -33,7 +33,7 @@ def dispatch(store, page='p01', *, mode='trial', layer='svg', references=None):
 
 
 def start(store, task, candidate_support=True):
-    capabilities = ['change_plan', 'generation_request_freeze', 'attempt_binding', 'native_tool_observation']
+    capabilities = [value for value in task['required_capabilities'] if value != 'candidate_result']
     if candidate_support:
         capabilities.append('candidate_result')
     return service.task_start(store.project_root, task_id=task['task_id'], execution_ref='synthetic-test-host',

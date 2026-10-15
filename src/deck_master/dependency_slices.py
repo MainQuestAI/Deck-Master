@@ -142,6 +142,26 @@ def _authorization_projection(store, record) -> dict:
 def build_slice(store, document, *, kind, identity, projection, _seen=frozenset(), now=None):
     """Current value of one registered slice, or None when the target is absent
     or the (kind, projection) pair is not registered."""
+    if kind == "artifact" and projection == "page_semantics" and identity.startswith("page:"):
+        entry = _find_page(document, identity.split(":", 1)[1])
+        if not entry:
+            return None
+        from .design_requirements import page_semantic_projection
+        return {"ref": entry["page"], "sha256": _canonical(page_semantic_projection(store.read_object_json(entry["page"])))}
+    if kind == "artifact" and projection in ("plan_page", "plan_progression"):
+        ref = document.get("content_plan")
+        if ref is None:
+            return None
+        from .design_requirements import plan_page_projection, plan_global_projection
+        plan = store.read_object_json(ref)
+        if projection == "plan_progression" and identity == "content_plan":
+            return {"ref": ref, "sha256": _canonical(plan_global_projection(plan))}
+        if projection == "plan_page" and identity.startswith("plan:"):
+            pid = identity.split(":", 1)[1]
+            if pid not in (plan.get("input") or {}).get("page_order", []):
+                return None
+            return {"ref": ref, "sha256": _canonical(plan_page_projection(plan, pid))}
+        return None
     if kind == "artifact" and projection == "visual_input" and identity.startswith("page:"):
         entry = _find_page(document, identity.split(":", 1)[1])
         if not entry or not entry.get("page"):
