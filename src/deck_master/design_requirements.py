@@ -80,12 +80,18 @@ def plan_global_projection(plan: dict | None) -> dict | None:
                               "chapters": data["chapters"], "goals": data["goals"],
                               "unresolved_facts": data["unresolved_facts"]})
     by_page = {role["page_id"]: role for role in data["page_roles"]}
+    speech_policy = copy.deepcopy(data["speech_policy"])
+    if speech_policy["mode"] == "none" and speech_policy["output"] == "none":
+        # The origin of an absent speech product is audit evidence, not a
+        # visual requirement. Keep the original complete policy in its Plan
+        # Ref; active speech/file policy fields retain their dependency.
+        speech_policy.pop("source", None)
     return copy.deepcopy({
         "mode": plan["mode"], "narrative_ref": plan["narrative_ref"],
         "imported_manuscript": plan["imported_manuscript"],
         "page_order": data["page_order"], "chapters": data["chapters"],
         "page_budget": data["page_budget"], "time_budget": data["time_budget"],
-        "speech_policy": data["speech_policy"],
+        "speech_policy": speech_policy,
         "progression": [{"page_id": page_id, **{key: (by_page.get(page_id) or {}).get(key)
                           for key in PAGE_ROLE_FIELDS}} for page_id in data["page_order"]],
     })
