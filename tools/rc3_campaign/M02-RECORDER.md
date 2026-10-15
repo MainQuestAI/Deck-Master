@@ -25,7 +25,8 @@ No gate status in a template establishes admission or successful M02 production.
 Required fields: `experiment_id`, `recorder_sha256`, `common`, `image_controller`,
 `installation`, `protocol`, `grammar`, `admission_review`, `common_review` for
 ADMITTED, `exposure_registry`, `technical_supplements`, `materials`,
-`create_arguments`, `global_image_budget`, `scopes`, and admission `gates`.
+`create_arguments`, `scopes`, admission `gates`, and the selected image profile
+bindings described below.
 References have absolute `path` and exact `sha256` (optional `bytes`). The
 installation entry is the actual final B identity/inventory, not a relabelled
 new source SHA. `common` must be the sibling d0 file; `common_review` pins its R4
@@ -64,6 +65,20 @@ The exact ledger may initialize later, before the first image. Actual Request
 IDs enter independent bf batch profiles only after real freeze/begin, never as
 future placeholders; every batch points to that same global budget/ledger.
 This is a scoped experiment ceiling, not a product-wide quota.
+
+`image_ledger_profile` defaults to `legacy-bf-v1`; omission retains the original
+`global_image_budget` validation and bf ledger guard. Explicit
+`scope-events-v1` instead requires `image_event_controller`,
+`image_event_registration`, and `global_image_policy` refs and omits
+`global_image_budget`. The new pinned helper validates one same-root event epoch,
+the exact protocol/own B installation, original M02 parent, distinct exact
+live/read Page sets, instructions, per-use caps and one candidate per allowed
+call. Unknown or mixed profiles refuse. Existing actual SDK rights, per-phase
+begun-attempt checks and all Narrative/version/notes/review business checks are
+unchanged. See [IMAGE-EVENT-CONTROLLER.md](IMAGE-EVENT-CONTROLLER.md) for actual
+Host dispatch/observation/settlement; this profile is not an image caller or a
+new grant. A changed M02 recorder needs its actual new hash/registration; old
+3c84 source and evidence remain historical.
 
 ## Public execution sequence
 

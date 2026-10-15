@@ -47,12 +47,62 @@ def image_helper(config):
     return helper
 
 
+def image_ledger_profile(config):
+    profile = config.get("image_ledger_profile", "legacy-bf-v1")
+    require(isinstance(profile, str) and profile in {"legacy-bf-v1", "scope-events-v1"}, "unknown explicit M02 image ledger profile")
+    return profile
+
+
+def event_image_helper(config):
+    path = Path(__file__).with_name("image_event_controller.py")
+    for key in ("image_event_controller", "image_event_registration", "global_image_policy"):
+        c.check_ref(config[key])
+    require(Path(config["image_event_controller"]["path"]).resolve() == path.resolve(), "pin actual sibling event helper")
+    require(c.digest(path.read_bytes()) == config["image_event_controller"]["sha256"], "pinned event helper changed before import")
+    spec = importlib.util.spec_from_file_location("rc3_m02_pinned_image_events", path)
+    helper = importlib.util.module_from_spec(spec); spec.loader.exec_module(helper)
+    return helper
+
+
+def validate_image_policy(config):
+    if image_ledger_profile(config) == "scope-events-v1":
+        require("global_image_budget" not in config, "event profile must not also supply a conflicting legacy budget")
+        return event_image_helper(config).validate_m02_policy(config)
+    require(not any(key in config for key in ("image_event_controller", "image_event_registration", "global_image_policy")), "legacy profile cannot silently choose event bindings")
+    c.check_ref(config["global_image_budget"])
+    budget = c.read(config["global_image_budget"]["path"])
+    image = image_helper(config)
+    image.validate_global_budget(budget)
+    require(budget.get("status") == ("ADMITTED" if config["status"] == "ADMITTED" else image.ENGINEERING), "M02/image admission scopes cannot mix")
+    require(Path(budget["ledger_root"]).is_absolute() and str(Path(budget["ledger_root"]).resolve()) == budget["ledger_root"], "pin one canonical shared image ledger")
+    for phase in ("live", "read"):
+        allowed = {(r["case"], r["whole_run_id"], r["repetition"], r["arm"], r["page_id"]) for r in budget["allowed_page_arms"]}
+        scope = config["scopes"][phase]
+        wanted = {("M02", config["experiment_id"], 1, "B", pid) for pid in scope["page_ids"]}
+        require(wanted <= allowed, "M02 complete-version Pages must be in original shared global image scope")
+    own_rows = {row["page_id"] for row in budget["allowed_page_arms"] if (row["case"], row["whole_run_id"], row["repetition"], row["arm"]) == ("M02", config["experiment_id"], 1, "B")}
+    require(own_rows == set(config["scopes"]["live"]["page_ids"] + config["scopes"]["read"]["page_ids"]), "shared M02 budget may not hide extra Pages or another whole-run alias")
+    own_cap = [row["max_calls"] for row in budget["workflow_arm_caps"] if (row["case"], row["whole_run_id"], row["repetition"], row["arm"]) == ("M02", config["experiment_id"], 1, "B")]
+    require(own_cap == [sum(config["scopes"][p]["max_external_calls"] for p in ("live", "read"))], "shared M02 workflow cap must equal both fixed use ceilings")
+    return budget
+
+
+def guard_image_policy(journal, state, config, task, current, args):
+    if image_ledger_profile(config) == "scope-events-v1":
+        return event_image_helper(config).guard_m02_begin(journal, state, config, task, current, args)
+    c.check_ref(config["global_image_budget"])
+    budget = c.read(config["global_image_budget"]["path"])
+    ledger = Path(budget["ledger_root"])
+    require(ledger.is_dir() and not ledger.is_symlink() and c.read(ledger / "global-budget.json") == budget, "freeze the exact budget-pinned canonical shared ledger before first call, never reset between uses")
+
+
 def validate(config):
     require(config.get("format") == FORMAT and config.get("status") in {"ADMITTED", ENGINEERING}, "separate reviewed M02 registration required")
     require(c.digest(SOURCE.read_bytes()) == COMMON_SHA, "frozen d0 common helper changed")
     require(config.get("recorder_sha256") == c.digest(Path(__file__).read_bytes()), "M02 recorder identity changed")
     require(config["common"]["sha256"] == COMMON_SHA and Path(config["common"]["path"]).resolve() == SOURCE.resolve(), "pin the actual sibling d0 helper")
-    for key in ("common", "protocol", "admission_review", "exposure_registry", "grammar", "global_image_budget", "image_controller"):
+    image_ledger_profile(config)
+    for key in ("common", "protocol", "admission_review", "exposure_registry", "grammar", "image_controller"):
         c.check_ref(config[key])
     for ref in config["technical_supplements"] + config["materials"]:
         c.check_ref(ref)
@@ -80,20 +130,7 @@ def validate(config):
         # global task fact. Optional real fact changes retain Runtime barriers.
         require(patch is None or (set(patch) == {"reason", "task_patch"} and set(patch["task_patch"]) <= {"presentation_mode", "brief"}), "only optional preregistered actual task-fact events")
         if patch and "brief" in patch["task_patch"]: require(patch["task_patch"]["brief"] == Path(config["scopes"][use]["instruction"]["path"]).read_text(), "actual exact preregistered use instruction only")
-    budget = c.read(config["global_image_budget"]["path"])
-    image = image_helper(config)
-    image.validate_global_budget(budget)
-    require(budget.get("status") == ("ADMITTED" if config["status"] == "ADMITTED" else image.ENGINEERING), "M02/image admission scopes cannot mix")
-    require(Path(budget["ledger_root"]).is_absolute() and str(Path(budget["ledger_root"]).resolve()) == budget["ledger_root"], "pin one canonical shared image ledger")
-    for phase in ("live", "read"):
-        allowed = {(r["case"], r["whole_run_id"], r["repetition"], r["arm"], r["page_id"]) for r in budget["allowed_page_arms"]}
-        scope = config["scopes"][phase]
-        wanted = {("M02", config["experiment_id"], 1, "B", pid) for pid in scope["page_ids"]}
-        require(wanted <= allowed, "M02 complete-version Pages must be in original shared global image scope")
-    own_rows = {row["page_id"] for row in budget["allowed_page_arms"] if (row["case"], row["whole_run_id"], row["repetition"], row["arm"]) == ("M02", config["experiment_id"], 1, "B")}
-    require(own_rows == set(config["scopes"]["live"]["page_ids"] + config["scopes"]["read"]["page_ids"]), "shared M02 budget may not hide extra Pages or another whole-run alias")
-    own_cap = [row["max_calls"] for row in budget["workflow_arm_caps"] if (row["case"], row["whole_run_id"], row["repetition"], row["arm"]) == ("M02", config["experiment_id"], 1, "B")]
-    require(own_cap == [sum(config["scopes"][p]["max_external_calls"] for p in ("live", "read"))], "shared M02 workflow cap must equal both fixed use ceilings")
+    validate_image_policy(config)
     if config["status"] == "ADMITTED":
         require(config["common_review"]["sha256"] == "204242f6a4e0d9fef878d1b2a936176583e2b71061eb7f6fab200719e59c823b", "M02 admission depends on exact d0 R4 limited review, not a reused old head")
         c.check_ref(config["common_review"])
@@ -626,10 +663,7 @@ def image_begin_guard(journal, state, config, args):
     used = sum(len(c.store_for(state).read_object_json(ref).get("generation_attempts", []))
                for ref in store.load_document()["tasks"] if known.get(store.read_object_json(ref)["task_id"]) == current)
     require(used < config["scopes"][current]["max_external_calls"], "actual begun-attempt ceiling reached; query/reconcile, never reset rights")
-    c.check_ref(config["global_image_budget"])
-    budget = c.read(config["global_image_budget"]["path"])
-    ledger = Path(budget["ledger_root"])
-    require(ledger.is_dir() and not ledger.is_symlink() and c.read(ledger / "global-budget.json") == budget, "freeze the exact budget-pinned canonical shared ledger before first call, never reset between uses")
+    guard_image_policy(journal, state, config, task, current, args)
 
 
 def accepted_reviews(journal, current, role):
