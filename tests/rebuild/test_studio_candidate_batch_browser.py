@@ -8,6 +8,7 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_content_candidates import content_intent, start_task, page_envelope, accept
+from test_action_targets_browser import _prepare_browser_project
 
 pytestmark=pytest.mark.browser
 
@@ -15,6 +16,7 @@ pytestmark=pytest.mark.browser
 def test_bulk_candidates_groups_pagination_ambiguity_and_stale_plan(tmp_path):
     from playwright.sync_api import sync_playwright, expect
     path=tmp_path/'project';create_sample(path,page_count=33,readonly=False);store=Store(path)
+    _prepare_browser_project(path, max_candidate_count=34)
     doc=store.load_document();intent=content_intent(store)
     intent['targets']=[{'page_id':p['page_id'],'page_ref':p['page'],'layer':'content','artifact_ref':p['page']} for p in doc['pages']]
     planned=changes.plan(path,input=intent)

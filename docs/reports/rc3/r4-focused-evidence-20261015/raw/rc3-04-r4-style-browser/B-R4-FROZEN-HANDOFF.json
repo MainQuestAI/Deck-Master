@@ -1,0 +1,943 @@
+{
+  "scope": "R4 seven-file Chromium fixture domain; no Host16 rerun",
+  "source_head_at_assignment": "8223df80be654c9a89a44cd97cf770fa01bf4383",
+  "claimed_level": "actual local Chromium and actual Runtime over explicit L1 synthetic fixtures; no model/native-PPT/human/desktop/professional approval",
+  "rounds": {
+    "0": {
+      "passed": 63,
+      "failed": 18,
+      "skipped": 0,
+      "xml": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/round0.xml",
+      "log": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/round0.log"
+    },
+    "1": {
+      "passed": 76,
+      "failed": 5,
+      "skipped": 0,
+      "xml": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/round1.xml",
+      "log": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/round1.log"
+    },
+    "2": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "xml": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/round2.xml",
+      "log": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/round2.log"
+    },
+    "3": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "xml": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/round3.xml",
+      "log": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/round3.log"
+    }
+  },
+  "round0_limit": "Live mixed diagnostic: collection preceded own fixture edits and concurrent Owner product deltas; canonical immutable CI remains original failure baseline. Never a fixed validation result.",
+  "combined_unique_coverage": {
+    "passed": 81,
+    "failed": 0,
+    "skipped": 0,
+    "rule": "Retain 76 round1 passes, recover five original parameter failures in round2; round3 default-artifact checks update two observations. This is not a single 81-pass rerun.",
+    "latest_round_counts": {
+      "1": 75,
+      "3": 2,
+      "2": 4
+    }
+  },
+  "coverage": {
+    "tests/rebuild/test_style_content_browser.py::test_thirty_page_mobile_search_counts_missing_images_and_release": {
+      "outcome": "PASS",
+      "time": 5.349,
+      "round": "1"
+    },
+    "tests/rebuild/test_style_content_browser.py::test_empty_requirements_dimensions_refresh_and_fixed_reference": {
+      "outcome": "PASS",
+      "time": 5.782,
+      "round": "1"
+    },
+    "tests/rebuild/test_style_content_browser.py::test_confirmed_recipe_progression_edits_and_new_revision_invalidate": {
+      "outcome": "PASS",
+      "time": 7.321,
+      "round": "1"
+    },
+    "tests/rebuild/test_style_content_browser.py::test_late_style_plan_leaving_face_cannot_restore_controls": {
+      "outcome": "PASS",
+      "time": 6.805,
+      "round": "1"
+    },
+    "tests/rebuild/test_style_content_browser.py::test_material_states_verify_actual_extract_and_preserve_errors": {
+      "outcome": "PASS",
+      "time": 6.663,
+      "round": "1"
+    },
+    "tests/rebuild/test_style_content_browser.py::test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone": {
+      "outcome": "PASS",
+      "time": 9.038,
+      "round": "1"
+    },
+    "tests/rebuild/test_style_content_browser.py::test_user_chosen_phase_survives_the_passive_recipe_read": {
+      "outcome": "PASS",
+      "time": 4.971,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_style_conflict_choices_live_with_the_confirm_action": {
+      "outcome": "PASS",
+      "time": 4.21,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_style_plan_failure_stays_visible_without_a_plan": {
+      "outcome": "PASS",
+      "time": 5.706,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_content_change_list_keeps_the_formal_baseline_after_draft_restore": {
+      "outcome": "PASS",
+      "time": 6.065,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_version_area_survives_reading_reload_and_return": {
+      "outcome": "PASS",
+      "time": 4.033,
+      "round": "3"
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_long_list_keeps_selection_summary_and_config_entry_in_view": {
+      "outcome": "PASS",
+      "time": 3.931,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_screenshot_route_actions_follow_stage_and_plan": {
+      "outcome": "PASS",
+      "time": 5.134,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_complex_body_change_list_and_impact_share_one_screen": {
+      "outcome": "PASS",
+      "time": 5.518,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_gallery_conflict_reports_filter_anchor_and_zoom_differences": {
+      "outcome": "PASS",
+      "time": 14.016,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_main_layer_keeps_business_language_on_every_surface": {
+      "outcome": "PASS",
+      "time": 8.872,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_selection_to_style_path_works_after_using_the_screenshot_source": {
+      "outcome": "PASS",
+      "time": 6.493,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_style_handoff_appears_with_a_real_local_plan": {
+      "outcome": "PASS",
+      "time": 7.441,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history": {
+      "outcome": "PASS",
+      "time": 4.199,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_topbar_pending_entry_always_lands_on_the_task_list": {
+      "outcome": "PASS",
+      "time": 4.036,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_area_link_without_the_subarea_falls_back_to_tasks": {
+      "outcome": "PASS",
+      "time": 4.541,
+      "round": "1"
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_persisting_a_non_task_area_drops_the_hidden_task_route": {
+      "outcome": "PASS",
+      "time": 4.646,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_saved_task_failure_retries_the_same_group": {
+      "outcome": "PASS",
+      "time": 2.834,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_committed_upload_survives_private_note_afterwrite": {
+      "outcome": "PASS",
+      "time": 5.537,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_overview_handoff_is_actionable_in_task_context": {
+      "outcome": "PASS",
+      "time": 3.008,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_style_ui_trial_adoption_and_successful_expansion[project]": {
+      "outcome": "PASS",
+      "time": 11.5,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_style_ui_trial_adoption_and_successful_expansion[screenshot]": {
+      "outcome": "PASS",
+      "time": 17.855,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_partial_upload_keeps_successful_files_and_retries_only_failed_file[False]": {
+      "outcome": "PASS",
+      "time": 4.515,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_partial_upload_keeps_successful_files_and_retries_only_failed_file[True]": {
+      "outcome": "PASS",
+      "time": 6.104,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_upload_success_has_visible_recovery_when_private_save_fails": {
+      "outcome": "PASS",
+      "time": 4.458,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_three_versions_restore_uses_read_source_and_current_basis[False]": {
+      "outcome": "PASS",
+      "time": 5.309,
+      "round": "2"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_three_versions_restore_uses_read_source_and_current_basis[True]": {
+      "outcome": "PASS",
+      "time": 5.158,
+      "round": "2"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_147_mixed_tasks_paginate_filter_and_keep_subareas_reachable": {
+      "outcome": "PASS",
+      "time": 6.126,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_handoff_three_groups_and_late_clipboard_keep_original_copy_identity": {
+      "outcome": "PASS",
+      "time": 4.502,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_gallery_conflict_same_selection_and_layer_exposes_reference_difference": {
+      "outcome": "PASS",
+      "time": 16.977,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports[1440-900]": {
+      "outcome": "PASS",
+      "time": 4.962,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports[1280-800]": {
+      "outcome": "PASS",
+      "time": 4.097,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports[390-844]": {
+      "outcome": "PASS",
+      "time": 4.09,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct_empty_state[1440-900]": {
+      "outcome": "PASS",
+      "time": 4.54,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct_empty_state[1280-800]": {
+      "outcome": "PASS",
+      "time": 3.316,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_uploaded_result_finishes_recovery_after_late_draft_verification": {
+      "outcome": "PASS",
+      "time": 4.217,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_small_scale_pagination_counts_and_failed_page_retry_keeps_loaded_rows": {
+      "outcome": "PASS",
+      "time": 2.711,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_mobile_gallery_reads_on_page_and_restores_desktop_preference": {
+      "outcome": "PASS",
+      "time": 4.085,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_history_modes_keep_reading_and_page_comparison_fixed": {
+      "outcome": "PASS",
+      "time": 4.503,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_mobile_gallery_settings_keep_selection_focus_and_production_targets": {
+      "outcome": "PASS",
+      "time": 5.69,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_fixed_history_images_share_a_row_with_candidate_entry[1280-800-svg]": {
+      "outcome": "PASS",
+      "time": 4.67,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_fixed_history_images_share_a_row_with_candidate_entry[1280-800-ppt]": {
+      "outcome": "PASS",
+      "time": 4.669,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_fixed_history_images_share_a_row_with_candidate_entry[1440-900-svg]": {
+      "outcome": "PASS",
+      "time": 4.553,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_fixed_history_images_share_a_row_with_candidate_entry[1440-900-ppt]": {
+      "outcome": "PASS",
+      "time": 4.811,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_host_handoff_clipboard_failure_remains_pending": {
+      "outcome": "PASS",
+      "time": 3.018,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_artwork_and_save_row_share_the_first_screen[1280-800]": {
+      "outcome": "PASS",
+      "time": 4.434,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_artwork_and_save_row_share_the_first_screen[1440-900]": {
+      "outcome": "PASS",
+      "time": 4.535,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_plain_task_entry_opens_tasks_without_a_delivery_detour[1280-800]": {
+      "outcome": "PASS",
+      "time": 4.683,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_plain_task_entry_opens_tasks_without_a_delivery_detour[1440-900]": {
+      "outcome": "PASS",
+      "time": 3.989,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_page_opinion_editor_stays_with_artwork_before_trial_form[1280-800]": {
+      "outcome": "PASS",
+      "time": 4.106,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_page_opinion_editor_stays_with_artwork_before_trial_form[1440-900]": {
+      "outcome": "PASS",
+      "time": 4.37,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_page_opinion_editor_stays_with_artwork_before_trial_form[390-844]": {
+      "outcome": "PASS",
+      "time": 4.148,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_selected_internal_style_keeps_main_action_in_first_view[1280-800]": {
+      "outcome": "PASS",
+      "time": 3.97,
+      "round": "2"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_selected_internal_style_keeps_main_action_in_first_view[1440-900]": {
+      "outcome": "PASS",
+      "time": 3.759,
+      "round": "2"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_current_version_read_blocks_obsolete_actions_and_restores_controls[False-False]": {
+      "outcome": "PASS",
+      "time": 3.216,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_current_version_read_blocks_obsolete_actions_and_restores_controls[False-True]": {
+      "outcome": "PASS",
+      "time": 3.665,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_current_version_read_blocks_obsolete_actions_and_restores_controls[True-False]": {
+      "outcome": "PASS",
+      "time": 2.814,
+      "round": "1"
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_current_version_read_blocks_obsolete_actions_and_restores_controls[True-True]": {
+      "outcome": "PASS",
+      "time": 3.348,
+      "round": "1"
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_batch_route_normal_result_and_lost_response_recovery": {
+      "outcome": "PASS",
+      "time": 5.838,
+      "round": "1"
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_style_route_conflict_resolution_trial_plan_and_extension_error": {
+      "outcome": "PASS",
+      "time": 6.578,
+      "round": "1"
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_content_route_change_list_impact_and_draft_restore": {
+      "outcome": "PASS",
+      "time": 7.561,
+      "round": "3"
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_delivery_route_version_identities_files_and_blocked_delivery": {
+      "outcome": "PASS",
+      "time": 4.616,
+      "round": "1"
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_recovery_route_real_gallery_conflict_reports_differences": {
+      "outcome": "PASS",
+      "time": 11.382,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_page_history_offers_the_direct_before_snapshot_and_deduplicates_paging": {
+      "outcome": "PASS",
+      "time": 2.612,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_same_page_other_layer_opinion_is_selectable_and_reaches_core_plan[original_image-svg]": {
+      "outcome": "PASS",
+      "time": 3.582,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_same_page_other_layer_opinion_is_selectable_and_reaches_core_plan[svg-original_image]": {
+      "outcome": "PASS",
+      "time": 3.55,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_same_page_other_layer_opinion_is_selectable_and_reaches_core_plan[ppt-svg]": {
+      "outcome": "PASS",
+      "time": 3.396,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_same_page_other_layer_opinion_is_selectable_and_reaches_core_plan[content-svg]": {
+      "outcome": "PASS",
+      "time": 3.553,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_other_layer_opinion_keeps_its_own_staleness_and_page_gates[own_layer_changed]": {
+      "outcome": "PASS",
+      "time": 2.043,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_other_layer_opinion_keeps_its_own_staleness_and_page_gates[own_layer_missing]": {
+      "outcome": "PASS",
+      "time": 2.112,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_other_layer_opinion_keeps_its_own_staleness_and_page_gates[other_page]": {
+      "outcome": "PASS",
+      "time": 1.969,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_other_layer_opinion_keeps_its_own_staleness_and_page_gates[page_changed]": {
+      "outcome": "PASS",
+      "time": 1.985,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[current]": {
+      "outcome": "PASS",
+      "time": 4.02,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[historical]": {
+      "outcome": "PASS",
+      "time": 4.147,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[readonly]": {
+      "outcome": "PASS",
+      "time": 4.074,
+      "round": "1"
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_candidate_phase_opens_the_decisions_subarea": {
+      "outcome": "PASS",
+      "time": 75.541,
+      "round": "1"
+    }
+  },
+  "original_27_closure": {
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_style_conflict_choices_live_with_the_confirm_action": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_style_conflict_choices_live_with_the_confirm_action",
+      "summary": "AssertionError: Locator expected to be visible",
+      "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 4.21,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_style_plan_failure_stays_visible_without_a_plan": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_style_plan_failure_stays_visible_without_a_plan",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope",
+      "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 5.706,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_version_area_survives_reading_reload_and_return": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_version_area_survives_reading_reload_and_return",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.",
+      "resolution": "explicit_historical_reader_task_and_full_history",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 4.033,
+        "round": "3"
+      }
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_complex_body_change_list_and_impact_share_one_screen": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_complex_body_change_list_and_impact_share_one_screen",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction",
+      "resolution": "named_page_copy_direction_and_zero_call_content_grant",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 5.518,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py::test_gallery_conflict_reports_filter_anchor_and_zoom_differences": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_gallery_conflict_reports_filter_anchor_and_zoom_differences",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 14.016,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_main_layer_keeps_business_language_on_every_surface": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_obligations_browser.py::test_main_layer_keeps_business_language_on_every_surface",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 8.872,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_selection_to_style_path_works_after_using_the_screenshot_source": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_obligations_browser.py::test_selection_to_style_path_works_after_using_the_screenshot_source",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 6.493,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py::test_style_handoff_appears_with_a_real_local_plan": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_obligations_browser.py::test_style_handoff_appears_with_a_real_local_plan",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope",
+      "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 7.441,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_mobile_gallery_reads_on_page_and_restores_desktop_preference": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_navigation_usability_browser.py::test_mobile_gallery_reads_on_page_and_restores_desktop_preference",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 4.085,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_mobile_gallery_settings_keep_selection_focus_and_production_targets": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_navigation_usability_browser.py::test_mobile_gallery_settings_keep_selection_focus_and_production_targets",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 5.69,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_selected_internal_style_keeps_main_action_in_first_view[1280-800]": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_navigation_usability_browser.py::test_selected_internal_style_keeps_main_action_in_first_view[1280-800]",
+      "summary": "AssertionError: Locator expected to be enabled",
+      "resolution": "case_only_zero_call_style_scope_before_initial_browser_load",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 3.97,
+        "round": "2"
+      }
+    },
+    "tests/rebuild/test_navigation_usability_browser.py::test_selected_internal_style_keeps_main_action_in_first_view[1440-900]": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_navigation_usability_browser.py::test_selected_internal_style_keeps_main_action_in_first_view[1440-900]",
+      "summary": "AssertionError: Locator expected to be enabled",
+      "resolution": "case_only_zero_call_style_scope_before_initial_browser_load",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 3.759,
+        "round": "2"
+      }
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_three_versions_restore_uses_read_source_and_current_basis[False]": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr103_complete_browser.py::test_three_versions_restore_uses_read_source_and_current_basis[False]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.select_option: Timeout 30000ms exceeded.",
+      "resolution": "explicit_full_history_and_current_label_with_exact_option_url_restore_cas",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 5.309,
+        "round": "2"
+      }
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_three_versions_restore_uses_read_source_and_current_basis[True]": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr103_complete_browser.py::test_three_versions_restore_uses_read_source_and_current_basis[True]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.select_option: Timeout 30000ms exceeded.",
+      "resolution": "explicit_full_history_and_current_label_with_exact_option_url_restore_cas",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 5.158,
+        "round": "2"
+      }
+    },
+    "tests/rebuild/test_pr103_complete_browser.py::test_gallery_conflict_same_selection_and_layer_exposes_reference_difference": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr103_complete_browser.py::test_gallery_conflict_same_selection_and_layer_exposes_reference_difference",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.check: Timeout 30000ms exceeded.",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 16.977,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[current]": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[current]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 4.02,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[historical]": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[historical]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 4.147,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[readonly]": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[readonly]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 4.074,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_style_content_browser.py::test_confirmed_recipe_progression_edits_and_new_revision_invalidate": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_style_content_browser.py::test_confirmed_recipe_progression_edits_and_new_revision_invalidate",
+      "summary": "AssertionError: Locator expected to be enabled",
+      "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 7.321,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_style_content_browser.py::test_late_style_plan_leaving_face_cannot_restore_controls": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_style_content_browser.py::test_late_style_plan_leaving_face_cannot_restore_controls",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope",
+      "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 6.805,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_style_content_browser.py::test_material_states_verify_actual_extract_and_preserve_errors": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_style_content_browser.py::test_material_states_verify_actual_extract_and_preserve_errors",
+      "summary": "deck_master.generation.GenerationError: host_protocol: this task requires compose.v2 and its declared capabilities",
+      "resolution": "actual_compose_v2_workorder_capability_claim_and_input_revision_envelope",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 6.663,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_style_content_browser.py::test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_style_content_browser.py::test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone",
+      "summary": "deck_master.generation.GenerationError: host_protocol: this task requires compose.v2 and its declared capabilities",
+      "resolution": "actual_compose_v2_workorder_capability_claim_and_input_revision_envelope",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 9.038,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_batch_route_normal_result_and_lost_response_recovery": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_batch_route_normal_result_and_lost_response_recovery",
+      "summary": "AssertionError: Locator expected to contain text '已保存'",
+      "resolution": "exact_two_page_two_call_trial_grant_and_L1_fidelity_review",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 5.838,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_style_route_conflict_resolution_trial_plan_and_extension_error": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_style_route_conflict_resolution_trial_plan_and_extension_error",
+      "summary": "AssertionError: Locator expected to be visible",
+      "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 6.578,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_content_route_change_list_impact_and_draft_restore": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_content_route_change_list_impact_and_draft_restore",
+      "summary": "AssertionError: Locator expected to contain text '本次具体改动（0）'",
+      "resolution": "named_page_copy_direction_and_zero_call_content_grant",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 7.561,
+        "round": "3"
+      }
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_delivery_route_version_identities_files_and_blocked_delivery": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_delivery_route_version_identities_files_and_blocked_delivery",
+      "summary": "AssertionError: Locator expected to be visible",
+      "resolution": "explicit_delivery_consent_and_output_scope_grant_engineering_gates_preserved",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 4.616,
+        "round": "1"
+      }
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_recovery_route_real_gallery_conflict_reports_differences": {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_recovery_route_real_gallery_conflict_reports_differences",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+      "latest_actual_observation": {
+        "outcome": "PASS",
+        "time": 11.382,
+        "round": "1"
+      }
+    }
+  },
+  "original_CI_log": "/workspace/work/rc3/reviews/rc3-04-root-ci-failure-8223df8/browser-job-116294607252.exact-api-content.log",
+  "original_CI_sha256": "9705083903f932e1da74310b9c5bc066781d290de443dc15e18e2a251c632f89",
+  "original_tracebacks_sha256": "93a69da0e69dbc5f66f77aa00fcef3c29ec011610885277f1738bcada0f736f1",
+  "final_test_sha256": {
+    "test_style_content_browser.py": "ff540b129b0692d06f2366e89b7e667887197cbf32fd9de451294b9f83a09cb1",
+    "test_deep_review_fixes_browser.py": "3bb77974b305b4717223cfce18e66fe54b2060494deddba5f86dacdb9f54d2c8",
+    "test_deep_review_obligations_browser.py": "ba933838a1f9ba7c09786d4ba206e4e91763747ae9ab8225082da8120c8315e4",
+    "test_pr103_complete_browser.py": "8d81175e4e33652f9b325665ee1219f9f6797950736b789927741a60bfc404c7",
+    "test_navigation_usability_browser.py": "d5e201e0776e3d08ab45496f0e9a7760980380527a62e6c09a46ce23e6fca4ee",
+    "test_ux08_task_walkthrough_browser.py": "45cb3f4bfba6eb14754ca0546ab48b20140bdb8f35886681ffce060bd400ee3c",
+    "test_pr104_supplemental_browser.py": "51f340e89fb0496cbcdbc747d02d20c733cba6eb0df197239ce6af4041b1e138"
+  },
+  "changed_test_files": [
+    "test_style_content_browser.py",
+    "test_deep_review_fixes_browser.py",
+    "test_deep_review_obligations_browser.py",
+    "test_pr103_complete_browser.py",
+    "test_navigation_usability_browser.py",
+    "test_ux08_task_walkthrough_browser.py"
+  ],
+  "unchanged_test_files": [
+    "test_pr104_supplemental_browser.py"
+  ],
+  "B_product_delta": false,
+  "Owner_product_dependencies": [
+    "C1: actual v2 gallery/content-sources/overview readers",
+    "C2: retain honest unchanged reason",
+    "C3: unreadable bad-task read boundary"
+  ],
+  "source_before_after_deltas": {
+    "1": {
+      "sources": {
+        "src/deck_master/resources/static/v2/content-sources.js": {
+          "before": "5bb1d92342066811f886c80123af3b96f17ede8aa485d9e4fd7ec6035a534f95",
+          "after": "302cbdefde9234bad588a38b26fa925100571fc1043187a03f2fad5c177c29ca"
+        }
+      },
+      "fixture_dependencies": {}
+    },
+    "2": {
+      "sources": {},
+      "fixture_dependencies": {}
+    },
+    "3": {
+      "sources": {},
+      "fixture_dependencies": {}
+    }
+  },
+  "wording_migration": {
+    "old": "当前阅读版本",
+    "actual": "正在阅读的历史版本",
+    "preserved_and_strengthened": [
+      "exact option[value=B/A]",
+      "selected combobox value=B/A",
+      "URL revision=B/A",
+      "export revision=B",
+      "restore source=A with base_revision=C",
+      "concurrent current unchanged on stale CAS",
+      "new restored revision distinct from A/B/C"
+    ]
+  },
+  "assertion_retention": {
+    "report": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/assertion-retention.json",
+    "all_prior_plain_asserts_preserved": true,
+    "only_removed_expectations": "Two exact old-label contains assertions replaced with exact actual label plus option value and URL identity checks; no geometry, CAS, restore, source, original, late-read, feedback or gate assertion removed."
+  },
+  "artifact_only_delta": "deep screenshots derive default from project.parent/evidence; UX08 Journal receives actual project and uses project.parent/evidence; explicit env override retained. pr103 and navigation screenshot destinations also use fixture temp roots.",
+  "artifact_default_verification": "/workspace/work/rc3/reviews/rc3-04-r4-style-browser/artifact-default-verification.json",
+  "out_of_scope_edits": "No product/shared helper/other test/Git/installation/HOME change. The round0 four generated relative screenshots were preserved externally; their originally empty checkout directory was restored empty.",
+  "limits": [
+    "No Provider/model execution; synthetic tool/provider adapters remain explicitly L1.",
+    "No claimed human, native PPT, visual quality or independent review proof.",
+    "No full browser broad suite and no extra 81-case rerun after bounded fixes.",
+    "One Owner content-sources prompt-only source delta during round1 is preserved above; round2 and round3 product/test/dependency hashes stable."
+  ],
+  "evidence_manifest": {
+    "artifact-default-verification.json": "43aa24efbcdbecd7814e221439659150017222dd0ff2bb9bb7b269f6856da7c4",
+    "assertion-retention.json": "af58fe5754358497690eced3f1a8315c52d71da94abc4dbf40b38d583a3a2845",
+    "browser-environment.json": "1f600ff23c3a2e719080f2e5672e7a66d7e274417fedfdc87b3e508d698a9c6b",
+    "capture_sources.py": "16bf0dbe7231b05341341513b371ecab1dc2e384004ddb52aa619c2720a4fc60",
+    "helper-smoke.log": "68aa9114cad217a0c055691723b28836e2c20e673175a624d62f6fe04ba4dea4",
+    "initial-assignment.json": "09a194310b02361e1d31ed8e0155d66f54bf7bb2098c7b0452d4e6b97206691d",
+    "original-assigned-tracebacks.log": "93a69da0e69dbc5f66f77aa00fcef3c29ec011610885277f1738bcada0f736f1",
+    "preexisting-studio-first-view/preexisting-sha256.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "round0-evidence/2-1-long-list-selection-bar.png": "ad8a7ab180e0990e1d7b86d0f948f45ad48d31e7adb455cb988cd403ac42d7ba",
+    "round0-evidence/2-2-screenshot-route-actions.png": "6c0fc1ade2fe8f81452b9ab7c20c1b536aaaf71311331a3436dfc47159a4327d",
+    "round0-evidence/batch-01-empty-selection.png": "1a4db1038cc43a00a5e6cb502c4acdd50e357997d6a91d5746924ae852c06d2b",
+    "round0-evidence/batch-02-selected-2-and-28-with-sticky-summary.png": "d8979f3e38254a15e928c8a7ddf7377396178da1d6fb10084d0d6cbf6e27e678",
+    "round0-evidence/batch-03-plan-request-lost-input-kept.png": "111f2590680ce3c66582ddc6eac1ba66356453ed76bf7f3f47d6d6735df4e442",
+    "round0-evidence/batch-04-plan-reviewed-handoff-visible.png": "6e9f5a893e9a9d587e14ae860ddffb43e743d2d3c62b0f8b8d297d0a2e25320e",
+    "round0-evidence/batch-journal.json": "a4959c987a438e1e9afc6306cd0c8617d10d474dd2d1413115929f434cc6d81f",
+    "round0-evidence/content-01-edited-with-live-change-list.png": "850ad5cc2bc26f6a1c50d5c570d95124f9890e5b1e46327d710fd164312c26c5",
+    "round0-evidence/content-02-draft-restored-against-formal-baseline.png": "3f506141e179daba1f12489d9ab6448b93d21c33db54860af8050d2b33d9beca",
+    "round0-evidence/content-03-impact-with-change-list.png": "f8aeb4ae5c72531cf9d65a1139993435c72cb4368d2a0fff663125c7b1ccea3d",
+    "round0-evidence/content-journal.json": "cec66cb36236cea049f791b0be6234c0f5151db01acde8d7c22ec635e7cdbe93",
+    "round0-evidence/delivery-01-version-identities.png": "2830188f2a8ffa44d26f37f70466857dcf6c6a6220939f9d16342bd7d2f4198e",
+    "round0-evidence/delivery-02-file-purposes.png": "e69036d0d0d2e2d795dd45df8543bb3480454cd1d8bef9f79a97c373ec1b73b1",
+    "round0-evidence/delivery-03-review-package-generated.png": "d08ac538961beb86a81b04e5a34b047ad0a43c933407bfba66cdeac37e884496",
+    "round0-evidence/delivery-journal.json": "8b51b9c819cff829d9e08b4066b75b908c356d6812bc770dd0b8cce6cdaf0f7a",
+    "round0-evidence/r3-draft-restore-keeps-formal-baseline.png": "9467ba0e8c30d0f407776d3b727add003df065af7d2d648110b0e7068d9c57ec",
+    "round0-evidence/r4-version-area-after-read.png": "1d6427d80024c53f8585bc318860ac39642da997d601146ef939d2fdf9226fcb",
+    "round0-evidence/recovery-01-real-409-conflict.png": "f9cc772db221a9d38fec9189d8cfb2eb13e73fffe70a99402de8eda5c13ed200",
+    "round0-evidence/recovery-02-conflict-panel-real-differences.png": "a12f4e259c26b373339056060bad1d7c5a47dd2e5a6647a504fe7a2cd57d38e4",
+    "round0-evidence/recovery-03-recovered-by-adopting-saved-side.png": "75a1b80f8c84baff18e94ec7608cfbc5d00dad939c49524041f3951ed08e5aed",
+    "round0-evidence/recovery-journal.json": "c7546a970499d27bff83f50f5e0d48a06aa5ecf8b7957369d4f910bbee3fe506",
+    "round0-evidence/style-journal.json": "25f5050ec3dbd0ac0d3107dda089fbb02949b27e346a26703f3bad203190189d",
+    "round0-relative-evidence/opinion-1280-800.json": "793ea61f2bab0cc12d0f7c98a432426b6882cd015eff27212177847bdc9cf882",
+    "round0-relative-evidence/opinion-1280-800.png": "a9aa3ee679d86ab27294f3f7004d1a23f8a24c8576927f9fb3b7a2a800648519",
+    "round0-relative-evidence/opinion-1440-900.json": "def32add5edd7a39cc075dd98039438c43605c1d0106b28d7b7d438f84283c54",
+    "round0-relative-evidence/opinion-1440-900.png": "eaad255e448c3c91a7a9e7e75f35d63338a0b3cc3924ceea7ef9acaf78ed36a0",
+    "round0-result.json": "1567e81fa1cecc23ca30770b2fc8da08e7085f071b3c5ac33ad7d77f1745e9b2",
+    "round0.log": "f6d8d80be313ca611496085e22acd25f2d8b2563b9f8eb2af704e9a47d3bd698",
+    "round0.xml": "277f5af98cf5e9979eadedec2269b9317fe8eaba6d0801a93b7cf4a74bf9d5e0",
+    "round1-after.json": "50cf0a646c833c2ce81304fd6fcc1914509bcc53399405a80c8904fefd307f6e",
+    "round1-before-tests/test_deep_review_fixes_browser.py": "9a2811dbb29cddb0f677b7b7636ca982d7916a46c08552f3966b5354b9029c67",
+    "round1-before-tests/test_deep_review_obligations_browser.py": "ba933838a1f9ba7c09786d4ba206e4e91763747ae9ab8225082da8120c8315e4",
+    "round1-before-tests/test_navigation_usability_browser.py": "12fb058647908bbd9a4b9a5d22c5a4afbad073f1176c770beb38118c9999038b",
+    "round1-before-tests/test_pr103_complete_browser.py": "d6ce539d2369294f08a7d995c6c13a5920c9520017a956e57c087cc745a44132",
+    "round1-before-tests/test_pr104_supplemental_browser.py": "51f340e89fb0496cbcdbc747d02d20c733cba6eb0df197239ce6af4041b1e138",
+    "round1-before-tests/test_style_content_browser.py": "ff540b129b0692d06f2366e89b7e667887197cbf32fd9de451294b9f83a09cb1",
+    "round1-before-tests/test_ux08_task_walkthrough_browser.py": "d56925be8d0d7574c1baf184ad23b84afa147f5312fad4e4019f8d143f02b9ea",
+    "round1-before.json": "91835a7787edd11541de957d59341a5b17bdbf6adf2b3dde87ac4eda94d4bd6d",
+    "round1-evidence/2-1-long-list-selection-bar.png": "b577cf518957770d0b80b1597fc0020b1f5d96b1d964cb8093f2e24c502b074e",
+    "round1-evidence/2-2-screenshot-route-actions.png": "ca25d9cb4d3c5f1a961a2bca765ea3cc4080889a4c52846c7c458460a2ba3c50",
+    "round1-evidence/2-3-complex-body-single-screen-check.png": "9accf342600e52d9f302d05eed25df8801500b6a5fb003fb4a12e7b1459686db",
+    "round1-evidence/2-4-gallery-real-differences.png": "aad228acdfb38e3735d8a935fa0616cb720dd15db489657197ab75e4f4802b44",
+    "round1-evidence/batch-01-empty-selection.png": "5a6c9af0a685885adf3dc05c70097d8c62ab3854ad1ac50dd478d26750a4a474",
+    "round1-evidence/batch-02-selected-2-and-28-with-sticky-summary.png": "9996e26371db7af85270158b3ce3493662008b307332e1d5b6233a7d7ebf069c",
+    "round1-evidence/batch-03-plan-request-lost-input-kept.png": "fbf6e014499ae6ab57d0445ac1b76af3eaf5b0b212284ddb10fc86c901250fa7",
+    "round1-evidence/batch-04-plan-reviewed-handoff-visible.png": "ed14fbcb8da008e2f72bd7b932d901da050d04791f375da6c2f0684d245ca6f3",
+    "round1-evidence/batch-05-handoff-saved.png": "7b6879fb8213f71614c889d04cd22f56f1ce386a451f27ecc2091cebc3fcf328",
+    "round1-evidence/batch-journal.json": "6383d816716efbd99e1b35422af39adc686738264e5cc4476e09daf6c3486674",
+    "round1-evidence/content-01-edited-with-live-change-list.png": "c7499a4c6a6c5ff48d15f61d970529664bd0f28dd9c99fdc138c89fba8c22c9e",
+    "round1-evidence/content-02-draft-restored-against-formal-baseline.png": "fcca304d49771c7ede7e5ae30f56c4dea9acf4887d3d070cdbdd66cb2c68159d",
+    "round1-evidence/content-03-impact-with-change-list.png": "59c9402b16c73ce7308ce0bfe7366ba9c888749adb5660ad860a1659670a2534",
+    "round1-evidence/content-04-confirmed-and-advanced.png": "d2250d01badcc68bacc202d0c7812183f4361a96f5d140102b4dba9f9cadd024",
+    "round1-evidence/content-journal.json": "b7ad4d1f83f2483379f269ca85f116f2224144d6fb3ccddc711ad505c269e611",
+    "round1-evidence/delivery-01-version-identities.png": "d73ae0c984d08c6280a83d94ab8007790992233b334dafe18955d060dadf8bb5",
+    "round1-evidence/delivery-02-file-purposes.png": "85a69ef088f46a4b6a03aca52f260447f886eb7944ef6466c9b38a92e712fe94",
+    "round1-evidence/delivery-03-review-package-generated.png": "55765964150857c9a17db736db96ba9be31bd19c8eff9c4410a78215c87c83a2",
+    "round1-evidence/delivery-04-delivery-blocked-with-gaps.png": "b2ec177c3928da5b4c8799dfe1f439e910122de299f5e571ccfbfbafee0bf997",
+    "round1-evidence/delivery-journal.json": "785887c4c487d7407373987638c9f8f8271685668977629d1363d836e46598d3",
+    "round1-evidence/r1-style-conflict-in-confirm-phase.png": "94470a4c8e508ff63e4ef49c280759ce22554cbcbacc48e0db9306bce67a5813",
+    "round1-evidence/r2-style-plan-error-visible.png": "78d46c7e0f22da8e165fcd0e0ad3f8d1563fff99cb85daaecac6af34c27c8f11",
+    "round1-evidence/r3-draft-restore-keeps-formal-baseline.png": "f8739d3d393ae962eb7ddf77305f228384a2e0337d4fbc4858f772a132344ff1",
+    "round1-evidence/recovery-01-real-409-conflict.png": "d5ac17b90ab5d98d9cb62f43481ddbd18376369bc4466c707d17912eb2ff77a8",
+    "round1-evidence/recovery-02-conflict-panel-real-differences.png": "b42745701ef9a67e7f185764584306a4b5ae2e9cf5e0a7692f8686265ecba1c4",
+    "round1-evidence/recovery-03-recovered-by-adopting-saved-side.png": "e6ac7c0bd0e708137f8d31476f303aede81f19b0b0815eb64a0dda82b99508db",
+    "round1-evidence/recovery-journal.json": "c7546a970499d27bff83f50f5e0d48a06aa5ecf8b7957369d4f910bbee3fe506",
+    "round1-evidence/style-01-conflict-choice-in-confirm-phase.png": "68a634cd07d20c4792ca6f1292d6178f76911691a5e71f3626d64781a895850c",
+    "round1-evidence/style-02-conflict-resolved-confirm-enabled.png": "5dca02fc03ffdf460f27a648a70e874c89967a7c0264b63ea6bc3be27b7fc665",
+    "round1-evidence/style-03-trial-plan-ready-handoff-visible.png": "52f65aa9d561b3a745234962ed5816fb022616158d079718b984fe31ab747614",
+    "round1-evidence/style-04-extension-without-pages-error-visible.png": "7b5c277842873849bf8af29c3c79655e3f11d52d76766689c9110556e3ece6e2",
+    "round1-evidence/style-journal.json": "e3b868b14f7dfab556336045268cb95f02820453a2533253d284cd11ee58930d",
+    "round1-history-filter-diagnostic.json": "a25844fd97df697b3b350326b7ddf1e3ee7d74c8ae30667958906daef8267a85",
+    "round1-result.json": "069305cf765335b08c477d8c309ad6ad6e1f208236e59fb95bf9dc15365b5de3",
+    "round1-source-before.json": "2c0164388791ea78fe24f2591ab43dd447507418d08f20ce7539f53512cb7692",
+    "round1-test_selected_internal_style_keeps_main_action_in_first_view[1280-800].trace.txt": "cc14893a804e73baec41ef81523cbe0c80b485769c556f9a338af5e748c003a7",
+    "round1-test_selected_internal_style_keeps_main_action_in_first_view[1440-900].trace.txt": "f354a11f7ff8325e16f89a61b9b3993990033061ab9b13a2f8b13a17ed4d8659",
+    "round1-test_three_versions_restore_uses_read_source_and_current_basis[False].trace.txt": "f4004b9af521e66ad15e3fd2dbd1cc296c818e0ee731ed2dccef443c8e6c5787",
+    "round1-test_three_versions_restore_uses_read_source_and_current_basis[True].trace.txt": "c4e457150568e055fd552e9a85c412dc5a90d819de255d70c69eca6f2b1f17c8",
+    "round1-test_version_area_survives_reading_reload_and_return.trace.txt": "0b726070ba0752f09e3a42ce4cef77aac0cf6adba04f8487a091cd160ff784a9",
+    "round1.log": "c884d468e8ec3402f32b8b011e2a6b6ba0949dc4f028e9cbfa1606b88bfcc706",
+    "round1.xml": "65068c8cbb20ca60a1431bc44cdbbd8b9fad212c03b98fa8d8c2495f6760ff5e",
+    "round2-after.json": "a7ed6f407fe8a0924ab8f2999667e3e711fe0b9a82ec80538f2010907e375318",
+    "round2-before-tests/test_deep_review_fixes_browser.py": "5f695a985ea7406cdb91ba192ffc333b4272a116ef807d753b2e1d8684a25fce",
+    "round2-before-tests/test_deep_review_obligations_browser.py": "ba933838a1f9ba7c09786d4ba206e4e91763747ae9ab8225082da8120c8315e4",
+    "round2-before-tests/test_navigation_usability_browser.py": "d5e201e0776e3d08ab45496f0e9a7760980380527a62e6c09a46ce23e6fca4ee",
+    "round2-before-tests/test_pr103_complete_browser.py": "8d81175e4e33652f9b325665ee1219f9f6797950736b789927741a60bfc404c7",
+    "round2-before-tests/test_pr104_supplemental_browser.py": "51f340e89fb0496cbcdbc747d02d20c733cba6eb0df197239ce6af4041b1e138",
+    "round2-before-tests/test_style_content_browser.py": "ff540b129b0692d06f2366e89b7e667887197cbf32fd9de451294b9f83a09cb1",
+    "round2-before-tests/test_ux08_task_walkthrough_browser.py": "d56925be8d0d7574c1baf184ad23b84afa147f5312fad4e4019f8d143f02b9ea",
+    "round2-before.json": "a7ed6f407fe8a0924ab8f2999667e3e711fe0b9a82ec80538f2010907e375318",
+    "round2-evidence/r4-version-area-after-read.png": "17a0cf21007d8ba031ef6aef155fa5b2d3ac628b1bda2b2ea63c059ab257ac1a",
+    "round2.log": "a0ad44f6a0fd1c2b821b9dbb5d81b6f63b6a44079eebbfdb92fe318b643af37f",
+    "round2.xml": "f788216301af20cde6969785f6bd1378e4f979d865d7282d2bc0f47885231870",
+    "round3-after.json": "c2d9648e05baa17c125179c0af5e7d984b93a6d19f075eae9de363d6d2f36eb0",
+    "round3-before-tests/test_deep_review_fixes_browser.py": "3bb77974b305b4717223cfce18e66fe54b2060494deddba5f86dacdb9f54d2c8",
+    "round3-before-tests/test_deep_review_obligations_browser.py": "ba933838a1f9ba7c09786d4ba206e4e91763747ae9ab8225082da8120c8315e4",
+    "round3-before-tests/test_navigation_usability_browser.py": "d5e201e0776e3d08ab45496f0e9a7760980380527a62e6c09a46ce23e6fca4ee",
+    "round3-before-tests/test_pr103_complete_browser.py": "8d81175e4e33652f9b325665ee1219f9f6797950736b789927741a60bfc404c7",
+    "round3-before-tests/test_pr104_supplemental_browser.py": "51f340e89fb0496cbcdbc747d02d20c733cba6eb0df197239ce6af4041b1e138",
+    "round3-before-tests/test_style_content_browser.py": "ff540b129b0692d06f2366e89b7e667887197cbf32fd9de451294b9f83a09cb1",
+    "round3-before-tests/test_ux08_task_walkthrough_browser.py": "45cb3f4bfba6eb14754ca0546ab48b20140bdb8f35886681ffce060bd400ee3c",
+    "round3-before.json": "c2d9648e05baa17c125179c0af5e7d984b93a6d19f075eae9de363d6d2f36eb0",
+    "round3.log": "8d0315b2d6abec97f3e4ce369a52e9db731431d24346cfcdba8c896c644f18a4",
+    "round3.xml": "7ebe5c1d2bd95871e5edeb413ac4e57a771c9b807cd4ceeb27681d839dfc7ce9",
+    "ruff-final.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  }
+}

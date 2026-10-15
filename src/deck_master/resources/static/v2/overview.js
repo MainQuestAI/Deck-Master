@@ -398,11 +398,14 @@ function matrixPanel(app, saved) {
       const plan = await get('/api/content-plan' + revisionQuery(app.route.revision));
       if (disposed) return;
       const goalChapter = new Map();
-      for (const chapter of plan.content_plan?.chapters || [])
-        for (const goalId of chapter.goal_ids || []) goalChapter.set(goalId, chapter.title || chapter.chapter_id);
       const pageChapter = new Map();
+      for (const chapter of plan.content_plan?.chapters || []) {
+        const title = chapter.title || chapter.chapter_id;
+        if (Array.isArray(chapter.page_ids)) for (const pageId of chapter.page_ids) pageChapter.set(pageId, title);
+        else for (const goalId of chapter.goal_ids || []) goalChapter.set(goalId, title);
+      }
       for (const goal of plan.content_plan?.goals || [])
-        if (goal.page_id) pageChapter.set(goal.page_id, goalChapter.get(goal.goal_id) ?? null);
+        if (goal.page_id && !pageChapter.has(goal.page_id)) pageChapter.set(goal.page_id, goalChapter.get(goal.goal_id) ?? null);
       chapterTitleOf = pageId => pageChapter.get(pageId) ?? null;
       render();
     } catch { /* 章节分组保持关闭，不影响矩阵与待办 */ }

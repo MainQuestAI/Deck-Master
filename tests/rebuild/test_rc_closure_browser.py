@@ -574,8 +574,21 @@ def test_page_candidate_uses_one_fixed_lineage_read(workbench):
 def test_prepared_prompt_selection_mounts_one_recovery_panel(workbench):
     import uuid
     from urllib.parse import urlencode
-    from deck_master import changes
+    from deck_master import changes, collaboration
+    from rc3_fixtures import evidence_for
     page, _, store, url, _, _ = workbench
+    prior = next(item for item in collaboration.describe(store.project_root)['effective_authorizations']
+                 if 'change.commit' in item['record']['actions'])
+    record = prior['record']
+    collaboration.grant(store.project_root, input={'authorization_id': record['authorization_id'],
+        'replaces': prior['ref'], 'mode': 'execute',
+        'actions': list(dict.fromkeys(record['actions'] + ['allowance.allocate'])),
+        'scope': {**record['scope'], 'page_ids': ['p01']},
+        'max_external_calls': 2, 'max_candidate_count': 2, 'adoption_policy': 'within_scope',
+        'instruction_evidence': evidence_for(store.project_root,
+            text='L1 explicitly reserve two bounded original-image trials for p01, one prepared prompt each; no tool call has begun.',
+            locator='L1:prepared-prompt-browser:two-reservations')},
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
     for instruction in ['仅调整标题层级', '仅调整配色']:
         doc = store.load_document()
         entry = doc['pages'][0]

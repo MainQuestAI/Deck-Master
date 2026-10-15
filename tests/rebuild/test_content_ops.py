@@ -61,6 +61,8 @@ def v2_revision_envelope(store, task, envelope):
         'summary': update.get('impact_summary') or update.get('unchanged_reason') or 'Explicit L1 reconciliation',
         'changed_page_ids': list(dict.fromkeys(changed)),
         'removed_page_ids': removed, 'page_order': update.get('page_order', [])}
+    if 'unchanged_reason' in update:
+        diff['unchanged_reason'] = update['unchanged_reason']
     return {'schema_version': 'compose_result.v2', 'kind': 'compose', 'variant': 'input_revision',
         'task_id': task['task_id'], 'operation_id': task['operation_id'],
         'produced_against': task['produced_against'],

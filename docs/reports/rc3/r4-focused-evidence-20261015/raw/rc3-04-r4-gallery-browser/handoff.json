@@ -1,0 +1,381 @@
+{
+  "status": "READY_FOR_OWNER_REVIEW_CHILD_STOPPED",
+  "recorded_utc": "2026-10-15T08:06:36.913155+00:00",
+  "source_head_declared_by_owner": "8223df80be654c9a89a44cd97cf770fa01bf4383",
+  "execution_level": "L1 synthetic, actual Chromium with --require-browser; mutable live worktree, not fixed CI or professional quality approval",
+  "canonical_original_log": "/workspace/work/rc3/reviews/rc3-04-root-ci-failure-8223df8/browser-job-116294607252.exact-api-content.log",
+  "canonical_original_log_sha256": "9705083903f932e1da74310b9c5bc066781d290de443dc15e18e2a251c632f89",
+  "original_94_mapping": "final-original94-mapping.json",
+  "original_failures_this_domain": 23,
+  "outside_domain_original_failures": 71,
+  "owned_files_sha256": {
+    "tests/rebuild/test_gallery_reading_browser.py": "5f5846f43285c0da25a54a66e56c9affbd79d2a746e6ad256aeac837086d4367",
+    "tests/rebuild/test_studio_gallery_batch_browser.py": "a2b4b62ecca4ab2ed57009c65111972c3df3995a338186dd9e033a0483921e3a",
+    "tests/rebuild/test_container_hierarchy_browser.py": "3679fd7730386b62091310b154b9317fafc1cfbbd558fb304c8e1f7932d4e084",
+    "tests/rebuild/test_ux05_runs_delivery_browser.py": "a8fd13d7419d57827b14e347c9fd271d4def94fbb768a5c78d3a055c992b0ee0",
+    "tests/rebuild/test_ux06_gallery_conflict_browser.py": "45b5681d62a3b7887296ad7d395d48f2e8b5694fbe195772472fc7641bd67aa6",
+    "tests/rebuild/test_ux07_style_convergence_browser.py": "0ad2be775d9f3ce8db8752fa78d3b489c0d598e428cc67077efca560e6e538f8",
+    "tests/rebuild/test_studio_reading_browser.py": "4d4e66d92ac76390ac2ea6e586b85fe0336390cdadc11654a56fce915e85e1c8",
+    "tests/rebuild/test_workbench_usability_browser.py": "59ad0bb7ac7bef66339a27c490ad15114af47f72846cda4cf52f42aae7bc2420"
+  },
+  "modified_owned_files": [
+    "tests/rebuild/test_gallery_reading_browser.py",
+    "tests/rebuild/test_container_hierarchy_browser.py",
+    "tests/rebuild/test_studio_gallery_batch_browser.py",
+    "tests/rebuild/test_studio_reading_browser.py",
+    "tests/rebuild/test_ux07_style_convergence_browser.py"
+  ],
+  "unchanged_owned_files": [
+    "tests/rebuild/test_ux05_runs_delivery_browser.py",
+    "tests/rebuild/test_ux06_gallery_conflict_browser.py",
+    "tests/rebuild/test_workbench_usability_browser.py"
+  ],
+  "shared_signatures_unchanged": [
+    "ux06.gallery_pair(tmp_path)",
+    "ux06.open_gallery(context,url,name)",
+    "ux05.add_task(store,task_id,kind,status,instruction)"
+  ],
+  "child_product_edits": [],
+  "child_shared_fixture_edits": [],
+  "child_scope_or_authorization_changes": [],
+  "product_delta": {
+    "required": true,
+    "owner_files": [
+      "src/deck_master/resources/static/v2/gallery.js",
+      "src/deck_master/resources/static/v2/content-sources.js",
+      "src/deck_master/resources/static/v2/overview.js"
+    ],
+    "root_cause": "Actual content_plan.v2 chapters carry page_ids; gallery unconditionally called goal_ids.map. Rendering threw and loadRoute caught it, leaving the previous surface visible despite the gallery URL.",
+    "raw_failure": "first-gallery.log: 1 failed in 19.21s; first-gallery-render-error.json captures original TypeError stack at gallery.js:32:102; 125 resource entries completed, no failed requests or HTTP >=400 responses.",
+    "diagnostic_instrumentation": "Standalone render wrapper only captured and rethrew the exact exception. No product/test gate or stored fact was patched.",
+    "owner_other_runtime_changes_observed": [
+      "src/deck_master/content_production.py",
+      "src/deck_master/eligibility.py"
+    ]
+  },
+  "changes": [
+    "Screenshot/output defaults use tmp_path or explicit DECK_MASTER_BROWSER_EVIDENCE; container retains explicit CONTAINER_EVIDENCE. No checkout/output writes.",
+    "Existing gallery keyboard case additionally verifies actual content_plan.v2 page_ids, chapter label/filter, and 30/30 membership.",
+    "Existing five-viewport container case additionally verifies three actual v2 chapter names and exact page sets, first-group matrix chapter rows, ranges 1–8/9–16/17–24, and all eight page choices within each chapter."
+  ],
+  "assertions_preserved": [
+    "All original selectors, expectation timeouts and geometry tolerances retained.",
+    "Exact selected five-page target IDs/stages/base_revision, preview-only Store unchanged assertions and no-request negative cases retained.",
+    "Historical production controls remain disabled; actual two-window ETag CAS conflict snapshots and both download controls retained.",
+    "Native 960x540 pixels, fit/fullscreen, 44px controls, fixed revision/URL, keyboard focus and stored draft assertions retained."
+  ],
+  "successful_distinct_browser_cases": 42,
+  "original_23_final_passed": 23,
+  "runs": [
+    {
+      "name": "cg4-other19",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 122.031,
+      "log_sha256": "89e6b868a01e4c9977bf1e5afe9a206471144e4cab747e3b7b4a9cacf5308426",
+      "xml_sha256": "9b6cc37241087b0339323fb35c9e49ed845382ea1a573f0b5cdd2a5eb846ede2",
+      "identity_sha256": "b5b9fd164e41338e9d9669f6762c424d91c8bca5a48895d3f2c00c3d13c9e984",
+      "changed_during_run": [
+        "tests/rebuild/test_studio_content_browser.py",
+        "tests/rebuild/test_navigation_usability_browser.py",
+        "tests/rebuild/test_pr103_complete_browser.py",
+        "tests/rebuild/test_deep_review_obligations_browser.py",
+        "tests/rebuild/test_ux08_task_walkthrough_browser.py",
+        "tests/rebuild/test_rc3_reconciliation_reasons.py",
+        "tests/rebuild/test_deep_review_fixes_browser.py",
+        "src/deck_master/content_production.py",
+        "tests/rebuild/test_style_content_browser.py"
+      ],
+      "results": [
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_single_page_faces_and_content_sections[1440-900]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_single_page_faces_and_content_sections[1280-800]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_single_page_faces_and_content_sections[1024-768]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_single_page_faces_and_content_sections[830-900]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_single_page_faces_and_content_sections[390-844]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_runs_subareas_reach_decisions_versions_files_and_shortcuts_match_layers",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_file_area_orders_version_purpose_result_with_recovery_secondary[studio]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_file_area_orders_version_purpose_result_with_recovery_secondary[v2]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_version_selection_reading_and_restore_state_their_targets",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_historical_record_is_fixed_latest_todo_reachable_and_status_honest",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_batch_blocking_reasons_sit_beside_the_field",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_task_detail_leaves_subarea_clean_and_version_identity_has_no_value_noise",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_reading_browser.py::test_single_page_unreadable_image_retries_without_empty_reading_controls",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_workbench_usability_browser.py::test_reading_prioritizes_artwork_and_preserves_fixed_layers[390-844]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_workbench_usability_browser.py::test_reading_prioritizes_artwork_and_preserves_fixed_layers[1280-800]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_workbench_usability_browser.py::test_reading_prioritizes_artwork_and_preserves_fixed_layers[1440-900]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_workbench_usability_browser.py::test_optional_tools_do_not_arm_annotation_and_keep_keyboard_return",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_workbench_usability_browser.py::test_readonly_workbench_does_not_offer_a_live_opinion_entry",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_workbench_usability_browser.py::test_mobile_reading_actions_keep_fixed_comparison_and_resize_focus",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "name": "cg4-original23",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 144.884,
+      "log_sha256": "bdca027524b28652e18ec1b49411d5c93145f82582daa59f9a21232c25105e7d",
+      "xml_sha256": "c96fad81020ffed2b9f67464c17b5d034104a50b645b4c40c97b5e6e57e39775",
+      "identity_sha256": "cbbd01e3b46f3399c0473bd70785c1bde83d9f9efd0a7ca643bb373beb575f24",
+      "changed_during_run": [
+        "tests/rebuild/test_studio_content_browser.py",
+        "tests/rebuild/test_ux08_task_walkthrough_browser.py",
+        "tests/rebuild/test_ux03_style_candidate_browser.py",
+        "tests/rebuild/test_navigation_usability_browser.py",
+        "src/deck_master/content_production.py",
+        "tests/rebuild/test_deep_review_fixes_browser.py",
+        "tests/rebuild/test_rc3_reconciliation_reasons.py",
+        "tests/rebuild/test_pr103_complete_browser.py",
+        "tests/rebuild/test_style_content_browser.py"
+      ],
+      "results": [
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1440-900]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1280-800]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1024-768]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[830-900]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[390-844]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_gallery_reading_browser.py::test_canvas_arrows_move_focus_without_leaving_gallery",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_gallery_reading_browser.py::test_continuous_grid_renders_a_window_and_keyboard_recovers_focus",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_selected_pages_enter_real_batch_without_reselection[blueprint]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_selected_pages_enter_real_batch_without_reselection[reconstruct]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_selected_pages_enter_real_batch_without_reselection[repair]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_selected_pages_enter_real_batch_without_reselection[style]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_production_is_readonly_for_history",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_large_selection_persists_but_comparison_stays_two_to_four",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_reading_browser.py::test_single_page_native_fit_fullscreen_keeps_basis_and_draft[size0]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_reading_browser.py::test_single_page_native_fit_fullscreen_keeps_basis_and_draft[size1]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_studio_reading_browser.py::test_single_page_native_fit_fullscreen_keeps_basis_and_draft[size2]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_gallery_comparison_entry_stays_on_the_toolbar",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux06_gallery_conflict_browser.py::test_conflict_panel_lists_different_fields_and_both_snapshots",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux07_style_convergence_browser.py::test_migrated_components_keep_targets_adjacency_and_state_text[1440-900]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux07_style_convergence_browser.py::test_migrated_components_keep_targets_adjacency_and_state_text[1280-800]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux07_style_convergence_browser.py::test_migrated_components_keep_targets_adjacency_and_state_text[390-844]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_ux07_style_convergence_browser.py::test_representative_paths_survive_200_percent_text_zoom",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_workbench_usability_browser.py::test_gallery_reading_preferences_remain_open_and_restore",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "name": "cg4-chapters6",
+      "tests": 6,
+      "failures": 5,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 26.435,
+      "log_sha256": "e8b5066472fd0e730f9cf5871114ded8ea6d322498cea2e1849ae8b72fd8f2e0",
+      "xml_sha256": "7d0d298652192689cbd6df36326cfb8b6987a6647d0f094bc67114b2e7b9f5bf",
+      "identity_sha256": "ac7fbdfa0bb2481b0c40e2e4325fce05f49afdffcd74bda9e74a5b69b243d9b5",
+      "changed_during_run": [],
+      "results": [
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1440-900]",
+          "outcome": "failed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1280-800]",
+          "outcome": "failed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1024-768]",
+          "outcome": "failed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[830-900]",
+          "outcome": "failed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[390-844]",
+          "outcome": "failed"
+        },
+        {
+          "test_id": "tests/rebuild/test_gallery_reading_browser.py::test_canvas_arrows_move_focus_without_leaving_gallery",
+          "outcome": "passed"
+        }
+      ]
+    },
+    {
+      "name": "cg4-chapters-final6",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_seconds": 41.234,
+      "log_sha256": "73f2265f734c590a45ed7e61212a4d221e8e7700a8ca3466c01e27720babf3b0",
+      "xml_sha256": "dbfda95531caf68399ad9a968b649a0013553b3a81521a99039be74a2115002c",
+      "identity_sha256": "e63f3f300357a3a23343c58d0899f31f4cfcd51b1fda21b9bf6e9a66ed430b39",
+      "changed_during_run": [],
+      "results": [
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1440-900]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1280-800]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1024-768]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[830-900]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[390-844]",
+          "outcome": "passed"
+        },
+        {
+          "test_id": "tests/rebuild/test_gallery_reading_browser.py::test_canvas_arrows_move_focus_without_leaving_gallery",
+          "outcome": "passed"
+        }
+      ]
+    }
+  ],
+  "intermediate_new_assertion_failure": {
+    "run": "cg4-chapters6",
+    "results": "5 failed, 1 passed in 26.44s",
+    "cause": "Test author initially assumed the mixed-gallery24 fixture had one 24-page chapter. Existing factory actually has three explicit eight-page chapters. Expected values were corrected to that existing fixture without changing fixture, product, or original assertions.",
+    "preserved": true
+  },
+  "final_fresh_affected_run": {
+    "name": "cg4-chapters-final6",
+    "results": "6 passed in 41.24s, 0 skipped",
+    "changed_during_run": [],
+    "note": "Fresh Python process after Owner JS stabilization; full src/deck_master and tests/rebuild hashes identical before/after. Earlier 19/23 rounds explicitly record concurrent content_production.py changes; no fixed BUILD_ID/CI claim."
+  },
+  "artifact_directory": "/workspace/work/rc3/reviews/rc3-04-r4-gallery-browser",
+  "artifact_sha256_manifest": "artifact-sha256.json",
+  "artifact_sha256_manifest_sha256": "2c2e5fbc5fc955a30d23694f8bda8090bf30ca027e165f31da2b094da3e1403c",
+  "all_artifacts_preserved": true,
+  "outstanding_product_blockers_in_owned_domain": [],
+  "git_write_operations_performed": false
+}

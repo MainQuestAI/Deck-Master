@@ -1482,7 +1482,11 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
     if violation:
         raise tasks_mod.EnvelopeError('(result)/payload/diff/page_order', violation)
     if not changed_pages and not removed:
-        virtual_update['unchanged_reason'] = summary.strip()
+        unchanged_reason = diff.get('unchanged_reason', summary)
+        if not isinstance(unchanged_reason, str) or not unchanged_reason.strip():
+            raise tasks_mod.EnvelopeError('(result)/payload/diff/unchanged_reason',
+                                          'an unchanged result needs a concrete reason')
+        virtual_update['unchanged_reason'] = unchanged_reason.strip()
     if set(changed_page_ids) != changed_pages | set(removed):
         raise tasks_mod.EnvelopeError("(result)/payload/diff/changed_page_ids", "diff must identify exactly the substantive Page proposals and removals")
     if task.get('content_operation_ref'):
@@ -1537,6 +1541,7 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             response={"status": "accepted", "revision_id": pending["revision_id"], "variant": "input_revision",
                 "adopted": False, "changed_layers": changed_layers, "proposal_refs": proposed,
                 'impact_summary': summary.strip(), 'new_page_hashes': {},
+                **({'unchanged_reason': virtual_update['unchanged_reason']} if 'unchanged_reason' in virtual_update else {}),
                 "result_refs": proposed, "next_action": "adopt_with_covering_decision"})
     actual_plan_change = plan_input != (old_plan or {}).get('input')
     if (any(entry['page'] != entries.get(entry['page_id'], {}).get('page') for entry in new_pages)
@@ -1552,6 +1557,7 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         response={"status": "accepted", "revision_id": updated["revision_id"], "variant": "input_revision",
             "adopted": True, "changed_layers": changed_layers, "narrative_ref": narrative_ref,
             'impact_summary': summary.strip(),
+            **({'unchanged_reason': virtual_update['unchanged_reason']} if 'unchanged_reason' in virtual_update else {}),
             'new_page_hashes': {entry['page_id']: entry['page']['sha256'] for entry in new_pages if entry['page_id'] in changed_pages},
             "plan_ref": updated.get("content_plan"), "page_refs": [entry["page"] for entry in new_pages],
             "result_refs": result_refs, "invalidated_outputs": [ref for key, ref in document['outputs'].items()

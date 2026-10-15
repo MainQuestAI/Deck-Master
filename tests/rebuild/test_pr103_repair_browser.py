@@ -259,7 +259,7 @@ def test_reference_preview_and_same_file_retry_after_not_found(flow):
 
 
 @pytest.mark.parametrize('rejection', ['decode', 'pixels', 'basis'])
-def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection):
+def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection, tmp_path):
     # Regression: PR103 P2 — confirmed rejection must not trap a new upload.
     # Value: protects=new file/current base after rejection; fails_when=all errors stay unknown;
     # why_new=existing retry case only exercises missing response; seam=none
@@ -348,7 +348,7 @@ def test_rejected_reference_can_start_a_new_upload_after_reload(flow, rejection)
             screenshot(page, 'upload-restarted-'+rejection)
             assert errors == []
         finally:
-            evidence = Path('output/playwright/pr103-complete/upload-rejection-milestones')
+            evidence = Path(os.environ.get('DECK_MASTER_BROWSER_EVIDENCE', str(tmp_path/'evidence'))) / 'upload-rejection-milestones'
             evidence.mkdir(parents=True, exist_ok=True)
             state = page.evaluate("""() => ({url: location.href,
               draft: document.querySelector('.draft-state')?.textContent,

@@ -13,8 +13,28 @@ from test_action_targets import add_handoffs
 from test_candidates import candidate
 from test_content_candidates import dispatch_content_ops_trial, start_task, accept, changeset_envelope
 from test_workbench_actions import commit
+from rc3_fixtures import evidence_for
+from test_service_flow import _prepare_production
 
 pytestmark = pytest.mark.browser
+
+
+def _prepare_browser_project(path, *, max_candidate_count=4):
+    """Explicit L1 editorial scope; local candidates never grant image calls."""
+    from deck_master import collaboration
+    scope = _prepare_production(path,
+        actions=['content.operation', 'change.commit', 'candidate.adopt'],
+        max_external_calls=0, max_candidate_count=max_candidate_count,
+        membership=True, order=True,
+        scenario=f'L1 fixed manuscript browser transactions, {max_candidate_count} local candidates, zero image calls')
+    store = Store(path)
+    collaboration.record_decision(path, input={'topic': 'direction', 'disposition': 'accepted',
+        'authority_mode': 'direct_user', 'value': 'Preserve this exact synthetic manuscript direction',
+        'scope': scope, 'subject_refs': [],
+        'instruction_evidence': evidence_for(path,
+            text='L1 explicitly confirmed editorial direction for these fixed pages and bounded local trials.',
+            locator='L1:browser-editorial-direction')},
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
 
 
 @pytest.fixture
@@ -22,6 +42,7 @@ def action_browser(tmp_path):
     playwright = pytest.importorskip('playwright.sync_api')
     path = tmp_path / 'browser-project'
     create_sample(path, page_count=3, readonly=False)
+    _prepare_browser_project(path)
     store = Store(path)
     server = WorkbenchServer(path)
     with playwright.sync_playwright() as runtime:

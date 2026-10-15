@@ -1,5 +1,7 @@
 # RC3-04 完整工程交接（最终HEAD CI待执行）
 
+> 后续事实：本文件的文档HEAD `8223df8` 在真实run `38696634552` 中browser失败（90FAIL/4ERROR），其后安装UI与recovery步骤未运行，PR119尚未合并，RC3-05不开始。下文保留R3当时的固定本地结果与交接状态；当前修复与94事件映射见 [R4交接](RC3-04-R4-HANDOFF.md)，新的exact-head CI仍为 **PENDING_NEW_FIXED_HEAD**。
+
 RC3-04代码冻结于 `a53a265321ca6bb15f347bbe23b5143fe8b7378c` / tree `31cca075ac76877908e04f030f0c4e815d3a6268`。固定unit2362、render71与Ruff通过；三路独立code/installed behavior/installed UI有限复审通过。最终四Skill代表性组合是R3新执行1条+R2精确复用15条，同一个实际Host。版本`1.0.0rc3`，实际候选包、方法、合同与安装来源均有准确hash；严格审计为270canonical+1generated/四Role字节一致。
 
 [最终证据导航](entry-integration-handoff-20261015/README.md)、[报告](entry-integration-handoff-20261015/report.md)、[原卡/AC映射](entry-integration-handoff-20261015/acceptance-map.md)、[复制清单](entry-integration-handoff-20261015/manifest.json)供clone后追溯。R1/R2原失败、真实产品修复和R3关闭分别保留；原单p04 native与37AC/13CQ状态不被批量改写。各轮当时的交接文档保留历史措辞。

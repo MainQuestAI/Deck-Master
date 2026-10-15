@@ -1,0 +1,1547 @@
+{
+  "schema": "rc3_r4_original_ci_event_mapping.v1",
+  "original_head": "8223df80be654c9a89a44cd97cf770fa01bf4383",
+  "canonical_ci_log_sha256": "9705083903f932e1da74310b9c5bc066781d290de443dc15e18e2a251c632f89",
+  "original_counts": {
+    "FAILED": 90,
+    "ERROR": 4
+  },
+  "mapped_events": 94,
+  "distinct_test_ids": 93,
+  "level": "All mappings are actual L1 live focused observations, not a new fixed broad, installed, CI or human/professional PASS. Original FAIL/ERROR outcomes are retained.",
+  "worker_status": "All four workers stopped source editing and execution; Owner alone integrates Git.",
+  "cases": [
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_action_targets_browser.py::test_multi_candidate_todo_and_historical_candidate_reads",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_action_targets_browser.py::test_changeset_todo_opens_fixed_deck_comparison_without_fake_page",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_batch_actions_browser.py::test_explicit_budget_exact_plan_and_duplicate_click_create_one_batch",
+      "summary": "AssertionError: Locator expected to contain text '已保存 2 项待交接任务，尚未开始制作'",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual change.commit grant; 409 also triggered original intercepted-response teardown assertion.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_batch_actions_browser.py::test_lost_commit_response_verify_original_receipt_reload_never_redispatches",
+      "summary": "AssertionError: Locator expected to contain text '尚未确认保存结果'",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual change.commit grant; 409 also triggered original intercepted-response teardown assertion.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_comparison_canvas_browser.py::test_candidate_ppt_requires_rendered_preview_and_late_results_stay_bound",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_comparison_canvas_browser.py::test_actual_ppt_bytes_must_match_check_and_candidate_identity",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_comparison_canvas_browser.py::test_candidate_fullscreen_fit_keeps_both_canvases_above_actions[size0]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_comparison_canvas_browser.py::test_candidate_fullscreen_fit_keeps_both_canvases_above_actions[size1]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_comparison_canvas_browser.py::test_candidate_fullscreen_fit_keeps_both_canvases_above_actions[size2]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_comparison_canvas_browser.py::test_missing_candidate_font_has_clear_guidance_and_collapsed_technical_detail",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1440-900]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-chapters-final6"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1280-800]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-chapters-final6"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[1024-768]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-chapters-final6"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[830-900]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-chapters-final6"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_container_hierarchy_browser.py::test_layout_sections_and_style_routes[390-844]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-chapters-final6"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_style_conflict_choices_live_with_the_confirm_action",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+        "observation": {
+          "outcome": "PASS",
+          "time": 4.21,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_style_plan_failure_stays_visible_without_a_plan",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+        "observation": {
+          "outcome": "PASS",
+          "time": 5.706,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_version_area_survives_reading_reload_and_return",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "explicit_historical_reader_task_and_full_history",
+        "observation": {
+          "outcome": "PASS",
+          "time": 4.033,
+          "round": "3"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_complex_body_change_list_and_impact_share_one_screen",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "named_page_copy_direction_and_zero_call_content_grant",
+        "observation": {
+          "outcome": "PASS",
+          "time": 5.518,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_fixes_browser.py::test_gallery_conflict_reports_filter_anchor_and_zoom_differences",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 14.016,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_obligations_browser.py::test_main_layer_keeps_business_language_on_every_surface",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 8.872,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_obligations_browser.py::test_selection_to_style_path_works_after_using_the_screenshot_source",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 6.493,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_deep_review_obligations_browser.py::test_style_handoff_appears_with_a_real_local_plan",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+        "observation": {
+          "outcome": "PASS",
+          "time": 7.441,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_gallery_reading_browser.py::test_canvas_arrows_move_focus_without_leaving_gallery",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-chapters-final6"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_gallery_reading_browser.py::test_continuous_grid_renders_a_window_and_keyboard_recovers_focus",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_navigation_usability_browser.py::test_mobile_gallery_reads_on_page_and_restores_desktop_preference",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 4.085,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_navigation_usability_browser.py::test_mobile_gallery_settings_keep_selection_focus_and_production_targets",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 5.69,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_navigation_usability_browser.py::test_selected_internal_style_keeps_main_action_in_first_view[1280-800]",
+      "summary": "AssertionError: Locator expected to be enabled",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "case_only_zero_call_style_scope_before_initial_browser_load",
+        "observation": {
+          "outcome": "PASS",
+          "time": 3.97,
+          "round": "2"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_navigation_usability_browser.py::test_selected_internal_style_keeps_main_action_in_first_view[1440-900]",
+      "summary": "AssertionError: Locator expected to be enabled",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "case_only_zero_call_style_scope_before_initial_browser_load",
+        "observation": {
+          "outcome": "PASS",
+          "time": 3.759,
+          "round": "2"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr103_complete_browser.py::test_three_versions_restore_uses_read_source_and_current_basis[False]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.select_option: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "explicit_full_history_and_current_label_with_exact_option_url_restore_cas",
+        "observation": {
+          "outcome": "PASS",
+          "time": 5.309,
+          "round": "2"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr103_complete_browser.py::test_three_versions_restore_uses_read_source_and_current_basis[True]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.select_option: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "explicit_full_history_and_current_label_with_exact_option_url_restore_cas",
+        "observation": {
+          "outcome": "PASS",
+          "time": 5.158,
+          "round": "2"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr103_complete_browser.py::test_gallery_conflict_same_selection_and_layer_exposes_reference_difference",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.check: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 16.977,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[current]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 4.02,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[historical]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 4.147,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr104_supplemental_browser.py::test_pressure_history_and_full_breakdown_use_visible_production_controls[readonly]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 4.074,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr105_draft_browser.py::test_candidate_recovery_survives_modal_and_allows_adoption[saved-False]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr105_draft_browser.py::test_candidate_recovery_survives_modal_and_allows_adoption[saved-True]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr105_draft_browser.py::test_candidate_recovery_survives_modal_and_allows_adoption[dirty-False]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr105_draft_browser.py::test_candidate_recovery_survives_modal_and_allows_adoption[dirty-True]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr105_draft_browser.py::test_candidate_recovery_survives_modal_and_allows_adoption[unknown-False]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr105_draft_browser.py::test_candidate_recovery_survives_modal_and_allows_adoption[unknown-True]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr105_draft_browser.py::test_candidate_recovery_survives_modal_and_allows_adoption[late-False]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_pr105_draft_browser.py::test_candidate_recovery_survives_modal_and_allows_adoption[late-True]",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_rc_closure_browser.py::test_prepared_prompt_selection_mounts_one_recovery_panel",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/allowance.allocate: the request asks for 1 external calls but only 0 remain on the bound authorization chain; a batch request answers to the same ceiling, not just to availability",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_rollup_browser.py::test_dispatch_unknown_explains_preservation_without_redispatch",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C3 unreadable preproduction evidence isolated at read boundary; no bad Task rewrite or redispatch",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_rollup_browser.py::test_damaged_reading_after_loaded_summary_does_not_reuse_old_etag[runs]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Original unchanged read/navigation assertion passes with integrated R4-C1/C3; no narrower causal attribution claimed",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_rollup_browser.py::test_damaged_reading_after_loaded_summary_does_not_reuse_old_etag[action]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Original unchanged read/navigation assertion passes with integrated R4-C1/C3; no narrower causal attribution claimed",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_candidate_batch_browser.py::test_bulk_candidates_groups_pagination_ambiguity_and_stale_plan",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_content_browser.py::test_studio_content_order_preview_cancel_and_plan_commit",
+      "summary": "AssertionError: assert False",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction/content.operation grant caused commit 409; old poll then read error response as success receipt.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_content_browser.py::test_studio_content_overview_starts_with_chapters_and_materials",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Runtime v2 chapters incorrectly resolved through legacy goal_ids/null goal identity.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_content_browser.py::test_studio_goal_material_links_keep_fixed_source_versions_and_recover",
+      "summary": "AssertionError: Locator expected to be enabled",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Runtime serialized v1 outline for actual v2 Plan; source version/location assertions remain exact.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_content_browser.py::test_studio_split_merge_fields_preview_cancel_refresh_and_dispatch[split-\\u62c6\\u5206-\\u62c6\\u5206\\u4f4d\\u7f6e\\u4e0e\\u65b9\\u5f0f-\\u5728\\u7b2c\\u4e8c\\u4e2a\\u8981\\u70b9\\u540e\\u62c6\\u5206\\uff1a\\u524d\\u9875\\u4fdd\\u7559\\u95ee\\u9898\\uff0c\\u540e\\u9875\\u8bb2\\u884c\\u52a8\\u4e0e\\u9a8c\\u8bc1\\u3002-1]",
+      "summary": "AssertionError: assert False",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction/content.operation grant caused commit 409; old poll then read error response as success receipt.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_content_browser.py::test_studio_split_merge_fields_preview_cancel_refresh_and_dispatch[merge-\\u5408\\u5e76-\\u5408\\u5e76\\u540e\\u7684\\u9875\\u9762\\u6807\\u9898-\\u95ee\\u9898\\u3001\\u884c\\u52a8\\u4e0e\\u9a8c\\u8bc1-2]",
+      "summary": "AssertionError: assert False",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction/content.operation grant caused commit 409; old poll then read error response as success receipt.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_content_browser.py::test_old_poll_cannot_invalidate_newly_read_content_plan[False]",
+      "summary": "KeyError: 'operation_result'",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction/content.operation grant caused commit 409; old poll then read error response as success receipt.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_content_browser.py::test_old_poll_cannot_invalidate_newly_read_content_plan[True]",
+      "summary": "KeyError: 'operation_result'",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction/content.operation grant caused commit 409; old poll then read error response as success receipt.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_selected_pages_enter_real_batch_without_reselection[blueprint]",
+      "summary": "AssertionError: Locator expected to have count '4'",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_selected_pages_enter_real_batch_without_reselection[reconstruct]",
+      "summary": "AssertionError: Locator expected to have count '4'",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_selected_pages_enter_real_batch_without_reselection[repair]",
+      "summary": "AssertionError: Locator expected to have count '4'",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_selected_pages_enter_real_batch_without_reselection[style]",
+      "summary": "AssertionError: Locator expected to have count '4'",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_production_is_readonly_for_history",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.check: Timeout 30000ms exceeded.",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_gallery_batch_browser.py::test_gallery_large_selection_persists_but_comparison_stays_two_to_four",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.fill: Timeout 30000ms exceeded.",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_reading_browser.py::test_single_page_native_fit_fullscreen_keeps_basis_and_draft[size0]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_reading_browser.py::test_single_page_native_fit_fullscreen_keeps_basis_and_draft[size1]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_studio_reading_browser.py::test_single_page_native_fit_fullscreen_keeps_basis_and_draft[size2]",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_style_content_browser.py::test_confirmed_recipe_progression_edits_and_new_revision_invalidate",
+      "summary": "AssertionError: Locator expected to be enabled",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+        "observation": {
+          "outcome": "PASS",
+          "time": 7.321,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_style_content_browser.py::test_late_style_plan_leaving_face_cannot_restore_controls",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+        "observation": {
+          "outcome": "PASS",
+          "time": 6.805,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_style_content_browser.py::test_material_states_verify_actual_extract_and_preserve_errors",
+      "summary": "deck_master.generation.GenerationError: host_protocol: this task requires compose.v2 and its declared capabilities",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "actual_compose_v2_workorder_capability_claim_and_input_revision_envelope",
+        "observation": {
+          "outcome": "PASS",
+          "time": 6.663,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_style_content_browser.py::test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone",
+      "summary": "deck_master.generation.GenerationError: host_protocol: this task requires compose.v2 and its declared capabilities",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "actual_compose_v2_workorder_capability_claim_and_input_revision_envelope",
+        "observation": {
+          "outcome": "PASS",
+          "time": 9.038,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux00_fixes_browser.py::test_handoff_copy_binds_to_the_loaded_group_not_the_pending_selection",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux00_fixes_browser.py::test_project_scope_reads_as_opinion_and_decision_ref_is_not_a_revision",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux03_style_candidate_browser.py::test_same_name_saved_recipes_and_groups_are_distinguishable_before_selection",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux03_style_candidate_browser.py::test_candidate_desk_rapid_switch_late_reply_and_decisions_target_displayed_object",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux04_content_annotations_browser.py::test_same_text_body_nodes_are_distinguishable_and_editable_separately",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction decision/content.operation grant before real direct content edit.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux04_content_annotations_browser.py::test_outline_block_reaches_its_pages_and_return_keeps_surface",
+      "summary": "AssertionError: Locator expected to contain text '第 1–2 页'",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Runtime v2 chapters incorrectly resolved through legacy goal_ids/null goal identity.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux04_content_annotations_browser.py::test_same_text_ranges_validate_per_node_and_feed_text_annotation",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction decision/content.operation grant before real direct content edit.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux05_runs_delivery_browser.py::test_gallery_comparison_entry_stays_on_the_toolbar",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux06_gallery_conflict_browser.py::test_conflict_panel_lists_different_fields_and_both_snapshots",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux07_style_convergence_browser.py::test_migrated_components_keep_targets_adjacency_and_state_text[1440-900]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux07_style_convergence_browser.py::test_migrated_components_keep_targets_adjacency_and_state_text[1280-800]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux07_style_convergence_browser.py::test_migrated_components_keep_targets_adjacency_and_state_text[390-844]",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux07_style_convergence_browser.py::test_representative_paths_survive_200_percent_text_zoom",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_batch_route_normal_result_and_lost_response_recovery",
+      "summary": "AssertionError: Locator expected to contain text '已保存'",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "exact_two_page_two_call_trial_grant_and_L1_fidelity_review",
+        "observation": {
+          "outcome": "PASS",
+          "time": 5.838,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_style_route_conflict_resolution_trial_plan_and_extension_error",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "named_page_style_grant_and_L1_fidelity_for_trial_planning",
+        "observation": {
+          "outcome": "PASS",
+          "time": 6.578,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_content_route_change_list_impact_and_draft_restore",
+      "summary": "AssertionError: Locator expected to contain text '本次具体改动（0）'",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "named_page_copy_direction_and_zero_call_content_grant",
+        "observation": {
+          "outcome": "PASS",
+          "time": 7.561,
+          "round": "3"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_delivery_route_version_identities_files_and_blocked_delivery",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "explicit_delivery_consent_and_output_scope_grant_engineering_gates_preserved",
+        "observation": {
+          "outcome": "PASS",
+          "time": 4.616,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_ux08_task_walkthrough_browser.py::test_recovery_route_real_gallery_conflict_reports_differences",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "skills_install",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Owner_C1_v2_gallery_chapter_reader_product_fix",
+        "observation": {
+          "outcome": "PASS",
+          "time": 11.382,
+          "round": "1"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-style-browser/B-R4-FROZEN-HANDOFF.json",
+        "frozen_handoff_sha256": "58a181d3503086e911058d1116e34d385ee9b109bb236e230b33d5eebd095a59"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_work_surface_browser.py::test_seven_surfaces_at_all_acceptance_sizes",
+      "summary": "playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 30000ms exceeded.",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Original unchanged read/navigation assertion passes with integrated R4-C1/C3; no narrower causal attribution claimed",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_work_surface_browser.py::test_candidate_keep_reopen_and_lost_adoption_response_use_original_receipt",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_work_surface_browser.py::test_cancel_via_task_desk_rejects_repeated_late_result",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope",
+      "exclusive_owner": "adapter_external",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Explicit named-page L1 request/decision/grant/real capability setup; shared gate remains enabled",
+        "observation": {
+          "outcome": "passed",
+          "run": "nine-focused-1: all nine owned modules, 86 passed; artifact-only three parameters separately revalidated"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-adapter-browser/handoff.json",
+        "frozen_handoff_sha256": "23744a158df69d40aae7f61745fdbf60e6b51a7df3ee9408fc6a58ad2774e1b7"
+      }
+    },
+    {
+      "outcome": "FAILED",
+      "test_id": "tests/rebuild/test_workbench_usability_browser.py::test_gallery_reading_preferences_remain_open_and_restore",
+      "summary": "AssertionError: Locator expected to be visible",
+      "exclusive_owner": "studio_browser",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "R4-C1 actual v2 Plan chapter/page consumers; original business/geometry/keyboard assertions retained",
+        "observation": {
+          "outcome": "passed",
+          "run": "cg4-original23"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-gallery-browser/handoff.json",
+        "frozen_handoff_sha256": "ab66144227692047d50745ae9cc05b8f8319eb37aaf4ae402185061d9b501b31"
+      }
+    },
+    {
+      "outcome": "ERROR",
+      "test_id": "tests/rebuild/test_batch_actions_browser.py::test_lost_commit_response_verify_original_receipt_reload_never_redispatches",
+      "summary": "AssertionError: Browser.close: assert 409 == 200",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual change.commit grant; 409 also triggered original intercepted-response teardown assertion.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "ERROR",
+      "test_id": "tests/rebuild/test_studio_range_edit_browser.py::test_exact_unicode_range_cancel_restore_replace_delete_and_history",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction decision/content.operation grant before real direct content edit.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "ERROR",
+      "test_id": "tests/rebuild/test_studio_range_edit_browser.py::test_exact_range_later_write_and_stale_plan_are_preserved",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction decision/content.operation grant before real direct content edit.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    },
+    {
+      "outcome": "ERROR",
+      "test_id": "tests/rebuild/test_studio_range_edit_browser.py::test_old_range_preview_does_not_close_reopened_dialog",
+      "summary": "deck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction",
+      "exclusive_owner": "classic_fixture_migration",
+      "r4_live_focused": {
+        "result": "passed",
+        "resolution": "Missing actual direction decision/content.operation grant before real direct content edit.",
+        "observation": {
+          "outcome": "passed",
+          "run": "current-core stable 23-case Chromium; relevant artifact-only four-parameter repeat separately recorded"
+        },
+        "frozen_handoff": "raw/rc3-04-r4-content-browser/handoff.json",
+        "frozen_handoff_sha256": "91828d4b7ef92b33c7a5d1d8de2f4957b92f7891eaf438af5e5dc6dbf6c4e57c"
+      }
+    }
+  ],
+  "new_CI": "PENDING_NEW_FIXED_HEAD"
+}

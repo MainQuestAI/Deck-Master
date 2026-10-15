@@ -1,0 +1,119 @@
+Traceback (most recent call last):
+  File "/workspace/work/rc3/cards/rc3-04/examples/workbench/w12_offline_browser.py", line 182, in <module>
+    main()
+  File "/workspace/work/rc3/cards/rc3-04/examples/workbench/w12_offline_browser.py", line 90, in main
+    expect(link).to_be_visible()
+  File "/workspace/work/rc3/venv-rc3-04/lib/python3.12/site-packages/playwright/sync_api/_generated.py", line 23501, in to_be_visible
+    self._sync(
+  File "/workspace/work/rc3/venv-rc3-04/lib/python3.12/site-packages/playwright/_impl/_sync_base.py", line 115, in _sync
+    return task.result()
+           ^^^^^^^^^^^^^
+  File "/workspace/work/rc3/venv-rc3-04/lib/python3.12/site-packages/playwright/_impl/_assertions.py", line 852, in to_be_visible
+    await self._expect_impl(
+  File "/workspace/work/rc3/venv-rc3-04/lib/python3.12/site-packages/playwright/_impl/_assertions.py", line 128, in _expect_impl
+    _record_soft_or_raise(
+  File "/workspace/work/rc3/venv-rc3-04/lib/python3.12/site-packages/playwright/_impl/_assertions.py", line 60, in _record_soft_or_raise
+    raise error
+AssertionError: Locator expected to be visible
+Actual value: None
+Error: element(s) not found 
+Call log:
+  - Expect "to_be_visible" locator(".export-result").filter(has=get_by_role("heading", name="正式交付包 ·")).first.get_by_role("link", name="下载 ZIP", exact=True) with timeout 5000ms
+  - waiting for locator(".export-result").filter(has=get_by_role("heading", name="正式交付包 ·")).first.get_by_role("link", name="下载 ZIP", exact=True)
+
+Aria snapshot:
+- link "跳到工作区":
+  - /url: "#main"
+- complementary:
+  - img "Deck Master"
+  - navigation "项目工作区":
+    - button "制作总览"
+    - button "内容与来源"
+    - button "整稿画廊"
+    - button "风格校准"
+    - button "任务与交付"
+  - text: 当前项目
+  - strong: Deck task
+  - text: 合成验证项目
+  - paragraph: 当前为项目独立入口
+  - button "连接状态"
+- banner:
+  - strong: Deck task
+  - text: 当前稿
+  - region "本次工作状态":
+    - button "查看本次工作与范围": 内容进行中
+  - button "查看待交接任务，0 项": 待交接 0
+- text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。
+- main:
+  - heading "任务与交付" [level=1]
+  - paragraph: 任务状态按当前阅读版本展示。复制交接说明不会启动模型。
+  - group "任务与交付的子区":
+    - button "正在进行"
+    - button "待决定"
+    - button "版本"
+    - button "文件" [pressed]
+  - heading "版本与文件" [level=2]
+  - region "所选实际文件的交付判断":
+    - heading "所选文件仍有交付缺口" [level=3]
+    - paragraph: 稿件 R 6eb90ef4 · 当前控制 R 6eb90ef4
+    - term: 工程检查
+    - definition: 通过
+    - term: 协作控制
+    - definition: 受阻
+    - term: 专业复核
+    - definition: 无需此项
+    - paragraph: 实际文件与口播保留方式按下面的固定记录核对。当前暂停或撤回同样适用于历史文件。
+    - list:
+      - listitem: 此项条件尚未满足。请查看完整判断中的具体依据与范围。
+      - listitem: 当前授权不足以执行本次动作。输入仍保留，请查看实际范围与下一责任。
+    - group: › 实际文件、口播方式、支持依据与完整判断
+  - button "重新核对当前控制"
+  - strong: 当前阅读版本文件
+  - paragraph: 本次文件固定为 R 6eb90ef4。后台新结果不会改变已经生成的包。
+  - button "选择其它版本"
+  - text: 原图
+  - strong: 1 / 1 页
+  - text: SVG
+  - strong: 1 / 1 页
+  - text: PPT 预览
+  - strong: 1 / 1 页
+  - heading "正式用途（按此版本生成）" [level=3]
+  - article:
+    - heading "正式交付包" [level=3]
+    - paragraph: 核对所选实际文件、口播保留方式与当前控制。存在未解决项时拒绝生成。
+    - button "生成正式交付包"
+  - article:
+    - heading "审阅包" [level=3]
+    - paragraph: 可读正文、已有图稿与缺项说明。尚无 PPT 也可生成，不包含内部材料与完整提示词。
+    - button "生成审阅包"
+  - button "内部工程恢复包"
+  - text: 仅在需要内部材料与项目恢复时生成
+  - status
+  - heading "生成结果" [level=3]
+  - heading "正式交付包未生成 · R 6eb90ef4" [level=3]
+  - alert:
+    - paragraph: "required business decisions are missing or ineffective: delivery_acceptance"
+    - paragraph: 当前稿件、可读报告和本次输入均保留。
+    - paragraph: 下一责任：用户
+    - paragraph: 下一步：核对实际稿件与取舍后，记录对应范围的明确决定。
+    - group: › 决定范围与影响
+    - group: › 错误依据与范围
+  - paragraph: 未列出缺项；正式交付仍由服务核对所选快照。
+  - heading "审阅包 · R 6eb90ef4" [level=3]
+  - text: 文件已生成
+  - paragraph: deck-review-6eb90ef4.zip
+  - link "下载 ZIP":
+    - /url: /api/exports/export-35ad1a0f-eddd-4529-b1a8-bd600024fd50/files/deck-review-6eb90ef4.zip
+  - link "下载 PPT":
+    - /url: /api/exports/export-35ad1a0f-eddd-4529-b1a8-bd600024fd50/files/deck.pptx
+  - paragraph: 文件已生成。下载由浏览器完成；中断后可继续使用同一链接。
+  - button "以此文件来源局改"
+  - button "查看文件与哈希（8 项）"
+  - button "查看此版本的交付缺项与制作证据"
+  - heading "此版本逐页文件" [level=3]
+  - article:
+    - text: "01"
+    - strong: W11 file verification
+    - paragraph: 原图 已记录 · SVG 已记录 · PPT 预览 已记录
+    - button "查看本页"
+- status: 任务与交付，R 6eb90ef4

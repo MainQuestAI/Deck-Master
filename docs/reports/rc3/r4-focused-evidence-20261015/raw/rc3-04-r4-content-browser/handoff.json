@@ -1,0 +1,174 @@
+{
+  "artifact_output_only_delta": {
+    "case_ids": [
+      "tests.rebuild.test_studio_range_edit_browser::test_exact_unicode_range_cancel_restore_replace_delete_and_history",
+      "tests.rebuild.test_ux04_content_annotations_browser::test_icon_opinions_distinguish_same_text_layers_and_old_basis[1440-900]",
+      "tests.rebuild.test_ux04_content_annotations_browser::test_icon_opinions_distinguish_same_text_layers_and_old_basis[1280-800]",
+      "tests.rebuild.test_ux04_content_annotations_browser::test_icon_opinions_distinguish_same_text_layers_and_old_basis[390-844]"
+    ],
+    "changes": [
+      "Move six repository-local artifact originals as whole directories into preserved-original-artifacts; SHA/mode/mtime_ns before/after exactly match in artifact-relocation.json.",
+      "Range screenshots/result JSON now default to tmp_path/evidence/exact-range; icon screenshots default to fixture tmp_path/evidence/icon-identities. Remove now-unused pathlib import only.",
+      "No assertion, timeout, selector, semantic setup, runtime, or shared factory change."
+    ],
+    "command": "/workspace/work/rc3/venv-rc3-04/bin/python -m pytest -q --require-browser tests/rebuild/test_studio_range_edit_browser.py::test_exact_unicode_range_cancel_restore_replace_delete_and_history tests/rebuild/test_ux04_content_annotations_browser.py::test_icon_opinions_distinguish_same_text_layers_and_old_basis --basetemp=/workspace/work/rc3/t04/cb6 --junitxml=/workspace/work/rc3/reviews/rc3-04-r4-content-browser/artifact-delta-junit.xml",
+    "focused_result": {
+      "duration_seconds": 16.28,
+      "errors": 0,
+      "failed": 0,
+      "parameterized_cases": 4,
+      "passed": 4,
+      "skipped": 0,
+      "test_functions": 2
+    },
+    "fresh_screenshots_preserved": "artifact-delta-captures.json",
+    "originals_preserved": "artifact-relocation.json",
+    "repo_artifact_paths_absent": true,
+    "source_stability": {
+      "owned_sources": [],
+      "runtime_sources": [],
+      "shared_dependency_sources": []
+    }
+  },
+  "assignment": "RC3-04 R4 four exclusive content/range/UX04/batch browser modules",
+  "canonical_ci_log_sha256": "9705083903f932e1da74310b9c5bc066781d290de443dc15e18e2a251c632f89",
+  "changed_owned_sources": {
+    "tests/rebuild/test_batch_actions_browser.py": "2d5fff38b971596f907c08f6801c164679cc9b7f85fd62c8cb3c99c2fbd02e14",
+    "tests/rebuild/test_studio_content_browser.py": "ff2a9d4401cbd28387c57eb255a956c43f066525c50b360a57d1430a097a0fe4",
+    "tests/rebuild/test_studio_range_edit_browser.py": "098a0a3c1da5edeac0da7e940fca9514e248406aec4749854c81072bde4c2dcf",
+    "tests/rebuild/test_ux04_content_annotations_browser.py": "f31b823167e522e2165ebb84e65625efc8549076db3f6f1b0c5e7b77a6791330"
+  },
+  "command": "/workspace/work/rc3/venv-rc3-04/bin/python -m pytest -q --require-browser tests/rebuild/test_studio_content_browser.py tests/rebuild/test_studio_range_edit_browser.py tests/rebuild/test_ux04_content_annotations_browser.py tests/rebuild/test_batch_actions_browser.py --basetemp=/workspace/work/rc3/t04/cb5 --junitxml=/workspace/work/rc3/reviews/rc3-04-r4-content-browser/current-core-junit.xml",
+  "evidence_level": "L1_MUTABLE_REAL_CHROMIUM_FOCUSED_DIAGNOSTIC; not fixed CI/installed/professional evidence",
+  "evidence_sha256": {
+    "artifact-delta-after.json": "c69c22b3d355d10658533725babc75f34cde858d76982e72741ee27d8d511019",
+    "artifact-delta-before.json": "be3faf44e6c26bdda21a543d4b005ec4fd2a8a888f9cd8cfbf05ae2575776bfb",
+    "artifact-delta-captures.json": "3b1b6d8916e3ed22344a4288e9c875ef1c7ffa7339c4d387ad43c5701a11bfc0",
+    "artifact-delta-junit.xml": "af79b3423ac7a09ebb497bc122da61e4c2cdceb75c2b12553d1b4629fdb2a5e0",
+    "artifact-relocation.json": "6e656fd3c3b7ef83e19757721385fa6930eb04837a7d05c2e2a436a9be9a1e65",
+    "assertion-preservation.json": "a29e002d32d6a8e45f54edfb158bb8dc9882a9ede48ab758c9a81a611f1b68c1",
+    "before.json": "178c3a8afbd33254efe6e921be020466800d289995a304fb10a21f2aa9bad17e",
+    "current-core-after.json": "90599bb5eaa0c6ec90dd3e2840a2558a462ea32ed5202ed6183007ae1d4b42fe",
+    "current-core-before.json": "aac04958b9effa315f96b3a7535ed0810bcf323de6536b1c13c82b1ca76773f3",
+    "current-core-case-results.json": "2608a89349af82b3ac73ad10dd77f550ffc5eba3de5cd3d30fb60967a0a13e48",
+    "current-core-junit.xml": "a491e74ea8feec4e7cb8cd7063cd58991302f21688fd9104b96c59945ae8bf81",
+    "environment.json": "34f389aa2f85235a86a2825b8fabfd90a472d13b970ced76e36a0e4f0f4acd05",
+    "final-after.json": "0516cbe5e69af98ccc466fcbb4bb01bcecdb7efa323c5eeaf902e4b06c76ff38",
+    "final-before.json": "c4232d0cf1ad74fe85f0bea39efaa45bbb26fe5449a52f6fd87d22ba490bcc15",
+    "final-case-results.json": "30c6efacff99c8a21dd36895001fd0e9c07188041b9a26c160056e784de3c874",
+    "final-junit.xml": "e8819f0e87079db00c9c589ab31889ecf56d1f703633539e64facb1e3e6b95fc",
+    "handoff-first-combined-run.json": "23de981ba24ab92bc127fb2261d821cefd4a2124c6297d38d3ee5d6854ebf930",
+    "handoff-stable23-before-artifact-delta.json": "4bae7b596d31e0c188b31d8340f6b85568e0183e0023cf4d1da5da528d557f4d",
+    "original-failure-classification.json": "ba29753c2b143a61088a0866b6e65dcf8a3b15d281c3154c969b719ad81ff9e3",
+    "original16-current-core-results.json": "d93a382f2494398cea0ab4d46da8041ca3b1315603b2618b97d7e2f37f93cae4",
+    "original16-final-results.json": "d93a382f2494398cea0ab4d46da8041ca3b1315603b2618b97d7e2f37f93cae4",
+    "owned-source-changes.json": "bcd8b0998137c158a75ba456c192cd8bc6f12e04d7c5045eda021cc34b918e47",
+    "product-patch-before.json": "10d278e0c38dc7c981054e2345bbd98462b07634a763225cf22876c6c4d11ea9"
+  },
+  "final_manifest_files": [
+    "current-core-before.json",
+    "current-core-after.json",
+    "environment.json"
+  ],
+  "final_original16_mapping": "original16-current-core-results.json",
+  "final_result": {
+    "duration_seconds": 129.47,
+    "errors": 0,
+    "failed": 0,
+    "passed": 23,
+    "skipped": 0
+  },
+  "first_combined_run": {
+    "changed_sources": {
+      "owned_sources": [],
+      "runtime_sources": [
+        "src/deck_master/eligibility.py"
+      ],
+      "shared_dependency_sources": []
+    },
+    "note": "Fresh same-scope repeat performed because actual shared eligibility.py changed during this first combined run; original logs/manifests preserved.",
+    "result": {
+      "duration_seconds": 122.12,
+      "errors": 0,
+      "failed": 0,
+      "passed": 23,
+      "skipped": 0
+    }
+  },
+  "full_semantic_owned_source_aggregate_sha256": "30d563547e69234fb02493616703cc238f7d962c753ad180ff0ed737989697dc",
+  "full_semantic_suite_note": "Stable 23-case run passed before the subsequent artifact-output-only delta. It is preserved at its actual source hashes; no full 23 rerun after changing only artifact paths.",
+  "full_semantic_suite_owned_sources": {
+    "tests/rebuild/test_batch_actions_browser.py": "2d5fff38b971596f907c08f6801c164679cc9b7f85fd62c8cb3c99c2fbd02e14",
+    "tests/rebuild/test_studio_content_browser.py": "ff2a9d4401cbd28387c57eb255a956c43f066525c50b360a57d1430a097a0fe4",
+    "tests/rebuild/test_studio_range_edit_browser.py": "95c218d42a1ceb647e65e5b7ffcc51ac146eeba6fef493da02f3101d3f80cc19",
+    "tests/rebuild/test_ux04_content_annotations_browser.py": "745930ee939a4c322712137eef264c8e7388f0366ad5ccc288e32ac707112ad3"
+  },
+  "limits": [
+    "Mutable source diagnostics only; Owner/Root own unified commit, fixed installed source/CI and final approval.",
+    "All fixtures remain explicit L1 synthetic manuscript/image/review protocol evidence; no actual native/provider/human professional approval claim.",
+    "No new autouse/monkeypatch/gate disable/legacy public switch, timeout increase/broad selector/dynamic skip/deleted case.",
+    "No Git, checkout, commit, push or child agents used in R4."
+  ],
+  "logs": {
+    "artifact-delta-focused.log": {
+      "last_line": "4 passed in 16.28s",
+      "sha256": "a2e941ba2b2f5d74fb8758430b75a8e476d63470a22cf1be2b78fd5c1ac4e876"
+    },
+    "baseline.log": {
+      "last_line": "12 failed, 8 passed, 4 errors in 92.30s (0:01:32)",
+      "sha256": "1b3e87f28f7dedae3e920f9d0e3bb337e116e409c4dd49a47ef1139d3d7003ed"
+    },
+    "content-dispatch-poll.log": {
+      "last_line": "4 passed in 25.63s",
+      "sha256": "b583fc637993717af58b7de5dcecdf8277948e638a5f74de088f7f9bdff3c48b"
+    },
+    "current-core-focused.log": {
+      "last_line": "23 passed in 129.47s (0:02:09)",
+      "sha256": "0e65346926affc881058c4de2031eb357ac30b8197eca28049b89c033796a79e"
+    },
+    "final-focused.log": {
+      "last_line": "23 passed in 122.12s (0:02:02)",
+      "sha256": "4b93676b7f9ef6251803b6d4db546135ddbc27d57b5a3e5365b4102eff8ac41b"
+    },
+    "first-scope-focused.log": {
+      "last_line": "10 passed in 47.73s",
+      "sha256": "c53511d6e638ed22cc1538b5f59c9ab1535f3f2d20bb94ead552d326dfb3d73b"
+    },
+    "ruff-artifact-delta.log": {
+      "last_line": "All checks passed!",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "ruff-final.log": {
+      "last_line": "All checks passed!",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "v2-product-focused.log": {
+      "last_line": "4 passed in 39.26s",
+      "sha256": "b2cd942a8c54f5c7728fe4f09611dc29d0587f6b2100a2a45018abee8e3f8e42"
+    }
+  },
+  "original16_final_result": "All 16 original FAIL/ERROR events map to final passed cases, including batch lost-response teardown",
+  "original_distinct_test_ids": 15,
+  "original_events": 16,
+  "our_product_or_shared_factory_edits": false,
+  "owned_source_aggregate_sha256": "a0cf245887fc93c8d5060937834680a5090010d62a89149c4a0d3fa977045a18",
+  "owner_declared_base_head": "8223df8",
+  "owner_product_delta_required": [
+    "Current v2 chapters must consume actual page_ids in content/gallery/overview, without invented goal IDs.",
+    "Current outline edit must round-trip complete v2 Plan input, preserving budgets/time/speech/issues/tradeoff/roles; only actual edited chapter/takeaway/source fields change. V1-only summary/unresolved fields cannot silently write into v2.",
+    "Current compose input_revision must preserve separate nonempty authored unchanged_reason through the actual diff/receipt, instead of replacing it with summary; shared envelope helper serializes it."
+  ],
+  "remaining_failures": [],
+  "remaining_product_defects": [],
+  "sources_changed_during_final_run": {
+    "owned_sources": [],
+    "runtime_sources": [],
+    "shared_dependency_sources": []
+  },
+  "test_only_changes": [
+    "Explicit accepted L1 direction and content.operation grant on actual named Pages/Plan-copy-speech-review layers with zero image calls/candidates; applied only to editorial tests.",
+    "Explicit bounded change.commit grant on actual three sample Pages/blueprint+SVG, max two calls/two candidates, actual public fidelity review before batch dispatch. No image call is invoked.",
+    "Actual v2 chapter title, page_roles intended_takeaway/source_links assertions replace nonexistent v1 summary/goals writer assertions; all untouched constraints and other roles preserved exactly. Summary readonly is asserted.",
+    "Shared actual compose.v2 protocol/capability claim and v2 envelope helpers retained at their public Task boundaries; no public bypass."
+  ]
+}

@@ -11,6 +11,7 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_workbench_actions import commit
+from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
 
 pytestmark = pytest.mark.browser
 
@@ -28,6 +29,16 @@ def batch_browser(tmp_path):
                             dependencies=[{'kind': 'blueprint', 'identity': 'page:' + entry['page_id'], 'sha256': entry['blueprint']['sha256']}],
                             derived_from=[entry['blueprint']])
     commit(store, doc, str(uuid.uuid4()))
+    scope = copy.deepcopy(store.load_document()['collaboration']['request']['scope'])
+    scope['layers'] = ['blueprint', 'svg']
+    evidence = evidence_for(path,
+        text='L1 browser trial: at most two pending image candidates for the named sample Pages; '
+             'no image execution or professional approval is claimed.',
+        locator='L1:batch-browser:two-call-bound')
+    settle_fidelity_review(path, page_ids=scope['page_ids'], execution_ref='L1-batch-fidelity',
+        scenario='Exact synthetic sample manuscript before bounded browser dispatch')
+    authorize_scope(path, actions=['change.commit'], scope=scope, max_external_calls=2,
+        max_candidate_count=2, adoption_policy='candidate_only', evidence=evidence)
     server = WorkbenchServer(path)
     with playwright.sync_playwright() as runtime:
         executable = shutil.which('chromium') or shutil.which('chromium-browser')

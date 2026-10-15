@@ -2,13 +2,13 @@
 import copy
 import json
 import re
-from pathlib import Path
 from urllib.parse import urlencode
 import pytest
 from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_content_ops import commit, value
+from test_studio_content_browser import authorize_content_edits
 
 pytestmark=pytest.mark.browser
 SAME='A😀重复e\u0301重复Z'
@@ -18,10 +18,11 @@ LEAF='正文块 2 · 重复片段 · 条目 1 · 文字'
 def exact_editor(tmp_path):
     from playwright.sync_api import sync_playwright
     project=tmp_path/'range';create_sample(project,page_count=2,readonly=False);store=Store(project)
+    authorize_content_edits(project)
     doc=store.load_document();visible=copy.deepcopy(store.read_object_json(doc['pages'][0]['page'])['customer_visible'])
     visible['body_blocks']=[{'id':'first','type':'paragraph','text':SAME},{'id':'second','type':'bullets','heading':'重复片段','items':[{'id':'item1','text':SAME}]}]
     commit(project,store,value(store,ids=('p01',),customer_visible=visible))
-    server=WorkbenchServer(project);base=server.start();out=Path('output/opendesign-completion/exact-range');out.mkdir(parents=True,exist_ok=True)
+    server=WorkbenchServer(project);base=server.start();out=tmp_path/'evidence'/'exact-range';out.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});errors=[]
         page.on('pageerror',lambda e:errors.append(str(e)))

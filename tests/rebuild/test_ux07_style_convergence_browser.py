@@ -5,6 +5,7 @@
 选页工具条；同时按 1440/1280/390 三视口输出 PNG 作为视觉验收证据。
 """
 import shutil
+import os
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,6 @@ from deck_master.web import WorkbenchServer
 
 pytestmark = pytest.mark.browser
 
-EVIDENCE = Path(__file__).resolve().parents[2] / 'output/playwright/ux-review'
 # AC23 规范给的是 1440/1280 桌面与 390×844 手机三种视口。
 VIEWPORTS = [(1440, 900), (1280, 800), (390, 844)]
 
@@ -59,11 +59,12 @@ def assert_touch_targets(page, selector):
 
 
 @pytest.mark.parametrize('width,height', VIEWPORTS)
-def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser, width, height):
+def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser, width, height, tmp_path):
     from playwright.sync_api import expect
     page, server, path, store = ux07_browser
     url = server.start()
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
+    evidence = Path(os.environ.get('DECK_MASTER_BROWSER_EVIDENCE', str(tmp_path/'evidence'))) / 'ux-review'
+    evidence.mkdir(parents=True, exist_ok=True)
     page.set_viewport_size({'width': width, 'height': height})
     page.goto(url)
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
@@ -81,7 +82,7 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     }""")
     assert 0 <= gap <= 160, f'配置区与选页工具条的间距过大: {gap}'
     assert_touch_targets(page, '.batch-actions button, .batch-actions select')
-    page.screenshot(path=str(EVIDENCE / f'ux07-{width}-overview-batch.png'), full_page=False)
+    page.screenshot(path=str(evidence / f'ux07-{width}-overview-batch.png'), full_page=False)
 
     # 风格阶段组（UX-03b）：真实阶段按钮触点达标，阶段状态有文字而不是只有颜色。
     page.get_by_role('button', name='风格校准', exact=True).click()
@@ -92,7 +93,7 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     assert phases.count() == 4
     expect(phases.first).to_contain_text('1 · 参考与目标')
     expect(phases.nth(3)).to_contain_text('4 · 扩展')
-    page.screenshot(path=str(EVIDENCE / f'ux07-{width}-style-phases.png'), full_page=False)
+    page.screenshot(path=str(evidence / f'ux07-{width}-style-phases.png'), full_page=False)
 
     # 任务与交付子区（UX-05b）：分段按钮互斥且有按压状态，触点达标。
     page.get_by_role('button', name='任务与交付', exact=True).click()
@@ -104,7 +105,7 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     expect(running).to_have_attribute('aria-pressed', 'false')
     expect(page.get_by_role('button', name='版本', exact=True)).to_have_attribute('aria-pressed', 'true')
     expect(page.locator('.history-identity')).to_contain_text('选中：')
-    page.screenshot(path=str(EVIDENCE / f'ux07-{width}-runs-versions.png'), full_page=False)
+    page.screenshot(path=str(evidence / f'ux07-{width}-runs-versions.png'), full_page=False)
 
     # AC23 剩余：受影响消费者一并检查——画廊与内容面同样不能横向溢出，
     # 主要动作触点 ≥44px，字体回退来自 token（中文界面要有中文字族）。
@@ -118,7 +119,7 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
         assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth + 1'), f'{surface} 横向溢出'
         assert_touch_targets(page, selector)
         # 证据文件名用 ASCII slug，避免非 ASCII 路径在其它环境/工具链上的兼容问题。
-        page.screenshot(path=str(EVIDENCE / f'ux07-{width}-{slug}.png'), full_page=False)
+        page.screenshot(path=str(evidence / f'ux07-{width}-{slug}.png'), full_page=False)
 
 
 def test_representative_paths_survive_200_percent_text_zoom(ux07_browser):

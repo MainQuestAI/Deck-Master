@@ -1,5 +1,6 @@
 """Mounted single-page image reading: intrinsic pixels, fit, fullscreen, fixed basis."""
 import json
+import os
 import copy
 import uuid
 import xml.etree.ElementTree as ET
@@ -26,10 +27,10 @@ def reading_store(icon_store):
     return store
 
 @pytest.mark.parametrize('size',[(1440,900),(1280,800),(390,844)])
-def test_single_page_native_fit_fullscreen_keeps_basis_and_draft(reading_store,size):
+def test_single_page_native_fit_fullscreen_keeps_basis_and_draft(reading_store,size,tmp_path):
     from playwright.sync_api import sync_playwright,expect
     store=reading_store;before=store.load_document();server=WorkbenchServer(store.project_root)
-    out=Path('output/opendesign-completion/page-reading');out.mkdir(parents=True,exist_ok=True)
+    out=Path(os.environ.get('DECK_MASTER_BROWSER_EVIDENCE',str(tmp_path/'evidence')))/'page-reading';out.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':size[0],'height':size[1]});errors=[]
         page.on('pageerror',lambda e:errors.append(str(e)))

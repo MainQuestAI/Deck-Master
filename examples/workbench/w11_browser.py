@@ -18,7 +18,7 @@ from urllib.parse import urlencode
 
 from playwright.sync_api import sync_playwright, expect
 from pptx import Presentation
-from deck_master import service, editing, ui_journal
+from deck_master import collaboration, service, editing, ui_journal
 from deck_master.compiler import CompileOptions, SvgInput, compile_deck
 from deck_master.compiler.svg import parse_svg
 from deck_master.pipeline import artifact, render_deck, resolve_fonts, readback
@@ -179,6 +179,25 @@ def fixture(root, font="Arial"):
         updated["reviews"].append(store.put_json_object(review))
     updated["policy"]["user_stop"] = True
     store.commit_change(base_revision=doc["revision_id"], document=updated, operation_id="synthetic-production")
+    # Explicit L1 consent for this fixture's actual selected output only.
+    # Engineering/review records above never imply delivery authorization.
+    scope = {'subject': 'deck', 'page_ids': ['p1'], 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['output'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False,
+        'purpose': 'working'}
+    text = ('L1 synthetic fixture: deliver only this fixed one-page output when the '
+            'configured checks and policy allow it; no image calls or human approval are asserted.')
+    evidence = {'kind': 'host_attested_instruction', 'source_ref': store.put_blob(text.encode(), ext='txt'),
+        'source_locator': 'L1:w11:fixed-output-delivery', 'actor_id': None,
+        'transport_receipt_ref': None, 'presentation_ref': None}
+    collaboration.grant(project, input={'mode': 'execute', 'actions': ['export.delivery'],
+        'scope': scope, 'max_external_calls': 0, 'max_candidate_count': 0,
+        'adoption_policy': 'within_scope', 'instruction_evidence': evidence},
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+    collaboration.record_decision(project, input={'topic': 'delivery_acceptance',
+        'scope': scope, 'subject_refs': [], 'value': 'Explicit L1 fixed-file export test only',
+        'disposition': 'accepted', 'authority_mode': 'direct_user', 'instruction_evidence': evidence},
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
     assert editing.check_summary(store, store.load_document())["status"] == "pass"
     return project, store, old
 

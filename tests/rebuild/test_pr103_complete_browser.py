@@ -26,7 +26,7 @@ def browser_for(project):
         browser = runtime.chromium.launch(args=['--no-sandbox'])
         context = browser.new_context(viewport={'width': 1440, 'height': 900})
         page = context.new_page()
-        evidence = Path('output/playwright/pr103-complete') / project.parent.name
+        evidence = project.parent / 'browser-evidence'
         evidence.mkdir(parents=True, exist_ok=True)
         page.evidence = evidence
         requests = []
@@ -396,9 +396,16 @@ def test_three_versions_restore_uses_read_source_and_current_basis(tmp_path, con
     with browser_for(flow.project) as (page, _):
         page.get_by_role('button', name='任务与交付', exact=True).click()
         page.get_by_role('button', name='版本', exact=True).click()
+        # mutate() records explicit L1 task-update/review history. Those facts
+        # belong to the full record list, not the default manuscript filter.
+        page.get_by_role('checkbox', name='显示全部历史记录', exact=True).check()
+        expect(page.get_by_label('阅读历史版本').locator(f'option[value="{b}"]')).to_have_count(1)
         page.get_by_label('阅读历史版本').select_option(b)
         page.get_by_role('button', name='读取所选版本', exact=True).click()
-        expect(page.get_by_label('阅读历史版本').locator(f'option[value="{b}"]')).to_contain_text('当前阅读版本')
+        expect(page.get_by_label('阅读历史版本').locator(f'option[value="{b}"]')).to_have_text('正在阅读的历史版本')
+        expect(page.get_by_label('阅读历史版本')).to_have_value(b)
+        assert f'revision={b}' in page.url
+        page.get_by_role('checkbox', name='显示全部历史记录', exact=True).check()
         page.get_by_label('阅读历史版本').select_option(a)
         expect(page.get_by_role('button', name='预览恢复此版本', exact=True)).to_be_disabled()
         expect(page.locator('.history-identity')).to_contain_text('请先读取所选版本')
@@ -412,11 +419,14 @@ def test_three_versions_restore_uses_read_source_and_current_basis(tmp_path, con
         assert exported.value.post_data_json['revision'] == b
         expect(page.get_by_role('link', name='下载 ZIP', exact=True)).to_be_visible()
         page.get_by_role('button', name='版本', exact=True).click()
+        page.get_by_role('checkbox', name='显示全部历史记录', exact=True).check()
         page.get_by_label('阅读历史版本').select_option(a)
         requests = []
         page.on('request', lambda r: requests.append(r.post_data_json) if '/api/history/plan-restore' in r.url else None)
         page.get_by_role('button', name='读取所选版本', exact=True).click()
-        expect(page.get_by_label('阅读历史版本').locator(f'option[value="{a}"]')).to_contain_text('当前阅读版本')
+        expect(page.get_by_label('阅读历史版本').locator(f'option[value="{a}"]')).to_have_text('正在阅读的历史版本')
+        expect(page.get_by_label('阅读历史版本')).to_have_value(a)
+        assert f'revision={a}' in page.url
         page.get_by_role('button', name='预览恢复此版本', exact=True).click()
         dialog = page.locator('dialog[open]')
         expect(dialog).to_contain_text('来源版本')

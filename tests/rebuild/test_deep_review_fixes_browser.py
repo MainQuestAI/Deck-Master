@@ -12,6 +12,7 @@
 - §2.4 画廊 409 面板报告真实字段差异（筛选/位置/版本/缩放/参考）。
 """
 import copy
+import os
 import re
 import shutil
 import uuid
@@ -24,18 +25,30 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_ux06_gallery_conflict_browser import gallery_pair, open_gallery  # noqa: F401  (fixture reuse)
-from test_style_content_browser import confirm_recipe, open_style, toggle_phase  # noqa: F401
+from test_style_content_browser import confirm_recipe, open_style, toggle_phase, prepare_style_project, prepare_content_project  # noqa: F401
 
 pytestmark = pytest.mark.browser
 
-EVIDENCE = Path(__file__).resolve().parents[2] / 'output/playwright/ux-review/deep-review'
+def evidence_dir(project):
+    override = os.environ.get('DECK_MASTER_UI_EVIDENCE_DIR')
+    return Path(override) if override else Path(project).parent / 'evidence'
 
 
-def project_browser(tmp_path, page_count=3):
+
+def project_browser(tmp_path, page_count=3, *, prepare=None, historical=False):
     playwright = pytest.importorskip('playwright.sync_api')
     path = tmp_path / 'deep-review-project'
     create_sample(path, page_count=page_count, readonly=False)
     store = Store(path)
+    if historical:
+        from rc3_fixtures import historical_snapshot
+        from test_ux05_runs_delivery_browser import add_task
+        pages = [store.read_object_json(entry['page']) for entry in store.load_document()['pages']]
+        path = historical_snapshot(tmp_path, scenario='Old task/version reader; no current execution', pages=pages)['project']
+        store = Store(path)
+        add_task(store, 'historical-completed-compose', 'compose', 'completed', '旧版本内容整理已完成；只读事实。')
+    if prepare is not None:
+        prepare(path)
     server = WorkbenchServer(path)
     with playwright.sync_playwright() as runtime:
         executable = shutil.which('chromium') or shutil.which('chromium-browser')
@@ -55,12 +68,24 @@ def project_browser(tmp_path, page_count=3):
 
 @pytest.fixture
 def style_browser(tmp_path):
-    yield from project_browser(tmp_path, page_count=30)
+    yield from project_browser(tmp_path, page_count=30,
+        prepare=lambda path: prepare_style_project(path, page_ids=['p02', 'p30'], max_calls=2))
 
 
 @pytest.fixture
 def pages_browser(tmp_path):
     yield from project_browser(tmp_path, page_count=30)
+
+
+@pytest.fixture
+def historical_pages_browser(tmp_path):
+    yield from project_browser(tmp_path, page_count=30, historical=True)
+
+
+@pytest.fixture
+def editorial_browser(tmp_path):
+    yield from project_browser(tmp_path, page_count=30,
+        prepare=lambda path: prepare_content_project(path, page_ids=['p01']))
 
 
 def in_viewport(page, locator):
@@ -96,8 +121,9 @@ def test_style_conflict_choices_live_with_the_confirm_action(style_browser):
     expect(confirm_phase).to_contain_text('本次方案（确认前核对）')
     expect(confirm_phase).to_contain_text('借用：')
     expect(confirm).to_be_disabled()
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    page.screenshot(path=str(EVIDENCE / 'r1-style-conflict-in-confirm-phase.png'))
+    evidence = evidence_dir(path)
+    evidence.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(evidence / 'r1-style-conflict-in-confirm-phase.png'))
 
     # 明确取舍后在同一阶段内重新检查（复审 P1：不得回到阶段 1 才能解锁确认），
     # 确认动作随后可用；阶段 1 全程保持关闭。
@@ -135,8 +161,9 @@ def test_style_plan_failure_stays_visible_without_a_plan(style_browser):
     expect(error).to_be_visible(timeout=15000)
     expect(error).to_contain_text('请明确勾选本次扩展页')
     assert in_viewport(page, error), '失败原因必须在当前视口内'
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    page.screenshot(path=str(EVIDENCE / 'r2-style-plan-error-visible.png'))
+    evidence = evidence_dir(path)
+    evidence.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(evidence / 'r2-style-plan-error-visible.png'))
 
     # 网络失败同样可见，且输入保留。
     page.route('**/api/styles/plan', lambda route: route.abort())
@@ -171,16 +198,17 @@ def test_content_change_list_keeps_the_formal_baseline_after_draft_restore(pages
     expect(row.locator('.content-change-before')).to_have_text(formal_title)
     expect(row.locator('.content-change-after')).to_have_text('未提交的草稿标题')
     assert store.current_revision_id() == before, '未提交的草稿不得改变业务版本'
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    page.screenshot(path=str(EVIDENCE / 'r3-draft-restore-keeps-formal-baseline.png'))
+    evidence = evidence_dir(path)
+    evidence.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(evidence / 'r3-draft-restore-keeps-formal-baseline.png'))
 
 
 # --------------------------------------------------------------------------- R4
 
-def test_version_area_survives_reading_reload_and_return(pages_browser):
+def test_version_area_survives_reading_reload_and_return(historical_pages_browser):
     from playwright.sync_api import expect
     import urllib.parse
-    page, server, path, store = pages_browser
+    page, server, path, store = historical_pages_browser
     historical = store.current_revision_id()
     doc = copy.deepcopy(store.load_document())
     from test_workbench_actions import commit
@@ -189,6 +217,9 @@ def test_version_area_survives_reading_reload_and_return(pages_browser):
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('button', name='版本', exact=True).click()
+    # The chosen historical snapshot contains an old execution record. Read
+    # that exact record through the explicit full-history control.
+    page.get_by_role('checkbox', name='显示全部历史记录', exact=True).check()
     page.get_by_role('combobox', name='阅读历史版本').select_option(value=historical)
     page.get_by_role('button', name='读取所选版本', exact=True).click()
 
@@ -197,8 +228,9 @@ def test_version_area_survives_reading_reload_and_return(pages_browser):
     expect(page.locator('#runs-versions')).to_be_visible()
     params = dict(urllib.parse.parse_qsl(page.url.split('#')[1]))
     assert params.get('area') == 'versions', params
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    page.screenshot(path=str(EVIDENCE / 'r4-version-area-after-read.png'))
+    evidence = evidence_dir(path)
+    evidence.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(evidence / 'r4-version-area-after-read.png'))
 
     # 刷新与跨面返回同样保持。
     page.reload()
@@ -232,8 +264,9 @@ def test_long_list_keeps_selection_summary_and_config_entry_in_view(style_browse
     expect(bar).to_be_visible()
     assert in_viewport(page, bar), '选完末尾页后选择摘要必须在视口内'
     expect(bar).to_contain_text('已选 2 页用于')
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    page.screenshot(path=str(EVIDENCE / '2-1-long-list-selection-bar.png'))
+    evidence = evidence_dir(path)
+    evidence.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(evidence / '2-1-long-list-selection-bar.png'))
 
     # 配置入口就地可达：点击后回到配置区并聚焦要求输入。
     bar.get_by_role('button', name='配置要求', exact=True).click()
@@ -263,17 +296,18 @@ def test_screenshot_route_actions_follow_stage_and_plan(style_browser):
     assert not trial.is_visible(), '阶段 3 未打开时不应看到后续动作'
     assert visual.locator('button', has_text='保存并交接试作').count() == 1
     assert not visual.locator('button', has_text='保存并交接试作').is_visible(), '没有计划时交接动作不出现'
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    page.screenshot(path=str(EVIDENCE / '2-2-screenshot-route-actions.png'))
+    evidence = evidence_dir(path)
+    evidence.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(evidence / '2-2-screenshot-route-actions.png'))
 
 
 # --------------------------------------------------------------------------- §2.3
 
-def test_complex_body_change_list_and_impact_share_one_screen(pages_browser):
+def test_complex_body_change_list_and_impact_share_one_screen(editorial_browser):
     from playwright.sync_api import expect
     from deck_master import content_ops
     from test_content_ops import commit as ops_commit, value as ops_value
-    page, server, path, store = pages_browser
+    page, server, path, store = editorial_browser
     doc = store.load_document()
     entry = next(e for e in doc['pages'] if e['page_id'] == 'p01')
     visible = copy.deepcopy(store.read_object_json(entry['page'])['customer_visible'])
@@ -298,8 +332,9 @@ def test_complex_body_change_list_and_impact_share_one_screen(pages_browser):
     expect(changes.locator('.content-change-list li')).to_have_count(1)
     assert in_viewport(page, changes), '差异清单必须在当前视口内'
     assert in_viewport(page, impact), '影响与确认必须在同一屏内'
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    page.screenshot(path=str(EVIDENCE / '2-3-complex-body-single-screen-check.png'))
+    evidence = evidence_dir(path)
+    evidence.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(evidence / '2-3-complex-body-single-screen-check.png'))
 
 
 # --------------------------------------------------------------------------- §2.4
@@ -335,5 +370,6 @@ def test_gallery_conflict_reports_filter_anchor_and_zoom_differences(gallery_pai
     expect(dialog).to_contain_text('列数：')
     rows = dialog.locator('p').filter(has_text='｜ 项目保存：')
     assert rows.count() >= 2
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    first.screenshot(path=str(EVIDENCE / '2-4-gallery-real-differences.png'))
+    evidence = evidence_dir(path)
+    evidence.mkdir(parents=True, exist_ok=True)
+    first.screenshot(path=str(evidence / '2-4-gallery-real-differences.png'))

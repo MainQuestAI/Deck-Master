@@ -10,6 +10,7 @@ import hashlib
 import json
 from pathlib import Path
 import platform
+import re
 import sys
 import zipfile
 from urllib.parse import urlencode, urlsplit
@@ -92,7 +93,10 @@ def main():
                 target = root / event.value.suggested_filename
                 event.value.save_as(target)
                 digest = hashlib.sha256(target.read_bytes()).hexdigest()
-                expect(row).to_contain_text(digest)
+                row.get_by_role('button', name=re.compile(r'^查看文件与哈希（\d+ 项）$')).click()
+                integrity = page.get_by_role('dialog', name='文件清单与完整性校验', exact=True)
+                expect(integrity).to_contain_text(digest)
+                integrity.get_by_role('button', name='关闭', exact=True).click()
                 with zipfile.ZipFile(target) as archive:
                     manifest = json.loads(archive.read("manifest.json"))
                     assert manifest["purpose"] == purpose and manifest["revision_id"] == revision

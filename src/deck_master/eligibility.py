@@ -983,9 +983,23 @@ def preproduction_state(store: Store, document: dict) -> dict:
     never substitutes the review's result, so it cannot satisfy this state.
     """
     from . import content_review
-    status = content_review.preproduction_status(store, document)
+    try:
+        status = content_review.preproduction_status(store, document)
+        qualified = content_review.qualify_for_production(store, document)
+    except (ModelError, StoreError):
+        # A damaged immutable record must not make the read-only project
+        # projection disappear. It cannot establish a passing review either.
+        # Keep the production resolver strict; report this missing proof at
+        # the eligibility boundary without repairing or skipping any object.
+        state = content_review.requirement_state(store, document)
+        units = content_review.required_units(store, document)
+        return {'requirement': state['effective'], 'declared_requirement': state['declared'],
+            'requirement_origin': state['origin'], 'requirement_reasons': list(state['reasons']),
+            'required': bool(document.get('pages')), 'satisfied': False, 'status': 'unreadable',
+            'units': list(units), 'satisfied_units': [], 'missing_units': list(units),
+            'blocking_findings': [], 'review_refs': [], 'needs_reviewer': False, 'via': None,
+            'reasons': [*state['reasons'], 'stored applicability evidence is unreadable; preserve and inspect the original records']}
     state = status["requirement_state"]
-    qualified = content_review.qualify_for_production(store, document)
     return {"requirement": state["effective"],
             "declared_requirement": state["declared"],
             "requirement_origin": state["origin"],

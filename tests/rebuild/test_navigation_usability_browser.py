@@ -5,6 +5,34 @@ from test_ui_design_browser import workbench_page  # noqa: F401
 pytestmark = pytest.mark.browser
 
 
+@pytest.fixture
+def style_navigation_page(tmp_path):
+    """The two style-planning cases load their explicitly authorized current."""
+    import shutil
+    from pathlib import Path
+    from deck_master.samples import create_gallery_sample
+    from deck_master.web import WorkbenchServer
+    from test_style_content_browser import prepare_style_project
+    playwright = pytest.importorskip('playwright.sync_api')
+    project = tmp_path / 'sample'
+    create_gallery_sample(project, page_count=24, readonly=False)
+    prepare_style_project(project, page_ids=['p02'], max_calls=0)
+    server = WorkbenchServer(project)
+    with playwright.sync_playwright() as runtime:
+        executable = shutil.which('chromium') or shutil.which('chromium-browser')
+        if not executable and not Path(runtime.chromium.executable_path).exists():
+            pytest.skip('Chromium is required for real UI geometry and keyboard checks')
+        browser = runtime.chromium.launch(executable_path=executable, args=['--no-sandbox'])
+        page = browser.new_page(viewport={'width': 1440, 'height': 900})
+        try:
+            page.goto(server.start())
+            page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+            yield page
+        finally:
+            browser.close()
+            server.stop()
+
+
 def test_mobile_gallery_reads_on_page_and_restores_desktop_preference(workbench_page):
     from playwright.sync_api import expect
     page = workbench_page
@@ -218,7 +246,7 @@ def test_host_handoff_clipboard_failure_remains_pending(workbench_page):
 
 
 @pytest.mark.parametrize('width,height', [(1280, 800), (1440, 900)])
-def test_artwork_and_save_row_share_the_first_screen(workbench_page, width, height):
+def test_artwork_and_save_row_share_the_first_screen(workbench_page, tmp_path, width, height):
     from urllib.parse import urlencode
     page = workbench_page
     from urllib.parse import urlsplit
@@ -237,9 +265,8 @@ def test_artwork_and_save_row_share_the_first_screen(workbench_page, width, heig
     page.evaluate("() => {scrollTo({top:0,behavior:'instant'});document.querySelector('.page-tools').scrollTop=0;}")
     assert page.evaluate('scrollY') == 0
     # Preserve the rendered controls when platform font metrics expose overflow.
-    from pathlib import Path
     import json
-    evidence = Path('output/playwright/studio-first-view')
+    evidence = tmp_path / 'evidence'
     evidence.mkdir(parents=True, exist_ok=True)
     page.screenshot(path=str(evidence / f'opinion-{width}-{height}.png'))
     (evidence / f'opinion-{width}-{height}.json').write_text(json.dumps(page.locator('.page-workbench').evaluate('''n => [...n.querySelectorAll('h1,.chain,.reading-toolbar,.page-tools,.studio-tool-title,.tool-object-summary,.annotations-panel .panel-body>*')].map(e=>({tag:e.tagName,cls:e.className,text:e.innerText?.slice(0,250),hidden:e.hidden,rect:e.getBoundingClientRect().toJSON()}))'''),ensure_ascii=False,indent=2))
@@ -319,12 +346,12 @@ def test_page_opinion_editor_stays_with_artwork_before_trial_form(workbench_page
 
 
 @pytest.mark.parametrize('width,height', [(1280, 800), (1440, 900)])
-def test_selected_internal_style_keeps_main_action_in_first_view(workbench_page, tmp_path, width, height):
+def test_selected_internal_style_keeps_main_action_in_first_view(style_navigation_page, tmp_path, width, height):
     import json
     import os
     from pathlib import Path
     from playwright.sync_api import expect
-    page = workbench_page
+    page = style_navigation_page
     page.set_viewport_size({'width': width, 'height': height})
     page.get_by_role('button', name='风格校准', exact=True).click()
     page.get_by_role('button', name='项目页面', exact=True).click()
