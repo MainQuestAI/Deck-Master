@@ -1,0 +1,242 @@
+[
+  {
+    "case": "G05-content-variant-sequence-fresh-and-historical-narrow-edit",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "first_export": {
+        "status": "exported",
+        "schema_version": "export_record.v1",
+        "export_id": "export-950d2786-bed2-4233-b749-4453532e5128",
+        "project_identity": "685023b0622b32f4a9dd97cb1cca916994e6f1fdadf94a05a107c4200adf602f",
+        "revision_id": "bd3d8a79e63b4a75a8b5ae4a1e057879",
+        "purpose": "review",
+        "archive": "deck-review-bd3d8a79.zip",
+        "files": {
+          "delivery.json": {
+            "sha256": "ce3db182bf8974b099e5f807f1d3dd77444c51d304dc1bb4f1a2e8c3286f2de3",
+            "size": 3911
+          },
+          "page-001/content.txt": {
+            "sha256": "10d019b666d8466e7e1240271a3ff8d3052103605742a4c8acb7dab75e71f089",
+            "size": 72
+          },
+          "page-002/content.txt": {
+            "sha256": "2460bc8f873fdd87683780f423bfe90204856cfe7661edb478ecdde19cf3fdd9",
+            "size": 72
+          },
+          "review.html": {
+            "sha256": "8e2d6810d2e4a2a37408b7c946395ac70b103a788bb1519d5915a17cb63857f8",
+            "size": 465
+          },
+          "manifest.json": {
+            "sha256": "a91a332ee04bb2e1c53e6e4ee5cf586ae448ff24cbb9b8176c5a354398670f30",
+            "size": 2111
+          },
+          "deck-review-bd3d8a79.zip": {
+            "sha256": "e855ba5227b59bd299562f76ac47bb4b51d2c6f5c9eff564688d93a96bb29506",
+            "size": 3090
+          }
+        },
+        "manifest": {
+          "schema_version": "export_manifest.v1",
+          "export_id": "export-950d2786-bed2-4233-b749-4453532e5128",
+          "project_identity": "685023b0622b32f4a9dd97cb1cca916994e6f1fdadf94a05a107c4200adf602f",
+          "revision_id": "bd3d8a79e63b4a75a8b5ae4a1e057879",
+          "purpose": "review",
+          "files": [
+            {
+              "path": "delivery.json",
+              "sha256": "ce3db182bf8974b099e5f807f1d3dd77444c51d304dc1bb4f1a2e8c3286f2de3",
+              "size": 3911,
+              "original_sha256": null
+            },
+            {
+              "path": "page-001/content.txt",
+              "sha256": "10d019b666d8466e7e1240271a3ff8d3052103605742a4c8acb7dab75e71f089",
+              "size": 72,
+              "original_sha256": null
+            },
+            {
+              "path": "page-002/content.txt",
+              "sha256": "2460bc8f873fdd87683780f423bfe90204856cfe7661edb478ecdde19cf3fdd9",
+              "size": 72,
+              "original_sha256": null
+            },
+            {
+              "path": "review.html",
+              "sha256": "8e2d6810d2e4a2a37408b7c946395ac70b103a788bb1519d5915a17cb63857f8",
+              "size": 465,
+              "original_sha256": null
+            }
+          ],
+          "excluded": [
+            "runtime_authentication",
+            "service_state",
+            "locks",
+            "personal_ui_drafts"
+          ],
+          "metadata_policy": "sanitized_public_copy",
+          "notes_policy": {
+            "selection": "pptx_notes",
+            "source": "plan",
+            "speech_mode": "none",
+            "plan_sha256": "599278212a964205a3686cf0991d4f5d45c19defaa7aeeeade659afcdbaf15f3",
+            "newlines": "LF",
+            "pptx_notes": true,
+            "separate_script": false,
+            "pages": [
+              {
+                "page_id": "p1",
+                "page_sha256": "82d8a244a7cf59914d3b505f531f74c797de736cb0901753e053b9f564db4774",
+                "notes_sha256": "9a6e5aaea1073c11e3169eafea30cea6e987a243471e86f5ee233dabd88debfd"
+              },
+              {
+                "page_id": "p2",
+                "page_sha256": "0bdfc2fe744e53c18a852e9c6bbf765811764f8d460df38c74f03cd4e363c4b1",
+                "notes_sha256": "9a6e5aaea1073c11e3169eafea30cea6e987a243471e86f5ee233dabd88debfd"
+              }
+            ]
+          },
+          "request_sha256": "db8346432bab6b473c036955fc4271bd5e607adac73f068f3980e9990eaee0e8",
+          "variant": {
+            "group_id": "vg-e38b9d818020eeb9",
+            "variant_id": "live",
+            "label": "live explicit synthetic content variant",
+            "narrative_ref": {
+              "path": ".deckmaster/objects/8e/8e8b90fc2e6ebff420f8bbfce912cc88d80f148afb1b01f6c967adb53985a7ff.json",
+              "sha256": "8e8b90fc2e6ebff420f8bbfce912cc88d80f148afb1b01f6c967adb53985a7ff"
+            },
+            "plan_ref": {
+              "path": ".deckmaster/objects/59/599278212a964205a3686cf0991d4f5d45c19defaa7aeeeade659afcdbaf15f3.json",
+              "sha256": "599278212a964205a3686cf0991d4f5d45c19defaa7aeeeade659afcdbaf15f3"
+            }
+          }
+        },
+        "download_url": "/api/exports/export-950d2786-bed2-4233-b749-4453532e5128/files/deck-review-bd3d8a79.zip"
+      },
+      "second_export": {
+        "status": "exported",
+        "schema_version": "export_record.v1",
+        "export_id": "export-81e499a5-bc20-444b-a21e-def21e3eb985",
+        "project_identity": "685023b0622b32f4a9dd97cb1cca916994e6f1fdadf94a05a107c4200adf602f",
+        "revision_id": "dfcefc5d60a44cfd8486fb0792df9aa3",
+        "purpose": "review",
+        "archive": "deck-review-dfcefc5d.zip",
+        "files": {
+          "delivery.json": {
+            "sha256": "7757604543d16509e895c2c04afa43548bedb6cc2d535c21b5d9e87cec6cb0e3",
+            "size": 3911
+          },
+          "page-001/content.txt": {
+            "sha256": "dbcb872f2d314ce35e1378cfab3119383c14cbe9aab83cc7a4dd3c4be9794933",
+            "size": 72
+          },
+          "page-002/content.txt": {
+            "sha256": "31e571bd7b17ab17cb37336f80fa69945d10005c43ef2f066c46937e2a1f79d1",
+            "size": 72
+          },
+          "review.html": {
+            "sha256": "db752db00a6bf492b03a75faf1d8e166f3256a106e359075ec1be4b194d17fb5",
+            "size": 465
+          },
+          "manifest.json": {
+            "sha256": "6cba7603f7858f24620682ef4c747099e3af9716db8c5c81b1ec7370740d7734",
+            "size": 2111
+          },
+          "deck-review-dfcefc5d.zip": {
+            "sha256": "9dce059a110ba9242cd9ed30d58e55744783e736e346c79882ede8367a1847f9",
+            "size": 3080
+          }
+        },
+        "manifest": {
+          "schema_version": "export_manifest.v1",
+          "export_id": "export-81e499a5-bc20-444b-a21e-def21e3eb985",
+          "project_identity": "685023b0622b32f4a9dd97cb1cca916994e6f1fdadf94a05a107c4200adf602f",
+          "revision_id": "dfcefc5d60a44cfd8486fb0792df9aa3",
+          "purpose": "review",
+          "files": [
+            {
+              "path": "delivery.json",
+              "sha256": "7757604543d16509e895c2c04afa43548bedb6cc2d535c21b5d9e87cec6cb0e3",
+              "size": 3911,
+              "original_sha256": null
+            },
+            {
+              "path": "page-001/content.txt",
+              "sha256": "dbcb872f2d314ce35e1378cfab3119383c14cbe9aab83cc7a4dd3c4be9794933",
+              "size": 72,
+              "original_sha256": null
+            },
+            {
+              "path": "page-002/content.txt",
+              "sha256": "31e571bd7b17ab17cb37336f80fa69945d10005c43ef2f066c46937e2a1f79d1",
+              "size": 72,
+              "original_sha256": null
+            },
+            {
+              "path": "review.html",
+              "sha256": "db752db00a6bf492b03a75faf1d8e166f3256a106e359075ec1be4b194d17fb5",
+              "size": 465,
+              "original_sha256": null
+            }
+          ],
+          "excluded": [
+            "runtime_authentication",
+            "service_state",
+            "locks",
+            "personal_ui_drafts"
+          ],
+          "metadata_policy": "sanitized_public_copy",
+          "notes_policy": {
+            "selection": "pptx_notes",
+            "source": "plan",
+            "speech_mode": "none",
+            "plan_sha256": "00a4cf21dfacd5d68c2a898a90739b45914d70dee43c29be9a96bc9bf002f6e8",
+            "newlines": "LF",
+            "pptx_notes": true,
+            "separate_script": false,
+            "pages": [
+              {
+                "page_id": "p1",
+                "page_sha256": "f08feddd8f844736f3fd55205b951eaafd109f4dd360f1fef32b09cd0f8ea09c",
+                "notes_sha256": "1028f0d088b8e21ddbe073d8e5a7bad06ec82a7d052ef117969c1c7d197e94fc"
+              },
+              {
+                "page_id": "p2",
+                "page_sha256": "97304cf01645a08043ba1c70719edcc07306c5dfbeb6ee4551649003dccc6259",
+                "notes_sha256": "1028f0d088b8e21ddbe073d8e5a7bad06ec82a7d052ef117969c1c7d197e94fc"
+              }
+            ]
+          },
+          "request_sha256": "029192784543454fbdc9ffe86ad5aa72a080b093f879babc92001b795e2b4d24",
+          "variant": {
+            "group_id": "vg-e38b9d818020eeb9",
+            "variant_id": "read",
+            "label": "read explicit synthetic content variant",
+            "narrative_ref": {
+              "path": ".deckmaster/objects/8e/8e8b90fc2e6ebff420f8bbfce912cc88d80f148afb1b01f6c967adb53985a7ff.json",
+              "sha256": "8e8b90fc2e6ebff420f8bbfce912cc88d80f148afb1b01f6c967adb53985a7ff"
+            },
+            "plan_ref": {
+              "path": ".deckmaster/objects/00/00a4cf21dfacd5d68c2a898a90739b45914d70dee43c29be9a96bc9bf002f6e8.json",
+              "sha256": "00a4cf21dfacd5d68c2a898a90739b45914d70dee43c29be9a96bc9bf002f6e8"
+            }
+          }
+        },
+        "download_url": "/api/exports/export-81e499a5-bc20-444b-a21e-def21e3eb985/files/deck-review-dfcefc5d.zip"
+      },
+      "fresh_second": true,
+      "first_and_second_export_bytes_preserved_after_narrow_edit": true,
+      "limit": "content-only text/notes files; no full-deck PPTX, native or human use-effectiveness claim"
+    }
+  },
+  {
+    "case": "G11-actual-sanitized-notes-final-hashes-and-pure-blocked-query",
+    "status": "FAIL",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "AssertionError",
+    "message": "",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/probe_behavior.py\", line 83, in case\n    detail = fn()\n             ^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/probe_final_corrected.py\", line 155, in projection_case\n    assert m.models.sha256_bytes(no_notes)!=digest and not notes_records(no_notes)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+  }
+]

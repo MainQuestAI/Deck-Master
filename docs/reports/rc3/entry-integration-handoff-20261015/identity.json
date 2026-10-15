@@ -1,0 +1,93 @@
+{
+  "schema": "rc3_04_documentary_candidate_identity.v1",
+  "runtime": {
+    "sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+    "tree": "31cca075ac76877908e04f030f0c4e815d3a6268",
+    "parent": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae"
+  },
+  "document_identity": "The Git commit containing this documentary bundle; Root records final HEAD/tree separately.",
+  "final_head_ci": "PENDING_FINAL_HEAD",
+  "final_head_pr_merge": "PENDING_FINAL_HEAD",
+  "package_install": {
+    "source_sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+    "source_tree": "31cca075ac76877908e04f030f0c4e815d3a6268",
+    "package_version": "1.0.0rc3",
+    "manifest_sha256": "a338a72fb577890e77fbf6f5b0f25663f551b85d77eb04f85706a9c59c59368e",
+    "wheel_sha256": "01177541b9a1bc38aefb50fd6c8e8499b6bae4a6afe59b7b467693fc1bd740fb",
+    "sdist_sha256": "37ab2d030bc207689534e3d039629600f56a0250c0da4d07d02decbdc035f01b",
+    "actual_installed_python": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/bin/python",
+    "actual_module": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "canonical_files": 270,
+    "generated_files": 1,
+    "strict_byte_report_sha256": "9209595b80d313436dd9bbd98443466f8e0da5668e55517271db907afc3bcb4c",
+    "scope": "Actual fixed candidate bytes only; no HOME activation; reviews and root broad regression ongoing"
+  },
+  "package_install_evidence": {
+    "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/install-admission.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/install-admission.json",
+    "sha256": "1acd9b80b2f52b3e874eaec4a0039608bf8d2a02fc262cab17b4195323d396e0"
+  },
+  "strict_byte_report": {
+    "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/strict-installed-byte-audit.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/strict-installed-byte-audit.json",
+    "sha256": "9209595b80d313436dd9bbd98443466f8e0da5668e55517271db907afc3bcb4c"
+  },
+  "candidate_manifest": {
+    "source_path": "/workspace/work/rc3/candidate-04-a53a265/manifest.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/candidate-04-a53a265/manifest.json",
+    "sha256": "a338a72fb577890e77fbf6f5b0f25663f551b85d77eb04f85706a9c59c59368e"
+  },
+  "current_method_bytes": {
+    "source_path": "/workspace/work/rc3/candidate-04-a53a265/method-bytes.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/candidate-04-a53a265/method-bytes.json",
+    "sha256": "9b2841ce0d8d4332a9544defb0f5d5295ae78ab03f3c19411d14966141efe7bd"
+  },
+  "capabilities": {
+    "source_path": "/workspace/work/rc3/candidate-04-a53a265/capabilities.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/candidate-04-a53a265/capabilities.json",
+    "sha256": "165ea72ded117dc9396d1f61e44b063ee26df979a4ef285eb7cc3a1a4d70ae25"
+  },
+  "writer": {
+    "name": "rc3-entry.v1",
+    "rank": 13,
+    "rank12_without_region": "migration_required; not authority"
+  },
+  "skill_mapping": {
+    "deck_master/resources/skill/": "skills/deck-master/",
+    "deck_master/resources/skills/deck-content/": "skills/deck-content/",
+    "deck_master/resources/skills/deck-design/": "skills/deck-design/",
+    "deck_master/resources/skills/deck-review/": "skills/deck-review/",
+    "shared_canonical_methods": "skills/deck-master/references/",
+    "only_generated_resource": "deck_master/resources/method-inventory.json",
+    "actual_host_skill_resource_files": 23
+  },
+  "fixed_local_summary": {
+    "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+    "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+  },
+  "independent_reviews": [
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+      "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+      "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+      "sha256": "19693ba1fc6e0294741bbb1987a9420e55689f42fdde4635432dec6c969fb250"
+    }
+  ],
+  "actual_host_handoff": {
+    "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+    "sha256": "529556a28aec86c288f89b8251f4b855382d4c09bdc6a7be12dc1cbf389a1e8f"
+  },
+  "human_listener_desktop_professional": "NOT_RUN_DEFERRED",
+  "fees_models_tokens_price": "unknown/not_reported remains unknown; no new provider/image calls asserted"
+}

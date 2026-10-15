@@ -1,0 +1,11 @@
+{
+  "case_id": "deck-design--natural",
+  "skill": "deck-design",
+  "entry_mode": "natural",
+  "instruction": "请给固定p2新损伤处置页出视觉方案，清楚保留停阅→保持原状→通知保管员以及保管员确认恢复；不要生图，不改正文。",
+  "project": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/projects/deck-design--natural",
+  "skill_entry": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/skill/deck-design/SKILL.md",
+  "target_page_ids": [
+    "p2"
+  ]
+}

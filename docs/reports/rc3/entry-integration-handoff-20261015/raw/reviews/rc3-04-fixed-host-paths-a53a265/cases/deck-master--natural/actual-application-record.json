@@ -1,0 +1,225 @@
+{
+  "case_id": "deck-master--natural",
+  "status": "ACTUAL_R3_HOST_RESPONSIBILITY_RETURNED",
+  "original_instruction": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+  "identity": {
+    "pid": 526665,
+    "time": "2026-10-15T06:49:12.633465+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "a53a265321ca-01177541b9a1"
+  },
+  "actual_host_count": 1,
+  "independent_review_identity": false,
+  "actual_role_and_task_method_applications": [
+    {
+      "id": "source-reading",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+      "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "application": "完整读取L1-L10及实际extract，区分合成规则、教学组织推理和缺失效果数据；所有关键节点链接实际source/version/locator。"
+    },
+    {
+      "id": "content-methods",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+      "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "application": "实际写出三条件AND、权限未知/错号的不同交接、新损伤独立立即停阅与保管员确认恢复；8节点连通论证与2页职责按phase分别接纳。"
+    },
+    {
+      "id": "content-examples",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+      "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "application": "矩阵/流程的触发、动作、下一责任和恢复条件落实为具体计划，不交泛化高效标签，不编收益。"
+    },
+    {
+      "id": "collaboration-routing",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+      "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "application": "原句的主动动作是协调。实际route Master且读取真实当前请求/工作单；沿同项目交Content只做策划，并在completed后退出，不因否定整套PPT或出现策划名词越权。"
+    },
+    {
+      "id": "source-reading",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+      "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "application": "完整读取L1-L10及实际extract，区分合成规则、教学组织推理和缺失效果数据；所有关键节点链接实际source/version/locator。"
+    },
+    {
+      "id": "content-methods",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+      "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "application": "实际写出三条件AND、权限未知/错号的不同交接、新损伤独立立即停阅与保管员确认恢复；8节点连通论证与2页职责按phase分别接纳。"
+    },
+    {
+      "id": "content-examples",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+      "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "application": "矩阵/流程的触发、动作、下一责任和恢复条件落实为具体计划，不交泛化高效标签，不编收益。"
+    },
+    {
+      "id": "source-reading",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+      "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "application": "完整读取L1-L10及实际extract，区分合成规则、教学组织推理和缺失效果数据；所有关键节点链接实际source/version/locator。"
+    },
+    {
+      "id": "content-methods",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+      "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "application": "实际写出三条件AND、权限未知/错号的不同交接、新损伤独立立即停阅与保管员确认恢复；8节点连通论证与2页职责按phase分别接纳。"
+    },
+    {
+      "id": "content-examples",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+      "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "application": "矩阵/流程的触发、动作、下一责任和恢复条件落实为具体计划，不交泛化高效标签，不编收益。"
+    },
+    {
+      "id": "collaboration-routing",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+      "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "application": "原句的主动动作是协调。实际route Master且读取真实当前请求/工作单；沿同项目交Content只做策划，并在completed后退出，不因否定整套PPT或出现策划名词越权。"
+    },
+    {
+      "id": "source-reading",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+      "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "application": "完整读取L1-L10及实际extract，区分合成规则、教学组织推理和缺失效果数据；所有关键节点链接实际source/version/locator。"
+    },
+    {
+      "id": "content-methods",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+      "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "application": "实际写出三条件AND、权限未知/错号的不同交接、新损伤独立立即停阅与保管员确认恢复；8节点连通论证与2页职责按phase分别接纳。"
+    },
+    {
+      "id": "content-examples",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+      "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "application": "矩阵/流程的触发、动作、下一责任和恢复条件落实为具体计划，不交泛化高效标签，不编收益。"
+    },
+    {
+      "id": "collaboration-routing",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+      "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-entry-guidance-read.json",
+      "application": "原句的主动动作是协调。实际route Master且读取真实当前请求/工作单；沿同项目交Content只做策划，并在completed后退出，不因否定整套PPT或出现策划名词越权。"
+    },
+    {
+      "id": "input-update",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+      "sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-entry-guidance-read.json",
+      "application": "完整来源和受众用途未变化，保留原source/extract版本，不发明input_revision或把未知指标写成新事实。"
+    },
+    {
+      "id": "review-and-repair",
+      "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+      "sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a",
+      "fulltext_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-entry-guidance-read.json",
+      "application": "按L2-L10实核三条件、三类责任与不自行恢复；明确未做真实成品/专业/桌面观察，不把策划完成冒称成品通过。"
+    }
+  ],
+  "role_entry_guidance_separate": "master-entry-guidance-read.json is explicit role guidance; no method inserted into the dispatched phase manifest.",
+  "actual_outputs": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-authored.json",
+      "sha256": "845a0bc058f3ed74ef644976975ee8de18501c546a7b83c35e745391de063dea"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-envelope.json",
+      "sha256": "c503a8cbe71aa99892d6d2f222dd2b93f3fdb443d2a68bbc4ccc1bd3ba97a44f"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-accepted.json",
+      "sha256": "8033d9315b1617c109e09be9b5250f2b49f80f51c30e5309d6ac91c7f77367ef"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-authored.json",
+      "sha256": "bab4c4668c2a96574dd91d028499ee55e8855b7dd2f806fbc296de5ea3aadc4f"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-envelope.json",
+      "sha256": "289d74d36ea91b94ff0ea9ea2953bd7621c9126ff08e97ad7dd46fa8593a934b"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-accepted.json",
+      "sha256": "28c1019abc9fab8ec0b9bc8a2ac2fcf329b078d1a6eb3db87b55fc1d9dcf7e11"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-authored-output.json",
+      "sha256": "aca15ed6fe6f667ad62e2f8473871d721ce5dad8922c7db4c5eb4c21d9bc8144"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/normal-completion.json",
+      "sha256": "21824c6dc42b1f32aae45c5b926d385da9fbf5cc21cde186a9def1bf0d89c328"
+    }
+  ],
+  "completion": {
+    "state": "completed",
+    "request_id": "req-a01e4ba887d4",
+    "intent": "content_only",
+    "content_intent": "plan_only",
+    "artifact_revision_id": "394c65f187ad4b779a62a58508d1dbfe",
+    "effective_scope": {
+      "allow_page_membership_change": true,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "page_ids": [
+        "p1",
+        "p2"
+      ],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    },
+    "outputs": [
+      {
+        "path": ".deckmaster/objects/50/500c23cf6fbb817abaddc09fef312be90affcd53458f98aed6c319017fbe42af.json",
+        "sha256": "500c23cf6fbb817abaddc09fef312be90affcd53458f98aed6c319017fbe42af"
+      },
+      {
+        "path": ".deckmaster/objects/5f/5fb05c764af52bef10931f730bf3ae4e10325f16646d4508ce05041800ec5919.json",
+        "sha256": "5fb05c764af52bef10931f730bf3ae4e10325f16646d4508ce05041800ec5919"
+      }
+    ],
+    "checks": [
+      {
+        "kind": "requested_content",
+        "status": "pass",
+        "basis": "requested planning artifacts are available; no page production requested"
+      }
+    ],
+    "missing": [],
+    "responsible_role": "caller",
+    "next_action": "return_requested_content"
+  },
+  "request_closed": true,
+  "closed_reason": "completed",
+  "two_continues_same_revision": true,
+  "production_tasks_created": 0,
+  "provider_or_image_calls": 0,
+  "model_price_tokens_identity": "not_reported",
+  "provenance": "Current same actual collaboration Host, full read and actual reasoning/payload/application; known prior material/scaffold disclosed, no extra independent model/tool or human/native/desktop execution.",
+  "R2_F9_blocked_record_preserved": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-exact-reread-exception.json"
+}

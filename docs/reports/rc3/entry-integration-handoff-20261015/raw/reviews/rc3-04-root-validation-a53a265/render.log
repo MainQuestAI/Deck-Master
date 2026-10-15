@@ -1,0 +1,52 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/work/rc3/reviews/rc3-04-code-snapshot-a53a265
+configfile: pyproject.toml
+collected 2868 items / 2797 deselected / 71 selected
+
+tests/rebuild/test_candidate_preview_recovery.py .                       [  1%]
+tests/rebuild/test_candidates.py ..                                      [  4%]
+tests/rebuild/test_compiler_geometry.py .                                [  5%]
+tests/rebuild/test_deep_quality_render.py ....                           [ 11%]
+tests/rebuild/test_deep_quality_state.py ..                              [ 14%]
+tests/rebuild/test_export.py .                                           [ 15%]
+tests/rebuild/test_external_review_lifecycle.py ...                      [ 19%]
+tests/rebuild/test_external_review_render.py ......                      [ 28%]
+tests/rebuild/test_flow_quality.py ....                                  [ 33%]
+tests/rebuild/test_gradient_readability.py ...                           [ 38%]
+tests/rebuild/test_icon_quality.py ..                                    [ 40%]
+tests/rebuild/test_install.py ...                                        [ 45%]
+tests/rebuild/test_page_visual_gate.py ...........                       [ 60%]
+tests/rebuild/test_production.py .                                       [ 61%]
+tests/rebuild/test_rc3_design_native.py ..............                   [ 81%]
+tests/rebuild/test_rc3_notes_files.py .                                  [ 83%]
+tests/rebuild/test_rc3_notes_transactions.py ....                        [ 88%]
+tests/rebuild/test_render.py ...                                         [ 92%]
+tests/rebuild/test_service_flow.py ...                                   [ 97%]
+tests/rebuild/test_tasks.py ..                                           [100%]
+
+=============================== warnings summary ===============================
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]
+  /workspace/work/rc3/reviews/rc3-04-code-snapshot-a53a265/tests/rebuild/test_deep_quality_render.py:37: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+    def count(image,predicate):return sum(predicate(p) for p in image.getdata())
+
+tests/rebuild/test_external_review_render.py: 10 warnings
+  /workspace/work/rc3/reviews/rc3-04-code-snapshot-a53a265/tests/rebuild/test_external_review_render.py:51: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+    dark=sum(max(pixel)<180 for pixel in crop.getdata())
+
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]
+tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]
+  /workspace/work/rc3/reviews/rc3-04-code-snapshot-a53a265/tests/rebuild/test_gradient_readability.py:80: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+    counts[image_name]=sum(max(pixel)<250 for pixel in crop.getdata())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========= 71 passed, 2797 deselected, 22 warnings in 140.04s (0:02:20) =========

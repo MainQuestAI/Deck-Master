@@ -1,0 +1,436 @@
+{
+  "identity": {
+    "pid": 524740,
+    "time": "2026-10-15T06:47:14.652510+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "a53a265321ca-01177541b9a1"
+  },
+  "count": 24,
+  "rows": [
+    {
+      "text": "请给固定p2新损伤处置页出视觉方案，清楚保留停阅→保持原状→通知保管员以及保管员确认恢复；不要生图，不改正文。",
+      "expected_skill": "deck-design",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-design",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "请为灾后恢复流程设计样页，不要制作整套文件。",
+      "expected_skill": "deck-design",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-design",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "Design a sample page explaining how to resume archive services; preserve the fixed copy.",
+      "expected_skill": "deck-design",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-design",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "只写设备继续运行前的核验讲稿。",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "speech_only",
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "speech_only",
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "请恢复之前的项目，接着完成现有工作。",
+      "expected_skill": "deck-master",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-master",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "继续当前任务，沿已批准范围执行。",
+      "expected_skill": "deck-master",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-master",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "Please resume the previous project using the saved request.",
+      "expected_skill": "deck-master",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-master",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "Continue the complete deck within the existing request",
+      "expected_skill": "deck-master",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-master",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "Please continue designing a sample page for the current bounded request.",
+      "expected_skill": "deck-design",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-design",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "只写讲稿，不要审稿，也不要设计。",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "speech_only",
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "speech_only",
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "请为审查流程这一页出视觉方案，不要改正文。",
+      "expected_skill": "deck-design",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-design",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "请审查已有文件，指出实际缺口，不修改。",
+      "expected_skill": "deck-review",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-review",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "只写正文，不要讲稿。",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "write_only",
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "write_only",
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "只写讲稿，不要正文，不审稿。",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "speech_only",
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "speech_only",
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "只做内容策划，不要写稿和讲稿。",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "plan_only",
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "plan_only",
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+      "expected_skill": "deck-master",
+      "expected_content_intent": null,
+      "origin": "R3 coordination regression/negative/explicit name",
+      "actual_route": {
+        "skill": "deck-master",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "请统筹内容策划、设计与下一责任，暂时不要制作。",
+      "expected_skill": "deck-master",
+      "expected_content_intent": null,
+      "origin": "R3 coordination regression/negative/explicit name",
+      "actual_route": {
+        "skill": "deck-master",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "Please coordinate content planning and the next responsibilities; do not build a complete deck.",
+      "expected_skill": "deck-master",
+      "expected_content_intent": null,
+      "origin": "R3 coordination regression/negative/explicit name",
+      "actual_route": {
+        "skill": "deck-master",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "请给协调流程这一页写正文，不做设计。",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "write_only",
+      "origin": "R3 coordination regression/negative/explicit name",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "write_only",
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "Write the manuscript about coordination procedures; do not design it.",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "write_only",
+      "origin": "R3 coordination regression/negative/explicit name",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "write_only",
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "deck-content：请协调现有材料，只写正文。",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "write_only",
+      "origin": "R3 coordination regression/negative/explicit name",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "write_only",
+        "explicit_name": true,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "deck-review：协调流程这一页只读审查，不修改。",
+      "expected_skill": "deck-review",
+      "expected_content_intent": null,
+      "origin": "R3 coordination regression/negative/explicit name",
+      "actual_route": {
+        "skill": "deck-review",
+        "content_intent": null,
+        "explicit_name": true,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "请按已策划的档案训练两页写完整逐页稿；由Host在委派内选择上一请求已完成的具体论证/Plan后写稿。保持八项交接、未知权限与错目录号两种责任、新损伤立即停阅边界；不写讲稿，不做图。",
+      "expected_skill": "deck-content",
+      "expected_content_intent": "write_only",
+      "origin": "Exact original R2 natural-path entry reused with route dependency rechecked",
+      "actual_route": {
+        "skill": "deck-content",
+        "content_intent": "write_only",
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    {
+      "text": "只审稿：核对这份固定档案训练两页的触发条件、责任人和收益边界，说明具体证据与没验证的视觉维度；不要改稿或生图。",
+      "expected_skill": "deck-review",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 natural-path entry reused with route dependency rechecked",
+      "actual_route": {
+        "skill": "deck-review",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    }
+  ],
+  "project_source_tree_before": {
+    ".deckmaster/current.json": "aff68c8db6d73d9090c211cf96f9ec7d2784030ea4a38a2e7e61f4271d9bd5e7",
+    ".deckmaster/objects/15/15709e7199326e9549a9fd1afe719d87b49df83c15bf14d46dd3858df647aeb6.txt": "15709e7199326e9549a9fd1afe719d87b49df83c15bf14d46dd3858df647aeb6",
+    ".deckmaster/objects/26/26fbbb16c96043c0216f9faf126e0c596563b56c06266a3c06ce5091c5a0045f.json": "26fbbb16c96043c0216f9faf126e0c596563b56c06266a3c06ce5091c5a0045f",
+    ".deckmaster/objects/2a/2a9fa28d494c5d4e936ef56ee97347991d2e213e6aabbdb35db3619943c4b348.json": "2a9fa28d494c5d4e936ef56ee97347991d2e213e6aabbdb35db3619943c4b348",
+    ".deckmaster/objects/31/3104ef02c126cac25193e408f2698948ce9d296fb1bac92f185446c67cb28869.json": "3104ef02c126cac25193e408f2698948ce9d296fb1bac92f185446c67cb28869",
+    ".deckmaster/objects/3f/3f731febaf64c371c3ee6b95061a49f5e1fd92449525e1450f8cc257cb9b08f6.json": "3f731febaf64c371c3ee6b95061a49f5e1fd92449525e1450f8cc257cb9b08f6",
+    ".deckmaster/objects/49/495ad3814f59d499f9ed4a076756910a45a867990ee3f492d6684fe667cd35fa.json": "495ad3814f59d499f9ed4a076756910a45a867990ee3f492d6684fe667cd35fa",
+    ".deckmaster/objects/50/500c23cf6fbb817abaddc09fef312be90affcd53458f98aed6c319017fbe42af.json": "500c23cf6fbb817abaddc09fef312be90affcd53458f98aed6c319017fbe42af",
+    ".deckmaster/objects/58/584dc56761cddabaf55e853a44c2ab399ed7d73029622b037a0864158081aace.json": "584dc56761cddabaf55e853a44c2ab399ed7d73029622b037a0864158081aace",
+    ".deckmaster/objects/5f/5fb05c764af52bef10931f730bf3ae4e10325f16646d4508ce05041800ec5919.json": "5fb05c764af52bef10931f730bf3ae4e10325f16646d4508ce05041800ec5919",
+    ".deckmaster/objects/68/68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9.txt": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+    ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67",
+    ".deckmaster/objects/7e/7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3.json": "7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3",
+    ".deckmaster/objects/ab/abad1b25790957fa13e7926262f61cf2cf37cdd6c40d059c19cbc42da9fe3e34.json": "abad1b25790957fa13e7926262f61cf2cf37cdd6c40d059c19cbc42da9fe3e34",
+    ".deckmaster/objects/b5/b50aeb1c11a4eb38c071435bf24d02b06e97ea273f6666c96e4cb098abb0c760.json": "b50aeb1c11a4eb38c071435bf24d02b06e97ea273f6666c96e4cb098abb0c760",
+    ".deckmaster/operations/compose-1cfeac756500.json": "7ded836cf796af19af3ca8dab4b4a26d3b283ca37bb70f9cc1dcc76a879ce27f",
+    ".deckmaster/operations/compose-866b3c0cb801.json": "7d092ac5a972c2173251bb435a916c5e39796614f6b6400eb4401781214b9c93",
+    ".deckmaster/revisions/32bbc80fceca4f70b02e9f66ee014a19.json": "fc70249240554c3ca3049439f31f0e85c72140e3fc909302513a68ccb87a2b5f",
+    ".deckmaster/revisions/394c65f187ad4b779a62a58508d1dbfe.json": "369457574c81bdfda9aaeb6b2459b1f84c9be939496049aa6dac6e6e70a50218",
+    ".deckmaster/revisions/a6b407f57bd54e5c9fbe9d609d0dce89.json": "2da1912f5487e95083a73958c8a7d697b99cc9cb8e22fa2e5231b7e6f6acd5b6",
+    ".deckmaster/revisions/a913921e52b941e6b824adb99c9d385d.json": "d07c0921cd2d4c4ef7d2e855e81ea1e80f6f2b7a8a64b2bfa1b5d0d97f0188d4",
+    ".deckmaster/revisions/acaaece4849c4497894df8093bb452ee.json": "6c2906630a47a80bf3f1b964c8c39d47d8ebf19ed8db8289a22a72e528b245da",
+    ".deckmaster/revisions/cb9a27d812e34b7388a5364e82d17dc9.json": "9968011bbc665aca8fff6cbedebe68ddf4e4f81451289d62f4269593ae1ccf73",
+    ".deckmaster/revisions/d98ec5766a634856a7f5c65aec169ad9.json": "a2cbfe6eb69c11365c6ffc92070444fb8e8068b5affdaa6911930490c8f58891",
+    ".deckmaster/revisions/f850dff344eb4d7a938fc6f28a9d1139.json": "aad2dda76827d65e97b5976b43339e0ff8be2650b34a42d07a9d7e2720886418",
+    ".deckmaster/revisions/ff354e10595f48a1aa059821b070fa21.json": "21f98461aef267d2e2267b0ca8f230803f4d33cfa0f88d79ffdea93858ce43e2",
+    ".deckmaster/write.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "project_source_tree_after": {
+    ".deckmaster/current.json": "aff68c8db6d73d9090c211cf96f9ec7d2784030ea4a38a2e7e61f4271d9bd5e7",
+    ".deckmaster/objects/15/15709e7199326e9549a9fd1afe719d87b49df83c15bf14d46dd3858df647aeb6.txt": "15709e7199326e9549a9fd1afe719d87b49df83c15bf14d46dd3858df647aeb6",
+    ".deckmaster/objects/26/26fbbb16c96043c0216f9faf126e0c596563b56c06266a3c06ce5091c5a0045f.json": "26fbbb16c96043c0216f9faf126e0c596563b56c06266a3c06ce5091c5a0045f",
+    ".deckmaster/objects/2a/2a9fa28d494c5d4e936ef56ee97347991d2e213e6aabbdb35db3619943c4b348.json": "2a9fa28d494c5d4e936ef56ee97347991d2e213e6aabbdb35db3619943c4b348",
+    ".deckmaster/objects/31/3104ef02c126cac25193e408f2698948ce9d296fb1bac92f185446c67cb28869.json": "3104ef02c126cac25193e408f2698948ce9d296fb1bac92f185446c67cb28869",
+    ".deckmaster/objects/3f/3f731febaf64c371c3ee6b95061a49f5e1fd92449525e1450f8cc257cb9b08f6.json": "3f731febaf64c371c3ee6b95061a49f5e1fd92449525e1450f8cc257cb9b08f6",
+    ".deckmaster/objects/49/495ad3814f59d499f9ed4a076756910a45a867990ee3f492d6684fe667cd35fa.json": "495ad3814f59d499f9ed4a076756910a45a867990ee3f492d6684fe667cd35fa",
+    ".deckmaster/objects/50/500c23cf6fbb817abaddc09fef312be90affcd53458f98aed6c319017fbe42af.json": "500c23cf6fbb817abaddc09fef312be90affcd53458f98aed6c319017fbe42af",
+    ".deckmaster/objects/58/584dc56761cddabaf55e853a44c2ab399ed7d73029622b037a0864158081aace.json": "584dc56761cddabaf55e853a44c2ab399ed7d73029622b037a0864158081aace",
+    ".deckmaster/objects/5f/5fb05c764af52bef10931f730bf3ae4e10325f16646d4508ce05041800ec5919.json": "5fb05c764af52bef10931f730bf3ae4e10325f16646d4508ce05041800ec5919",
+    ".deckmaster/objects/68/68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9.txt": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+    ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67",
+    ".deckmaster/objects/7e/7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3.json": "7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3",
+    ".deckmaster/objects/ab/abad1b25790957fa13e7926262f61cf2cf37cdd6c40d059c19cbc42da9fe3e34.json": "abad1b25790957fa13e7926262f61cf2cf37cdd6c40d059c19cbc42da9fe3e34",
+    ".deckmaster/objects/b5/b50aeb1c11a4eb38c071435bf24d02b06e97ea273f6666c96e4cb098abb0c760.json": "b50aeb1c11a4eb38c071435bf24d02b06e97ea273f6666c96e4cb098abb0c760",
+    ".deckmaster/operations/compose-1cfeac756500.json": "7ded836cf796af19af3ca8dab4b4a26d3b283ca37bb70f9cc1dcc76a879ce27f",
+    ".deckmaster/operations/compose-866b3c0cb801.json": "7d092ac5a972c2173251bb435a916c5e39796614f6b6400eb4401781214b9c93",
+    ".deckmaster/revisions/32bbc80fceca4f70b02e9f66ee014a19.json": "fc70249240554c3ca3049439f31f0e85c72140e3fc909302513a68ccb87a2b5f",
+    ".deckmaster/revisions/394c65f187ad4b779a62a58508d1dbfe.json": "369457574c81bdfda9aaeb6b2459b1f84c9be939496049aa6dac6e6e70a50218",
+    ".deckmaster/revisions/a6b407f57bd54e5c9fbe9d609d0dce89.json": "2da1912f5487e95083a73958c8a7d697b99cc9cb8e22fa2e5231b7e6f6acd5b6",
+    ".deckmaster/revisions/a913921e52b941e6b824adb99c9d385d.json": "d07c0921cd2d4c4ef7d2e855e81ea1e80f6f2b7a8a64b2bfa1b5d0d97f0188d4",
+    ".deckmaster/revisions/acaaece4849c4497894df8093bb452ee.json": "6c2906630a47a80bf3f1b964c8c39d47d8ebf19ed8db8289a22a72e528b245da",
+    ".deckmaster/revisions/cb9a27d812e34b7388a5364e82d17dc9.json": "9968011bbc665aca8fff6cbedebe68ddf4e4f81451289d62f4269593ae1ccf73",
+    ".deckmaster/revisions/d98ec5766a634856a7f5c65aec169ad9.json": "a2cbfe6eb69c11365c6ffc92070444fb8e8068b5affdaa6911930490c8f58891",
+    ".deckmaster/revisions/f850dff344eb4d7a938fc6f28a9d1139.json": "aad2dda76827d65e97b5976b43339e0ff8be2650b34a42d07a9d7e2720886418",
+    ".deckmaster/revisions/ff354e10595f48a1aa059821b070fa21.json": "21f98461aef267d2e2267b0ca8f230803f4d33cfa0f88d79ffdea93858ce43e2",
+    ".deckmaster/write.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "unchanged": true,
+  "evidence_limit": "Finite software route/reader checks only, not extra Host role applications or new independent model executions."
+}

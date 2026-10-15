@@ -1,0 +1,113 @@
+{
+  "schema": "rc3_04_documentary_preserved_failures.v1",
+  "fixed_regressions": [
+    {
+      "phase": "7a8578b",
+      "unit": {
+        "failed": 538,
+        "passed": 1674,
+        "errors": 74
+      },
+      "render": {
+        "failed": 47,
+        "passed": 24
+      },
+      "evidence": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/unit.log",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/unit.log",
+          "sha256": "a09557431f47a1b50ff89e2ddd84d73c3e17fb9f99be80dc3087cd3f632d0ad9"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/render.log",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/render.log",
+          "sha256": "e16ff1db2413885e2faf1545ca4b1b4410483a37cad1ac342b673431ca23c104"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/unit-result-expanded.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/unit-result-expanded.json",
+          "sha256": "eba9757a3fa0d433281983195fda3576fe64893510454cc22e1fefb8316b8e15"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/render-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/render-result.json",
+          "sha256": "fd20176fd9583721c1b01e4ad27de2ec01d8015e9935eb26b5cba2b8f83fb9fc"
+        }
+      ],
+      "identity_rule": "Only this original fixed candidate, not relabeled as R3 execution."
+    },
+    {
+      "phase": "573a46a",
+      "unit": {
+        "failed": 255,
+        "passed": 2099,
+        "errors": 0
+      },
+      "render": {
+        "failed": 19,
+        "passed": 52
+      },
+      "evidence": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/unit.log",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/unit.log",
+          "sha256": "58c74a03bbcc05424ebc74cc6ca00068516bcb0e6d00504bfe89b1d49941c8b1"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/render.log",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/render.log",
+          "sha256": "96c3bbe500d6de824c8476833753e86c1bfaf8ebe98fa346a8c4c0a7a54bafbb"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/unit-result-expanded.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/unit-result-expanded.json",
+          "sha256": "11ee59d07b55fbffc402742c8288a75a9691e4a94b4cae0f985ca89c97bd9d9c"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/render-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/render-result.json",
+          "sha256": "4f72b46612c0641c36f5f838ff31b02034a783e4c18ab3d2a0640b90de6baa50"
+        }
+      ],
+      "identity_rule": "Only this original fixed candidate, not relabeled as R3 execution."
+    }
+  ],
+  "findings": "finding-closure-map.json",
+  "R3_closing_regression": {
+    "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+    "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+  },
+  "R2_install_environment_first_attempt": {
+    "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/install-first-attempt-environment-error.json",
+    "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/install-first-attempt-environment-error.json",
+    "sha256": "ca36422e9896c63be09b217ed011f49c22e78e416e409676c287410f45474646"
+  },
+  "mutable_originals": [
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/owner-focused.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-owner-r3/owner-focused.json",
+      "sha256": "a9f90709251b9570fa3cedabe43d1e9602b6340adb663c99cea5555c0d3ed988"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-studio-browser/r3-live/handoff.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-studio-browser/r3-live/handoff.json",
+      "sha256": "6dd328d661425d37ab3cb974133564c36c3b24c481270d5bae1926f18b973fbe"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-handoff.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-adapter-external/diagnostic/r3-handoff.json",
+      "sha256": "f271032bba56526d33beb41a452532336da695aa49e587930c127f28384e2c2e"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-r3-design-notes-fixtures/handoff.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-r3-design-notes-fixtures/handoff.json",
+      "sha256": "7a63d6421bfb2b3f048069245b330e2887f73e3c7756de36927aa5bfe85bb438"
+    }
+  ],
+  "limits": [
+    "Original broad failures include actual product defects and explicit fixture migration, never all called fixtures.",
+    "Mutable focused evidence remains mutable; C startup BUILD_ID confound is only an inference with no captured pair.",
+    "No deletion of excluded external logs, project Stores or original packages. This is a safe subset, not an exhaustive archive."
+  ]
+}

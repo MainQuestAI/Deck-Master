@@ -1,0 +1,66 @@
+{
+  "changed_product_paths": [
+    "src/deck_master/method_resources.py",
+    "src/deck_master/resources/static/v2/launcher-ui.js",
+    "src/deck_master/resources/static/v2/overview.js",
+    "src/deck_master/run_desk.py"
+  ],
+  "F4_F5_relevant_unchanged": [
+    {
+      "path": "src/deck_master/collaboration_api.py",
+      "r2_sha256": "33f9d6f0a15f6f66754680cdda5ac2330adda5a7b07e5328fb7aee823e21345b",
+      "r3_sha256": "33f9d6f0a15f6f66754680cdda5ac2330adda5a7b07e5328fb7aee823e21345b",
+      "equal": true
+    },
+    {
+      "path": "src/deck_master/external_review.py",
+      "r2_sha256": "8e4939a22bcaf9300924a30378e55d3d7eebc9118774a44fd840856e898365b7",
+      "r3_sha256": "8e4939a22bcaf9300924a30378e55d3d7eebc9118774a44fd840856e898365b7",
+      "equal": true
+    },
+    {
+      "path": "src/deck_master/project_initialization.py",
+      "r2_sha256": "d91c7bf3da8f40db44472df3809d8af9baf49dcd816b41f8e34ebcad1597f7bc",
+      "r3_sha256": "d91c7bf3da8f40db44472df3809d8af9baf49dcd816b41f8e34ebcad1597f7bc",
+      "equal": true
+    },
+    {
+      "path": "src/deck_master/service.py",
+      "r2_sha256": "8b9efc267d1f9dc00254acea5a1e1a8f02f20c752b2f608e5b5ffeb975293872",
+      "r3_sha256": "8b9efc267d1f9dc00254acea5a1e1a8f02f20c752b2f608e5b5ffeb975293872",
+      "equal": true
+    },
+    {
+      "path": "src/deck_master/collaboration.py",
+      "r2_sha256": "a323b1c551ff0165d508d4509e1c603b06967efc65091dc2766448fc7928a654",
+      "r3_sha256": "a323b1c551ff0165d508d4509e1c603b06967efc65091dc2766448fc7928a654",
+      "equal": true
+    },
+    {
+      "path": "src/deck_master/eligibility.py",
+      "r2_sha256": "0a472196e790ed70a6626df8d17f78dde396f343e0e148efd6eb6f4610aed31a",
+      "r3_sha256": "0a472196e790ed70a6626df8d17f78dde396f343e0e148efd6eb6f4610aed31a",
+      "equal": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/collaboration-desk.js",
+      "r2_sha256": "c0b2ba65367981ba285c030962a0642bc90ffc4f419571500d53ccc2b55cd8ab",
+      "r3_sha256": "c0b2ba65367981ba285c030962a0642bc90ffc4f419571500d53ccc2b55cd8ab",
+      "equal": true
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/draft-intake.js",
+      "r2_sha256": "8f1efb18578cfe8297faeb1ee92c36d5aa7c4bb944e7440a03046f425955840e",
+      "r3_sha256": "8f1efb18578cfe8297faeb1ee92c36d5aa7c4bb944e7440a03046f425955840e",
+      "equal": true
+    },
+    {
+      "path": "src/deck_master/registry.py",
+      "r2_sha256": "7b596b9d547a9f76a6057182e155cf5b24e6af24cde303b4e382d7d08d91a32c",
+      "r3_sha256": "7b596b9d547a9f76a6057182e155cf5b24e6af24cde303b4e382d7d08d91a32c",
+      "equal": true
+    }
+  ],
+  "R2_report_sha256": "3d7a044a793a547c3432956869e3a82daec1d54a7404f81ae43859fbb08086b0",
+  "note": "R2 eighteen checks retain exact R2 installed identity. This is a source-delta reuse boundary, not eighteen new R3 executions."
+}

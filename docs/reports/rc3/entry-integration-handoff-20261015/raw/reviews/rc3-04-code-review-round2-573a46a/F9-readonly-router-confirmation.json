@@ -1,0 +1,13 @@
+{
+  "input": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+  "expected_role": "deck-master",
+  "actual": {
+    "skill": "deck-content",
+    "content_intent": "plan_only",
+    "explicit_name": false,
+    "authority": "routing_suggestion_only"
+  },
+  "module": "/workspace/work/rc3/reviews/rc3-04-code-snapshot-573a46a/src/deck_master/method_resources.py",
+  "module_sha256": "1aecd96fac2a234d1ea762d99c6f523c3ae7e6cad9734a5959bc4a4d2ca107a3",
+  "evidence_scope": "Pure read-only source-runtime router confirmation; Root/B supplied actual installed Host failure separately."
+}

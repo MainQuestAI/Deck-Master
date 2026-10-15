@@ -1,0 +1,424 @@
+{
+  "schema_version": "rc3_04_owner_fixed_entry.v1",
+  "recorded_at": "2026-10-15T06:41:10.603515+00:00",
+  "candidate": {
+    "head": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+    "tree": "31cca075ac76877908e04f030f0c4e815d3a6268",
+    "parent": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+    "branch": "impl/rc3-04",
+    "source_root": "/workspace/work/rc3/cards/rc3-04",
+    "status_porcelain": "",
+    "changed_files": 52,
+    "disk_equals_head_for_all_changed_files": true
+  },
+  "environment": {
+    "python": "/workspace/work/rc3/venv-rc3-04/bin/python",
+    "package_origin": "/workspace/work/rc3/cards/rc3-04/src/deck_master/__init__.py",
+    "PIP_NO_INDEX": "1",
+    "PIP_FIND_LINKS": "/workspace/work/rc3/wheelhouse",
+    "TMPDIR": "/workspace/work/rc3/t04"
+  },
+  "handoff": {
+    "path": "/workspace/work/rc3/cards/rc3-04/docs/reports/rc3/RC3-04-R3-HANDOFF.md",
+    "sha256": "23178a7d2383ecd08b88fe4240d30cff4a126fe3f88cb5221508e02e1da3326d"
+  },
+  "workers": {
+    "adapter_external": "final completed; no commands or edits remain",
+    "skills_install": "final completed; no commands or edits remain",
+    "classic_fixture_migration": "final completed; no commands or edits remain",
+    "studio_browser": "final completed; no commands or edits remain"
+  },
+  "product_deltas": [
+    "F9 actual coordination action natural role routing",
+    "UI-O1 actual content-only completion overview",
+    "UI-O2 safe hard-limit recovery text",
+    "R3-C6 exact modern template task summary; raw and unknown retained"
+  ],
+  "failure_assignment": {
+    "unit": {
+      "total": 255,
+      "owner": 16,
+      "A": 53,
+      "B": 16,
+      "C": 43,
+      "classic": 127
+    },
+    "render": {
+      "total": 19,
+      "A": 14,
+      "owner": 5
+    }
+  },
+  "evidence": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/failure-domain-map.json",
+      "sha256": "f615549e3d0e449a4e36038bde42ffd9348c2de8dc4b02dbe61ba491780e6f39",
+      "bytes": 5698
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/owner-focused.json",
+      "sha256": "a9f90709251b9570fa3cedabe43d1e9602b6340adb663c99cea5555c0d3ed988",
+      "bytes": 3493
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/f9-routing.log",
+      "sha256": "e9f0d8f23502e884ed3aad3dfed483ede8c1d9b799c72a6bc952936854e0a462",
+      "bytes": 99
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/c6-summary-final.log",
+      "sha256": "8a8087ec1a9d7ac3a3e24f4d4f2cf4dc5d8454a9ee0514098651a820529b6109",
+      "bytes": 98
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/final-static-checks.json",
+      "sha256": "cdc74189de947687c877be5d80602e3f2419fbcc7fa6f3f4096219d21d60d1b8",
+      "bytes": 664
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-handoff.json",
+      "sha256": "f271032bba56526d33beb41a452532336da695aa49e587930c127f28384e2c2e",
+      "bytes": 3645
+    },
+    {
+      "path": "/workspace/work/rc3/t04/b-misc-r3/B-R3-MISC-HANDOFF.json",
+      "sha256": "932b6005256d1c012308cf73127c278fb5ceae39948ef8c91e38f63070e291c9",
+      "bytes": 15056
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-r3-design-notes-fixtures/handoff.json",
+      "sha256": "7a63d6421bfb2b3f048069245b330e2887f73e3c7756de36927aa5bfe85bb438",
+      "bytes": 6053
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-studio-browser/r3-live/handoff.json",
+      "sha256": "6dd328d661425d37ab3cb974133564c36c3b24c481270d5bae1926f18b973fbe",
+      "bytes": 23801
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-studio-browser/r3-live/artifact-relocation.json",
+      "sha256": "78fecf50760e80ee40e67954d3656b95bd7d6d0637b4564e0a4234debacfc86b",
+      "bytes": 3298
+    }
+  ],
+  "changed_file_identity": [
+    {
+      "path": "docs/reports/rc3/RC3-04-R3-HANDOFF.md",
+      "head_blob": "0445624fb68370c42a0c2a83d1f05fed72761ced",
+      "sha256": "23178a7d2383ecd08b88fe4240d30cff4a126fe3f88cb5221508e02e1da3326d",
+      "bytes": 18666
+    },
+    {
+      "path": "examples/workbench/w10_pressure.py",
+      "head_blob": "9538ffe8ad76135eef3ceb71f14bc2d1062a7185",
+      "sha256": "e627ec24ffc81d0c85a8098bde4f4b4ca79eea58a50de6ffc2c18813af73f902",
+      "bytes": 22945
+    },
+    {
+      "path": "src/deck_master/method_resources.py",
+      "head_blob": "1788be6931dcbc33aca2ffc74c9d955d81cbf1cb",
+      "sha256": "1aea3e14a381eddd022bd036e5977714f6c7f71c98d98b1f698aec7318b88acf",
+      "bytes": 17598
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/launcher-ui.js",
+      "head_blob": "48f98fe2876c828f1e1951e5113e0de6d311e5c7",
+      "sha256": "efd01184b06bcaefb3fe2d83725590ca445dd1b3499d20dd0ac02ceadc717bdb",
+      "bytes": 14419
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/overview.js",
+      "head_blob": "6edbe4039d3ff70770f61ceae95fcf0d97dc0899",
+      "sha256": "17c89c990aacb32b36547aac9db10bdf3ef5e2eca8d5207c35edef4b3ba2e96a",
+      "bytes": 32243
+    },
+    {
+      "path": "src/deck_master/run_desk.py",
+      "head_blob": "e8651ed470781d81aafab10218fb2c8f45506a25",
+      "sha256": "dabcee691af0d8f5561ba10a8c243b4cc4bc88b9397009a2d747e49d9236803b",
+      "bytes": 17949
+    },
+    {
+      "path": "tests/rebuild/engineering_render_helpers.py",
+      "head_blob": "ce293a039d2fa654bf2931863f1555d5e022fb66",
+      "sha256": "b8010afdeac603b4a4ee1d3312f37c285f9fed48a5a1aa655025cb7a041f954a",
+      "bytes": 3940
+    },
+    {
+      "path": "tests/rebuild/rc3_fixtures.py",
+      "head_blob": "0eb05720be44c5599bc27ff05c2251e89617b43e",
+      "sha256": "29737e12ca9307c24496a9b31443414583fdb36fa95fd472116976534ad9fa51",
+      "bytes": 13797
+    },
+    {
+      "path": "tests/rebuild/test_action_targets.py",
+      "head_blob": "a219063730e6d8f8321b889f5956289ed2f3fc6e",
+      "sha256": "e92b7ea3bc396e0cc3faa2b33305c67a0ae752d45b26a1aa4b83112ea927b5ac",
+      "bytes": 11625
+    },
+    {
+      "path": "tests/rebuild/test_candidate_decisions.py",
+      "head_blob": "ffbb1598071e610dfd2a904203102daff9508274",
+      "sha256": "490107a4e82dfc020734cc056781c288000beeb3b96025af0f1fb73f4a00bf14",
+      "bytes": 22576
+    },
+    {
+      "path": "tests/rebuild/test_candidate_preview_recovery.py",
+      "head_blob": "bbf9ce19e359d763d2a074f40428a48accb6d5db",
+      "sha256": "56db90a089e3cf54c50a15cdba5955a887603d29c827cf00e631789ca580c802",
+      "bytes": 11843
+    },
+    {
+      "path": "tests/rebuild/test_change_http.py",
+      "head_blob": "464ef4d894f94865c4815b339e64576b4ece5009",
+      "sha256": "9040c1e589bd894e231dba3e79c500768a22c5664386209387179b117d1c085c",
+      "bytes": 6490
+    },
+    {
+      "path": "tests/rebuild/test_compiler_geometry.py",
+      "head_blob": "27a090df45db8ea804f8f1f2a684038c2bb41b87",
+      "sha256": "01921ba457c3a06166daf9dda3f2a9cf3df264b40913c89d2793ba97e5671e3b",
+      "bytes": 5567
+    },
+    {
+      "path": "tests/rebuild/test_decision_receipts.py",
+      "head_blob": "2dd1b928e4284a8949d38775fbc2ef47a80dddaa",
+      "sha256": "c6ddd88883191e1d9d2248d04efc39918de7d2872a06782773e7f0a9fa14bd36",
+      "bytes": 13068
+    },
+    {
+      "path": "tests/rebuild/test_delivery_control_snapshot.py",
+      "head_blob": "f4348249bc4734d1fd7a4963fdcc68c0ea7e3f5f",
+      "sha256": "2a3273eb6354738bdf1e450101b55dcb1108674d0c78ed2453f11c29a8129e9e",
+      "bytes": 9792
+    },
+    {
+      "path": "tests/rebuild/test_eligibility_resolver.py",
+      "head_blob": "9ef8664856a5afb1fb2137024f232822654e72a9",
+      "sha256": "61f2e0db7ab34c6cdab2d6169f1132d93c3eead701afbb7d8781fb6a8691caa9",
+      "bytes": 52699
+    },
+    {
+      "path": "tests/rebuild/test_entry_capabilities.py",
+      "head_blob": "d96eaba28aff4cfe3cebd3e3bcd07a66af994172",
+      "sha256": "df581a8a7459f3aba0765964534d4044cb8fdf62a6db17b329f2f0c240822ded",
+      "bytes": 12165
+    },
+    {
+      "path": "tests/rebuild/test_external_review_render.py",
+      "head_blob": "02c632f248f83664ce94adf885e06459e67a38ae",
+      "sha256": "fe7ee58132c1607410525eb0d6dbec09738418ff0a2da8330bd90b83440a3ded",
+      "bytes": 4783
+    },
+    {
+      "path": "tests/rebuild/test_gradient_readability.py",
+      "head_blob": "e6bd3fb988f6e77ad74ada69b82ffcff48492571",
+      "sha256": "e36d373c238edf912d21edc5a345c3b5618d2d59e3304ea00bcbfcca4705b72e",
+      "bytes": 6245
+    },
+    {
+      "path": "tests/rebuild/test_icon_quality.py",
+      "head_blob": "01149bb419da0d9ccb4f1bb5e43fdd4bde250eb8",
+      "sha256": "aac3bc3203b419b35454405d0a94925888a80ae06c239f2c92f6ca6b7814defc",
+      "bytes": 26593
+    },
+    {
+      "path": "tests/rebuild/test_install.py",
+      "head_blob": "9e53b8d7f61e6a5602406db1790b1934eaa7bfb9",
+      "sha256": "8bee05145a359484a84520da7a9cb9740fd731fed9309ec3de145d3bbfdcad11",
+      "bytes": 54851
+    },
+    {
+      "path": "tests/rebuild/test_late_results_and_stops.py",
+      "head_blob": "f1f213f0c602a8b41007c2ec34d7e7c0e7683920",
+      "sha256": "b8f1a805443120a3d5a7e41b489121ef8295c4c580581122a9261bbbe93a3e5b",
+      "bytes": 23871
+    },
+    {
+      "path": "tests/rebuild/test_page_detail.py",
+      "head_blob": "85229457f72a28b2547792eb9050d676f19b602f",
+      "sha256": "330ac25e06cfd25019998576e643285687a88c7335076c2e8c772c2ae9468fbf",
+      "bytes": 17120
+    },
+    {
+      "path": "tests/rebuild/test_page_visual_gate.py",
+      "head_blob": "4f289fef8e18f414e60572fd8e7bc46b374aebd5",
+      "sha256": "7475a5071dc13dd106717f60b142d0fb36f1c65ac88413a3de267bb2b24c6792",
+      "bytes": 27886
+    },
+    {
+      "path": "tests/rebuild/test_rc3_adopted_design_handoff.py",
+      "head_blob": "79282542c108035bb826f1bcf3840627d7402443",
+      "sha256": "151f3a05d1124caf6954e5123b9eb2e7e68d78d469976641c59cdd9543f9b5b2",
+      "bytes": 25279
+    },
+    {
+      "path": "tests/rebuild/test_rc3_design_feasibility.py",
+      "head_blob": "305fd49bb09269fbf07c33beccf64cbcf63d4690",
+      "sha256": "aedf57459654e2d119645bd03813db03d9d10a0fe426ebd3912702edeb3f1158",
+      "bytes": 16653
+    },
+    {
+      "path": "tests/rebuild/test_rc3_design_requirements.py",
+      "head_blob": "73140ec0130ceff28e4a2e2f8371397dd3280cff",
+      "sha256": "d2d6ca53b68267528be1c8a5c7af70cbc9e437de585e58d7ee89ca679edd9ca2",
+      "bytes": 29116
+    },
+    {
+      "path": "tests/rebuild/test_rc3_design_workflows.py",
+      "head_blob": "fd2748db83c3474372325e7ed833ab723bef7fe2",
+      "sha256": "8c08143e53a2f3d1df3829110ce024b0758df3dd61518fe2096066775de8cc4c",
+      "bytes": 6538
+    },
+    {
+      "path": "tests/rebuild/test_rc3_four_skills.py",
+      "head_blob": "2da6f365040e286565468f902d11394cb60d5769",
+      "sha256": "de49a89569cb6041c5a8f4c456564997bea51400a065c8d4e58c7299e029d96f",
+      "bytes": 8725
+    },
+    {
+      "path": "tests/rebuild/test_rc3_native_visual_reuse.py",
+      "head_blob": "b58cc288e9973a8a9cbb493e8f313b24afa86ac7",
+      "sha256": "8b8f67ea6c4aff9f2b26b67bb82e8e7470e75caf1c4ae640763ecc9c1460b42a",
+      "bytes": 16255
+    },
+    {
+      "path": "tests/rebuild/test_rc3_notes_files.py",
+      "head_blob": "8b48a6d6148f45d8e984ba41c6814d3998540e06",
+      "sha256": "0eac8157334f24de96fdb947c4c08d2511a24050914d05265f2406130b375992",
+      "bytes": 29696
+    },
+    {
+      "path": "tests/rebuild/test_rc3_notes_transactions.py",
+      "head_blob": "7db3509b547b954ea69ed8a018b3a965b83af67f",
+      "sha256": "0504d6a0e87136bb66762901f74d4c2e8cfcf7acbd3ff3d298888a4df10d6839",
+      "bytes": 30988
+    },
+    {
+      "path": "tests/rebuild/test_rc3_preproduction_semantics.py",
+      "head_blob": "0cf6b7dc31f0f249c669b68e4bc33cd80853a378",
+      "sha256": "6d4ca6aa8e93e14cfe32c5adbdd98126099f90652fef604f53cb3f1cc3c90831",
+      "bytes": 16472
+    },
+    {
+      "path": "tests/rebuild/test_rc3_restyle_workflows.py",
+      "head_blob": "3cafa0fb51882560069d50b391956845b9067c3e",
+      "sha256": "ff5f6421ebc7e2253ff298bca9d2b746a234daf82e42b7878c838535c24e4857",
+      "bytes": 18726
+    },
+    {
+      "path": "tests/rebuild/test_rc3_review_repairs.py",
+      "head_blob": "0d40d33435cc541f79b14761a3257c06687de8c2",
+      "sha256": "5d97ecb1f8306ff93ae6d981af5063b389a3cdcd4de0d2bfb183d169c1c8f459",
+      "bytes": 8682
+    },
+    {
+      "path": "tests/rebuild/test_rc3_run_summary.py",
+      "head_blob": "1d5769cfd3140191ca64ebc8013c4134ae2c29a6",
+      "sha256": "a5345f516fccfc5da239a86ca660245dda4618f654ffe5270f7379680ce6d884",
+      "bytes": 1536
+    },
+    {
+      "path": "tests/rebuild/test_rc3_studio_control_browser.py",
+      "head_blob": "916ea32acd3c849d1d3125b7f027fe20cd4a04c6",
+      "sha256": "4903d5220e98116b0dad0779d3ee379766a4ba54ed7524cbc0d581f0f65d404c",
+      "bytes": 28567
+    },
+    {
+      "path": "tests/rebuild/test_rc3_studio_intake_browser.py",
+      "head_blob": "7b05e46bb76b93ce3220e766d8cff487b9f59467",
+      "sha256": "b4a28c3e5df479fb3082ee2a89ad0e02184f11f9bcebf0ac9101a1e78addc54e",
+      "bytes": 18693
+    },
+    {
+      "path": "tests/rebuild/test_review.py",
+      "head_blob": "7f9251812af65abaadac3ab95494df74a1f72be2",
+      "sha256": "3140c7cf03574f3e6b09fadde7ab8acc35df42dca716704a53d31a768f7ab531",
+      "bytes": 50155
+    },
+    {
+      "path": "tests/rebuild/test_run_desk.py",
+      "head_blob": "5dcf3b476d6f0999666ca40718e4f9ed7174985d",
+      "sha256": "baeb7e74bef176861207caedbd09f918a4dc07d030a9cb0921a171f4683b127d",
+      "bytes": 13070
+    },
+    {
+      "path": "tests/rebuild/test_scope_and_delegation.py",
+      "head_blob": "6f2d3d7d8be23ad75663fb9550b1902202dddf45",
+      "sha256": "f7ede3a18cd33f9f39248533939600bc4c93628e8d4eebfd8602122b00168a23",
+      "bytes": 15695
+    },
+    {
+      "path": "tests/rebuild/test_store_transactions.py",
+      "head_blob": "d1d6a30b7ce093f00babf0228a807100f9507f48",
+      "sha256": "51781b4748fad5e1bc564c7f1ae6ace208103b9ddeb97f75ff3dd8c153652ab3",
+      "bytes": 24244
+    },
+    {
+      "path": "tests/rebuild/test_studio_delivery_browser.py",
+      "head_blob": "9d73998ddf19710ce012cd87a51f9789e1e9e45a",
+      "sha256": "6b97f6dcf939d12a4e60d32f54d4b53e021e17bfc5353ae0494a4fd121b3827e",
+      "bytes": 14078
+    },
+    {
+      "path": "tests/rebuild/test_t03_t04_integration.py",
+      "head_blob": "e332af1781feb013a305f4d4672ae24db8783e1f",
+      "sha256": "0ce080496326c808e0fe2d55162fe5e916e57d35b376d8d73bc0f6a84e66cbe7",
+      "bytes": 35216
+    },
+    {
+      "path": "tests/rebuild/test_ui_journal.py",
+      "head_blob": "3bb5c5fe57922890798c7f5f39fe3e5c87119275",
+      "sha256": "71da4a5ffaa5a593b6a866db5fce935c83494a5d29c1dfffb9e44d648db5cfcf",
+      "bytes": 16437
+    },
+    {
+      "path": "tests/rebuild/test_ui_state_clear.py",
+      "head_blob": "3a626c2b5633147076c8026856d4a447c0d70be4",
+      "sha256": "e995ec61325e504b7edd1aa3e413f464298c4ebe9dda2330ce6989989f31b8d5",
+      "bytes": 23601
+    },
+    {
+      "path": "tests/rebuild/test_usability_history.py",
+      "head_blob": "1ba8a3f0307cf2827457ca7fa45ce20d2765996a",
+      "sha256": "f6dd44e02dffc7f97b4b1dfe8a63db35aea00c94dd0de95c91349bcd1d1c9baa",
+      "bytes": 2340
+    },
+    {
+      "path": "tests/rebuild/test_versioned_exports.py",
+      "head_blob": "70c67eddf080afc4157a8bf4dde79907a6cf2bb5",
+      "sha256": "b1fbef2e68b7f9cd414c25be53790b5c750e0fc88109c28e21a1c43fc229fa67",
+      "bytes": 22848
+    },
+    {
+      "path": "tests/rebuild/test_workbench_actions.py",
+      "head_blob": "a42f876571385e676185e5f04e03b8c1b5d9d403",
+      "sha256": "252c0f0fb575c76a074db1685839b78f90779c3a6941ab673e354df88ed91c74",
+      "bytes": 25415
+    },
+    {
+      "path": "tests/rebuild/test_workbench_e2e.py",
+      "head_blob": "ba67118741d0d4ffb50e52f00dc07abb6b5cddce",
+      "sha256": "c9371e4ff29a180ba78684a9eaeab0c2d58c8171c520e568af27fd1a63896bc5",
+      "bytes": 15809
+    },
+    {
+      "path": "tests/rebuild/test_workbench_operations.py",
+      "head_blob": "3fff078d223df264f2f9e1679eb1df15938497fe",
+      "sha256": "9b7fe7993dace08e5f724e3dcf3323b77e7ddfdc562a18149c073f4928b23c36",
+      "bytes": 10151
+    },
+    {
+      "path": "tests/rebuild/test_workbench_reads.py",
+      "head_blob": "440398ae10d0925d398492d2e50a564cc57fa99d",
+      "sha256": "7bf326f17abc1b276fff2205c54e08eed13fa2c828cc876e4cba2a68e9e157f0",
+      "bytes": 22595
+    }
+  ],
+  "limits": [
+    "No fixed R3 unit/render/install/independent review has yet run; Root owns these next.",
+    "Mutable focused logs are not fixed candidate PASS.",
+    "No new human/native/model/professional/desktop acceptance or known price claim.",
+    "No push, PR or merge by Owner. R1/R2 fixed evidence remains immutable."
+  ]
+}

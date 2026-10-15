@@ -1,0 +1,40 @@
+{
+  "method_resources.py": {
+    "changed_top_functions": [
+      "route_request"
+    ],
+    "unchanged_top_functions": [
+      "_read_entries",
+      "_read_ids",
+      "method_ids_for",
+      "method_release",
+      "method_resources",
+      "methods_sha256",
+      "read_methods",
+      "read_skill_methods",
+      "read_task_methods",
+      "resolve_root",
+      "route_skill"
+    ],
+    "module_nonfunction_statements_identical": true,
+    "old_file_sha256": "1aecd96fac2a234d1ea762d99c6f523c3ae7e6cad9734a5959bc4a4d2ca107a3",
+    "new_file_sha256": "1aea3e14a381eddd022bd036e5977714f6c7f71c98d98b1f698aec7318b88acf"
+  },
+  "run_desk.py": {
+    "changed_top_functions": [
+      "task_instruction_summary"
+    ],
+    "unchanged_top_functions": [
+      "_error",
+      "_groups",
+      "_public",
+      "_records",
+      "detail",
+      "listing",
+      "task_row"
+    ],
+    "module_nonfunction_statements_identical": false,
+    "old_file_sha256": "4ee468545764d9d8c3d996b4356ca3f5acd4aa9544891145f46243d8231c3f30",
+    "new_file_sha256": "dabcee691af0d8f5561ba10a8c243b4cc4bc88b9397009a2d747e49d9236803b"
+  }
+}

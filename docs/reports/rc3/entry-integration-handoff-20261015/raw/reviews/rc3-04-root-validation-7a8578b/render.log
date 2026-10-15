@@ -1,0 +1,2373 @@
+FFFF....FF.FFFFFFFFFFFFFFFFFF.F.FFFFFFFFFFFF..............FFFFF...FFFFF  [100%]
+=================================== FAILURES ===================================
+________ test_damaged_state_retries_actual_compile_render_and_readback _________
+
+icon_store = <deck_master.store.Store object at 0x7f73813f1820>
+
+    @pytest.mark.render
+    def test_damaged_state_retries_actual_compile_render_and_readback(icon_store):
+>       recipe = confirm(icon_store, input_for(icon_store, method="standard"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_candidate_preview_recovery.py:215: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_icon_quality.py:36: in confirm
+    value=value or input_for(store);p=icons.propose(store.project_root,input=value)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/icons.py:327: in propose
+    eligibility.guard(store, doc, "style.propose",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380e13380>
+document = {'change': {'description': 'synthetic icons', 'kind': 'artifact_adoption', 'operation_id': '3f632010-3cfd-452a-bc98-0e...-15T05:02:11.532003+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'style.propose', context = {'targets': {'layers': ['design']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+_ test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[True] __
+
+store = <deck_master.store.Store object at 0x7f7380db9d90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7380a3f470>
+use_candidates = True
+
+    @pytest.mark.render
+    @pytest.mark.parametrize("use_candidates", [True, False])
+    def test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays(store, monkeypatch, use_candidates):
+        import shutil
+        from deck_master import pipeline, stages
+        from page_visual_helpers import pass_page_review
+        if any(not shutil.which(tool) for tool in ('rsvg-convert', 'soffice', 'pdftoppm')):
+            pytest.skip('real renderer toolchain unavailable')
+        if use_candidates:
+>           ids = [candidate(store), candidate(store, 'p02')]; adopt(store, plan(store, ids))
+                   ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_candidates.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_candidates.py:59: in candidate
+    task = dispatch(store, page); start(store, task)
+           ^^^^^^^^^^^^^^^^^^^^^
+tests/rebuild/test_candidates.py:31: in dispatch
+    result = changes.commit(store.project_root, plan_id=plan['plan_id'], base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/changes.py:184: in commit
+    eligibility.guard(store, document, "change.commit", context={
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380a886b0>
+document = {'change': {'description': 'Explicit synthetic sample images; no Host call', 'kind': 'task_update', 'operation_id': 's...-15T05:02:11.701050+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'change.commit'
+context = {'targets': {'page_ids': ['p01'], 'layers': ['svg']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+_ test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[False] _
+
+store = <deck_master.store.Store object at 0x7f7380eb5cd0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7380a3f620>
+use_candidates = False
+
+    @pytest.mark.render
+    @pytest.mark.parametrize("use_candidates", [True, False])
+    def test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays(store, monkeypatch, use_candidates):
+        import shutil
+        from deck_master import pipeline, stages
+        from page_visual_helpers import pass_page_review
+        if any(not shutil.which(tool) for tool in ('rsvg-convert', 'soffice', 'pdftoppm')):
+            pytest.skip('real renderer toolchain unavailable')
+        if use_candidates:
+            ids = [candidate(store), candidate(store, 'p02')]; adopt(store, plan(store, ids))
+        else:
+            for pid in ('p01', 'p02'):
+                task = service.open_host_task(store, kind='reconstruct', page_ids=[pid], instruction='Synthetic normal automatic SVG return')
+>               accept(store, task)
+
+tests/rebuild/test_candidates.py:316: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_candidates.py:54: in accept
+    return service.accept_result(store.project_root, **{key: task[key] for key in ('task_id', 'operation_id', 'produced_against')},
+src/deck_master/service.py:1676: in accept_result
+    outcome = tasks_mod.accept_result(
+src/deck_master/tasks.py:1088: in accept_result
+    return _accept_result_locked(store, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380ef5f70>
+task_id = '8dcd2986cabf', operation_id = 'reconstruct-9f700f88b51b'
+produced_against = '6d9bd37d99c0b32fc03e77bcaf8ec95eae78bb1a16bc0f8f3bc2f1b33ee02c51'
+envelope_raw = {'kind': 'reconstruct', 'files': [{'file_id': 'svg', 'path': 'page.svg', 'media_type': 'image/svg+xml'}], 'artifact_sp... 'svg', 'page_id': 'p01', 'provenance': {'source_type': 'unknown', 'tool': 'synthetic-test', 'invocation_ref': None}}]}
+adapter_context = None, review_receipt_selector = None
+
+    def _accept_result_locked(
+        store: Store,
+        *,
+        task_id: str,
+        operation_id: str,
+        produced_against: str,
+        envelope_raw: dict[str, Any],
+        adapter_context: TrustedContext | None = None,
+        review_receipt_selector: dict | None = None,
+    ) -> dict:
+        """Validate a Host result envelope and adopt it atomically (spec 09.7).
+    
+        Returns a response dict with ``status`` accepted/already_applied; raises
+        EnvelopeError (invalid input) or TaskConflict (late result / stale input /
+        different output for a known operation) without touching current state.
+        """
+        envelope = parse_envelope(envelope_raw)
+        result_digest = sha256_bytes(canonical_json_bytes(envelope))
+        document = store.load_document()
+        task = _lookup_task(document, task_id, store)
+    
+        if task.get("kind") != envelope["kind"]:
+            raise EnvelopeError(
+                f"(task {task_id})/kind",
+                f"task kind is {task.get('kind')!r}; envelope kind {envelope['kind']!r} does not match",
+            )
+        # P1-03: an envelope is bound to the task's own operation; a different
+        # operation id is a conflict, never a new submission channel.
+        if operation_id != task.get("operation_id"):
+            raise TaskConflict(
+                f"(task {task_id})/operation_id",
+                "operation_id does not match the dispatched task operation",
+            )
+    
+        # Successful adoption completes the Task in the same pointer swap. New
+        # active tasks have no committed receipt; avoid scanning every old revision
+        # on the normal production path. Terminal retries recover from ancestry.
+        receipt = store.operation_receipt(operation_id) if task.get("status") in (
+            "completed", "cancelled", "superseded", "failed"
+        ) or (_operations_dir(store) / f"{operation_id}.json").is_file() else None
+        if receipt is not None:
+            if receipt["request_digest"] != _request_digest(task_id, operation_id, produced_against, envelope):
+                raise TaskConflict("(operation)", "same operation already applied with a different result or request binding")
+            response = receipt["response"]
+            warning = _publish_receipt_cache(store, task=task, envelope=envelope, produced_against=produced_against,
+                                             result_digest=result_digest, response=response)
+            replay = {**response, "status": "already_applied", "same_revision": True,
+                      "operation_result": copy.deepcopy(response)}
+            if warning:
+                replay["journal_warning"] = warning
+            return replay
+    
+        journal = read_operation_journal(store, operation_id)
+        if journal is not None:
+            if (journal.get('status') == 'late_result_settled' and
+                    store.workbench_protocol_required(document)):
+                raise TaskConflict(f'(task {task_id})', 'late result call facts were settled; cancelled output was not adopted')
+            if task.get("status") == "superseded":
+                raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")
+            if journal.get("result_digest") == result_digest:
+                return {
+                    "status": "already_applied",
+                    "revision_id": journal.get("revision_id"),
+                    "same_revision": True,
+                }
+            raise TaskConflict(
+                f"(operation {operation_id})",
+                "same operation already applied with a different result",
+            )
+    
+        if task.get("status") == "completed":
+            # P1-03: a completed task only ever replays its original result (the
+            # journal check above already returned already_applied for it). Any
+            # other submission is refused; call facts are history, not a channel.
+            raise TaskConflict(
+                f"(task {task_id})",
+                "task already completed; only the original operation result replays",
+            )
+        if task.get("status") in ("cancelled", "superseded"):
+            # Settle call facts first; the late product is then refused (current unchanged).
+            staged = _read_staged(store, operation_id, envelope)
+            settled = _settled_allowances(task, envelope.get("usage_events") or [], staged, store)
+            updated_task = {
+                **task,
+                "call_allowances": settled["call_allowances"],
+                "updated_at": _utc_now_iso(),
+            }
+            validate_task_semantics(updated_task)
+            task_ref = store.put_json_object(updated_task)
+            bumped = bump_revision(
+                document,
+                {
+                    "operation_id": f"settle-{operation_id}",
+                    "kind": "task_update",
+                    "description": "late result after cancellation; call facts settled",
+                    "read_set": [],
+                },
+            )
+            bumped = _replace_task_ref(bumped, task, task_ref, store)
+            store._commit_locked(
+                blobs=[], base_revision=document["revision_id"],
+                document=bumped,
+                operation_id=f"settle-{operation_id}",
+            )
+            write_operation_journal(
+                store,
+                OperationJournal(
+                    operation_id=operation_id,
+                    task_id=task_id,
+                    kind=envelope["kind"],
+                    produced_against=produced_against,
+                    result_digest=result_digest,
+                    revision_id=document["revision_id"],
+                    status="late_result_settled",
+                    usage_events=envelope.get("usage_events") or [],
+                ),
+            )
+            conflict = StaleInputContext if task.get("status") == "superseded" else TaskConflict
+            raise conflict(
+                f"(task {task_id})", "result arrived after cancellation; call facts were settled"
+            )
+    
+        if produced_against != task.get("produced_against"):
+            raise TaskConflict(
+                f"(task {task_id})",
+                "produced_against does not match the dispatched dependency hash; rebase required",
+            )
+        # Round-B: settle call facts BEFORE any content prevalidation, in its own
+        # committed revision. A later content refusal must never erase already
+        # observed call facts (spec 09.7 settle-then-adopt, as on the cancelled path).
+        staged = _read_staged(store, operation_id, envelope)
+        allowances_before = [dict(entry) for entry in (task.get("call_allowances") or [])]
+        _settled_allowances(task, envelope.get("usage_events") or [], staged, store)
+        if task.get("call_allowances") != allowances_before:
+            validate_task_semantics(task)
+            settled_ref = store.put_json_object(task)
+            settled_doc = bump_revision(
+                document,
+                {"operation_id": f"settle-{operation_id}", "kind": "task_update",
+                 "description": "call facts settled before content adoption", "read_set": []},
+            )
+            settled_doc = _replace_task_ref(settled_doc, task, settled_ref, store)
+            store._commit_locked(blobs=[], base_revision=document["revision_id"], document=settled_doc,
+                                operation_id=f"settle-{operation_id}")
+            document = store.load_document()
+        # Freshness is content-based: task-management revisions (claim, allocation)
+        # keep the result valid; a content change invalidates it (spec 09.7 recheck).
+        if not task_inputs_current(store, document, task):
+            raise StaleInputContext(
+                "(document)",
+                "project content moved since dispatch; read the new inputs and rebase",
+            )
+    
+        # The adoption half of accept_result consumes the same judgement as every
+        # other boundary (CONTRACTS §6.1 exception): the call facts above already
+        # settled in their own committed revision, so a refusal here keeps the cost
+        # and leaves the current draft untouched.
+        from . import eligibility
+        adoption = eligibility.evaluate(store, document, document, "task.accept",
+                                        {"task": task, "targets": _accept_targets(envelope, task, store=store, document=document),
+                                         "record_only": _record_only(envelope, task)})
+        if not adoption["allowed"]:
+            raise eligibility.EligibilityBlocked(adoption)
+        if "rc3-entry.v1" in (task.get("required_capabilities") or []):
+            from .generation import check_host
+            if task.get("status") != "running" or not task.get("execution_ref"):
+>               raise TaskConflict(f"(task {task_id})/execution_ref", "claim the RC3 task with its actual Host protocol before adoption")
+E               deck_master.tasks.TaskConflict: (task 8dcd2986cabf)/execution_ref: claim the RC3 task with its actual Host protocol before adoption
+
+src/deck_master/tasks.py:1257: TaskConflict
+_____________ test_document_canvas_is_prompt_and_compile_authority _____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_document_canvas_is_prompt0')
+resolvable_font_family = 'Noto Sans CJK SC'
+
+    @pytest.mark.render
+    def test_document_canvas_is_prompt_and_compile_authority(tmp_path, resolvable_font_family):
+        # AC-K14: a 4:3 Document canvas flows into the prompt projection, resolve_design,
+        # and the real produced PPT page size; no hidden 16:9 default appears anywhere.
+        project = create_project(tmp_path)
+        store = attach_svg(project, SVG_4_3.replace("Hiragino Sans GB", resolvable_font_family))
+        document = store.load_document()
+        assert document['design_context']['canvas'] == CANVAS_4_3
+        assert (document['design_context']['canvas']['slide_width_in'],
+                document['design_context']['canvas']['slide_height_in']) != (40 / 3, 7.5)
+    
+        page = store.read_object_json(document['pages'][0]['page'])
+        effective, _ = resolve_design(page, document['design_context'],
+                                      document['design_context'].get('assets', []))
+        assert effective['canvas'] == CANVAS_4_3
+        request = project_prompt(page, document['design_context'],
+                                 document['design_context'].get('assets', []))
+        assert 'Canvas: 960x720 px' in request['prompt']
+        assert 'physical size 10.0x7.5 in' in request['prompt']
+        assert '1280x720' not in request['prompt']
+        assert request['projection']['canvas'] == CANVAS_4_3
+    
+>       report = produce(project)
+                 ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_compiler_geometry.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380ac7b30>
+document = {'change': {'description': 'attach svg for produce test', 'kind': 'task_update', 'operation_id': 'attach-svg', 'read_s...-15T05:02:12.086872+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+____________ test_adopted_svg_continue_rebuilds_existing_ppt[False] ____________
+
+project = <deck_master.store.Store object at 0x7f7380c69820>
+restore_stale_output = False
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('restore_stale_output', [False, True])
+    def test_adopted_svg_continue_rebuilds_existing_ppt(project, restore_stale_output):
+        from deck_master.models import bump_revision
+        store = project
+>       first = artifacts.dispatch(store, mode='auto'); artifacts.start(store, first)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_deep_quality_state.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_candidates.py:31: in dispatch
+    result = changes.commit(store.project_root, plan_id=plan['plan_id'], base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/changes.py:184: in commit
+    eligibility.guard(store, document, "change.commit", context={
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f73809221e0>
+document = {'change': {'description': 'Explicit synthetic sample images; no Host call', 'kind': 'task_update', 'operation_id': 's...-15T05:02:14.900902+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'change.commit'
+context = {'targets': {'page_ids': ['p01'], 'layers': ['svg']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+____________ test_adopted_svg_continue_rebuilds_existing_ppt[True] _____________
+
+project = <deck_master.store.Store object at 0x7f7380a1c500>
+restore_stale_output = True
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('restore_stale_output', [False, True])
+    def test_adopted_svg_continue_rebuilds_existing_ppt(project, restore_stale_output):
+        from deck_master.models import bump_revision
+        store = project
+>       first = artifacts.dispatch(store, mode='auto'); artifacts.start(store, first)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_deep_quality_state.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_candidates.py:31: in dispatch
+    result = changes.commit(store.project_root, plan_id=plan['plan_id'], base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/changes.py:184: in commit
+    eligibility.guard(store, document, "change.commit", context={
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380ac7980>
+document = {'change': {'description': 'Explicit synthetic sample images; no Host call', 'kind': 'task_update', 'operation_id': 's...-15T05:02:15.001293+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'change.commit'
+context = {'targets': {'page_ids': ['p01'], 'layers': ['svg']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+___ test_old_final_is_retired_atomically_and_normal_continue_rebuilds[False] ___
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_old_final_is_retired_atom0')
+running = False
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('running',[False,True])
+    def test_old_final_is_retired_atomically_and_normal_continue_rebuilds(tmp_path,running):
+        path=tmp_path/'project';create_sample(path,page_count=1,readonly=False);store=Store(path)
+>       attach_svg(store);page_review=service.continue_project(path)['pending_tasks'][0];pass_page_review(path,page_review)
+        ^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_lifecycle.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_external_review_lifecycle.py:18: in attach_svg
+    task=artifacts.dispatch(store,page,mode='auto');artifacts.start(store,task)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/rebuild/test_candidates.py:31: in dispatch
+    result = changes.commit(store.project_root, plan_id=plan['plan_id'], base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/changes.py:184: in commit
+    eligibility.guard(store, document, "change.commit", context={
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380a956d0>
+document = {'change': {'description': 'Explicit synthetic sample images; no Host call', 'kind': 'task_update', 'operation_id': 's...-15T05:02:15.128442+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'change.commit'
+context = {'targets': {'page_ids': ['p01'], 'layers': ['svg']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+___ test_old_final_is_retired_atomically_and_normal_continue_rebuilds[True] ____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_old_final_is_retired_atom1')
+running = True
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('running',[False,True])
+    def test_old_final_is_retired_atomically_and_normal_continue_rebuilds(tmp_path,running):
+        path=tmp_path/'project';create_sample(path,page_count=1,readonly=False);store=Store(path)
+>       attach_svg(store);page_review=service.continue_project(path)['pending_tasks'][0];pass_page_review(path,page_review)
+        ^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_lifecycle.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_external_review_lifecycle.py:18: in attach_svg
+    task=artifacts.dispatch(store,page,mode='auto');artifacts.start(store,task)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/rebuild/test_candidates.py:31: in dispatch
+    result = changes.commit(store.project_root, plan_id=plan['plan_id'], base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/changes.py:184: in commit
+    eligibility.guard(store, document, "change.commit", context={
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380ac7bc0>
+document = {'change': {'description': 'Explicit synthetic sample images; no Host call', 'kind': 'task_update', 'operation_id': 's...-15T05:02:15.241161+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'change.commit'
+context = {'targets': {'page_ids': ['p01'], 'layers': ['svg']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+_ test_historical_stale_final_recovers_without_retiring_valid_trial_or_other_page _
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_historical_stale_final_re0')
+
+    @pytest.mark.render
+    def test_historical_stale_final_recovers_without_retiring_valid_trial_or_other_page(tmp_path):
+        path=tmp_path/'project';create_sample(path,page_count=2,readonly=False);store=Store(path)
+>       attach_svg(store,'p02');pipeline.preview_svg_page(path,'p02')
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_lifecycle.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_external_review_lifecycle.py:18: in attach_svg
+    task=artifacts.dispatch(store,page,mode='auto');artifacts.start(store,task)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/rebuild/test_candidates.py:31: in dispatch
+    result = changes.commit(store.project_root, plan_id=plan['plan_id'], base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/changes.py:184: in commit
+    eligibility.guard(store, document, "change.commit", context={
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f73809f9100>
+document = {'change': {'description': 'Explicit synthetic sample images; no Host call', 'kind': 'task_update', 'operation_id': 's...-15T05:02:15.366765+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'change.commit'
+context = {'targets': {'page_ids': ['p02'], 'layers': ['svg']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/change.commit: no authorization names 'change.commit' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+____ test_actual_render_and_persisted_produce_report[duplicate-hidden-fail] ____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_actual_render_and_persist0')
+case = 'duplicate-hidden', expected = 'fail'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380ac7590>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:02:15.490919+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+___ test_actual_render_and_persisted_produce_report[duplicate-visible-pass] ____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_actual_render_and_persist1')
+case = 'duplicate-visible', expected = 'pass'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380a3f8f0>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:02:15.602553+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+________ test_actual_render_and_persisted_produce_report[no-fill-fail] _________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_actual_render_and_persist2')
+case = 'no-fill', expected = 'fail'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380a8b7a0>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:02:15.720340+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+_________ test_actual_render_and_persisted_produce_report[solid-pass] __________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_actual_render_and_persist3')
+case = 'solid', expected = 'pass'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380abc980>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:02:15.813849+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+____ test_actual_render_and_persisted_produce_report[partial-gradient-pass] ____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_actual_render_and_persist4')
+case = 'partial-gradient', expected = 'pass'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380abfaa0>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:02:15.906934+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+_____ test_readback_implementation_change_cannot_reuse_old_candidate_check _____
+
+icon_store = <deck_master.store.Store object at 0x7f7380ac6630>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f73809fa720>
+
+    def test_readback_implementation_change_cannot_reuse_old_candidate_check(icon_store,monkeypatch):
+>       recipe=confirm(icon_store,input_for(icon_store,method='standard'));task=dispatch(icon_store,recipe)[0];start(icon_store,task)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_icon_quality.py:36: in confirm
+    value=value or input_for(store);p=icons.propose(store.project_root,input=value)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/icons.py:327: in propose
+    eligibility.guard(store, doc, "style.propose",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380a4a900>
+document = {'change': {'description': 'synthetic icons', 'kind': 'artifact_adoption', 'operation_id': '176842a7-359e-49db-b12c-40...-15T05:02:16.058583+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'style.propose', context = {'targets': {'layers': ['design']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+____________ test_revised_deck_recompiles_real_slide_order[reorder] ____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_revised_deck_recompiles_r0')
+resolvable_font_family = 'Noto Sans CJK SC', mode = 'reorder'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+    def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+        import io
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from PIL import Image
+        from page_visual_helpers import pass_page_review
+        from deck_master.pipeline import artifact, produce
+        from deck_master.editing import export_project
+        from deck_master.handoff import check_handoff
+        from deck_master.store import StoreError
+    
+        def page(pid):
+            return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                    'customer_visible': {'title': pid, 'body_blocks': []},
+                    'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+    
+        project = tmp_path / 'real-deck'
+        service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+        store = Store(project)
+        png = tmp_path / 'reference.png'
+        Image.new('RGB', (960, 540), 'white').save(png)
+    
+        def attach_missing_svgs(doc):
+            for entry in doc['pages']:
+                if entry.get('svg'):
+                    continue
+                content = store.read_object_json(entry['page'])
+                svg = tmp_path / (entry['page_id'] + '.svg')
+                svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                               f'<rect width="960" height="540" fill="#ffffff"/>'
+                               f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                               f'{content["customer_visible"]["title"]}</text></svg>')
+                if not entry.get('blueprint'):
+                    entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+                entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+    
+        _raw_commit(store, attach_missing_svgs)
+>       assert produce(project)['status'] == 'pass'
+               ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_flow_quality.py:1413: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380955e50>
+document = {'change': {'description': 'task fact corrected', 'kind': 'task_update', 'operation_id': 'raw-7e7b411fe644', 'read_set...-15T05:02:16.159447+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+____________ test_revised_deck_recompiles_real_slide_order[remove] _____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_revised_deck_recompiles_r1')
+resolvable_font_family = 'Noto Sans CJK SC', mode = 'remove'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+    def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+        import io
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from PIL import Image
+        from page_visual_helpers import pass_page_review
+        from deck_master.pipeline import artifact, produce
+        from deck_master.editing import export_project
+        from deck_master.handoff import check_handoff
+        from deck_master.store import StoreError
+    
+        def page(pid):
+            return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                    'customer_visible': {'title': pid, 'body_blocks': []},
+                    'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+    
+        project = tmp_path / 'real-deck'
+        service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+        store = Store(project)
+        png = tmp_path / 'reference.png'
+        Image.new('RGB', (960, 540), 'white').save(png)
+    
+        def attach_missing_svgs(doc):
+            for entry in doc['pages']:
+                if entry.get('svg'):
+                    continue
+                content = store.read_object_json(entry['page'])
+                svg = tmp_path / (entry['page_id'] + '.svg')
+                svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                               f'<rect width="960" height="540" fill="#ffffff"/>'
+                               f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                               f'{content["customer_visible"]["title"]}</text></svg>')
+                if not entry.get('blueprint'):
+                    entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+                entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+    
+        _raw_commit(store, attach_missing_svgs)
+>       assert produce(project)['status'] == 'pass'
+               ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_flow_quality.py:1413: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f73809fa6f0>
+document = {'change': {'description': 'task fact corrected', 'kind': 'task_update', 'operation_id': 'raw-92f0f45180de', 'read_set...-15T05:02:16.286793+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+______________ test_revised_deck_recompiles_real_slide_order[add] ______________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_revised_deck_recompiles_r2')
+resolvable_font_family = 'Noto Sans CJK SC', mode = 'add'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+    def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+        import io
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from PIL import Image
+        from page_visual_helpers import pass_page_review
+        from deck_master.pipeline import artifact, produce
+        from deck_master.editing import export_project
+        from deck_master.handoff import check_handoff
+        from deck_master.store import StoreError
+    
+        def page(pid):
+            return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                    'customer_visible': {'title': pid, 'body_blocks': []},
+                    'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+    
+        project = tmp_path / 'real-deck'
+        service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+        store = Store(project)
+        png = tmp_path / 'reference.png'
+        Image.new('RGB', (960, 540), 'white').save(png)
+    
+        def attach_missing_svgs(doc):
+            for entry in doc['pages']:
+                if entry.get('svg'):
+                    continue
+                content = store.read_object_json(entry['page'])
+                svg = tmp_path / (entry['page_id'] + '.svg')
+                svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                               f'<rect width="960" height="540" fill="#ffffff"/>'
+                               f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                               f'{content["customer_visible"]["title"]}</text></svg>')
+                if not entry.get('blueprint'):
+                    entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+                entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+    
+        _raw_commit(store, attach_missing_svgs)
+>       assert produce(project)['status'] == 'pass'
+               ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_flow_quality.py:1413: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380954e00>
+document = {'change': {'description': 'task fact corrected', 'kind': 'task_update', 'operation_id': 'raw-c0d1128bc059', 'read_set...-15T05:02:16.413236+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+_____________ test_revised_deck_recompiles_real_slide_order[edit] ______________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_revised_deck_recompiles_r3')
+resolvable_font_family = 'Noto Sans CJK SC', mode = 'edit'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('mode', ['reorder', 'remove', 'add', 'edit'])
+    def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_family, mode):
+        import io
+        import zipfile
+        import xml.etree.ElementTree as ET
+        from PIL import Image
+        from page_visual_helpers import pass_page_review
+        from deck_master.pipeline import artifact, produce
+        from deck_master.editing import export_project
+        from deck_master.handoff import check_handoff
+        from deck_master.store import StoreError
+    
+        def page(pid):
+            return {'schema_version': 'deck_page_package.v2', 'page_id': pid,
+                    'customer_visible': {'title': pid, 'body_blocks': []},
+                    'visual_spec': {'intent': 'synthetic regression', 'reference_mode': 'new_design'}}
+    
+        project = tmp_path / 'real-deck'
+        service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+        store = Store(project)
+        png = tmp_path / 'reference.png'
+        Image.new('RGB', (960, 540), 'white').save(png)
+    
+        def attach_missing_svgs(doc):
+            for entry in doc['pages']:
+                if entry.get('svg'):
+                    continue
+                content = store.read_object_json(entry['page'])
+                svg = tmp_path / (entry['page_id'] + '.svg')
+                svg.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">'
+                               f'<rect width="960" height="540" fill="#ffffff"/>'
+                               f'<text x="40" y="100" font-family="{resolvable_font_family}" font-size="32">'
+                               f'{content["customer_visible"]["title"]}</text></svg>')
+                if not entry.get('blueprint'):
+                    entry['blueprint'] = artifact(store, png, 'blueprint', page_id=entry['page_id'])
+                entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
+    
+        _raw_commit(store, attach_missing_svgs)
+>       assert produce(project)['status'] == 'pass'
+               ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_flow_quality.py:1413: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f73809f8ad0>
+document = {'change': {'description': 'task fact corrected', 'kind': 'task_update', 'operation_id': 'raw-0b7f95024762', 'read_set...-15T05:02:16.535666+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+__________ test_real_gradient_svg_ppt_and_persisted_check[start-zero] __________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_real_gradient_svg_ppt_and0')
+name = 'start-zero', stops = [(0, 1), (0, 0), (1, 0)], expected = 'fail'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('name,stops,expected', [CASES[0],CASES[1],CASES[11]], ids=['start-zero','end-zero','partial'])
+    def test_real_gradient_svg_ppt_and_persisted_check(tmp_path,name,stops,expected):
+        page={'schema_version':'deck_page_package.v2',**_atom_page(['REPORT','Body'])};project=tmp_path/'project'
+        service.create(project,brief='Synthetic gradient interval regression',draft={'pages':[page]},design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100"><rect width="200" height="100" fill="#ffffff"/>'+gradient_body(stops)+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(project);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'gradient-proof','kind':'artifact_adoption','description':'synthetic explicit gradient','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='gradient-proof')
+>       report=pipeline.produce(project);doc=store.load_document();stored=json.loads(store.read_object_bytes(store.read_object_json(doc['outputs']['render_report'])['file']))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_gradient_readability.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f738078deb0>
+document = {'change': {'description': 'synthetic explicit gradient', 'kind': 'artifact_adoption', 'operation_id': 'gradient-proof...-15T05:02:16.642857+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+___________ test_real_gradient_svg_ppt_and_persisted_check[end-zero] ___________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_real_gradient_svg_ppt_and1')
+name = 'end-zero', stops = [(0, 0), (1, 0), (1, 1)], expected = 'fail'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('name,stops,expected', [CASES[0],CASES[1],CASES[11]], ids=['start-zero','end-zero','partial'])
+    def test_real_gradient_svg_ppt_and_persisted_check(tmp_path,name,stops,expected):
+        page={'schema_version':'deck_page_package.v2',**_atom_page(['REPORT','Body'])};project=tmp_path/'project'
+        service.create(project,brief='Synthetic gradient interval regression',draft={'pages':[page]},design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100"><rect width="200" height="100" fill="#ffffff"/>'+gradient_body(stops)+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(project);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'gradient-proof','kind':'artifact_adoption','description':'synthetic explicit gradient','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='gradient-proof')
+>       report=pipeline.produce(project);doc=store.load_document();stored=json.loads(store.read_object_bytes(store.read_object_json(doc['outputs']['render_report'])['file']))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_gradient_readability.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380a3fda0>
+document = {'change': {'description': 'synthetic explicit gradient', 'kind': 'artifact_adoption', 'operation_id': 'gradient-proof...-15T05:02:16.726495+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+___________ test_real_gradient_svg_ppt_and_persisted_check[partial] ____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_real_gradient_svg_ppt_and2')
+name = 'partial', stops = [(0, 1), (1, 0)], expected = 'pass'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('name,stops,expected', [CASES[0],CASES[1],CASES[11]], ids=['start-zero','end-zero','partial'])
+    def test_real_gradient_svg_ppt_and_persisted_check(tmp_path,name,stops,expected):
+        page={'schema_version':'deck_page_package.v2',**_atom_page(['REPORT','Body'])};project=tmp_path/'project'
+        service.create(project,brief='Synthetic gradient interval regression',draft={'pages':[page]},design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100"><rect width="200" height="100" fill="#ffffff"/>'+gradient_body(stops)+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(project);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'gradient-proof','kind':'artifact_adoption','description':'synthetic explicit gradient','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='gradient-proof')
+>       report=pipeline.produce(project);doc=store.load_document();stored=json.loads(store.read_object_bytes(store.read_object_json(doc['outputs']['render_report'])['file']))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_gradient_readability.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380955c70>
+document = {'change': {'description': 'synthetic explicit gradient', 'kind': 'artifact_adoption', 'operation_id': 'gradient-proof...-15T05:02:16.807931+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+______________ test_actual_candidate_preview_and_cross_page_reuse ______________
+
+icon_store = <deck_master.store.Store object at 0x7f73809207d0>
+
+    @pytest.mark.render
+    def test_actual_candidate_preview_and_cross_page_reuse(icon_store):
+>       before=icon_store.load_document();recipe=confirm(icon_store,input_for(icon_store,method='standard'));task=dispatch(icon_store,recipe)[0];start(icon_store,task)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_icon_quality.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_icon_quality.py:36: in confirm
+    value=value or input_for(store);p=icons.propose(store.project_root,input=value)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/icons.py:327: in propose
+    eligibility.guard(store, doc, "style.propose",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380954ef0>
+document = {'change': {'description': 'synthetic icons', 'kind': 'artifact_adoption', 'operation_id': '40c7016d-e5d0-4384-a81a-c0...-15T05:02:16.946062+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'style.propose', context = {'targets': {'layers': ['design']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+_________________ test_preview_failure_retry_and_corrupt_files _________________
+
+icon_store = <deck_master.store.Store object at 0x7f7380d50b00>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7380956870>
+
+    @pytest.mark.render
+    def test_preview_failure_retry_and_corrupt_files(icon_store,monkeypatch):
+>       recipe=confirm(icon_store,input_for(icon_store,method='standard'));task=dispatch(icon_store,recipe)[0];start(icon_store,task)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_icon_quality.py:219: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_icon_quality.py:36: in confirm
+    value=value or input_for(store);p=icons.propose(store.project_root,input=value)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/icons.py:327: in propose
+    eligibility.guard(store, doc, "style.propose",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380a94b60>
+document = {'change': {'description': 'synthetic icons', 'kind': 'artifact_adoption', 'operation_id': '9cda9028-0553-43dd-b3db-55...-15T05:02:17.096660+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'style.propose', context = {'targets': {'layers': ['design']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+___________________ test_isolated_full_chain_and_local_edit ____________________
+
+wheel_venv = PosixPath('/workspace/work/rc3/t04/r-7a8578b/wheel-venv0/venv-home')
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_isolated_full_chain_and_l0')
+
+    @pytest.mark.render
+    def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
+        home = tmp_path / "home"
+        home.mkdir()
+        work = tmp_path / "work"
+        work.mkdir()
+        project = work / "chain-proj"
+        family = _resolvable_font_family(wheel_venv, home, work)
+        material = _write_material(work)
+    
+        code, payload, _ = _iso_run(wheel_venv, ["create", "--brief", "隔离全链", "--source", str(material),
+                                                 "--out", str(project)], home, work)
+        assert code == 0, payload
+        compose = _json.loads((ENVELOPES / "compose.json").read_text())
+        for page in compose["pages"]:
+            page.get("visual_spec", {}).pop("nodes", None)
+            page.get("visual_spec", {}).pop("edges", None)
+>       _adopt(wheel_venv, home, work, project, "compose", compose)
+
+tests/rebuild/test_install.py:524: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+venv = PosixPath('/workspace/work/rc3/t04/r-7a8578b/wheel-venv0/venv-home')
+home = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_isolated_full_chain_and_l0/home')
+work = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_isolated_full_chain_and_l0/work')
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_isolated_full_chain_and_l0/work/chain-proj')
+kind = 'compose'
+envelope = {'kind': 'compose', 'files': [], 'pages': [{'schema_version': 'deck_page_package.v2', 'page_id': 'p09', 'customer_visi...': 'read_only', 'text': '本期只读接口'}], ...}, 'speaker_notes': '所有企业与数字均为合成输入，不代表客户成绩。', ...}], 'page_order': ['p09'], ...}
+staged = None
+
+    def _adopt(venv, home, work, project, kind, envelope, staged=None):
+        code, pending, _ = _iso_run(venv, ["continue", "--project", str(project)], home, work)
+        assert code == 3 and pending["pending_tasks"][0]["kind"] == kind, (kind, pending)
+        task = pending["pending_tasks"][0]
+        if staged:
+            staging = project / ".deckmaster" / "staging" / task["operation_id"]
+            staging.mkdir(parents=True, exist_ok=True)
+            for name, data in staged.items():
+                (staging / name).write_bytes(data)
+        envelope_path = work / f"envelope-{kind}.json"
+        envelope_path.write_text(_json.dumps(envelope, ensure_ascii=False))
+        code, payload, err = _iso_run(venv, ["task", "accept", "--project", str(project),
+                                             "--task-id", task["task_id"], "--operation-id", task["operation_id"],
+                                             "--produced-against", task["produced_against"],
+                                             "--result", str(envelope_path)], home, work)
+>       assert code == 0, (payload, err)
+E       AssertionError: ({}, '{
+E          "error": {
+E           "code": "scope_exceeded",
+E           "message": "the target is outside the current request scope",
+E           ...
+E            "target_layers": [
+E             "page_copy"
+E            ],
+E            "projection": null
+E           },
+E           "required_artifact_refs": []
+E          }
+E         }
+E         ')
+E       assert 4 == 0
+
+tests/rebuild/test_install.py:503: AssertionError
+________ test_stored_invalid_svg_reconstructs_then_resumes_page_review _________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_stored_invalid_svg_recons0')
+
+    @pytest.mark.render
+    def test_stored_invalid_svg_reconstructs_then_resumes_page_review(tmp_path):
+        from deck_master.models import bump_revision
+        from deck_master.pipeline import artifact
+        project = tmp_path / 'project'
+        service.create(project, brief='坏 SVG 恢复', draft={'pages': [
+            _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_stored_invalid_svg_recons0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_ test_repeated_visual_review_without_resolution_stops_with_actionable_finding _
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_repeated_visual_review_wi0')
+
+    @pytest.mark.render
+    def test_repeated_visual_review_without_resolution_stops_with_actionable_finding(tmp_path):
+        project = tmp_path / 'project'
+        service.create(project, brief='无进展审阅', draft={'pages': [_draft_page('p1', '标题', '正文。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_repeated_visual_review_wi0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+____ test_page_review_blocks_next_blueprint_until_current_three_checks_pass ____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_page_review_blocks_next_b0')
+
+    @pytest.mark.render
+    def test_page_review_blocks_next_blueprint_until_current_three_checks_pass(tmp_path):
+        project = tmp_path / 'project'
+        service.create(project, brief='逐页审图', draft={'pages': [
+            _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:198: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_page_review_blocks_next_b0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+________ test_accepted_variance_on_same_page_advances_to_next_blueprint ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_accepted_variance_on_same0')
+
+    @pytest.mark.render
+    def test_accepted_variance_on_same_page_advances_to_next_blueprint(tmp_path):
+        project = tmp_path / 'project'
+        service.create(project, brief='合理差异', draft={'pages': [
+            _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:236: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_accepted_variance_on_same0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_____ test_failed_visual_review_requires_page_repair_and_evidenced_closure _____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_failed_visual_review_requ0')
+
+    @pytest.mark.render
+    def test_failed_visual_review_requires_page_repair_and_evidenced_closure(tmp_path):
+        project = tmp_path / 'project'
+        service.create(project, brief='逐页返修', draft={'pages': [
+            _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_failed_visual_review_requ0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_____ test_unchanged_page_visual_repair_stops_without_another_repair_loop ______
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_unchanged_page_visual_rep0')
+
+    @pytest.mark.render
+    def test_unchanged_page_visual_repair_stops_without_another_repair_loop(tmp_path):
+        project = tmp_path / 'project'
+        service.create(project, brief='无进展返修', draft={'pages': [_draft_page('p1', '标题', '正文。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_unchanged_page_visual_rep0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+____________ test_preflight_and_preview_share_approved_image_assets ____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_preflight_and_preview_sha0')
+
+    @pytest.mark.render
+    def test_preflight_and_preview_share_approved_image_assets(tmp_path):
+        project = tmp_path / 'project'
+        service.create(project, brief='批准图片', draft={'pages': [_draft_page('p1', '标题', '正文。')]})
+        image = tmp_path / 'approved.png'
+        Image.new('RGB', (20, 12), 'blue').save(image)
+        service.import_asset(project, asset_id='approved', kind='image', file_path=image)
+>       task, _ = _start(project, 'p1')
+                  ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:333: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_preflight_and_preview_sha0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_______ test_missing_preview_renderer_blocks_next_page_with_tool_reason ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_missing_preview_renderer_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f73809fa510>
+
+    @pytest.mark.render
+    def test_missing_preview_renderer_blocks_next_page_with_tool_reason(tmp_path, monkeypatch):
+        from deck_master import pipeline
+    
+        project = tmp_path / 'project'
+        service.create(project, brief='缺渲染器', draft={'pages': [
+            _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:352: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_missing_preview_renderer_0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_ test_preview_renderer_execution_error_is_reported_separately_from_missing_tool _
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_preview_renderer_executio0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7380a02630>
+
+    @pytest.mark.render
+    def test_preview_renderer_execution_error_is_reported_separately_from_missing_tool(tmp_path, monkeypatch):
+        from deck_master import pipeline
+        project = tmp_path / 'project'
+        service.create(project, brief='预览器运行失败', draft={'pages': [_draft_page('p1', '标题', '正文。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:373: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_preview_renderer_executio0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+____________ test_page_review_cannot_pass_after_design_asset_change ____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_page_review_cannot_pass_a0')
+
+    @pytest.mark.render
+    def test_page_review_cannot_pass_after_design_asset_change(tmp_path):
+        project = tmp_path / 'project'
+        service.create(project, brief='过期逐页审图', draft={'pages': [_draft_page('p1', '标题', '正文。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:391: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_page_review_cannot_pass_a0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_____ test_style_change_retires_open_review_and_rebuilds_only_current_page _____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_style_change_retires_open0')
+
+    @pytest.mark.render
+    def test_style_change_retires_open_review_and_rebuilds_only_current_page(tmp_path):
+        project = tmp_path / 'project'
+        service.create(project, brief='样式调整续跑', draft={'pages': [
+            _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+>       task, svg = _start(project, 'p1')
+                    ^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_page_visual_gate.py:410: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_style_change_retires_open0/project')
+page_id = 'p1'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_____________ test_new_design_mode_and_failed_review_is_preserved ______________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_new_design_mode_and_faile0')
+
+    @pytest.mark.render
+    def test_new_design_mode_and_failed_review_is_preserved(tmp_path: Path) -> None:
+        # AC-B10: reference_mode='new_design' reaches the prompt projection, and a
+        # failed review stays preserved (readable, still failed) instead of being
+        # back-filled by a later passing review or by supersede.
+        project = _create_project(tmp_path)
+        store = Store(project)
+        document = store.load_document()
+        page_obj = store.read_object_json(document["pages"][0]["page"])
+        request = project_prompt(page_obj, document["design_context"], [])
+        assert request["projection"]["visual_spec"]["reference_mode"] == "new_design"
+        assert '"reference_mode": "new_design"' in request["prompt"]
+    
+        # Adopt blueprint + SVG, then really produce; an open review task is
+        # superseded by production, not rewritten as passed.
+>       document = _adopt_blueprint(tmp_path, project)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_production.py:481: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_new_design_mode_and_faile0')
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_new_design_mode_and_faile0/proj')
+
+    def _adopt_blueprint(tmp_path: Path, project: Path) -> dict:
+        response = service.continue_project(project)
+>       task = response["pending_tasks"][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_production.py:271: IndexError
+______ test_real_pipeline_to_export_preserves_full_notes_and_dependencies ______
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_real_pipeline_to_export_p0')
+resolvable_font_family = 'Noto Sans CJK SC'
+
+    @pytest.mark.render
+    def test_real_pipeline_to_export_preserves_full_notes_and_dependencies(tmp_path, resolvable_font_family):
+        root, store, _ = _project(tmp_path, resolvable_font_family)
+        before = store.load_document()
+>       report = produce(root)
+                 ^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_notes_files.py:62: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f7380abda90>
+document = {'change': {'description': 'Synthetic initial SVGs; no model production claim', 'kind': 'artifact_adoption', 'operatio...-15T05:02:43.989962+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1609: EligibilityBlocked
+______ test_notes_edit_preserves_completed_visual_and_actual_review_bytes ______
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_notes_edit_preserves_comp0')
+
+    @pytest.mark.render
+    def test_notes_edit_preserves_completed_visual_and_actual_review_bytes(tmp_path):
+>       project, store = _completed_visual(tmp_path)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_notes_transactions.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_notes_transactions.py:30: in _completed_visual
+    task, svg = _start(project, 'p-a')
+                ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_notes_edit_preserves_comp0/project')
+page_id = 'p-a'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_________________ test_visual_open_finding_not_fixed_by_notes __________________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_visual_open_finding_not_f0')
+
+    @pytest.mark.render
+    def test_visual_open_finding_not_fixed_by_notes(tmp_path):
+>       project, store = _completed_visual(tmp_path, finding=True)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_notes_transactions.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_notes_transactions.py:30: in _completed_visual
+    task, svg = _start(project, 'p-a')
+                ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_visual_open_finding_not_f0/project')
+page_id = 'p-a'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_____ test_actual_completed_visual_notes_assembly_export_zero_image_ledger _____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_actual_completed_visual_n0')
+
+    @pytest.mark.render
+    def test_actual_completed_visual_notes_assembly_export_zero_image_ledger(tmp_path):
+        from deck_master import pipeline, exports
+        from deck_master.compiler.native import notes_records
+>       project, store = _completed_visual(tmp_path)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_notes_transactions.py:293: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_notes_transactions.py:30: in _completed_visual
+    task, svg = _start(project, 'p-a')
+                ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_actual_completed_visual_n0/project')
+page_id = 'p-a'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_______ test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_frozen_a_real_sdk_refuses0')
+
+    @pytest.mark.render
+    def test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries(tmp_path):
+        """Use the immutable actual A installation; never patch its writer set."""
+        python = Path('/workspace/work/rc3/baseline-a/venv/bin/python')
+        if not python.exists():
+            pytest.skip('Frozen A installation is an external engineering resource')
+>       project, store = _completed_visual(tmp_path)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_notes_transactions.py:326: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_notes_transactions.py:30: in _completed_visual
+    task, svg = _start(project, 'p-a')
+                ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_frozen_a_real_sdk_refuses0/project')
+page_id = 'p-a'
+
+    def _start(project, page_id):
+        store = Store(project)
+>       task = service.continue_project(project)['pending_tasks'][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_page_visual_gate.py:30: IndexError
+_____ test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles _____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_single_page_edit_keeps_un0')
+
+    @pytest.mark.render
+    def test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles(tmp_path):
+        # AC-S05: editing p09 leaves the unrelated page's blueprint/SVG bytes and
+        # refs untouched, opens only a reconstruct (no new external image making),
+        # and the whole PPT is re-assembled afterwards; old artifacts stay findable.
+>       project, store = _produced_project(tmp_path, [
+            _draft_page("p09", "条件收集", "在售后门户嵌入表单。"),
+            _draft_page("p10", "处理方案", "自动分派到值班组。"),
+        ])
+
+tests/rebuild/test_service_flow.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_service_flow.py:256: in _produced_project
+    _drive_blueprints(project, store)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_single_page_edit_keeps_un0/proj')
+store = <deck_master.store.Store object at 0x7f7383f35880>
+
+    def _drive_blueprints(project, store):
+        while True:
+            document = store.load_document()
+            missing = next((e for e in document["pages"] if not e.get("blueprint")), None)
+            if missing is None:
+                return document
+>           task = service.continue_project(project)["pending_tasks"][0]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           IndexError: list index out of range
+
+tests/rebuild/test_service_flow.py:210: IndexError
+____ test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt _____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_page_reorder_and_removal_0')
+
+    @pytest.mark.render
+    def test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt(tmp_path):
+        # AC-S07: reorder + removal keeps surviving page refs byte-identical, the
+        # removed page's objects stay readable in history, and the re-assembled
+        # PPT contains exactly the current page set.
+>       project, store = _produced_project(tmp_path, [
+            _draft_page("p1", "第一页", "正文一。"),
+            _draft_page("p2", "第二页", "正文二。"),
+            _draft_page("p3", "第三页", "正文三。"),
+        ])
+
+tests/rebuild/test_service_flow.py:350: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_service_flow.py:256: in _produced_project
+    _drive_blueprints(project, store)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_page_reorder_and_removal_0/proj')
+store = <deck_master.store.Store object at 0x7f7380761bb0>
+
+    def _drive_blueprints(project, store):
+        while True:
+            document = store.load_document()
+            missing = next((e for e in document["pages"] if not e.get("blueprint")), None)
+            if missing is None:
+                return document
+>           task = service.continue_project(project)["pending_tasks"][0]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           IndexError: list index out of range
+
+tests/rebuild/test_service_flow.py:210: IndexError
+_________ test_reconstruct_after_style_change_uses_new_effective_style _________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_reconstruct_after_style_c0')
+
+    @pytest.mark.render
+    def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
+        # After invalidation the rebuild actually runs against the new style, not
+        # just a cleared slot: reconstruct + produce re-renders and the resolved
+        # effective style carries the new accent value.
+        from deck_master.production import resolve_design
+        project, store = _style_design_pages(tmp_path)
+        _attach_design_slots(store)
+        document = store.load_document()
+        design = document["design_context"]
+        changed = deepcopy(design)
+        changed["styles"][0]["colors"]["accent"] = "#00AA66"
+        service.update_design(project, design_context=changed)
+    
+        while True:
+            current = store.load_document()
+            missing = next((e for e in current["pages"] if not e.get("svg")), None)
+            if missing is None:
+                break
+            response = service.continue_project(project)
+            task = response["pending_tasks"][0]
+            if task['kind'] == 'review' and task.get('review_stage') == 'page_visual':
+                pass_page_review(project, task)
+                continue
+            assert task["kind"] == "reconstruct"
+            blueprint_sha = store.read_object_json(missing["blueprint"])["file"]["sha256"]
+            page = store.read_object_json(missing["page"])
+            svg = _svg_for(page).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
+            staging = project / ".deckmaster" / "staging" / task["operation_id"]
+            staging.mkdir(parents=True, exist_ok=True)
+            (staging / "page.svg").write_bytes(svg)
+>           service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                  produced_against=task["produced_against"], result_payload={
+                                      "kind": "reconstruct",
+                                      "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
+                                      "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": missing["page_id"],
+                                                          "provenance": {"source_type": "unknown",
+                                                                         "tool": "host-reconstruct",
+                                                                         "invocation_ref": None}}]})
+
+tests/rebuild/test_service_flow.py:611: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/service.py:1676: in accept_result
+    outcome = tasks_mod.accept_result(
+src/deck_master/tasks.py:1088: in accept_result
+    return _accept_result_locked(store, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f738074ee40>
+task_id = '9c6fe49d7ca7', operation_id = 'reconstruct-a4f92672c942'
+produced_against = '53e892858d3d7d02b314905503072bc795ce48581ea616988e8823e3c565bed2'
+envelope_raw = {'kind': 'reconstruct', 'files': [{'file_id': 's', 'path': 'page.svg', 'media_type': 'image/svg+xml'}], 'artifact_spec...'svg', 'page_id': 'p1', 'provenance': {'source_type': 'unknown', 'tool': 'host-reconstruct', 'invocation_ref': None}}]}
+adapter_context = None, review_receipt_selector = None
+
+    def _accept_result_locked(
+        store: Store,
+        *,
+        task_id: str,
+        operation_id: str,
+        produced_against: str,
+        envelope_raw: dict[str, Any],
+        adapter_context: TrustedContext | None = None,
+        review_receipt_selector: dict | None = None,
+    ) -> dict:
+        """Validate a Host result envelope and adopt it atomically (spec 09.7).
+    
+        Returns a response dict with ``status`` accepted/already_applied; raises
+        EnvelopeError (invalid input) or TaskConflict (late result / stale input /
+        different output for a known operation) without touching current state.
+        """
+        envelope = parse_envelope(envelope_raw)
+        result_digest = sha256_bytes(canonical_json_bytes(envelope))
+        document = store.load_document()
+        task = _lookup_task(document, task_id, store)
+    
+        if task.get("kind") != envelope["kind"]:
+            raise EnvelopeError(
+                f"(task {task_id})/kind",
+                f"task kind is {task.get('kind')!r}; envelope kind {envelope['kind']!r} does not match",
+            )
+        # P1-03: an envelope is bound to the task's own operation; a different
+        # operation id is a conflict, never a new submission channel.
+        if operation_id != task.get("operation_id"):
+            raise TaskConflict(
+                f"(task {task_id})/operation_id",
+                "operation_id does not match the dispatched task operation",
+            )
+    
+        # Successful adoption completes the Task in the same pointer swap. New
+        # active tasks have no committed receipt; avoid scanning every old revision
+        # on the normal production path. Terminal retries recover from ancestry.
+        receipt = store.operation_receipt(operation_id) if task.get("status") in (
+            "completed", "cancelled", "superseded", "failed"
+        ) or (_operations_dir(store) / f"{operation_id}.json").is_file() else None
+        if receipt is not None:
+            if receipt["request_digest"] != _request_digest(task_id, operation_id, produced_against, envelope):
+                raise TaskConflict("(operation)", "same operation already applied with a different result or request binding")
+            response = receipt["response"]
+            warning = _publish_receipt_cache(store, task=task, envelope=envelope, produced_against=produced_against,
+                                             result_digest=result_digest, response=response)
+            replay = {**response, "status": "already_applied", "same_revision": True,
+                      "operation_result": copy.deepcopy(response)}
+            if warning:
+                replay["journal_warning"] = warning
+            return replay
+    
+        journal = read_operation_journal(store, operation_id)
+        if journal is not None:
+            if (journal.get('status') == 'late_result_settled' and
+                    store.workbench_protocol_required(document)):
+                raise TaskConflict(f'(task {task_id})', 'late result call facts were settled; cancelled output was not adopted')
+            if task.get("status") == "superseded":
+                raise StaleInputContext(f"(task {task_id})", "task was superseded by newer inputs; run continue")
+            if journal.get("result_digest") == result_digest:
+                return {
+                    "status": "already_applied",
+                    "revision_id": journal.get("revision_id"),
+                    "same_revision": True,
+                }
+            raise TaskConflict(
+                f"(operation {operation_id})",
+                "same operation already applied with a different result",
+            )
+    
+        if task.get("status") == "completed":
+            # P1-03: a completed task only ever replays its original result (the
+            # journal check above already returned already_applied for it). Any
+            # other submission is refused; call facts are history, not a channel.
+            raise TaskConflict(
+                f"(task {task_id})",
+                "task already completed; only the original operation result replays",
+            )
+        if task.get("status") in ("cancelled", "superseded"):
+            # Settle call facts first; the late product is then refused (current unchanged).
+            staged = _read_staged(store, operation_id, envelope)
+            settled = _settled_allowances(task, envelope.get("usage_events") or [], staged, store)
+            updated_task = {
+                **task,
+                "call_allowances": settled["call_allowances"],
+                "updated_at": _utc_now_iso(),
+            }
+            validate_task_semantics(updated_task)
+            task_ref = store.put_json_object(updated_task)
+            bumped = bump_revision(
+                document,
+                {
+                    "operation_id": f"settle-{operation_id}",
+                    "kind": "task_update",
+                    "description": "late result after cancellation; call facts settled",
+                    "read_set": [],
+                },
+            )
+            bumped = _replace_task_ref(bumped, task, task_ref, store)
+            store._commit_locked(
+                blobs=[], base_revision=document["revision_id"],
+                document=bumped,
+                operation_id=f"settle-{operation_id}",
+            )
+            write_operation_journal(
+                store,
+                OperationJournal(
+                    operation_id=operation_id,
+                    task_id=task_id,
+                    kind=envelope["kind"],
+                    produced_against=produced_against,
+                    result_digest=result_digest,
+                    revision_id=document["revision_id"],
+                    status="late_result_settled",
+                    usage_events=envelope.get("usage_events") or [],
+                ),
+            )
+            conflict = StaleInputContext if task.get("status") == "superseded" else TaskConflict
+            raise conflict(
+                f"(task {task_id})", "result arrived after cancellation; call facts were settled"
+            )
+    
+        if produced_against != task.get("produced_against"):
+            raise TaskConflict(
+                f"(task {task_id})",
+                "produced_against does not match the dispatched dependency hash; rebase required",
+            )
+        # Round-B: settle call facts BEFORE any content prevalidation, in its own
+        # committed revision. A later content refusal must never erase already
+        # observed call facts (spec 09.7 settle-then-adopt, as on the cancelled path).
+        staged = _read_staged(store, operation_id, envelope)
+        allowances_before = [dict(entry) for entry in (task.get("call_allowances") or [])]
+        _settled_allowances(task, envelope.get("usage_events") or [], staged, store)
+        if task.get("call_allowances") != allowances_before:
+            validate_task_semantics(task)
+            settled_ref = store.put_json_object(task)
+            settled_doc = bump_revision(
+                document,
+                {"operation_id": f"settle-{operation_id}", "kind": "task_update",
+                 "description": "call facts settled before content adoption", "read_set": []},
+            )
+            settled_doc = _replace_task_ref(settled_doc, task, settled_ref, store)
+            store._commit_locked(blobs=[], base_revision=document["revision_id"], document=settled_doc,
+                                operation_id=f"settle-{operation_id}")
+            document = store.load_document()
+        # Freshness is content-based: task-management revisions (claim, allocation)
+        # keep the result valid; a content change invalidates it (spec 09.7 recheck).
+        if not task_inputs_current(store, document, task):
+            raise StaleInputContext(
+                "(document)",
+                "project content moved since dispatch; read the new inputs and rebase",
+            )
+    
+        # The adoption half of accept_result consumes the same judgement as every
+        # other boundary (CONTRACTS §6.1 exception): the call facts above already
+        # settled in their own committed revision, so a refusal here keeps the cost
+        # and leaves the current draft untouched.
+        from . import eligibility
+        adoption = eligibility.evaluate(store, document, document, "task.accept",
+                                        {"task": task, "targets": _accept_targets(envelope, task, store=store, document=document),
+                                         "record_only": _record_only(envelope, task)})
+        if not adoption["allowed"]:
+            raise eligibility.EligibilityBlocked(adoption)
+        if "rc3-entry.v1" in (task.get("required_capabilities") or []):
+            from .generation import check_host
+            if task.get("status") != "running" or not task.get("execution_ref"):
+>               raise TaskConflict(f"(task {task_id})/execution_ref", "claim the RC3 task with its actual Host protocol before adoption")
+E               deck_master.tasks.TaskConflict: (task 9c6fe49d7ca7)/execution_ref: claim the RC3 task with its actual Host protocol before adoption
+
+src/deck_master/tasks.py:1257: TaskConflict
+_______________ test_no_progress_repair_stops_instead_of_looping _______________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_no_progress_repair_stops_0')
+
+    @pytest.mark.render
+    def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
+        # Same failing readback + unchanged content: the second repair dispatch is
+        # refused with an explicit no-progress explanation (stopping != passing).
+        from deck_master.pipeline import produce
+        project = tmp_path / "proj"
+        page = json.loads((ENVELOPES / "compose.json").read_text())["pages"][0]
+        service.create(project, brief="无进展返修", draft={"pages": [page]})
+        store = Store(project)
+    
+        def drive(envelope, accept_kind, staged_name=None, staged_bytes=None):
+            response = service.continue_project(project)
+            task = response["pending_tasks"][0]
+            assert task["kind"] == accept_kind, (accept_kind, task["kind"])
+            if staged_name:
+                _stage(project, task["operation_id"], staged_name, staged_bytes)
+            outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                            produced_against=task["produced_against"], result_payload=envelope)
+            assert outcome["status"] == "accepted"
+            return task
+    
+        import io as _io
+        from PIL import Image
+        png = _io.BytesIO()
+        Image.new("RGB", (16, 9), (250, 250, 250)).save(png, format="PNG")
+        document = store.load_document()
+>       drive(_png_blueprint_envelope(document["pages"][0]["page"]), "blueprint",
+              "reference.png", png.getvalue())
+
+tests/rebuild/test_tasks.py:473: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+envelope = {'kind': 'blueprint', 'files': [{'file_id': 'b', 'path': 'reference.png', 'media_type': 'image/png'}], 'artifact_specs...2e3e36e4f984ab268f13707f6.json', 'sha256': '237d8dd888a63fa7bd29d814517f25de63861632e3e36e4f984ab268f13707f6'}], ...}]}
+accept_kind = 'blueprint', staged_name = 'reference.png'
+staged_bytes = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x10\x00\x00\x00\t\x08\x02\x00\x00\x00\xb4H;e\x00\x00\x00\x17IDATx\x9cc\xfc\xf5\xeb\x17\x03)\x80\x89$\xd5\xa3\x1ah\xa5\x01\x00\x17\xa7\x03\x00k\x19X\xa3\x00\x00\x00\x00IEND\xaeB`\x82'
+
+    def drive(envelope, accept_kind, staged_name=None, staged_bytes=None):
+        response = service.continue_project(project)
+>       task = response["pending_tasks"][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_tasks.py:459: IndexError
+________________ test_svg_only_fix_is_progress_not_no_progress _________________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/r-7a8578b/test_svg_only_fix_is_progress_0')
+
+    @pytest.mark.render
+    def test_svg_only_fix_is_progress_not_no_progress(tmp_path):
+        """Round-B 附加-1: a repair round that only changes the SVG (page text
+        untouched) is real progress — the no-progress guard must not stop it."""
+        import io
+        from PIL import Image
+        from deck_master.pipeline import produce
+        project = tmp_path / "proj"
+        page = json.loads((ENVELOPES / "compose.json").read_text())["pages"][0]
+        service.create(project, brief="svg 进展", draft={"pages": [page]})
+        store = Store(project)
+    
+        def drive(envelope, kind, name=None, data=None):
+            task = service.continue_project(project)["pending_tasks"][0]
+            assert task["kind"] == kind, (kind, task["kind"])
+            if name:
+                staging = project / ".deckmaster" / "staging" / task["operation_id"]
+                staging.mkdir(parents=True, exist_ok=True)
+                (staging / name).write_bytes(data)
+            assert service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                         produced_against=task["produced_against"],
+                                         result_payload=envelope)["status"] == "accepted"
+            return task
+    
+        png = io.BytesIO()
+        Image.new("RGB", (16, 9), (250, 250, 250)).save(png, format="PNG")
+        document = store.load_document()
+>       drive(_png_blueprint_envelope(document["pages"][0]["page"]), "blueprint",
+              "reference.png", png.getvalue())
+
+tests/rebuild/test_tasks.py:742: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+envelope = {'kind': 'blueprint', 'files': [{'file_id': 'b', 'path': 'reference.png', 'media_type': 'image/png'}], 'artifact_specs...2e3e36e4f984ab268f13707f6.json', 'sha256': '237d8dd888a63fa7bd29d814517f25de63861632e3e36e4f984ab268f13707f6'}], ...}]}
+kind = 'blueprint', name = 'reference.png'
+data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x10\x00\x00\x00\t\x08\x02\x00\x00\x00\xb4H;e\x00\x00\x00\x17IDATx\x9cc\xfc\xf5\xeb\x17\x03)\x80\x89$\xd5\xa3\x1ah\xa5\x01\x00\x17\xa7\x03\x00k\x19X\xa3\x00\x00\x00\x00IEND\xaeB`\x82'
+
+    def drive(envelope, kind, name=None, data=None):
+>       task = service.continue_project(project)["pending_tasks"][0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/rebuild/test_tasks.py:728: IndexError
+=============================== warnings summary ===============================
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]
+  /workspace/work/rc3/reviews/rc3-04-code-snapshot-7a8578b/tests/rebuild/test_deep_quality_render.py:37: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+    def count(image,predicate):return sum(predicate(p) for p in image.getdata())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_candidate_preview_recovery.py::test_damaged_state_retries_actual_compile_render_and_readback
+FAILED tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[True]
+FAILED tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[False]
+FAILED tests/rebuild/test_compiler_geometry.py::test_document_canvas_is_prompt_and_compile_authority
+FAILED tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[False]
+FAILED tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[True]
+FAILED tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[False]
+FAILED tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[True]
+FAILED tests/rebuild/test_external_review_lifecycle.py::test_historical_stale_final_recovers_without_retiring_valid_trial_or_other_page
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-hidden-fail]
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-visible-pass]
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[no-fill-fail]
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[solid-pass]
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[partial-gradient-pass]
+FAILED tests/rebuild/test_external_review_render.py::test_readback_implementation_change_cannot_reuse_old_candidate_check
+FAILED tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[reorder]
+FAILED tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[remove]
+FAILED tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[add]
+FAILED tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[edit]
+FAILED tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]
+FAILED tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]
+FAILED tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]
+FAILED tests/rebuild/test_icon_quality.py::test_actual_candidate_preview_and_cross_page_reuse
+FAILED tests/rebuild/test_icon_quality.py::test_preview_failure_retry_and_corrupt_files
+FAILED tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit
+FAILED tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review
+FAILED tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding
+FAILED tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass
+FAILED tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint
+FAILED tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure
+FAILED tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop
+FAILED tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets
+FAILED tests/rebuild/test_page_visual_gate.py::test_missing_preview_renderer_blocks_next_page_with_tool_reason
+FAILED tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool
+FAILED tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change
+FAILED tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page
+FAILED tests/rebuild/test_production.py::test_new_design_mode_and_failed_review_is_preserved
+FAILED tests/rebuild/test_rc3_notes_files.py::test_real_pipeline_to_export_preserves_full_notes_and_dependencies
+FAILED tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes
+FAILED tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes
+FAILED tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger
+FAILED tests/rebuild/test_rc3_notes_transactions.py::test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries
+FAILED tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles
+FAILED tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt
+FAILED tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style
+FAILED tests/rebuild/test_tasks.py::test_no_progress_repair_stops_instead_of_looping
+FAILED tests/rebuild/test_tasks.py::test_svg_only_fix_is_progress_not_no_progress
+47 failed, 24 passed, 2709 deselected, 6 warnings in 38.53s

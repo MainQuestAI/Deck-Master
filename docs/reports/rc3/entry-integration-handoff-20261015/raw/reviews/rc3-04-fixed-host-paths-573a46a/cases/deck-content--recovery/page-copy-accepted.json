@@ -1,0 +1,207 @@
+{
+  "identity": {
+    "pid": 489422,
+    "time": "2026-10-15T05:56:53.358261+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "payload": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/page-copy-full-authored.json",
+  "payload_sha256": "bb1a1f9efe6f54a99f148f241b715c0a0ee56b8f70dea0793331198eda862c0e",
+  "result": {
+    "status": "accepted",
+    "project_id": "deck-content--recovery",
+    "revision_id": "1dc632dcee484d00adfc5ec03b0f3df6",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/5f/5f953f83a3f6a90ac00234924a7c15098135ee8930a18846ecdaca144657780c.json",
+        "sha256": "5f953f83a3f6a90ac00234924a7c15098135ee8930a18846ecdaca144657780c"
+      },
+      {
+        "path": ".deckmaster/objects/7d/7d7976c5f461a9c5e6376f72c5fecd38040a04e547aeb36476b38a15f9999efc.json",
+        "sha256": "7d7976c5f461a9c5e6376f72c5fecd38040a04e547aeb36476b38a15f9999efc"
+      },
+      {
+        "path": ".deckmaster/objects/10/1075abdb0a84d73855205118976deeb4fc2fbba4693ae12104768a4d1d73927a.json",
+        "sha256": "1075abdb0a84d73855205118976deeb4fc2fbba4693ae12104768a4d1d73927a"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "speech_or_production",
+    "input_alignment": "current",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "1dc632dcee484d00adfc5ec03b0f3df6",
+    "work_complete": true,
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "1dc632dcee484d00adfc5ec03b0f3df6",
+      "variant": "page_copy",
+      "adopted": true,
+      "page_refs": {
+        "p1": {
+          "path": ".deckmaster/objects/5f/5f953f83a3f6a90ac00234924a7c15098135ee8930a18846ecdaca144657780c.json",
+          "sha256": "5f953f83a3f6a90ac00234924a7c15098135ee8930a18846ecdaca144657780c"
+        },
+        "p2": {
+          "path": ".deckmaster/objects/7d/7d7976c5f461a9c5e6376f72c5fecd38040a04e547aeb36476b38a15f9999efc.json",
+          "sha256": "7d7976c5f461a9c5e6376f72c5fecd38040a04e547aeb36476b38a15f9999efc"
+        }
+      },
+      "plan_ref": {
+        "path": ".deckmaster/objects/10/1075abdb0a84d73855205118976deeb4fc2fbba4693ae12104768a4d1d73927a.json",
+        "sha256": "1075abdb0a84d73855205118976deeb4fc2fbba4693ae12104768a4d1d73927a"
+      },
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/5f/5f953f83a3f6a90ac00234924a7c15098135ee8930a18846ecdaca144657780c.json",
+          "sha256": "5f953f83a3f6a90ac00234924a7c15098135ee8930a18846ecdaca144657780c"
+        },
+        {
+          "path": ".deckmaster/objects/7d/7d7976c5f461a9c5e6376f72c5fecd38040a04e547aeb36476b38a15f9999efc.json",
+          "sha256": "7d7976c5f461a9c5e6376f72c5fecd38040a04e547aeb36476b38a15f9999efc"
+        },
+        {
+          "path": ".deckmaster/objects/10/1075abdb0a84d73855205118976deeb4fc2fbba4693ae12104768a4d1d73927a.json",
+          "sha256": "1075abdb0a84d73855205118976deeb4fc2fbba4693ae12104768a4d1d73927a"
+        }
+      ],
+      "page_count": 2,
+      "work_complete": true,
+      "next_action": "speech_or_production"
+    },
+    "variant": "page_copy",
+    "adopted": true,
+    "page_refs": {
+      "p1": {
+        "path": ".deckmaster/objects/5f/5f953f83a3f6a90ac00234924a7c15098135ee8930a18846ecdaca144657780c.json",
+        "sha256": "5f953f83a3f6a90ac00234924a7c15098135ee8930a18846ecdaca144657780c"
+      },
+      "p2": {
+        "path": ".deckmaster/objects/7d/7d7976c5f461a9c5e6376f72c5fecd38040a04e547aeb36476b38a15f9999efc.json",
+        "sha256": "7d7976c5f461a9c5e6376f72c5fecd38040a04e547aeb36476b38a15f9999efc"
+      }
+    },
+    "plan_ref": {
+      "path": ".deckmaster/objects/10/1075abdb0a84d73855205118976deeb4fc2fbba4693ae12104768a4d1d73927a.json",
+      "sha256": "1075abdb0a84d73855205118976deeb4fc2fbba4693ae12104768a4d1d73927a"
+    },
+    "page_count": 2
+  },
+  "task": {
+    "call_allowances": [],
+    "collaboration_binding": {
+      "adoption_policy": "within_scope",
+      "authorization_ref": null,
+      "decision_refs": [
+        {
+          "path": ".deckmaster/objects/a0/a0bfeaf907cb1531b561ecca98e8592d3acbe2adc5f1fe3dbda71e797bd3f106.json",
+          "sha256": "a0bfeaf907cb1531b561ecca98e8592d3acbe2adc5f1fe3dbda71e797bd3f106"
+        },
+        {
+          "path": ".deckmaster/objects/dc/dc7b5fe43c9b4bf3cd3de65d53f3fcfaa3edb6db9ad55cf06b82bccaf2afb6f1.json",
+          "sha256": "dc7b5fe43c9b4bf3cd3de65d53f3fcfaa3edb6db9ad55cf06b82bccaf2afb6f1"
+        }
+      ],
+      "eligibility_basis": [
+        {
+          "identity": "brief",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "bc697a500d476557f0ed8a77bd27942e0838ee237a5fe0b2ec6d046977a32741"
+        },
+        {
+          "identity": "page_limit",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "168c742cce44e10c930a9c2c77d1ebba571165136c17b6c5679ad46f046dde6d"
+        },
+        {
+          "identity": "narrative",
+          "kind": "artifact",
+          "projection": "content",
+          "ref": {
+            "path": ".deckmaster/objects/dc/dc7f877c339bb90d14c4ff90fbc27547cb27da6c9e687ae259e15c1355031686.json",
+            "sha256": "dc7f877c339bb90d14c4ff90fbc27547cb27da6c9e687ae259e15c1355031686"
+          },
+          "sha256": "dc7f877c339bb90d14c4ff90fbc27547cb27da6c9e687ae259e15c1355031686"
+        },
+        {
+          "identity": "content_plan",
+          "kind": "artifact",
+          "projection": "content",
+          "ref": {
+            "path": ".deckmaster/objects/3c/3c760964879dd5081c5326c96787498a9a98777be3a54d352107aba45e809408.json",
+            "sha256": "3c760964879dd5081c5326c96787498a9a98777be3a54d352107aba45e809408"
+          },
+          "sha256": "3c760964879dd5081c5326c96787498a9a98777be3a54d352107aba45e809408"
+        }
+      ],
+      "eligibility_digest": "5d1912569dd3d7f3922da5b0a3f480a1a16708f41e1cf67a1aa2b10f4d8fe9a6",
+      "executor_type": "host",
+      "phase": "page_copy",
+      "request_id": "req-3d7dee80390f",
+      "write_scope": {
+        "allow_page_membership_change": true,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "page_copy",
+          "plan"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      }
+    },
+    "cost_class": "host_reasoning",
+    "created_at": "2026-10-15T05:56:53Z",
+    "dependencies": [
+      {
+        "identity": "document-revision:1268fd1385eb4e6d8d71e282fcab7ea3",
+        "kind": "content",
+        "sha256": "c56b3867c0493ec190db27c13f32ffb2c4de288f5b14c34ad3f6bf70149bae4e"
+      }
+    ],
+    "dispatch_revision": "1268fd1385eb4e6d8d71e282fcab7ea3",
+    "error": null,
+    "execution_ref": null,
+    "input_digest": "a79b161e355795f7af1c6ad6bcb17c94f8daa0efba436d811f0d67a24aeaff66",
+    "inputs": [],
+    "instruction": "按已采用的 Narrative 写完整逐页稿：payload.pages 为完整 Page v2（含 content_mapping，覆盖每个可见 atom 与真实来源 locator），payload.page_order 为完整页序，payload.plan_input 为 content_plan_input.v2。Runtime 会校验全部 Page 后生成全部 page_links 并一次提交。",
+    "intent": "initial",
+    "kind": "compose",
+    "method_release": {
+      "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+      "release_id": "573a46a85bf9-13e3d2708abf"
+    },
+    "operation_id": "compose-711262d46519",
+    "produced_against": "c56b3867c0493ec190db27c13f32ffb2c4de288f5b14c34ad3f6bf70149bae4e",
+    "protocol_version": "compose.v2",
+    "required_capabilities": [
+      "compose.v2",
+      "collaboration.v1",
+      "rc3-entry.v1"
+    ],
+    "result_refs": [],
+    "schema_version": "deck_task.v1",
+    "scope_pages": [],
+    "status": "awaiting_host",
+    "task_id": "fa38552047d1",
+    "updated_at": "2026-10-15T05:56:53Z",
+    "usage": {
+      "external_calls": null,
+      "source": "not_reported"
+    }
+  }
+}

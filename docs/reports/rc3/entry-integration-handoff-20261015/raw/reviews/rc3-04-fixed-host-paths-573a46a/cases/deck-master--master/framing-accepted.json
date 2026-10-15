@@ -1,0 +1,167 @@
+{
+  "identity": {
+    "pid": 488496,
+    "time": "2026-10-15T05:56:05.224289+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "payload": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/framing-authored.json",
+  "payload_sha256": "c049aa40c01cbb91c329c00fecc45060d01ced134c2d73286acbcb8002d061bf",
+  "result": {
+    "status": "accepted",
+    "project_id": "deck-master--master",
+    "revision_id": "908ae1839c1e4c11ba9656939d1f5468",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/46/46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa.json",
+        "sha256": "46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "argument_phase",
+    "input_alignment": "no_content",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "908ae1839c1e4c11ba9656939d1f5468",
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "908ae1839c1e4c11ba9656939d1f5468",
+      "variant": "framing",
+      "adopted": false,
+      "narrative_ref": {
+        "path": ".deckmaster/objects/46/46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa.json",
+        "sha256": "46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa"
+      },
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/46/46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa.json",
+          "sha256": "46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa"
+        }
+      ],
+      "effective_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "exploratory",
+        "subject": "deck"
+      },
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/46/46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa.json",
+          "sha256": "46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa"
+        }
+      ],
+      "next_action": "argument_phase",
+      "note": "framing proposal stored; the current Narrative pointer moves only through an adopted decision"
+    },
+    "variant": "framing",
+    "adopted": false,
+    "narrative_ref": {
+      "path": ".deckmaster/objects/46/46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa.json",
+      "sha256": "46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa"
+    },
+    "proposal_refs": [
+      {
+        "path": ".deckmaster/objects/46/46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa.json",
+        "sha256": "46503448ba74a5611677ce4e223333951f4b422d3af3642f12bd5b2ff62669aa"
+      }
+    ],
+    "effective_scope": {
+      "allow_page_membership_change": false,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative"
+      ],
+      "page_ids": [],
+      "page_manifest_ref": null,
+      "purpose": "exploratory",
+      "subject": "deck"
+    }
+  },
+  "task": {
+    "call_allowances": [],
+    "collaboration_binding": {
+      "adoption_policy": "proposal_only",
+      "authorization_ref": null,
+      "decision_refs": [],
+      "eligibility_basis": [
+        {
+          "identity": "brief",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "30c7e73476128d7e0a824f54ea6eadc0a87e5430c45abdec41f91bd2042b3719"
+        }
+      ],
+      "eligibility_digest": "1dfc9cf4542d396bea71bd9645023b608d7ba86e3a70e013ac28947b1c09ff39",
+      "executor_type": "host",
+      "phase": "framing",
+      "request_id": "req-309bdb4f1a1b",
+      "write_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "exploratory",
+        "subject": "deck"
+      }
+    },
+    "cost_class": "host_reasoning",
+    "created_at": "2026-10-15T05:56:04Z",
+    "dependencies": [
+      {
+        "identity": "document-revision:feb68f658cc84c7f8ee2c83923d567be",
+        "kind": "content",
+        "sha256": "a4aed4253533f556ebb221e49f0f9db3d385920dcd4632d1704adb1a7b55957b"
+      }
+    ],
+    "dispatch_revision": "feb68f658cc84c7f8ee2c83923d567be",
+    "error": null,
+    "execution_ref": null,
+    "input_digest": "b4d03bd95953a05277d3797be649e05f97290699cec4b6041ef7f951d59e8030",
+    "inputs": [],
+    "instruction": "按材料读出用途、权威与冲突，建立受众变化目标与具体缺口：提交 maturity=framing 的 Narrative 作为提案（payload.narrative）。不得提交完整 Page、图像、SVG 或任何用户决定。",
+    "intent": "initial",
+    "kind": "compose",
+    "method_release": {
+      "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+      "release_id": "573a46a85bf9-13e3d2708abf"
+    },
+    "operation_id": "compose-a2bc685691b3",
+    "produced_against": "a4aed4253533f556ebb221e49f0f9db3d385920dcd4632d1704adb1a7b55957b",
+    "protocol_version": "compose.v2",
+    "required_capabilities": [
+      "compose.v2",
+      "collaboration.v1",
+      "rc3-entry.v1"
+    ],
+    "result_refs": [],
+    "schema_version": "deck_task.v1",
+    "scope_pages": [],
+    "status": "awaiting_host",
+    "task_id": "d8524db7dfb3",
+    "updated_at": "2026-10-15T05:56:04Z",
+    "usage": {
+      "external_calls": null,
+      "source": "not_reported"
+    }
+  }
+}

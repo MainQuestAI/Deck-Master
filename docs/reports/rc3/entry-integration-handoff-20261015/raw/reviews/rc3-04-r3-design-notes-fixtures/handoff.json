@@ -1,0 +1,110 @@
+{
+  "assignment": "RC3-04 R3 exclusive 13 design/notes/native test files",
+  "baseline_head": "573a46a",
+  "baseline_result": {
+    "failed": 127,
+    "passed": 195
+  },
+  "changed_sources": {
+    "tests/rebuild/test_rc3_adopted_design_handoff.py": "151f3a05d1124caf6954e5123b9eb2e7e68d78d469976641c59cdd9543f9b5b2",
+    "tests/rebuild/test_rc3_design_feasibility.py": "aedf57459654e2d119645bd03813db03d9d10a0fe426ebd3912702edeb3f1158",
+    "tests/rebuild/test_rc3_design_requirements.py": "d2d6ca53b68267528be1c8a5c7af70cbc9e437de585e58d7ee89ca679edd9ca2",
+    "tests/rebuild/test_rc3_design_workflows.py": "8c08143e53a2f3d1df3829110ce024b0758df3dd61518fe2096066775de8cc4c",
+    "tests/rebuild/test_rc3_native_visual_reuse.py": "8b8f67ea6c4aff9f2b26b67bb82e8e7470e75caf1c4ae640763ecc9c1460b42a",
+    "tests/rebuild/test_rc3_preproduction_semantics.py": "6d4ca6aa8e93e14cfe32c5adbdd98126099f90652fef604f53cb3f1cc3c90831",
+    "tests/rebuild/test_rc3_restyle_workflows.py": "ff5f6421ebc7e2253ff298bca9d2b746a234daf82e42b7878c838535c24e4857",
+    "tests/rebuild/test_rc3_review_repairs.py": "5d97ecb1f8306ff93ae6d981af5063b389a3cdcd4de0d2bfb183d169c1c8f459"
+  },
+  "changes": [
+    "Rebuild imported/null-Narrative Page visible mapping from actual atoms, preserving existing links and marking new atoms explicitly unknown; update speech mapping when notes are authored.",
+    "Declare actual Task protocol with exact required capabilities on fidelity review claims; assert current rank13 writer and collaboration capability on new visual consumers.",
+    "Use real Narrative qualification node identities and complete planned chapter coverage; retain scoped freshness/irrelevance assertions.",
+    "Use public manuscript creation before replacing with actual design-only request and zero-call planning grant; retain refused production and unchanged pointer.",
+    "Use existing public editorial setup for current generation prompt tests; no native image calls introduced.",
+    "Represent pre-RC3 stored queues and preparations as explicit historical reader fixtures; verify exact immutable read and migration_required for new claims.",
+    "Treat replace-scope as real Task supersession and assert one late fact receipt, exact replay pointer stability, original unknown fee and no adoption."
+  ],
+  "confirmed_product_defects": [],
+  "evidence_level": "L1_MUTABLE_FOCUSED_DIAGNOSTIC; not fixed source/install/native/provider or independent review proof",
+  "final_result": {
+    "duration_seconds": 94.97,
+    "errors": 0,
+    "failed": 0,
+    "owned_sources_stable_during_run": true,
+    "passed": 322,
+    "product_sources_changed_during_run": []
+  },
+  "limits": [
+    "All image/controller events remain explicitly isolated synthetic L1 protocol evidence; no real native/provider/professional quality claim.",
+    "Live mutable workspace with Owner/A/C changes; root still owns fixed snapshot broad unit/render/install verification.",
+    "No product/contracts/shared helper edits, no new public bypass or monkeypatch, no commit/push."
+  ],
+  "logs": {
+    "baseline.log": {
+      "sha256": "c1e42d9009267cb5c33b56a956c8bb6d5616a0cab854e259ab8e155b1399c473",
+      "tail": "127 failed, 195 passed in 39.56s"
+    },
+    "final-focused.log": {
+      "sha256": "716ec2ebfec392fdda24d06279d740958b18531ac1100b8dcff493e59fbb9c83",
+      "tail": "322 passed in 94.97s (0:01:34)"
+    },
+    "first-factory-migration.log": {
+      "sha256": "2cbfd25aa189b6c316ea60db6bb5153636d690873a3510250f11c6d5facc811b",
+      "tail": "8 failed, 314 passed in 101.92s (0:01:41)"
+    },
+    "plan-review-fixtures.log": {
+      "sha256": "fd3ae65322637ee3f41d1070031f0481fd40f1b97dd4366e76a0359ea70b282d",
+      "tail": "29 passed in 6.02s"
+    },
+    "remaining-focused.log": {
+      "sha256": "fa88833825bf24e4e8010b5e27a232082f1a7c1570544182590353a1b1d5e418",
+      "tail": "1 failed, 86 passed in 41.26s"
+    },
+    "ruff.log": {
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "tail": "All checks passed!"
+    },
+    "zero-call-current-manuscript.log": {
+      "sha256": "87a3dfd7eb8e4f86915e69a4bcb5587589b8e686992dafe23e2021a3da46eb7a",
+      "tail": "1 failed in 0.17s"
+    },
+    "zero-call-final-scope.log": {
+      "sha256": "d907fec0e0445cfe67a7272e864304e81194b234052d6bdfcb6ec87c0b123e62",
+      "tail": "1 passed in 0.24s"
+    },
+    "zero-call-final.log": {
+      "sha256": "e55e198f04a59df403a58c3211cf8b693117e2178943dcfe9492aca8546ae72c",
+      "tail": "1 failed in 0.27s"
+    }
+  },
+  "manifest_sha256": {
+    "before.json": "a8d82652f97b0f298f587e337719388483c219c2c371d6718fa2c0c9a3e04296",
+    "environment.json": "170cdb866135e37f72b28343f0611df18aae0aba09ca2f85be7ea83b921fe8dc",
+    "final-after.json": "5670a4d4caf173246b5b77b9cad4ac6666d7530229a26d3c1ae68f30a758c4ee",
+    "final-before.json": "320516c3de82a568b057eb36fd30eb133983adb29102b84e31460f9fdcb73dfd"
+  },
+  "remaining_failures": [],
+  "scope": [
+    "tests/rebuild/test_rc3_design_requirements.py",
+    "tests/rebuild/test_rc3_design_recipes.py",
+    "tests/rebuild/test_rc3_native_image_bridge.py",
+    "tests/rebuild/test_rc3_design_workflows.py",
+    "tests/rebuild/test_rc3_restyle_workflows.py",
+    "tests/rebuild/test_rc3_adopted_design_handoff.py",
+    "tests/rebuild/test_rc3_decision_visual_consumption.py",
+    "tests/rebuild/test_rc3_native_visual_reuse.py",
+    "tests/rebuild/test_rc3_notes_visual_inputs.py",
+    "tests/rebuild/test_rc3_design_feasibility.py",
+    "tests/rebuild/test_rc3_plan_visual_consumption.py",
+    "tests/rebuild/test_rc3_preproduction_semantics.py",
+    "tests/rebuild/test_rc3_review_repairs.py"
+  ],
+  "source_aggregate_sha256": "9e47fbf5482b0a2c93564509afed478f25f43c10a67ce70897acce31c33324ec",
+  "unchanged_sources": [
+    "tests/rebuild/test_rc3_design_recipes.py",
+    "tests/rebuild/test_rc3_native_image_bridge.py",
+    "tests/rebuild/test_rc3_decision_visual_consumption.py",
+    "tests/rebuild/test_rc3_notes_visual_inputs.py",
+    "tests/rebuild/test_rc3_plan_visual_consumption.py"
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "input": {
+    "source": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/external-gap-source.txt",
+    "scope": {
+      "subject": "external_artifact",
+      "page_ids": [],
+      "page_manifest_ref": null,
+      "external_artifact_ref": null,
+      "layers": [
+        "review"
+      ],
+      "allow_page_membership_change": false,
+      "allow_page_order_change": false,
+      "purpose": "review"
+    },
+    "persistence": "none"
+  },
+  "response": {
+    "schema_version": "collaboration_response.v1",
+    "status": "needs_reviewer",
+    "project_id": null,
+    "artifact_revision_id": null,
+    "control_revision_id": null,
+    "operation_id": null,
+    "result": {
+      "status": "needs_reviewer",
+      "source_hashes": [
+        {
+          "source_uri": "file:///workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/external-gap-source.txt",
+          "sha256": "32d5bde65f4e0752e9a08274e04bb847de6612a23d2958b51d2fcc337741a177",
+          "size": 63,
+          "media_type": "text/plain"
+        }
+      ],
+      "source_sha256": "32d5bde65f4e0752e9a08274e04bb847de6612a23d2958b51d2fcc337741a177",
+      "external_report": {
+        "report": {
+          "schema_version": "external_review_report.v1",
+          "source_manifest": {
+            "source_kind": "file",
+            "original_project_id": null,
+            "artifact_revision_id": null,
+            "files": [
+              {
+                "source_uri": "file:///workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/external-gap-source.txt",
+                "sha256": "32d5bde65f4e0752e9a08274e04bb847de6612a23d2958b51d2fcc337741a177",
+                "size": 63,
+                "media_type": "text/plain"
+              }
+            ]
+          },
+          "source_manifest_sha256": "4c0b5c68ed167051622c8cd77f99cdc3ffd8312e1d7a9a290de74991f47e5b0f",
+          "source_unchanged": true,
+          "scope": {
+            "subject": "external_artifact",
+            "page_ids": [],
+            "page_manifest_ref": null,
+            "external_artifact_ref": null,
+            "layers": [
+              "review"
+            ],
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "purpose": "review"
+          },
+          "subjects": [
+            {
+              "source_uri": "file:///workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/external-gap-source.txt",
+              "sha256": "32d5bde65f4e0752e9a08274e04bb847de6612a23d2958b51d2fcc337741a177",
+              "media_type": "text/plain"
+            }
+          ],
+          "engineering_observations": [
+            {
+              "source_uri": "file:///workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/external-gap-source.txt",
+              "sha256": "32d5bde65f4e0752e9a08274e04bb847de6612a23d2958b51d2fcc337741a177",
+              "kind": "text_readback",
+              "status": "observed",
+              "text": "Explicit synthetic manuscript for read-only packet generation.\n",
+              "truncated": false
+            }
+          ],
+          "reviews": [],
+          "provenance": {
+            "executor_type": "tool",
+            "assurance": "engineering",
+            "reviewer_executed": false,
+            "trust_boundary": "local_bytes_only",
+            "implementation": {
+              "module": "deck_master.external_review",
+              "package_version": "1.0.0rc3",
+              "sha256": "8e4939a22bcaf9300924a30378e55d3d7eebc9118774a44fd840856e898365b7"
+            },
+            "observations_sha256": "dc5cf01371d3bac74376591bd67f664258d4e4fd4e9d92f558cd8abe45cbb679",
+            "methods": [],
+            "author_exclusion_set": {
+              "status": "unknown",
+              "execution_refs": []
+            },
+            "renderer": {
+              "available": true,
+              "executed": false
+            }
+          },
+          "limitations": [
+            {
+              "code": "needs_reviewer",
+              "detail": "No independent reviewer executed; professional dimensions remain not_evaluated."
+            }
+          ],
+          "evidence_level": "engineering"
+        },
+        "report_sha256": "ca1742204ce97ebad9e30fe795c1d33e63cb2d796a734c9f5241f53ff211bd69"
+      },
+      "report_output": null,
+      "evidence_level": "engineering",
+      "limitations": [
+        {
+          "code": "needs_reviewer",
+          "detail": "No independent reviewer executed; professional dimensions remain not_evaluated."
+        }
+      ],
+      "artifact_revision_id": null,
+      "control_revision_id": null,
+      "next_action": "review_the_readable_packet"
+    },
+    "error": {
+      "code": "needs_reviewer",
+      "path": "review.evaluate",
+      "message": "No independent reviewer executed; professional dimensions remain not_evaluated.",
+      "recoverable": true,
+      "details": {
+        "artifact_revision_id": null,
+        "control_revision_id": null,
+        "affected_scope": {
+          "subject": "external_artifact",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "review"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "review"
+        },
+        "decision": null
+      }
+    },
+    "next_action": "review_the_readable_packet"
+  },
+  "http_status": 409,
+  "cli_exit": 4,
+  "has_readable_report": true
+}

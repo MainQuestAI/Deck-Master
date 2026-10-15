@@ -1,0 +1,422 @@
+[
+  {
+    "path": "tests/rebuild/engineering_render_helpers.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert not output_dir.is_relative_to(project), 'engineering artifacts must stay outside the source project'",
+      "assert all((value is None for value in document['outputs'].values()))",
+      "assert blocked.value.error_code in ('stage_prerequisite_missing', 'stage_quality_blocked')",
+      "assert source_snapshot(project) == before",
+      "assert source_snapshot(project) == before",
+      "assert len(ppt_previews) == len(inputs)",
+      "assert json.loads(report_path.read_bytes()) == report",
+      "assert store.load_document() == document"
+    ]
+  },
+  {
+    "path": "tests/rebuild/rc3_fixtures.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_action_targets.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_candidate_decisions.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_candidate_preview_recovery.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_change_http.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_compiler_geometry.py",
+    "removed_assertions": [
+      "assert entry['svg_preview'] and entry['ppt_preview']"
+    ],
+    "added_assertions": [
+      "assert all((value is None for value in delivered['outputs'].values()))",
+      "assert diagnostic['provenance']['visual_acceptance'] == 'not_evaluated'",
+      "assert diagnostic['svg_previews'][0].is_file() and diagnostic['ppt_previews'][0].is_file()",
+      "assert render_report == report"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_decision_receipts.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_delivery_control_snapshot.py",
+    "removed_assertions": [
+      "assert after['compatibility']['minimum_writer'] == 'collaboration.v1'"
+    ],
+    "added_assertions": [
+      "assert after['compatibility']['minimum_writer'] == 'rc3-entry.v1'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_eligibility_resolver.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_entry_capabilities.py",
+    "removed_assertions": [
+      "assert info['minimum_writer'] == 'workbench-quality.v1'",
+      "assert 'view --open --ui v2' in skill and '默认入口已切换为新工作台' in skill"
+    ],
+    "added_assertions": [
+      "assert info['minimum_writer'] == 'rc3-entry.v1'",
+      "assert actions['inputs']['writable'] is False",
+      "assert actions['inputs']['reason_code'] == 'migration_required'",
+      "assert 'references/collaboration-routing.md' in skill",
+      "assert 'view --open --ui v2' in method.read_text('utf-8')",
+      "assert '实际 Studio' in skill"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_external_review_render.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert all((value is None for value in doc['outputs'].values()))",
+      "assert diagnostic['provenance']['visual_acceptance'] == 'not_evaluated'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_gradient_readability.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert all((value is None for value in doc['outputs'].values()))",
+      "assert diagnostic['provenance']['visual_acceptance'] == 'not_evaluated'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_icon_quality.py",
+    "removed_assertions": [
+      "assert after['compatibility']['minimum_writer'] == 'workbench-quality.v1'"
+    ],
+    "added_assertions": [
+      "assert after['compatibility']['minimum_writer'] == before['compatibility']['minimum_writer'] == 'rc3-entry.v1'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_install.py",
+    "removed_assertions": [
+      "assert code == 0, err"
+    ],
+    "added_assertions": [
+      "assert response.returncode == 0, response.stderr",
+      "assert all((Path(path).is_relative_to(venv) and (not Path(path).is_relative_to(REPO)) for path in payload['module_origins'].values()))",
+      "assert code == 3, (pending, err)",
+      "assert task['review_stage'] == 'page_visual'",
+      "assert blocked['status'] == 'needs_input' and (not blocked['pending_tasks'])",
+      "assert blocked_facts['calls']['tasks'] == original['calls']['tasks']",
+      "assert (project / original['output_file']['path']).read_bytes() == original_ppt_bytes",
+      "assert (project / original['pages'][0]['blueprint']['path']).read_bytes() == original_blueprint_bytes",
+      "assert _iso_fixture(wheel_venv, home, work, project, 'facts')['calls'] == cancelled['calls']",
+      "assert prepared['status'] == 'prepared_for_cli_adoption'",
+      "assert code == 0, (claimed, err)"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_late_results_and_stops.py",
+    "removed_assertions": [
+      "assert _allowance_state(store) == 'reserved'",
+      "assert _allowance_state(store) == 'in_flight'",
+      "assert _allowance_state(store) == 'consumed'",
+      "assert _allowance_state(store) == 'consumed'",
+      "assert _allowance_state(store) == 'consumed'",
+      "assert _allowance_state(store) == 'consumed'",
+      "assert after['compatibility']['minimum_writer'] == 'collaboration.v1'"
+    ],
+    "added_assertions": [
+      "assert task['collaboration_binding']['authorization_ref'] == grant['authorization_ref']",
+      "assert {'collaboration.v1', 'rc3-entry.v1'} <= set(task['required_capabilities'])",
+      "assert _allowance_state(store, task['task_id']) == 'reserved'",
+      "assert _allowance_state(store, task['task_id']) == 'in_flight'",
+      "assert _allowance_state(store, task['task_id']) == 'consumed'",
+      "assert _allowance_state(store, task['task_id']) == 'consumed'",
+      "assert _allowance_state(store, task['task_id']) == 'consumed'",
+      "assert _allowance_state(store, task['task_id']) == 'consumed'",
+      "assert after['compatibility']['minimum_writer'] == 'rc3-entry.v1'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_page_detail.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_page_visual_gate.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_rc3_adopted_design_handoff.py",
+    "removed_assertions": [
+      "assert set(task['required_capabilities']) == {'content_requirements_v1', 'style_recipe', 'style_recipe_v3'}",
+      "assert doc['compatibility']['minimum_writer'] == 'rc3.v1'",
+      "assert 'protocol_version' not in task and 'required_capabilities' not in task",
+      "assert store.load_document()['compatibility']['minimum_writer'] == 'rc3.v1'"
+    ],
+    "added_assertions": [
+      "assert task['protocol_version'] == 'changes.v1'",
+      "assert set(task['required_capabilities']) == {'content_requirements_v1', 'style_recipe', 'style_recipe_v3', 'collaboration.v1', 'rc3-entry.v1'}",
+      "assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'",
+      "assert {'rc3-entry.v1', 'collaboration.v1'} <= set(task['required_capabilities'])",
+      "assert 'content_requirements_v1' not in task['required_capabilities']",
+      "assert store.load_document()['compatibility']['minimum_writer'] == 'rc3-entry.v1'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_design_feasibility.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_rc3_design_requirements.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_rc3_design_workflows.py",
+    "removed_assertions": [
+      "assert store.load_document()['compatibility']['minimum_writer'] == 'rc3.v1'"
+    ],
+    "added_assertions": [
+      "assert store.load_document()['compatibility']['minimum_writer'] == 'rc3-entry.v1'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_four_skills.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert routed['skill'] == 'deck-master' and routed['content_intent'] is None",
+      "assert routed['authority'] == 'routing_suggestion_only'",
+      "assert result['skill'] == 'deck-master'",
+      "assert source_snapshot(project) == before",
+      "assert routed['skill'] == 'deck-content' and routed['content_intent'] == 'write_only'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_native_visual_reuse.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_rc3_notes_files.py",
+    "removed_assertions": [
+      "assert doc['compatibility']['minimum_writer'] == 'rc3.v1'"
+    ],
+    "added_assertions": [
+      "assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'",
+      "assert pending['pending_tasks'][0]['review_stage'] == 'page_visual'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_notes_transactions.py",
+    "removed_assertions": [
+      "assert after['compatibility']['minimum_writer'] == 'rc3.v1'",
+      "assert after.get('collaboration') is None",
+      "assert store.load_document()['compatibility']['minimum_writer'] == 'rc3.v1'"
+    ],
+    "added_assertions": [
+      "assert after['compatibility']['minimum_writer'] == 'rc3-entry.v1'",
+      "assert after['collaboration'] == before['collaboration']",
+      "assert store.load_document() == before",
+      "assert store.load_document()['compatibility']['minimum_writer'] == ('rc3-entry.v1' if original_format == 'workbench.v3' else 'rc3.v1')",
+      "assert len(segments) <= 1"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_preproduction_semantics.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_rc3_restyle_workflows.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert tasks._lookup_task(before_doc, task['task_id'], store)['status'] == ('cancelled' if control == 'cancel' else 'superseded')"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_review_repairs.py",
+    "removed_assertions": [
+      "assert store.workbench_protocol_required(store.load_document()) is False",
+      "assert store.workbench_protocol_required(store.load_document()) is False",
+      "assert preparation.get('resolved_design_context') is None",
+      "assert 'content_requirements' not in preparation['projection']",
+      "assert store.read_current().get('minimum_writer') == before"
+    ],
+    "added_assertions": [
+      "assert read == preparation and ref == preparation_ref",
+      "assert read.get('resolved_design_context') is None",
+      "assert 'content_requirements' not in read['projection']",
+      "assert store.read_current() == pointer and source_snapshot(path) == before",
+      "assert store.read_current() == pointer and source_snapshot(path) == before",
+      "assert 'migration_required' in blocked.value.decision['reason_codes']"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_run_summary.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert task['protocol_version'] == 'compose.v2'",
+      "assert row['display_instruction'].startswith(authored['instruction'] + ' · 改写所选正文')",
+      "assert 'changed_layers仅page_copy/plan' not in row['display_instruction']",
+      "assert ('先返回候选' in row['display_instruction']) is (mode == 'trial')",
+      "assert task['instruction'] == row['instruction'] == raw",
+      "assert run_desk.task_row(task)['display_instruction'] == task['instruction']"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_studio_control_browser.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert store.load_document() == before",
+      "assert store.load_document()['pages'] == before['pages']"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_rc3_studio_intake_browser.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert response.value.status == 422",
+      "assert not target.exists() and source.read_bytes() == original"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_review.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert task['collaboration_binding']['phase'] == 'review'",
+      "assert {'collaboration.v1', 'rc3-entry.v1'} <= set(task['required_capabilities'])"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_run_desk.py",
+    "removed_assertions": [
+      "assert store.read_current()['minimum_writer'] == 'rc3.v1'",
+      "assert store.read_current()['minimum_writer'] == 'workbench-quality.v1'",
+      "assert doc['compatibility']['minimum_writer'] == 'workbench-quality.v1'",
+      "assert doc['compatibility']['minimum_writer'] == 'workbench-quality.v1'"
+    ],
+    "added_assertions": [
+      "assert store.read_current()['minimum_writer'] == 'rc3-entry.v1'",
+      "assert store.read_current()['minimum_writer'] == 'rc3-entry.v1'",
+      "assert store.read_current()['minimum_writer'] == 'rc3-entry.v1'",
+      "assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'",
+      "assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'",
+      "assert pinned['compatibility']['minimum_writer'] == 'rc3-entry.v1'",
+      "assert pinned['collaboration'] == doc['collaboration'] and pinned['pages'] == doc['pages']",
+      "assert old_store.load_document() == old_doc"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_scope_and_delegation.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_store_transactions.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert restored_task['call_allowances'][0]['state'] == 'unknown'"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_studio_delivery_browser.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert row['display_instruction'].startswith(reason + ' · ')",
+      "assert run_desk.task_row(task)['display_instruction'] == task['instruction']",
+      "assert 'operation ' not in row['display_instruction']",
+      "assert 'compose.v2 input_revision' not in row['display_instruction']",
+      "assert row['instruction'] == original and task['instruction'] == original"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_t03_t04_integration.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert store.load_document() == stable",
+      "assert [t['task_id'] for t in again['pending_tasks']] == [t['task_id'] for t in resumed['pending_tasks']]",
+      "assert not dispatched",
+      "assert [t['task_id'] for t in resumed['pending_tasks']] == [t['task_id'] for t in preexisting]"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_ui_journal.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_ui_state_clear.py",
+    "removed_assertions": [
+      "assert response.status == 200"
+    ],
+    "added_assertions": [
+      "assert migration_gate.value.code == 422",
+      "assert json_module.load(migration_gate.value)['error']['code'] == 'migration_required'",
+      "assert Store(project).load_document() == doc"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_usability_history.py",
+    "removed_assertions": [
+      "assert row['revision_id'] == changed['revision_id']",
+      "assert editing.history(flow.project, page_id='p01', limit=10)['revisions'][0]['revision_id'] != changed['revision_id']"
+    ],
+    "added_assertions": [
+      "assert row['revision_id'] == content_revision",
+      "assert editing.history(flow.project, page_id='p01', limit=10)['revisions'][0]['revision_id'] != content_revision"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_versioned_exports.py",
+    "removed_assertions": [],
+    "added_assertions": [
+      "assert fixed_delivery['revision_id'] == good['revision_id']",
+      "assert checked['input_alignment'] == 'current' and checked['review_status'] == 'pass'",
+      "assert 'basis_stale' in historical_gap.value.decision['reason_codes']",
+      "assert 'professional_review_required' in failure.value.decision['reason_codes']"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_workbench_actions.py",
+    "removed_assertions": [
+      "assert {i['kind'] for i in summary['pages'][0]['attention']['items']} == {'compare_candidates', 'prepare_stage'}",
+      "assert summary['pages'][0]['attention'] == {'status': 'not_recorded'}"
+    ],
+    "added_assertions": [
+      "assert {i['kind'] for i in summary['pages'][0]['attention']['items']} == {'compare_candidates', 'prepare_stage', 'review_results'}",
+      "assert {i['kind'] for i in summary['pages'][0]['attention']['items']} == {'review_results'}"
+    ]
+  },
+  {
+    "path": "tests/rebuild/test_workbench_e2e.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_workbench_operations.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  },
+  {
+    "path": "tests/rebuild/test_workbench_reads.py",
+    "removed_assertions": [],
+    "added_assertions": []
+  }
+]

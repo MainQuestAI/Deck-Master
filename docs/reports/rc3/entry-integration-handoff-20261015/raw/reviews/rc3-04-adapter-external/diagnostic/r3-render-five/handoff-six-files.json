@@ -1,0 +1,399 @@
+{
+  "schema_version": "rc3-fixture-handoff.v1",
+  "recorded_at": "2026-10-15T06:02:54.602652+00:00",
+  "worker": "adapter_external",
+  "head_at_handoff": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+  "scope": "five explicitly assigned tests and newly authorized engineering_render_helpers.py only; no product/shared-helper/Git mutation",
+  "source_files": [
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_icon_quality.py",
+      "sha256": "aac3bc3203b419b35454405d0a94925888a80ae06c239f2c92f6ca6b7814defc",
+      "bytes": 26593
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_candidate_preview_recovery.py",
+      "sha256": "56db90a089e3cf54c50a15cdba5955a887603d29c827cf00e631789ca580c802",
+      "bytes": 11843
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_external_review_render.py",
+      "sha256": "fe7ee58132c1607410525eb0d6dbec09738418ff0a2da8330bd90b83440a3ded",
+      "bytes": 4783
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_compiler_geometry.py",
+      "sha256": "01921ba457c3a06166daf9dda3f2a9cf3df264b40913c89d2793ba97e5671e3b",
+      "bytes": 5567
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_gradient_readability.py",
+      "sha256": "e36d373c238edf912d21edc5a345c3b5618d2d59e3304ea00bcbfcca4705b72e",
+      "bytes": 6245
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/engineering_render_helpers.py",
+      "sha256": "b8010afdeac603b4a4ee1d3312f37c285f9fed48a5a1aa655025cb7a041f954a",
+      "bytes": 3940
+    }
+  ],
+  "read_only_dependencies": [
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_service_flow.py",
+      "sha256": "cbcd18e62fe7ebc68aa98e355f817d1b405ef76c7ad771e190815226de6b26b9",
+      "bytes": 53900
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/rc3_fixtures.py",
+      "sha256": "c82cc15f0c3cd9b82ab0650414f3891b7787a7e8956cfa040099aebc415d7498",
+      "bytes": 13464
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/src/deck_master/pipeline.py",
+      "sha256": "b04b6db1f15124f4ff22429fdb932cfda7d1b7fff63a48de3c2a5b130aaa603e",
+      "bytes": 26194
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/src/deck_master/stages.py",
+      "sha256": "525f603b86ded6d1ac14ef7591c0a0270e1f0d255f88b4434edab55a1edc2ec9",
+      "bytes": 2848
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/src/deck_master/store.py",
+      "sha256": "e6618576cbc51c690a035d5802e088fb2ba5060e9199e36da9bc6893aedb2421",
+      "bytes": 23441
+    }
+  ],
+  "verification": {
+    "root_R2_render_original": {
+      "path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/render.log",
+      "sha256": "96c3bbe500d6de824c8476833753e86c1bfaf8ebe98fa346a8c4c0a7a54bafbb",
+      "bytes": 75000
+    },
+    "initial_focused": {
+      "log": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-render-five/initial-focused.log",
+        "sha256": "d7afb2490cb84e9d9c529332864d0e31a837f8a8d379f81a64a8c596f3130779",
+        "bytes": 40162
+      },
+      "passed": 52,
+      "failed": 40,
+      "seconds": 6.45
+    },
+    "first_focused": {
+      "log": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-render-five/focused-1.log",
+        "sha256": "e3d7d727120ee4327e398ed1a77be32c82de4bf6cce46cac457429dd10401660",
+        "bytes": 8032
+      },
+      "passed": 83,
+      "failed": 9,
+      "seconds": 20.88,
+      "actual_render_passed": 4
+    },
+    "last_nine": {
+      "log": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-render-five/engineering-nine.log",
+        "sha256": "1d9a7eb78cc9b22c3fec5baaf85aed5a7028ed05fbb2d43f2fea33f61a882161",
+        "bytes": 1492
+      },
+      "passed": 9,
+      "failed": 0,
+      "seconds": 7.47,
+      "warnings": "16 existing Pillow Image.getdata deprecation warnings"
+    },
+    "unique_positive_coverage": 92,
+    "actual_render_unique_positive_coverage": 13,
+    "skipped": 0,
+    "qualification": "Mutable focused diagnostics: 83 unchanged positives plus the final nine engineering cases. No claim of one fixed-commit full-suite run; Root fixed-snapshot validation remains separate.",
+    "ruff": {
+      "path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-render-five/ruff-final.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "bytes": 19
+    },
+    "diff_check": {
+      "path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-render-five/diff-check-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "changes": [
+    "icon_store now starts a real fixed three-page request, performs actual fidelity ReviewTask claim/adoption, and explicitly authorizes style.propose/change.commit/candidate.adopt with four local candidates and zero image calls.",
+    "Icon Host claims actual Task declared protocol/capabilities; the missing icon_repair negative removes only that capability. Current writer floor stays rc3-entry.v1 and never regresses to workbench-quality.",
+    "Mechanical preview context explicitly consumes the same lawful project fixture while retaining original damaged/cache/lease/late-worker and real retry assertions.",
+    "Nine SVG-only compiler/gradient cases retain exact authored visual inputs and actual rsvg/soffice/native-PPT/readback assertions. Their new projects have real current manuscript fidelity review but formal pipeline.produce must still refuse incomplete stage prerequisites without publication.",
+    "New authorized test-only helper reads source Store, proves actual formal produce refusal and complete source-tree/Document equality, invokes actual compiler/font/asset/render/readback functions, and persists engineering report/PPT/PNG/manifest exclusively outside the source project. Persisted report is read back and compared to actual return value.",
+    "Engineering provenance explicitly says L1_ENGINEERING_ONLY, visual_acceptance:not_evaluated and production_published:false. Four intentionally unreadable cases retain real fail reports and never receive fabricated PageVisual PASS.",
+    "No historical snapshot/migration workaround, public gate change, autouse patch, fake native/human/independent quality claim or extra image approval was introduced."
+  ],
+  "remaining_failures": [],
+  "remaining_product_blockers": [],
+  "product_surface_limit": "The new engineering helper is test-only and does not add a user-facing SVG-only diagnostic publication entry. Existing candidate_preview paths were actually exercised in four passing render cases; no missing candidate preview entry was observed.",
+  "preserved_remaining_inventory": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-render-five/remaining-nine-inventory.json",
+    "sha256": "47952ffa5a566dc2a1394443556f74f53dc2c8eda0461600a21217e02fba9f27",
+    "bytes": 8018
+  },
+  "engineering_evidence": [
+    {
+      "case_directory": "test_actual_render_and_persist0",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist0/engineering/diagnostic.json",
+        "sha256": "9d20db9b9b5c7ec2a499e1264ef0f3034ee6bc382da5e89bc9b88a68636ba22b",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist0/engineering/readback.json",
+        "sha256": "62f8056211c2fa0dec2b08b62e0328a865d07d6435704277c6278315906ca75b",
+        "bytes": 1052
+      },
+      "report_status": "fail",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "24204691effc7babab5e08b94c1bbbca004ab1a75b5bdb85e1b6d7cb719d040d"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "6f808a16bb36178ca7137c84aa9609e7b7c1459f8be275935c13d79caac39097"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "ad540e008046286a31fe6294322dadb575df49be009875ebfe2ca6200cadd2ab"
+        }
+      ]
+    },
+    {
+      "case_directory": "test_actual_render_and_persist1",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist1/engineering/diagnostic.json",
+        "sha256": "6d9c9169294e4900d5e58269e0514816a4353ecd73db99f7e8b2b39637621c40",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist1/engineering/readback.json",
+        "sha256": "23d0fa56c63109b453d821e49349e663ebab5f4cbcaef16c26299355c5095c1b",
+        "bytes": 420
+      },
+      "report_status": "pass",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "7c5ca543981fd19687b000cf78fee234c08d8c997ff467f8338ee3a09ecefac5"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "b4051ac9b9b7c4eab1b4eb34e46e8b3481d3cf895c2ecd570736583d3901e347"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "ea24a36ebbbe449f37f848e41298b5d4d5a9df3ed2b7d0c2c2820326bb83eae8"
+        }
+      ]
+    },
+    {
+      "case_directory": "test_actual_render_and_persist2",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist2/engineering/diagnostic.json",
+        "sha256": "d291215d39ae0bbd92fecb0231dfe629c91758515a6c0d0e89fcaa86bba413f1",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist2/engineering/readback.json",
+        "sha256": "8033c3d247a31e6cde1eafde57fdc29de0d6bfc1f386e3e889ac955abbfe19cf",
+        "bytes": 674
+      },
+      "report_status": "fail",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "0185ce98ffa00c0493f6837016654e72e0b593ce81f1a66de296ae44a9fe2576"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "12bff5016c31f6d0ba2fec10e37b9ee6a652acd52849b95af96227e14f01addd"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "4aba0ffa223bfcd4d676988108b225f9cec7e883b6431469d221e712d60b60d0"
+        }
+      ]
+    },
+    {
+      "case_directory": "test_actual_render_and_persist3",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist3/engineering/diagnostic.json",
+        "sha256": "080914cf712630bc798a53de1b335e311d5cee89c0b1ec0754afcb5572ac67e1",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist3/engineering/readback.json",
+        "sha256": "23d0fa56c63109b453d821e49349e663ebab5f4cbcaef16c26299355c5095c1b",
+        "bytes": 420
+      },
+      "report_status": "pass",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "2b7491ad5561fe8706b87497ba631c47b7f0df7671b3e28bd9d65532132c9c4f"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "0312a79e4507a95676f4c8c7d75264df680e35061abc8c1ed11d0ba933343a7c"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "c867e30c2efda67ee155553fb4b60ff19ae6df6e2104eba32e9096d46fe2b2f2"
+        }
+      ]
+    },
+    {
+      "case_directory": "test_actual_render_and_persist4",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist4/engineering/diagnostic.json",
+        "sha256": "6de25cec7f67f3ec32c6c107a2c820ab64644a658ac90fefa5c7403c192b4f24",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_actual_render_and_persist4/engineering/readback.json",
+        "sha256": "23d0fa56c63109b453d821e49349e663ebab5f4cbcaef16c26299355c5095c1b",
+        "bytes": 420
+      },
+      "report_status": "pass",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "ac70c1a6065335fff66e180e5376c5dae95ca29c52841d1d7120aff5cccfa098"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "c33430ffe9c012de2e65396fcdf857a65518b415dd609b675ac0ee71827ebd68"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "c867e30c2efda67ee155553fb4b60ff19ae6df6e2104eba32e9096d46fe2b2f2"
+        }
+      ]
+    },
+    {
+      "case_directory": "test_document_canvas_is_prompt0",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_document_canvas_is_prompt0/engineering/diagnostic.json",
+        "sha256": "193611d1d2cb21e3facc19523af9f960eff8ba06f8ad0f2a40def9cb39a4b9aa",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_document_canvas_is_prompt0/engineering/readback.json",
+        "sha256": "a0ee2060785ff3a48c163f0b4c43ae5fa646b9250e03d4472aac438aedde7ebf",
+        "bytes": 420
+      },
+      "report_status": "pass",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "3c002111a8ed66623cff635dafc915c7ec18173b1678272cecd4fa9ea61c8104"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "49c5623da1aa68bc68f0c9ab1c14cbcba1e9337ee66f505472bdfc1f34ba7d6e"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "bd9806594774ce5763c9f311ad60eafbeb6f18744c1a545dbcfe73dfa08f75ef"
+        }
+      ]
+    },
+    {
+      "case_directory": "test_real_gradient_svg_ppt_and0",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_real_gradient_svg_ppt_and0/engineering/diagnostic.json",
+        "sha256": "7497f8943fd4cc903abe0dd20ff723d38956046df8ad3987feb2486e0a8eb8a3",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_real_gradient_svg_ppt_and0/engineering/readback.json",
+        "sha256": "6f8422e4f72320a7b578477a5023c01b9f183f6e10b4c5aca16b23117eb487e7",
+        "bytes": 674
+      },
+      "report_status": "fail",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "0f2bf771ab8c60337d5e03790ef8e43c49830822090e63f8285ed18817d14622"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "059a3b5be05103167aea8c5979bf93020334a73163e66ec254585c3a7edc48a6"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "4aba0ffa223bfcd4d676988108b225f9cec7e883b6431469d221e712d60b60d0"
+        }
+      ]
+    },
+    {
+      "case_directory": "test_real_gradient_svg_ppt_and1",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_real_gradient_svg_ppt_and1/engineering/diagnostic.json",
+        "sha256": "15aa15186bf8e399d08ab49a8252101f5cc6993ea3370b03cd8ffc541e17fe0a",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_real_gradient_svg_ppt_and1/engineering/readback.json",
+        "sha256": "6f8422e4f72320a7b578477a5023c01b9f183f6e10b4c5aca16b23117eb487e7",
+        "bytes": 674
+      },
+      "report_status": "fail",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "c46f72bbd3ae139a6df70f6b09c761916048ee5e959ea36f25682526d09f8d3d"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "839fc426dff86425f19feeb516be11913318bd555ee701f665d3b9b9e878fa02"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "4aba0ffa223bfcd4d676988108b225f9cec7e883b6431469d221e712d60b60d0"
+        }
+      ]
+    },
+    {
+      "case_directory": "test_real_gradient_svg_ppt_and2",
+      "provenance": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_real_gradient_svg_ppt_and2/engineering/diagnostic.json",
+        "sha256": "18f0b65253490a88638c4794e22f85bf4989c215b95523b48896faf78ecc7f3c",
+        "bytes": 934
+      },
+      "report": {
+        "path": "/workspace/work/rc3/t04/a3r9/test_real_gradient_svg_ppt_and2/engineering/readback.json",
+        "sha256": "f44e87391cd071c312ee69076c083ce7a7469636abda402647f6d20bc664b1f3",
+        "bytes": 420
+      },
+      "report_status": "pass",
+      "production_refusal": "stage_prerequisite_missing",
+      "outputs": [
+        {
+          "path": "compiled/deck.pptx",
+          "sha256": "443e57cad0f7bc5d3e1f3d0108d2c911b52e029ab36d613b885e8625a7997727"
+        },
+        {
+          "path": "svg-1.png",
+          "sha256": "4f2b3b8644c0a9a12c7016d64054d9057dfeaf4a37a6c207f5ec7570c58f1dd1"
+        },
+        {
+          "path": "rendered/page-1.png",
+          "sha256": "c867e30c2efda67ee155553fb4b60ff19ae6df6e2104eba32e9096d46fe2b2f2"
+        }
+      ]
+    }
+  ]
+}

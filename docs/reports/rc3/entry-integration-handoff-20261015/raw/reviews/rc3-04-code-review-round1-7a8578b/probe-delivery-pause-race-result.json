@@ -1,0 +1,1440 @@
+{
+  "evidence_level": "L1_SYNTHETIC",
+  "fixture_limit": "synthetic engineering facts; no human, model, renderer or desktop execution",
+  "helper": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-code-snapshot-7a8578b/tests/rebuild/test_export.py",
+    "sha256": "1aaeae0cc3c9cc7158cbc9dfa2b868643edbbec76ad7e52863d7eee281fcc53e"
+  },
+  "before": {
+    "change": {
+      "description": "review",
+      "kind": "task_update",
+      "operation_id": "rv-pass-privacy",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [
+        {
+          "path": ".deckmaster/objects/e1/e1fe922b3fba01a49696126e786288e3bfdf188fb7594d94563f4364ccaae9d9.json",
+          "sha256": "e1fe922b3fba01a49696126e786288e3bfdf188fb7594d94563f4364ccaae9d9"
+        }
+      ],
+      "decisions": [
+        {
+          "path": ".deckmaster/objects/41/41c3085a8fab2d7688f3cc5805bb6c3d1b238c4b171027f15eb1bc5fdbd92108.json",
+          "sha256": "41c3085a8fab2d7688f3cc5805bb6c3d1b238c4b171027f15eb1bc5fdbd92108"
+        }
+      ],
+      "quality_profile": {
+        "content_review_requirement": "fidelity_only",
+        "override_decision_ref": null,
+        "requirement_origin": "confirmed_manuscript"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": null,
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "create:actual-input",
+          "source_ref": {
+            "path": ".deckmaster/objects/0f/0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22.json",
+            "sha256": "0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "full_deck",
+        "pause_reason": null,
+        "paused": false,
+        "request_id": "req-7edd1bd04e8a",
+        "scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech",
+            "design",
+            "blueprint",
+            "svg",
+            "review",
+            "output"
+          ],
+          "page_ids": [
+            "p1"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T05:09:10.139006+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "content_basis": {
+      "input_digest": "354196163af2802311a753ebd9d8d138e826c4702fec0dbc19845b3196018614",
+      "input_revision_id": null,
+      "resolved_by_task_id": null
+    },
+    "content_plan": {
+      "path": ".deckmaster/objects/cc/cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643.json",
+      "sha256": "cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643"
+    },
+    "created_at": "2026-10-15T05:09:09Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "narrative": null,
+    "outputs": {
+      "pptx": {
+        "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+        "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+      },
+      "render_report": {
+        "path": ".deckmaster/objects/19/19cf64bf2a836c56ff48dfd02b6d710c9c4e9fcc5a2fbec3fb0af0de99e4216a.json",
+        "sha256": "19cf64bf2a836c56ff48dfd02b6d710c9c4e9fcc5a2fbec3fb0af0de99e4216a"
+      },
+      "trace": null
+    },
+    "pages": [
+      {
+        "blueprint": null,
+        "page": {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        },
+        "page_id": "p1",
+        "ppt_preview": {
+          "path": ".deckmaster/objects/46/461dc9499e5e92263425c617c418cf4195426aba02979c2ded3721526418318f.json",
+          "sha256": "461dc9499e5e92263425c617c418cf4195426aba02979c2ded3721526418318f"
+        },
+        "svg": {
+          "path": ".deckmaster/objects/f0/f09cd9e2fce5d2fbfcc6db4bcbfd0042811650a3d93b8fe9d8122d5fca2fa27a.json",
+          "sha256": "f09cd9e2fce5d2fbfcc6db4bcbfd0042811650a3d93b8fe9d8122d5fca2fa27a"
+        },
+        "svg_preview": null
+      }
+    ],
+    "parent_revision_id": "267500f6751f4707b7caa4ddacf4f2a1",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "rc3-c2511f1f",
+    "reviews": [
+      {
+        "path": ".deckmaster/objects/ea/eac3fd07619dfaa43b596794f763059ee580e7dd2d3a2a6fcdf97867cabe7aee.json",
+        "sha256": "eac3fd07619dfaa43b596794f763059ee580e7dd2d3a2a6fcdf97867cabe7aee"
+      },
+      {
+        "path": ".deckmaster/objects/19/1945a2e314bcaf423622685d54e863131cbff211224fcb050f1205cd4cb54b45.json",
+        "sha256": "1945a2e314bcaf423622685d54e863131cbff211224fcb050f1205cd4cb54b45"
+      },
+      {
+        "path": ".deckmaster/objects/52/523b6a45653594bff27516e4b40499819f20d45b7f652423d9f4575bf74befc8.json",
+        "sha256": "523b6a45653594bff27516e4b40499819f20d45b7f652423d9f4575bf74befc8"
+      },
+      {
+        "path": ".deckmaster/objects/44/4434e9331e587e1d9f3d19ad9cd2c419e250f2dee62b33a9e5ca98e021b44291.json",
+        "sha256": "4434e9331e587e1d9f3d19ad9cd2c419e250f2dee62b33a9e5ca98e021b44291"
+      },
+      {
+        "path": ".deckmaster/objects/fd/fdff2b42a42e0b70d9c7768f4e86d1839b615c532e420730a9d2987b63261883.json",
+        "sha256": "fdff2b42a42e0b70d9c7768f4e86d1839b615c532e420730a9d2987b63261883"
+      },
+      {
+        "path": ".deckmaster/objects/ea/ea34eae9d056acac3e4dde250764b4f4dd7171575a43a8306a7365382f1667bc.json",
+        "sha256": "ea34eae9d056acac3e4dde250764b4f4dd7171575a43a8306a7365382f1667bc"
+      }
+    ],
+    "revision_id": "1b5712fc475b421481e1130ad4e62765",
+    "schema_version": "deck_document.v1",
+    "sources": [],
+    "task": {
+      "audience": "",
+      "brief": "L1 synthetic export fixture: one fixed page, scoped review and delivery; no image generation",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "live",
+      "presentation_mode_source": "default",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": []
+  },
+  "initial_readiness": {
+    "status": "ready",
+    "project_id": "rc3-c2511f1f",
+    "artifact_revision_id": "1b5712fc475b421481e1130ad4e62765",
+    "control_revision_id": "1b5712fc475b421481e1130ad4e62765",
+    "revision_id": "1b5712fc475b421481e1130ad4e62765",
+    "selected_output": {
+      "artifact_ref": {
+        "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+        "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+      },
+      "subject_ref": {
+        "path": ".deckmaster/objects/f5/f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd.pptx",
+        "sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd"
+      },
+      "file_sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd",
+      "original_file_sha256": "8e65f2093987162dc56b689e69ce7683c88a7bdff919e70a8ff4da069fef73dc",
+      "notes_policy": {
+        "selection": "pptx_notes",
+        "source": "plan",
+        "speech_mode": "none",
+        "plan_sha256": "cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643",
+        "newlines": "LF",
+        "pptx_notes": true,
+        "separate_script": false,
+        "pages": [
+          {
+            "page_id": "p1",
+            "page_sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a",
+            "notes_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "projection": "sanitized_public"
+    },
+    "engineering_ready": true,
+    "engineering": {
+      "ready": true,
+      "summary": {
+        "status": "pass",
+        "current_outputs": {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        "dimensions": {
+          "content:p1": {
+            "review_id": "rv-pass-content",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "blueprint_content:p1": {
+            "review_id": "rv-pass-blueprint_content",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "blueprint_fidelity:p1": {
+            "review_id": "rv-pass-blueprint_fidelity",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "conversion:p1": {
+            "review_id": "rv-pass-conversion",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "readability:p1": {
+            "review_id": "rv-pass-readability",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "privacy:p1": {
+            "review_id": "rv-pass-privacy",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          }
+        },
+        "stale": [],
+        "missing_dimensions": [],
+        "output_facts": {
+          "render_report_missing": false,
+          "completeness": [],
+          "render_report_status": "pass",
+          "render_report_findings": []
+        },
+        "dimension_reasons": {},
+        "input_alignment": "current"
+      }
+    },
+    "review_status": "pass",
+    "unresolved": {
+      "missing_dimensions": [],
+      "failed_dimensions": []
+    },
+    "professional": {
+      "required": false,
+      "satisfied": true,
+      "human_signoff": false,
+      "evidence": {
+        "professional_use": "not_evaluated",
+        "desktop_editing": "not_evaluated"
+      },
+      "reviews_considered": 0,
+      "gap_reasons": [],
+      "reviews": []
+    },
+    "eligibility": {
+      "schema_version": "eligibility.v1",
+      "allowed": true,
+      "action": "export.delivery",
+      "enforcement": "active",
+      "scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "blueprint",
+          "design",
+          "narrative",
+          "output",
+          "page_copy",
+          "plan",
+          "review",
+          "speech",
+          "svg"
+        ],
+        "page_ids": [
+          "p1"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "required_artifact_refs": [
+        {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        }
+      ],
+      "required_decision_topics": [
+        "delivery_acceptance"
+      ],
+      "missing_decision_topics": [],
+      "reason_codes": [],
+      "reasons": [],
+      "responsible_role": "user",
+      "next_action": null,
+      "decision_card_ref_or_projection": null,
+      "dependency_slices": [],
+      "eligibility_digest": "4ecca663b42ed8214719ba1fabceb6f07c8c05c4399ca197fbc537d4f3745a93",
+      "authority_assurance": "host_attested",
+      "request_id": "req-7edd1bd04e8a",
+      "artifact_revision_id": "1b5712fc475b421481e1130ad4e62765",
+      "control_revision_id": "1b5712fc475b421481e1130ad4e62765",
+      "facts_only": false,
+      "binding": null,
+      "preproduction": null,
+      "delivery": {
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "output_pptx": {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        "artifact_revision_id": "1b5712fc475b421481e1130ad4e62765",
+        "control_revision_id": "1b5712fc475b421481e1130ad4e62765"
+      },
+      "targets": {
+        "page_ids": null,
+        "layers": [],
+        "subject": null
+      }
+    },
+    "collaboration": {
+      "schema_version": "eligibility.v1",
+      "allowed": true,
+      "action": "export.delivery",
+      "enforcement": "active",
+      "scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "blueprint",
+          "design",
+          "narrative",
+          "output",
+          "page_copy",
+          "plan",
+          "review",
+          "speech",
+          "svg"
+        ],
+        "page_ids": [
+          "p1"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "required_artifact_refs": [
+        {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        }
+      ],
+      "required_decision_topics": [
+        "delivery_acceptance"
+      ],
+      "missing_decision_topics": [],
+      "reason_codes": [],
+      "reasons": [],
+      "responsible_role": "user",
+      "next_action": null,
+      "decision_card_ref_or_projection": null,
+      "dependency_slices": [],
+      "eligibility_digest": "4ecca663b42ed8214719ba1fabceb6f07c8c05c4399ca197fbc537d4f3745a93",
+      "authority_assurance": "host_attested",
+      "request_id": "req-7edd1bd04e8a",
+      "artifact_revision_id": "1b5712fc475b421481e1130ad4e62765",
+      "control_revision_id": "1b5712fc475b421481e1130ad4e62765",
+      "facts_only": false,
+      "binding": null,
+      "preproduction": null,
+      "delivery": {
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "output_pptx": {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        "artifact_revision_id": "1b5712fc475b421481e1130ad4e62765",
+        "control_revision_id": "1b5712fc475b421481e1130ad4e62765"
+      },
+      "targets": {
+        "page_ids": null,
+        "layers": [],
+        "subject": null
+      }
+    },
+    "reason_codes": [],
+    "next_action": "deliver_selected_file"
+  },
+  "pause": {
+    "status": "accepted",
+    "request_id": "req-7edd1bd04e8a",
+    "revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec"
+  },
+  "at_pause": {
+    "change": {
+      "description": "pause request: Stop delivery before publication.",
+      "kind": "collaboration_update",
+      "operation_id": "0fb546b4-7781-4176-8296-84863c5f5526",
+      "operation_receipt": {
+        "format": "operation_receipt.v1",
+        "request_digest": "f9388a9bfdab134bb1b93a5f800b0c6053dc274d71cfb462c799246b5baa4bcc",
+        "response": {
+          "request_id": "req-7edd1bd04e8a",
+          "revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+          "status": "accepted"
+        }
+      },
+      "payload_digest": "f9388a9bfdab134bb1b93a5f800b0c6053dc274d71cfb462c799246b5baa4bcc",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [
+        {
+          "path": ".deckmaster/objects/e1/e1fe922b3fba01a49696126e786288e3bfdf188fb7594d94563f4364ccaae9d9.json",
+          "sha256": "e1fe922b3fba01a49696126e786288e3bfdf188fb7594d94563f4364ccaae9d9"
+        }
+      ],
+      "decisions": [
+        {
+          "path": ".deckmaster/objects/41/41c3085a8fab2d7688f3cc5805bb6c3d1b238c4b171027f15eb1bc5fdbd92108.json",
+          "sha256": "41c3085a8fab2d7688f3cc5805bb6c3d1b238c4b171027f15eb1bc5fdbd92108"
+        }
+      ],
+      "quality_profile": {
+        "content_review_requirement": "fidelity_only",
+        "override_decision_ref": null,
+        "requirement_origin": "confirmed_manuscript"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": null,
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "create:actual-input",
+          "source_ref": {
+            "path": ".deckmaster/objects/0f/0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22.json",
+            "sha256": "0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "full_deck",
+        "pause_reason": "Stop delivery before publication.",
+        "paused": true,
+        "request_id": "req-7edd1bd04e8a",
+        "scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech",
+            "design",
+            "blueprint",
+            "svg",
+            "review",
+            "output"
+          ],
+          "page_ids": [
+            "p1"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T05:09:10.272852+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "content_basis": {
+      "input_digest": "354196163af2802311a753ebd9d8d138e826c4702fec0dbc19845b3196018614",
+      "input_revision_id": null,
+      "resolved_by_task_id": null
+    },
+    "content_plan": {
+      "path": ".deckmaster/objects/cc/cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643.json",
+      "sha256": "cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643"
+    },
+    "created_at": "2026-10-15T05:09:09Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "narrative": null,
+    "outputs": {
+      "pptx": {
+        "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+        "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+      },
+      "render_report": {
+        "path": ".deckmaster/objects/19/19cf64bf2a836c56ff48dfd02b6d710c9c4e9fcc5a2fbec3fb0af0de99e4216a.json",
+        "sha256": "19cf64bf2a836c56ff48dfd02b6d710c9c4e9fcc5a2fbec3fb0af0de99e4216a"
+      },
+      "trace": null
+    },
+    "pages": [
+      {
+        "blueprint": null,
+        "page": {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        },
+        "page_id": "p1",
+        "ppt_preview": {
+          "path": ".deckmaster/objects/46/461dc9499e5e92263425c617c418cf4195426aba02979c2ded3721526418318f.json",
+          "sha256": "461dc9499e5e92263425c617c418cf4195426aba02979c2ded3721526418318f"
+        },
+        "svg": {
+          "path": ".deckmaster/objects/f0/f09cd9e2fce5d2fbfcc6db4bcbfd0042811650a3d93b8fe9d8122d5fca2fa27a.json",
+          "sha256": "f09cd9e2fce5d2fbfcc6db4bcbfd0042811650a3d93b8fe9d8122d5fca2fa27a"
+        },
+        "svg_preview": null
+      }
+    ],
+    "parent_revision_id": "1b5712fc475b421481e1130ad4e62765",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "rc3-c2511f1f",
+    "reviews": [
+      {
+        "path": ".deckmaster/objects/ea/eac3fd07619dfaa43b596794f763059ee580e7dd2d3a2a6fcdf97867cabe7aee.json",
+        "sha256": "eac3fd07619dfaa43b596794f763059ee580e7dd2d3a2a6fcdf97867cabe7aee"
+      },
+      {
+        "path": ".deckmaster/objects/19/1945a2e314bcaf423622685d54e863131cbff211224fcb050f1205cd4cb54b45.json",
+        "sha256": "1945a2e314bcaf423622685d54e863131cbff211224fcb050f1205cd4cb54b45"
+      },
+      {
+        "path": ".deckmaster/objects/52/523b6a45653594bff27516e4b40499819f20d45b7f652423d9f4575bf74befc8.json",
+        "sha256": "523b6a45653594bff27516e4b40499819f20d45b7f652423d9f4575bf74befc8"
+      },
+      {
+        "path": ".deckmaster/objects/44/4434e9331e587e1d9f3d19ad9cd2c419e250f2dee62b33a9e5ca98e021b44291.json",
+        "sha256": "4434e9331e587e1d9f3d19ad9cd2c419e250f2dee62b33a9e5ca98e021b44291"
+      },
+      {
+        "path": ".deckmaster/objects/fd/fdff2b42a42e0b70d9c7768f4e86d1839b615c532e420730a9d2987b63261883.json",
+        "sha256": "fdff2b42a42e0b70d9c7768f4e86d1839b615c532e420730a9d2987b63261883"
+      },
+      {
+        "path": ".deckmaster/objects/ea/ea34eae9d056acac3e4dde250764b4f4dd7171575a43a8306a7365382f1667bc.json",
+        "sha256": "ea34eae9d056acac3e4dde250764b4f4dd7171575a43a8306a7365382f1667bc"
+      }
+    ],
+    "revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+    "schema_version": "deck_document.v1",
+    "sources": [],
+    "task": {
+      "audience": "",
+      "brief": "L1 synthetic export fixture: one fixed page, scoped review and delivery; no image generation",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "live",
+      "presentation_mode_source": "default",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": []
+  },
+  "outcome": {
+    "result": {
+      "status": "exported",
+      "schema_version": "export_record.v1",
+      "export_id": "export-831035b9-ee9e-41c5-a13c-014c35154c05",
+      "project_identity": "652f738e28e335a64a74c4d3e98d7229a8afb2b632ff0aee608c624d3ec86970",
+      "revision_id": "1b5712fc475b421481e1130ad4e62765",
+      "purpose": "delivery",
+      "archive": "deck-delivery-1b5712fc.zip",
+      "files": {
+        "deck.pptx": {
+          "sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd",
+          "size": 23584
+        },
+        "delivery.json": {
+          "sha256": "fea8958c2201e985f3af47fd5c0843c4c3b0cbf9f2facd0e9f8c55dabe2e8017",
+          "size": 1881
+        },
+        "page-001/content.txt": {
+          "sha256": "18c027a31c9283b6f6db83d6c5907441332f1b5d9e44e3f51571d1886c81d3ef",
+          "size": 24
+        },
+        "page-001/ppt_preview.svg": {
+          "sha256": "4ee535d17aa422a8c7d159568ff59866b35a730580de8bb6c436707d5166f566",
+          "size": 65
+        },
+        "page-001/svg.svg": {
+          "sha256": "4ee535d17aa422a8c7d159568ff59866b35a730580de8bb6c436707d5166f566",
+          "size": 65
+        },
+        "review.html": {
+          "sha256": "0510628c2fe32a95b349e8ce86c950f02a9e617be53088bd3e86c2803aa273e4",
+          "size": 300
+        },
+        "manifest.json": {
+          "sha256": "0f6423aef8da1a7c02195359ea362f7a48ee8cdc54b4b7400c9822edd6f67cc3",
+          "size": 1891
+        },
+        "deck-delivery-1b5712fc.zip": {
+          "sha256": "b076a7766e305bd44ac61fa03842701d44ce8e2dc97493e820d96585c2510e8e",
+          "size": 21136
+        }
+      },
+      "manifest": {
+        "schema_version": "export_manifest.v1",
+        "export_id": "export-831035b9-ee9e-41c5-a13c-014c35154c05",
+        "project_identity": "652f738e28e335a64a74c4d3e98d7229a8afb2b632ff0aee608c624d3ec86970",
+        "revision_id": "1b5712fc475b421481e1130ad4e62765",
+        "purpose": "delivery",
+        "files": [
+          {
+            "path": "deck.pptx",
+            "sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd",
+            "size": 23584,
+            "original_sha256": "8e65f2093987162dc56b689e69ce7683c88a7bdff919e70a8ff4da069fef73dc"
+          },
+          {
+            "path": "delivery.json",
+            "sha256": "fea8958c2201e985f3af47fd5c0843c4c3b0cbf9f2facd0e9f8c55dabe2e8017",
+            "size": 1881,
+            "original_sha256": null
+          },
+          {
+            "path": "page-001/content.txt",
+            "sha256": "18c027a31c9283b6f6db83d6c5907441332f1b5d9e44e3f51571d1886c81d3ef",
+            "size": 24,
+            "original_sha256": null
+          },
+          {
+            "path": "page-001/ppt_preview.svg",
+            "sha256": "4ee535d17aa422a8c7d159568ff59866b35a730580de8bb6c436707d5166f566",
+            "size": 65,
+            "original_sha256": "1cb2e936faebffb8e4eda83e60ba9c0861ccddab98349aee6a389255c0b5e315"
+          },
+          {
+            "path": "page-001/svg.svg",
+            "sha256": "4ee535d17aa422a8c7d159568ff59866b35a730580de8bb6c436707d5166f566",
+            "size": 65,
+            "original_sha256": "1cb2e936faebffb8e4eda83e60ba9c0861ccddab98349aee6a389255c0b5e315"
+          },
+          {
+            "path": "review.html",
+            "sha256": "0510628c2fe32a95b349e8ce86c950f02a9e617be53088bd3e86c2803aa273e4",
+            "size": 300,
+            "original_sha256": null
+          }
+        ],
+        "excluded": [
+          "runtime_authentication",
+          "service_state",
+          "locks",
+          "personal_ui_drafts"
+        ],
+        "metadata_policy": "sanitized_public_copy",
+        "notes_policy": {
+          "selection": "pptx_notes",
+          "source": "plan",
+          "speech_mode": "none",
+          "plan_sha256": "cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643",
+          "newlines": "LF",
+          "pptx_notes": true,
+          "separate_script": false,
+          "pages": [
+            {
+              "page_id": "p1",
+              "page_sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a",
+              "notes_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          ]
+        },
+        "request_sha256": "28809bf4daed55ce7de0803fa7bfa71e2d7e542d97ea50c68f1e303e8b49ef60"
+      },
+      "download_url": "/api/exports/export-831035b9-ee9e-41c5-a13c-014c35154c05/files/deck-delivery-1b5712fc.zip",
+      "output_dir": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/delivery-published-after-pause"
+    }
+  },
+  "after": {
+    "change": {
+      "description": "pause request: Stop delivery before publication.",
+      "kind": "collaboration_update",
+      "operation_id": "0fb546b4-7781-4176-8296-84863c5f5526",
+      "operation_receipt": {
+        "format": "operation_receipt.v1",
+        "request_digest": "f9388a9bfdab134bb1b93a5f800b0c6053dc274d71cfb462c799246b5baa4bcc",
+        "response": {
+          "request_id": "req-7edd1bd04e8a",
+          "revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+          "status": "accepted"
+        }
+      },
+      "payload_digest": "f9388a9bfdab134bb1b93a5f800b0c6053dc274d71cfb462c799246b5baa4bcc",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [
+        {
+          "path": ".deckmaster/objects/e1/e1fe922b3fba01a49696126e786288e3bfdf188fb7594d94563f4364ccaae9d9.json",
+          "sha256": "e1fe922b3fba01a49696126e786288e3bfdf188fb7594d94563f4364ccaae9d9"
+        }
+      ],
+      "decisions": [
+        {
+          "path": ".deckmaster/objects/41/41c3085a8fab2d7688f3cc5805bb6c3d1b238c4b171027f15eb1bc5fdbd92108.json",
+          "sha256": "41c3085a8fab2d7688f3cc5805bb6c3d1b238c4b171027f15eb1bc5fdbd92108"
+        }
+      ],
+      "quality_profile": {
+        "content_review_requirement": "fidelity_only",
+        "override_decision_ref": null,
+        "requirement_origin": "confirmed_manuscript"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": null,
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "create:actual-input",
+          "source_ref": {
+            "path": ".deckmaster/objects/0f/0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22.json",
+            "sha256": "0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "full_deck",
+        "pause_reason": "Stop delivery before publication.",
+        "paused": true,
+        "request_id": "req-7edd1bd04e8a",
+        "scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech",
+            "design",
+            "blueprint",
+            "svg",
+            "review",
+            "output"
+          ],
+          "page_ids": [
+            "p1"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T05:09:10.272852+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "content_basis": {
+      "input_digest": "354196163af2802311a753ebd9d8d138e826c4702fec0dbc19845b3196018614",
+      "input_revision_id": null,
+      "resolved_by_task_id": null
+    },
+    "content_plan": {
+      "path": ".deckmaster/objects/cc/cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643.json",
+      "sha256": "cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643"
+    },
+    "created_at": "2026-10-15T05:09:09Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "narrative": null,
+    "outputs": {
+      "pptx": {
+        "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+        "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+      },
+      "render_report": {
+        "path": ".deckmaster/objects/19/19cf64bf2a836c56ff48dfd02b6d710c9c4e9fcc5a2fbec3fb0af0de99e4216a.json",
+        "sha256": "19cf64bf2a836c56ff48dfd02b6d710c9c4e9fcc5a2fbec3fb0af0de99e4216a"
+      },
+      "trace": null
+    },
+    "pages": [
+      {
+        "blueprint": null,
+        "page": {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        },
+        "page_id": "p1",
+        "ppt_preview": {
+          "path": ".deckmaster/objects/46/461dc9499e5e92263425c617c418cf4195426aba02979c2ded3721526418318f.json",
+          "sha256": "461dc9499e5e92263425c617c418cf4195426aba02979c2ded3721526418318f"
+        },
+        "svg": {
+          "path": ".deckmaster/objects/f0/f09cd9e2fce5d2fbfcc6db4bcbfd0042811650a3d93b8fe9d8122d5fca2fa27a.json",
+          "sha256": "f09cd9e2fce5d2fbfcc6db4bcbfd0042811650a3d93b8fe9d8122d5fca2fa27a"
+        },
+        "svg_preview": null
+      }
+    ],
+    "parent_revision_id": "1b5712fc475b421481e1130ad4e62765",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "rc3-c2511f1f",
+    "reviews": [
+      {
+        "path": ".deckmaster/objects/ea/eac3fd07619dfaa43b596794f763059ee580e7dd2d3a2a6fcdf97867cabe7aee.json",
+        "sha256": "eac3fd07619dfaa43b596794f763059ee580e7dd2d3a2a6fcdf97867cabe7aee"
+      },
+      {
+        "path": ".deckmaster/objects/19/1945a2e314bcaf423622685d54e863131cbff211224fcb050f1205cd4cb54b45.json",
+        "sha256": "1945a2e314bcaf423622685d54e863131cbff211224fcb050f1205cd4cb54b45"
+      },
+      {
+        "path": ".deckmaster/objects/52/523b6a45653594bff27516e4b40499819f20d45b7f652423d9f4575bf74befc8.json",
+        "sha256": "523b6a45653594bff27516e4b40499819f20d45b7f652423d9f4575bf74befc8"
+      },
+      {
+        "path": ".deckmaster/objects/44/4434e9331e587e1d9f3d19ad9cd2c419e250f2dee62b33a9e5ca98e021b44291.json",
+        "sha256": "4434e9331e587e1d9f3d19ad9cd2c419e250f2dee62b33a9e5ca98e021b44291"
+      },
+      {
+        "path": ".deckmaster/objects/fd/fdff2b42a42e0b70d9c7768f4e86d1839b615c532e420730a9d2987b63261883.json",
+        "sha256": "fdff2b42a42e0b70d9c7768f4e86d1839b615c532e420730a9d2987b63261883"
+      },
+      {
+        "path": ".deckmaster/objects/ea/ea34eae9d056acac3e4dde250764b4f4dd7171575a43a8306a7365382f1667bc.json",
+        "sha256": "ea34eae9d056acac3e4dde250764b4f4dd7171575a43a8306a7365382f1667bc"
+      }
+    ],
+    "revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+    "schema_version": "deck_document.v1",
+    "sources": [],
+    "task": {
+      "audience": "",
+      "brief": "L1 synthetic export fixture: one fixed page, scoped review and delivery; no image generation",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "live",
+      "presentation_mode_source": "default",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": []
+  },
+  "current_readiness": {
+    "status": "blocked",
+    "project_id": "rc3-c2511f1f",
+    "artifact_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+    "control_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+    "revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+    "selected_output": {
+      "artifact_ref": {
+        "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+        "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+      },
+      "subject_ref": {
+        "path": ".deckmaster/objects/f5/f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd.pptx",
+        "sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd"
+      },
+      "file_sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd",
+      "original_file_sha256": "8e65f2093987162dc56b689e69ce7683c88a7bdff919e70a8ff4da069fef73dc",
+      "notes_policy": {
+        "selection": "pptx_notes",
+        "source": "plan",
+        "speech_mode": "none",
+        "plan_sha256": "cc4e50629a35edd4baba86b7a2d2ca2388c38ed3659194ed72ce242f0b8aa643",
+        "newlines": "LF",
+        "pptx_notes": true,
+        "separate_script": false,
+        "pages": [
+          {
+            "page_id": "p1",
+            "page_sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a",
+            "notes_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "projection": "sanitized_public"
+    },
+    "engineering_ready": true,
+    "engineering": {
+      "ready": true,
+      "summary": {
+        "status": "pass",
+        "current_outputs": {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        "dimensions": {
+          "content:p1": {
+            "review_id": "rv-pass-content",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "blueprint_content:p1": {
+            "review_id": "rv-pass-blueprint_content",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "blueprint_fidelity:p1": {
+            "review_id": "rv-pass-blueprint_fidelity",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "conversion:p1": {
+            "review_id": "rv-pass-conversion",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "readability:p1": {
+            "review_id": "rv-pass-readability",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "privacy:p1": {
+            "review_id": "rv-pass-privacy",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          }
+        },
+        "stale": [],
+        "missing_dimensions": [],
+        "output_facts": {
+          "render_report_missing": false,
+          "completeness": [],
+          "render_report_status": "pass",
+          "render_report_findings": []
+        },
+        "dimension_reasons": {},
+        "input_alignment": "current"
+      }
+    },
+    "review_status": "pass",
+    "unresolved": {
+      "missing_dimensions": [],
+      "failed_dimensions": []
+    },
+    "professional": {
+      "required": false,
+      "satisfied": true,
+      "human_signoff": false,
+      "evidence": {
+        "professional_use": "not_evaluated",
+        "desktop_editing": "not_evaluated"
+      },
+      "reviews_considered": 0,
+      "gap_reasons": [],
+      "reviews": []
+    },
+    "eligibility": {
+      "schema_version": "eligibility.v1",
+      "allowed": false,
+      "action": "export.delivery",
+      "enforcement": "active",
+      "scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "blueprint",
+          "design",
+          "narrative",
+          "output",
+          "page_copy",
+          "plan",
+          "review",
+          "speech",
+          "svg"
+        ],
+        "page_ids": [
+          "p1"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "required_artifact_refs": [
+        {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        }
+      ],
+      "required_decision_topics": [
+        "delivery_acceptance"
+      ],
+      "missing_decision_topics": [],
+      "reason_codes": [
+        "request_paused",
+        "authority_insufficient"
+      ],
+      "reasons": [
+        {
+          "code": "request_paused",
+          "detail": "Stop delivery before publication."
+        },
+        {
+          "code": "authority_insufficient",
+          "detail": "the covering authorization is not effective",
+          "reasons": [
+            "request_paused"
+          ],
+          "authorization_ids": [
+            "authz-1f645b95f986"
+          ]
+        }
+      ],
+      "responsible_role": "user",
+      "next_action": "resume the request explicitly (resume never widens scope) or cancel it",
+      "decision_card_ref_or_projection": {
+        "kind": "stop_card",
+        "action": "export.delivery",
+        "state": "paused"
+      },
+      "dependency_slices": [],
+      "eligibility_digest": "4ecca663b42ed8214719ba1fabceb6f07c8c05c4399ca197fbc537d4f3745a93",
+      "authority_assurance": "host_attested",
+      "request_id": "req-7edd1bd04e8a",
+      "artifact_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+      "control_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+      "facts_only": false,
+      "binding": null,
+      "preproduction": null,
+      "delivery": {
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "output_pptx": {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        "artifact_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+        "control_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec"
+      },
+      "targets": {
+        "page_ids": null,
+        "layers": [],
+        "subject": null
+      }
+    },
+    "collaboration": {
+      "schema_version": "eligibility.v1",
+      "allowed": false,
+      "action": "export.delivery",
+      "enforcement": "active",
+      "scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "blueprint",
+          "design",
+          "narrative",
+          "output",
+          "page_copy",
+          "plan",
+          "review",
+          "speech",
+          "svg"
+        ],
+        "page_ids": [
+          "p1"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "required_artifact_refs": [
+        {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        }
+      ],
+      "required_decision_topics": [
+        "delivery_acceptance"
+      ],
+      "missing_decision_topics": [],
+      "reason_codes": [
+        "request_paused",
+        "authority_insufficient"
+      ],
+      "reasons": [
+        {
+          "code": "request_paused",
+          "detail": "Stop delivery before publication."
+        },
+        {
+          "code": "authority_insufficient",
+          "detail": "the covering authorization is not effective",
+          "reasons": [
+            "request_paused"
+          ],
+          "authorization_ids": [
+            "authz-1f645b95f986"
+          ]
+        }
+      ],
+      "responsible_role": "user",
+      "next_action": "resume the request explicitly (resume never widens scope) or cancel it",
+      "decision_card_ref_or_projection": {
+        "kind": "stop_card",
+        "action": "export.delivery",
+        "state": "paused"
+      },
+      "dependency_slices": [],
+      "eligibility_digest": "4ecca663b42ed8214719ba1fabceb6f07c8c05c4399ca197fbc537d4f3745a93",
+      "authority_assurance": "host_attested",
+      "request_id": "req-7edd1bd04e8a",
+      "artifact_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+      "control_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+      "facts_only": false,
+      "binding": null,
+      "preproduction": null,
+      "delivery": {
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "output_pptx": {
+          "path": ".deckmaster/objects/e5/e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585.json",
+          "sha256": "e5c6bdb8271f0990d400884eef72d61172cc34e1ee7fbf1a260d5b2200777585"
+        },
+        "artifact_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec",
+        "control_revision_id": "4b432d6f4c7f4acd8d30e7884743d5ec"
+      },
+      "targets": {
+        "page_ids": null,
+        "layers": [],
+        "subject": null
+      }
+    },
+    "reason_codes": [
+      "request_paused",
+      "authority_insufficient"
+    ],
+    "next_action": "resume the request explicitly (resume never widens scope) or cancel it"
+  },
+  "fresh_after_pause_control": {
+    "type": "EligibilityBlocked",
+    "message": "eligibility/export.delivery: Stop delivery before publication."
+  },
+  "delivery_published_after_pause": true
+}

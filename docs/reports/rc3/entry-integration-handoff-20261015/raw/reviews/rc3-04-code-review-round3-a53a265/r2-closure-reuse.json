@@ -1,0 +1,75 @@
+{
+  "basis": "Actual byte-identical product dependency files; R2 original probes/40 finite checks are inherited, not relabeled as new R3 runs. The only shared L1 fixture change adds explicit adopt=False without changing default adoption or scope.",
+  "files": [
+    {
+      "path": "src/deck_master/project_initialization.py",
+      "r2_r3_identical": true,
+      "sha256": "d91c7bf3da8f40db44472df3809d8af9baf49dcd816b41f8e34ebcad1597f7bc"
+    },
+    {
+      "path": "src/deck_master/collaboration.py",
+      "r2_r3_identical": true,
+      "sha256": "a323b1c551ff0165d508d4509e1c603b06967efc65091dc2766448fc7928a654"
+    },
+    {
+      "path": "src/deck_master/collaboration_api.py",
+      "r2_r3_identical": true,
+      "sha256": "33f9d6f0a15f6f66754680cdda5ac2330adda5a7b07e5328fb7aee823e21345b"
+    },
+    {
+      "path": "src/deck_master/collaboration_binding.py",
+      "r2_r3_identical": true,
+      "sha256": "92a3a9acd2834e0d4f4c8ac7e5373587fa8f5ea406af576fd12ca5d24f60c4bf"
+    },
+    {
+      "path": "src/deck_master/content_production.py",
+      "r2_r3_identical": true,
+      "sha256": "8c2b7bae33b809d86a95b4b76812582740d553995a8478d09e93d2aa32eedbcb"
+    },
+    {
+      "path": "src/deck_master/content_ops.py",
+      "r2_r3_identical": true,
+      "sha256": "792c485bcbfc12db0d5b886072256ea84fab8e6132372543e920f4e7668756ed"
+    },
+    {
+      "path": "src/deck_master/content_plan.py",
+      "r2_r3_identical": true,
+      "sha256": "65064f11dcb4c8019a331bae2f0865a6e9e9a5888d44d6473e8ee2e8f5253430"
+    },
+    {
+      "path": "src/deck_master/eligibility.py",
+      "r2_r3_identical": true,
+      "sha256": "0a472196e790ed70a6626df8d17f78dde396f343e0e148efd6eb6f4610aed31a"
+    },
+    {
+      "path": "src/deck_master/eligibility_entries.py",
+      "r2_r3_identical": true,
+      "sha256": "339d4899f502508bbffcd5976e94fe630f221dc0ae767403cf06eaeeed6c3683"
+    },
+    {
+      "path": "src/deck_master/exports.py",
+      "r2_r3_identical": true,
+      "sha256": "5fd5d569cb389387e7a1a54ac86482359023d5ca0623a96e704b00f8f174a1a4"
+    },
+    {
+      "path": "src/deck_master/generation.py",
+      "r2_r3_identical": true,
+      "sha256": "a2974611f90cc39572f9b16394733de883d6d8e6a900ead4bbc989be2c501cad"
+    },
+    {
+      "path": "src/deck_master/models.py",
+      "r2_r3_identical": true,
+      "sha256": "c5cc610f9fa08eba09dfc31b589b0d893ef4dfc928bb86cd46c99e63f12d9a62"
+    },
+    {
+      "path": "src/deck_master/service.py",
+      "r2_r3_identical": true,
+      "sha256": "8b9efc267d1f9dc00254acea5a1e1a8f02f20c752b2f608e5b5ffeb975293872"
+    },
+    {
+      "path": "src/deck_master/visual_styles.py",
+      "r2_r3_identical": true,
+      "sha256": "357a128501f98b2c12942de10c6a5120aa27d24a06c7c82b30db0a09c6d4833b"
+    }
+  ]
+}

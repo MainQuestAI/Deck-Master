@@ -1,0 +1,1518 @@
+{
+  "identity": {
+    "pid": 489901,
+    "time": "2026-10-15T05:57:29.053392+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "source_manifest": {
+    "manuscript.json": "ead23b7e9462eb792bf4d2b9284f4b99951970952ff71d3823a69f64382ca132",
+    "rules.txt": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+  },
+  "rules_fulltext": "L1 本材料由当前Host原创，只供固定安装路径执行，不是实际机构制度或实际业绩。\nL2 阅览原件须同时满足三项：借阅人权限有效、所借目录号匹配、管理员已登记本次领取；三项齐全后值班员才可交付。\nL3 权限未知时登记待核验，记录借阅人和目录号，交权限管理员核对；值班员不能凭熟悉程度认定有效。\nL4 目录号不符时停止本次领取，保留申请号与实物目录号，交库房管理员核对；不能按标题相似替换。\nL5 阅览中发现撕裂、脱页或新污渍时立即停止翻阅，保持原状并通知保管员；权限齐全也不授权继续，更不能自行粘补。恢复由保管员确认。\nL6 交接单记录借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人及未决项八项。\nL7 情境A：林宁借A-17，实物A-17且领取已登记，权限未知；正确下一步是待核验交权限管理员，不交原件。\nL8 情境B：周禾权限和领取登记均齐全，正阅A-19时发现新脱页；正确下一步是停止翻阅、保持原状、通知保管员，不先补齐交接单再处置。\nL9 情境C：申请A-21、实物A-12，即使书名相同也不交付；核对两号由库房管理员处理。\nL10 本材料无平均核验时长、损伤发生率和节约数据；不得编造收益、阈值或机构政策。\n",
+  "manuscript_fulltext": {
+    "evidence_origin": "Actual same-Host fixed installed write_only output; no independent/human evidence",
+    "revision_id": "9639f044640442d2bc1e4315b27ea7a6",
+    "pages": [
+      {
+        "content_mapping": {
+          "narrative_ref": {
+            "path": ".deckmaster/objects/6d/6dbd4624cc5b79803182441954c11f72f0f18374606403a792eff97c8a1c3aed.json",
+            "sha256": "6dbd4624cc5b79803182441954c11f72f0f18374606403a792eff97c8a1c3aed"
+          },
+          "plan_role_page_id": "p1",
+          "speech_segments": [],
+          "visible_links": [
+            {
+              "element_ref": "atom:p1:title",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:block:gate:text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L3",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:column:branches:trigger:label",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:column:branches:action:label",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:column:branches:owner:label",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:column:branches:resume:label",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:unknown:trigger:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:unknown:action:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:unknown:owner:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:unknown:resume:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:mismatch:trigger:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:mismatch:action:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:mismatch:owner:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:mismatch:resume:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:ready:trigger:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:ready:action:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:ready:owner:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:ready:resume:display_text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L2",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:block:handoff:text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L6",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:block:case-a:text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L7",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L6",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p1:block:case-c:text",
+              "narrative_node_ids": [
+                "eligibility",
+                "unknown",
+                "mismatch",
+                "handoff"
+              ],
+              "source_links": [
+                {
+                  "locator": "L9",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "id": "gate",
+              "text": "先核对借阅人权限有效、申请与实物目录号匹配、管理员已登记本次领取；三项同时成立后值班员才交付。熟悉借阅人或书名相近都不能替代核验。",
+              "type": "paragraph"
+            },
+            {
+              "columns": [
+                {
+                  "id": "trigger",
+                  "label": "触发情境"
+                },
+                {
+                  "id": "action",
+                  "label": "值班员动作"
+                },
+                {
+                  "id": "owner",
+                  "label": "下一责任人"
+                },
+                {
+                  "id": "resume",
+                  "label": "交付前还需什么"
+                }
+              ],
+              "id": "branches",
+              "rows": [
+                {
+                  "cells": [
+                    {
+                      "column_id": "trigger",
+                      "display_text": "权限未知"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "登记待核验，写明借阅人和目录号；暂不交原件"
+                    },
+                    {
+                      "column_id": "owner",
+                      "display_text": "权限管理员"
+                    },
+                    {
+                      "column_id": "resume",
+                      "display_text": "核对权限有效，再连同目录号及领取登记一并检查"
+                    }
+                  ],
+                  "id": "unknown"
+                },
+                {
+                  "cells": [
+                    {
+                      "column_id": "trigger",
+                      "display_text": "申请目录号与实物号不符"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "停止本次领取，保留两号；不按标题相似更换"
+                    },
+                    {
+                      "column_id": "owner",
+                      "display_text": "库房管理员"
+                    },
+                    {
+                      "column_id": "resume",
+                      "display_text": "核对正确实物后重新检查本次领取条件"
+                    }
+                  ],
+                  "id": "mismatch"
+                },
+                {
+                  "cells": [
+                    {
+                      "column_id": "trigger",
+                      "display_text": "权限有效、目录号匹配且领取已登记"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "核对三项均齐，按本次记录交付"
+                    },
+                    {
+                      "column_id": "owner",
+                      "display_text": "值班员"
+                    },
+                    {
+                      "column_id": "resume",
+                      "display_text": "已满足本次交付条件；不代表之后可忽略新损伤"
+                    }
+                  ],
+                  "id": "ready"
+                }
+              ],
+              "type": "table"
+            },
+            {
+              "id": "handoff",
+              "text": "交接单保留八项：借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人、未决项。未知要写明未知，不能填成没有问题；填完交接单不等于取得交付或恢复许可。",
+              "type": "paragraph"
+            },
+            {
+              "id": "case-a",
+              "text": "情境A：林宁申请A-17，实物A-17，本次领取已登记，权限未知。当前不交原件，权限状态写“待核验”，下一责任人写权限管理员，未决项写权限是否有效；损伤情况未给出，不填“无损伤”。",
+              "type": "paragraph"
+            },
+            {
+              "id": "case-c",
+              "text": "情境C：申请A-21、实物A-12且书名相同。目录号不匹配，交库房管理员核对两号；权限即使有效，也不能先拿相近书名的原件。",
+              "type": "paragraph"
+            }
+          ],
+          "title": "合成训练｜先过三项领取核验，再处理未决交接"
+        },
+        "page_id": "p1",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "",
+        "visual_spec": {
+          "intent": "用四列分支矩阵明确触发、动作、下一责任与恢复条件；八项交接单独成可查段落",
+          "reference_mode": "new_design"
+        }
+      },
+      {
+        "content_mapping": {
+          "narrative_ref": {
+            "path": ".deckmaster/objects/6d/6dbd4624cc5b79803182441954c11f72f0f18374606403a792eff97c8a1c3aed.json",
+            "sha256": "6dbd4624cc5b79803182441954c11f72f0f18374606403a792eff97c8a1c3aed"
+          },
+          "plan_role_page_id": "p2",
+          "speech_segments": [],
+          "visible_links": [
+            {
+              "element_ref": "atom:p2:title",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:block:priority:text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L8",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:column:damage:step:label",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:column:damage:action:label",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:column:damage:boundary:label",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:stop:step:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:stop:action:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:stop:boundary:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:notify:step:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:notify:action:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:notify:boundary:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:resume:step:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:resume:action:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:cell:damage:resume:boundary:display_text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:block:case-b:text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L8",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:block:transfer:text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L3",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L4",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L5",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            },
+            {
+              "element_ref": "atom:p2:block:limit:text",
+              "narrative_node_ids": [
+                "damage",
+                "recovery",
+                "limits"
+              ],
+              "source_links": [
+                {
+                  "locator": "L1",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                },
+                {
+                  "locator": "L10",
+                  "source_id": "src-108c4542",
+                  "source_version": {
+                    "extract": {
+                      "path": ".deckmaster/objects/c5/c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151.json",
+                      "sha256": "c55834770c5cfe7525599d05373e1a9390c006b1c52f86120097fef49b3ae151"
+                    },
+                    "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "id": "priority",
+              "text": "阅览中新撕裂、脱页或污渍，立即停止翻阅、保持原状并通知保管员。不等交接单填完再停阅；权限和领取登记齐全也不授权继续。",
+              "type": "paragraph"
+            },
+            {
+              "columns": [
+                {
+                  "id": "step",
+                  "label": "时点"
+                },
+                {
+                  "id": "action",
+                  "label": "实际动作"
+                },
+                {
+                  "id": "boundary",
+                  "label": "不能替代的责任边界"
+                }
+              ],
+              "id": "damage",
+              "rows": [
+                {
+                  "cells": [
+                    {
+                      "column_id": "step",
+                      "display_text": "发现新损伤"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "停止翻阅并保持原状"
+                    },
+                    {
+                      "column_id": "boundary",
+                      "display_text": "不自行粘补、不因权限有效继续"
+                    }
+                  ],
+                  "id": "stop"
+                },
+                {
+                  "cells": [
+                    {
+                      "column_id": "step",
+                      "display_text": "停阅后交接"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "告知保管员原件目录号、所见损伤及当时状态；八项单据保留已知和未决"
+                    },
+                    {
+                      "column_id": "boundary",
+                      "display_text": "单据补充不应延迟停阅通知"
+                    }
+                  ],
+                  "id": "notify"
+                },
+                {
+                  "cells": [
+                    {
+                      "column_id": "step",
+                      "display_text": "考虑恢复"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "等待保管员确认后再恢复"
+                    },
+                    {
+                      "column_id": "boundary",
+                      "display_text": "值班员或借阅人不能自行决定恢复"
+                    }
+                  ],
+                  "id": "resume"
+                }
+              ],
+              "type": "table"
+            },
+            {
+              "id": "case-b",
+              "text": "情境B：周禾权限有效、本次领取已登记，正阅A-19时出现新脱页。正确顺序是停阅→保持原状→通知保管员；不能先补齐交接单再处置，也不能自行把页粘回去。",
+              "type": "paragraph"
+            },
+            {
+              "id": "transfer",
+              "text": "辨别规则：权限未知是领取前的核验缺口，交权限管理员；两号不符交库房管理员；新损伤是阅览中的停阅触发，交保管员。三者的下一责任不同，不可压成同一个“管理员处理”。完成单据也不能代替权限管理员核验或保管员确认恢复。",
+              "type": "paragraph"
+            },
+            {
+              "id": "limit",
+              "text": "本稿是合成规则的训练说明，不代表真实机构制度。材料没有核验时长、损伤发生率或节约数据，因此不承诺效率或保护成效。",
+              "type": "paragraph"
+            }
+          ],
+          "title": "合成训练｜发现新损伤先停阅，保持原状交保管员"
+        },
+        "page_id": "p2",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "",
+        "visual_spec": {
+          "intent": "先后顺序与恢复权限完整可见，案例B对照不得先补单据，不以三张泛化卡代替",
+          "reference_mode": "new_design"
+        }
+      }
+    ]
+  }
+}

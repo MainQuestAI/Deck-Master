@@ -1,0 +1,607 @@
+{
+  "evidence_level": "L1_SYNTHETIC",
+  "original_request": {
+    "background_request_ids": [],
+    "closed": false,
+    "closed_reason": null,
+    "content_intent": null,
+    "instruction_evidence": {
+      "actor_id": null,
+      "assurance": "host_attested",
+      "kind": "host_attested_instruction",
+      "presentation_ref": null,
+      "source_locator": "create:actual-input",
+      "source_ref": {
+        "path": ".deckmaster/objects/b9/b9f56ce3f7645df95719e3ddaf997804838c5c509d162be4a3675c3f403df7f7.json",
+        "sha256": "b9f56ce3f7645df95719e3ddaf997804838c5c509d162be4a3675c3f403df7f7"
+      },
+      "transport_receipt_ref": null
+    },
+    "intent": "full_deck",
+    "pause_reason": null,
+    "paused": false,
+    "request_id": "req-4d8f06f642ec",
+    "scope": {
+      "allow_page_membership_change": true,
+      "allow_page_order_change": true,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative",
+        "plan",
+        "page_copy",
+        "speech",
+        "design",
+        "blueprint",
+        "svg",
+        "review",
+        "output"
+      ],
+      "page_ids": [],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    },
+    "variant": null
+  },
+  "middle": {
+    "change": {
+      "description": "start work request",
+      "kind": "collaboration_update",
+      "operation_id": "04b63934-01d2-4942-990b-0c919e9f181b",
+      "operation_receipt": {
+        "format": "operation_receipt.v1",
+        "request_digest": "2fed63b5d4a4b50f5da685e9159e62dfc2867d0be6bb2cf1563774f92f0445f0",
+        "response": {
+          "affected_tasks": [
+            "5aa9d54d3eb6"
+          ],
+          "assurance": "host_attested",
+          "effective_scope": {
+            "allow_page_membership_change": true,
+            "allow_page_order_change": true,
+            "external_artifact_ref": null,
+            "layers": [
+              "review"
+            ],
+            "page_ids": [],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "paused_authorizations": [],
+          "prior_request_disposition": {
+            "background_request_ids": [],
+            "disposition": "superseded",
+            "request_id": "req-4d8f06f642ec"
+          },
+          "request_id": "req-39eb621c60f9",
+          "request_source_key": "f6a11dc2060ff10a3de3ecd05754b2695c4fd63bd5f32979a705ad985da47a24",
+          "revision_id": "d0accda0fb22464997ce291d4d7dd19c",
+          "status": "accepted"
+        }
+      },
+      "payload_digest": "2fed63b5d4a4b50f5da685e9159e62dfc2867d0be6bb2cf1563774f92f0445f0",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [],
+      "decisions": [],
+      "quality_profile": {
+        "content_review_requirement": "independent_model_or_human",
+        "override_decision_ref": null,
+        "requirement_origin": "default_new_argument"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": null,
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "independent-review:alternate-request",
+          "source_ref": {
+            "path": ".deckmaster/objects/60/605daa83a371de865fd2df339d5b4a67b0eec248d435e93d704cb5b558c98b54.txt",
+            "sha256": "605daa83a371de865fd2df339d5b4a67b0eec248d435e93d704cb5b558c98b54"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "review_only",
+        "pause_reason": null,
+        "paused": false,
+        "request_id": "req-39eb621c60f9",
+        "scope": {
+          "allow_page_membership_change": true,
+          "allow_page_order_change": true,
+          "external_artifact_ref": null,
+          "layers": [
+            "review"
+          ],
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T05:51:27.597194+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "created_at": "2026-10-15T05:51:27Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "outputs": {
+      "pptx": null,
+      "render_report": null,
+      "trace": null
+    },
+    "pages": [],
+    "parent_revision_id": "38ce2392201b4fc0a82d9167fa71a8f1",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "probe-source-replay-project",
+    "reviews": [],
+    "revision_id": "d0accda0fb22464997ce291d4d7dd19c",
+    "schema_version": "deck_document.v1",
+    "sources": [],
+    "task": {
+      "audience": "",
+      "brief": "One original bounded work request; no new production instruction.",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "live",
+      "presentation_mode_source": "default",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": [
+      {
+        "path": ".deckmaster/objects/25/252cd9cf01402cbb4131560902523df59fead1f1a2827ce5f3a64287745f5ca2.json",
+        "sha256": "252cd9cf01402cbb4131560902523df59fead1f1a2827ce5f3a64287745f5ca2"
+      }
+    ]
+  },
+  "response": {
+    "status": "already_started",
+    "request_id": "req-4d8f06f642ec",
+    "request_source_key": "2d21c7d36e1d1ae9043c9a69ae3b794ac8f42631d805f703a398e39a482e1b6f",
+    "request_state": "superseded",
+    "request": {
+      "background_request_ids": [],
+      "closed": false,
+      "closed_reason": null,
+      "content_intent": null,
+      "instruction_evidence": {
+        "actor_id": null,
+        "assurance": "host_attested",
+        "kind": "host_attested_instruction",
+        "presentation_ref": null,
+        "source_locator": "create:actual-input",
+        "source_ref": {
+          "path": ".deckmaster/objects/b9/b9f56ce3f7645df95719e3ddaf997804838c5c509d162be4a3675c3f403df7f7.json",
+          "sha256": "b9f56ce3f7645df95719e3ddaf997804838c5c509d162be4a3675c3f403df7f7"
+        },
+        "transport_receipt_ref": null
+      },
+      "intent": "full_deck",
+      "pause_reason": null,
+      "paused": false,
+      "request_id": "req-4d8f06f642ec",
+      "scope": {
+        "allow_page_membership_change": true,
+        "allow_page_order_change": true,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "plan",
+          "page_copy",
+          "speech",
+          "design",
+          "blueprint",
+          "svg",
+          "review",
+          "output"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "variant": null
+    },
+    "effective_scope": {
+      "allow_page_membership_change": true,
+      "allow_page_order_change": true,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative",
+        "plan",
+        "page_copy",
+        "speech",
+        "design",
+        "blueprint",
+        "svg",
+        "review",
+        "output"
+      ],
+      "page_ids": [],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    },
+    "request_revision_id": "38ce2392201b4fc0a82d9167fa71a8f1",
+    "current_request_id": "req-39eb621c60f9",
+    "current_request": {
+      "background_request_ids": [],
+      "closed": false,
+      "closed_reason": null,
+      "content_intent": null,
+      "instruction_evidence": {
+        "actor_id": null,
+        "assurance": "host_attested",
+        "kind": "host_attested_instruction",
+        "presentation_ref": null,
+        "source_locator": "independent-review:alternate-request",
+        "source_ref": {
+          "path": ".deckmaster/objects/60/605daa83a371de865fd2df339d5b4a67b0eec248d435e93d704cb5b558c98b54.txt",
+          "sha256": "605daa83a371de865fd2df339d5b4a67b0eec248d435e93d704cb5b558c98b54"
+        },
+        "transport_receipt_ref": null
+      },
+      "intent": "review_only",
+      "pause_reason": null,
+      "paused": false,
+      "request_id": "req-39eb621c60f9",
+      "scope": {
+        "allow_page_membership_change": true,
+        "allow_page_order_change": true,
+        "external_artifact_ref": null,
+        "layers": [
+          "review"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "variant": null
+    },
+    "revision_id": "52b298d3bf404eb6953fb3ead7300395",
+    "creates_request": false,
+    "refreshes_credit": false
+  },
+  "after": {
+    "change": {
+      "description": "start work request",
+      "kind": "collaboration_update",
+      "operation_id": "65822abe-93d4-4e33-8e88-0b7c91e18894",
+      "operation_receipt": {
+        "format": "operation_receipt.v1",
+        "request_digest": "e273ad4737241c2f09fa6777577edd251e3253cb2932dc968720b39b890742c2",
+        "response": {
+          "creates_request": false,
+          "current_request": {
+            "background_request_ids": [],
+            "closed": false,
+            "closed_reason": null,
+            "content_intent": null,
+            "instruction_evidence": {
+              "actor_id": null,
+              "assurance": "host_attested",
+              "kind": "host_attested_instruction",
+              "presentation_ref": null,
+              "source_locator": "independent-review:alternate-request",
+              "source_ref": {
+                "path": ".deckmaster/objects/60/605daa83a371de865fd2df339d5b4a67b0eec248d435e93d704cb5b558c98b54.txt",
+                "sha256": "605daa83a371de865fd2df339d5b4a67b0eec248d435e93d704cb5b558c98b54"
+              },
+              "transport_receipt_ref": null
+            },
+            "intent": "review_only",
+            "pause_reason": null,
+            "paused": false,
+            "request_id": "req-39eb621c60f9",
+            "scope": {
+              "allow_page_membership_change": true,
+              "allow_page_order_change": true,
+              "external_artifact_ref": null,
+              "layers": [
+                "review"
+              ],
+              "page_ids": [],
+              "page_manifest_ref": null,
+              "purpose": "working",
+              "subject": "deck"
+            },
+            "variant": null
+          },
+          "current_request_id": "req-39eb621c60f9",
+          "effective_scope": {
+            "allow_page_membership_change": true,
+            "allow_page_order_change": true,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "plan",
+              "page_copy",
+              "speech",
+              "design",
+              "blueprint",
+              "svg",
+              "review",
+              "output"
+            ],
+            "page_ids": [],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "refreshes_credit": false,
+          "request": {
+            "background_request_ids": [],
+            "closed": false,
+            "closed_reason": null,
+            "content_intent": null,
+            "instruction_evidence": {
+              "actor_id": null,
+              "assurance": "host_attested",
+              "kind": "host_attested_instruction",
+              "presentation_ref": null,
+              "source_locator": "create:actual-input",
+              "source_ref": {
+                "path": ".deckmaster/objects/b9/b9f56ce3f7645df95719e3ddaf997804838c5c509d162be4a3675c3f403df7f7.json",
+                "sha256": "b9f56ce3f7645df95719e3ddaf997804838c5c509d162be4a3675c3f403df7f7"
+              },
+              "transport_receipt_ref": null
+            },
+            "intent": "full_deck",
+            "pause_reason": null,
+            "paused": false,
+            "request_id": "req-4d8f06f642ec",
+            "scope": {
+              "allow_page_membership_change": true,
+              "allow_page_order_change": true,
+              "external_artifact_ref": null,
+              "layers": [
+                "narrative",
+                "plan",
+                "page_copy",
+                "speech",
+                "design",
+                "blueprint",
+                "svg",
+                "review",
+                "output"
+              ],
+              "page_ids": [],
+              "page_manifest_ref": null,
+              "purpose": "working",
+              "subject": "deck"
+            },
+            "variant": null
+          },
+          "request_id": "req-4d8f06f642ec",
+          "request_revision_id": "38ce2392201b4fc0a82d9167fa71a8f1",
+          "request_source_key": "2d21c7d36e1d1ae9043c9a69ae3b794ac8f42631d805f703a398e39a482e1b6f",
+          "request_state": "superseded",
+          "revision_id": "52b298d3bf404eb6953fb3ead7300395",
+          "status": "already_started"
+        }
+      },
+      "payload_digest": "e273ad4737241c2f09fa6777577edd251e3253cb2932dc968720b39b890742c2",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [],
+      "decisions": [],
+      "quality_profile": {
+        "content_review_requirement": "independent_model_or_human",
+        "override_decision_ref": null,
+        "requirement_origin": "default_new_argument"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": null,
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "independent-review:alternate-request",
+          "source_ref": {
+            "path": ".deckmaster/objects/60/605daa83a371de865fd2df339d5b4a67b0eec248d435e93d704cb5b558c98b54.txt",
+            "sha256": "605daa83a371de865fd2df339d5b4a67b0eec248d435e93d704cb5b558c98b54"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "review_only",
+        "pause_reason": null,
+        "paused": false,
+        "request_id": "req-39eb621c60f9",
+        "scope": {
+          "allow_page_membership_change": true,
+          "allow_page_order_change": true,
+          "external_artifact_ref": null,
+          "layers": [
+            "review"
+          ],
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T05:51:27.604574+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "created_at": "2026-10-15T05:51:27Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "outputs": {
+      "pptx": null,
+      "render_report": null,
+      "trace": null
+    },
+    "pages": [],
+    "parent_revision_id": "d0accda0fb22464997ce291d4d7dd19c",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "probe-source-replay-project",
+    "reviews": [],
+    "revision_id": "52b298d3bf404eb6953fb3ead7300395",
+    "schema_version": "deck_document.v1",
+    "sources": [],
+    "task": {
+      "audience": "",
+      "brief": "One original bounded work request; no new production instruction.",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "live",
+      "presentation_mode_source": "default",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": [
+      {
+        "path": ".deckmaster/objects/25/252cd9cf01402cbb4131560902523df59fead1f1a2827ce5f3a64287745f5ca2.json",
+        "sha256": "252cd9cf01402cbb4131560902523df59fead1f1a2827ce5f3a64287745f5ca2"
+      }
+    ]
+  },
+  "same_source_key": false,
+  "original_request_id": "req-4d8f06f642ec",
+  "current_request_id": "req-39eb621c60f9",
+  "request_recreated": true,
+  "original_credit": [
+    {
+      "page_id": "p1",
+      "budget_key": "req-4d8f06f642ec:initial:p1",
+      "calls": 1
+    }
+  ],
+  "new_credit": [
+    {
+      "page_id": "p1",
+      "budget_key": "req-39eb621c60f9:initial:p1",
+      "calls": 1
+    }
+  ],
+  "note": "Credit planner is pure; no image calls or actual consumed-credit claim is made."
+}

@@ -1,0 +1,429 @@
+[
+  {
+    "case": "trial-original-adoption-correct-envelope-readback",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "operation_envelope": {
+        "status": "committed",
+        "operation_id": "c007d6db-2cde-460d-baae-a1e0d4dcadfa",
+        "committed_revision_id": "c1e77a2a48b44f3ab53e5f8b497d9b38",
+        "current_revision_id": "c1e77a2a48b44f3ab53e5f8b497d9b38",
+        "request_digest": "a979c8f70a3fca3d14ca2ac608d70d9924b635dabfcb512061907d1e570af2bb",
+        "result_ref": {
+          "path": ".deckmaster/objects/37/37bdcf697a22bbe7a4ef64c6c2d96b4edc32b55501212de5bfab82c33ff07213.json",
+          "sha256": "37bdcf697a22bbe7a4ef64c6c2d96b4edc32b55501212de5bfab82c33ff07213"
+        },
+        "operation_result": {
+          "icon_checks": {},
+          "status": "adopted",
+          "revision_id": "c1e77a2a48b44f3ab53e5f8b497d9b38",
+          "candidate_ids": [
+            "candidate-20f3e701d4254315ad60ed47c8cf1a6f"
+          ],
+          "result_refs": [
+            {
+              "path": ".deckmaster/objects/f0/f0a1a8ac1015b2537e91d6f602d6218fec7e482d2aac14bef96dcfe9c4185dd0.json",
+              "sha256": "f0a1a8ac1015b2537e91d6f602d6218fec7e482d2aac14bef96dcfe9c4185dd0"
+            }
+          ],
+          "impact": [
+            {
+              "candidate_id": "candidate-20f3e701d4254315ad60ed47c8cf1a6f",
+              "candidate_ref": {
+                "path": ".deckmaster/objects/96/9665536af001f1e9887375b52b5328410aee97b00961da7f8dcb8288da55febe.json",
+                "sha256": "9665536af001f1e9887375b52b5328410aee97b00961da7f8dcb8288da55febe"
+              },
+              "result_kind": "content_update",
+              "stage": "content",
+              "result_ref": {
+                "path": ".deckmaster/objects/f0/f0a1a8ac1015b2537e91d6f602d6218fec7e482d2aac14bef96dcfe9c4185dd0.json",
+                "sha256": "f0a1a8ac1015b2537e91d6f602d6218fec7e482d2aac14bef96dcfe9c4185dd0"
+              },
+              "plan_input_ref": {
+                "path": ".deckmaster/objects/0f/0f5977378e2dbba1b52d696ffd8b6ac69cded1efe7b2ce99c72dcdd1ac38b659.json",
+                "sha256": "0f5977378e2dbba1b52d696ffd8b6ac69cded1efe7b2ce99c72dcdd1ac38b659"
+              },
+              "basis_digest": "cf4033a987e27b921b2072efb05a889156c55aafc186a23cccfffb1dffe0ee7c",
+              "mapping": [
+                {
+                  "page_id": "p1",
+                  "source_page_ids": [
+                    "p1"
+                  ],
+                  "relation": "retained"
+                },
+                {
+                  "page_id": "p2",
+                  "source_page_ids": [
+                    "p2"
+                  ],
+                  "relation": "retained"
+                }
+              ],
+              "page_order": [
+                "p1",
+                "p2"
+              ],
+              "superseded_tasks": [],
+              "downstream": [
+                "svg",
+                "svg_preview",
+                "ppt_preview",
+                "deck_outputs",
+                "quality_applicability"
+              ]
+            }
+          ],
+          "max_calls": 0
+        }
+      },
+      "alignment": "current",
+      "pages_and_nonnull_actual_output_preserved": true,
+      "no_new_allowance": true,
+      "correction": "Original run2 assertion read outer committed status; actual adoption had already succeeded."
+    }
+  },
+  {
+    "case": "R1-four-layer-legal-composite-rollback-on-R2-validator",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "accepted": {
+        "status": "accepted",
+        "project_id": "four-layers",
+        "revision_id": "1016dcbb3e89407b931ddcc6862e5927",
+        "requested_action": "task accept",
+        "result_refs": [
+          {
+            "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+            "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+          },
+          {
+            "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+            "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          },
+          {
+            "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+            "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+          },
+          {
+            "path": ".deckmaster/objects/38/382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a.json",
+            "sha256": "382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a"
+          }
+        ],
+        "pending_tasks": [],
+        "findings": [],
+        "next_action": "continue_within_request",
+        "input_alignment": "current",
+        "review_url": null,
+        "view_status": "view_arrives_with_workbench",
+        "evidence_level": "engineering",
+        "current_revision_id": "1016dcbb3e89407b931ddcc6862e5927",
+        "new_page_hashes": {
+          "p1": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3",
+          "p2": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+        },
+        "impact_summary": "Change all four actual layers, retain stable order",
+        "operation_result": {
+          "status": "accepted",
+          "revision_id": "1016dcbb3e89407b931ddcc6862e5927",
+          "variant": "input_revision",
+          "adopted": true,
+          "changed_layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech"
+          ],
+          "narrative_ref": {
+            "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+            "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+          },
+          "impact_summary": "Change all four actual layers, retain stable order",
+          "new_page_hashes": {
+            "p1": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3",
+            "p2": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          },
+          "plan_ref": {
+            "path": ".deckmaster/objects/38/382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a.json",
+            "sha256": "382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a"
+          },
+          "page_refs": [
+            {
+              "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+              "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+            },
+            {
+              "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+              "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+            }
+          ],
+          "result_refs": [
+            {
+              "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+              "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+            },
+            {
+              "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+              "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+            },
+            {
+              "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+              "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+            },
+            {
+              "path": ".deckmaster/objects/38/382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a.json",
+              "sha256": "382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a"
+            }
+          ],
+          "invalidated_outputs": [],
+          "effective_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "page_copy",
+              "plan",
+              "speech"
+            ],
+            "page_ids": [
+              "p1",
+              "p2"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "next_action": "continue_within_request"
+        },
+        "variant": "input_revision",
+        "adopted": true,
+        "changed_layers": [
+          "narrative",
+          "plan",
+          "page_copy",
+          "speech"
+        ],
+        "page_refs": [
+          {
+            "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+            "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+          },
+          {
+            "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+            "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          }
+        ],
+        "plan_ref": {
+          "path": ".deckmaster/objects/38/382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a.json",
+          "sha256": "382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a"
+        },
+        "narrative_ref": {
+          "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+          "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+        },
+        "invalidated_outputs": [],
+        "effective_scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "page_copy",
+            "plan",
+            "speech"
+          ],
+          "page_ids": [
+            "p1",
+            "p2"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        }
+      },
+      "duplicate_rejected": {
+        "type": "EnvelopeError",
+        "message": "(result)/payload/proposals: plan has exactly one proposal; no last-wins"
+      },
+      "late_speech_body_rejected": {
+        "type": "EnvelopeError",
+        "message": "(result)/payload/proposals: speech changes only notes and speech segments"
+      },
+      "exact_replay": {
+        "status": "already_applied",
+        "project_id": "four-layers",
+        "revision_id": "1016dcbb3e89407b931ddcc6862e5927",
+        "requested_action": "task accept",
+        "result_refs": [
+          {
+            "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+            "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+          },
+          {
+            "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+            "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          },
+          {
+            "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+            "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+          },
+          {
+            "path": ".deckmaster/objects/38/382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a.json",
+            "sha256": "382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a"
+          }
+        ],
+        "pending_tasks": [],
+        "findings": [],
+        "next_action": null,
+        "input_alignment": "current",
+        "review_url": null,
+        "view_status": "view_arrives_with_workbench",
+        "evidence_level": "engineering",
+        "current_revision_id": "1016dcbb3e89407b931ddcc6862e5927",
+        "new_page_hashes": {
+          "p1": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3",
+          "p2": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+        },
+        "impact_summary": "Change all four actual layers, retain stable order",
+        "operation_result": {
+          "adopted": true,
+          "changed_layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech"
+          ],
+          "effective_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "page_copy",
+              "plan",
+              "speech"
+            ],
+            "page_ids": [
+              "p1",
+              "p2"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "impact_summary": "Change all four actual layers, retain stable order",
+          "invalidated_outputs": [],
+          "narrative_ref": {
+            "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+            "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+          },
+          "new_page_hashes": {
+            "p1": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3",
+            "p2": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          },
+          "next_action": "continue_within_request",
+          "page_refs": [
+            {
+              "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+              "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+            },
+            {
+              "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+              "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+            }
+          ],
+          "plan_ref": {
+            "path": ".deckmaster/objects/38/382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a.json",
+            "sha256": "382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a"
+          },
+          "result_refs": [
+            {
+              "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+              "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+            },
+            {
+              "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+              "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+            },
+            {
+              "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+              "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+            },
+            {
+              "path": ".deckmaster/objects/38/382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a.json",
+              "sha256": "382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a"
+            }
+          ],
+          "revision_id": "1016dcbb3e89407b931ddcc6862e5927",
+          "status": "accepted",
+          "variant": "input_revision"
+        },
+        "same_revision": true,
+        "variant": "input_revision",
+        "adopted": true,
+        "changed_layers": [
+          "narrative",
+          "plan",
+          "page_copy",
+          "speech"
+        ],
+        "page_refs": [
+          {
+            "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+            "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+          },
+          {
+            "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+            "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          }
+        ],
+        "plan_ref": {
+          "path": ".deckmaster/objects/38/382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a.json",
+          "sha256": "382ba2791169d3f8d10659a7ae36d3d02e2882e9d4c2c75db3263af2c211d21a"
+        },
+        "narrative_ref": {
+          "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+          "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+        },
+        "invalidated_outputs": [],
+        "effective_scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "page_copy",
+            "plan",
+            "speech"
+          ],
+          "page_ids": [
+            "p1",
+            "p2"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        }
+      }
+    }
+  },
+  {
+    "case": "F8-honest-old03-and-oldR1-mappingless-speech-continuation",
+    "status": "FAIL",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "AttributeError",
+    "message": "'NoneType' object has no attribute 'get'",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_common.py\", line 83, in case\n    detail = fn()\n             ^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_remaining_r2.py\", line 66, in legacy_speech_case\n    m.request(project,store,sc,intent='content_only',content_intent='speech_only',text='Explicitly write only this old p1 cue, preserve copy and visuals')\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_common.py\", line 200, in request\n    if not r.get('closed'):\n           ^^^^^\nAttributeError: 'NoneType' object has no attribute 'get'\n"
+  },
+  {
+    "case": "style-only-input-binding-bounded-proposal-zero-calls",
+    "status": "FAIL",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "NameError",
+    "message": "name 'editing' is not defined",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_common.py\", line 83, in case\n    detail = fn()\n             ^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_remaining_r2.py\", line 106, in style_binding_case\n    m.call('unrelated copy edit',editing.edit_page,project,page=page,base_revision=doc['revision_id'],page_hash=doc['pages'][0]['page']['sha256'],operation_id=m.op())\n                                 ^^^^^^^\nNameError: name 'editing' is not defined\n"
+  }
+]

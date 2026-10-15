@@ -1,0 +1,1188 @@
+[
+  {
+    "case": "G11-correct-blank-notes-readback-and-exact-final-file",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "included_sha256": "0a7ddf15200e9128ac8e77a3499c1f54d1acd2978756cd968169ed981f617a04",
+      "excluded_sha256": "7112fabd0de44ad4d1a0267e5737acfb45df1f28323b6cdae40ccd3f4d85f60f",
+      "notes_included": [
+        {
+          "slide": 1,
+          "page_id": "p1",
+          "notes": "Original Chinese 备注 😀 — qualification retained.",
+          "notes_sha256": "d212d4530e6599d00c2d51449c3eff236bf6b784c8b29377c039d80e049f786c"
+        }
+      ],
+      "notes_excluded": [
+        {
+          "slide": 1,
+          "page_id": "p1",
+          "notes": "",
+          "notes_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "selected_output": {
+        "status": "blocked",
+        "project_id": "actual-projection",
+        "artifact_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+        "control_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+        "revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+        "selected_output": {
+          "artifact_ref": {
+            "path": ".deckmaster/objects/b0/b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9.json",
+            "sha256": "b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9"
+          },
+          "subject_ref": {
+            "path": ".deckmaster/objects/0a/0a7ddf15200e9128ac8e77a3499c1f54d1acd2978756cd968169ed981f617a04.pptx",
+            "sha256": "0a7ddf15200e9128ac8e77a3499c1f54d1acd2978756cd968169ed981f617a04"
+          },
+          "file_sha256": "0a7ddf15200e9128ac8e77a3499c1f54d1acd2978756cd968169ed981f617a04",
+          "original_file_sha256": "34eaa73d739e13d28514d7c59564108f105991f3657d291e23bcda6fb835174b",
+          "notes_policy": {
+            "selection": "pptx_notes",
+            "source": "explicit",
+            "speech_mode": "none",
+            "plan_sha256": "a32df6beb85a3895d4621354590da68bc77c5635329887c472973932303e2863",
+            "newlines": "LF",
+            "pptx_notes": true,
+            "separate_script": false,
+            "pages": [
+              {
+                "page_id": "p1",
+                "page_sha256": "2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3",
+                "notes_sha256": "d212d4530e6599d00c2d51449c3eff236bf6b784c8b29377c039d80e049f786c"
+              }
+            ]
+          },
+          "projection": "sanitized_public"
+        },
+        "engineering_ready": false,
+        "engineering": {
+          "ready": false,
+          "summary": {
+            "status": "not_evaluated",
+            "current_outputs": {
+              "path": ".deckmaster/objects/b0/b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9.json",
+              "sha256": "b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9"
+            },
+            "dimensions": {},
+            "stale": [],
+            "missing_dimensions": [
+              "blueprint_content:p1",
+              "blueprint_fidelity:p1",
+              "content:p1",
+              "conversion:p1",
+              "privacy:p1",
+              "readability:p1"
+            ],
+            "output_facts": {
+              "render_report_missing": true,
+              "completeness": [
+                {
+                  "page_id": "p1",
+                  "code": "missing_svg"
+                }
+              ]
+            },
+            "dimension_reasons": {},
+            "input_alignment": "current"
+          }
+        },
+        "review_status": "not_evaluated",
+        "unresolved": {
+          "missing_dimensions": [
+            "blueprint_content:p1",
+            "blueprint_fidelity:p1",
+            "content:p1",
+            "conversion:p1",
+            "privacy:p1",
+            "readability:p1"
+          ],
+          "failed_dimensions": []
+        },
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "eligibility": {
+          "schema_version": "eligibility.v1",
+          "allowed": false,
+          "action": "export.delivery",
+          "enforcement": "active",
+          "scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "output",
+              "page_copy",
+              "review",
+              "speech"
+            ],
+            "page_ids": [
+              "p1"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "required_artifact_refs": [
+            {
+              "path": ".deckmaster/objects/b0/b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9.json",
+              "sha256": "b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9"
+            },
+            {
+              "path": ".deckmaster/objects/2d/2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3.json",
+              "sha256": "2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3"
+            }
+          ],
+          "required_decision_topics": [
+            "delivery_acceptance"
+          ],
+          "missing_decision_topics": [
+            "delivery_acceptance"
+          ],
+          "reason_codes": [
+            "decision_needed",
+            "authority_insufficient"
+          ],
+          "reasons": [
+            {
+              "code": "decision_needed",
+              "detail": "required business decisions are missing or ineffective: delivery_acceptance",
+              "missing": "decision",
+              "topics": [
+                "delivery_acceptance"
+              ],
+              "card": {
+                "kind": "decision_card",
+                "topics": [
+                  "delivery_acceptance"
+                ],
+                "projection": "delivery_acceptance",
+                "subject_refs": [],
+                "scope": {
+                  "allow_page_membership_change": false,
+                  "allow_page_order_change": false,
+                  "external_artifact_ref": null,
+                  "layers": [
+                    "page_copy",
+                    "speech",
+                    "review",
+                    "output"
+                  ],
+                  "page_ids": [
+                    "p1"
+                  ],
+                  "page_manifest_ref": null,
+                  "purpose": "working",
+                  "subject": "deck"
+                }
+              }
+            },
+            {
+              "code": "authority_insufficient",
+              "detail": "no authorization names 'export.delivery' within the request scope",
+              "action": "export.delivery"
+            }
+          ],
+          "responsible_role": "user",
+          "next_action": "record an accepted decision (or an effective delegate) for delivery_acceptance, then retry export.delivery",
+          "decision_card_ref_or_projection": {
+            "kind": "decision_card",
+            "topics": [
+              "delivery_acceptance"
+            ],
+            "projection": "delivery_acceptance",
+            "subject_refs": [],
+            "scope": {
+              "allow_page_membership_change": false,
+              "allow_page_order_change": false,
+              "external_artifact_ref": null,
+              "layers": [
+                "page_copy",
+                "speech",
+                "review",
+                "output"
+              ],
+              "page_ids": [
+                "p1"
+              ],
+              "page_manifest_ref": null,
+              "purpose": "working",
+              "subject": "deck"
+            }
+          },
+          "dependency_slices": [],
+          "eligibility_digest": "db16abcd43ffa5ff60c52025b5ea71c093e9a0f9b74a8b4ce47edd000f904d19",
+          "authority_assurance": "host_attested",
+          "request_id": "req-04da76831fe7",
+          "artifact_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+          "control_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+          "facts_only": false,
+          "binding": null,
+          "preproduction": null,
+          "delivery": {
+            "professional": {
+              "required": false,
+              "satisfied": true,
+              "human_signoff": false,
+              "evidence": {
+                "professional_use": "not_evaluated",
+                "desktop_editing": "not_evaluated"
+              },
+              "reviews_considered": 0,
+              "gap_reasons": [],
+              "reviews": []
+            },
+            "output_pptx": {
+              "path": ".deckmaster/objects/b0/b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9.json",
+              "sha256": "b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9"
+            },
+            "artifact_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+            "control_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73"
+          },
+          "targets": {
+            "page_ids": null,
+            "layers": [],
+            "subject": null
+          }
+        },
+        "collaboration": {
+          "schema_version": "eligibility.v1",
+          "allowed": false,
+          "action": "export.delivery",
+          "enforcement": "active",
+          "scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "output",
+              "page_copy",
+              "review",
+              "speech"
+            ],
+            "page_ids": [
+              "p1"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "required_artifact_refs": [
+            {
+              "path": ".deckmaster/objects/b0/b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9.json",
+              "sha256": "b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9"
+            },
+            {
+              "path": ".deckmaster/objects/2d/2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3.json",
+              "sha256": "2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3"
+            }
+          ],
+          "required_decision_topics": [
+            "delivery_acceptance"
+          ],
+          "missing_decision_topics": [
+            "delivery_acceptance"
+          ],
+          "reason_codes": [
+            "decision_needed",
+            "authority_insufficient"
+          ],
+          "reasons": [
+            {
+              "code": "decision_needed",
+              "detail": "required business decisions are missing or ineffective: delivery_acceptance",
+              "missing": "decision",
+              "topics": [
+                "delivery_acceptance"
+              ],
+              "card": {
+                "kind": "decision_card",
+                "topics": [
+                  "delivery_acceptance"
+                ],
+                "projection": "delivery_acceptance",
+                "subject_refs": [],
+                "scope": {
+                  "allow_page_membership_change": false,
+                  "allow_page_order_change": false,
+                  "external_artifact_ref": null,
+                  "layers": [
+                    "page_copy",
+                    "speech",
+                    "review",
+                    "output"
+                  ],
+                  "page_ids": [
+                    "p1"
+                  ],
+                  "page_manifest_ref": null,
+                  "purpose": "working",
+                  "subject": "deck"
+                }
+              }
+            },
+            {
+              "code": "authority_insufficient",
+              "detail": "no authorization names 'export.delivery' within the request scope",
+              "action": "export.delivery"
+            }
+          ],
+          "responsible_role": "user",
+          "next_action": "record an accepted decision (or an effective delegate) for delivery_acceptance, then retry export.delivery",
+          "decision_card_ref_or_projection": {
+            "kind": "decision_card",
+            "topics": [
+              "delivery_acceptance"
+            ],
+            "projection": "delivery_acceptance",
+            "subject_refs": [],
+            "scope": {
+              "allow_page_membership_change": false,
+              "allow_page_order_change": false,
+              "external_artifact_ref": null,
+              "layers": [
+                "page_copy",
+                "speech",
+                "review",
+                "output"
+              ],
+              "page_ids": [
+                "p1"
+              ],
+              "page_manifest_ref": null,
+              "purpose": "working",
+              "subject": "deck"
+            }
+          },
+          "dependency_slices": [],
+          "eligibility_digest": "db16abcd43ffa5ff60c52025b5ea71c093e9a0f9b74a8b4ce47edd000f904d19",
+          "authority_assurance": "host_attested",
+          "request_id": "req-04da76831fe7",
+          "artifact_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+          "control_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+          "facts_only": false,
+          "binding": null,
+          "preproduction": null,
+          "delivery": {
+            "professional": {
+              "required": false,
+              "satisfied": true,
+              "human_signoff": false,
+              "evidence": {
+                "professional_use": "not_evaluated",
+                "desktop_editing": "not_evaluated"
+              },
+              "reviews_considered": 0,
+              "gap_reasons": [],
+              "reviews": []
+            },
+            "output_pptx": {
+              "path": ".deckmaster/objects/b0/b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9.json",
+              "sha256": "b052e94276de93e4a9b7afdcce3d90deebf9f1dd688c3b39b72b9f2155506ec9"
+            },
+            "artifact_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73",
+            "control_revision_id": "95225b7a9ebc48b195d17f1fa8b12c73"
+          },
+          "targets": {
+            "page_ids": null,
+            "layers": [],
+            "subject": null
+          }
+        },
+        "reason_codes": [
+          "decision_needed",
+          "authority_insufficient",
+          "engineering_checks_required"
+        ],
+        "next_action": "record an accepted decision (or an effective delegate) for delivery_acceptance, then retry export.delivery"
+      },
+      "wrong_file_error": "file_path: candidate_not_selected_output: file differs from both exact output projections",
+      "source_whole_tree_unchanged_by_queries": true,
+      "fixture_limit": "Actual PPTX/sanitize/readback; engineering association is L1 seeded, no full-pipeline/real reviewer/human PASS."
+    }
+  },
+  {
+    "case": "G03-G08-legal-merge-split-newIDs-frozen-source-scope",
+    "status": "FAIL",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "EligibilityBlocked",
+    "message": "eligibility/content.operation: required business decisions are missing or ineffective: direction",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/probe_behavior.py\", line 83, in case\n    detail = fn()\n             ^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/probe_tail.py\", line 68, in bounded_derivation\n    committed=m.call('commit '+action,m.content_ops.commit,project,plan_id=planned['plan_id'],base_revision=doc['revision_id'],operation_id=m.op())\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/probe_behavior.py\", line 52, in call\n    value = fn(*args, **kwargs)\n            ^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/operations.py\", line 172, in wrapped\n    return function(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/content_ops.py\", line 196, in commit\n    eligibility.guard(store, doc, \"content.operation\", context={\n  File \"/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/eligibility.py\", line 1609, in guard\n    raise EligibilityBlocked(decision)\ndeck_master.eligibility.EligibilityBlocked: eligibility/content.operation: required business decisions are missing or ineffective: direction\n"
+  },
+  {
+    "case": "G01-G12-installed-CLI-real-HTTP-shared-gates",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "cli_created": {
+        "status": "created",
+        "project_id": "cli-default",
+        "revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+        "requested_action": "create",
+        "result_refs": [],
+        "pending_tasks": [
+          {
+            "task_id": "d6b7a6c8d36d",
+            "operation_id": "compose-2f21b9a674d0",
+            "kind": "compose",
+            "intent": "initial",
+            "method_release": {
+              "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+              "release_id": "7a8578baa210-8d52fd31f7d7"
+            },
+            "current_method_release": {
+              "release_id": "7a8578baa210-8d52fd31f7d7",
+              "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b"
+            },
+            "method_basis_status": "current",
+            "review_stage": "final",
+            "status": "awaiting_host",
+            "scope_pages": [],
+            "instruction": "按材料读出用途、权威与冲突，建立受众变化目标与具体缺口：提交 maturity=framing 的 Narrative 作为提案（payload.narrative）。不得提交完整 Page、图像、SVG 或任何用户决定。",
+            "inputs": [],
+            "dispatch_revision": "59b3635ec63d434f80757cd35fd39cfb",
+            "produced_against": "2627f54a5d3290bbf133c36338a3a8631338023e82f503029871891f564f2e99",
+            "call_allowances": [],
+            "sources": [],
+            "resolved_design_context": {
+              "allowed_asset_ids": [],
+              "assets": [],
+              "canvas": {
+                "fit": "contain",
+                "height_px": 900,
+                "slide_height_in": 7.5,
+                "slide_width_in": 13.333333333333334,
+                "width_px": 1600
+              },
+              "default_style_id": "default",
+              "fonts": [
+                {
+                  "asset_id": null,
+                  "face": "Regular",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "body",
+                  "weight": 400
+                },
+                {
+                  "asset_id": null,
+                  "face": "Bold",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "heading",
+                  "weight": 700
+                }
+              ],
+              "language": "zh-CN",
+              "styles": [
+                {
+                  "colors": {
+                    "accent": "#1478FF",
+                    "background": "#FFFFFF",
+                    "text": "#14213D"
+                  },
+                  "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+                  "style_id": "default",
+                  "typography": {
+                    "auxiliary_size_pt": 12,
+                    "body_font_id": "body",
+                    "body_size_pt": 18,
+                    "heading_font_id": "heading",
+                    "heading_size_pt": 30
+                  }
+                }
+              ]
+            },
+            "method_resources": [
+              {
+                "id": "source-reading",
+                "relative_path": "references/source-reading.md",
+                "path": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+                "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+              },
+              {
+                "id": "content-methods",
+                "relative_path": "references/content-methods.md",
+                "path": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+                "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+              },
+              {
+                "id": "content-examples",
+                "relative_path": "references/content-examples.md",
+                "path": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+                "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+              }
+            ],
+            "project_context": {
+              "task": {
+                "audience": "",
+                "brief": "L1 independent installed CLI create",
+                "existing_decisions": [],
+                "page_limit": null,
+                "presentation_mode": "live",
+                "presentation_mode_source": "default",
+                "scenario": "",
+                "title": "Deck task"
+              },
+              "input_digest": "205e60201419d28807db40cbc55f9a02cfe240e899b0fc9bd090a20e4130568d",
+              "dispatch_revision": "59b3635ec63d434f80757cd35fd39cfb",
+              "current_revision": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+              "context_status": "current",
+              "input_alignment": "no_content"
+            },
+            "staging_dir": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run7/cli-default/.deckmaster/staging/compose-2f21b9a674d0",
+            "collaboration_binding": {
+              "adoption_policy": "proposal_only",
+              "authorization_ref": null,
+              "decision_refs": [],
+              "eligibility_basis": [
+                {
+                  "identity": "brief",
+                  "kind": "task_fact",
+                  "projection": "value",
+                  "ref": null,
+                  "sha256": "635a3d6de5f295ff68eb3a1433d27fff0a808115f29350c5cb0315526f50d8e9"
+                }
+              ],
+              "eligibility_digest": "23420c3c49d4aca884f121cd10164d33f06f949df29b857b00b2e7e8cce771d4",
+              "executor_type": "host",
+              "phase": "framing",
+              "request_id": "req-b3040ae3be91",
+              "write_scope": {
+                "allow_page_membership_change": false,
+                "allow_page_order_change": false,
+                "external_artifact_ref": null,
+                "layers": [
+                  "narrative"
+                ],
+                "page_ids": [],
+                "page_manifest_ref": null,
+                "purpose": "exploratory",
+                "subject": "deck"
+              }
+            },
+            "execution_ref": null,
+            "protocol_version": "compose.v2",
+            "required_capabilities": [
+              "compose.v2",
+              "collaboration.v1",
+              "rc3-entry.v1"
+            ],
+            "source_reading": []
+          }
+        ],
+        "findings": [],
+        "next_action": "submit_host_results",
+        "input_alignment": "no_content",
+        "review_url": null,
+        "view_status": "view_arrives_with_workbench",
+        "evidence_level": "engineering",
+        "sources_adopted": [],
+        "sources_skipped": [],
+        "sources_errored": [],
+        "completion": {
+          "state": "in_progress",
+          "request_id": "req-b3040ae3be91",
+          "intent": "full_deck",
+          "content_intent": null,
+          "artifact_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+          "effective_scope": {
+            "allow_page_membership_change": true,
+            "allow_page_order_change": true,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "plan",
+              "page_copy",
+              "speech",
+              "design",
+              "blueprint",
+              "svg",
+              "review",
+              "output"
+            ],
+            "page_ids": [],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "outputs": [],
+          "checks": [
+            {
+              "kind": "requested_content",
+              "status": "not_evaluated",
+              "basis": "no framing or argument Narrative exists yet"
+            }
+          ],
+          "missing": [],
+          "responsible_role": "content",
+          "next_action": "no framing or argument Narrative exists yet"
+        }
+      },
+      "http_show": {
+        "schema_version": "collaboration_response.v1",
+        "status": "ok",
+        "project_id": "cli-default",
+        "artifact_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+        "control_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+        "operation_id": null,
+        "result": {
+          "project_id": "cli-default",
+          "revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+          "minimum_writer": "rc3-entry.v1",
+          "migrated": true,
+          "authority_policy": "traceable",
+          "quality_profile": {
+            "content_review_requirement": "independent_model_or_human",
+            "override_decision_ref": null,
+            "requirement_origin": "default_new_argument"
+          },
+          "request": {
+            "background_request_ids": [],
+            "closed": false,
+            "closed_reason": null,
+            "content_intent": null,
+            "instruction_evidence": {
+              "actor_id": null,
+              "assurance": "host_attested",
+              "kind": "host_attested_instruction",
+              "presentation_ref": null,
+              "source_locator": "create:actual-input",
+              "source_ref": {
+                "path": ".deckmaster/objects/84/840853be9554b21d50aeb954eb2276b1749c29aa8b6f0dc86ed5d5d88d621502.json",
+                "sha256": "840853be9554b21d50aeb954eb2276b1749c29aa8b6f0dc86ed5d5d88d621502"
+              },
+              "transport_receipt_ref": null
+            },
+            "intent": "full_deck",
+            "pause_reason": null,
+            "paused": false,
+            "request_id": "req-b3040ae3be91",
+            "scope": {
+              "allow_page_membership_change": true,
+              "allow_page_order_change": true,
+              "external_artifact_ref": null,
+              "layers": [
+                "narrative",
+                "plan",
+                "page_copy",
+                "speech",
+                "design",
+                "blueprint",
+                "svg",
+                "review",
+                "output"
+              ],
+              "page_ids": [],
+              "page_manifest_ref": null,
+              "purpose": "working",
+              "subject": "deck"
+            },
+            "variant": null
+          },
+          "decisions": [],
+          "authorizations": [],
+          "request_source_key": "1c79745222cd4937799167d2f550a6b18f0daf0061b852e41267451a426ad12a",
+          "effective_decisions": [],
+          "effective_authorizations": [],
+          "blocking_cards": [
+            {
+              "action": "dispatch.blueprint",
+              "decision": {
+                "schema_version": "eligibility.v1",
+                "allowed": false,
+                "action": "dispatch.blueprint",
+                "enforcement": "active",
+                "scope": {
+                  "allow_page_membership_change": true,
+                  "allow_page_order_change": true,
+                  "external_artifact_ref": null,
+                  "layers": [
+                    "blueprint",
+                    "design",
+                    "narrative",
+                    "output",
+                    "page_copy",
+                    "plan",
+                    "review",
+                    "speech",
+                    "svg"
+                  ],
+                  "page_ids": [],
+                  "page_manifest_ref": null,
+                  "purpose": "working",
+                  "subject": "deck"
+                },
+                "required_artifact_refs": [],
+                "required_decision_topics": [],
+                "missing_decision_topics": [],
+                "reason_codes": [
+                  "authority_insufficient",
+                  "preproduction_blocked"
+                ],
+                "reasons": [
+                  {
+                    "code": "authority_insufficient",
+                    "detail": "no authorization names 'dispatch.blueprint' within the request scope",
+                    "action": "dispatch.blueprint"
+                  },
+                  {
+                    "code": "preproduction_blocked",
+                    "detail": "the preproduction content review does not pass on the current manuscript; a review draft can still be returned",
+                    "requirement": "independent_model_or_human",
+                    "review_status": "no_manuscript",
+                    "missing_units": [
+                      "argument",
+                      "page_copy",
+                      "progression"
+                    ],
+                    "open_findings": 0
+                  }
+                ],
+                "responsible_role": "user",
+                "next_action": "grant an execute authorization naming 'dispatch.blueprint' within the request scope",
+                "decision_card_ref_or_projection": {
+                  "kind": "authorization_card",
+                  "action": "dispatch.blueprint",
+                  "required_actions": [
+                    "dispatch.blueprint"
+                  ],
+                  "projection": null,
+                  "reason": "authority_insufficient",
+                  "detail": "no authorization names 'dispatch.blueprint' within the request scope"
+                },
+                "dependency_slices": [],
+                "eligibility_digest": "8cdbaf210eb090059d99cca90adc4a7c4064e9ea7c339a450d161a931c28a7f7",
+                "authority_assurance": "host_attested",
+                "request_id": "req-b3040ae3be91",
+                "artifact_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+                "control_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+                "facts_only": false,
+                "binding": null,
+                "preproduction": {
+                  "requirement": "independent_model_or_human",
+                  "declared_requirement": "independent_model_or_human",
+                  "requirement_origin": "default_new_argument",
+                  "requirement_reasons": [],
+                  "required": false,
+                  "satisfied": false,
+                  "status": "no_manuscript",
+                  "units": [
+                    "argument",
+                    "page_copy",
+                    "progression"
+                  ],
+                  "satisfied_units": [],
+                  "missing_units": [
+                    "argument",
+                    "page_copy",
+                    "progression"
+                  ],
+                  "blocking_findings": [],
+                  "review_refs": [],
+                  "needs_reviewer": false,
+                  "via": null,
+                  "reasons": []
+                },
+                "delivery": null,
+                "targets": {
+                  "page_ids": null,
+                  "layers": [],
+                  "subject": null
+                }
+              }
+            },
+            {
+              "action": "export.delivery",
+              "decision": {
+                "schema_version": "eligibility.v1",
+                "allowed": false,
+                "action": "export.delivery",
+                "enforcement": "active",
+                "scope": {
+                  "allow_page_membership_change": true,
+                  "allow_page_order_change": true,
+                  "external_artifact_ref": null,
+                  "layers": [
+                    "blueprint",
+                    "design",
+                    "narrative",
+                    "output",
+                    "page_copy",
+                    "plan",
+                    "review",
+                    "speech",
+                    "svg"
+                  ],
+                  "page_ids": [],
+                  "page_manifest_ref": null,
+                  "purpose": "working",
+                  "subject": "deck"
+                },
+                "required_artifact_refs": [],
+                "required_decision_topics": [
+                  "delivery_acceptance"
+                ],
+                "missing_decision_topics": [
+                  "delivery_acceptance"
+                ],
+                "reason_codes": [
+                  "decision_needed",
+                  "authority_insufficient"
+                ],
+                "reasons": [
+                  {
+                    "code": "decision_needed",
+                    "detail": "required business decisions are missing or ineffective: delivery_acceptance",
+                    "missing": "decision",
+                    "topics": [
+                      "delivery_acceptance"
+                    ],
+                    "card": {
+                      "kind": "decision_card",
+                      "topics": [
+                        "delivery_acceptance"
+                      ],
+                      "projection": "delivery_acceptance",
+                      "subject_refs": [],
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "narrative",
+                          "plan",
+                          "page_copy",
+                          "speech",
+                          "design",
+                          "blueprint",
+                          "svg",
+                          "review",
+                          "output"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      }
+                    }
+                  },
+                  {
+                    "code": "authority_insufficient",
+                    "detail": "no authorization names 'export.delivery' within the request scope",
+                    "action": "export.delivery"
+                  }
+                ],
+                "responsible_role": "user",
+                "next_action": "record an accepted decision (or an effective delegate) for delivery_acceptance, then retry export.delivery",
+                "decision_card_ref_or_projection": {
+                  "kind": "decision_card",
+                  "topics": [
+                    "delivery_acceptance"
+                  ],
+                  "projection": "delivery_acceptance",
+                  "subject_refs": [],
+                  "scope": {
+                    "allow_page_membership_change": true,
+                    "allow_page_order_change": true,
+                    "external_artifact_ref": null,
+                    "layers": [
+                      "narrative",
+                      "plan",
+                      "page_copy",
+                      "speech",
+                      "design",
+                      "blueprint",
+                      "svg",
+                      "review",
+                      "output"
+                    ],
+                    "page_ids": [],
+                    "page_manifest_ref": null,
+                    "purpose": "working",
+                    "subject": "deck"
+                  }
+                },
+                "dependency_slices": [],
+                "eligibility_digest": "670cd603f9cf6157c005f8867a462c9e3221af8eea32bc74a3307c5f1c9cdd12",
+                "authority_assurance": "host_attested",
+                "request_id": "req-b3040ae3be91",
+                "artifact_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+                "control_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+                "facts_only": false,
+                "binding": null,
+                "preproduction": null,
+                "delivery": {
+                  "professional": {
+                    "required": false,
+                    "satisfied": true,
+                    "human_signoff": false,
+                    "evidence": {
+                      "professional_use": "not_evaluated",
+                      "desktop_editing": "not_evaluated"
+                    },
+                    "reviews_considered": 0,
+                    "gap_reasons": [],
+                    "reviews": []
+                  },
+                  "output_pptx": null,
+                  "artifact_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+                  "control_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd"
+                },
+                "targets": {
+                  "page_ids": null,
+                  "layers": [],
+                  "subject": null
+                }
+              }
+            }
+          ],
+          "capabilities": {
+            "schema_version": "host_capabilities.v1",
+            "package_version": "1.0.0rc3",
+            "protocol_capabilities": [
+              "collaboration.v1",
+              "rc3-entry.v1"
+            ],
+            "installation_identity": {
+              "module_path": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+              "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+              "python_executable": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/bin/python",
+              "python_prefix": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv",
+              "method_root": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/resources/skill",
+              "method_source": "packaged",
+              "source": null,
+              "install": {
+                "release_id": "7a8578baa210-8d52fd31f7d7",
+                "source_sha": "7a8578baa210a92b92ae98922ff3236edf4d5975",
+                "source_tree": null,
+                "source_dirty": false,
+                "package_version": "1.0.0rc3",
+                "wheel_sha256": "8d52fd31f7d7321876973e0980401d8a834edfa744cd0bcf5f1b908d1b88e8ee",
+                "status": "candidate_ready"
+              },
+              "metadata_version": "1.0.0rc3"
+            },
+            "status": "ready",
+            "verified_user_events": false,
+            "independent_review_receipts": false,
+            "human_review_receipts": false,
+            "adapter_version": null,
+            "providers": [],
+            "evidence_kinds": [
+              "host_attested_instruction"
+            ],
+            "assurance": "host_attested",
+            "methods": [
+              {
+                "id": "collaboration-routing",
+                "relative_path": "references/collaboration-routing.md",
+                "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+                "available": true
+              },
+              {
+                "id": "physical-units",
+                "relative_path": "references/physical-units.md",
+                "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3",
+                "available": true
+              },
+              {
+                "id": "style-calibration",
+                "relative_path": "references/style-calibration.md",
+                "sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f",
+                "available": true
+              },
+              {
+                "id": "candidates-and-stages",
+                "relative_path": "references/candidates-and-stages.md",
+                "sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec",
+                "available": true
+              },
+              {
+                "id": "icon-quality",
+                "relative_path": "references/icon-quality.md",
+                "sha256": "a178377f8d956c6bc42b534905962c57073b615d58ddde566dffdef5314a000b",
+                "available": true
+              },
+              {
+                "id": "visual-reference",
+                "relative_path": "references/visual-reference.md",
+                "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52",
+                "available": true
+              },
+              {
+                "id": "source-reading",
+                "relative_path": "references/source-reading.md",
+                "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+                "available": true
+              },
+              {
+                "id": "content-methods",
+                "relative_path": "references/content-methods.md",
+                "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+                "available": true
+              },
+              {
+                "id": "content-examples",
+                "relative_path": "references/content-examples.md",
+                "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+                "available": true
+              },
+              {
+                "id": "content-calibration",
+                "relative_path": "references/content-calibration.md",
+                "sha256": "bb672652bf1f0e7c1248a423af8ce432793bc0eb2fd4905c9a423ebea0a9718c",
+                "available": true
+              },
+              {
+                "id": "input-update",
+                "relative_path": "references/input-update.md",
+                "sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6",
+                "available": true
+              },
+              {
+                "id": "blueprint-svg",
+                "relative_path": "references/blueprint-svg.md",
+                "sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e",
+                "available": true
+              },
+              {
+                "id": "review-and-repair",
+                "relative_path": "references/review-and-repair.md",
+                "sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a",
+                "available": true
+              }
+            ],
+            "method_release": {
+              "release_id": "7a8578baa210-8d52fd31f7d7",
+              "methods_sha256": "2da8f4a9453b304c9e536b4ec1e1af1bed8a1aed85b1f7fa21cfa9d99c5b9670"
+            },
+            "review_channel_status": "needs_reviewer",
+            "limitations": [
+              "Host-attested instructions do not verify human identity",
+              "Method availability does not prove a Host read or applied the method",
+              "No strict identity/review channel is implied by a CLI call"
+            ]
+          },
+          "completion": {
+            "state": "in_progress",
+            "request_id": "req-b3040ae3be91",
+            "intent": "full_deck",
+            "content_intent": null,
+            "artifact_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+            "effective_scope": {
+              "allow_page_membership_change": true,
+              "allow_page_order_change": true,
+              "external_artifact_ref": null,
+              "layers": [
+                "narrative",
+                "plan",
+                "page_copy",
+                "speech",
+                "design",
+                "blueprint",
+                "svg",
+                "review",
+                "output"
+              ],
+              "page_ids": [],
+              "page_manifest_ref": null,
+              "purpose": "working",
+              "subject": "deck"
+            },
+            "outputs": [],
+            "checks": [
+              {
+                "kind": "requested_content",
+                "status": "not_evaluated",
+                "basis": "no framing or argument Narrative exists yet"
+              }
+            ],
+            "missing": [],
+            "responsible_role": "content",
+            "next_action": "no framing or argument Narrative exists yet"
+          }
+        },
+        "error": null,
+        "next_action": "inspect_current_state"
+      },
+      "eligibility": {
+        "schema_version": "collaboration_response.v1",
+        "status": "ok",
+        "project_id": "cli-default",
+        "artifact_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+        "control_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+        "operation_id": null,
+        "result": {
+          "schema_version": "eligibility.v1",
+          "allowed": true,
+          "action": "dispatch.compose",
+          "enforcement": "active",
+          "scope": {
+            "allow_page_membership_change": true,
+            "allow_page_order_change": true,
+            "external_artifact_ref": null,
+            "layers": [
+              "blueprint",
+              "design",
+              "narrative",
+              "output",
+              "page_copy",
+              "plan",
+              "review",
+              "speech",
+              "svg"
+            ],
+            "page_ids": [],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "required_artifact_refs": [],
+          "required_decision_topics": [],
+          "missing_decision_topics": [],
+          "reason_codes": [],
+          "reasons": [],
+          "responsible_role": "host",
+          "next_action": null,
+          "decision_card_ref_or_projection": null,
+          "dependency_slices": [],
+          "eligibility_digest": "7e3cf1748393e150936e0727a3d20807a5609b65898d55758ff94b6135bcae09",
+          "authority_assurance": "host_attested",
+          "request_id": "req-b3040ae3be91",
+          "artifact_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+          "control_revision_id": "1b7054a330ad4b4e9fbfc56e1e7548cd",
+          "facts_only": false,
+          "binding": null,
+          "preproduction": null,
+          "delivery": null,
+          "targets": {
+            "page_ids": [],
+            "layers": [
+              "narrative"
+            ],
+            "subject": null
+          }
+        },
+        "error": null,
+        "next_action": "inspect_current_state"
+      },
+      "wrong_project_status": 404,
+      "forged_context_status": 403,
+      "source_whole_tree_unchanged_by_reads_and_refusals": true,
+      "local_transport_token_is_not_human_or_trusted_evidence": true
+    }
+  }
+]

@@ -1,0 +1,114 @@
+[
+  {
+    "raw_results": "run1/results.json",
+    "position": 0,
+    "case": "C5-empty-report-noop-replay-and-invocation-enrichment",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run2/results.json",
+    "position": 0,
+    "case": "C1-C2-C3-v2-editorial-imported-atom-and-historical-projection",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run2/results.json",
+    "position": 1,
+    "case": "C3-authored-new-atom-requires-real-mapping",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run2/results.json",
+    "position": 2,
+    "case": "reconciliation-pause-cancel-recovery-noop-and-output-retention",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run2/results.json",
+    "position": 3,
+    "case": "Plan-only-nochange-trial-then-explicit-adoption",
+    "raw_status": "FAIL",
+    "classification": "PRESERVED_PROBE_ERROR",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "AssertionError",
+    "message": ""
+  },
+  {
+    "raw_results": "run2/results.json",
+    "position": 4,
+    "case": "C5-spent-scope-revoked-does-not-erase-call-fact",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run3/results.json",
+    "position": 0,
+    "case": "trial-original-adoption-correct-envelope-readback",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run3/results.json",
+    "position": 1,
+    "case": "R1-four-layer-legal-composite-rollback-on-R2-validator",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run3/results.json",
+    "position": 2,
+    "case": "F8-honest-old03-and-oldR1-mappingless-speech-continuation",
+    "raw_status": "FAIL",
+    "classification": "PRESERVED_PROBE_ERROR",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "AttributeError",
+    "message": "'NoneType' object has no attribute 'get'"
+  },
+  {
+    "raw_results": "run3/results.json",
+    "position": 3,
+    "case": "style-only-input-binding-bounded-proposal-zero-calls",
+    "raw_status": "FAIL",
+    "classification": "PRESERVED_PROBE_ERROR",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "NameError",
+    "message": "name 'editing' is not defined"
+  },
+  {
+    "raw_results": "run4/results.json",
+    "position": 0,
+    "case": "F8-honest-old03-and-oldR1-mappingless-speech-continuation",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run4/results.json",
+    "position": 1,
+    "case": "style-only-input-binding-bounded-proposal-zero-calls",
+    "raw_status": "FAIL",
+    "classification": "PRESERVED_PROBE_ERROR",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "EligibilityBlocked",
+    "message": "eligibility/allowance.allocate: no remaining credit for a new external call; an exhausted budget only stops new calls (settlement and adoption stay available)"
+  },
+  {
+    "raw_results": "run5/results.json",
+    "position": 0,
+    "case": "style-only-input-binding-bounded-proposal-zero-calls",
+    "raw_status": "PASS",
+    "classification": "VALID_PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  }
+]

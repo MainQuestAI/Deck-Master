@@ -1,0 +1,178 @@
+{
+  "identity": {
+    "pid": 489422,
+    "time": "2026-10-15T05:56:52.889470+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "payload": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/framing-authored.json",
+  "payload_sha256": "cb146bfdd62ad3d87ccea331196deb98cc748c6a7a22390d85db76744fa6afbf",
+  "result": {
+    "status": "accepted",
+    "project_id": "deck-content--recovery",
+    "revision_id": "bee4590cfb74465792b133816ec4724e",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/52/521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232.json",
+        "sha256": "521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "argument_phase",
+    "input_alignment": "no_content",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "bee4590cfb74465792b133816ec4724e",
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "bee4590cfb74465792b133816ec4724e",
+      "variant": "framing",
+      "adopted": false,
+      "narrative_ref": {
+        "path": ".deckmaster/objects/52/521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232.json",
+        "sha256": "521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232"
+      },
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/52/521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232.json",
+          "sha256": "521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232"
+        }
+      ],
+      "effective_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "exploratory",
+        "subject": "deck"
+      },
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/52/521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232.json",
+          "sha256": "521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232"
+        }
+      ],
+      "next_action": "argument_phase",
+      "note": "framing proposal stored; the current Narrative pointer moves only through an adopted decision"
+    },
+    "variant": "framing",
+    "adopted": false,
+    "narrative_ref": {
+      "path": ".deckmaster/objects/52/521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232.json",
+      "sha256": "521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232"
+    },
+    "proposal_refs": [
+      {
+        "path": ".deckmaster/objects/52/521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232.json",
+        "sha256": "521db95b75b011b3e21fcbbfb62bd2bf839b6fe8e1003efc7bf43d8cfa80a232"
+      }
+    ],
+    "effective_scope": {
+      "allow_page_membership_change": false,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative"
+      ],
+      "page_ids": [],
+      "page_manifest_ref": null,
+      "purpose": "exploratory",
+      "subject": "deck"
+    }
+  },
+  "task": {
+    "call_allowances": [],
+    "collaboration_binding": {
+      "adoption_policy": "proposal_only",
+      "authorization_ref": null,
+      "decision_refs": [],
+      "eligibility_basis": [
+        {
+          "identity": "brief",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "bc697a500d476557f0ed8a77bd27942e0838ee237a5fe0b2ec6d046977a32741"
+        }
+      ],
+      "eligibility_digest": "8f4083e0fa6102538cb643141d36a6c72cdfbbbbf93191772ccf00d9e64cecfd",
+      "executor_type": "host",
+      "phase": "framing",
+      "request_id": "req-3d7dee80390f",
+      "write_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "exploratory",
+        "subject": "deck"
+      }
+    },
+    "cost_class": "host_reasoning",
+    "created_at": "2026-10-15T05:56:04Z",
+    "dependencies": [
+      {
+        "identity": "document-revision:f22511442b8447658d7a9fdf7f60d546",
+        "kind": "content",
+        "sha256": "db4fe2b9325068da0a8077ec472eb1d6ca3d0079bb7d9022fe8d60c69caeeb60"
+      }
+    ],
+    "dispatch_revision": "f22511442b8447658d7a9fdf7f60d546",
+    "error": null,
+    "execution_ref": "/root/rc3_04_owner/skills_install:deck-content--recovery",
+    "execution_started_at": "2026-10-15T05:56:04Z",
+    "host_protocol": {
+      "capabilities": [
+        "compose.v2",
+        "collaboration.v1",
+        "rc3-entry.v1"
+      ],
+      "supported_protocols": [
+        "compose.v2"
+      ]
+    },
+    "input_digest": "a79b161e355795f7af1c6ad6bcb17c94f8daa0efba436d811f0d67a24aeaff66",
+    "inputs": [],
+    "instruction": "按材料读出用途、权威与冲突，建立受众变化目标与具体缺口：提交 maturity=framing 的 Narrative 作为提案（payload.narrative）。不得提交完整 Page、图像、SVG 或任何用户决定。",
+    "intent": "initial",
+    "kind": "compose",
+    "method_release": {
+      "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+      "release_id": "573a46a85bf9-13e3d2708abf"
+    },
+    "operation_id": "compose-2310d6d4fc19",
+    "produced_against": "db4fe2b9325068da0a8077ec472eb1d6ca3d0079bb7d9022fe8d60c69caeeb60",
+    "protocol_version": "compose.v2",
+    "required_capabilities": [
+      "compose.v2",
+      "collaboration.v1",
+      "rc3-entry.v1"
+    ],
+    "result_refs": [],
+    "schema_version": "deck_task.v1",
+    "scope_pages": [],
+    "status": "running",
+    "task_id": "2d8da7f2e6c5",
+    "updated_at": "2026-10-15T05:56:04Z",
+    "usage": {
+      "external_calls": null,
+      "source": "not_reported"
+    }
+  }
+}

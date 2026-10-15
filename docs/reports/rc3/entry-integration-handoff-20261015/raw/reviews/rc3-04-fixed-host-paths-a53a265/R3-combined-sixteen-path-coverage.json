@@ -1,0 +1,27 @@
+{
+  "schema_version": "rc3_fixed_installed_host_coverage.v3",
+  "candidate": "a53a265321ca-01177541b9a1",
+  "status": "SIXTEEN_REPRESENTATIVE_ROLE_ENTRY_RESPONSIBILITIES_ACCOUNTED_FOR__ONE_NEW_R3_PLUS_FIFTEEN_REUSED_R2",
+  "coverage_count": 16,
+  "new_R3_actual_host_applications": 1,
+  "retained_R2_actual_host_applications": 15,
+  "new_R3_lifecycle_runs": 0,
+  "actual_host_count": 1,
+  "independent_review_execution_count": 0,
+  "new_F9": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/actual-application-record.json",
+    "sha256": "b66971ecc11f2651aabd24e47feecd335d5fd6db251ddf033038700f51b52a21"
+  },
+  "retained15": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-fifteen-path-and-lifecycle-reuse.json",
+    "sha256": "3d481fb5cec0e81caadb5f6ae46813bb9aa2cf6500c6295604b0ca5327888d8c"
+  },
+  "finite_R3_route_software_controls": 24,
+  "original_failures": "R1 F7/F8 and R2 F9 remain their immutable original BLOCKED observations; closures are later separate evidence.",
+  "limitations": [
+    "Not a claimed new R3 full16 rerun or16 independent models.",
+    "Role response completion is distinct from quality/independent/human/desktop acceptance; retained Review machine needs_reviewer and Design suggestion remain exact.",
+    "No E1 blinded/fair-effect result or real Provider/native image/paid call/human/listener/desktop evidence.",
+    "UI-O1/O2/C6 are outside this actualHost delta task; independent Root review/suites remain separate."
+  ]
+}

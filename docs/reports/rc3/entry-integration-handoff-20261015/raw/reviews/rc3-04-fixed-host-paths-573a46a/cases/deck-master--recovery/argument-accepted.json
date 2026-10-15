@@ -1,0 +1,201 @@
+{
+  "identity": {
+    "pid": 488496,
+    "time": "2026-10-15T05:56:05.687510+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "payload": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-authored.json",
+  "payload_sha256": "ffa16e6be0aee229224cb63690158ca7a62d1b14f94730b63334f6d4e9fba8d3",
+  "result": {
+    "status": "accepted",
+    "project_id": "deck-master--recovery",
+    "revision_id": "ace4e7187f464b43a10414fc46640c4e",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+        "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+      },
+      {
+        "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+        "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "adopt_or_request_direction",
+    "input_alignment": "no_content",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "ace4e7187f464b43a10414fc46640c4e",
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "ace4e7187f464b43a10414fc46640c4e",
+      "variant": "narrative",
+      "adopted": false,
+      "narrative_ref": {
+        "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+        "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+      },
+      "plan_ref": {
+        "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+        "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+      },
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+          "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+        },
+        {
+          "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+          "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+        }
+      ],
+      "effective_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "plan"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+          "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+        },
+        {
+          "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+          "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+        }
+      ],
+      "next_action": "adopt_or_request_direction",
+      "note": "proposal stored; adoption needs an effective accepted direction decision"
+    },
+    "variant": "narrative",
+    "adopted": false,
+    "plan_ref": {
+      "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+      "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+    },
+    "narrative_ref": {
+      "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+      "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+    },
+    "proposal_refs": [
+      {
+        "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+        "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+      },
+      {
+        "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+        "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+      }
+    ],
+    "effective_scope": {
+      "allow_page_membership_change": false,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "page_ids": [],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    }
+  },
+  "task": {
+    "call_allowances": [],
+    "collaboration_binding": {
+      "adoption_policy": "proposal_only",
+      "authorization_ref": null,
+      "decision_refs": [],
+      "eligibility_basis": [
+        {
+          "identity": "brief",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "db8c41da92aec223e624c93e431d7ead07b89d5b2b38dbaa242c9342fd46c8b9"
+        },
+        {
+          "identity": "audience",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "a623cb25fbe08b5c1bf1ebc03dfd08aa4b526412ebd53d1197632fc5f546d3e3"
+        }
+      ],
+      "eligibility_digest": "9a2afbfd94c989e28149655233d13e88f26db8d74a763ba95e8456258bc3ac5d",
+      "executor_type": "host",
+      "phase": "argument",
+      "request_id": "req-b9b84c57f10a",
+      "write_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "plan"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      }
+    },
+    "cost_class": "host_reasoning",
+    "created_at": "2026-10-15T05:56:05Z",
+    "dependencies": [
+      {
+        "identity": "document-revision:14aea0997d2b46c7baaefb595025d4e9",
+        "kind": "content",
+        "sha256": "5c70653de421600e2e191fe3cc586b762f04f57212c8ee08ccfcf7790a6f274a"
+      }
+    ],
+    "dispatch_revision": "14aea0997d2b46c7baaefb595025d4e9",
+    "error": null,
+    "execution_ref": null,
+    "input_digest": "5bcaf0f37c81292d8e2616b1cb4b33b3861ff0018a8f0c78c90dada586059e15",
+    "inputs": [],
+    "instruction": "写 argument Narrative：中心节点、连通论证/讲解结构、证据与限定、未决项；可选附 planned content_plan.v2（payload.plan）。这是提案：不改当前指针，不进入完整页稿或外部生成。",
+    "intent": "initial",
+    "kind": "compose",
+    "method_release": {
+      "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+      "release_id": "573a46a85bf9-13e3d2708abf"
+    },
+    "operation_id": "compose-48c1d303a135",
+    "produced_against": "5c70653de421600e2e191fe3cc586b762f04f57212c8ee08ccfcf7790a6f274a",
+    "protocol_version": "compose.v2",
+    "required_capabilities": [
+      "compose.v2",
+      "collaboration.v1",
+      "rc3-entry.v1"
+    ],
+    "result_refs": [],
+    "schema_version": "deck_task.v1",
+    "scope_pages": [],
+    "status": "awaiting_host",
+    "task_id": "b0fa0b645b56",
+    "updated_at": "2026-10-15T05:56:05Z",
+    "usage": {
+      "external_calls": null,
+      "source": "not_reported"
+    }
+  }
+}
