@@ -148,10 +148,21 @@ def resolve_generation_design(store, document, page_entry, *, recipe_ref=None):
             if fallback not in used:
                 used.add(fallback); pending.append(fallback)
     resolved["fonts"] = [font for font in resolved.get("fonts") or [] if font["font_id"] in used]
-    from .dependency_slices import accepted_decision
+    from .dependency_slices import accepted_decision, _head_for_identity
     decisions = []
+    seen_decisions = set()
     for ref in (document.get("collaboration") or {}).get("decisions", []):
         decision = store.read_object_json(ref)
+        identity = decision["decision_id"]
+        if identity in seen_decisions:
+            continue
+        seen_decisions.add(identity)
+        # Acceptance follows identity to its current version. Select that
+        # same head before applying topic/scope filters or recording audit Refs.
+        head = _head_for_identity(store, document, "decisions", "decision_id", identity)
+        if head is None:
+            continue
+        ref, decision = head
         if (decision.get("topic") in ("style", "tradeoff")
                 and page_entry["page_id"] in decision.get("scope", {}).get("page_ids", [])
                 and accepted_decision(store, document, ref)):
@@ -162,11 +173,34 @@ def resolve_generation_design(store, document, page_entry, *, recipe_ref=None):
     return resolved
 
 
-def consumed_design(resolved):
+def consumed_design(resolved, *, store):
     """Audit Refs stay recorded; freshness compares the actual consumed values."""
     result = {key: value for key, value in resolved.items() if key != "content_basis"}
     if resolved.get("content_basis"):
-        result["consumed_basis"] = resolved["content_basis"]["consumed"]
+        from .models import validate_decision_semantics
+        basis = resolved["content_basis"]
+        consumed = deepcopy(basis["consumed"])
+        slices = consumed["decision_slices"]
+        if basis["decision_refs"] != [item["decision_ref"] for item in slices]:
+            raise ModelError("content_basis/decision_refs", "decision slices differ from their actual audit Refs")
+        decisions = [store.read_object_json(item["decision_ref"]) for item in slices]
+        if decisions:
+            plan = store.read_object_json(basis["plan_ref"])
+            for decision in decisions:
+                validate_decision_semantics(decision)
+                if (decision["project_id"] != plan["project_id"]
+                        or decision["topic"] not in ("style", "tradeoff")
+                        or resolved["content_requirements"]["page_id"] not in decision["scope"]["page_ids"]):
+                    raise ModelError("content_basis/decision_refs", "decision is outside its actual project/Page design")
+        # Immutable Ref versions remain in the original basis. The registered
+        # effective slice supplies semantics; the actual Decision supplies its
+        # identity so equal values from different decisions never collapse.
+        consumed["decision_slices"] = sorted([
+            {"decision_id": decision["decision_id"],
+             "sha256": item["sha256"]}
+            for item, decision in zip(slices, decisions)
+        ], key=lambda item: item["decision_id"])
+        result["consumed_basis"] = consumed
     return result
 
 
@@ -265,8 +299,8 @@ def resolve_page_design(store, document, page_entry, *, require_current=False):
         return resolve_design(page, document["design_context"],
                               document["design_context"].get("assets") or [])[0]
     resolved = bound["resolved_design_context"]
-    if require_current and consumed_design(resolved) != consumed_design(
-            resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"])):
+    if require_current and consumed_design(resolved, store=store) != consumed_design(
+            resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"]), store=store):
         raise ModelError("blueprint/content_basis", "adopted blueprint's consumed Page/Plan/design inputs changed")
     return resolved
 

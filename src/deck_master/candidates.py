@@ -45,14 +45,17 @@ def generation_basis(store, document, page_id, stage, *, preserve_blueprint=Fals
     page = store.read_object_json(entry['page'])
     design, _ = resolve_design(page, document['design_context'], document['design_context'].get('assets') or [])
     if stage != 'content' and task and task.get('kind') == 'blueprint':
-        from .production import stored_blueprint_request, resolve_generation_design, consumed_design
+        from .production import stored_blueprint_request, resolve_generation_design
         prepared, _ = stored_blueprint_request(store, task)
         if prepared and prepared.get('resolved_design_context'):
-            design = consumed_design(resolve_generation_design(store, document, entry,
-                       recipe_ref=task.get('stage_request', {}).get('style_recipe_ref')))
+            design = _recorded_design_basis(store, resolve_generation_design(store, document, entry,
+                recipe_ref=task.get('stage_request', {}).get('style_recipe_ref')),
+                prepared['resolved_design_context'])
     elif stage == 'svg':
-        from .production import consumed_design, resolve_page_rendering_design
-        design = consumed_design(resolve_page_rendering_design(store, document, entry))
+        from .production import adopted_blueprint_design, resolve_page_rendering_design
+        bound = adopted_blueprint_design(store, document, entry)
+        design = _recorded_design_basis(store, resolve_page_rendering_design(store, document, entry),
+            bound['resolved_design_context'] if bound else None)
     if stage == 'content':
         # Precise single-page scope: the Page identity decides adoption
         # concurrency; the digests stay recorded dispatch facts, not gates.
@@ -61,6 +64,22 @@ def generation_basis(store, document, page_id, stage, *, preserve_blueprint=Fals
     return {'page_ref': entry['page'], 'input_digest': compute_input_digest(document),
             'design_digest': sha256_bytes(canonical_json_bytes(design)),
             'blueprint_ref': entry.get('blueprint') if stage == 'svg' or preserve_blueprint else None}
+
+
+def _recorded_design_basis(store, current, frozen):
+    """Keep the historical candidate digest encoding without consuming audit versions.
+
+    The immutable actual preparation supplies the old Ref shell only after
+    the shared semantic comparison proves it equivalent to current inputs.
+    No candidate, Request or basis is rewritten by this read.
+    """
+    from .production import consumed_design
+    if frozen is not None and consumed_design(current, store=store) == consumed_design(frozen, store=store):
+        current = frozen
+    result = {key: value for key, value in current.items() if key != 'content_basis'}
+    if current.get('content_basis'):
+        result['consumed_basis'] = current['content_basis']['consumed']
+    return result
 
 
 def inputs_current(store, document, task):

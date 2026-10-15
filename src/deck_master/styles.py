@@ -329,7 +329,7 @@ def validate_change(store, document, value):
                 # The recipe did not yet exist at its proposal revision. Add
                 # this exact immutable Ref only to the read-only resolver view.
                 prior = {**prior, 'style_recipes': [*prior.get('style_recipes', []), ref]}
-                design_current = consumed_design(resolve_generation_design(store, prior, old_entry, recipe_ref=ref)) == consumed_design(resolve_generation_design(store, document, entry, recipe_ref=ref))
+                design_current = consumed_design(resolve_generation_design(store, prior, old_entry, recipe_ref=ref), store=store) == consumed_design(resolve_generation_design(store, document, entry, recipe_ref=ref), store=store)
         except (StoreError, OSError, ValueError, KeyError, TypeError):
             role_current = design_current = False
         if not entry or not equivalent or not role_current or not design_current or entry.get('blueprint') != anchor['blueprint_ref']:

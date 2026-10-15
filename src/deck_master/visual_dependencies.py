@@ -70,6 +70,17 @@ def visual_task_inputs_current(store, document, task):
         target = task.get("stage_request", {}).get("target_reference_ref")
         if target is not None and any(entry.get("blueprint") != target for entry in document["pages"] if entry["page_id"] in task["scope_pages"]):
             return False
+        if prepared and prepared.get("resolved_design_context"):
+            from .production import resolve_generation_design
+            recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
+            for entry in document["pages"]:
+                if entry["page_id"] in task["scope_pages"]:
+                    # Collaboration Decisions can change without changing the
+                    # manuscript identity. Check their actual consumed slice
+                    # before that fast path, including rejection/withdrawal.
+                    if consumed_design(prepared["resolved_design_context"], store=store) != consumed_design(
+                            resolve_generation_design(store, document, entry, recipe_ref=recipe_ref), store=store):
+                        return False
         if task.get("kind") != "blueprint":
             for entry in document["pages"]:
                 if entry["page_id"] in task["scope_pages"]:
@@ -90,14 +101,9 @@ def visual_task_inputs_current(store, document, task):
             old, current = before[page_id], after[page_id]
             if not page_visual_equivalent(store, old["page"], current["page"], page_id):
                 return False
-            if prepared and prepared.get("resolved_design_context"):
-                from .production import resolve_generation_design
-                recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
-                if consumed_design(prepared["resolved_design_context"]) != consumed_design(
-                        resolve_generation_design(store, document, current, recipe_ref=recipe_ref)):
-                    return False
-            elif consumed_design(resolve_page_rendering_design(store, dispatched, old)) != consumed_design(
-                    resolve_page_rendering_design(store, document, current)):
+            if not (prepared and prepared.get("resolved_design_context")) and consumed_design(
+                    resolve_page_rendering_design(store, dispatched, old), store=store) != consumed_design(
+                    resolve_page_rendering_design(store, document, current), store=store):
                 return False
             slots = ("blueprint", "svg", "svg_preview") if task.get("review_stage") == "page_visual" else (("blueprint", "svg") if task.get("kind") in ("reconstruct", "repair", "review") else ())
             if task.get("stage_request", {}).get("mode") == "trial":
