@@ -9,12 +9,17 @@ from deck_master.models import bump_revision
 from deck_master.operations import OperationError
 from deck_master.samples import create_sample
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task
+from test_service_flow import _prepare_production
 
 SVG = b'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540"><defs><g id="symbol"><path d="M0 0L8 0L8 8"/></g></defs><text x="10" y="30" font-family="Arial" font-size="20">Keep this text</text><g transform="translate(100 100)"><g stroke="#1478ff" fill="none"><path id="duplicate" d="M0 0L30 30"/><path id="duplicate" d="M30 0L0 30"/></g><use href="#symbol" x="60" y="10"/></g></svg>'''
 
 @pytest.fixture
 def icon_store(tmp_path):
     project=tmp_path/'icons';create_sample(project,page_count=3,readonly=False);store=Store(project)
+    _prepare_production(project, actions=['style.propose', 'change.commit', 'candidate.adopt'],
+        max_external_calls=0, max_candidate_count=4,
+        scenario='L1 synthetic fixed three-page icon repair/reuse; four bounded local candidates, zero image calls')
     doc=store.load_document();new=copy.deepcopy(doc)
     for entry in new['pages']:
         original=store.read_object_json(entry['blueprint'])['file']['sha256']
@@ -45,7 +50,7 @@ def dispatch(store,recipe,pids=None):
 
 
 def start(store,task):
-    return service.task_start(store.project_root,task_id=task['task_id'],execution_ref='synthetic-icon-host',supported_protocols=['changes.v1'],capabilities=['change_plan','candidate_result','icon_repair'])
+    return claim_fixture_task(store.project_root, task, execution_ref='synthetic-icon-host')
 
 
 def accept(store,task,data):
@@ -69,7 +74,7 @@ def test_confirm_idempotency_writer_boundary_and_no_output_changes(icon_store):
     args={'proposal_id':p['proposal_id'],'base_revision':value['base_revision'],'operation_id':op}
     first=icons.confirm(icon_store.project_root,**args);second=icons.confirm(icon_store.project_root,**args)
     after=icon_store.load_document();assert first['operation_result']==second['operation_result']
-    assert after['compatibility']['minimum_writer']=='workbench-quality.v1'
+    assert after['compatibility']['minimum_writer']==before['compatibility']['minimum_writer']=='rc3-entry.v1'
     assert after['pages']==before['pages'] and after['outputs']==before['outputs'] and after['tasks']==before['tasks']
 
 
@@ -100,7 +105,7 @@ def test_invalid_locator_nested_selection_and_old_proposal(icon_store):
 def test_standard_candidate_and_capability_gate(icon_store):
     before=icon_store.load_document();recipe=confirm(icon_store,input_for(icon_store,method='standard'));task=dispatch(icon_store,recipe)[0]
     assert task['required_capabilities'][-1]=='icon_repair' or 'icon_repair' in task['required_capabilities']
-    with pytest.raises(Exception,match='declared capabilities'):service.task_start(icon_store.project_root,task_id=task['task_id'],execution_ref='old-host',supported_protocols=['changes.v1'],capabilities=['change_plan','candidate_result'])
+    with pytest.raises(Exception,match='declared capabilities'):service.task_start(icon_store.project_root,task_id=task['task_id'],execution_ref='old-host',supported_protocols=[task['protocol_version']],capabilities=[cap for cap in task['required_capabilities'] if cap != 'icon_repair'])
     start(icon_store,task);draft=icons.draft(icon_store.project_root,recipe_id=recipe['recipe_id'],page_id='p01')
     accepted=accept(icon_store,task,draft['svg'].encode());assert accepted['status']=='candidate_ready'
     after=icon_store.load_document();assert after['pages']==before['pages'] and after['outputs']==before['outputs']

@@ -1,4 +1,8 @@
-"""T04 task tests: the five result envelopes and atomic adoption (AC-S14)."""
+"""T04 classic readers and current RC3 atomic adoption (AC-S14).
+
+Scripted Host claims/provider events are explicit L1 synthetic fixtures; actual
+compiler runs never establish native-image, human or professional acceptance.
+"""
 
 from __future__ import annotations
 
@@ -11,22 +15,83 @@ import deck_master.service as service
 from deck_master import tasks as tasks_mod
 from deck_master.models import bump_revision, canonical_json_bytes, sha256_bytes
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task, accept_synthetic_blueprint, historical_snapshot, call_facts
+from test_content_ops import prepare_editorial_project, v2_revision_envelope
 
 SPEC_DIR = Path(__file__).resolve().parents[2] / "docs" / "specs" / "deck-master-rebuild-v1"
 ENVELOPES = SPEC_DIR / "examples" / "roundtrips" / "result-envelope"
 
 
 def _make_project(tmp_path: Path) -> tuple[Path, dict]:
+    """Public confirmed input followed by a real RC3 reconciliation Task."""
     material = tmp_path / "material.txt"
     material.write_text("季度对照正文\n(尾部约束)合成数据不可回写。", encoding="utf-8")
     project = tmp_path / "proj"
-    service.create(project, brief="设备运维汇报", sources=[material])
-    response = service.continue_project(project)
-    return project, response["pending_tasks"][0]
+    page = json.loads((ENVELOPES / "compose.json").read_text())["pages"][0]
+    page['customer_visible']['title'] += ' (original baseline)'
+    service.create(project, brief="设备运维汇报", sources=[material], draft={'pages': [page]})
+    prepare_editorial_project(project)
+    from test_content_ops import dispatch
+    store = Store(project)
+    task = dispatch(project, store, 'rewrite', ('p09',))
+    task['_fixture_project'] = project
+    return project, task
 
 
-def _compose_envelope() -> dict:
-    return json.loads((ENVELOPES / "compose.json").read_text())
+def _compose_envelope(task) -> dict:
+    store = Store(task['_fixture_project'])
+    envelope = json.loads((ENVELOPES / 'compose.json').read_text())
+    page = envelope['pages'][0]
+    current = store.read_object_json(store.load_document()['pages'][0]['page'])
+    page['content_mapping'] = current['content_mapping']
+    authored = {'kind': 'compose', 'content_update': {'input_digest': task['input_digest'],
+        'upsert_pages': [page], 'remove_page_ids': [], 'page_order': ['p09'],
+        'impact_summary': 'L1 adopts the authored visible title and preserves the original notes'},
+        'content_plan': store.read_object_json(store.load_document()['content_plan'])['input']}
+    return v2_revision_envelope(store, task, authored)
+
+
+def _start(project, *, task_id, execution_ref, **kwargs):
+    store = Store(project)
+    task = tasks_mod._lookup_task(store.load_document(), task_id, store)
+    return service.task_start(project, task_id=task_id, execution_ref=execution_ref,
+        supported_protocols=kwargs.get('supported_protocols', [task['protocol_version']]),
+        capabilities=kwargs.get('capabilities', task['required_capabilities']))
+
+
+def _accept(project, **kwargs):
+    store = Store(project)
+    task = tasks_mod._lookup_task(store.load_document(), kwargs['task_id'], store)
+    if kwargs['operation_id'] != task['operation_id'] or kwargs['produced_against'] != task['produced_against']:
+        return service.accept_result(project, **kwargs)
+    if task.get('protocol_version') == 'generation.v1' and task['kind'] == 'blueprint' and task['status'] in ('awaiting_host', 'running'):
+        return accept_synthetic_blueprint(project, task=task, result_payload=kwargs['result_payload'],
+            execution_ref=task.get('execution_ref') or 'L1-classic-image-host', scenario='Classic Task fixture; isolated synthetic Codex events')
+    if task['status'] == 'awaiting_host':
+        claim_fixture_task(project, task, execution_ref='L1-classic-adoption-host')
+    return service.accept_result(project, **kwargs)
+
+
+def qualify_render_fixture(project):
+    """Real previews and L1 claimed page reviews before the real compiler run."""
+    from deck_master.pipeline import preview_svg_page
+    from page_visual_helpers import pass_page_review
+    store = Store(project)
+    for entry in store.load_document()['pages']:
+        preview_svg_page(project, entry['page_id'])
+        task = service.open_host_task(store, kind='review', page_ids=[entry['page_id']],
+            instruction='L1 synthetic page-visual protocol fixture; engineering is checked separately',
+            review_stage='page_visual')
+        pass_page_review(project, service.task_summary(store, store.load_document(), task))
+
+
+def _fixture_task_ref(store, document, task):
+    from deck_master import collaboration_binding
+    collaboration_binding.stamp_task(store, document, task,
+        phase='review' if task['kind'] == 'review' else 'production',
+        executor_type='host', page_ids=task['scope_pages'], adoption_policy='within_scope',
+        action='dispatch.host_task')
+    return store.put_json_object(task)
 
 
 def _staging_dir(project: Path, operation_id: str) -> Path:
@@ -37,15 +102,15 @@ def _staging_dir(project: Path, operation_id: str) -> Path:
 
 def test_envelope_roundtrip(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
-    response = service.accept_result(
+    response = _accept(
         project,
         task_id=task["task_id"],
         operation_id=task["operation_id"],
         produced_against=task["produced_against"],
-        result_payload=json.loads((ENVELOPES / "compose.json").read_text()),
+        result_payload=_compose_envelope(task),
     )
     assert response["status"] == "accepted"
-    assert response["next_action"] == "auto_view_then_production"
+    assert response["next_action"] == "continue_within_request"
     document = service.Store(project).load_document()
     assert len(document["pages"]) == 1
     assert document["pages"][0]["page_id"] == "p09"
@@ -59,27 +124,27 @@ def test_envelope_roundtrip(tmp_path: Path) -> None:
     ({'artifact_specs': [None]}, 'artifact_specs[0]'),
 ])
 def test_malformed_nested_envelope_is_located_and_does_not_switch_document(tmp_path, bad, location):
-    project, task = _make_project(tmp_path)
+    project = historical_snapshot(tmp_path, scenario='fixed classic nested-envelope reader',
+        pages=[json.loads((ENVELOPES / 'compose.json').read_text())['pages'][0]])['project']
     before = Store(project).load_document()
-    envelope = _compose_envelope()
+    envelope = json.loads((ENVELOPES / 'compose.json').read_text())
     envelope.update(bad)
     with pytest.raises(tasks_mod.EnvelopeError, match=location.replace('[', r'\[').replace(']', r'\]')):
-        service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
-                              produced_against=task['produced_against'], result_payload=envelope)
-    assert Store(project).load_document()['pages'] == before['pages']
+        tasks_mod._validate_content_envelope(tasks_mod.parse_envelope(envelope))
+    assert Store(project).load_document() == before
 
 
 def test_idempotent_replay_returns_same_revision(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
-    envelope = json.loads((ENVELOPES / "compose.json").read_text())
-    first = service.accept_result(
+    envelope = _compose_envelope(task)
+    first = _accept(
         project,
         task_id=task["task_id"],
         operation_id=task["operation_id"],
         produced_against=task["produced_against"],
         result_payload=envelope,
     )
-    second = service.accept_result(
+    second = _accept(
         project,
         task_id=task["task_id"],
         operation_id=task["operation_id"],
@@ -92,17 +157,17 @@ def test_idempotent_replay_returns_same_revision(tmp_path: Path) -> None:
 
 def test_same_operation_different_output_conflicts(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
-    envelope = json.loads((ENVELOPES / "compose.json").read_text())
-    first = service.accept_result(
+    envelope = _compose_envelope(task)
+    first = _accept(
         project,
         task_id=task["task_id"],
         operation_id=task["operation_id"],
         produced_against=task["produced_against"],
         result_payload=envelope,
     )
-    envelope["notes"] = "a different result for the same operation"
+    envelope["payload"]["diff"]["summary"] = "a different result for the same operation"
     with pytest.raises(tasks_mod.TaskConflict):
-        service.accept_result(
+        _accept(
             project,
             task_id=task["task_id"],
             operation_id=task["operation_id"],
@@ -115,9 +180,9 @@ def test_same_operation_different_output_conflicts(tmp_path: Path) -> None:
 
 def test_stale_produced_against_conflicts(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
-    envelope = json.loads((ENVELOPES / "compose.json").read_text())
+    envelope = _compose_envelope(task)
     with pytest.raises(tasks_mod.TaskConflict):
-        service.accept_result(
+        _accept(
             project,
             task_id=task["task_id"],
             operation_id=task["operation_id"],
@@ -158,12 +223,12 @@ def test_cancelled_task_late_result_settles_usage(tmp_path: Path) -> None:
 
     service.task_cancel(project, task_id=task["task_id"], reason="user stop")
 
-    envelope = json.loads((ENVELOPES / "compose.json").read_text())
+    envelope = _compose_envelope(task)
     envelope["usage_events"] = [
         {"allowance_id": "call-1", "outcome": "unknown", "invocation_ref": "invocation-1", "evidence_file_ids": []}
     ]
     with pytest.raises(tasks_mod.TaskConflict):
-        service.accept_result(
+        _accept(
             project,
             task_id=task["task_id"],
             operation_id=task["operation_id"],
@@ -199,15 +264,16 @@ def test_unknown_type_discriminator_rejected(tmp_path: Path) -> None:
 def test_blueprint_envelope_stages_files_and_prompt(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
     # First adopt the compose result so page p09 exists.
-    compose = json.loads((ENVELOPES / "compose.json").read_text())
-    service.accept_result(
+    compose = _compose_envelope(task)
+    _accept(
         project,
         task_id=task["task_id"],
         operation_id=task["operation_id"],
         produced_against=task["produced_against"],
         result_payload=compose,
     )
-    # With content adopted, continue dispatches the real T06 blueprint task.
+    prepare_editorial_project(project)
+    # With content adopted and reviewed, continue dispatches the real blueprint task.
     response = service.continue_project(project)
     assert response["pending_tasks"][0]["kind"] == "blueprint"
     assert response["next_action"] == "codex_generate_blueprint"
@@ -233,7 +299,7 @@ def test_blueprint_envelope_stages_files_and_prompt(tmp_path: Path) -> None:
             {"allowance_id": "img-1", "state": "reserved", "execution_ref": None, "invocation_ref": None, "evidence": []}
         ],
     )
-    task_ref = store.put_json_object(task_obj)
+    task_ref = _fixture_task_ref(store, document, task_obj)
     bumped = tasks_mod.bump_revision(
         document,
         {"operation_id": "blueprint-dispatch-1", "kind": "task_update", "description": "open blueprint", "read_set": []},
@@ -245,7 +311,11 @@ def test_blueprint_envelope_stages_files_and_prompt(tmp_path: Path) -> None:
     (staging / "reference.svg").write_text("<svg xmlns='http://www.w3.org/2000/svg'/>", encoding="utf-8")
     (staging / "submitted-prompt.txt").write_text("实际提交的prompt内容", encoding="utf-8")
     envelope = json.loads((ENVELOPES / "blueprint.json").read_text())
-    outcome = service.accept_result(
+    for spec in envelope['artifact_specs']:
+        if spec['role'] == 'blueprint':
+            spec['derived_from'] = [page_ref]
+            spec['provenance']['generated_from_page'] = page_ref
+    outcome = _accept(
         project,
         task_id=task_obj["task_id"],
         operation_id="blueprint-op-1",
@@ -264,8 +334,8 @@ def test_blueprint_envelope_stages_files_and_prompt(tmp_path: Path) -> None:
 
 def test_review_envelope_keeps_not_evaluated(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
-    compose = json.loads((ENVELOPES / "compose.json").read_text())
-    service.accept_result(
+    compose = _compose_envelope(task)
+    _accept(
         project,
         task_id=task["task_id"],
         operation_id=task["operation_id"],
@@ -291,7 +361,7 @@ def test_review_envelope_keeps_not_evaluated(tmp_path: Path) -> None:
         dispatch_revision=document["revision_id"],
         produced_against=content_identity(document),
     )
-    task_ref = store.put_json_object(task_obj)
+    task_ref = _fixture_task_ref(store, document, task_obj)
     bumped = tasks_mod.bump_revision(
         document,
         {"operation_id": "review-dispatch-1", "kind": "task_update", "description": "open review", "read_set": []},
@@ -299,7 +369,7 @@ def test_review_envelope_keeps_not_evaluated(tmp_path: Path) -> None:
     bumped = {**bumped, "tasks": list(bumped.get("tasks") or []) + [task_ref]}
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="review-dispatch-1")
 
-    response = service.accept_result(
+    response = _accept(
         project,
         task_id=task_obj["task_id"],
         operation_id="review-op-1",
@@ -333,7 +403,7 @@ def test_call_begin_settle_flow(tmp_path: Path) -> None:
     bumped = tasks_mod._replace_task_ref(bumped, task_obj, task_ref, store)
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="alloc-2")
 
-    service.task_start(project, task_id=task["task_id"], execution_ref="exec-1")
+    _start(project, task_id=task["task_id"], execution_ref="exec-1")
     first_begin = tasks_mod.call_begin(store, task_id=task["task_id"], allowance_id="img-1", execution_ref="exec-1")
     assert first_begin["status"] in ("in_flight", "started")
     # Idempotent same execution
@@ -374,32 +444,34 @@ def uuid_hex(length: int) -> str:
 
 def test_cancel_wins_late_result_is_settled_not_adopted(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
+    before_pages = Store(project).load_document()["pages"]
     service.task_cancel(project, task_id=task["task_id"], reason="user stopped the call")
-    envelope = _compose_envelope()
+    envelope = _compose_envelope(task)
     with pytest.raises(tasks_mod.TaskConflict, match="after cancellation"):
-        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                               produced_against=task["produced_against"], result_payload=envelope)
     store = Store(project)
     document = store.load_document()
-    assert document["pages"] == [], "cancel-first: the late product never enters current"
+    assert document["pages"] == before_pages, "cancel-first: the late product never enters current"
     settled = store.read_object_json(document["tasks"][-1])
     assert settled["status"] == "cancelled"
-    # The identical late result is replay-idempotent and still not adopted.
-    replay = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                                   produced_against=task["produced_against"], result_payload=envelope)
-    assert replay["status"] == "already_applied"
-    assert Store(project).load_document()["pages"] == []
+    # Current protocol refuses a replay of settled late content; facts stay.
+    pointer = store.read_current()
+    with pytest.raises(tasks_mod.TaskConflict, match='settled'):
+        _accept(project, task_id=task['task_id'], operation_id=task['operation_id'],
+                produced_against=task['produced_against'], result_payload=envelope)
+    assert store.read_current() == pointer and store.load_document()['pages'] == before_pages
 
 
 def test_accept_wins_cancel_cannot_revoke_adopted_product(tmp_path: Path) -> None:
     project, task = _make_project(tmp_path)
-    envelope = _compose_envelope()
-    outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+    envelope = _compose_envelope(task)
+    outcome = _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                                     produced_against=task["produced_against"], result_payload=envelope)
     assert outcome["status"] == "accepted"
     store = Store(project)
     adopted = store.load_document()
-    assert len(adopted["pages"]) == len(envelope["pages"])
+    assert len(adopted['pages']) == len([row for row in envelope['payload']['proposals'] if row['layer'] == 'page_copy'])
     with pytest.raises(tasks_mod.TaskConflict, match="cancel refused"):
         service.task_cancel(project, task_id=task["task_id"], reason="too late")
     current = store.load_document()
@@ -414,8 +486,9 @@ def test_accept_wins_cancel_cannot_revoke_adopted_product(tmp_path: Path) -> Non
 
 def _adopt_compose(tmp_path: Path):
     project, task = _make_project(tmp_path)
-    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                          produced_against=task["produced_against"], result_payload=_compose_envelope())
+    _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload=_compose_envelope(task))
+    prepare_editorial_project(project)
     return project, Store(project)
 
 
@@ -430,7 +503,7 @@ def test_repair_rounds_archive_distinct_ids_all_recoverable(tmp_path: Path) -> N
         page["customer_visible"]["body_blocks"][0]["heading"] = f"第{round_index + 1}轮返修正文"
         task = service.open_host_task(store, kind="repair", page_ids=["p09"],
                                       instruction=f"repair round {round_index + 1}")
-        outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        outcome = _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                                         produced_against=task["produced_against"],
                                         result_payload={"kind": "repair", "files": [], "pages": [page]})
         assert outcome["status"] == "accepted"
@@ -452,6 +525,7 @@ def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
     project = tmp_path / "proj"
     page = json.loads((ENVELOPES / "compose.json").read_text())["pages"][0]
     service.create(project, brief="无进展返修", draft={"pages": [page]})
+    prepare_editorial_project(project)
     store = Store(project)
 
     def drive(envelope, accept_kind, staged_name=None, staged_bytes=None):
@@ -460,7 +534,7 @@ def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
         assert task["kind"] == accept_kind, (accept_kind, task["kind"])
         if staged_name:
             _stage(project, task["operation_id"], staged_name, staged_bytes)
-        outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        outcome = _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                                         produced_against=task["produced_against"], result_payload=envelope)
         assert outcome["status"] == "accepted"
         return task
@@ -477,6 +551,7 @@ def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
                store.read_object_json(store.load_document()["pages"][0]["blueprint"])["file"]["sha256"].encode() +
                b'"><rect width="10" height="10"/></svg>')
     drive(_svg_envelope("p09"), "reconstruct", "page.svg", bad_svg)
+    qualify_render_fixture(project)
     report = produce(project)
     assert report["status"] == "fail" and report["findings"]
 
@@ -487,7 +562,7 @@ def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
     assert "findings-sig:" in repair_task["instruction"]
     unchanged = store.read_object_json(document["pages"][0]["page"])
     _stage(project, repair_task["operation_id"], "page.svg", bad_svg)
-    service.accept_result(project, task_id=repair_task["task_id"], operation_id=repair_task["operation_id"],
+    _accept(project, task_id=repair_task["task_id"], operation_id=repair_task["operation_id"],
                           produced_against=repair_task["produced_against"],
                           result_payload={"kind": "repair",
                                           "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
@@ -496,6 +571,7 @@ def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
                                                               "provenance": {"source_type": "unknown",
                                                                              "tool": "host-reconstruct",
                                                                              "invocation_ref": None}}]})
+    qualify_render_fixture(project)
     again = produce(project)
     assert again["status"] == "fail"
 
@@ -514,6 +590,18 @@ def test_no_progress_repair_stops_instead_of_looping(tmp_path: Path) -> None:
     from deck_master.editing import edit_page
     edit_page(store.project_root, page=changed, base_revision=document["revision_id"],
               page_hash=document["pages"][0]["page"]["sha256"], operation_id="real-progress")
+    before_approval = store.load_document()
+    retained = before_approval['pages'][0]['blueprint']
+    retained_bytes = store.read_object_bytes(store.read_object_json(retained)['file'])
+    prior_calls = call_facts(project)['tasks']
+    blocked = service.continue_project(project)
+    assert blocked['status'] == 'needs_input' and blocked['findings']
+    assert blocked['pending_tasks'] == []
+    assert call_facts(project)['tasks'] == prior_calls
+    assert store.load_document()['pages'][0]['blueprint'] == retained
+    assert store.read_object_bytes(store.read_object_json(retained)['file']) == retained_bytes
+    # A separate explicit current instruction supplies fresh bounded credit.
+    prepare_editorial_project(project)
     after_change = service.continue_project(project)
     assert after_change["next_action"] == "codex_generate_blueprint" or \
         after_change["next_action"] in ("codex_reconstruct_svg", "repair_readback"), \
@@ -557,10 +645,11 @@ def test_two_executions_race_for_the_last_allowance(tmp_path: Path) -> None:
                                       "description": "one call left", "read_set": []})
     bumped["policy"] = {**bumped["policy"], "external_call_limit": 1}
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="limit-1")
+    prepare_editorial_project(project)
     task_id = service.continue_project(store.project_root)["pending_tasks"][0]["task_id"]
-    service.task_start(store.project_root, task_id=task_id, execution_ref="exec-a")
+    _start(store.project_root, task_id=task_id, execution_ref="exec-a")
     with pytest.raises(tasks_mod.TaskConflict, match="another execution"):
-        service.task_start(store.project_root, task_id=task_id, execution_ref="exec-b")
+        _start(store.project_root, task_id=task_id, execution_ref="exec-b")
     tasks_mod.allocate_call_allowances(store, task_id=task_id, count=1)
     assert tasks_mod.call_begin(store, task_id=task_id, allowance_id="call-1",
                                 execution_ref="exec-a")["status"] == "started"
@@ -586,11 +675,11 @@ def test_operation_journal_json_keeps_status() -> None:
 
 def _adopted_project(tmp_path):
     """compose adopted so pages exist; returns (project, store, compose_task)."""
-    project, _ = _make_project(tmp_path)
+    project, task = _make_project(tmp_path)
     store = Store(project)
-    task = service.continue_project(project)["pending_tasks"][0]
-    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                          produced_against=task["produced_against"], result_payload=_compose_envelope())
+    _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload=_compose_envelope(task))
+    prepare_editorial_project(project)
     return project, store, task
 
 
@@ -598,20 +687,20 @@ def test_accept_rejects_foreign_operation_id(tmp_path):
     project, store, compose_task = _adopted_project(tmp_path)
     pending = service.continue_project(project)["pending_tasks"][0]
     with pytest.raises(tasks_mod.TaskConflict, match="operation_id"):
-        service.accept_result(project, task_id=pending["task_id"], operation_id="different-op",
+        _accept(project, task_id=pending["task_id"], operation_id="different-op",
                               produced_against=pending["produced_against"],
                               result_payload={"kind": "blueprint", "files": [], "artifact_specs": []})
 
 
 def test_completed_task_refuses_new_submission(tmp_path):
     project, store, task = _adopted_project(tmp_path)
-    replay = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                                   produced_against=task["produced_against"], result_payload=_compose_envelope())
+    replay = _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                                   produced_against=task["produced_against"], result_payload=_compose_envelope(task))
     assert replay["status"] == "already_applied"
-    altered = _compose_envelope()
-    altered["notes"] = "different result for the same completed task"
+    altered = _compose_envelope(task)
+    altered["payload"]["diff"]["summary"] = "different result for the same completed task"
     with pytest.raises(tasks_mod.TaskConflict, match="different result"):
-        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                               produced_against=task["produced_against"], result_payload=altered)
 
 
@@ -627,7 +716,7 @@ def test_artifact_specs_are_scoped_to_task_pages(tmp_path):
                                     "provenance": {"source_type": "unknown", "tool": "h",
                                                    "invocation_ref": None}}]}
     with pytest.raises(tasks_mod.EnvelopeError, match="outside the authorized scope"):
-        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                               produced_against=task["produced_against"], result_payload=envelope)
 
 
@@ -651,7 +740,7 @@ def test_task_kind_cannot_deliver_foreign_roles(tmp_path):
                                     "provenance": {"source_type": "unknown", "tool": "h",
                                                    "invocation_ref": None}}]}
     with pytest.raises(tasks_mod.EnvelopeError, match="may not deliver role"):
-        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                               produced_against=task["produced_against"], result_payload=envelope)
 
 
@@ -676,7 +765,7 @@ def test_blueprint_reference_regions_are_preserved(tmp_path):
     staging = project / ".deckmaster" / "staging" / task["operation_id"]
     staging.mkdir(parents=True, exist_ok=True)
     (staging / "ref.png").write_bytes(png.read_bytes())
-    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+    _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                           produced_against=task["produced_against"], result_payload=envelope)
     document = store.load_document()
     blueprint = store.read_object_json(document["pages"][0]["blueprint"])
@@ -708,7 +797,7 @@ def test_blueprint_lineage_rejects_preview_backfeed(tmp_path):
     staging.mkdir(parents=True, exist_ok=True)
     (staging / "ref.png").write_bytes(png.read_bytes())
     with pytest.raises(tasks_mod.EnvelopeError, match="must not derive"):
-        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                               produced_against=task["produced_against"], result_payload=envelope)
 
 
@@ -722,6 +811,7 @@ def test_svg_only_fix_is_progress_not_no_progress(tmp_path):
     project = tmp_path / "proj"
     page = json.loads((ENVELOPES / "compose.json").read_text())["pages"][0]
     service.create(project, brief="svg 进展", draft={"pages": [page]})
+    prepare_editorial_project(project)
     store = Store(project)
 
     def drive(envelope, kind, name=None, data=None):
@@ -731,7 +821,7 @@ def test_svg_only_fix_is_progress_not_no_progress(tmp_path):
             staging = project / ".deckmaster" / "staging" / task["operation_id"]
             staging.mkdir(parents=True, exist_ok=True)
             (staging / name).write_bytes(data)
-        assert service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        assert _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                                      produced_against=task["produced_against"],
                                      result_payload=envelope)["status"] == "accepted"
         return task
@@ -745,6 +835,7 @@ def test_svg_only_fix_is_progress_not_no_progress(tmp_path):
     bad_svg = (b'<svg viewBox="0 0 100 75" data-blueprint-sha256="' + blueprint_sha.encode()
                + b'"><rect width="10" height="10"/></svg>')
     drive(_svg_envelope("p09"), "reconstruct", "page.svg", bad_svg)
+    qualify_render_fixture(project)
     assert produce(project)["status"] == "fail"
     repair_task = service.continue_project(project)["pending_tasks"][0]
     unchanged_page = store.read_object_json(store.load_document()["pages"][0]["page"])
@@ -752,7 +843,7 @@ def test_svg_only_fix_is_progress_not_no_progress(tmp_path):
     changed_svg = (b'<svg viewBox="0 0 100 75" data-blueprint-sha256="' + blueprint_sha.encode()
                    + b'"><rect width="20" height="20"/></svg>')
     _stage(project, repair_task["operation_id"], "page.svg", changed_svg)
-    service.accept_result(project, task_id=repair_task["task_id"], operation_id=repair_task["operation_id"],
+    _accept(project, task_id=repair_task["task_id"], operation_id=repair_task["operation_id"],
                           produced_against=repair_task["produced_against"],
                           result_payload={"kind": "repair",
                                           "files": [{"file_id": "s", "path": "page.svg", "media_type": "image/svg+xml"}],
@@ -760,12 +851,19 @@ def test_svg_only_fix_is_progress_not_no_progress(tmp_path):
                                           "artifact_specs": [{"file_id": "s", "role": "svg", "page_id": "p09",
                                                               "provenance": {"source_type": "unknown", "tool": "h",
                                                                              "invocation_ref": None}}]})
+    qualify_render_fixture(project)
     assert produce(project)["status"] == "fail"
     # Same findings, but the SVG bytes genuinely moved: a new round must be
     # dispatched instead of repair_no_progress.
     response = service.continue_project(project)
     assert response["next_action"] == "repair_readback"
     assert response["pending_tasks"][0]["kind"] == "repair"
+    # Local SVG/compile work reserves no second image call.
+    image_tasks = [store.read_object_json(ref) for ref in store.load_document()['tasks']
+                   if store.read_object_json(ref)['kind'] == 'blueprint']
+    assert len(image_tasks) == 1
+    assert len(image_tasks[0]['call_allowances']) == 1
+    assert image_tasks[0]['call_allowances'][0]['state'] == 'consumed'
 
 
 def test_settle_facts_survive_content_refusal(tmp_path):
@@ -773,7 +871,7 @@ def test_settle_facts_survive_content_refusal(tmp_path):
     content is refused — call facts are never rolled back by a content error."""
     project, store, _ = _adopted_project(tmp_path)
     task = service.open_host_task(store, kind="repair", page_ids=["p09"], instruction="settle then refuse")
-    service.task_start(project, task_id=task["task_id"], execution_ref="round-b-exec")
+    _start(project, task_id=task["task_id"], execution_ref="round-b-exec")
     tasks_mod.allocate_call_allowances(store, task_id=task["task_id"], count=1)
     tasks_mod.call_begin(store, task_id=task["task_id"], allowance_id="call-1", execution_ref="round-b-exec")
     report = tmp_path / "tool-report.json"
@@ -797,7 +895,7 @@ def test_settle_facts_survive_content_refusal(tmp_path):
         # The page belongs to no current page entry → content prevalidation
         # refuses AFTER the usage facts already settled.
         (staging / "report").write_text(report.read_text())
-        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+        _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
                               produced_against=task["produced_against"], result_payload=envelope)
     settled = next(store.read_object_json(ref) for ref in store.load_document()["tasks"]
                    if store.read_object_json(ref)["task_id"] == task["task_id"])
@@ -823,8 +921,8 @@ def _final_review_setup(tmp_path: Path):
     from deck_master.pipeline import artifact as adopt_artifact
 
     project, task = _make_project(tmp_path)
-    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                          produced_against=task["produced_against"], result_payload=_compose_envelope())
+    _accept(project, task_id=task["task_id"], operation_id=task["operation_id"],
+                          produced_against=task["produced_against"], result_payload=_compose_envelope(task))
     store = service.Store(project)
     document = store.load_document()
     deck = store.staging_dir / "deck.pptx"
@@ -843,7 +941,7 @@ def _final_review_setup(tmp_path: Path):
         dispatch_revision=document["revision_id"], produced_against=content_identity(document))
     bumped = tasks_mod.bump_revision(document, {"operation_id": "final-dispatch", "kind": "task_update",
                                                 "description": "open final", "read_set": []})
-    bumped["tasks"] = list(bumped.get("tasks") or []) + [store.put_json_object(task_obj)]
+    bumped["tasks"] = list(bumped.get("tasks") or []) + [_fixture_task_ref(store, document, task_obj)]
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="final-dispatch")
     review = json.loads((ENVELOPES / "review.json").read_text())["reviews"][0]
     finding = {"finding_id": "f1", "kind": "conversion", "impact": "must_fix", "page_id": "p09",
@@ -853,7 +951,7 @@ def _final_review_setup(tmp_path: Path):
               "subjects": [document["outputs"]["pptx"], page_ref]}
 
     def submit(item):
-        return service.accept_result(project, task_id=task_obj["task_id"], operation_id="final-op",
+        return _accept(project, task_id=task_obj["task_id"], operation_id="final-op",
                                      produced_against=task_obj["produced_against"],
                                      result_payload={"kind": "review", "files": [], "reviews": [item]})
     return review, page_ref, submit

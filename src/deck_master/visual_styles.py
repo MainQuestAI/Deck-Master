@@ -149,10 +149,6 @@ def analyze(project, *, reference_ids=None, instruction=None, input=None, base_r
         fail('reference_ids', 'select 1–5 distinct imported screenshots')
     if not isinstance(instruction,str) or not instruction.strip() or len(instruction) > 4000:
         fail('instruction', 'describe the visual direction in 1–4000 characters')
-    from . import eligibility
-    gate_store = Store(project)
-    eligibility.guard(gate_store, gate_store.load_document(), "dispatch.host_task",
-                      context={"targets": {"layers": ["design"]}})
     store = Store(project)
     with store._locked():
         doc = store.load_document()
@@ -162,6 +158,8 @@ def analyze(project, *, reference_ids=None, instruction=None, input=None, base_r
             return recovered
         if doc['revision_id'] != base_revision:
             fail('base_revision','project changed; preserve requirements and reload',conflict=True)
+        from . import collaboration_binding, eligibility
+        eligibility.guard(store, doc, 'dispatch.host_task', context={'targets': {'layers': ['design']}})
         rows = [owned(store,doc,rid) for rid in reference_ids]
         request = {'schema_version':'style-analysis-request.v1','project_id':doc['project_id'],
                    'references':[ref for _,ref in rows],'instruction':instruction,
@@ -174,6 +172,10 @@ def analyze(project, *, reference_ids=None, instruction=None, input=None, base_r
                                            for record,ref in rows],dispatch_revision=doc['revision_id'],
                              produced_against=content_identity(doc))
         task.update(protocol_version='changes.v1',required_capabilities=['visual_reference'],analysis_request_ref=request_ref)
+        scope = {**doc['collaboration']['request']['scope'], 'page_ids': [], 'layers': ['design'],
+            'allow_page_membership_change': False, 'allow_page_order_change': False}
+        collaboration_binding.stamp_task(store, doc, task, phase='design', write_scope=scope,
+            adoption_policy='proposal_only', action='dispatch.host_task', action_targets={'layers': ['design']})
         updated = bump_revision(doc, {'operation_id':operation_id,'kind':'task_update',
                                      'description':'Visual analysis ready for Host; no image calls','read_set':[]})
         updated['tasks'] = [*doc['tasks'],store.put_json_object(task)]

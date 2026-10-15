@@ -1,0 +1,6 @@
+interface:
+  display_name: "Deck Design"
+  short_description: "独立设计方案、版式可行性与限定样页试作；消费确认正文、信息关系、模板和品牌，返回recipe、样页候选与覆盖范围，不自动改主线或扩到整套制作。"
+  default_prompt: "Use $deck-design for the requested responsibility and preserve the current scope."
+policy:
+  allow_implicit_invocation: true

@@ -13,7 +13,8 @@ from . import local_runtime as runtime, registry
 from .local_state import LocalStateError, project_path
 from .snapshots import load_snapshot
 from .store import Store
-from .web import WorkbenchHandler, _static_dir
+from .web import WorkbenchHandler, _static_dir, UI_CAPABILITIES
+from .capabilities import RUNTIME_PROTOCOL_CAPABILITIES
 
 
 def open_workbench(*, project=None, registry_file=None, ui="studio", port=0, open_browser=True, stop=False):
@@ -100,9 +101,19 @@ def compose_handoff(project):
 class LauncherHandler(WorkbenchHandler):
     registry_path: Path
 
+    def _collaboration_project(self, project_id):
+        from .store import StoreError
+        matches = [item for item in registry.listing(self.registry_path)['projects']
+                   if item['project_id'] == project_id and item.get('available')]
+        if len(matches) != 1:
+            raise StoreError('project_id', 'URL project must identify one available registered project')
+        return registry.registered_path(self.registry_path, matches[0]['entry_id'])
+
     def do_GET(self):
         if not self._local_host():
             self._send_json({"error": "loopback Host required"}, 403)
+            return
+        if self._collaboration_route('GET'):
             return
         parsed = urlparse(self.path)
         if parsed.path in ("/", "/studio", "/studio/") or parsed.path.startswith("/studio/"):
@@ -117,6 +128,8 @@ class LauncherHandler(WorkbenchHandler):
         if parsed.path == "/api/health":
             self._send_json({"status": "ok", **self.runtime_state,
                              "registry_identity": self.runtime_state["identity"],
+                             "ui_capabilities": list(UI_CAPABILITIES),
+                             "protocol_capabilities": list(RUNTIME_PROTOCOL_CAPABILITIES),
                              "ui_available": (self.static_dir / "studio" / "index.html").is_file()})
             return
         if parsed.path == "/api/projects":
@@ -131,8 +144,12 @@ class LauncherHandler(WorkbenchHandler):
     def do_POST(self):
         if not self._authorized_write():
             return
+        if self._collaboration_route('POST'):
+            return
         try:
             data = self._read_json_body()
+            from .collaboration_api import validate_declarations
+            validate_declarations(data)
             if self.path == "/api/projects/register":
                 result = registry.register(self.registry_path, **data)
             elif self.path == "/api/projects/remove":

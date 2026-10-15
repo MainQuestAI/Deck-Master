@@ -1,0 +1,46 @@
+{
+  "schema": "rc3_report_copy_manifest.v1",
+  "scope": "Original failed final CI 8223df8; later R4 does not overwrite this failure.",
+  "source_head": "8223df80be654c9a89a44cd97cf770fa01bf4383",
+  "checkout_merge_sha": "749b022e016a058f80fd516117c8d324227fab4f",
+  "workflow_run": 38696634552,
+  "browser_job": 116294607252,
+  "original_result": "90 failed /342 passed /4 errors /2433 deselected",
+  "copy_policy": "Explicit five-file report/log/index/capture-correction allowlist; byte-exact, no API secrets, runtime Stores/registry/HMAC/venv/package/customer files.",
+  "exact_copy_count": 5,
+  "exact_copy_bytes": 1303721,
+  "files": [
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-final-ci-8223df8/report.md",
+      "copied_path": "docs/reports/rc3/r4-ci-failure-evidence-20261015/raw/rc3-04-final-ci-8223df8/report.md",
+      "bytes": 2894,
+      "sha256": "1168dbfc01b688aa48db1fe7c2a77bf780e17e8f85534b6b7522bd2a84886aa4"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-final-ci-8223df8/report.json",
+      "copied_path": "docs/reports/rc3/r4-ci-failure-evidence-20261015/raw/rc3-04-final-ci-8223df8/report.json",
+      "bytes": 27511,
+      "sha256": "ea409cc2aa89f2b533eddc6d39176db5208625215a68ad7f3a4eb8710681b101"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-ci-failure-8223df8/browser-job-116294607252.exact-api-content.log",
+      "copied_path": "docs/reports/rc3/r4-ci-failure-evidence-20261015/raw/rc3-04-root-ci-failure-8223df8/browser-job-116294607252.exact-api-content.log",
+      "bytes": 1241304,
+      "sha256": "9705083903f932e1da74310b9c5bc066781d290de443dc15e18e2a251c632f89"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-ci-failure-8223df8/raw-log-capture-correction.json",
+      "copied_path": "docs/reports/rc3/r4-ci-failure-evidence-20261015/raw/rc3-04-root-ci-failure-8223df8/raw-log-capture-correction.json",
+      "bytes": 444,
+      "sha256": "2921ecaa79707727f1a909e768282ae26cd18187a811d59df2e4769f03d1e622"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r4/ci-browser-failure-inventory.json",
+      "copied_path": "docs/reports/rc3/r4-ci-failure-evidence-20261015/raw/rc3-04-owner-r4/ci-browser-failure-inventory.json",
+      "bytes": 31568,
+      "sha256": "f5b759226bd648f8c12ceb45318b820494c978568fcc6cd9e90f80ccb8976585"
+    }
+  ],
+  "new_CI": "PENDING_NEW_FIXED_HEAD",
+  "human": "NOT_RUN_DEFERRED"
+}

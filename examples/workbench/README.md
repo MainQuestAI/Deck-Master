@@ -191,3 +191,68 @@ acceptance; the W07 execution report records that separately.
 `w12_rollback.py --prefix <temporary-prefix> --project <temporary-project> --previous <verified-release> --candidate <verified-release> --out <new-dir>` 演练停止项目服务、旧入口读取、临时切换和恢复候选。两版须先通过 `install candidate`；每次切换关闭 Host 注册。停止浏览器服务不是全局 CLI 写锁。
 
 脚本均不调用真实模型，不改实际 HOME。87 AC 索引、真实 Host 缺口及测量边界见 W12 执行报告，合成结果不能代替真实跨页效果或客户验收。
+
+## RC3 four-Skill Host application packet
+
+`rc3_four_skill_paths.py` is a stdlib external driver. After Owner fixes the
+candidate snapshot and installs it, prepare a JSON `cases` array with every
+combination of `skill=deck-master|deck-content|deck-design|deck-review` and
+`entry_mode=named|natural|master|recovery` exactly once. Each item supplies the
+original `instruction`, actual loaded `skill_entry`, existing `project`, and
+real `task_id` when present. Content requires a real scoped task and its
+`content_intent`; use the four modes to cover plan_only, write_only, speech_only
+and content_full. Review requires `source` and strict source-external reports.
+Design's zero-image case requests a concrete design scheme over actual confirmed
+Page/Plan/imported mapping. Master records task understanding and bounded next
+responsibility. These are responsibility cases; do not spend image calls merely
+to fill the matrix.
+
+For Master handoff, first record the actual Master application and same-project
+handoff; for recovery, reload the real installed Host entry and current Runtime
+state in a fresh execution. Supply their genuine execution locators in the case
+and application records. An enum label alone is not evidence that either path
+was exercised. Resume existing paused work only through the normal scoped
+Runtime service; the packet driver never mints authorization or resets calls.
+
+```bash
+python examples/workbench/rc3_four_skill_paths.py prepare \
+  --python /temporary/prefix/.deck-master/current/venv/bin/python \
+  --cases /outside-sources/cases.json --out /outside-sources/host-packet
+```
+
+Preparation stores exact installed workorders/method bytes and leaves every
+`*.application.json` with `executed=false`. The actual Host must read and apply
+each workorder, submit real content results via the Runtime, and write its
+concrete responsibility output outside the source. For each method record its
+id, SHA and specific application (for example the matrix ownership or claim
+limitation checked and resulting output location). Add actual execution
+source/locator, output field values and inspectable output file hashes. Do not
+copy `runtime_returned_bytes` into an executed/model PASS claim.
+
+```bash
+python examples/workbench/rc3_four_skill_paths.py verify \
+  --out /outside-sources/host-packet
+```
+
+Verification re-reads the isolated candidate, methods, current completion and
+call facts; Content must normally complete the exact sub-intent with actual
+Runtime outputs. It checks strict Review's full source snapshot is unchanged,
+rejects unexpected blueprint/call changes, and checks record/output hashes.
+It reports validated Host attestations, not an independent identity or human,
+native or desktop approval. Root/Owner separately link the genuine model turn
+and its actual method application to the records. No live mutable diagnostic
+packet is final fixed-candidate evidence.
+
+`rc3_content_intents_diagnostic.py` supports the earlier live source diagnostic:
+it captures exact real workorders/methods, claims with that task's declared
+protocol/capabilities, and submits a separately Host-authored payload through
+Runtime. It imports no fixture results and never edits Document pointers.
+`start`/`adopt` Python helpers use explicit synthetic task instructions, zero-call
+scopes and delegated decisions; CLI `capture|submit|continue` saves raw evidence
+without overwriting prior paths. Failures are retained. This helper is not a
+model generator: actual content must be authored by the real Host after reading
+the methods. Per-process runtime paths/hashes are captured for future runs;
+a mutable past run must not be assigned a later source hash retroactively.
+The current four-content-intent execution handoff is
+`docs/reports/rc3/RC3-04-B-ACTUAL-CONTENT-HOST-DIAGNOSTIC.json`; it remains separate
+from the final fixed-installed 16-path matrix.

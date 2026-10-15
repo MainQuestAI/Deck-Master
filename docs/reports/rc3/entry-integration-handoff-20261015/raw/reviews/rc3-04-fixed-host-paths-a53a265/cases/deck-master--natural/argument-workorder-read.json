@@ -1,0 +1,1098 @@
+{
+  "identity": {
+    "pid": 521222,
+    "time": "2026-10-15T06:46:01.416236+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "a53a265321ca-01177541b9a1"
+  },
+  "config": {
+    "case_id": "deck-master--natural",
+    "skill": "deck-master",
+    "entry_mode": "natural",
+    "instruction": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+    "project": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/projects/deck-master--natural",
+    "content_intent": "plan_only",
+    "delegation": {
+      "path": ".deckmaster/objects/b5/b50aeb1c11a4eb38c071435bf24d02b06e97ea273f6666c96e4cb098abb0c760.json",
+      "sha256": "b50aeb1c11a4eb38c071435bf24d02b06e97ea273f6666c96e4cb098abb0c760"
+    },
+    "skill_entry": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/skill/deck-master/SKILL.md"
+  },
+  "skill_entry_sha256": "497884c95fef034399f50c0389888bad322bcb4820a9ae1472a5f08a83fc5beb",
+  "skill_entry_fulltext": "---\nname: deck-master\ndescription: 从任务、材料或已有项目协调内容、设计、制作和审查，按有效范围连续推进及恢复；需要策划、写稿、样页或只读审查时分配到对应职责。\n---\n\n# Deck Master\n\n## Use when\n\n新任务、完整制作、续作、局部修改或职责未明；需协调 Content、Design、Review 与授权内 Producer。\n\n## Do not use when\n\n已明确只策划/写稿/口播、只设计或只读审查时，直接使用对应 Skill 的独立范围。已有合法决定与授权继续有效，不为了换 Skill 重新询问。\n\n## 方法与允许产物\n\n1. 读原始指令、来源、当前 request/eligibility/completion，区分决定、授权与具体文件认可。省略格式的新建默认 workbench.v3/rc3；不选择旧协议规避资格。\n2. 对新任务形成任务理解、拟议范围、关键未知和下一责任；通过同一 Runtime create/start_request，保存真实 instruction evidence。模型建议不得记成用户已接受决定。\n3. 按请求的职责调用 Content/Design/Review；传同一项目、固定版本与 scope，不复制状态。完整制作只有在资格允许时才交 Producer 继续蓝图→SVG→真实 PPT→逐页/最终检查。\n4. 每次接纳后读取 completion/continue；用户只要内容或样页时到本次完成即返回，不隐式整套制作。已有非空稿可打开实际 Studio 供查看，打开不代表授权生产。\n5. 费用按实际 begin/settle 记录；取消、暂停、撤回或 basis 过期后仍结算真实已发调用，拒绝稿件采用。不重复执行已完成调用。\n6. 两用途版本按同一 start_request 的 variant_transition 选定源 revision/export；先固定第一份，再生成第二份独立 Plan/Page/output。编辑旧版本明确源与页/字段，不能用 restore 全项目模拟窄改。\n\n允许产物：任务理解、范围与影响说明、待决定项、下一责任及授权范围内实际作品；所有持久化写入经 Runtime service/CAS。\n\n## 退出条件与下一责任\n\n本次 completion 已完成时返回其 outputs/checks；needs_reviewer/awaiting_decision 返回可读稿、具体缺口及下一责任。full_deck 交付按准备附上的实际文件执行 eligibility/handoff-check，工程与专业/人类/桌面状态分列。不得把旧 Desktop 记录称为本轮实际桌面已验。\n\n## 同一发布版与方法\n\n先读取本次 Host 入口路径，不从 PATH 或 HOME 猜另一套安装。把 `skill_entry` 设为实际加载的 SKILL.md 路径（保留未解析的 Host 路径，升级/回退后重新解析），执行：\n\n```python\nfrom pathlib import Path\n\nskill_file = Path(skill_entry).expanduser().resolve(strict=True)\nrelease = skill_file.parents[2]\nskill_name = skill_file.parent.name\npython = release / \"venv/bin/python\"\nif (skill_name not in (\"deck-master\", \"deck-content\", \"deck-design\", \"deck-review\")\n        or skill_file != release / \"skill\" / skill_name / \"SKILL.md\"\n        or release.parent.name != \"releases\"\n        or release.parent.parent.name != \".deck-master\"\n        or not (release / \"release.json\").is_file()\n        or not python.is_file()):\n    raise RuntimeError(\"Skill is not in a complete managed release; check installation\")\ndeck_master_cli = [str(python), \"-I\", \"-m\", \"deck_master\"]\n```\n\n用 `subprocess.run([*deck_master_cli, ...])` 调用；不能将参数拼成 shell 字符串。\n源码开发安装须通过 doctor.module_path 核对所属 checkout 与实际 Python。\n四入口共享 [路由与恢复方法](../deck-master/references/collaboration-routing.md)，内容/设计/审查方法只有 `deck-master/references` 一处 canonical；不复制到其他 Skill。\n真实工作单的 `method_resources` 是要读取的准确文件、路径与 SHA。用该发布版 Python 调用 `method_resources.read_skill_methods`，传本角色、`entry_mode=named|natural|master|recovery`、真实 project/task_id；自然路由另传原始 text。返回字节只证明读取，实际完成的判断、修改、产物和限制另记。恢复读取当前 scope/决定/撤回和 completion，不重复建项目或补授权。\n",
+  "revision_id": "cb9a27d812e34b7388a5364e82d17dc9",
+  "request": {
+    "background_request_ids": [],
+    "closed": false,
+    "closed_reason": null,
+    "content_intent": "plan_only",
+    "instruction_evidence": {
+      "actor_id": null,
+      "assurance": "host_attested",
+      "kind": "host_attested_instruction",
+      "presentation_ref": null,
+      "source_locator": "create:actual-input",
+      "source_ref": {
+        "path": ".deckmaster/objects/7e/7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3.json",
+        "sha256": "7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3"
+      },
+      "transport_receipt_ref": null
+    },
+    "intent": "content_only",
+    "pause_reason": null,
+    "paused": false,
+    "request_id": "req-a01e4ba887d4",
+    "scope": {
+      "allow_page_membership_change": true,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "page_ids": [
+        "p1",
+        "p2"
+      ],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    },
+    "variant": null
+  },
+  "task": {
+    "call_allowances": [],
+    "collaboration_binding": {
+      "adoption_policy": "proposal_only",
+      "authorization_ref": null,
+      "decision_refs": [],
+      "eligibility_basis": [
+        {
+          "identity": "brief",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "7c8812489001f08f02a047dbbfa5a31772c96e381cd8d63a499b224e9e37fe2d"
+        },
+        {
+          "identity": "audience",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "a623cb25fbe08b5c1bf1ebc03dfd08aa4b526412ebd53d1197632fc5f546d3e3"
+        }
+      ],
+      "eligibility_digest": "7e87c484d0cc6a0311b85c61a224f8398ac1850282c9a4dd08fc6ec3a65a405e",
+      "executor_type": "host",
+      "phase": "argument",
+      "request_id": "req-a01e4ba887d4",
+      "write_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "plan"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      }
+    },
+    "cost_class": "host_reasoning",
+    "created_at": "2026-10-15T06:46:01Z",
+    "dependencies": [
+      {
+        "identity": "document-revision:d98ec5766a634856a7f5c65aec169ad9",
+        "kind": "content",
+        "sha256": "345c64c7b819f3b1a36c8590e3a45f4363a16e2b19d43806aae5ac4eb7550199"
+      }
+    ],
+    "dispatch_revision": "d98ec5766a634856a7f5c65aec169ad9",
+    "error": null,
+    "execution_ref": null,
+    "input_digest": "20da6e40963fd7cbf8bcfd90fd442e09fe87953df736f3680d82cff5eca30a19",
+    "inputs": [],
+    "instruction": "写 argument Narrative：中心节点、连通论证/讲解结构、证据与限定、未决项；可选附 planned content_plan.v2（payload.plan）。这是提案：不改当前指针，不进入完整页稿或外部生成。",
+    "intent": "initial",
+    "kind": "compose",
+    "method_release": {
+      "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+      "release_id": "a53a265321ca-01177541b9a1"
+    },
+    "operation_id": "compose-866b3c0cb801",
+    "produced_against": "345c64c7b819f3b1a36c8590e3a45f4363a16e2b19d43806aae5ac4eb7550199",
+    "protocol_version": "compose.v2",
+    "required_capabilities": [
+      "compose.v2",
+      "collaboration.v1",
+      "rc3-entry.v1"
+    ],
+    "result_refs": [],
+    "schema_version": "deck_task.v1",
+    "scope_pages": [],
+    "status": "awaiting_host",
+    "task_id": "ea541e2efe4e",
+    "updated_at": "2026-10-15T06:46:01Z",
+    "usage": {
+      "external_calls": null,
+      "source": "not_reported"
+    }
+  },
+  "consumption": {
+    "schema_version": "skill_method_consumption.v1",
+    "skill": "deck-master",
+    "entry_mode": "natural",
+    "route": {
+      "skill": "deck-master",
+      "content_intent": null,
+      "explicit_name": false,
+      "authority": "routing_suggestion_only"
+    },
+    "context": {
+      "project_id": "deck-master--natural",
+      "artifact_revision_id": "cb9a27d812e34b7388a5364e82d17dc9",
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": "plan_only",
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "create:actual-input",
+          "source_ref": {
+            "path": ".deckmaster/objects/7e/7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3.json",
+            "sha256": "7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "content_only",
+        "pause_reason": null,
+        "paused": false,
+        "request_id": "req-a01e4ba887d4",
+        "scope": {
+          "allow_page_membership_change": true,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "page_ids": [
+            "p1",
+            "p2"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "completion": {
+        "state": "in_progress",
+        "request_id": "req-a01e4ba887d4",
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "artifact_revision_id": "cb9a27d812e34b7388a5364e82d17dc9",
+        "effective_scope": {
+          "allow_page_membership_change": true,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "page_ids": [
+            "p1",
+            "p2"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "outputs": [],
+        "checks": [
+          {
+            "kind": "requested_content",
+            "status": "not_evaluated",
+            "basis": "a framing proposal exists; the argument Narrative is the next phase"
+          }
+        ],
+        "missing": [],
+        "responsible_role": "content",
+        "next_action": "a framing proposal exists; the argument Narrative is the next phase"
+      }
+    },
+    "dispatch": {
+      "task_id": "ea541e2efe4e",
+      "work_order": {
+        "task_id": "ea541e2efe4e",
+        "operation_id": "compose-866b3c0cb801",
+        "kind": "compose",
+        "intent": "initial",
+        "method_release": {
+          "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+          "release_id": "a53a265321ca-01177541b9a1"
+        },
+        "current_method_release": {
+          "release_id": "a53a265321ca-01177541b9a1",
+          "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b"
+        },
+        "method_basis_status": "current",
+        "review_stage": "final",
+        "status": "awaiting_host",
+        "scope_pages": [],
+        "instruction": "写 argument Narrative：中心节点、连通论证/讲解结构、证据与限定、未决项；可选附 planned content_plan.v2（payload.plan）。这是提案：不改当前指针，不进入完整页稿或外部生成。",
+        "inputs": [],
+        "dispatch_revision": "d98ec5766a634856a7f5c65aec169ad9",
+        "produced_against": "345c64c7b819f3b1a36c8590e3a45f4363a16e2b19d43806aae5ac4eb7550199",
+        "call_allowances": [],
+        "sources": [
+          {
+            "external_use": "unspecified",
+            "extract": {
+              "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+              "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+            },
+            "format": "txt",
+            "locator_scheme": "line",
+            "name": "source-archive-rules.txt",
+            "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+            "original_uri": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/source-archive-rules.txt",
+            "restriction": "",
+            "source_id": "src-dcc6e474"
+          }
+        ],
+        "resolved_design_context": {
+          "allowed_asset_ids": [],
+          "assets": [],
+          "canvas": {
+            "fit": "contain",
+            "height_px": 900,
+            "slide_height_in": 7.5,
+            "slide_width_in": 13.333333333333334,
+            "width_px": 1600
+          },
+          "default_style_id": "default",
+          "fonts": [
+            {
+              "asset_id": null,
+              "face": "Regular",
+              "fallback_font_ids": [],
+              "family": "Noto Sans CJK SC",
+              "font_id": "body",
+              "weight": 400
+            },
+            {
+              "asset_id": null,
+              "face": "Bold",
+              "fallback_font_ids": [],
+              "family": "Noto Sans CJK SC",
+              "font_id": "heading",
+              "weight": 700
+            }
+          ],
+          "language": "zh-CN",
+          "styles": [
+            {
+              "colors": {
+                "accent": "#1478FF",
+                "background": "#FFFFFF",
+                "text": "#14213D"
+              },
+              "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+              "style_id": "default",
+              "typography": {
+                "auxiliary_size_pt": 12,
+                "body_font_id": "body",
+                "body_size_pt": 18,
+                "heading_font_id": "heading",
+                "heading_size_pt": 30
+              }
+            }
+          ]
+        },
+        "method_resources": [
+          {
+            "id": "source-reading",
+            "relative_path": "references/source-reading.md",
+            "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+            "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+          },
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+            "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+          },
+          {
+            "id": "content-examples",
+            "relative_path": "references/content-examples.md",
+            "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+            "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+          }
+        ],
+        "project_context": {
+          "task": {
+            "audience": "档案阅览室新值班员",
+            "brief": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+            "existing_decisions": [],
+            "page_limit": null,
+            "presentation_mode": "read_alone",
+            "presentation_mode_source": "provided",
+            "scenario": "",
+            "title": "Deck task"
+          },
+          "input_digest": "20da6e40963fd7cbf8bcfd90fd442e09fe87953df736f3680d82cff5eca30a19",
+          "dispatch_revision": "d98ec5766a634856a7f5c65aec169ad9",
+          "current_revision": "cb9a27d812e34b7388a5364e82d17dc9",
+          "context_status": "current",
+          "input_alignment": "no_content"
+        },
+        "staging_dir": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/projects/deck-master--natural/.deckmaster/staging/compose-866b3c0cb801",
+        "collaboration_binding": {
+          "adoption_policy": "proposal_only",
+          "authorization_ref": null,
+          "decision_refs": [],
+          "eligibility_basis": [
+            {
+              "identity": "brief",
+              "kind": "task_fact",
+              "projection": "value",
+              "ref": null,
+              "sha256": "7c8812489001f08f02a047dbbfa5a31772c96e381cd8d63a499b224e9e37fe2d"
+            },
+            {
+              "identity": "audience",
+              "kind": "task_fact",
+              "projection": "value",
+              "ref": null,
+              "sha256": "a623cb25fbe08b5c1bf1ebc03dfd08aa4b526412ebd53d1197632fc5f546d3e3"
+            }
+          ],
+          "eligibility_digest": "7e87c484d0cc6a0311b85c61a224f8398ac1850282c9a4dd08fc6ec3a65a405e",
+          "executor_type": "host",
+          "phase": "argument",
+          "request_id": "req-a01e4ba887d4",
+          "write_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "plan"
+            ],
+            "page_ids": [],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          }
+        },
+        "execution_ref": null,
+        "protocol_version": "compose.v2",
+        "required_capabilities": [
+          "compose.v2",
+          "collaboration.v1",
+          "rc3-entry.v1"
+        ],
+        "source_reading": [
+          {
+            "source_id": "src-dcc6e474",
+            "detail": "",
+            "format": "txt",
+            "format_kind": "text",
+            "image_pages": [],
+            "locators": [
+              {
+                "kind": "line",
+                "locator": "L1",
+                "text": "L1 本材料由当前Host原创，只供固定安装路径执行，不是实际机构制度或实际业绩。"
+              },
+              {
+                "kind": "line",
+                "locator": "L2",
+                "text": "L2 阅览原件须同时满足三项：借阅人权限有效、所借目录号匹配、管理员已登记本次领取；三项齐全后值班员才可交付。"
+              },
+              {
+                "kind": "line",
+                "locator": "L3",
+                "text": "L3 权限未知时登记待核验，记录借阅人和目录号，交权限管理员核对；值班员不能凭熟悉程度认定有效。"
+              },
+              {
+                "kind": "line",
+                "locator": "L4",
+                "text": "L4 目录号不符时停止本次领取，保留申请号与实物目录号，交库房管理员核对；不能按标题相似替换。"
+              },
+              {
+                "kind": "line",
+                "locator": "L5",
+                "text": "L5 阅览中发现撕裂、脱页或新污渍时立即停止翻阅，保持原状并通知保管员；权限齐全也不授权继续，更不能自行粘补。恢复由保管员确认。"
+              },
+              {
+                "kind": "line",
+                "locator": "L6",
+                "text": "L6 交接单记录借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人及未决项八项。"
+              },
+              {
+                "kind": "line",
+                "locator": "L7",
+                "text": "L7 情境A：林宁借A-17，实物A-17且领取已登记，权限未知；正确下一步是待核验交权限管理员，不交原件。"
+              },
+              {
+                "kind": "line",
+                "locator": "L8",
+                "text": "L8 情境B：周禾权限和领取登记均齐全，正阅A-19时发现新脱页；正确下一步是停止翻阅、保持原状、通知保管员，不先补齐交接单再处置。"
+              },
+              {
+                "kind": "line",
+                "locator": "L9",
+                "text": "L9 情境C：申请A-21、实物A-12，即使书名相同也不交付；核对两号由库房管理员处理。"
+              },
+              {
+                "kind": "line",
+                "locator": "L10",
+                "text": "L10 本材料无平均核验时长、损伤发生率和节约数据；不得编造收益、阈值或机构政策。"
+              }
+            ],
+            "original_file": {
+              "path": ".deckmaster/objects/68/68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9.txt",
+              "sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+            },
+            "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+            "original_uri": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/source-archive-rules.txt",
+            "status": "read",
+            "tables": [],
+            "text": "L1 本材料由当前Host原创，只供固定安装路径执行，不是实际机构制度或实际业绩。\nL2 阅览原件须同时满足三项：借阅人权限有效、所借目录号匹配、管理员已登记本次领取；三项齐全后值班员才可交付。\nL3 权限未知时登记待核验，记录借阅人和目录号，交权限管理员核对；值班员不能凭熟悉程度认定有效。\nL4 目录号不符时停止本次领取，保留申请号与实物目录号，交库房管理员核对；不能按标题相似替换。\nL5 阅览中发现撕裂、脱页或新污渍时立即停止翻阅，保持原状并通知保管员；权限齐全也不授权继续，更不能自行粘补。恢复由保管员确认。\nL6 交接单记录借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人及未决项八项。\nL7 情境A：林宁借A-17，实物A-17且领取已登记，权限未知；正确下一步是待核验交权限管理员，不交原件。\nL8 情境B：周禾权限和领取登记均齐全，正阅A-19时发现新脱页；正确下一步是停止翻阅、保持原状、通知保管员，不先补齐交接单再处置。\nL9 情境C：申请A-21、实物A-12，即使书名相同也不交付；核对两号由库房管理员处理。\nL10 本材料无平均核验时长、损伤发生率和节约数据；不得编造收益、阈值或机构政策。\n",
+            "extract_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/projects/deck-master--natural/.deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+            "original_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/projects/deck-master--natural/.deckmaster/objects/68/68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9.txt"
+          }
+        ]
+      },
+      "status": "current",
+      "dispatch_method_release": {
+        "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+        "release_id": "a53a265321ca-01177541b9a1"
+      },
+      "current_method_release": {
+        "release_id": "a53a265321ca-01177541b9a1",
+        "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b"
+      },
+      "methods": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+          "content": "# 材料阅读与使用\n\n## 先明确采用范围，再阅读原文\n\n材料目录不是知识库入库任务。把用户指定文件、目录和已有讨论与此次交流任务对应起来：哪些是正式要求，哪些是补充解释、经验或视觉参考。文件名、修改时间和“final”字样不能单独决定业务权威。\n\n简单目录可以直接登记为可用输入；复杂目录先列出候选，按任务选料。排除工具缓存、锁文件和本次下游生成物，但不能因为目录叫“输出”就排除用户明确提供的历史方案。主动说明跳过、不可读或版本冲突，不静默只读前几份。\n\n**反例：**读取目录失败后悄悄不带材料创建项目；将最新修改的销售简稿当成已确认 RFP。\n\n## 摘要帮助定位，原文负责支撑判断\n\n成稿先读与任务相关的完整来源。读取工作单给出的原件和提取文件的真实路径，核对必要的上下文。长文分段读取时保留覆盖范围，继续读取相关后文；不是读开头加最后一句就宣称完成。\n\n含图、扫描 PDF、PPT 的结构和图表可能不在文本提取结果里。`pending_visual` 时打开对应原图/页，不把空文本当空材料。只有需要且确无更合适手段时才使用 OCR；不得用不确定识别填出确定性客户事实。\n\n**反例：**手册末尾限定“此接口只读”，方案却承诺自动写回；图中箭头表示人工审批，正文改成全自动执行。\n\n## 区分材料角色，不增加信任评分\n\n正式要求限定本任务必须满足什么；补充说明帮助理解；历史经验说明实际做过什么；视觉参考影响表现方式。角色是可修订使用说明，不是被模型赋予的权威认证。\n\n同一页同时出现需求与建议时，用自然标题、列或句式区分：“需求要求统一入口；建议通过现有门户嵌入助手实现。”这类实质区分在客户可见正文完成，而非只在讲者备注承认。\n\n**反例：**把历史客户已上线功能写成本客户已实现能力；把参考页中的数字当作当前项目基准。\n\n## 允许推理，但写清成立条件\n\n资料没有直接写出建议，不等于不能提出建议。基于业务机制、目标和约束作出推导，解释建议改变哪一步工作以及为什么。没有测量数字时说明价值机制，不编造效果比例；可以对可复算样本作计算，但不能越过其适用范围。\n\n120 条抽样请求中，54 条首次提交缺型号或版本，54/120＝45% 是该样本的设备条件缺失占比。该样本未测得这 54 条是否发生补问或节省了多少时间；45% 不是自动解决率、节省工时比例或整个客户组织的总体发生率。\n\n## 缺口优先自己补读\n\n已有材料能解决就读取；公开事实需要外部核实时按任务授权核验。私有接口是否开放不能靠公网文章证明。只有缺失决定会实质改变推荐且无法用明确条件方案处理时，提出具体问题，并同时给出已知部分与原因。\n\n不要要求用户完成系统本应承担的行业分析，也不要为了“有来源”给每个设计动作编造引用。\n\n## 把来源接到论证与页面\n\n读完来源后不要立刻写页。先给每条会改变结论的证据一个稳定说法（claim/限定/机制），再把它分配给承担它的页面；来源、主张、页面三者必须能互相找到。\n\n- 同一份材料可以支持不同结论，但结论必须写明它依赖的限定。缺字段率只支持“先把字段补齐值得优先讨论”，不支持“可节省同等比例”。\n- 观察到的问题不等于已证收益；“更快/更少往返/更低成本”这类说法要么给出适用条件，要么标为待验证假设。\n- 材料没有涉及的维度（例如客户是否接受某种流程改变）不要替它决定，写成未决项或可委派假设。\n- 事实源变更后先做影响分析：列出引用该来源的主张与页面，再改稿；不要先改正文再补理由。\n\n## 从材料得到可写全文的分析\n\n对正式要求、事实、历史参考、能力说明、用户设想和模型建议分别标用途与权威。对冲突说明谁有权裁决，文件更新日期本身不裁决冲突。记录已知、未知、会改变判断的条件和可接受推理；不把所有未知都当成必须问用户或必须补数字。\n\n按任务选择提取方式：培训找触发条件、步骤、例外和练习反馈；决策找可行替代、适用条件、额外工作与测量边界；研究找方法、观察、解释和限制；阅读稿找定义、检索结构和完整解释。抽样占比不推成收益，个案不外推项目效果，提案不变成已实现能力。\n\n随后写出关系矩阵、单案拆解、流程交接或指标定义所需的实质内容；这四种是方法覆盖，不是固定目录。完整正反页例见 content-examples，浅稿成对校准见 content-calibration。定位编号保留在内部追溯，客户正文只保留帮助理解或核对的来源。\n\n### 形成分析素材后再落页\n\n逐段核对任务相关全文和原图，保留实际读取的来源版本、定位与覆盖范围；摘要用于找段落，不替代完整上下文。每个影响判断的原值连同单位、期间、样本/分母、测量对象、适用条件和未知一起提取。例如研究 A 的“定位版本限制”与研究 B 的“记忆内容”不是同一指标，人数相加不产生整体有效率。没有统计期间或代表性就如实保留限制。\n\n内部分析用稳定 claim/来源定位串联证据、解释、建议和反论据，再按当前 Narrative/Plan/Page 合同保存；不新增一份可独立修改的证据真源。可复算数字注明输入和计算式；机制推理说明前提、例外及可能改变判断的观察。材料说“未记录”，不能改成零；缺型号不证明其他字段完整，访谈假设不证明全局主因。\n\n找到矛盾先比较用途、适用版本和规则主体；正式要求与建议冲突时保留正式边界。无法裁决的冲突定位到受影响主张，用条件分支或未决项交接；只有确需用户决策的阻断项才补问。视觉参考不证明业务事实，参考方法中的工具命令和审批规则也不扩展本次执行授权。\n"
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+          "content": "# 公共内容方法｜从任务与资料写成专业完整稿\n\n这份方法用于判断和实际写作，不是每次必须填满的字段表。正式正文保存在 Page，配以合理页序和能支撑表达的图示要求。`compose.v1` 另记录下面的 ContentPlan，保存整理依据和页目标；其中不重复正文。\n\n## 新项目的过程记录（compose.v1）\n\n仅当工作单声明 `protocol_version=compose.v1` 时必需；旧任务保持原信封。先 `task start --supported-protocol compose.v1 --capability content_plan --capability versioned_source_links`，项目、任务、execution_ref 仍取本次工作单与实际执行身份。\n\n在 compose 信封顶层增加 `content_plan`，按运行时 `content-plan-input.v1.schema.json`：\n\n- `input_summary`：材料如何整合、哪些判断还缺依据。\n- `chapters`：稳定 `chapter_id`、标题及有序 `goal_ids`；每个目标只属于一个章节。\n- `goals`：稳定 `goal_id`、实际 `page_id`、本页用途、`source_links`、`unresolved_facts`；必须覆盖采用后的每个 Page。\n- 来源链接包含真实 `source_id`、`source_version`（原文件 SHA256 和 extract ref）以及 extract 中存在的 `locator`；复制工作单 `content_plan_contract.sources` 的版本，不把旧材料或页标题冒充来源。图像材料的定位存在，也不自动证明 Host 已阅图。\n- 全局 `unresolved_facts` 记录剩余缺口。某页没有来源链接时，必须说明该页缺少什么依据；不能伪造出处来通过结构检查。\n\n核心在同一次正文提交中生成不可变计划版本、绑定 Page refs，并保存 Task.result_refs。输入修订时保留未删除页的 goal_id；source/version/locator 有误或 Host 不支持协议时不采用正文。历史计划通过 ref 和固定 Document revision 定位，页标题推导的旧稿目录只供阅读、不会回填。\n\n可以在 `view --content-plan --revision …` 或按页 lineage 中核对；可运行的合成流程在 `examples/workbench/w02_content_plan.py`，不是专业内容验收证据。\n\n## 1. 先确定交流任务\n\n从当前工作单和既有讨论明确：受众已有认知、这次需要理解或判断什么、材料因此必须完成哪些职责。首次认识服务商时，身份、能力与经验可能是必要内容；已有合作的技术评审可以直接进入设计、选择和实施条件。\n\n现场讲解与独立阅读会影响解释量和页面表达，但不自动决定开头、结尾和页数。公司能力、研究发现、产品说明和教学内容都可以是完整 Deck 的组成部分，不需互斥选择固定类型。\n\n**好：**“本次只需理解服务范围与相关经验，所以用能力、机制与案例建立适配认知。”\n\n**坏：**所有首次交流先诊断痛点，所有结尾都启动试点；或把现场稿固定成行动号召、阅读稿固定成风险说明。\n\n## 2. 从资料中找出实际业务机制\n\n与方案有关的过程需要讲清参与者、触发条件、必要信息、关键动作及交接结果。然后识别建议会改变哪一个环节。保留能解释业务价值的细节，不把流程画得复杂当成专业。\n\n例如，若材料证明缺少设备版本会导致总部接单后补问，先定位具体触发和责任。仅增加搜索框不一定改变这次往返；设备条件在现场可得时，前移采集与适用资料匹配才可能避免后续再次确认，收益仍需测量。材料只有缺失计数时，补问仍是待验证机制，不能写成已观察事实。仍需专家的复杂问题，应形成包含设备条件与候选资料的接手摘要，而不是虚构所有问题自动解决。\n\n纯数据展示、日程页、产品参数说明不必套完整机制链；应准确说明如何阅读与使用。\n\n**坏：**几个“AI、数据、平台”方块相连就称方案，或所有页面都是三张能力卡片。\n\n## 3. 形成有用判断，而不是只复述\n\n把分散观察与机制连接，提出会改变理解、优先级或选择的判断。区分事实、分析、设计建议和目标；推导写明理由，数字能复算，既有能力与新增开发不混写。\n\n“120 条首次提交中 54 条缺型号或版本”说明该样本存在设备条件缺失；访谈提出补问可能发生，未统计其轮次、时间或相对成本。这可以支持讨论改善信息收集，但不能直接证明这是总成本最大的原因。若版本信息在现场根本无法获得，应该先讨论设备识别或现场采集，而不是继续坚持加字段。\n\n不要求每份 Deck 都有惊人洞察，也不要求所有页面提出方案。准确说明一项陌生机制或澄清几个混淆概念，本身可以是专业增量。\n\n## 4. 有真实选择时，说明推荐理由\n\n比较可行替代的作用、条件与额外工作。给被推荐以外的方案真实优点，不制造陪跑选项。方向已确认时沿用决定，必要时补理由，不重新组织无意义投票。\n\n资料搜索增强的优点可能是流程改动较少；门户内条件补齐与引用助手更贴近补问前移，但需要设备字段、资料适用范围映射和交互设计。推荐后者需要解释这些工作为何值得做，不能只说“更智能”。\n\n无真实选择时不凑方案一二三；缺少成本数据时不填精确成本与 ROI。\n\n## 5. 让页间关系完成同一次交流\n\n每个实质页面承担一个清楚职责：解释、比较、证明、说明结果或教学。后续内容回答前面留下的必要疑问；材料放在它能支持的位置，避免相同案例在各章节重复出现。\n\n公司能力、客户任务和建议路线可以成为一条主线，而不是分别生成三个小 Deck 拼接。复合内容按整体任务组织；说明型页面可以使用描述性标题，不能为了“每页结论”牺牲准确性。\n\n页数上限约束篇幅，不授权补固定目录。内容放不下时调整内容组织、拆分必要表达，不把正文缩成不可读的小字。\n\n## 6. 写完客户实际需要读的内容\n\n“本页通过三个维度建立信任”不是正文。应写成具体、成立的能力与经验，例如：\n\n> 我们提供技术资料接入、引用问答与现有门户集成服务。已完成的设备知识应用项目覆盖手册和维修工单接入、权限配置及上线培训。对于本次任务，这些经验可以支持资料和入口建设；设备条件映射与草稿写入仍属于需要单独设计和开发的部分。\n\n正式要求与建议同页出现时明确区分：同页混用正式要求与整理稿、访谈等补充材料时，在客户可见正文区分“原始要求”和“方案建议”；不能只在讲者备注里说明来源层级。备注给讲述者补充必要解释，制作注释放 internal_only。图内标题、标签、脚注也是正文的一部分，不能只审主文字区。\n\n“不接管生产控制”等边界只有影响当前理解或选择时才进入主线；通常可在相关方案处简洁说明，不自动占一页。CTA 同理。\n\n## 7. 审阅后实际改稿\n\n读取来源、完整正文和实际成品，找到具体错误后完成修改。判断是哪一层出了问题：内容不成立、输入投影丢失、原图还原偏离，还是 PPT 转换错误。不要通过降低要求、删除困难内容或重签参考图把失败变成通过。\n\n**坏的返修：**“P03 建议增强专业性。”\n\n**好的返修：**“P03 将草稿写入描述为公司已实现能力，但能力资料仅证明只读集成。将该句改为本期新增设计，补充权限和人工正式提交关系；同时检查实施与总结页是否仍沿用‘完全只读’的旧说法。”\n\n正常首稿可以有内部自主编辑；用户收到后需要替系统重建主线、补写核心论证，不算已经达到业务审阅门槛。工程通过、人类认可和跨任务适用范围分别记录，不互相替代。\n\n## 分阶段生产（compose.v2）\n\n工作单声明 `protocol_version=compose.v2` 时，任务只做它这一个阶段，结果按 `compose_result.v2` 变体提交。不要用空 Page 冒充策划，也不要把整份 Page 塞进 framing。\n\n| phase | 你要产出 | 明确不做 |\n| --- | --- | --- |\n| `framing` | `payload.narrative`：`maturity=framing`。材料用途/权威/冲突、受众已知与目标变化、具体缺口与候选方向 | 完整 Page、图像、SVG、PPT、替用户做决定 |\n| `argument` | `payload.narrative`：`maturity=argument`，中心节点 + 连通结构 + 证据/限定/未决项；可选 `payload.plan`（`content_plan.v2`、`mode=planned`） | 完整逐页稿、外部生成、声称已获确认 |\n| `page_copy` | `payload.pages`（完整 Page v2，含 `content_mapping`）、`payload.page_order`、`payload.plan_input`（`content_plan_input.v2`） | 改写 Narrative/来源/全局设计、超出范围的页面 |\n| `speech` | `payload.updates`：固定 Page Ref 的 `speaker_notes` 与覆盖全部口播的 `speech_segments` | 改动上屏正文、页序、视觉配置 |\n| `input_revision` | `payload.changed_layers`、每个变化层的实质 `proposals`、`payload.diff`（`input_digest`、`summary`、`changed_page_ids`） | 范围外差异、无 proposal 的层、半写成功 |\n\n`adoption_policy=proposal_only` 时结果只是提案：当前 Narrative/Plan/Page 指针不动，等有效决定覆盖后才由 Runtime 采用。\n\n### 阶段内的方法顺序\n\n1. **辨材料用途与权威**（framing）：正式要求 / 可核对事实 / 历史参考 / 能力说明 / 用户设想 / 模型建议分开；冲突不靠“较新的文件对”解决。目标写成受众变化：谁在什么场景、已知什么、用后要能判断或做什么。\n2. **建立论证或讲解结构**（argument）：按任务选方法——培训用目标行为与概念/步骤/边界/练习反馈；分析汇报用问题/方法/观察/解释/限制/结论；决策建议用真实选项/判断标准/证据/代价/推荐条件；独立阅读用检索结构/定义/完整解释/前提/可定位来源。每个核心结论标明支持它的事实或适用规则、限定挂在哪个结论上。\n3. **写出实质全文**（page_copy）：先有形（章节与页职责、节点映射、预算），再有文。每页一项可说明的沟通职责；删掉它丢掉什么、上一页留下什么问题、下一页为什么必要。正文写全图表标题、数值、单位、轴标签、注释与必要来源，不用“此处放结论”。\n4. **批判与返修**：写成后按页自查限定是否跟着结论、口播是否讲得完、下一页是否必要；发现问题按依赖范围返修，删字或缩小字号不是修复。\n\n### claim → source → page 映射纪律\n\n- 每个需要事实支撑的可见 atom 在 `content_mapping.visible_links` 里指向它承载的 `narrative_node_ids`，并带真实 `source_links`（`source_id` + `source_version` + 存在的 `locator`）。定位存在只证明可查，不证明支持。\n- `authority=reported_fact/calculation` 的节点必须有可核对来源定位或明确 blocker；`inference/hypothesis/target` 不得冒充事实。\n- 限定不能只留在备注：承担该主张的页面正文必须能看到必要限定。\n- 口播段用 `speech_segments` 覆盖 `speaker_notes` 的全部码点，标 `kind`（cue/verbatim）与 `estimated_seconds`（估计值，实测另记）。\n\n### 前置内容审查（preproduction）\n\n新论证的整套生产在进入真实视觉生产前需要内容审查，对象是任务适配、论证、证据边界、页面覆盖、推进与用途预算。默认要求 `independent_model_or_human`：独立模型必须有可核对的独立执行收据，人类必须有身份证据；作者自审（host_self）只有在用户明确接受降级且记录了范围与原因时才成立，且不影响交付前的人类专业复核政策。能力不存在时如实返回 `needs_reviewer` 并交出可审阅稿，不要伪造收据。\n\n### 完整稿与浅稿的区别\n\n对照 content-examples 四类完整页例，按用途写全单元格、条件、责任、异常、动作与含义。每个实质页能说明“删掉会丢什么、下一页回答什么”；有用途的总结和教学复习可保留。矩阵各格不能都写“高效”，侧栏解释差异/例外/含义，不仅换词复述主图。\n\nNarrative、Plan 与 Page 表达同一主线，保留事实到来源与 atom/notes 的映射。无收益数据时标假设和测量办法；必要限定在正文，notes 不藏核心论证，制作说明放 internal_only。预算不是加字或缩字的授权。\n\n前审实际读取材料与全稿，按 content-calibration 六组正反例查浅稿。返修记录具体 Page/atom、原句、改句及受影响页；只补 evidence ID、observation 或“更专业”不算改稿。原始稿、首次 Owner 稿与返修分开，不能用精修覆盖首次失败。\n\n### 从完整分析到当前页稿\n\nargument 写出中心解释/判断、实质支持和相应限定，不能只列章节标签。page_copy 在已有论证上完成全部客户可见内容：表头和每个单元格、案例原值与动作、流程触发/责任/异常/交接、指标分子分母/期间/单位/用途。选用表格、bullets、nodes/edges 或段落承载真实关系；图的箭头和表格归属也是内容，不留“此处放图/结论”给设计补写。\n\n把每个事实与限定接到真实 source/version/locator，再接到承担它的 Narrative node 和 Page atom；可见来源只是其中帮助读者核对的简洁部分。Plan 记录当前页职责、独特贡献、映射和承接，不再复制正文。检查“删掉这一页会丢什么、下一页回答什么”，合并没有贡献的重复页；结尾回顾和培训重复如果帮助完成任务，应保留。一个实质页的主图与侧栏分别承担关系和解释/例外，不能只换词复述。\n\n按 `content.visible_atoms` 的真实 atom_id 覆盖所有标题、正文、表格列/单元格、节点标签、脚注等，不能用显示页码或自造 block ID 代替；导航 atom 可空映射，不能给它编事实来源。来源定位存在不等于来源支持主张，前审需实际核对。变更正文时更新该页关系映射和受影响 notes；不越过本次 Scope 重写其他页。把相关但越界的问题列为 scope gap。\n\n### 篇幅、讲述与阅读边界\n\n- Plan 的 `page_budget.exact` 和 `max` 仅来自用户或有效委派，`target` 是可解释调整的软目标；“约 15 页”不变成恰好 15 页，也不为填上限补无用页。\n- `time_budget` 分开口播、互动与总时长；逐页估计说明假设并相加，不能把页数乘固定值宣称实测。内容放不下时去重复、重组必要表达或在授权内拆页；硬上限冲突用 Plan 本地 issue/tradeoff 指明取舍，不删核心限定、不缩成不可读小字、不临时跳过必要内容假装通过。\n- 沿用有效 `speech_policy`：现场讲解未另定时 cues；独立阅读默认 none；明确逐字稿才 verbatim。provided 原注按本次指令保留，none 不强制新增 notes。speaker-only 只写固定 Page Ref 的口播/段映射，不顺便改正文、页序或视觉。\n- live cues 补讲述提醒与停顿，不能藏上屏必须知道的事实/限定。read_alone 的必要论据、比较和限制完整可见；mixed 分别说明现场讲述与独立阅读的用法/投影，版本化保存需要的差异，不把同一稀疏现场页直接说成阅读稿。估时与实际完整试讲分开留证。\n- speaker_notes 是口播真源，`speech_segments` 按 Unicode codepoint 半开区间覆盖全部文本并标 cue/verbatim 与估时；讲稿导出或 PPTX notes 必须实际生成、按 page_id 回读后才能声明交付。Page 有 notes 不等于文件已带备注。\n\n已确认全文沿 fidelity：保留原稿主线、页面职责、必要表格和限定，`imported_mapping` 可没有 Narrative，未知映射如实记录；不为填合同字段补造论证/确认。已有用途和“不需要讲稿”等决定继续适用，不重新问一轮受众/口播。改变受众、中心主张或说服结构才回新论证流程，并先核对授权范围。\n"
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+          "content": "# Content Examples｜自包含合成样例\n\n对象：宿主 Agent。本文件只提供可直接对照的合成样例，全部内容为虚构，不冒充真实项目成绩；样例自包含，不依赖仓库外部目录或旧对象。\n\n## 样例一：从材料写出具体能力，而不是占位句\n\n合成材料（公司能力）：\n\n> 已交付设备知识库接入项目覆盖手册与维修工单导入、权限配置和上线培训；提供引用问答接口与现有门户嵌入组件。\n\n**坏正文：**“本页通过能力、机制与案例三个维度建立信任。”\n\n**好正文：**“我们提供技术资料接入、引用问答与现有门户集成服务。已完成的设备知识应用项目覆盖手册和维修工单接入、权限配置及上线培训。对于本次任务，这些经验可以支持资料和入口建设；设备条件映射与草稿写入仍属于需要单独设计和开发的部分。”\n\n要点：能力落到已发生的事实；本期新增与既有能力不混写；读者能据此核对。\n\n## 样例二：机制改写落到环节，而不是换词\n\n合成材料（业务机制）：一线缺少设备版本信息时总部接单后再补问，往返平均两次；仅增加搜索框不改变这次往返。\n\n**坏正文：**“引入 AI 搜索提升服务效率。”\n\n**好正文：**“当前往返的一个成因是设备条件在接单后才被发现缺失。若设备条件在现场可得，把收集前移并按适用资料检索，可以避免接单后再次确认这些条件；收益仍需测量。现场不可得时先取得铭牌或请专家协助，不假设增加字段即可解决。复杂问题形成包含已知条件、缺口与候选资料的接手摘要，不宣称自动解决所有问题。”\n\n要点：说清改变的环节与残余边界；样本占比（如 120 条中 54 条缺型号或版本）不得写成本自动解决率。\n\n## 样例三：正式要求与建议同页区分\n\n合成材料：正式接口说明写明“本期接口只读，不自动提交”；整理稿建议嵌入草稿助手。\n\n**坏正文：**“系统自动写入工单并关闭流程（来源：需求）。”\n\n**好正文：**“需求要求本期接口只读；建议通过现有门户嵌入草稿助手，为后续正式提交做准备。两者在正文分别标注。”\n\n要点：同页出现“原始要求”和“方案建议”时在客户可见正文区分，不只在讲者备注说明。\n\n## 样例四：返修说明定位到对象\n\n**坏返修：**“P03 建议增强专业性。”\n\n**好返修：**“P03 将草稿写入描述为公司已实现能力，但能力资料仅证明只读集成。将该句改为本期新增设计，补充权限和人工正式提交关系；同时检查实施与总结页是否仍沿用‘完全只读’的旧说法。”\n\n## 精修示例与默认成稿的边界\n\n人工或 Host 精修产生的 Page 是能力示范：它证明“给定正文可以做出什么样”，不证明“系统首次交流就能从原材料写出专业首稿”。默认成稿的质量判断由实际人类/Host 运行记录关闭；两者分开保存、分开引用。协议往返例（结果信封、atom 身份、审阅返修链）见任务工作单给出的方法与文档路径。\n\n## 样例五：无依据因果的修正（“直接减少往返”）\n\n合成材料（决策材料）：120 个请求中 54 个缺型号或版本；访谈提到缺设备条件可能带来接单后的补问，未统计轮次、时长或相对其他成本；一期只读。\n\n**坏正文：**“字段前移直接减少往返，节省 45% 处理时间。”\n\n**好正文（两选一，都必须可核对）：**\n\n1. 有适用条件时：“若设备条件可在现场取得，字段前移可避免接单后的再次确认；该收益依赖现场可得性，本次材料未测量轮次或时长。”\n2. 作为待验假设时：“假设：字段前移能减少接单后的再次确认。本材料只观察到 54/120 缺型号或版本，未测量补问轮次；该假设需要在试点中验证。”\n\n要点：观察（54/120）→ 可能的机制（依赖可得性）→ 待验假设或带条件判断，三者分开写。“45%”是样本占比，不是节省比例；“直接减少”必须带条件或标为假设。\n\n**反例要点：**把培训、研究或参考稿也套销售叙事（痛点—方案—CTA），或在材料没有商业异议、没有收益测量时补造一条；这类内容既不成立，也让读者无法核对来源。\n\n## 完整页例 A：跨材料关系矩阵\n\n**用途与材料（全部合成）**：决策人员选择本期范围。正式接口说明要求只读检索、记录设备型号/版本、人工确认后提交；能力说明仅证明手册/工单接入和门户嵌入；提案建议条件采集与引用摘要，尚未开发。没有预算和工期数据。\n\n**准确但浅的失败稿**：“需求与能力对齐”下三列“需求/能力/方案”，格子只写“只读/知识库/智能助手”。事实未错，关系与额外工作却未说明。\n\n**完整上屏正文**：\n\n标题：本期保留人工提交，新增工作集中在条件匹配和接手摘要\n\n| 工作环节 | 正式要求 | 已有能力的支持范围 | 本期提案和额外工作 |\n|---|---|---|---|\n| 资料接入 | 只读查询既有资料 | 手册和工单导入、权限配置 | 整理资料适用型号/版本，映射规则需设计，不能称已完成 |\n| 设备条件 | 查询带型号和版本 | 门户可嵌入入口，未证明已有条件校验 | 采集字段并提示缺失；缺型号先补铭牌，不猜条件继续检索 |\n| 检索与交接 | 人工核对适用资料 | 引用问答返回资料片段 | 摘要附已知条件、引用和缺口；不确定问题交专家 |\n| 正式提交 | 人工确认后提交 | 现有门户保留原提交动作 | 本期不新增自动写入；后续若需要写入，单独确认权限与范围 |\n\n判断：接入与入口可复用，不能替代设备适用范围设计。选择提案须安排字段采集、版本映射和摘要入口；当前材料不足以给出精确工期或 ROI。\n\n**结构与依据**：每行横向比较同一环节；已有能力和待开发提案分列。只读、人工确认和未证能力在正文，不只藏 notes。密度来自四种对应关系，不能换成四个“高效”格。\n\n**具体返修**：泛化标签替换为条件、关系和额外工作，删未经测量的收益。下一页回答“缺条件时怎样交接”。\n\n## 完整页例 B：单案例拆解\n\n**用途与材料（全部合成）**：培训接单员。案例 R07：现场报告间歇停机，型号已知、版本缺失；接单员取得铭牌照片，资料管理员核对版本并找到适用手册；故障原因未确定，专家接手。没有耗时和自动解决率记录。\n\n**准确但浅的失败稿**：“R07：接单员；问题停机；补信息→查资料→转专家。”环节正确，学员不能知道如何操作。\n\n**完整上屏正文**：\n\n标题：R07 先补齐资料适用条件，再把尚未确定的原因交给专家\n\n1. 接单时已知型号和间歇停机现象，版本仍缺。接单员登记版本待补，不用其他版本资料替代。\n2. 现场提供铭牌照片，资料管理员核对版本与资料适用范围。照片不足时保留缺口并继续核对，不把猜测写成事实。\n3. 接手摘要包含型号/版本、故障现象、适用手册引用和未确定的原因；专家据此继续判断。\n4. 已观察到的结果是资料定位和可核对的交接，故障原因仍待专家确认。本案例不证明自动解决，也不证明处理时间下降。\n\n迁移条件：现场可取得设备标识、有人维护资料适用范围。涉及安全风险时停止操作并立即升级，不等检索完成。\n\n**结构与依据**：“起点→缺口→动作→结果→迁移条件”解释一个案例；不从单案推导全项目收益。\n\n**具体返修**：展开阶段标签为具体核对和交接动作，保留不适用资料与专家判断边界。下一页给缺型号的练习，答案留到反馈页。\n\n## 完整页例 C：流程交接\n\n**用途与材料（全部合成）**：培训新接单员。SOP 要求先核对型号/版本；涉安全风险立即停止操作；资料不适用交管理员；复杂问题交专家；正式提交由接单员核对后执行。接口只读。\n\n**准确但浅的失败稿**：三个框“现场→AI→总部”，侧栏写“安全、高效、闭环”。没有触发条件、责任与异常处理。\n\n**完整上屏正文**：\n\n标题：摘要把条件与缺口交给下一责任人，AI 不替代安全判断和人工提交\n\n主流程：现场提供型号/版本与现象 → 接单员核对 → 按适用范围检索 → 人工核查引用 → 形成接手摘要或人工提交。\n\n| 触发条件 | 接单员动作 | 下一责任人收到什么 | 退出或恢复条件 |\n|---|---|---|---|\n| 型号或版本缺失 | 请现场补铭牌或可核对记录，标为待补 | 现场人员收到具体缺失字段 | 条件核对后检索；无法取得则升级，不自动填入 |\n| 涉安全风险 | 停止操作、保留风险信息、立即升级 | 值班专家收到风险信号和现场信息 | 专家给出适用处置后继续 |\n| 资料不适用或相互冲突 | 保存两份引用与冲突，暂停采用 | 资料管理员收到设备条件和冲突位置 | 核对适用版本；不按“更新的文件”自动裁决 |\n| 条件齐全但问题复杂 | 整理已知条件、已查资料和未决原因 | 专家收到可核对接手摘要 | 专家判断；接单员核对后沿现有门户人工提交 |\n\n规则：本期只读。摘要是待核查信息，不是已批准操作；提交由人工核对后的既有动作执行。\n\n**结构与依据**：主图给阅读顺序，矩阵承载四个不同分支。箭头表达真实责任交接，不能因版式把“人工核查→提交”改成“AI→自动提交”。\n\n**具体返修**：补责任、触发条件、交付物和恢复条件；侧栏不复述主图。拥挤时按职责拆页，不能删必要限定或缩字。\n\n## 完整页例 D：指标定义\n\n**用途与材料（全部合成）**：研究汇报。抽样 120 个有效请求中 54 个缺型号或版本；未给抽样期间、平均补问轮次和处理时间。另有提案把采集前移作为试点假设。\n\n**准确但浅的失败稿**：大字“45%”，小字“设备信息问题”，三个空指标框“效率/质量/成本”。数字正确，分母与含义未定义。\n\n**完整上屏正文**：\n\n标题：45% 是该样本的设备条件缺失比例，不是处理时间节省比例\n\n| 指标 | 定义与当前结果 | 用途和限制 |\n|---|---|---|\n| 设备条件缺失率 | 缺型号或版本的请求数 ÷ 有效抽样请求数＝54 ÷ 120＝45% | 只说明该样本；抽取期间与代表性未知，不外推全部业务 |\n| 补问轮次 | 每个请求在接单后为补信息发生的往返次数；当前未测 | 试点记录同类请求，检验前移采集是否减少接单后补问 |\n| 完成时长 | 从约定接单点到完成点的时长；当前无定义和数据 | 先定起止点和异常处理，不从缺失率推算节省 |\n| 引用适用性 | 引用是否匹配正确型号/版本，由人工核查 | 避免以错资料换速度；样本与错误类型单列 |\n\n解释：现场条件可得时，前移采集可能减少再次确认；不可得时需另行交接。试点先固定范围、口径和异常规则，再比较轮次、时长与引用适用性。\n\n**结构与依据**：数值、分母、范围和不可推导的含义同页。未测指标保留定义和测量建议，不编造成果，也不加装饰性“示意收益”图。\n\n**具体返修**：展开 45% 的分子/分母与限制，将空框换成可操作口径，删除未经确认的成本目标。\n\n四类是方法覆盖，不是每稿都要四种页型。实际稿按用途选结构，交出完整 Page 正文和适用 notes。表达理由、制作说明与追踪依据留内部字段，不照搬到客户正文。\n"
+        }
+      ]
+    },
+    "method_release": {
+      "release_id": "a53a265321ca-01177541b9a1",
+      "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b"
+    },
+    "methods": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+        "content": "# 材料阅读与使用\n\n## 先明确采用范围，再阅读原文\n\n材料目录不是知识库入库任务。把用户指定文件、目录和已有讨论与此次交流任务对应起来：哪些是正式要求，哪些是补充解释、经验或视觉参考。文件名、修改时间和“final”字样不能单独决定业务权威。\n\n简单目录可以直接登记为可用输入；复杂目录先列出候选，按任务选料。排除工具缓存、锁文件和本次下游生成物，但不能因为目录叫“输出”就排除用户明确提供的历史方案。主动说明跳过、不可读或版本冲突，不静默只读前几份。\n\n**反例：**读取目录失败后悄悄不带材料创建项目；将最新修改的销售简稿当成已确认 RFP。\n\n## 摘要帮助定位，原文负责支撑判断\n\n成稿先读与任务相关的完整来源。读取工作单给出的原件和提取文件的真实路径，核对必要的上下文。长文分段读取时保留覆盖范围，继续读取相关后文；不是读开头加最后一句就宣称完成。\n\n含图、扫描 PDF、PPT 的结构和图表可能不在文本提取结果里。`pending_visual` 时打开对应原图/页，不把空文本当空材料。只有需要且确无更合适手段时才使用 OCR；不得用不确定识别填出确定性客户事实。\n\n**反例：**手册末尾限定“此接口只读”，方案却承诺自动写回；图中箭头表示人工审批，正文改成全自动执行。\n\n## 区分材料角色，不增加信任评分\n\n正式要求限定本任务必须满足什么；补充说明帮助理解；历史经验说明实际做过什么；视觉参考影响表现方式。角色是可修订使用说明，不是被模型赋予的权威认证。\n\n同一页同时出现需求与建议时，用自然标题、列或句式区分：“需求要求统一入口；建议通过现有门户嵌入助手实现。”这类实质区分在客户可见正文完成，而非只在讲者备注承认。\n\n**反例：**把历史客户已上线功能写成本客户已实现能力；把参考页中的数字当作当前项目基准。\n\n## 允许推理，但写清成立条件\n\n资料没有直接写出建议，不等于不能提出建议。基于业务机制、目标和约束作出推导，解释建议改变哪一步工作以及为什么。没有测量数字时说明价值机制，不编造效果比例；可以对可复算样本作计算，但不能越过其适用范围。\n\n120 条抽样请求中，54 条首次提交缺型号或版本，54/120＝45% 是该样本的设备条件缺失占比。该样本未测得这 54 条是否发生补问或节省了多少时间；45% 不是自动解决率、节省工时比例或整个客户组织的总体发生率。\n\n## 缺口优先自己补读\n\n已有材料能解决就读取；公开事实需要外部核实时按任务授权核验。私有接口是否开放不能靠公网文章证明。只有缺失决定会实质改变推荐且无法用明确条件方案处理时，提出具体问题，并同时给出已知部分与原因。\n\n不要要求用户完成系统本应承担的行业分析，也不要为了“有来源”给每个设计动作编造引用。\n\n## 把来源接到论证与页面\n\n读完来源后不要立刻写页。先给每条会改变结论的证据一个稳定说法（claim/限定/机制），再把它分配给承担它的页面；来源、主张、页面三者必须能互相找到。\n\n- 同一份材料可以支持不同结论，但结论必须写明它依赖的限定。缺字段率只支持“先把字段补齐值得优先讨论”，不支持“可节省同等比例”。\n- 观察到的问题不等于已证收益；“更快/更少往返/更低成本”这类说法要么给出适用条件，要么标为待验证假设。\n- 材料没有涉及的维度（例如客户是否接受某种流程改变）不要替它决定，写成未决项或可委派假设。\n- 事实源变更后先做影响分析：列出引用该来源的主张与页面，再改稿；不要先改正文再补理由。\n\n## 从材料得到可写全文的分析\n\n对正式要求、事实、历史参考、能力说明、用户设想和模型建议分别标用途与权威。对冲突说明谁有权裁决，文件更新日期本身不裁决冲突。记录已知、未知、会改变判断的条件和可接受推理；不把所有未知都当成必须问用户或必须补数字。\n\n按任务选择提取方式：培训找触发条件、步骤、例外和练习反馈；决策找可行替代、适用条件、额外工作与测量边界；研究找方法、观察、解释和限制；阅读稿找定义、检索结构和完整解释。抽样占比不推成收益，个案不外推项目效果，提案不变成已实现能力。\n\n随后写出关系矩阵、单案拆解、流程交接或指标定义所需的实质内容；这四种是方法覆盖，不是固定目录。完整正反页例见 content-examples，浅稿成对校准见 content-calibration。定位编号保留在内部追溯，客户正文只保留帮助理解或核对的来源。\n\n### 形成分析素材后再落页\n\n逐段核对任务相关全文和原图，保留实际读取的来源版本、定位与覆盖范围；摘要用于找段落，不替代完整上下文。每个影响判断的原值连同单位、期间、样本/分母、测量对象、适用条件和未知一起提取。例如研究 A 的“定位版本限制”与研究 B 的“记忆内容”不是同一指标，人数相加不产生整体有效率。没有统计期间或代表性就如实保留限制。\n\n内部分析用稳定 claim/来源定位串联证据、解释、建议和反论据，再按当前 Narrative/Plan/Page 合同保存；不新增一份可独立修改的证据真源。可复算数字注明输入和计算式；机制推理说明前提、例外及可能改变判断的观察。材料说“未记录”，不能改成零；缺型号不证明其他字段完整，访谈假设不证明全局主因。\n\n找到矛盾先比较用途、适用版本和规则主体；正式要求与建议冲突时保留正式边界。无法裁决的冲突定位到受影响主张，用条件分支或未决项交接；只有确需用户决策的阻断项才补问。视觉参考不证明业务事实，参考方法中的工具命令和审批规则也不扩展本次执行授权。\n"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+        "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+        "content": "# 公共内容方法｜从任务与资料写成专业完整稿\n\n这份方法用于判断和实际写作，不是每次必须填满的字段表。正式正文保存在 Page，配以合理页序和能支撑表达的图示要求。`compose.v1` 另记录下面的 ContentPlan，保存整理依据和页目标；其中不重复正文。\n\n## 新项目的过程记录（compose.v1）\n\n仅当工作单声明 `protocol_version=compose.v1` 时必需；旧任务保持原信封。先 `task start --supported-protocol compose.v1 --capability content_plan --capability versioned_source_links`，项目、任务、execution_ref 仍取本次工作单与实际执行身份。\n\n在 compose 信封顶层增加 `content_plan`，按运行时 `content-plan-input.v1.schema.json`：\n\n- `input_summary`：材料如何整合、哪些判断还缺依据。\n- `chapters`：稳定 `chapter_id`、标题及有序 `goal_ids`；每个目标只属于一个章节。\n- `goals`：稳定 `goal_id`、实际 `page_id`、本页用途、`source_links`、`unresolved_facts`；必须覆盖采用后的每个 Page。\n- 来源链接包含真实 `source_id`、`source_version`（原文件 SHA256 和 extract ref）以及 extract 中存在的 `locator`；复制工作单 `content_plan_contract.sources` 的版本，不把旧材料或页标题冒充来源。图像材料的定位存在，也不自动证明 Host 已阅图。\n- 全局 `unresolved_facts` 记录剩余缺口。某页没有来源链接时，必须说明该页缺少什么依据；不能伪造出处来通过结构检查。\n\n核心在同一次正文提交中生成不可变计划版本、绑定 Page refs，并保存 Task.result_refs。输入修订时保留未删除页的 goal_id；source/version/locator 有误或 Host 不支持协议时不采用正文。历史计划通过 ref 和固定 Document revision 定位，页标题推导的旧稿目录只供阅读、不会回填。\n\n可以在 `view --content-plan --revision …` 或按页 lineage 中核对；可运行的合成流程在 `examples/workbench/w02_content_plan.py`，不是专业内容验收证据。\n\n## 1. 先确定交流任务\n\n从当前工作单和既有讨论明确：受众已有认知、这次需要理解或判断什么、材料因此必须完成哪些职责。首次认识服务商时，身份、能力与经验可能是必要内容；已有合作的技术评审可以直接进入设计、选择和实施条件。\n\n现场讲解与独立阅读会影响解释量和页面表达，但不自动决定开头、结尾和页数。公司能力、研究发现、产品说明和教学内容都可以是完整 Deck 的组成部分，不需互斥选择固定类型。\n\n**好：**“本次只需理解服务范围与相关经验，所以用能力、机制与案例建立适配认知。”\n\n**坏：**所有首次交流先诊断痛点，所有结尾都启动试点；或把现场稿固定成行动号召、阅读稿固定成风险说明。\n\n## 2. 从资料中找出实际业务机制\n\n与方案有关的过程需要讲清参与者、触发条件、必要信息、关键动作及交接结果。然后识别建议会改变哪一个环节。保留能解释业务价值的细节，不把流程画得复杂当成专业。\n\n例如，若材料证明缺少设备版本会导致总部接单后补问，先定位具体触发和责任。仅增加搜索框不一定改变这次往返；设备条件在现场可得时，前移采集与适用资料匹配才可能避免后续再次确认，收益仍需测量。材料只有缺失计数时，补问仍是待验证机制，不能写成已观察事实。仍需专家的复杂问题，应形成包含设备条件与候选资料的接手摘要，而不是虚构所有问题自动解决。\n\n纯数据展示、日程页、产品参数说明不必套完整机制链；应准确说明如何阅读与使用。\n\n**坏：**几个“AI、数据、平台”方块相连就称方案，或所有页面都是三张能力卡片。\n\n## 3. 形成有用判断，而不是只复述\n\n把分散观察与机制连接，提出会改变理解、优先级或选择的判断。区分事实、分析、设计建议和目标；推导写明理由，数字能复算，既有能力与新增开发不混写。\n\n“120 条首次提交中 54 条缺型号或版本”说明该样本存在设备条件缺失；访谈提出补问可能发生，未统计其轮次、时间或相对成本。这可以支持讨论改善信息收集，但不能直接证明这是总成本最大的原因。若版本信息在现场根本无法获得，应该先讨论设备识别或现场采集，而不是继续坚持加字段。\n\n不要求每份 Deck 都有惊人洞察，也不要求所有页面提出方案。准确说明一项陌生机制或澄清几个混淆概念，本身可以是专业增量。\n\n## 4. 有真实选择时，说明推荐理由\n\n比较可行替代的作用、条件与额外工作。给被推荐以外的方案真实优点，不制造陪跑选项。方向已确认时沿用决定，必要时补理由，不重新组织无意义投票。\n\n资料搜索增强的优点可能是流程改动较少；门户内条件补齐与引用助手更贴近补问前移，但需要设备字段、资料适用范围映射和交互设计。推荐后者需要解释这些工作为何值得做，不能只说“更智能”。\n\n无真实选择时不凑方案一二三；缺少成本数据时不填精确成本与 ROI。\n\n## 5. 让页间关系完成同一次交流\n\n每个实质页面承担一个清楚职责：解释、比较、证明、说明结果或教学。后续内容回答前面留下的必要疑问；材料放在它能支持的位置，避免相同案例在各章节重复出现。\n\n公司能力、客户任务和建议路线可以成为一条主线，而不是分别生成三个小 Deck 拼接。复合内容按整体任务组织；说明型页面可以使用描述性标题，不能为了“每页结论”牺牲准确性。\n\n页数上限约束篇幅，不授权补固定目录。内容放不下时调整内容组织、拆分必要表达，不把正文缩成不可读的小字。\n\n## 6. 写完客户实际需要读的内容\n\n“本页通过三个维度建立信任”不是正文。应写成具体、成立的能力与经验，例如：\n\n> 我们提供技术资料接入、引用问答与现有门户集成服务。已完成的设备知识应用项目覆盖手册和维修工单接入、权限配置及上线培训。对于本次任务，这些经验可以支持资料和入口建设；设备条件映射与草稿写入仍属于需要单独设计和开发的部分。\n\n正式要求与建议同页出现时明确区分：同页混用正式要求与整理稿、访谈等补充材料时，在客户可见正文区分“原始要求”和“方案建议”；不能只在讲者备注里说明来源层级。备注给讲述者补充必要解释，制作注释放 internal_only。图内标题、标签、脚注也是正文的一部分，不能只审主文字区。\n\n“不接管生产控制”等边界只有影响当前理解或选择时才进入主线；通常可在相关方案处简洁说明，不自动占一页。CTA 同理。\n\n## 7. 审阅后实际改稿\n\n读取来源、完整正文和实际成品，找到具体错误后完成修改。判断是哪一层出了问题：内容不成立、输入投影丢失、原图还原偏离，还是 PPT 转换错误。不要通过降低要求、删除困难内容或重签参考图把失败变成通过。\n\n**坏的返修：**“P03 建议增强专业性。”\n\n**好的返修：**“P03 将草稿写入描述为公司已实现能力，但能力资料仅证明只读集成。将该句改为本期新增设计，补充权限和人工正式提交关系；同时检查实施与总结页是否仍沿用‘完全只读’的旧说法。”\n\n正常首稿可以有内部自主编辑；用户收到后需要替系统重建主线、补写核心论证，不算已经达到业务审阅门槛。工程通过、人类认可和跨任务适用范围分别记录，不互相替代。\n\n## 分阶段生产（compose.v2）\n\n工作单声明 `protocol_version=compose.v2` 时，任务只做它这一个阶段，结果按 `compose_result.v2` 变体提交。不要用空 Page 冒充策划，也不要把整份 Page 塞进 framing。\n\n| phase | 你要产出 | 明确不做 |\n| --- | --- | --- |\n| `framing` | `payload.narrative`：`maturity=framing`。材料用途/权威/冲突、受众已知与目标变化、具体缺口与候选方向 | 完整 Page、图像、SVG、PPT、替用户做决定 |\n| `argument` | `payload.narrative`：`maturity=argument`，中心节点 + 连通结构 + 证据/限定/未决项；可选 `payload.plan`（`content_plan.v2`、`mode=planned`） | 完整逐页稿、外部生成、声称已获确认 |\n| `page_copy` | `payload.pages`（完整 Page v2，含 `content_mapping`）、`payload.page_order`、`payload.plan_input`（`content_plan_input.v2`） | 改写 Narrative/来源/全局设计、超出范围的页面 |\n| `speech` | `payload.updates`：固定 Page Ref 的 `speaker_notes` 与覆盖全部口播的 `speech_segments` | 改动上屏正文、页序、视觉配置 |\n| `input_revision` | `payload.changed_layers`、每个变化层的实质 `proposals`、`payload.diff`（`input_digest`、`summary`、`changed_page_ids`） | 范围外差异、无 proposal 的层、半写成功 |\n\n`adoption_policy=proposal_only` 时结果只是提案：当前 Narrative/Plan/Page 指针不动，等有效决定覆盖后才由 Runtime 采用。\n\n### 阶段内的方法顺序\n\n1. **辨材料用途与权威**（framing）：正式要求 / 可核对事实 / 历史参考 / 能力说明 / 用户设想 / 模型建议分开；冲突不靠“较新的文件对”解决。目标写成受众变化：谁在什么场景、已知什么、用后要能判断或做什么。\n2. **建立论证或讲解结构**（argument）：按任务选方法——培训用目标行为与概念/步骤/边界/练习反馈；分析汇报用问题/方法/观察/解释/限制/结论；决策建议用真实选项/判断标准/证据/代价/推荐条件；独立阅读用检索结构/定义/完整解释/前提/可定位来源。每个核心结论标明支持它的事实或适用规则、限定挂在哪个结论上。\n3. **写出实质全文**（page_copy）：先有形（章节与页职责、节点映射、预算），再有文。每页一项可说明的沟通职责；删掉它丢掉什么、上一页留下什么问题、下一页为什么必要。正文写全图表标题、数值、单位、轴标签、注释与必要来源，不用“此处放结论”。\n4. **批判与返修**：写成后按页自查限定是否跟着结论、口播是否讲得完、下一页是否必要；发现问题按依赖范围返修，删字或缩小字号不是修复。\n\n### claim → source → page 映射纪律\n\n- 每个需要事实支撑的可见 atom 在 `content_mapping.visible_links` 里指向它承载的 `narrative_node_ids`，并带真实 `source_links`（`source_id` + `source_version` + 存在的 `locator`）。定位存在只证明可查，不证明支持。\n- `authority=reported_fact/calculation` 的节点必须有可核对来源定位或明确 blocker；`inference/hypothesis/target` 不得冒充事实。\n- 限定不能只留在备注：承担该主张的页面正文必须能看到必要限定。\n- 口播段用 `speech_segments` 覆盖 `speaker_notes` 的全部码点，标 `kind`（cue/verbatim）与 `estimated_seconds`（估计值，实测另记）。\n\n### 前置内容审查（preproduction）\n\n新论证的整套生产在进入真实视觉生产前需要内容审查，对象是任务适配、论证、证据边界、页面覆盖、推进与用途预算。默认要求 `independent_model_or_human`：独立模型必须有可核对的独立执行收据，人类必须有身份证据；作者自审（host_self）只有在用户明确接受降级且记录了范围与原因时才成立，且不影响交付前的人类专业复核政策。能力不存在时如实返回 `needs_reviewer` 并交出可审阅稿，不要伪造收据。\n\n### 完整稿与浅稿的区别\n\n对照 content-examples 四类完整页例，按用途写全单元格、条件、责任、异常、动作与含义。每个实质页能说明“删掉会丢什么、下一页回答什么”；有用途的总结和教学复习可保留。矩阵各格不能都写“高效”，侧栏解释差异/例外/含义，不仅换词复述主图。\n\nNarrative、Plan 与 Page 表达同一主线，保留事实到来源与 atom/notes 的映射。无收益数据时标假设和测量办法；必要限定在正文，notes 不藏核心论证，制作说明放 internal_only。预算不是加字或缩字的授权。\n\n前审实际读取材料与全稿，按 content-calibration 六组正反例查浅稿。返修记录具体 Page/atom、原句、改句及受影响页；只补 evidence ID、observation 或“更专业”不算改稿。原始稿、首次 Owner 稿与返修分开，不能用精修覆盖首次失败。\n\n### 从完整分析到当前页稿\n\nargument 写出中心解释/判断、实质支持和相应限定，不能只列章节标签。page_copy 在已有论证上完成全部客户可见内容：表头和每个单元格、案例原值与动作、流程触发/责任/异常/交接、指标分子分母/期间/单位/用途。选用表格、bullets、nodes/edges 或段落承载真实关系；图的箭头和表格归属也是内容，不留“此处放图/结论”给设计补写。\n\n把每个事实与限定接到真实 source/version/locator，再接到承担它的 Narrative node 和 Page atom；可见来源只是其中帮助读者核对的简洁部分。Plan 记录当前页职责、独特贡献、映射和承接，不再复制正文。检查“删掉这一页会丢什么、下一页回答什么”，合并没有贡献的重复页；结尾回顾和培训重复如果帮助完成任务，应保留。一个实质页的主图与侧栏分别承担关系和解释/例外，不能只换词复述。\n\n按 `content.visible_atoms` 的真实 atom_id 覆盖所有标题、正文、表格列/单元格、节点标签、脚注等，不能用显示页码或自造 block ID 代替；导航 atom 可空映射，不能给它编事实来源。来源定位存在不等于来源支持主张，前审需实际核对。变更正文时更新该页关系映射和受影响 notes；不越过本次 Scope 重写其他页。把相关但越界的问题列为 scope gap。\n\n### 篇幅、讲述与阅读边界\n\n- Plan 的 `page_budget.exact` 和 `max` 仅来自用户或有效委派，`target` 是可解释调整的软目标；“约 15 页”不变成恰好 15 页，也不为填上限补无用页。\n- `time_budget` 分开口播、互动与总时长；逐页估计说明假设并相加，不能把页数乘固定值宣称实测。内容放不下时去重复、重组必要表达或在授权内拆页；硬上限冲突用 Plan 本地 issue/tradeoff 指明取舍，不删核心限定、不缩成不可读小字、不临时跳过必要内容假装通过。\n- 沿用有效 `speech_policy`：现场讲解未另定时 cues；独立阅读默认 none；明确逐字稿才 verbatim。provided 原注按本次指令保留，none 不强制新增 notes。speaker-only 只写固定 Page Ref 的口播/段映射，不顺便改正文、页序或视觉。\n- live cues 补讲述提醒与停顿，不能藏上屏必须知道的事实/限定。read_alone 的必要论据、比较和限制完整可见；mixed 分别说明现场讲述与独立阅读的用法/投影，版本化保存需要的差异，不把同一稀疏现场页直接说成阅读稿。估时与实际完整试讲分开留证。\n- speaker_notes 是口播真源，`speech_segments` 按 Unicode codepoint 半开区间覆盖全部文本并标 cue/verbatim 与估时；讲稿导出或 PPTX notes 必须实际生成、按 page_id 回读后才能声明交付。Page 有 notes 不等于文件已带备注。\n\n已确认全文沿 fidelity：保留原稿主线、页面职责、必要表格和限定，`imported_mapping` 可没有 Narrative，未知映射如实记录；不为填合同字段补造论证/确认。已有用途和“不需要讲稿”等决定继续适用，不重新问一轮受众/口播。改变受众、中心主张或说服结构才回新论证流程，并先核对授权范围。\n"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+        "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+        "content": "# Content Examples｜自包含合成样例\n\n对象：宿主 Agent。本文件只提供可直接对照的合成样例，全部内容为虚构，不冒充真实项目成绩；样例自包含，不依赖仓库外部目录或旧对象。\n\n## 样例一：从材料写出具体能力，而不是占位句\n\n合成材料（公司能力）：\n\n> 已交付设备知识库接入项目覆盖手册与维修工单导入、权限配置和上线培训；提供引用问答接口与现有门户嵌入组件。\n\n**坏正文：**“本页通过能力、机制与案例三个维度建立信任。”\n\n**好正文：**“我们提供技术资料接入、引用问答与现有门户集成服务。已完成的设备知识应用项目覆盖手册和维修工单接入、权限配置及上线培训。对于本次任务，这些经验可以支持资料和入口建设；设备条件映射与草稿写入仍属于需要单独设计和开发的部分。”\n\n要点：能力落到已发生的事实；本期新增与既有能力不混写；读者能据此核对。\n\n## 样例二：机制改写落到环节，而不是换词\n\n合成材料（业务机制）：一线缺少设备版本信息时总部接单后再补问，往返平均两次；仅增加搜索框不改变这次往返。\n\n**坏正文：**“引入 AI 搜索提升服务效率。”\n\n**好正文：**“当前往返的一个成因是设备条件在接单后才被发现缺失。若设备条件在现场可得，把收集前移并按适用资料检索，可以避免接单后再次确认这些条件；收益仍需测量。现场不可得时先取得铭牌或请专家协助，不假设增加字段即可解决。复杂问题形成包含已知条件、缺口与候选资料的接手摘要，不宣称自动解决所有问题。”\n\n要点：说清改变的环节与残余边界；样本占比（如 120 条中 54 条缺型号或版本）不得写成本自动解决率。\n\n## 样例三：正式要求与建议同页区分\n\n合成材料：正式接口说明写明“本期接口只读，不自动提交”；整理稿建议嵌入草稿助手。\n\n**坏正文：**“系统自动写入工单并关闭流程（来源：需求）。”\n\n**好正文：**“需求要求本期接口只读；建议通过现有门户嵌入草稿助手，为后续正式提交做准备。两者在正文分别标注。”\n\n要点：同页出现“原始要求”和“方案建议”时在客户可见正文区分，不只在讲者备注说明。\n\n## 样例四：返修说明定位到对象\n\n**坏返修：**“P03 建议增强专业性。”\n\n**好返修：**“P03 将草稿写入描述为公司已实现能力，但能力资料仅证明只读集成。将该句改为本期新增设计，补充权限和人工正式提交关系；同时检查实施与总结页是否仍沿用‘完全只读’的旧说法。”\n\n## 精修示例与默认成稿的边界\n\n人工或 Host 精修产生的 Page 是能力示范：它证明“给定正文可以做出什么样”，不证明“系统首次交流就能从原材料写出专业首稿”。默认成稿的质量判断由实际人类/Host 运行记录关闭；两者分开保存、分开引用。协议往返例（结果信封、atom 身份、审阅返修链）见任务工作单给出的方法与文档路径。\n\n## 样例五：无依据因果的修正（“直接减少往返”）\n\n合成材料（决策材料）：120 个请求中 54 个缺型号或版本；访谈提到缺设备条件可能带来接单后的补问，未统计轮次、时长或相对其他成本；一期只读。\n\n**坏正文：**“字段前移直接减少往返，节省 45% 处理时间。”\n\n**好正文（两选一，都必须可核对）：**\n\n1. 有适用条件时：“若设备条件可在现场取得，字段前移可避免接单后的再次确认；该收益依赖现场可得性，本次材料未测量轮次或时长。”\n2. 作为待验假设时：“假设：字段前移能减少接单后的再次确认。本材料只观察到 54/120 缺型号或版本，未测量补问轮次；该假设需要在试点中验证。”\n\n要点：观察（54/120）→ 可能的机制（依赖可得性）→ 待验假设或带条件判断，三者分开写。“45%”是样本占比，不是节省比例；“直接减少”必须带条件或标为假设。\n\n**反例要点：**把培训、研究或参考稿也套销售叙事（痛点—方案—CTA），或在材料没有商业异议、没有收益测量时补造一条；这类内容既不成立，也让读者无法核对来源。\n\n## 完整页例 A：跨材料关系矩阵\n\n**用途与材料（全部合成）**：决策人员选择本期范围。正式接口说明要求只读检索、记录设备型号/版本、人工确认后提交；能力说明仅证明手册/工单接入和门户嵌入；提案建议条件采集与引用摘要，尚未开发。没有预算和工期数据。\n\n**准确但浅的失败稿**：“需求与能力对齐”下三列“需求/能力/方案”，格子只写“只读/知识库/智能助手”。事实未错，关系与额外工作却未说明。\n\n**完整上屏正文**：\n\n标题：本期保留人工提交，新增工作集中在条件匹配和接手摘要\n\n| 工作环节 | 正式要求 | 已有能力的支持范围 | 本期提案和额外工作 |\n|---|---|---|---|\n| 资料接入 | 只读查询既有资料 | 手册和工单导入、权限配置 | 整理资料适用型号/版本，映射规则需设计，不能称已完成 |\n| 设备条件 | 查询带型号和版本 | 门户可嵌入入口，未证明已有条件校验 | 采集字段并提示缺失；缺型号先补铭牌，不猜条件继续检索 |\n| 检索与交接 | 人工核对适用资料 | 引用问答返回资料片段 | 摘要附已知条件、引用和缺口；不确定问题交专家 |\n| 正式提交 | 人工确认后提交 | 现有门户保留原提交动作 | 本期不新增自动写入；后续若需要写入，单独确认权限与范围 |\n\n判断：接入与入口可复用，不能替代设备适用范围设计。选择提案须安排字段采集、版本映射和摘要入口；当前材料不足以给出精确工期或 ROI。\n\n**结构与依据**：每行横向比较同一环节；已有能力和待开发提案分列。只读、人工确认和未证能力在正文，不只藏 notes。密度来自四种对应关系，不能换成四个“高效”格。\n\n**具体返修**：泛化标签替换为条件、关系和额外工作，删未经测量的收益。下一页回答“缺条件时怎样交接”。\n\n## 完整页例 B：单案例拆解\n\n**用途与材料（全部合成）**：培训接单员。案例 R07：现场报告间歇停机，型号已知、版本缺失；接单员取得铭牌照片，资料管理员核对版本并找到适用手册；故障原因未确定，专家接手。没有耗时和自动解决率记录。\n\n**准确但浅的失败稿**：“R07：接单员；问题停机；补信息→查资料→转专家。”环节正确，学员不能知道如何操作。\n\n**完整上屏正文**：\n\n标题：R07 先补齐资料适用条件，再把尚未确定的原因交给专家\n\n1. 接单时已知型号和间歇停机现象，版本仍缺。接单员登记版本待补，不用其他版本资料替代。\n2. 现场提供铭牌照片，资料管理员核对版本与资料适用范围。照片不足时保留缺口并继续核对，不把猜测写成事实。\n3. 接手摘要包含型号/版本、故障现象、适用手册引用和未确定的原因；专家据此继续判断。\n4. 已观察到的结果是资料定位和可核对的交接，故障原因仍待专家确认。本案例不证明自动解决，也不证明处理时间下降。\n\n迁移条件：现场可取得设备标识、有人维护资料适用范围。涉及安全风险时停止操作并立即升级，不等检索完成。\n\n**结构与依据**：“起点→缺口→动作→结果→迁移条件”解释一个案例；不从单案推导全项目收益。\n\n**具体返修**：展开阶段标签为具体核对和交接动作，保留不适用资料与专家判断边界。下一页给缺型号的练习，答案留到反馈页。\n\n## 完整页例 C：流程交接\n\n**用途与材料（全部合成）**：培训新接单员。SOP 要求先核对型号/版本；涉安全风险立即停止操作；资料不适用交管理员；复杂问题交专家；正式提交由接单员核对后执行。接口只读。\n\n**准确但浅的失败稿**：三个框“现场→AI→总部”，侧栏写“安全、高效、闭环”。没有触发条件、责任与异常处理。\n\n**完整上屏正文**：\n\n标题：摘要把条件与缺口交给下一责任人，AI 不替代安全判断和人工提交\n\n主流程：现场提供型号/版本与现象 → 接单员核对 → 按适用范围检索 → 人工核查引用 → 形成接手摘要或人工提交。\n\n| 触发条件 | 接单员动作 | 下一责任人收到什么 | 退出或恢复条件 |\n|---|---|---|---|\n| 型号或版本缺失 | 请现场补铭牌或可核对记录，标为待补 | 现场人员收到具体缺失字段 | 条件核对后检索；无法取得则升级，不自动填入 |\n| 涉安全风险 | 停止操作、保留风险信息、立即升级 | 值班专家收到风险信号和现场信息 | 专家给出适用处置后继续 |\n| 资料不适用或相互冲突 | 保存两份引用与冲突，暂停采用 | 资料管理员收到设备条件和冲突位置 | 核对适用版本；不按“更新的文件”自动裁决 |\n| 条件齐全但问题复杂 | 整理已知条件、已查资料和未决原因 | 专家收到可核对接手摘要 | 专家判断；接单员核对后沿现有门户人工提交 |\n\n规则：本期只读。摘要是待核查信息，不是已批准操作；提交由人工核对后的既有动作执行。\n\n**结构与依据**：主图给阅读顺序，矩阵承载四个不同分支。箭头表达真实责任交接，不能因版式把“人工核查→提交”改成“AI→自动提交”。\n\n**具体返修**：补责任、触发条件、交付物和恢复条件；侧栏不复述主图。拥挤时按职责拆页，不能删必要限定或缩字。\n\n## 完整页例 D：指标定义\n\n**用途与材料（全部合成）**：研究汇报。抽样 120 个有效请求中 54 个缺型号或版本；未给抽样期间、平均补问轮次和处理时间。另有提案把采集前移作为试点假设。\n\n**准确但浅的失败稿**：大字“45%”，小字“设备信息问题”，三个空指标框“效率/质量/成本”。数字正确，分母与含义未定义。\n\n**完整上屏正文**：\n\n标题：45% 是该样本的设备条件缺失比例，不是处理时间节省比例\n\n| 指标 | 定义与当前结果 | 用途和限制 |\n|---|---|---|\n| 设备条件缺失率 | 缺型号或版本的请求数 ÷ 有效抽样请求数＝54 ÷ 120＝45% | 只说明该样本；抽取期间与代表性未知，不外推全部业务 |\n| 补问轮次 | 每个请求在接单后为补信息发生的往返次数；当前未测 | 试点记录同类请求，检验前移采集是否减少接单后补问 |\n| 完成时长 | 从约定接单点到完成点的时长；当前无定义和数据 | 先定起止点和异常处理，不从缺失率推算节省 |\n| 引用适用性 | 引用是否匹配正确型号/版本，由人工核查 | 避免以错资料换速度；样本与错误类型单列 |\n\n解释：现场条件可得时，前移采集可能减少再次确认；不可得时需另行交接。试点先固定范围、口径和异常规则，再比较轮次、时长与引用适用性。\n\n**结构与依据**：数值、分母、范围和不可推导的含义同页。未测指标保留定义和测量建议，不编造成果，也不加装饰性“示意收益”图。\n\n**具体返修**：展开 45% 的分子/分母与限制，将空框换成可操作口径，删除未经确认的成本目标。\n\n四类是方法覆盖，不是每稿都要四种页型。实际稿按用途选结构，交出完整 Page 正文和适用 notes。表达理由、制作说明与追踪依据留内部字段，不照搬到客户正文。\n"
+      }
+    ],
+    "entry_methods": [
+      {
+        "id": "collaboration-routing",
+        "relative_path": "references/collaboration-routing.md",
+        "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+        "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+        "content": "# 同一 Runtime 的职责、范围与恢复\n\n四 Skill 是专业职责，不是四套状态机、四个身份或四份内容方法。先读用户真实指令、已有决定、当前 request、scope、eligibility 与 completion，再开展本次职责。决定采用、范围授权、文件认可分别记录；普通“继续”不补成决定或增额。\n\n## 四种入口\n\n- **点名**：使用点名职责；明确只写/只审/只试样页时保持原范围。名称与现有 request 冲突，返回具体冲突与建议责任，不重建项目或扩大 scope。\n- **自然路由**：按所求产物选职责。策划/正文/口播→Content；方案/限定样页→Design；只读检查→Review；整套作品/跨职责/不明确→Master。Runtime intent 只有 full_deck/content_only/design_trial/review_only/edit，resume 是操作。\n- **Master 连续调用**：同一项目、当前有效决定/授权、固定 artifact basis、相同 source/对象 ID，交给对应职责；只接纳该职责允许的产物。Content 独立完成、Design 方案/样页结束、Review 报告结束都不能自动变成全套制作。\n- **恢复后调用**：重新解析 Host Skill entry 到当前 release，读 Runtime 当前 request、暂停/撤回、scope、任务与调用账和 completion，再读取当前工作单方法 bytes/hash。不要从聊天“上次已批”推权限；同一次已完成调用不重发，unknown 先核实。\n\n用同版 Python 的 `method_resources.read_skill_methods(skill, entry_mode=..., project=..., task_id=..., text=...)` 返回方法和只读上下文。自然路由传原始 text；Master 调用与恢复传真实项目；存在 Task 时必须传真实 task_id，优先消费 Task 的派发方法和当前 basis 状态。basis_changed 不能冒称旧 Task 已消费新方法，须经正式 Runtime 解决过期任务。\n\n返回的 `consumption=runtime_returned_bytes` 只证明读取；实际 Host 应另记执行身份、所用方法 SHA、具体判断/产物、范围及结果。没有真实工具/模型/人类执行不得补写 executed/pass；合成 Runtime 检查是 L1，非真实模型、native 或人类验收。\n\n## 内容独立完成\n\n以 `content_production.completion_status(store, document)` 的 `state, content_intent, effective_scope, outputs, checks, missing, responsible_role, next_action` 为准；此纯投影不写 current。`state=completed` 正常返回请求的内容产物，不要求全项目 work_complete 或为继续而补设计授权。\n\nplan_only 返回 Narrative/Plan；write_only 返回完整逐页正文和约定检查；speech_only 返回 notes/segments/整稿投影及估时，固定稿可用 imported_mapping 而不补 Narrative；content_full 返回完整内容包及约定口播。必要独立审查缺失则 needs_reviewer，稿件仍可读。权限拒绝/零图像调用并不等于正常完成。\n\n每个子意图以独立 Task/检查点接纳，不把理解、论证、全文和审查挤成一次不可检查的全稿覆盖。只改口播不改屏幕正文；read_alone 默认 none，live 默认 cues，明确逐字才 verbatim。\n\n## 设计、审查与完整制作\n\nDesign 消费固定 Page/Plan或合法确认稿、recipe、内容关系和声明范围；缺正文依据交 Content，不能补造“已确认论证”。Design 方案或样页候选完成即返回；样页采用与范围扩展是两个决定。\n\nReview 严格只读走外部报告路径，不建生产项目或把报告写回源。source 可以是固定项目、单文件或明确文件集，report/scratch 必须在源外。没有审阅能力返回具体 needs_reviewer/needs_tool，不阻止返回可读报告。报告的事实引用不提升证据等级；换 Skill 名不改变作者 lineage 或独立性。\n\nfull_deck 的授权 Producer 使用工作单准确方法及 capability：generation.v1 的 freeze→begin→真实调用→settle→accept；changes/stage/candidate/recipe/icon 依实际工作单，不虚构协议能力。全部写入通过 Runtime，采用 candidate 不重复计生图费。已发调用的 consumed/unknown 在取消/过期拒收后仍保留；不要写本地对象修复资格。\n\n首次形成可读 Page 可通过同版 `view --open --ui v2` 打开真实 Studio；内容完成不会因此获得制作范围。没有浏览器报告实际原因和可用地址。不要把自动打开或拷贝交接视为执行。\n\n## 变更、两用途版本与实际交付\n\n材料/受众/用途改变通过 inputs update；局改明确 page/field/layer；当前 CAS、原始 instruction evidence 与 dependency basis 由同一 service 校验。恢复历史内容不恢复已撤回授权、暂停或费用。\n\n顺序双版本只按原声明两版：固定第一份 revision/export 后，start_request.input.variant_transition.kind=next_variant，source 显式指向第一份。第二版创建独立 Plan/Page/output，共享固定 Narrative/来源；不复制预算或用换 label 增第三版。edit_variant 指向要改的版本，限定页/字段，当前 control 生效；其他固定版本原文件保持原样。不能用 history restore 全项目替代窄 edit。\n\n交付核对准备交给用户的实际文件、实际 notes_policy、选定 artifact revision 与 current control。export/handoff/readiness 消费同一 delivery_eligibility；sanitized/notes-excluded 文件需核对自身 hash，不能借原 artifact 批准。工程、协作、专业/人类、native/桌面分列；历史 Desktop 工程记录不是当前人类桌面验收。\n"
+      }
+    ],
+    "consumption": "runtime_returned_bytes",
+    "host_application": "not_recorded",
+    "limitations": [
+      "Returned bytes are not evidence of model application or independent review",
+      "Routing and Skill names never create authorization or independent identity"
+    ]
+  },
+  "source_objects": [
+    {
+      "source": {
+        "external_use": "unspecified",
+        "extract": {
+          "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+          "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+        },
+        "format": "txt",
+        "locator_scheme": "line",
+        "name": "source-archive-rules.txt",
+        "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+        "original_uri": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/source-archive-rules.txt",
+        "restriction": "",
+        "source_id": "src-dcc6e474"
+      },
+      "extract_fulltext": {
+        "detail": "",
+        "format": "txt",
+        "format_kind": "text",
+        "image_pages": [],
+        "locators": [
+          {
+            "kind": "line",
+            "locator": "L1",
+            "text": "L1 本材料由当前Host原创，只供固定安装路径执行，不是实际机构制度或实际业绩。"
+          },
+          {
+            "kind": "line",
+            "locator": "L2",
+            "text": "L2 阅览原件须同时满足三项：借阅人权限有效、所借目录号匹配、管理员已登记本次领取；三项齐全后值班员才可交付。"
+          },
+          {
+            "kind": "line",
+            "locator": "L3",
+            "text": "L3 权限未知时登记待核验，记录借阅人和目录号，交权限管理员核对；值班员不能凭熟悉程度认定有效。"
+          },
+          {
+            "kind": "line",
+            "locator": "L4",
+            "text": "L4 目录号不符时停止本次领取，保留申请号与实物目录号，交库房管理员核对；不能按标题相似替换。"
+          },
+          {
+            "kind": "line",
+            "locator": "L5",
+            "text": "L5 阅览中发现撕裂、脱页或新污渍时立即停止翻阅，保持原状并通知保管员；权限齐全也不授权继续，更不能自行粘补。恢复由保管员确认。"
+          },
+          {
+            "kind": "line",
+            "locator": "L6",
+            "text": "L6 交接单记录借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人及未决项八项。"
+          },
+          {
+            "kind": "line",
+            "locator": "L7",
+            "text": "L7 情境A：林宁借A-17，实物A-17且领取已登记，权限未知；正确下一步是待核验交权限管理员，不交原件。"
+          },
+          {
+            "kind": "line",
+            "locator": "L8",
+            "text": "L8 情境B：周禾权限和领取登记均齐全，正阅A-19时发现新脱页；正确下一步是停止翻阅、保持原状、通知保管员，不先补齐交接单再处置。"
+          },
+          {
+            "kind": "line",
+            "locator": "L9",
+            "text": "L9 情境C：申请A-21、实物A-12，即使书名相同也不交付；核对两号由库房管理员处理。"
+          },
+          {
+            "kind": "line",
+            "locator": "L10",
+            "text": "L10 本材料无平均核验时长、损伤发生率和节约数据；不得编造收益、阈值或机构政策。"
+          }
+        ],
+        "original_file": {
+          "path": ".deckmaster/objects/68/68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9.txt",
+          "sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+        },
+        "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+        "original_uri": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/source-archive-rules.txt",
+        "status": "read",
+        "tables": [],
+        "text": "L1 本材料由当前Host原创，只供固定安装路径执行，不是实际机构制度或实际业绩。\nL2 阅览原件须同时满足三项：借阅人权限有效、所借目录号匹配、管理员已登记本次领取；三项齐全后值班员才可交付。\nL3 权限未知时登记待核验，记录借阅人和目录号，交权限管理员核对；值班员不能凭熟悉程度认定有效。\nL4 目录号不符时停止本次领取，保留申请号与实物目录号，交库房管理员核对；不能按标题相似替换。\nL5 阅览中发现撕裂、脱页或新污渍时立即停止翻阅，保持原状并通知保管员；权限齐全也不授权继续，更不能自行粘补。恢复由保管员确认。\nL6 交接单记录借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人及未决项八项。\nL7 情境A：林宁借A-17，实物A-17且领取已登记，权限未知；正确下一步是待核验交权限管理员，不交原件。\nL8 情境B：周禾权限和领取登记均齐全，正阅A-19时发现新脱页；正确下一步是停止翻阅、保持原状、通知保管员，不先补齐交接单再处置。\nL9 情境C：申请A-21、实物A-12，即使书名相同也不交付；核对两号由库房管理员处理。\nL10 本材料无平均核验时长、损伤发生率和节约数据；不得编造收益、阈值或机构政策。\n"
+      }
+    }
+  ],
+  "current_document": {
+    "change": {
+      "description": "compose.v2 narrative task opened for Host",
+      "kind": "task_update",
+      "operation_id": "dispatch-88345d5f0c94",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [
+        {
+          "path": ".deckmaster/objects/b5/b50aeb1c11a4eb38c071435bf24d02b06e97ea273f6666c96e4cb098abb0c760.json",
+          "sha256": "b50aeb1c11a4eb38c071435bf24d02b06e97ea273f6666c96e4cb098abb0c760"
+        }
+      ],
+      "decisions": [],
+      "quality_profile": {
+        "content_review_requirement": "independent_model_or_human",
+        "override_decision_ref": null,
+        "requirement_origin": "default_new_argument"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": "plan_only",
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "create:actual-input",
+          "source_ref": {
+            "path": ".deckmaster/objects/7e/7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3.json",
+            "sha256": "7e638a5546d8fea68bbf9e06efacbb7558f5eefa33bb9b59875656a543ea73e3"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "content_only",
+        "pause_reason": null,
+        "paused": false,
+        "request_id": "req-a01e4ba887d4",
+        "scope": {
+          "allow_page_membership_change": true,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "page_ids": [
+            "p1",
+            "p2"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T06:46:01.401523+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "created_at": "2026-10-15T06:44:56Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "outputs": {
+      "pptx": null,
+      "render_report": null,
+      "trace": null
+    },
+    "pages": [],
+    "parent_revision_id": "d98ec5766a634856a7f5c65aec169ad9",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "deck-master--natural",
+    "reviews": [],
+    "revision_id": "cb9a27d812e34b7388a5364e82d17dc9",
+    "schema_version": "deck_document.v1",
+    "sources": [
+      {
+        "external_use": "unspecified",
+        "extract": {
+          "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+          "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+        },
+        "format": "txt",
+        "locator_scheme": "line",
+        "name": "source-archive-rules.txt",
+        "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+        "original_uri": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/source-archive-rules.txt",
+        "restriction": "",
+        "source_id": "src-dcc6e474"
+      }
+    ],
+    "task": {
+      "audience": "档案阅览室新值班员",
+      "brief": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "read_alone",
+      "presentation_mode_source": "provided",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": [
+      {
+        "path": ".deckmaster/objects/3f/3f731febaf64c371c3ee6b95061a49f5e1fd92449525e1450f8cc257cb9b08f6.json",
+        "sha256": "3f731febaf64c371c3ee6b95061a49f5e1fd92449525e1450f8cc257cb9b08f6"
+      },
+      {
+        "path": ".deckmaster/objects/31/3104ef02c126cac25193e408f2698948ce9d296fb1bac92f185446c67cb28869.json",
+        "sha256": "3104ef02c126cac25193e408f2698948ce9d296fb1bac92f185446c67cb28869"
+      }
+    ]
+  },
+  "actual_task_methods": {
+    "schema_version": "method_consumption.v1",
+    "status": "current",
+    "project_id": "deck-master--natural",
+    "task_id": "ea541e2efe4e",
+    "dispatch_revision": "d98ec5766a634856a7f5c65aec169ad9",
+    "dispatch_method_release": {
+      "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+      "release_id": "a53a265321ca-01177541b9a1"
+    },
+    "current_method_release": {
+      "release_id": "a53a265321ca-01177541b9a1",
+      "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b"
+    },
+    "methods": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+        "content": "# 材料阅读与使用\n\n## 先明确采用范围，再阅读原文\n\n材料目录不是知识库入库任务。把用户指定文件、目录和已有讨论与此次交流任务对应起来：哪些是正式要求，哪些是补充解释、经验或视觉参考。文件名、修改时间和“final”字样不能单独决定业务权威。\n\n简单目录可以直接登记为可用输入；复杂目录先列出候选，按任务选料。排除工具缓存、锁文件和本次下游生成物，但不能因为目录叫“输出”就排除用户明确提供的历史方案。主动说明跳过、不可读或版本冲突，不静默只读前几份。\n\n**反例：**读取目录失败后悄悄不带材料创建项目；将最新修改的销售简稿当成已确认 RFP。\n\n## 摘要帮助定位，原文负责支撑判断\n\n成稿先读与任务相关的完整来源。读取工作单给出的原件和提取文件的真实路径，核对必要的上下文。长文分段读取时保留覆盖范围，继续读取相关后文；不是读开头加最后一句就宣称完成。\n\n含图、扫描 PDF、PPT 的结构和图表可能不在文本提取结果里。`pending_visual` 时打开对应原图/页，不把空文本当空材料。只有需要且确无更合适手段时才使用 OCR；不得用不确定识别填出确定性客户事实。\n\n**反例：**手册末尾限定“此接口只读”，方案却承诺自动写回；图中箭头表示人工审批，正文改成全自动执行。\n\n## 区分材料角色，不增加信任评分\n\n正式要求限定本任务必须满足什么；补充说明帮助理解；历史经验说明实际做过什么；视觉参考影响表现方式。角色是可修订使用说明，不是被模型赋予的权威认证。\n\n同一页同时出现需求与建议时，用自然标题、列或句式区分：“需求要求统一入口；建议通过现有门户嵌入助手实现。”这类实质区分在客户可见正文完成，而非只在讲者备注承认。\n\n**反例：**把历史客户已上线功能写成本客户已实现能力；把参考页中的数字当作当前项目基准。\n\n## 允许推理，但写清成立条件\n\n资料没有直接写出建议，不等于不能提出建议。基于业务机制、目标和约束作出推导，解释建议改变哪一步工作以及为什么。没有测量数字时说明价值机制，不编造效果比例；可以对可复算样本作计算，但不能越过其适用范围。\n\n120 条抽样请求中，54 条首次提交缺型号或版本，54/120＝45% 是该样本的设备条件缺失占比。该样本未测得这 54 条是否发生补问或节省了多少时间；45% 不是自动解决率、节省工时比例或整个客户组织的总体发生率。\n\n## 缺口优先自己补读\n\n已有材料能解决就读取；公开事实需要外部核实时按任务授权核验。私有接口是否开放不能靠公网文章证明。只有缺失决定会实质改变推荐且无法用明确条件方案处理时，提出具体问题，并同时给出已知部分与原因。\n\n不要要求用户完成系统本应承担的行业分析，也不要为了“有来源”给每个设计动作编造引用。\n\n## 把来源接到论证与页面\n\n读完来源后不要立刻写页。先给每条会改变结论的证据一个稳定说法（claim/限定/机制），再把它分配给承担它的页面；来源、主张、页面三者必须能互相找到。\n\n- 同一份材料可以支持不同结论，但结论必须写明它依赖的限定。缺字段率只支持“先把字段补齐值得优先讨论”，不支持“可节省同等比例”。\n- 观察到的问题不等于已证收益；“更快/更少往返/更低成本”这类说法要么给出适用条件，要么标为待验证假设。\n- 材料没有涉及的维度（例如客户是否接受某种流程改变）不要替它决定，写成未决项或可委派假设。\n- 事实源变更后先做影响分析：列出引用该来源的主张与页面，再改稿；不要先改正文再补理由。\n\n## 从材料得到可写全文的分析\n\n对正式要求、事实、历史参考、能力说明、用户设想和模型建议分别标用途与权威。对冲突说明谁有权裁决，文件更新日期本身不裁决冲突。记录已知、未知、会改变判断的条件和可接受推理；不把所有未知都当成必须问用户或必须补数字。\n\n按任务选择提取方式：培训找触发条件、步骤、例外和练习反馈；决策找可行替代、适用条件、额外工作与测量边界；研究找方法、观察、解释和限制；阅读稿找定义、检索结构和完整解释。抽样占比不推成收益，个案不外推项目效果，提案不变成已实现能力。\n\n随后写出关系矩阵、单案拆解、流程交接或指标定义所需的实质内容；这四种是方法覆盖，不是固定目录。完整正反页例见 content-examples，浅稿成对校准见 content-calibration。定位编号保留在内部追溯，客户正文只保留帮助理解或核对的来源。\n\n### 形成分析素材后再落页\n\n逐段核对任务相关全文和原图，保留实际读取的来源版本、定位与覆盖范围；摘要用于找段落，不替代完整上下文。每个影响判断的原值连同单位、期间、样本/分母、测量对象、适用条件和未知一起提取。例如研究 A 的“定位版本限制”与研究 B 的“记忆内容”不是同一指标，人数相加不产生整体有效率。没有统计期间或代表性就如实保留限制。\n\n内部分析用稳定 claim/来源定位串联证据、解释、建议和反论据，再按当前 Narrative/Plan/Page 合同保存；不新增一份可独立修改的证据真源。可复算数字注明输入和计算式；机制推理说明前提、例外及可能改变判断的观察。材料说“未记录”，不能改成零；缺型号不证明其他字段完整，访谈假设不证明全局主因。\n\n找到矛盾先比较用途、适用版本和规则主体；正式要求与建议冲突时保留正式边界。无法裁决的冲突定位到受影响主张，用条件分支或未决项交接；只有确需用户决策的阻断项才补问。视觉参考不证明业务事实，参考方法中的工具命令和审批规则也不扩展本次执行授权。\n"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+        "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+        "content": "# 公共内容方法｜从任务与资料写成专业完整稿\n\n这份方法用于判断和实际写作，不是每次必须填满的字段表。正式正文保存在 Page，配以合理页序和能支撑表达的图示要求。`compose.v1` 另记录下面的 ContentPlan，保存整理依据和页目标；其中不重复正文。\n\n## 新项目的过程记录（compose.v1）\n\n仅当工作单声明 `protocol_version=compose.v1` 时必需；旧任务保持原信封。先 `task start --supported-protocol compose.v1 --capability content_plan --capability versioned_source_links`，项目、任务、execution_ref 仍取本次工作单与实际执行身份。\n\n在 compose 信封顶层增加 `content_plan`，按运行时 `content-plan-input.v1.schema.json`：\n\n- `input_summary`：材料如何整合、哪些判断还缺依据。\n- `chapters`：稳定 `chapter_id`、标题及有序 `goal_ids`；每个目标只属于一个章节。\n- `goals`：稳定 `goal_id`、实际 `page_id`、本页用途、`source_links`、`unresolved_facts`；必须覆盖采用后的每个 Page。\n- 来源链接包含真实 `source_id`、`source_version`（原文件 SHA256 和 extract ref）以及 extract 中存在的 `locator`；复制工作单 `content_plan_contract.sources` 的版本，不把旧材料或页标题冒充来源。图像材料的定位存在，也不自动证明 Host 已阅图。\n- 全局 `unresolved_facts` 记录剩余缺口。某页没有来源链接时，必须说明该页缺少什么依据；不能伪造出处来通过结构检查。\n\n核心在同一次正文提交中生成不可变计划版本、绑定 Page refs，并保存 Task.result_refs。输入修订时保留未删除页的 goal_id；source/version/locator 有误或 Host 不支持协议时不采用正文。历史计划通过 ref 和固定 Document revision 定位，页标题推导的旧稿目录只供阅读、不会回填。\n\n可以在 `view --content-plan --revision …` 或按页 lineage 中核对；可运行的合成流程在 `examples/workbench/w02_content_plan.py`，不是专业内容验收证据。\n\n## 1. 先确定交流任务\n\n从当前工作单和既有讨论明确：受众已有认知、这次需要理解或判断什么、材料因此必须完成哪些职责。首次认识服务商时，身份、能力与经验可能是必要内容；已有合作的技术评审可以直接进入设计、选择和实施条件。\n\n现场讲解与独立阅读会影响解释量和页面表达，但不自动决定开头、结尾和页数。公司能力、研究发现、产品说明和教学内容都可以是完整 Deck 的组成部分，不需互斥选择固定类型。\n\n**好：**“本次只需理解服务范围与相关经验，所以用能力、机制与案例建立适配认知。”\n\n**坏：**所有首次交流先诊断痛点，所有结尾都启动试点；或把现场稿固定成行动号召、阅读稿固定成风险说明。\n\n## 2. 从资料中找出实际业务机制\n\n与方案有关的过程需要讲清参与者、触发条件、必要信息、关键动作及交接结果。然后识别建议会改变哪一个环节。保留能解释业务价值的细节，不把流程画得复杂当成专业。\n\n例如，若材料证明缺少设备版本会导致总部接单后补问，先定位具体触发和责任。仅增加搜索框不一定改变这次往返；设备条件在现场可得时，前移采集与适用资料匹配才可能避免后续再次确认，收益仍需测量。材料只有缺失计数时，补问仍是待验证机制，不能写成已观察事实。仍需专家的复杂问题，应形成包含设备条件与候选资料的接手摘要，而不是虚构所有问题自动解决。\n\n纯数据展示、日程页、产品参数说明不必套完整机制链；应准确说明如何阅读与使用。\n\n**坏：**几个“AI、数据、平台”方块相连就称方案，或所有页面都是三张能力卡片。\n\n## 3. 形成有用判断，而不是只复述\n\n把分散观察与机制连接，提出会改变理解、优先级或选择的判断。区分事实、分析、设计建议和目标；推导写明理由，数字能复算，既有能力与新增开发不混写。\n\n“120 条首次提交中 54 条缺型号或版本”说明该样本存在设备条件缺失；访谈提出补问可能发生，未统计其轮次、时间或相对成本。这可以支持讨论改善信息收集，但不能直接证明这是总成本最大的原因。若版本信息在现场根本无法获得，应该先讨论设备识别或现场采集，而不是继续坚持加字段。\n\n不要求每份 Deck 都有惊人洞察，也不要求所有页面提出方案。准确说明一项陌生机制或澄清几个混淆概念，本身可以是专业增量。\n\n## 4. 有真实选择时，说明推荐理由\n\n比较可行替代的作用、条件与额外工作。给被推荐以外的方案真实优点，不制造陪跑选项。方向已确认时沿用决定，必要时补理由，不重新组织无意义投票。\n\n资料搜索增强的优点可能是流程改动较少；门户内条件补齐与引用助手更贴近补问前移，但需要设备字段、资料适用范围映射和交互设计。推荐后者需要解释这些工作为何值得做，不能只说“更智能”。\n\n无真实选择时不凑方案一二三；缺少成本数据时不填精确成本与 ROI。\n\n## 5. 让页间关系完成同一次交流\n\n每个实质页面承担一个清楚职责：解释、比较、证明、说明结果或教学。后续内容回答前面留下的必要疑问；材料放在它能支持的位置，避免相同案例在各章节重复出现。\n\n公司能力、客户任务和建议路线可以成为一条主线，而不是分别生成三个小 Deck 拼接。复合内容按整体任务组织；说明型页面可以使用描述性标题，不能为了“每页结论”牺牲准确性。\n\n页数上限约束篇幅，不授权补固定目录。内容放不下时调整内容组织、拆分必要表达，不把正文缩成不可读的小字。\n\n## 6. 写完客户实际需要读的内容\n\n“本页通过三个维度建立信任”不是正文。应写成具体、成立的能力与经验，例如：\n\n> 我们提供技术资料接入、引用问答与现有门户集成服务。已完成的设备知识应用项目覆盖手册和维修工单接入、权限配置及上线培训。对于本次任务，这些经验可以支持资料和入口建设；设备条件映射与草稿写入仍属于需要单独设计和开发的部分。\n\n正式要求与建议同页出现时明确区分：同页混用正式要求与整理稿、访谈等补充材料时，在客户可见正文区分“原始要求”和“方案建议”；不能只在讲者备注里说明来源层级。备注给讲述者补充必要解释，制作注释放 internal_only。图内标题、标签、脚注也是正文的一部分，不能只审主文字区。\n\n“不接管生产控制”等边界只有影响当前理解或选择时才进入主线；通常可在相关方案处简洁说明，不自动占一页。CTA 同理。\n\n## 7. 审阅后实际改稿\n\n读取来源、完整正文和实际成品，找到具体错误后完成修改。判断是哪一层出了问题：内容不成立、输入投影丢失、原图还原偏离，还是 PPT 转换错误。不要通过降低要求、删除困难内容或重签参考图把失败变成通过。\n\n**坏的返修：**“P03 建议增强专业性。”\n\n**好的返修：**“P03 将草稿写入描述为公司已实现能力，但能力资料仅证明只读集成。将该句改为本期新增设计，补充权限和人工正式提交关系；同时检查实施与总结页是否仍沿用‘完全只读’的旧说法。”\n\n正常首稿可以有内部自主编辑；用户收到后需要替系统重建主线、补写核心论证，不算已经达到业务审阅门槛。工程通过、人类认可和跨任务适用范围分别记录，不互相替代。\n\n## 分阶段生产（compose.v2）\n\n工作单声明 `protocol_version=compose.v2` 时，任务只做它这一个阶段，结果按 `compose_result.v2` 变体提交。不要用空 Page 冒充策划，也不要把整份 Page 塞进 framing。\n\n| phase | 你要产出 | 明确不做 |\n| --- | --- | --- |\n| `framing` | `payload.narrative`：`maturity=framing`。材料用途/权威/冲突、受众已知与目标变化、具体缺口与候选方向 | 完整 Page、图像、SVG、PPT、替用户做决定 |\n| `argument` | `payload.narrative`：`maturity=argument`，中心节点 + 连通结构 + 证据/限定/未决项；可选 `payload.plan`（`content_plan.v2`、`mode=planned`） | 完整逐页稿、外部生成、声称已获确认 |\n| `page_copy` | `payload.pages`（完整 Page v2，含 `content_mapping`）、`payload.page_order`、`payload.plan_input`（`content_plan_input.v2`） | 改写 Narrative/来源/全局设计、超出范围的页面 |\n| `speech` | `payload.updates`：固定 Page Ref 的 `speaker_notes` 与覆盖全部口播的 `speech_segments` | 改动上屏正文、页序、视觉配置 |\n| `input_revision` | `payload.changed_layers`、每个变化层的实质 `proposals`、`payload.diff`（`input_digest`、`summary`、`changed_page_ids`） | 范围外差异、无 proposal 的层、半写成功 |\n\n`adoption_policy=proposal_only` 时结果只是提案：当前 Narrative/Plan/Page 指针不动，等有效决定覆盖后才由 Runtime 采用。\n\n### 阶段内的方法顺序\n\n1. **辨材料用途与权威**（framing）：正式要求 / 可核对事实 / 历史参考 / 能力说明 / 用户设想 / 模型建议分开；冲突不靠“较新的文件对”解决。目标写成受众变化：谁在什么场景、已知什么、用后要能判断或做什么。\n2. **建立论证或讲解结构**（argument）：按任务选方法——培训用目标行为与概念/步骤/边界/练习反馈；分析汇报用问题/方法/观察/解释/限制/结论；决策建议用真实选项/判断标准/证据/代价/推荐条件；独立阅读用检索结构/定义/完整解释/前提/可定位来源。每个核心结论标明支持它的事实或适用规则、限定挂在哪个结论上。\n3. **写出实质全文**（page_copy）：先有形（章节与页职责、节点映射、预算），再有文。每页一项可说明的沟通职责；删掉它丢掉什么、上一页留下什么问题、下一页为什么必要。正文写全图表标题、数值、单位、轴标签、注释与必要来源，不用“此处放结论”。\n4. **批判与返修**：写成后按页自查限定是否跟着结论、口播是否讲得完、下一页是否必要；发现问题按依赖范围返修，删字或缩小字号不是修复。\n\n### claim → source → page 映射纪律\n\n- 每个需要事实支撑的可见 atom 在 `content_mapping.visible_links` 里指向它承载的 `narrative_node_ids`，并带真实 `source_links`（`source_id` + `source_version` + 存在的 `locator`）。定位存在只证明可查，不证明支持。\n- `authority=reported_fact/calculation` 的节点必须有可核对来源定位或明确 blocker；`inference/hypothesis/target` 不得冒充事实。\n- 限定不能只留在备注：承担该主张的页面正文必须能看到必要限定。\n- 口播段用 `speech_segments` 覆盖 `speaker_notes` 的全部码点，标 `kind`（cue/verbatim）与 `estimated_seconds`（估计值，实测另记）。\n\n### 前置内容审查（preproduction）\n\n新论证的整套生产在进入真实视觉生产前需要内容审查，对象是任务适配、论证、证据边界、页面覆盖、推进与用途预算。默认要求 `independent_model_or_human`：独立模型必须有可核对的独立执行收据，人类必须有身份证据；作者自审（host_self）只有在用户明确接受降级且记录了范围与原因时才成立，且不影响交付前的人类专业复核政策。能力不存在时如实返回 `needs_reviewer` 并交出可审阅稿，不要伪造收据。\n\n### 完整稿与浅稿的区别\n\n对照 content-examples 四类完整页例，按用途写全单元格、条件、责任、异常、动作与含义。每个实质页能说明“删掉会丢什么、下一页回答什么”；有用途的总结和教学复习可保留。矩阵各格不能都写“高效”，侧栏解释差异/例外/含义，不仅换词复述主图。\n\nNarrative、Plan 与 Page 表达同一主线，保留事实到来源与 atom/notes 的映射。无收益数据时标假设和测量办法；必要限定在正文，notes 不藏核心论证，制作说明放 internal_only。预算不是加字或缩字的授权。\n\n前审实际读取材料与全稿，按 content-calibration 六组正反例查浅稿。返修记录具体 Page/atom、原句、改句及受影响页；只补 evidence ID、observation 或“更专业”不算改稿。原始稿、首次 Owner 稿与返修分开，不能用精修覆盖首次失败。\n\n### 从完整分析到当前页稿\n\nargument 写出中心解释/判断、实质支持和相应限定，不能只列章节标签。page_copy 在已有论证上完成全部客户可见内容：表头和每个单元格、案例原值与动作、流程触发/责任/异常/交接、指标分子分母/期间/单位/用途。选用表格、bullets、nodes/edges 或段落承载真实关系；图的箭头和表格归属也是内容，不留“此处放图/结论”给设计补写。\n\n把每个事实与限定接到真实 source/version/locator，再接到承担它的 Narrative node 和 Page atom；可见来源只是其中帮助读者核对的简洁部分。Plan 记录当前页职责、独特贡献、映射和承接，不再复制正文。检查“删掉这一页会丢什么、下一页回答什么”，合并没有贡献的重复页；结尾回顾和培训重复如果帮助完成任务，应保留。一个实质页的主图与侧栏分别承担关系和解释/例外，不能只换词复述。\n\n按 `content.visible_atoms` 的真实 atom_id 覆盖所有标题、正文、表格列/单元格、节点标签、脚注等，不能用显示页码或自造 block ID 代替；导航 atom 可空映射，不能给它编事实来源。来源定位存在不等于来源支持主张，前审需实际核对。变更正文时更新该页关系映射和受影响 notes；不越过本次 Scope 重写其他页。把相关但越界的问题列为 scope gap。\n\n### 篇幅、讲述与阅读边界\n\n- Plan 的 `page_budget.exact` 和 `max` 仅来自用户或有效委派，`target` 是可解释调整的软目标；“约 15 页”不变成恰好 15 页，也不为填上限补无用页。\n- `time_budget` 分开口播、互动与总时长；逐页估计说明假设并相加，不能把页数乘固定值宣称实测。内容放不下时去重复、重组必要表达或在授权内拆页；硬上限冲突用 Plan 本地 issue/tradeoff 指明取舍，不删核心限定、不缩成不可读小字、不临时跳过必要内容假装通过。\n- 沿用有效 `speech_policy`：现场讲解未另定时 cues；独立阅读默认 none；明确逐字稿才 verbatim。provided 原注按本次指令保留，none 不强制新增 notes。speaker-only 只写固定 Page Ref 的口播/段映射，不顺便改正文、页序或视觉。\n- live cues 补讲述提醒与停顿，不能藏上屏必须知道的事实/限定。read_alone 的必要论据、比较和限制完整可见；mixed 分别说明现场讲述与独立阅读的用法/投影，版本化保存需要的差异，不把同一稀疏现场页直接说成阅读稿。估时与实际完整试讲分开留证。\n- speaker_notes 是口播真源，`speech_segments` 按 Unicode codepoint 半开区间覆盖全部文本并标 cue/verbatim 与估时；讲稿导出或 PPTX notes 必须实际生成、按 page_id 回读后才能声明交付。Page 有 notes 不等于文件已带备注。\n\n已确认全文沿 fidelity：保留原稿主线、页面职责、必要表格和限定，`imported_mapping` 可没有 Narrative，未知映射如实记录；不为填合同字段补造论证/确认。已有用途和“不需要讲稿”等决定继续适用，不重新问一轮受众/口播。改变受众、中心主张或说服结构才回新论证流程，并先核对授权范围。\n"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+        "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+        "content": "# Content Examples｜自包含合成样例\n\n对象：宿主 Agent。本文件只提供可直接对照的合成样例，全部内容为虚构，不冒充真实项目成绩；样例自包含，不依赖仓库外部目录或旧对象。\n\n## 样例一：从材料写出具体能力，而不是占位句\n\n合成材料（公司能力）：\n\n> 已交付设备知识库接入项目覆盖手册与维修工单导入、权限配置和上线培训；提供引用问答接口与现有门户嵌入组件。\n\n**坏正文：**“本页通过能力、机制与案例三个维度建立信任。”\n\n**好正文：**“我们提供技术资料接入、引用问答与现有门户集成服务。已完成的设备知识应用项目覆盖手册和维修工单接入、权限配置及上线培训。对于本次任务，这些经验可以支持资料和入口建设；设备条件映射与草稿写入仍属于需要单独设计和开发的部分。”\n\n要点：能力落到已发生的事实；本期新增与既有能力不混写；读者能据此核对。\n\n## 样例二：机制改写落到环节，而不是换词\n\n合成材料（业务机制）：一线缺少设备版本信息时总部接单后再补问，往返平均两次；仅增加搜索框不改变这次往返。\n\n**坏正文：**“引入 AI 搜索提升服务效率。”\n\n**好正文：**“当前往返的一个成因是设备条件在接单后才被发现缺失。若设备条件在现场可得，把收集前移并按适用资料检索，可以避免接单后再次确认这些条件；收益仍需测量。现场不可得时先取得铭牌或请专家协助，不假设增加字段即可解决。复杂问题形成包含已知条件、缺口与候选资料的接手摘要，不宣称自动解决所有问题。”\n\n要点：说清改变的环节与残余边界；样本占比（如 120 条中 54 条缺型号或版本）不得写成本自动解决率。\n\n## 样例三：正式要求与建议同页区分\n\n合成材料：正式接口说明写明“本期接口只读，不自动提交”；整理稿建议嵌入草稿助手。\n\n**坏正文：**“系统自动写入工单并关闭流程（来源：需求）。”\n\n**好正文：**“需求要求本期接口只读；建议通过现有门户嵌入草稿助手，为后续正式提交做准备。两者在正文分别标注。”\n\n要点：同页出现“原始要求”和“方案建议”时在客户可见正文区分，不只在讲者备注说明。\n\n## 样例四：返修说明定位到对象\n\n**坏返修：**“P03 建议增强专业性。”\n\n**好返修：**“P03 将草稿写入描述为公司已实现能力，但能力资料仅证明只读集成。将该句改为本期新增设计，补充权限和人工正式提交关系；同时检查实施与总结页是否仍沿用‘完全只读’的旧说法。”\n\n## 精修示例与默认成稿的边界\n\n人工或 Host 精修产生的 Page 是能力示范：它证明“给定正文可以做出什么样”，不证明“系统首次交流就能从原材料写出专业首稿”。默认成稿的质量判断由实际人类/Host 运行记录关闭；两者分开保存、分开引用。协议往返例（结果信封、atom 身份、审阅返修链）见任务工作单给出的方法与文档路径。\n\n## 样例五：无依据因果的修正（“直接减少往返”）\n\n合成材料（决策材料）：120 个请求中 54 个缺型号或版本；访谈提到缺设备条件可能带来接单后的补问，未统计轮次、时长或相对其他成本；一期只读。\n\n**坏正文：**“字段前移直接减少往返，节省 45% 处理时间。”\n\n**好正文（两选一，都必须可核对）：**\n\n1. 有适用条件时：“若设备条件可在现场取得，字段前移可避免接单后的再次确认；该收益依赖现场可得性，本次材料未测量轮次或时长。”\n2. 作为待验假设时：“假设：字段前移能减少接单后的再次确认。本材料只观察到 54/120 缺型号或版本，未测量补问轮次；该假设需要在试点中验证。”\n\n要点：观察（54/120）→ 可能的机制（依赖可得性）→ 待验假设或带条件判断，三者分开写。“45%”是样本占比，不是节省比例；“直接减少”必须带条件或标为假设。\n\n**反例要点：**把培训、研究或参考稿也套销售叙事（痛点—方案—CTA），或在材料没有商业异议、没有收益测量时补造一条；这类内容既不成立，也让读者无法核对来源。\n\n## 完整页例 A：跨材料关系矩阵\n\n**用途与材料（全部合成）**：决策人员选择本期范围。正式接口说明要求只读检索、记录设备型号/版本、人工确认后提交；能力说明仅证明手册/工单接入和门户嵌入；提案建议条件采集与引用摘要，尚未开发。没有预算和工期数据。\n\n**准确但浅的失败稿**：“需求与能力对齐”下三列“需求/能力/方案”，格子只写“只读/知识库/智能助手”。事实未错，关系与额外工作却未说明。\n\n**完整上屏正文**：\n\n标题：本期保留人工提交，新增工作集中在条件匹配和接手摘要\n\n| 工作环节 | 正式要求 | 已有能力的支持范围 | 本期提案和额外工作 |\n|---|---|---|---|\n| 资料接入 | 只读查询既有资料 | 手册和工单导入、权限配置 | 整理资料适用型号/版本，映射规则需设计，不能称已完成 |\n| 设备条件 | 查询带型号和版本 | 门户可嵌入入口，未证明已有条件校验 | 采集字段并提示缺失；缺型号先补铭牌，不猜条件继续检索 |\n| 检索与交接 | 人工核对适用资料 | 引用问答返回资料片段 | 摘要附已知条件、引用和缺口；不确定问题交专家 |\n| 正式提交 | 人工确认后提交 | 现有门户保留原提交动作 | 本期不新增自动写入；后续若需要写入，单独确认权限与范围 |\n\n判断：接入与入口可复用，不能替代设备适用范围设计。选择提案须安排字段采集、版本映射和摘要入口；当前材料不足以给出精确工期或 ROI。\n\n**结构与依据**：每行横向比较同一环节；已有能力和待开发提案分列。只读、人工确认和未证能力在正文，不只藏 notes。密度来自四种对应关系，不能换成四个“高效”格。\n\n**具体返修**：泛化标签替换为条件、关系和额外工作，删未经测量的收益。下一页回答“缺条件时怎样交接”。\n\n## 完整页例 B：单案例拆解\n\n**用途与材料（全部合成）**：培训接单员。案例 R07：现场报告间歇停机，型号已知、版本缺失；接单员取得铭牌照片，资料管理员核对版本并找到适用手册；故障原因未确定，专家接手。没有耗时和自动解决率记录。\n\n**准确但浅的失败稿**：“R07：接单员；问题停机；补信息→查资料→转专家。”环节正确，学员不能知道如何操作。\n\n**完整上屏正文**：\n\n标题：R07 先补齐资料适用条件，再把尚未确定的原因交给专家\n\n1. 接单时已知型号和间歇停机现象，版本仍缺。接单员登记版本待补，不用其他版本资料替代。\n2. 现场提供铭牌照片，资料管理员核对版本与资料适用范围。照片不足时保留缺口并继续核对，不把猜测写成事实。\n3. 接手摘要包含型号/版本、故障现象、适用手册引用和未确定的原因；专家据此继续判断。\n4. 已观察到的结果是资料定位和可核对的交接，故障原因仍待专家确认。本案例不证明自动解决，也不证明处理时间下降。\n\n迁移条件：现场可取得设备标识、有人维护资料适用范围。涉及安全风险时停止操作并立即升级，不等检索完成。\n\n**结构与依据**：“起点→缺口→动作→结果→迁移条件”解释一个案例；不从单案推导全项目收益。\n\n**具体返修**：展开阶段标签为具体核对和交接动作，保留不适用资料与专家判断边界。下一页给缺型号的练习，答案留到反馈页。\n\n## 完整页例 C：流程交接\n\n**用途与材料（全部合成）**：培训新接单员。SOP 要求先核对型号/版本；涉安全风险立即停止操作；资料不适用交管理员；复杂问题交专家；正式提交由接单员核对后执行。接口只读。\n\n**准确但浅的失败稿**：三个框“现场→AI→总部”，侧栏写“安全、高效、闭环”。没有触发条件、责任与异常处理。\n\n**完整上屏正文**：\n\n标题：摘要把条件与缺口交给下一责任人，AI 不替代安全判断和人工提交\n\n主流程：现场提供型号/版本与现象 → 接单员核对 → 按适用范围检索 → 人工核查引用 → 形成接手摘要或人工提交。\n\n| 触发条件 | 接单员动作 | 下一责任人收到什么 | 退出或恢复条件 |\n|---|---|---|---|\n| 型号或版本缺失 | 请现场补铭牌或可核对记录，标为待补 | 现场人员收到具体缺失字段 | 条件核对后检索；无法取得则升级，不自动填入 |\n| 涉安全风险 | 停止操作、保留风险信息、立即升级 | 值班专家收到风险信号和现场信息 | 专家给出适用处置后继续 |\n| 资料不适用或相互冲突 | 保存两份引用与冲突，暂停采用 | 资料管理员收到设备条件和冲突位置 | 核对适用版本；不按“更新的文件”自动裁决 |\n| 条件齐全但问题复杂 | 整理已知条件、已查资料和未决原因 | 专家收到可核对接手摘要 | 专家判断；接单员核对后沿现有门户人工提交 |\n\n规则：本期只读。摘要是待核查信息，不是已批准操作；提交由人工核对后的既有动作执行。\n\n**结构与依据**：主图给阅读顺序，矩阵承载四个不同分支。箭头表达真实责任交接，不能因版式把“人工核查→提交”改成“AI→自动提交”。\n\n**具体返修**：补责任、触发条件、交付物和恢复条件；侧栏不复述主图。拥挤时按职责拆页，不能删必要限定或缩字。\n\n## 完整页例 D：指标定义\n\n**用途与材料（全部合成）**：研究汇报。抽样 120 个有效请求中 54 个缺型号或版本；未给抽样期间、平均补问轮次和处理时间。另有提案把采集前移作为试点假设。\n\n**准确但浅的失败稿**：大字“45%”，小字“设备信息问题”，三个空指标框“效率/质量/成本”。数字正确，分母与含义未定义。\n\n**完整上屏正文**：\n\n标题：45% 是该样本的设备条件缺失比例，不是处理时间节省比例\n\n| 指标 | 定义与当前结果 | 用途和限制 |\n|---|---|---|\n| 设备条件缺失率 | 缺型号或版本的请求数 ÷ 有效抽样请求数＝54 ÷ 120＝45% | 只说明该样本；抽取期间与代表性未知，不外推全部业务 |\n| 补问轮次 | 每个请求在接单后为补信息发生的往返次数；当前未测 | 试点记录同类请求，检验前移采集是否减少接单后补问 |\n| 完成时长 | 从约定接单点到完成点的时长；当前无定义和数据 | 先定起止点和异常处理，不从缺失率推算节省 |\n| 引用适用性 | 引用是否匹配正确型号/版本，由人工核查 | 避免以错资料换速度；样本与错误类型单列 |\n\n解释：现场条件可得时，前移采集可能减少再次确认；不可得时需另行交接。试点先固定范围、口径和异常规则，再比较轮次、时长与引用适用性。\n\n**结构与依据**：数值、分母、范围和不可推导的含义同页。未测指标保留定义和测量建议，不编造成果，也不加装饰性“示意收益”图。\n\n**具体返修**：展开 45% 的分子/分母与限制，将空框换成可操作口径，删除未经确认的成本目标。\n\n四类是方法覆盖，不是每稿都要四种页型。实际稿按用途选结构，交出完整 Page 正文和适用 notes。表达理由、制作说明与追踪依据留内部字段，不照搬到客户正文。\n"
+      }
+    ],
+    "consumption": "runtime_returned_bytes",
+    "work_order": {
+      "task_id": "ea541e2efe4e",
+      "operation_id": "compose-866b3c0cb801",
+      "kind": "compose",
+      "intent": "initial",
+      "method_release": {
+        "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b",
+        "release_id": "a53a265321ca-01177541b9a1"
+      },
+      "current_method_release": {
+        "release_id": "a53a265321ca-01177541b9a1",
+        "methods_sha256": "44293bc31d248b99bbcf3e4205ad23b49c0ceee4aa6c34dc64b2e49246c2530b"
+      },
+      "method_basis_status": "current",
+      "review_stage": "final",
+      "status": "awaiting_host",
+      "scope_pages": [],
+      "instruction": "写 argument Narrative：中心节点、连通论证/讲解结构、证据与限定、未决项；可选附 planned content_plan.v2（payload.plan）。这是提案：不改当前指针，不进入完整页稿或外部生成。",
+      "inputs": [],
+      "dispatch_revision": "d98ec5766a634856a7f5c65aec169ad9",
+      "produced_against": "345c64c7b819f3b1a36c8590e3a45f4363a16e2b19d43806aae5ac4eb7550199",
+      "call_allowances": [],
+      "sources": [
+        {
+          "external_use": "unspecified",
+          "extract": {
+            "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+            "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+          },
+          "format": "txt",
+          "locator_scheme": "line",
+          "name": "source-archive-rules.txt",
+          "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+          "original_uri": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/source-archive-rules.txt",
+          "restriction": "",
+          "source_id": "src-dcc6e474"
+        }
+      ],
+      "resolved_design_context": {
+        "allowed_asset_ids": [],
+        "assets": [],
+        "canvas": {
+          "fit": "contain",
+          "height_px": 900,
+          "slide_height_in": 7.5,
+          "slide_width_in": 13.333333333333334,
+          "width_px": 1600
+        },
+        "default_style_id": "default",
+        "fonts": [
+          {
+            "asset_id": null,
+            "face": "Regular",
+            "fallback_font_ids": [],
+            "family": "Noto Sans CJK SC",
+            "font_id": "body",
+            "weight": 400
+          },
+          {
+            "asset_id": null,
+            "face": "Bold",
+            "fallback_font_ids": [],
+            "family": "Noto Sans CJK SC",
+            "font_id": "heading",
+            "weight": 700
+          }
+        ],
+        "language": "zh-CN",
+        "styles": [
+          {
+            "colors": {
+              "accent": "#1478FF",
+              "background": "#FFFFFF",
+              "text": "#14213D"
+            },
+            "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+            "style_id": "default",
+            "typography": {
+              "auxiliary_size_pt": 12,
+              "body_font_id": "body",
+              "body_size_pt": 18,
+              "heading_font_id": "heading",
+              "heading_size_pt": 30
+            }
+          }
+        ]
+      },
+      "method_resources": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+        }
+      ],
+      "project_context": {
+        "task": {
+          "audience": "档案阅览室新值班员",
+          "brief": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+          "existing_decisions": [],
+          "page_limit": null,
+          "presentation_mode": "read_alone",
+          "presentation_mode_source": "provided",
+          "scenario": "",
+          "title": "Deck task"
+        },
+        "input_digest": "20da6e40963fd7cbf8bcfd90fd442e09fe87953df736f3680d82cff5eca30a19",
+        "dispatch_revision": "d98ec5766a634856a7f5c65aec169ad9",
+        "current_revision": "cb9a27d812e34b7388a5364e82d17dc9",
+        "context_status": "current",
+        "input_alignment": "no_content"
+      },
+      "staging_dir": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/projects/deck-master--natural/.deckmaster/staging/compose-866b3c0cb801",
+      "collaboration_binding": {
+        "adoption_policy": "proposal_only",
+        "authorization_ref": null,
+        "decision_refs": [],
+        "eligibility_basis": [
+          {
+            "identity": "brief",
+            "kind": "task_fact",
+            "projection": "value",
+            "ref": null,
+            "sha256": "7c8812489001f08f02a047dbbfa5a31772c96e381cd8d63a499b224e9e37fe2d"
+          },
+          {
+            "identity": "audience",
+            "kind": "task_fact",
+            "projection": "value",
+            "ref": null,
+            "sha256": "a623cb25fbe08b5c1bf1ebc03dfd08aa4b526412ebd53d1197632fc5f546d3e3"
+          }
+        ],
+        "eligibility_digest": "7e87c484d0cc6a0311b85c61a224f8398ac1850282c9a4dd08fc6ec3a65a405e",
+        "executor_type": "host",
+        "phase": "argument",
+        "request_id": "req-a01e4ba887d4",
+        "write_scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        }
+      },
+      "execution_ref": null,
+      "protocol_version": "compose.v2",
+      "required_capabilities": [
+        "compose.v2",
+        "collaboration.v1",
+        "rc3-entry.v1"
+      ],
+      "source_reading": [
+        {
+          "source_id": "src-dcc6e474",
+          "detail": "",
+          "format": "txt",
+          "format_kind": "text",
+          "image_pages": [],
+          "locators": [
+            {
+              "kind": "line",
+              "locator": "L1",
+              "text": "L1 本材料由当前Host原创，只供固定安装路径执行，不是实际机构制度或实际业绩。"
+            },
+            {
+              "kind": "line",
+              "locator": "L2",
+              "text": "L2 阅览原件须同时满足三项：借阅人权限有效、所借目录号匹配、管理员已登记本次领取；三项齐全后值班员才可交付。"
+            },
+            {
+              "kind": "line",
+              "locator": "L3",
+              "text": "L3 权限未知时登记待核验，记录借阅人和目录号，交权限管理员核对；值班员不能凭熟悉程度认定有效。"
+            },
+            {
+              "kind": "line",
+              "locator": "L4",
+              "text": "L4 目录号不符时停止本次领取，保留申请号与实物目录号，交库房管理员核对；不能按标题相似替换。"
+            },
+            {
+              "kind": "line",
+              "locator": "L5",
+              "text": "L5 阅览中发现撕裂、脱页或新污渍时立即停止翻阅，保持原状并通知保管员；权限齐全也不授权继续，更不能自行粘补。恢复由保管员确认。"
+            },
+            {
+              "kind": "line",
+              "locator": "L6",
+              "text": "L6 交接单记录借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人及未决项八项。"
+            },
+            {
+              "kind": "line",
+              "locator": "L7",
+              "text": "L7 情境A：林宁借A-17，实物A-17且领取已登记，权限未知；正确下一步是待核验交权限管理员，不交原件。"
+            },
+            {
+              "kind": "line",
+              "locator": "L8",
+              "text": "L8 情境B：周禾权限和领取登记均齐全，正阅A-19时发现新脱页；正确下一步是停止翻阅、保持原状、通知保管员，不先补齐交接单再处置。"
+            },
+            {
+              "kind": "line",
+              "locator": "L9",
+              "text": "L9 情境C：申请A-21、实物A-12，即使书名相同也不交付；核对两号由库房管理员处理。"
+            },
+            {
+              "kind": "line",
+              "locator": "L10",
+              "text": "L10 本材料无平均核验时长、损伤发生率和节约数据；不得编造收益、阈值或机构政策。"
+            }
+          ],
+          "original_file": {
+            "path": ".deckmaster/objects/68/68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9.txt",
+            "sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+          },
+          "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+          "original_uri": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/source-archive-rules.txt",
+          "status": "read",
+          "tables": [],
+          "text": "L1 本材料由当前Host原创，只供固定安装路径执行，不是实际机构制度或实际业绩。\nL2 阅览原件须同时满足三项：借阅人权限有效、所借目录号匹配、管理员已登记本次领取；三项齐全后值班员才可交付。\nL3 权限未知时登记待核验，记录借阅人和目录号，交权限管理员核对；值班员不能凭熟悉程度认定有效。\nL4 目录号不符时停止本次领取，保留申请号与实物目录号，交库房管理员核对；不能按标题相似替换。\nL5 阅览中发现撕裂、脱页或新污渍时立即停止翻阅，保持原状并通知保管员；权限齐全也不授权继续，更不能自行粘补。恢复由保管员确认。\nL6 交接单记录借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人及未决项八项。\nL7 情境A：林宁借A-17，实物A-17且领取已登记，权限未知；正确下一步是待核验交权限管理员，不交原件。\nL8 情境B：周禾权限和领取登记均齐全，正阅A-19时发现新脱页；正确下一步是停止翻阅、保持原状、通知保管员，不先补齐交接单再处置。\nL9 情境C：申请A-21、实物A-12，即使书名相同也不交付；核对两号由库房管理员处理。\nL10 本材料无平均核验时长、损伤发生率和节约数据；不得编造收益、阈值或机构政策。\n",
+          "extract_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/projects/deck-master--natural/.deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+          "original_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/projects/deck-master--natural/.deckmaster/objects/68/68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9.txt"
+        }
+      ]
+    },
+    "limitations": [
+      "Returning method bytes does not prove the Host applied them",
+      "basis_changed does not retroactively update the dispatched task"
+    ]
+  }
+}

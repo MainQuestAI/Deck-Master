@@ -20,7 +20,7 @@ decision that affects this task.
 | Change audience, decisions, purpose or materials | `deck-master inputs show --project <dir>` then `inputs update --project … --patch … --base-revision … --operation-id …` | `skills/deck-master/references/input-update.md`; only changed pages go in `content_update` |
 | Submit Host results | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | Envelope shape: `docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md` |
 | Retry a settled external call | `deck-master task call allocate --project … --task-id … --count 1` | Allocates a new allowance under the project policy; retain the earlier call outcome and evidence |
-| Start a new v3 protocol project | `deck-master create --project-format workbench.v3 --brief … --source … --out …` | Explicit opt-in; old projects and the default UI do not change; older cores refuse its pointer format |
+| Start a new v3 protocol project | `deck-master create --project-format workbench.v3 --brief … --source … --out …` | Default for new projects; existing projects require explicit migration before formal writes; older cores refuse the forward writer floor |
 | Freeze a new-protocol generation input | `deck-master requests freeze --project … --task-id … --input request.json --base-revision … --operation-id …` | First claim with required capabilities; input comes from the task's generation_input |
 | Inspect a generation request or attempt | `deck-master requests show --project … --request-id …` / `attempts show --project … --attempt-id …` | Optional --revision; attempt reads its original call allowance and actual observed fields |
 | Read the content plan | `deck-master view --project … --content-plan --revision …` | Stored chapters/goals/source versions; absent plans show a labeled derived outline without writing |
@@ -74,8 +74,9 @@ final reviews.
 
 After `python -m pip install -e ".[dev]"` the `deck-master` console command is
 the only CLI entry. For a release used from Codex, `install activate` registers
-one managed `deck-master` Skill under `$CODEX_HOME/skills` (default
-`~/.codex/skills`), following `current/skill/deck-master`. Registration does
+all four managed Skills (`deck-master`, `deck-content`, `deck-design`, `deck-review`) under `$CODEX_HOME/skills` (default
+`~/.codex/skills`), following `current/skill/<name>`. All four links are checked before activation;
+a conflict keeps the previous release and links unchanged. Registration does
 not modify config.toml or other Host skill roots. See
 `skills/deck-master/references/installation.md` for candidate installation,
 legacy companion migration and rollback.
@@ -90,3 +91,29 @@ For the current UI integration and capability completion increment, read
 [Web UI v4 baseline](specs/deck-master-webui-v4-20260930/README.md).
 A now means UI implementation; B means capability completion. Historical
 Flow Quality and W01-W12 records keep their original names and evidence.
+
+## RC3 responsibility and completion
+
+Route explicit planning/writing/speech/content packages to `deck-content`,
+visual plans and bounded sample pages to `deck-design`, strict read-only
+project/external-file review to `deck-review`, and full-deck coordination or
+cross-role continuation to `deck-master`. See `skills/RESOLVER.md` and the
+single shared `references/collaboration-routing.md` method.
+
+Named, natural-language, Master handoff and recovery paths use the same Runtime
+and current request/scope. `method_resources.read_skill_methods` reads actual
+installed bytes, task methods and current completion without dispatching work.
+Returned method bytes and actual Host application are separate evidence.
+
+`content_only` + `plan_only|write_only|speech_only|content_full` each finish with
+their requested artifacts. Use `completion.state/outputs/checks/missing` instead
+of project-wide `work_complete`; completed content does not start design or PPT.
+Design returns a scheme or bounded candidate; Review returns a strict read-only
+report outside the source, with gaps explicit. Only a separate explicit import
+writes that report through current CAS. A Skill name never upgrades identity.
+
+The default create is `workbench.v3`/rc3 with a real instruction source and no
+production grant. Imported confirmed drafts preserve their actual source and
+mapping; old formats need migration describe/apply before formal writes.
+Selected historical exports are judged against their actual file/notes and
+current control, including current pause/revoke/review facts.

@@ -20,6 +20,25 @@ def fail(field, message, *, conflict=False):
                                     exit_code=5 if conflict else 2)
 
 
+def _edited_page(store, doc, page_id, visible):
+    from .content import atom_ids
+    entry = next(entry for entry in doc['pages'] if entry['page_id'] == page_id)
+    page = copy.deepcopy(store.read_object_json(entry['page']))
+    mapping = page.pop('content_mapping', None)
+    page['customer_visible'] = copy.deepcopy(visible)
+    check_page(page)
+    if mapping is not None:
+        atoms = atom_ids(page)
+        old_links = {link['element_ref']: link for link in mapping['visible_links']}
+        missing = atoms - set(old_links)
+        if missing and doc.get('narrative') is not None:
+            fail('content_mapping', 'new visible atoms need explicit Narrative/source mappings; use a bounded host rewrite')
+        mapping['visible_links'] = [copy.deepcopy(old_links[atom]) if atom in old_links else
+            {'element_ref': atom, 'narrative_node_ids': [], 'source_links': []} for atom in sorted(atoms)]
+        page['content_mapping'] = mapping
+    return check_page(page)
+
+
 def _check(store, doc, value):
     validate_schema('content_operation_input', value)
     if not store.workbench_protocol_required(doc):
@@ -56,12 +75,18 @@ def _check(store, doc, value):
     if action == 'reorder' and set(value['page_order']) != set(entries):
         fail('page_order', 'list every existing page exactly once')
     if action == 'edit':
-        page = copy.deepcopy(store.read_object_json(entries[ids[0]]['page']))
-        page['customer_visible'] = copy.deepcopy(value['customer_visible']); check_page(page)
+        _edited_page(store, doc, ids[0], value['customer_visible'])
     if action == 'outline':
         if not doc.get('content_plan'):
             fail('content_plan', 'first obtain an explicit content plan from compose; derived titles are not a plan')
-        content_plan.validate_input(store, doc, value['content_plan'], doc['pages'])
+        if value['content_plan'].get('schema_version') == 'content_plan_input.v2':
+            previous = store.read_object_json(doc['content_plan'])
+            content_plan.validate_plan_input_v2(store, doc, value['content_plan'],
+                mode=previous.get('mode'), imported_manuscript=previous.get('imported_manuscript'))
+            if value['content_plan']['page_order'] != [entry['page_id'] for entry in doc['pages']]:
+                fail('content_plan', 'outline preserves current page membership and order')
+        else:
+            content_plan.validate_input(store, doc, value['content_plan'], doc['pages'])
     return ids
 
 
@@ -108,7 +133,11 @@ def _revise_outline(store, doc, updated, value, operation_id):
     previous_ref = doc.get('content_plan')
     if not previous_ref:
         return
-    if value['action'] == 'outline':
+    if store.read_object_json(previous_ref).get('schema_version') == 'content_plan.v2':
+        previous = store.read_object_json(previous_ref)
+        plan_input = copy.deepcopy(value['content_plan'] if value['action'] == 'outline' else previous['input'])
+        _finish_v2_plan(store, doc, previous, plan_input, updated, operation_id)
+    elif value['action'] == 'outline':
         previous = store.read_object_json(previous_ref); revised = copy.deepcopy(previous)
         revised.update(version=previous['version'] + 1, previous_ref=previous_ref, origin='user_edited', task_id=None, operation_id=operation_id)
         revised['input'] = copy.deepcopy(value['content_plan'])
@@ -127,9 +156,29 @@ def refresh_plan_links(store, doc, updated, operation_id):
     previous_ref = doc.get('content_plan')
     if not previous_ref:
         return
-    previous = store.read_object_json(previous_ref); revised = copy.deepcopy(previous)
+    previous = store.read_object_json(previous_ref)
+    if previous.get('schema_version') == 'content_plan.v2':
+        _finish_v2_plan(store, doc, previous, copy.deepcopy(previous['input']), updated, operation_id)
+        return
+    revised = copy.deepcopy(previous)
     revised.update(version=previous['version'] + 1, previous_ref=previous_ref, origin='user_edited', task_id=None, operation_id=operation_id)
     _finish_plan_revision(store, doc, revised, updated, operation_id)
+
+
+def _finish_v2_plan(store, doc, previous, plan_input, updated, operation_id):
+    ids = [entry['page_id'] for entry in updated['pages']]
+    plan_input['page_order'] = ids
+    plan_input['page_roles'] = [role for role in plan_input['page_roles'] if role['page_id'] in ids]
+    for chapter in plan_input['chapters']:
+        chapter['page_ids'] = [pid for pid in chapter['page_ids'] if pid in ids]
+    plan_input['chapters'] = [chapter for chapter in plan_input['chapters'] if chapter['page_ids']]
+    mode = previous['mode']
+    updated['content_plan'] = content_plan.build_v2_plan(store, doc,
+        {'task_id': None, 'dispatch_revision': doc['revision_id'],
+         'input_digest': previous['basis']['input_digest'], 'operation_id': operation_id},
+        plan_input, updated['pages'], narrative_ref=updated.get('narrative'), mode=mode,
+        imported_manuscript=previous.get('imported_manuscript'), require_role_mapping=mode != 'imported_mapping',
+        origin='user_edited')
 
 
 def _finish_plan_revision(store, doc, revised, updated, operation_id):
@@ -164,9 +213,11 @@ def commit(project, *, plan_id, base_revision, operation_id):
             fail('base_revision', 'content plan changed; no pages were changed', conflict=True)
         from . import eligibility
         eligibility.guard(store, doc, "content.operation", context={
-            "targets": {"page_ids": [item.get('page_id') for item in planned['input'].get('pages') or []
-                                     if isinstance(item, dict) and item.get('page_id')],
-                        "layers": ["page_copy"]}})
+            "targets": {"page_ids": [item['page_id'] for item in planned['input']['targets']]
+                            or [entry['page_id'] for entry in doc['pages']],
+                        "layers": ["page_copy", "plan"],
+                        "allow_page_membership_change": planned['input']['action'] in ('remove', 'merge', 'split'),
+                        "allow_page_order_change": planned['input']['action'] == 'reorder' }})
         value = planned['input']; action = value['action']; ids = [t['page_id'] for t in value['targets']]
         trial = value.get('mode', 'auto') == 'trial' and action in HOST_ACTIONS
         updated = bump_revision(copy.deepcopy(doc), {'operation_id': operation_id, 'kind': 'content_update', 'description': value['instruction'], 'read_set': []})
@@ -183,8 +234,16 @@ def commit(project, *, plan_id, base_revision, operation_id):
             task = revision_compose_task(store, updated, operation_id=operation_id,
                                          reason=value['instruction'])
             if task.get('protocol_version') == 'compose.v2':
-                fail('input', 'content operations are superseded by the phased compose.v2 protocol '
-                              'on this project; dispatch the phased content task instead')
+                from . import collaboration_binding, eligibility
+                scope = {**task['collaboration_binding']['write_scope'], 'page_ids': ids,
+                    'layers': ['page_copy', 'plan'],
+                    'allow_page_membership_change': action in ('merge', 'split'), 'allow_page_order_change': False}
+                authority = eligibility.covering_authorization_ref(store, doc, 'content.operation',
+                    {'page_ids': ids, 'layers': ['page_copy', 'plan']})
+                task['collaboration_binding'] = collaboration_binding.build_binding(store, doc,
+                    phase='page_copy', executor_type='host', write_scope=scope,
+                    adoption_policy='candidate_only' if trial else 'within_scope', authorization_ref=authority,
+                    decision_refs=task['collaboration_binding']['decision_refs'])
             task['scope_pages'] = ids; task['content_operation_ref'] = plan_ref; task['inputs'].append(plan_ref)
             task['required_capabilities'].append('content_operations')
             if trial:
@@ -195,11 +254,15 @@ def commit(project, *, plan_id, base_revision, operation_id):
             task['instruction'] = ('明确的内容操作 ' + action + '：' + value['instruction'] + '\n仅处理所选页。rewrite 保留原 page_id；merge/split 返回全新 page_id，移除所选旧页。'
                                    '未选页正文及目标不得改变。提交完整 content_plan 和 content_update，包含具体影响依据；不生成图片。'
                                    + ('当前为 trial：结果保存为候选，采用前不改动当前正文或页序。' if trial else ''))
+            if task.get('protocol_version') == 'compose.v2':
+                task['instruction'] += ('\n正式返回 compose_result.v2 variant=input_revision；changed_layers仅page_copy/plan；'
+                    '每个变化页提交完整含映射的Page Ref，plan提交完整content_plan_input.v2 Ref；'
+                    'diff列input_digest、真实changed_page_ids、removed_page_ids与完整page_order。未选页不得改变。')
             updated['tasks'].append(store.put_json_object(task)); task_ids = [task['task_id']]
         else:
             if action == 'edit':
-                entry = next(e for e in updated['pages'] if e['page_id'] == ids[0]); page = copy.deepcopy(store.read_object_json(entry['page']))
-                page['customer_visible'] = copy.deepcopy(value['customer_visible']); page = check_page(page)
+                entry = next(e for e in updated['pages'] if e['page_id'] == ids[0])
+                page = _edited_page(store, doc, ids[0], value['customer_visible'])
                 ref = store.put_json_object(page)
                 if ref != entry['page']:
                     entry['page'] = ref; entry['svg'] = entry['svg_preview'] = entry['ppt_preview'] = None
@@ -219,6 +282,28 @@ def commit(project, *, plan_id, base_revision, operation_id):
             result['trial_effect'] = 'the returned content_update is recorded as an immutable candidate; current pages, order and outputs change only through explicit adoption'
         return operations.commit_locked(store, document=updated, base_revision=base_revision, operation_id=operation_id,
                                         kind='content.commit', digest=digest, result=result)
+
+
+def _derived_source_scope(store, document, task):
+    """A generated identity inherits only its immutable merge/split sources.
+
+    This is an admission target, not permission to adopt an arbitrary result:
+    validate_host_result still validates every new identity, removal and Plan.
+    """
+    ref = task.get('content_operation_ref')
+    if not ref:
+        return None
+    planned = store.read_object_json(ref)
+    validate_schema('content_operation_plan', planned)
+    value = planned['input']
+    if value['action'] not in ('merge', 'split'):
+        return None
+    selected = [target['page_id'] for target in value['targets']]
+    if (planned['project_id'] != document['project_id'] or task['scope_pages'] != selected
+            or ref not in task['inputs']
+            or not (task.get('collaboration_binding') or {}).get('write_scope', {}).get('allow_page_membership_change')):
+        fail('task', 'derived identities require the frozen bounded source operation')
+    return selected
 
 
 def validate_host_result(store, doc, task, content_update, outline):
@@ -248,9 +333,14 @@ def validate_host_result(store, doc, task, content_update, outline):
         if added & historical:
             fail('page_ids', 'new derived pages cannot reuse any historical page identity')
     if doc.get('content_plan') and outline:
-        previous = store.read_object_json(doc['content_plan'])['input']; before = {g['page_id']: g for g in previous['goals']}; after = {g['page_id']: g for g in outline['goals']}
+        previous = store.read_object_json(doc['content_plan'])['input']
+        field = 'page_roles' if previous.get('schema_version') == 'content_plan_input.v2' else 'goals'
+        before = {g['page_id']: g for g in previous[field]}; after = {g['page_id']: g for g in outline[field]}
         if any(after.get(pid) != goal for pid, goal in before.items() if pid not in selected):
             fail('content_plan', 'unselected page goals and source links must remain unchanged')
+        for constraint in ('page_budget', 'time_budget', 'speech_policy'):
+            if constraint in previous and outline.get(constraint) != previous[constraint]:
+                fail('content_plan', 'bounded editorial operations preserve the agreed ' + constraint)
     if action == 'rewrite' and content_update['page_order'] != [p['page_id'] for p in doc['pages']]:
         fail('page_order', 'rewrite does not reorder pages')
     if action in ('merge', 'split'):

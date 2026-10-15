@@ -1,0 +1,110 @@
+{
+  "schema_version": "rc3_b_fixed_handoff.v2",
+  "time": "2026-10-15T06:03:17.065328+00:00",
+  "candidate": {
+    "source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+    "source_tree": "135769e0b16d6397baa51b5c098425b9a80eb9ff",
+    "release_id": "573a46a85bf9-13e3d2708abf",
+    "manifest_sha256": "fe17cde02538dece2cd311ec7c103f387ca2471b5b8e05945c5ec043f4a3eaae",
+    "wheel_sha256": "13e3d2708abf0e18ff387c7a74ca96bf05bf187b050a308f9b1f145232bbe9e0",
+    "actual_python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python"
+  },
+  "status": "PARTIAL_15_OF_16_ACTUAL_HOST_RESPONSIBILITIES__F9_BLOCKED",
+  "actual_host_identity": "/root/rc3_04_owner/skills_install",
+  "actual_host_count": 1,
+  "same_author_all_roles": true,
+  "independent_review_executions_claimed": 0,
+  "matrix": {
+    "deck-master": {
+      "named": "RETURNED",
+      "natural": "BLOCKED_F9",
+      "master": "RETURNED",
+      "recovery": "RETURNED"
+    },
+    "deck-content": {
+      "named": "plan_only completed+closed",
+      "natural": "write_only completed+closed; new request after closed plan_only without replace_id",
+      "master": "speech_only completed+closed; fixed Page/order/visual unchanged",
+      "recovery": "content_full completed+closed"
+    },
+    "deck-design": {
+      "named": "p1 feasibility returned, zero images",
+      "natural": "exact F7 p2 feasibility returned, zero images",
+      "master": "p1+p2 feasibility returned, zero images",
+      "recovery": "p1 feasibility after actual interruption, zero images"
+    },
+    "deck-review": {
+      "named": "readonly host_self text report returned; machine needs_reviewer",
+      "natural": "readonly host_self text report returned; machine needs_reviewer",
+      "master": "readonly host_self text report returned; machine needs_reviewer",
+      "recovery": "readonly host_self text report after actual interruption; machine needs_reviewer"
+    }
+  },
+  "original_finding_outcomes": {
+    "F7": "Exact original input now routes Design and actual scoped p2 method application completed; 15 software route controls separately pass.",
+    "F8": "Actual real old03 new project lifecycle with genuine old Task and unknown L1 ledger now ends in normal speech_only completion; original Page bytes and copy/visual/ledger retained.",
+    "F9": "New R2 regression: exact original Master coordination/planning natural request routes Content. Failure kept, no reword or controller bypass; full16 PASS withheld."
+  },
+  "artifacts": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/R2-actual-host-path-index.json",
+      "sha256": "6c1cb160aaec5df0a3bcaea02c90304d52c73d6e6fedcda8867c772a519f417d"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/R2-compatibility-lifecycle-index.json",
+      "sha256": "472f9e6cc2997ee42eb2bfeff125359f90552e6c572b8acd674715cc40af01f1"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/identity-before.json",
+      "sha256": "75b5ba2813561b7eade82971f674da19504844a3b6691fa8c4a0fb8c5e6fb577"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/identity-after.json",
+      "sha256": "499cf7c0255065e697da68c4ce4f07d23643faf547a0c5785382b03493561050"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/private-installed-bytes-versus-fixed-wheel.json",
+      "sha256": "ad989e3e362e68066bf00aec61ea54643224c4ddad47e53bc2a842c15d1d8231"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/F7-exact-original-and-routing-controls.json",
+      "sha256": "300330d2b1dbf9fff971fafe398ffe91f83c84d95bdd14df35bf84f3e56b2fba"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-exact-reread-exception.json",
+      "sha256": "f6f4ba9f509b137d14d09f9fcdc16383c2e1ad01350642d9b535a72a8ba9491b"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/four-actual-process-recoveries.json",
+      "sha256": "e7b24f396689deba14f27d70c3c3adf8f26f0fbf61f698f2dba75d80dcd60726"
+    }
+  ],
+  "immutability": {
+    "root_installed_package_files_before_after": 271,
+    "root_canonical_files": 270,
+    "only_generated_exception": "resources/method-inventory.json",
+    "root_extracted_skill_files_before_after": 23,
+    "unknown_new_package_or_skill_files": [],
+    "private_new_install_matches_same_wheel": true,
+    "source_canonical_matches_root_strict_audit": true,
+    "source_cache_only_changes": [
+      ".pytest_cache/v/cache/lastfailed",
+      ".pytest_cache/v/cache/nodeids"
+    ],
+    "prior_R1_reports_unchanged": true
+  },
+  "fees_and_identity_limits": {
+    "provider_image_calls_in_this_run": 0,
+    "actual_model_price_tokens_model_identity": "not_reported",
+    "old_inflight_ledger": "L1 controlled software ledger; no actual Provider/native call, timeout, charge or model fact claimed",
+    "same_host_not_sixteen_models": true,
+    "actual_independent_reviewer_human_desktop": "NOT_RUN; no claim",
+    "E1_fairness_or_blinded_effect": "NOT_EVALUATED; known prior scaffold and same source, fully disclosed"
+  },
+  "scope_of_work": "Only new private evidence/projects/scripts/temporary install prefix/host root; no product/source/snapshot/package/test edits, spawn or Git operations.",
+  "retained_scaffolding_failures": [
+    "Original combined setup aborted on true product F9; Master-natural request remains blocked.",
+    "Design/Review combined application read labels collided with existing exclusive evidence files; source Runtime untouched, first errors preserved, new recovery-only application labels used."
+  ],
+  "next_responsibility": "Root/Owner assess F9; a future fixed candidate is required for its actual retry. This fixed R2 record remains frozen."
+}

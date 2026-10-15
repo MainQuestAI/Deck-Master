@@ -6,6 +6,8 @@ import hashlib
 
 import pytest
 
+from rc3_fixtures import historical_snapshot
+
 from deck_master import collaboration, collaboration_migration, service, tasks as tasks_mod
 from deck_master.models import ModelError, bump_revision
 from deck_master.store import ConflictError, Store
@@ -21,8 +23,9 @@ def _page(pid: str) -> dict:
 def _legacy_project(tmp_path):
     """A pre-collaboration project: no writer metadata, one runnable task with
     an unknown call, legacy decision strings, a default presentation mode."""
-    project = tmp_path / "legacy"
-    service.create(project, brief="legacy deck", draft={"pages": [_page("p1"), _page("p2")]})
+    fixture = historical_snapshot(tmp_path, scenario="pre-collaboration fixed original with unknown call",
+        pages=[_page("p1"), _page("p2")], task={"brief": "legacy deck"})
+    project = fixture["project"]
     store = Store(project)
     document = store.load_document()
     task = tasks_mod.new_task(
@@ -50,7 +53,7 @@ def test_describe_is_read_only_and_lists_pending_reconciliation(tmp_path):
     description = collaboration_migration.describe(project)
     assert description["plan"]["needs_migration"] is True
     plan = description["plan"]
-    assert plan["minimum_writer"] is None and plan["target_minimum_writer"] == "collaboration.v1"
+    assert plan["minimum_writer"] is None and plan["target_minimum_writer"] == "rc3-entry.v1"
     assert plan["counts"] == {"pages": 2, "sources": 0, "reviews": 0, "tasks": 1, "runnable_tasks": 1}
     assert plan["tasks_to_supersede"] == ["legacy-task-1"]
     assert plan["unknown_calls"] == 1
@@ -72,7 +75,7 @@ def test_apply_preserves_facts_and_retires_legacy_tasks(tmp_path):
     assert outcome["superseded_tasks"] == ["legacy-task-1"]
     assert outcome["unknown_calls"] == 1
     after = store.load_document()
-    assert after["compatibility"]["minimum_writer"] == "collaboration.v1"
+    assert after["compatibility"]["minimum_writer"] == "rc3-entry.v1"
     assert after["collaboration"]["request"] is None
     assert after["collaboration"]["decisions"] == []
     # Immutable facts survive byte-for-byte.

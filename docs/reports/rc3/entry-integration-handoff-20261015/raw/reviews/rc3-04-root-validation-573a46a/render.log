@@ -1,0 +1,1098 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/work/rc3/reviews/rc3-04-code-snapshot-573a46a
+configfile: pyproject.toml
+collected 2858 items / 2787 deselected / 71 selected
+
+tests/rebuild/test_candidate_preview_recovery.py F                       [  1%]
+tests/rebuild/test_candidates.py ..                                      [  4%]
+tests/rebuild/test_compiler_geometry.py F                                [  5%]
+tests/rebuild/test_deep_quality_render.py ....                           [ 11%]
+tests/rebuild/test_deep_quality_state.py ..                              [ 14%]
+tests/rebuild/test_export.py .                                           [ 15%]
+tests/rebuild/test_external_review_lifecycle.py ...                      [ 19%]
+tests/rebuild/test_external_review_render.py FFFFFF                      [ 28%]
+tests/rebuild/test_flow_quality.py ....                                  [ 33%]
+tests/rebuild/test_gradient_readability.py FFF                           [ 38%]
+tests/rebuild/test_icon_quality.py FF                                    [ 40%]
+tests/rebuild/test_install.py .F.                                        [ 45%]
+tests/rebuild/test_page_visual_gate.py ...........                       [ 60%]
+tests/rebuild/test_production.py .                                       [ 61%]
+tests/rebuild/test_rc3_design_native.py ..............                   [ 81%]
+tests/rebuild/test_rc3_notes_files.py F                                  [ 83%]
+tests/rebuild/test_rc3_notes_transactions.py FFFF                        [ 88%]
+tests/rebuild/test_render.py ...                                         [ 92%]
+tests/rebuild/test_service_flow.py ...                                   [ 97%]
+tests/rebuild/test_tasks.py ..                                           [100%]
+
+=================================== FAILURES ===================================
+________ test_damaged_state_retries_actual_compile_render_and_readback _________
+
+icon_store = <deck_master.store.Store object at 0x7f69d1738ec0>
+
+    @pytest.mark.render
+    def test_damaged_state_retries_actual_compile_render_and_readback(icon_store):
+>       recipe = confirm(icon_store, input_for(icon_store, method="standard"))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_candidate_preview_recovery.py:215: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_icon_quality.py:36: in confirm
+    value=value or input_for(store);p=icons.propose(store.project_root,input=value)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/icons.py:327: in propose
+    eligibility.guard(store, doc, "style.propose",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0fa1fa0>
+document = {'change': {'description': 'synthetic icons', 'kind': 'artifact_adoption', 'operation_id': 'cc29139c-d3ca-4978-b2fe-f3...-15T05:51:08.389351+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'style.propose', context = {'targets': {'layers': ['design']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+_____________ test_document_canvas_is_prompt_and_compile_authority _____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_document_canvas_is_prompt0')
+resolvable_font_family = 'Noto Sans CJK SC'
+
+    @pytest.mark.render
+    def test_document_canvas_is_prompt_and_compile_authority(tmp_path, resolvable_font_family):
+        # AC-K14: a 4:3 Document canvas flows into the prompt projection, resolve_design,
+        # and the real produced PPT page size; no hidden 16:9 default appears anywhere.
+        project = create_project(tmp_path)
+        store = attach_svg(project, SVG_4_3.replace("Hiragino Sans GB", resolvable_font_family))
+        document = store.load_document()
+        assert document['design_context']['canvas'] == CANVAS_4_3
+        assert (document['design_context']['canvas']['slide_width_in'],
+                document['design_context']['canvas']['slide_height_in']) != (40 / 3, 7.5)
+    
+        page = store.read_object_json(document['pages'][0]['page'])
+        effective, _ = resolve_design(page, document['design_context'],
+                                      document['design_context'].get('assets', []))
+        assert effective['canvas'] == CANVAS_4_3
+        request = project_prompt(page, document['design_context'],
+                                 document['design_context'].get('assets', []))
+        assert 'Canvas: 960x720 px' in request['prompt']
+        assert 'physical size 10.0x7.5 in' in request['prompt']
+        assert '1280x720' not in request['prompt']
+        assert request['projection']['canvas'] == CANVAS_4_3
+    
+>       report = produce(project)
+                 ^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_compiler_geometry.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0bcdbe0>
+document = {'change': {'description': 'attach svg for produce test', 'kind': 'task_update', 'operation_id': 'attach-svg', 'read_s...-15T05:51:11.662063+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+____ test_actual_render_and_persisted_produce_report[duplicate-hidden-fail] ____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_actual_render_and_persist0')
+case = 'duplicate-hidden', expected = 'fail'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0bc02f0>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:51:23.811591+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+___ test_actual_render_and_persisted_produce_report[duplicate-visible-pass] ____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_actual_render_and_persist1')
+case = 'duplicate-visible', expected = 'pass'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0b8a000>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:51:23.897357+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+________ test_actual_render_and_persisted_produce_report[no-fill-fail] _________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_actual_render_and_persist2')
+case = 'no-fill', expected = 'fail'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0f2c6e0>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:51:23.982050+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+_________ test_actual_render_and_persisted_produce_report[solid-pass] __________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_actual_render_and_persist3')
+case = 'solid', expected = 'pass'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0b903b0>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:51:24.071087+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+____ test_actual_render_and_persisted_produce_report[partial-gradient-pass] ____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_actual_render_and_persist4')
+case = 'partial-gradient', expected = 'pass'
+
+    @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
+    def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+        duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
+        page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
+        path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
+            design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        body=text(words[0]);attrs='data-atom-id="atom:p1:block:b1:text"' if not duplicate else ''
+        if case=='duplicate-hidden':attrs+=' opacity="0"'
+        if case=='no-fill':attrs+=' fill="none"'
+        if case=='partial-gradient':
+            body='<defs><linearGradient id="paint"><stop offset="0" stop-opacity="1"/><stop offset="1" stop-opacity="0"/></linearGradient></defs>'+body
+            attrs+=' fill="url(#paint)"'
+        body+=text(words[1],60,attrs);svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100">'+body+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
+>       report=pipeline.produce(path);doc=store.load_document()
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0bcdd60>
+document = {'change': {'description': 'synthetic SVG fixture', 'kind': 'artifact_adoption', 'operation_id': 'attach-proof-svg', '...-15T05:51:24.159785+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+_____ test_readback_implementation_change_cannot_reuse_old_candidate_check _____
+
+icon_store = <deck_master.store.Store object at 0x7f69d0bceb70>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f69d0b88770>
+
+    def test_readback_implementation_change_cannot_reuse_old_candidate_check(icon_store,monkeypatch):
+>       recipe=confirm(icon_store,input_for(icon_store,method='standard'));task=dispatch(icon_store,recipe)[0];start(icon_store,task)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_external_review_render.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_icon_quality.py:36: in confirm
+    value=value or input_for(store);p=icons.propose(store.project_root,input=value)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/icons.py:327: in propose
+    eligibility.guard(store, doc, "style.propose",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0b93200>
+document = {'change': {'description': 'synthetic icons', 'kind': 'artifact_adoption', 'operation_id': 'cfac5669-780f-4265-9f97-8c...-15T05:51:24.325705+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'style.propose', context = {'targets': {'layers': ['design']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+__________ test_real_gradient_svg_ppt_and_persisted_check[start-zero] __________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_real_gradient_svg_ppt_and0')
+name = 'start-zero', stops = [(0, 1), (0, 0), (1, 0)], expected = 'fail'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('name,stops,expected', [CASES[0],CASES[1],CASES[11]], ids=['start-zero','end-zero','partial'])
+    def test_real_gradient_svg_ppt_and_persisted_check(tmp_path,name,stops,expected):
+        page={'schema_version':'deck_page_package.v2',**_atom_page(['REPORT','Body'])};project=tmp_path/'project'
+        service.create(project,brief='Synthetic gradient interval regression',draft={'pages':[page]},design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100"><rect width="200" height="100" fill="#ffffff"/>'+gradient_body(stops)+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(project);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'gradient-proof','kind':'artifact_adoption','description':'synthetic explicit gradient','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='gradient-proof')
+>       report=pipeline.produce(project);doc=store.load_document();stored=json.loads(store.read_object_bytes(store.read_object_json(doc['outputs']['render_report'])['file']))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_gradient_readability.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0aea600>
+document = {'change': {'description': 'synthetic explicit gradient', 'kind': 'artifact_adoption', 'operation_id': 'gradient-proof...-15T05:51:37.838565+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+___________ test_real_gradient_svg_ppt_and_persisted_check[end-zero] ___________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_real_gradient_svg_ppt_and1')
+name = 'end-zero', stops = [(0, 0), (1, 0), (1, 1)], expected = 'fail'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('name,stops,expected', [CASES[0],CASES[1],CASES[11]], ids=['start-zero','end-zero','partial'])
+    def test_real_gradient_svg_ppt_and_persisted_check(tmp_path,name,stops,expected):
+        page={'schema_version':'deck_page_package.v2',**_atom_page(['REPORT','Body'])};project=tmp_path/'project'
+        service.create(project,brief='Synthetic gradient interval regression',draft={'pages':[page]},design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100"><rect width="200" height="100" fill="#ffffff"/>'+gradient_body(stops)+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(project);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'gradient-proof','kind':'artifact_adoption','description':'synthetic explicit gradient','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='gradient-proof')
+>       report=pipeline.produce(project);doc=store.load_document();stored=json.loads(store.read_object_bytes(store.read_object_json(doc['outputs']['render_report'])['file']))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_gradient_readability.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d08ab350>
+document = {'change': {'description': 'synthetic explicit gradient', 'kind': 'artifact_adoption', 'operation_id': 'gradient-proof...-15T05:51:37.935187+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+___________ test_real_gradient_svg_ppt_and_persisted_check[partial] ____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_real_gradient_svg_ppt_and2')
+name = 'partial', stops = [(0, 1), (1, 0)], expected = 'pass'
+
+    @pytest.mark.render
+    @pytest.mark.parametrize('name,stops,expected', [CASES[0],CASES[1],CASES[11]], ids=['start-zero','end-zero','partial'])
+    def test_real_gradient_svg_ppt_and_persisted_check(tmp_path,name,stops,expected):
+        page={'schema_version':'deck_page_package.v2',**_atom_page(['REPORT','Body'])};project=tmp_path/'project'
+        service.create(project,brief='Synthetic gradient interval regression',draft={'pages':[page]},design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
+        svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100"><rect width="200" height="100" fill="#ffffff"/>'+gradient_body(stops)+'</svg>')
+        pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
+        store=Store(project);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'gradient-proof','kind':'artifact_adoption','description':'synthetic explicit gradient','read_set':[]})
+        updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='gradient-proof')
+>       report=pipeline.produce(project);doc=store.load_document();stored=json.loads(store.read_object_bytes(store.read_object_json(doc['outputs']['render_report'])['file']))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_gradient_readability.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0808950>
+document = {'change': {'description': 'synthetic explicit gradient', 'kind': 'artifact_adoption', 'operation_id': 'gradient-proof...-15T05:51:38.031374+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+______________ test_actual_candidate_preview_and_cross_page_reuse ______________
+
+icon_store = <deck_master.store.Store object at 0x7f69d0baebd0>
+
+    @pytest.mark.render
+    def test_actual_candidate_preview_and_cross_page_reuse(icon_store):
+>       before=icon_store.load_document();recipe=confirm(icon_store,input_for(icon_store,method='standard'));task=dispatch(icon_store,recipe)[0];start(icon_store,task)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_icon_quality.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_icon_quality.py:36: in confirm
+    value=value or input_for(store);p=icons.propose(store.project_root,input=value)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/icons.py:327: in propose
+    eligibility.guard(store, doc, "style.propose",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0a5a9c0>
+document = {'change': {'description': 'synthetic icons', 'kind': 'artifact_adoption', 'operation_id': '95def0c1-4257-4c0b-ba1b-d9...-15T05:51:38.215889+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'style.propose', context = {'targets': {'layers': ['design']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+_________________ test_preview_failure_retry_and_corrupt_files _________________
+
+icon_store = <deck_master.store.Store object at 0x7f69d0b84c50>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f69d0ae43b0>
+
+    @pytest.mark.render
+    def test_preview_failure_retry_and_corrupt_files(icon_store,monkeypatch):
+>       recipe=confirm(icon_store,input_for(icon_store,method='standard'));task=dispatch(icon_store,recipe)[0];start(icon_store,task)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_icon_quality.py:219: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_icon_quality.py:36: in confirm
+    value=value or input_for(store);p=icons.propose(store.project_root,input=value)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/icons.py:327: in propose
+    eligibility.guard(store, doc, "style.propose",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d0f437a0>
+document = {'change': {'description': 'synthetic icons', 'kind': 'artifact_adoption', 'operation_id': 'f1e2c995-74d6-4b19-a551-b3...-15T05:51:38.393729+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'style.propose', context = {'targets': {'layers': ['design']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/style.propose: no authorization names 'style.propose' within the request scope
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+___________________ test_isolated_full_chain_and_local_edit ____________________
+
+wheel_venv = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/wheel-venv0/venv-home')
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_isolated_full_chain_and_l0')
+
+    @pytest.mark.render
+    def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
+        home = tmp_path / "home"
+        home.mkdir()
+        work = tmp_path / "work"
+        work.mkdir()
+        project = work / "chain-proj"
+        family = _resolvable_font_family(wheel_venv, home, work)
+        material = _write_material(work)
+    
+        code, payload, _ = _iso_run(wheel_venv, ["create", "--brief", "隔离全链", "--source", str(material),
+                                                 "--out", str(project)], home, work)
+        assert code == 0, payload
+        compose = _json.loads((ENVELOPES / "compose.json").read_text())
+        for page in compose["pages"]:
+            page.get("visual_spec", {}).pop("nodes", None)
+            page.get("visual_spec", {}).pop("edges", None)
+>       _adopt(wheel_venv, home, work, project, "compose", compose)
+
+tests/rebuild/test_install.py:524: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+venv = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/wheel-venv0/venv-home')
+home = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_isolated_full_chain_and_l0/home')
+work = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_isolated_full_chain_and_l0/work')
+project = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_isolated_full_chain_and_l0/work/chain-proj')
+kind = 'compose'
+envelope = {'kind': 'compose', 'files': [], 'pages': [{'schema_version': 'deck_page_package.v2', 'page_id': 'p09', 'customer_visi...': 'read_only', 'text': '本期只读接口'}], ...}, 'speaker_notes': '所有企业与数字均为合成输入，不代表客户成绩。', ...}], 'page_order': ['p09'], ...}
+staged = None
+
+    def _adopt(venv, home, work, project, kind, envelope, staged=None):
+        code, pending, _ = _iso_run(venv, ["continue", "--project", str(project)], home, work)
+        assert code == 3 and pending["pending_tasks"][0]["kind"] == kind, (kind, pending)
+        task = pending["pending_tasks"][0]
+        if staged:
+            staging = project / ".deckmaster" / "staging" / task["operation_id"]
+            staging.mkdir(parents=True, exist_ok=True)
+            for name, data in staged.items():
+                (staging / name).write_bytes(data)
+        envelope_path = work / f"envelope-{kind}.json"
+        envelope_path.write_text(_json.dumps(envelope, ensure_ascii=False))
+        code, payload, err = _iso_run(venv, ["task", "accept", "--project", str(project),
+                                             "--task-id", task["task_id"], "--operation-id", task["operation_id"],
+                                             "--produced-against", task["produced_against"],
+                                             "--result", str(envelope_path)], home, work)
+>       assert code == 0, (payload, err)
+E       AssertionError: ({}, '{
+E          "error": {
+E           "code": "scope_exceeded",
+E           "message": "the target is outside the current request scope",
+E           ...
+E            "target_layers": [
+E             "page_copy"
+E            ],
+E            "projection": null
+E           },
+E           "required_artifact_refs": []
+E          }
+E         }
+E         ')
+E       assert 4 == 0
+
+tests/rebuild/test_install.py:503: AssertionError
+______ test_real_pipeline_to_export_preserves_full_notes_and_dependencies ______
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_real_pipeline_to_export_p0')
+resolvable_font_family = 'Noto Sans CJK SC'
+
+    @pytest.mark.render
+    def test_real_pipeline_to_export_preserves_full_notes_and_dependencies(tmp_path, resolvable_font_family):
+        root, store, _ = _project(tmp_path, resolvable_font_family)
+        before = store.load_document()
+>       report = produce(root)
+                 ^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_notes_files.py:62: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/pipeline.py:347: in produce
+    eligibility.guard(store, store.load_document(), "compile.ppt",
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7f69d08a9580>
+document = {'change': {'description': 'Synthetic initial SVGs; no model production claim', 'kind': 'artifact_adoption', 'operatio...-15T05:52:20.567098+00:00', 'compatibility': {'minimum_writer': 'rc3-entry.v1', 'project_format': 'workbench.v3'}, ...}
+action = 'compile.ppt', context = {'targets': {'layers': ['output']}}
+
+    def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
+        """Consume one active decision; historical readers/fact settlement remain legal.
+    
+        Every new business write, including legacy-project production, is refused
+        when ineligible. Routing returns the same named gap without dispatching.
+        Restore recovers facts under scope while preserving current stop/control.
+        """
+        decision = evaluate(store, document, document, action, context)
+        if not decision["allowed"] and (
+                "migration_required" in decision["reason_codes"]
+                or "persistence_none" in decision["reason_codes"]
+                or decision["action"] not in ROUTING_ACTIONS):
+>           raise EligibilityBlocked(decision)
+E           deck_master.eligibility.EligibilityBlocked: eligibility/compile.ppt: the preproduction content review does not pass on the current manuscript; a review draft can still be returned
+
+src/deck_master/eligibility.py:1614: EligibilityBlocked
+______ test_notes_edit_preserves_completed_visual_and_actual_review_bytes ______
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_notes_edit_preserves_comp0')
+
+    @pytest.mark.render
+    def test_notes_edit_preserves_completed_visual_and_actual_review_bytes(tmp_path):
+        project, store = _completed_visual(tmp_path)
+        before = store.load_document()
+        entry = before['pages'][0]
+        raw_reviews = [store.read_object_bytes(ref) for ref in before['reviews']]
+        page = store.read_object_json(entry['page'])
+        page['speaker_notes'] = '新备注中文。\n\n末段54/120＝45%，不是节约率。\n'
+>       result = editing.edit_page(project, page=page, base_revision=before['revision_id'],
+                                   page_hash=entry['page']['sha256'], operation_id='notes-change')
+
+tests/rebuild/test_rc3_notes_transactions.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/editing.py:346: in edit_page
+    return _edit(Store(project_dir),page=check_page(page),base_revision=base_revision,page_hash=page_hash,operation_id=operation_id)
+                                         ^^^^^^^^^^^^^^^^
+src/deck_master/content.py:322: in check_page
+    validate_page_semantics(page)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+page = {'content_mapping': {'narrative_ref': None, 'plan_role_page_id': 'p-a', 'speech_segments': [{'end_codepoint': 12, 'est...＝45%，不是节约率。', 'type': 'paragraph'}], 'title': '记录未知'}, 'page_id': 'p-a', 'schema_version': 'deck_page_package.v2', ...}
+
+    def validate_page_semantics(page: dict[str, Any]) -> None:
+        validate_schema("page", page)
+        visual = page.get("visual_spec") or {}
+        nodes = visual.get("nodes") or []
+        edges = visual.get("edges") or []
+        node_ids = [node.get("node_id") for node in nodes]
+        if len(node_ids) != len(set(node_ids)):
+            raise ModelError("page/visual_spec", "duplicate node_id")
+        for edge in edges:
+            where = f"page/visual_spec/edges/{edge.get('edge_id')}"
+            if edge.get("from") not in node_ids or edge.get("to") not in node_ids:
+                raise ModelError(
+                    where, f"edge endpoints must exist in nodes, got {edge.get('from')}->{edge.get('to')}"
+                )
+        mapping = page.get("content_mapping")
+        if mapping:
+            atom_refs = [link.get("element_ref") for link in mapping.get("visible_links") or []]
+            if len(atom_refs) != len(set(atom_refs)):
+                raise ModelError("page/content_mapping/visible_links",
+                                 "each visible atom gets exactly one mapping entry")
+            from .content import atom_ids
+            expected_atoms = atom_ids(page)
+            mapped_atoms = {link.get("element_ref") for link in mapping.get("visible_links") or []}
+            missing_atoms = sorted(expected_atoms - mapped_atoms)
+            unknown_atoms = sorted(mapped_atoms - expected_atoms)
+            if missing_atoms:
+                raise ModelError("page/content_mapping/visible_links",
+                                 f"every visible atom needs exactly one mapping entry; missing: {missing_atoms}")
+            if unknown_atoms:
+                raise ModelError("page/content_mapping/visible_links",
+                                 f"mapping references atoms that are not visible content: {unknown_atoms}")
+            segments = mapping.get("speech_segments") or []
+            segment_ids = [segment.get("segment_id") for segment in segments]
+            if len(segment_ids) != len(set(segment_ids)):
+                raise ModelError("page/content_mapping/speech_segments", "duplicate segment_id")
+            previous_end = 0
+            for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                start, end = segment.get("start_codepoint"), segment.get("end_codepoint")
+                where = f"page/content_mapping/speech_segments/{segment.get('segment_id')}"
+                if start is None or end is None or start >= end:
+                    raise ModelError(where, "speech ranges are half-open and must be non-empty")
+                if start < previous_end:
+                    raise ModelError(where, "speech ranges must not overlap")
+                previous_end = end
+            notes = page.get("speaker_notes") or ""
+            if segments:
+                cursor = 0
+                for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                    if segment.get("start_codepoint") != cursor:
+                        raise ModelError("page/content_mapping/speech_segments",
+                                         "speech segments must cover the notes contiguously")
+                    cursor = segment.get("end_codepoint")
+                if cursor != len(notes):
+>                   raise ModelError("page/content_mapping/speech_segments",
+E                   deck_master.models.ModelError: page/content_mapping/speech_segments: speech segments must cover all 28 codepoints of speaker_notes
+
+src/deck_master/models.py:335: ModelError
+_________________ test_visual_open_finding_not_fixed_by_notes __________________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_visual_open_finding_not_f0')
+
+    @pytest.mark.render
+    def test_visual_open_finding_not_fixed_by_notes(tmp_path):
+        project, store = _completed_visual(tmp_path, finding=True)
+        before = store.load_document(); entry = before['pages'][0]
+        page = store.read_object_json(entry['page']); page['speaker_notes'] = '仅改备注。'
+>       editing.edit_page(project, page=page, base_revision=before['revision_id'],
+                          page_hash=entry['page']['sha256'], operation_id='notes-not-visual-fix')
+
+tests/rebuild/test_rc3_notes_transactions.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/editing.py:346: in edit_page
+    return _edit(Store(project_dir),page=check_page(page),base_revision=base_revision,page_hash=page_hash,operation_id=operation_id)
+                                         ^^^^^^^^^^^^^^^^
+src/deck_master/content.py:322: in check_page
+    validate_page_semantics(page)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+page = {'content_mapping': {'narrative_ref': None, 'plan_role_page_id': 'p-a', 'speech_segments': [{'end_codepoint': 12, 'est...＝45%，不是节约率。', 'type': 'paragraph'}], 'title': '记录未知'}, 'page_id': 'p-a', 'schema_version': 'deck_page_package.v2', ...}
+
+    def validate_page_semantics(page: dict[str, Any]) -> None:
+        validate_schema("page", page)
+        visual = page.get("visual_spec") or {}
+        nodes = visual.get("nodes") or []
+        edges = visual.get("edges") or []
+        node_ids = [node.get("node_id") for node in nodes]
+        if len(node_ids) != len(set(node_ids)):
+            raise ModelError("page/visual_spec", "duplicate node_id")
+        for edge in edges:
+            where = f"page/visual_spec/edges/{edge.get('edge_id')}"
+            if edge.get("from") not in node_ids or edge.get("to") not in node_ids:
+                raise ModelError(
+                    where, f"edge endpoints must exist in nodes, got {edge.get('from')}->{edge.get('to')}"
+                )
+        mapping = page.get("content_mapping")
+        if mapping:
+            atom_refs = [link.get("element_ref") for link in mapping.get("visible_links") or []]
+            if len(atom_refs) != len(set(atom_refs)):
+                raise ModelError("page/content_mapping/visible_links",
+                                 "each visible atom gets exactly one mapping entry")
+            from .content import atom_ids
+            expected_atoms = atom_ids(page)
+            mapped_atoms = {link.get("element_ref") for link in mapping.get("visible_links") or []}
+            missing_atoms = sorted(expected_atoms - mapped_atoms)
+            unknown_atoms = sorted(mapped_atoms - expected_atoms)
+            if missing_atoms:
+                raise ModelError("page/content_mapping/visible_links",
+                                 f"every visible atom needs exactly one mapping entry; missing: {missing_atoms}")
+            if unknown_atoms:
+                raise ModelError("page/content_mapping/visible_links",
+                                 f"mapping references atoms that are not visible content: {unknown_atoms}")
+            segments = mapping.get("speech_segments") or []
+            segment_ids = [segment.get("segment_id") for segment in segments]
+            if len(segment_ids) != len(set(segment_ids)):
+                raise ModelError("page/content_mapping/speech_segments", "duplicate segment_id")
+            previous_end = 0
+            for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                start, end = segment.get("start_codepoint"), segment.get("end_codepoint")
+                where = f"page/content_mapping/speech_segments/{segment.get('segment_id')}"
+                if start is None or end is None or start >= end:
+                    raise ModelError(where, "speech ranges are half-open and must be non-empty")
+                if start < previous_end:
+                    raise ModelError(where, "speech ranges must not overlap")
+                previous_end = end
+            notes = page.get("speaker_notes") or ""
+            if segments:
+                cursor = 0
+                for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                    if segment.get("start_codepoint") != cursor:
+                        raise ModelError("page/content_mapping/speech_segments",
+                                         "speech segments must cover the notes contiguously")
+                    cursor = segment.get("end_codepoint")
+                if cursor != len(notes):
+>                   raise ModelError("page/content_mapping/speech_segments",
+E                   deck_master.models.ModelError: page/content_mapping/speech_segments: speech segments must cover all 5 codepoints of speaker_notes
+
+src/deck_master/models.py:335: ModelError
+_____ test_actual_completed_visual_notes_assembly_export_zero_image_ledger _____
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_actual_completed_visual_n0')
+
+    @pytest.mark.render
+    def test_actual_completed_visual_notes_assembly_export_zero_image_ledger(tmp_path):
+        from deck_master import pipeline, exports
+        from deck_master.compiler.native import notes_records
+        project, store = _completed_visual(tmp_path)
+        pipeline.produce(project)
+        before = store.load_document(); entry = before['pages'][0]
+        page = store.read_object_json(entry['page'])
+        page['speaker_notes'] = '新口播54/120＝45%，不是节约率。\n\n末段。\n'
+        task_facts = [store.read_object_json(ref) for ref in before['tasks']]
+>       editing.edit_page(project, page=page, base_revision=before['revision_id'],
+                          page_hash=entry['page']['sha256'], operation_id='notes-for-final-file')
+
+tests/rebuild/test_rc3_notes_transactions.py:299: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/editing.py:346: in edit_page
+    return _edit(Store(project_dir),page=check_page(page),base_revision=base_revision,page_hash=page_hash,operation_id=operation_id)
+                                         ^^^^^^^^^^^^^^^^
+src/deck_master/content.py:322: in check_page
+    validate_page_semantics(page)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+page = {'content_mapping': {'narrative_ref': None, 'plan_role_page_id': 'p-a', 'speech_segments': [{'end_codepoint': 12, 'est...＝45%，不是节约率。', 'type': 'paragraph'}], 'title': '记录未知'}, 'page_id': 'p-a', 'schema_version': 'deck_page_package.v2', ...}
+
+    def validate_page_semantics(page: dict[str, Any]) -> None:
+        validate_schema("page", page)
+        visual = page.get("visual_spec") or {}
+        nodes = visual.get("nodes") or []
+        edges = visual.get("edges") or []
+        node_ids = [node.get("node_id") for node in nodes]
+        if len(node_ids) != len(set(node_ids)):
+            raise ModelError("page/visual_spec", "duplicate node_id")
+        for edge in edges:
+            where = f"page/visual_spec/edges/{edge.get('edge_id')}"
+            if edge.get("from") not in node_ids or edge.get("to") not in node_ids:
+                raise ModelError(
+                    where, f"edge endpoints must exist in nodes, got {edge.get('from')}->{edge.get('to')}"
+                )
+        mapping = page.get("content_mapping")
+        if mapping:
+            atom_refs = [link.get("element_ref") for link in mapping.get("visible_links") or []]
+            if len(atom_refs) != len(set(atom_refs)):
+                raise ModelError("page/content_mapping/visible_links",
+                                 "each visible atom gets exactly one mapping entry")
+            from .content import atom_ids
+            expected_atoms = atom_ids(page)
+            mapped_atoms = {link.get("element_ref") for link in mapping.get("visible_links") or []}
+            missing_atoms = sorted(expected_atoms - mapped_atoms)
+            unknown_atoms = sorted(mapped_atoms - expected_atoms)
+            if missing_atoms:
+                raise ModelError("page/content_mapping/visible_links",
+                                 f"every visible atom needs exactly one mapping entry; missing: {missing_atoms}")
+            if unknown_atoms:
+                raise ModelError("page/content_mapping/visible_links",
+                                 f"mapping references atoms that are not visible content: {unknown_atoms}")
+            segments = mapping.get("speech_segments") or []
+            segment_ids = [segment.get("segment_id") for segment in segments]
+            if len(segment_ids) != len(set(segment_ids)):
+                raise ModelError("page/content_mapping/speech_segments", "duplicate segment_id")
+            previous_end = 0
+            for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                start, end = segment.get("start_codepoint"), segment.get("end_codepoint")
+                where = f"page/content_mapping/speech_segments/{segment.get('segment_id')}"
+                if start is None or end is None or start >= end:
+                    raise ModelError(where, "speech ranges are half-open and must be non-empty")
+                if start < previous_end:
+                    raise ModelError(where, "speech ranges must not overlap")
+                previous_end = end
+            notes = page.get("speaker_notes") or ""
+            if segments:
+                cursor = 0
+                for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                    if segment.get("start_codepoint") != cursor:
+                        raise ModelError("page/content_mapping/speech_segments",
+                                         "speech segments must cover the notes contiguously")
+                    cursor = segment.get("end_codepoint")
+                if cursor != len(notes):
+>                   raise ModelError("page/content_mapping/speech_segments",
+E                   deck_master.models.ModelError: page/content_mapping/speech_segments: speech segments must cover all 26 codepoints of speaker_notes
+
+src/deck_master/models.py:335: ModelError
+_______ test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/root-r2-render-573a46a/test_frozen_a_real_sdk_refuses0')
+
+    @pytest.mark.render
+    def test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries(tmp_path):
+        """Use the immutable actual A installation; never patch its writer set."""
+        python = Path('/workspace/work/rc3/baseline-a/venv/bin/python')
+        if not python.exists():
+            pytest.skip('Frozen A installation is an external engineering resource')
+        project, store = _completed_visual(tmp_path)
+        before = store.load_document(); entry = before['pages'][0]
+        page = store.read_object_json(entry['page']); page['speaker_notes'] = '受保护备注。'
+>       editing.edit_page(project, page=page, base_revision=before['revision_id'],
+                          page_hash=entry['page']['sha256'], operation_id='protect-notes')
+
+tests/rebuild/test_rc3_notes_transactions.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/editing.py:346: in edit_page
+    return _edit(Store(project_dir),page=check_page(page),base_revision=base_revision,page_hash=page_hash,operation_id=operation_id)
+                                         ^^^^^^^^^^^^^^^^
+src/deck_master/content.py:322: in check_page
+    validate_page_semantics(page)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+page = {'content_mapping': {'narrative_ref': None, 'plan_role_page_id': 'p-a', 'speech_segments': [{'end_codepoint': 12, 'est...＝45%，不是节约率。', 'type': 'paragraph'}], 'title': '记录未知'}, 'page_id': 'p-a', 'schema_version': 'deck_page_package.v2', ...}
+
+    def validate_page_semantics(page: dict[str, Any]) -> None:
+        validate_schema("page", page)
+        visual = page.get("visual_spec") or {}
+        nodes = visual.get("nodes") or []
+        edges = visual.get("edges") or []
+        node_ids = [node.get("node_id") for node in nodes]
+        if len(node_ids) != len(set(node_ids)):
+            raise ModelError("page/visual_spec", "duplicate node_id")
+        for edge in edges:
+            where = f"page/visual_spec/edges/{edge.get('edge_id')}"
+            if edge.get("from") not in node_ids or edge.get("to") not in node_ids:
+                raise ModelError(
+                    where, f"edge endpoints must exist in nodes, got {edge.get('from')}->{edge.get('to')}"
+                )
+        mapping = page.get("content_mapping")
+        if mapping:
+            atom_refs = [link.get("element_ref") for link in mapping.get("visible_links") or []]
+            if len(atom_refs) != len(set(atom_refs)):
+                raise ModelError("page/content_mapping/visible_links",
+                                 "each visible atom gets exactly one mapping entry")
+            from .content import atom_ids
+            expected_atoms = atom_ids(page)
+            mapped_atoms = {link.get("element_ref") for link in mapping.get("visible_links") or []}
+            missing_atoms = sorted(expected_atoms - mapped_atoms)
+            unknown_atoms = sorted(mapped_atoms - expected_atoms)
+            if missing_atoms:
+                raise ModelError("page/content_mapping/visible_links",
+                                 f"every visible atom needs exactly one mapping entry; missing: {missing_atoms}")
+            if unknown_atoms:
+                raise ModelError("page/content_mapping/visible_links",
+                                 f"mapping references atoms that are not visible content: {unknown_atoms}")
+            segments = mapping.get("speech_segments") or []
+            segment_ids = [segment.get("segment_id") for segment in segments]
+            if len(segment_ids) != len(set(segment_ids)):
+                raise ModelError("page/content_mapping/speech_segments", "duplicate segment_id")
+            previous_end = 0
+            for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                start, end = segment.get("start_codepoint"), segment.get("end_codepoint")
+                where = f"page/content_mapping/speech_segments/{segment.get('segment_id')}"
+                if start is None or end is None or start >= end:
+                    raise ModelError(where, "speech ranges are half-open and must be non-empty")
+                if start < previous_end:
+                    raise ModelError(where, "speech ranges must not overlap")
+                previous_end = end
+            notes = page.get("speaker_notes") or ""
+            if segments:
+                cursor = 0
+                for segment in sorted(segments, key=lambda s: s.get("start_codepoint", 0)):
+                    if segment.get("start_codepoint") != cursor:
+                        raise ModelError("page/content_mapping/speech_segments",
+                                         "speech segments must cover the notes contiguously")
+                    cursor = segment.get("end_codepoint")
+                if cursor != len(notes):
+>                   raise ModelError("page/content_mapping/speech_segments",
+E                   deck_master.models.ModelError: page/content_mapping/speech_segments: speech segments must cover all 6 codepoints of speaker_notes
+
+src/deck_master/models.py:335: ModelError
+=============================== warnings summary ===============================
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]
+tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]
+  /workspace/work/rc3/reviews/rc3-04-code-snapshot-573a46a/tests/rebuild/test_deep_quality_render.py:37: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+    def count(image,predicate):return sum(predicate(p) for p in image.getdata())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_candidate_preview_recovery.py::test_damaged_state_retries_actual_compile_render_and_readback
+FAILED tests/rebuild/test_compiler_geometry.py::test_document_canvas_is_prompt_and_compile_authority
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-hidden-fail]
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-visible-pass]
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[no-fill-fail]
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[solid-pass]
+FAILED tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[partial-gradient-pass]
+FAILED tests/rebuild/test_external_review_render.py::test_readback_implementation_change_cannot_reuse_old_candidate_check
+FAILED tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]
+FAILED tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]
+FAILED tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]
+FAILED tests/rebuild/test_icon_quality.py::test_actual_candidate_preview_and_cross_page_reuse
+FAILED tests/rebuild/test_icon_quality.py::test_preview_failure_retry_and_corrupt_files
+FAILED tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit
+FAILED tests/rebuild/test_rc3_notes_files.py::test_real_pipeline_to_export_preserves_full_notes_and_dependencies
+FAILED tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes
+FAILED tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes
+FAILED tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger
+FAILED tests/rebuild/test_rc3_notes_transactions.py::test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries
+==== 19 failed, 52 passed, 2787 deselected, 6 warnings in 105.11s (0:01:45) ====

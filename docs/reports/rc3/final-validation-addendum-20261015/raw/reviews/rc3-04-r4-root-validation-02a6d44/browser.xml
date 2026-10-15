@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="283" time="1336.665" timestamp="2026-10-15T08:33:56.610903+00:00" hostname="a06a8ea56218"><testcase classname="tests.rebuild.test_action_targets_browser" name="test_grouped_todo_lists_every_task_then_opens_the_selected_task" time="3.083" /><testcase classname="tests.rebuild.test_action_targets_browser" name="test_multi_candidate_todo_and_historical_candidate_reads" time="4.397" /><testcase classname="tests.rebuild.test_action_targets_browser" name="test_changeset_todo_opens_fixed_deck_comparison_without_fake_page" time="3.150" /><testcase classname="tests.rebuild.test_action_targets_browser" name="test_foreign_project_link_keeps_the_loaded_work_surface" time="2.213" /><testcase classname="tests.rebuild.test_action_targets_browser" name="test_read_result_removes_same_overview_target_and_survives_reload" time="3.772" /><testcase classname="tests.rebuild.test_action_targets_browser" name="test_target_paging_failure_retries_exact_page_and_ignores_departed_response" time="3.523" /><testcase classname="tests.rebuild.test_batch_actions_browser" name="test_mixed_modes_keep_selection_until_explicit_range_adjustment" time="2.616" /><testcase classname="tests.rebuild.test_batch_actions_browser" name="test_explicit_budget_exact_plan_and_duplicate_click_create_one_batch" time="3.134" /><testcase classname="tests.rebuild.test_batch_actions_browser" name="test_lost_commit_response_verify_original_receipt_reload_never_redispatches" time="3.453" /><testcase classname="tests.rebuild.test_batch_actions_browser" name="test_changes_to_range_inputs_filter_version_and_late_preview_invalidate_plan" time="3.052" /><testcase classname="tests.rebuild.test_batch_actions_browser" name="test_style_transfer_preserves_exact_context_and_reference_target_conflict" time="2.851" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_intrinsic_zoom_independent_pan_and_disposal[size0]" time="2.513" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_intrinsic_zoom_independent_pan_and_disposal[size1]" time="2.726" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_intrinsic_zoom_independent_pan_and_disposal[size2]" time="2.519" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_candidate_ppt_requires_rendered_preview_and_late_results_stay_bound" time="3.397" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_actual_ppt_bytes_must_match_check_and_candidate_identity" time="2.752" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_candidate_fullscreen_fit_keeps_both_canvases_above_actions[size0]" time="2.657" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_candidate_fullscreen_fit_keeps_both_canvases_above_actions[size1]" time="2.925" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_candidate_fullscreen_fit_keeps_both_canvases_above_actions[size2]" time="2.625" /><testcase classname="tests.rebuild.test_comparison_canvas_browser" name="test_missing_candidate_font_has_clear_guidance_and_collapsed_technical_detail" time="2.750" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_layout_sections_and_style_routes[1440-900]" time="7.960" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_layout_sections_and_style_routes[1280-800]" time="7.721" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_layout_sections_and_style_routes[1024-768]" time="8.323" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_layout_sections_and_style_routes[830-900]" time="8.638" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_layout_sections_and_style_routes[390-844]" time="8.213" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_single_page_faces_and_content_sections[1440-900]" time="13.191" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_single_page_faces_and_content_sections[1280-800]" time="12.780" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_single_page_faces_and_content_sections[1024-768]" time="13.103" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_single_page_faces_and_content_sections[830-900]" time="13.883" /><testcase classname="tests.rebuild.test_container_hierarchy_browser" name="test_single_page_faces_and_content_sections[390-844]" time="12.954" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_cloned_window_offline_drafts_both_survive[1280-800]" time="5.369" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_cloned_window_offline_drafts_both_survive[1440-900]" time="5.105" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_cloned_window_offline_drafts_both_survive[390-844]" time="5.172" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_old_revision_draft_never_locks_a_new_opinion" time="4.026" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_private_note_stays_out_of_opinions_and_repeat_saves" time="3.725" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_saved_opinions_group_by_scope_and_never_mix_pages" time="4.173" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_requirement_is_explicit_and_plans_default_to_trial" time="3.011" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_page_candidate_compares_its_own_basis_not_the_current_revision" time="2.185" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_escape_ends_the_open_comparison_before_leaving_the_page" time="2.401" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_escape_inside_fullscreen_does_not_navigate_the_surface" time="2.295" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_near_field_entry_names_returned_candidates" time="2.006" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_many_opinions_do_not_push_the_artwork_out_of_view" time="2.485" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_delivery_gaps_name_rules_and_keep_unknown_reasons_blocked" time="2.329" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_candidate_batch_names_the_page_and_layer" time="2.190" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_unselected_icon_page_cannot_be_dispatched_by_late_plan" time="3.268" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_handoff_navigation_opens_current_task" time="2.864" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_historical_candidate_list_never_acquires_future_candidate" time="3.118" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_annotation_plan_conflict_keeps_draft_and_opens_recovery" time="2.966" /><testcase classname="tests.rebuild.test_deep_quality_browser" name="test_clear_plan_network_failure_allows_retry" time="2.482" /><testcase classname="tests.rebuild.test_deep_review_fixes_browser" name="test_style_conflict_choices_live_with_the_confirm_action" time="4.347" /><testcase classname="tests.rebuild.test_deep_review_fixes_browser" name="test_style_plan_failure_stays_visible_without_a_plan" time="5.276" /><testcase classname="tests.rebuild.test_deep_review_fixes_browser" name="test_content_change_list_keeps_the_formal_baseline_after_draft_restore" time="5.547" /><testcase classname="tests.rebuild.test_deep_review_fixes_browser" name="test_version_area_survives_reading_reload_and_return" time="5.172" /><testcase classname="tests.rebuild.test_deep_review_fixes_browser" name="test_long_list_keeps_selection_summary_and_config_entry_in_view" time="4.231" /><testcase classname="tests.rebuild.test_deep_review_fixes_browser" name="test_screenshot_route_actions_follow_stage_and_plan" time="4.075" /><testcase classname="tests.rebuild.test_deep_review_fixes_browser" name="test_complex_body_change_list_and_impact_share_one_screen" time="4.341" /><testcase classname="tests.rebuild.test_deep_review_fixes_browser" name="test_gallery_conflict_reports_filter_anchor_and_zoom_differences" time="8.979" /><testcase classname="tests.rebuild.test_deep_review_obligations_browser" name="test_main_layer_keeps_business_language_on_every_surface" time="6.296" /><testcase classname="tests.rebuild.test_deep_review_obligations_browser" name="test_selection_to_style_path_works_after_using_the_screenshot_source" time="5.127" /><testcase classname="tests.rebuild.test_deep_review_obligations_browser" name="test_style_handoff_appears_with_a_real_local_plan" time="5.322" /><testcase classname="tests.rebuild.test_deep_review_obligations_browser" name="test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history" time="3.686" /><testcase classname="tests.rebuild.test_deep_review_obligations_browser" name="test_topbar_pending_entry_always_lands_on_the_task_list" time="3.573" /><testcase classname="tests.rebuild.test_deep_review_obligations_browser" name="test_area_link_without_the_subarea_falls_back_to_tasks" time="3.929" /><testcase classname="tests.rebuild.test_deep_review_obligations_browser" name="test_persisting_a_non_task_area_drops_the_hidden_task_route" time="3.718" /><testcase classname="tests.rebuild.test_gallery_reading_browser" name="test_canvas_arrows_move_focus_without_leaving_gallery" time="3.918" /><testcase classname="tests.rebuild.test_gallery_reading_browser" name="test_continuous_grid_renders_a_window_and_keyboard_recovers_focus" time="3.717" /><testcase classname="tests.rebuild.test_icon_browser" name="test_icon_proposal_compare_confirm_keyboard_and_dispatch" time="5.157" /><testcase classname="tests.rebuild.test_icon_browser" name="test_local_zoom_preserves_aspect_ratio_at_canvas_limit" time="2.501" /><testcase classname="tests.rebuild.test_icon_browser" name="test_icon_http_cli_parity_and_origin" time="0.783" /><testcase classname="tests.rebuild.test_icon_browser" name="test_actual_icon_candidate_ppt_comparison_retry_and_adoption" time="6.518" /><testcase classname="tests.rebuild.test_icon_browser" name="test_saved_sample_identity_survives_reorder_and_missing" time="2.426" /><testcase classname="tests.rebuild.test_icon_browser" name="test_missing_compare_column_keeps_stable_focus_identity" time="2.494" /><testcase classname="tests.rebuild.test_icon_browser" name="test_icon_opinion_scope_and_basis_rows" time="3.268" /><testcase classname="tests.rebuild.test_icon_browser" name="test_catalog_file_endpoint_serves_whitelisted_bytes_and_rejects_bogus" time="2.654" /><testcase classname="tests.rebuild.test_icon_browser" name="test_catalog_zone_fails_independently_and_retries_without_first_item_default" time="2.834" /><testcase classname="tests.rebuild.test_icon_browser" name="test_layer_switch_entry_requires_saved_local_draft" time="3.492" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_mobile_gallery_reads_on_page_and_restores_desktop_preference" time="4.511" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_history_modes_keep_reading_and_page_comparison_fixed" time="6.657" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_mobile_gallery_settings_keep_selection_focus_and_production_targets" time="5.439" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_fixed_history_images_share_a_row_with_candidate_entry[1280-800-svg]" time="6.106" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_fixed_history_images_share_a_row_with_candidate_entry[1280-800-ppt]" time="5.367" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_fixed_history_images_share_a_row_with_candidate_entry[1440-900-svg]" time="5.291" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_fixed_history_images_share_a_row_with_candidate_entry[1440-900-ppt]" time="6.605" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_host_handoff_clipboard_failure_remains_pending" time="4.161" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_artwork_and_save_row_share_the_first_screen[1280-800]" time="6.150" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_artwork_and_save_row_share_the_first_screen[1440-900]" time="4.907" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_plain_task_entry_opens_tasks_without_a_delivery_detour[1280-800]" time="5.030" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_plain_task_entry_opens_tasks_without_a_delivery_detour[1440-900]" time="5.022" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_page_opinion_editor_stays_with_artwork_before_trial_form[1280-800]" time="4.479" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_page_opinion_editor_stays_with_artwork_before_trial_form[1440-900]" time="4.786" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_page_opinion_editor_stays_with_artwork_before_trial_form[390-844]" time="4.373" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_selected_internal_style_keeps_main_action_in_first_view[1280-800]" time="4.937" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_selected_internal_style_keeps_main_action_in_first_view[1440-900]" time="4.276" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_current_version_read_blocks_obsolete_actions_and_restores_controls[False-False]" time="3.574" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_current_version_read_blocks_obsolete_actions_and_restores_controls[False-True]" time="3.890" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_current_version_read_blocks_obsolete_actions_and_restores_controls[True-False]" time="3.165" /><testcase classname="tests.rebuild.test_navigation_usability_browser" name="test_current_version_read_blocks_obsolete_actions_and_restores_controls[True-True]" time="3.748" /><testcase classname="tests.rebuild.test_overview_preferences_browser" name="test_refresh_cross_surface_and_explicit_url_restore_only_reading_preferences" time="3.208" /><testcase classname="tests.rebuild.test_overview_preferences_browser" name="test_new_revision_defaults_and_old_link_keeps_its_fixed_preferences" time="2.571" /><testcase classname="tests.rebuild.test_overview_preferences_browser" name="test_two_actual_windows_keep_conflicting_input_and_require_explicit_choice" time="7.959" /><testcase classname="tests.rebuild.test_overview_preferences_browser" name="test_lost_preference_response_is_verified_without_replaying_or_losing_later_input" time="2.684" /><testcase classname="tests.rebuild.test_overview_preferences_browser" name="test_delayed_initial_save_after_clear_cannot_resurrect_preferences" time="2.554" /><testcase classname="tests.rebuild.test_overview_preferences_browser" name="test_navigation_keeps_unconfirmed_input_and_damaged_state_does_not_break_overview" time="3.237" /><testcase classname="tests.rebuild.test_overview_preferences_browser" name="test_old_core_uses_session_state_and_malformed_explicit_url_keeps_surface" time="2.952" /><testcase classname="tests.rebuild.test_page_tools_panel_browser" name="test_five_face_switcher_is_stable_and_single_face" time="2.245" /><testcase classname="tests.rebuild.test_page_tools_panel_browser" name="test_anomaly_summary_survives_face_switch_and_locates_recovery" time="4.259" /><testcase classname="tests.rebuild.test_page_tools_panel_browser" name="test_narrow_viewport_switches_between_panel_and_new_column" time="3.284" /><testcase classname="tests.rebuild.test_page_tools_panel_browser" name="test_panel_escape_does_not_leave_page_and_dialog_layers_return_focus" time="2.170" /><testcase classname="tests.rebuild.test_page_tools_panel_browser" name="test_second_level_modal_above_panel_keeps_layers_and_returns_focus" time="5.281" /><testcase classname="tests.rebuild.test_page_tools_panel_browser" name="test_anomaly_chip_runs_the_full_draft_state_lifecycle" time="7.257" /><testcase classname="tests.rebuild.test_page_tools_panel_browser" name="test_continuous_face_path_keeps_half_written_opinion" time="4.514" /><testcase classname="tests.rebuild.test_personal_recovery_browser" name="test_studio_clear_backup_download_restore_and_legacy_reading" time="6.810" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_saved_task_failure_retries_the_same_group" time="2.924" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_committed_upload_survives_private_note_afterwrite" time="4.133" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_overview_handoff_is_actionable_in_task_context" time="2.955" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_style_ui_trial_adoption_and_successful_expansion[project]" time="9.825" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_style_ui_trial_adoption_and_successful_expansion[screenshot]" time="11.918" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_partial_upload_keeps_successful_files_and_retries_only_failed_file[False]" time="4.337" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_partial_upload_keeps_successful_files_and_retries_only_failed_file[True]" time="4.634" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_upload_success_has_visible_recovery_when_private_save_fails" time="5.224" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_three_versions_restore_uses_read_source_and_current_basis[False]" time="6.124" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_three_versions_restore_uses_read_source_and_current_basis[True]" time="5.787" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_147_mixed_tasks_paginate_filter_and_keep_subareas_reachable" time="4.865" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_handoff_three_groups_and_late_clipboard_keep_original_copy_identity" time="3.453" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_gallery_conflict_same_selection_and_layer_exposes_reference_difference" time="15.885" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports[1440-900]" time="3.517" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports[1280-800]" time="3.900" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports[390-844]" time="3.930" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct_empty_state[1440-900]" time="3.326" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct_empty_state[1280-800]" time="3.290" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_uploaded_result_finishes_recovery_after_late_draft_verification" time="3.853" /><testcase classname="tests.rebuild.test_pr103_complete_browser" name="test_small_scale_pagination_counts_and_failed_page_retry_keeps_loaded_rows" time="2.297" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_saved_opinion_is_still_saved_after_reload[new]" time="3.159" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_saved_opinion_is_still_saved_after_reload[scope]" time="3.120" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_unknown_opinion_receipt_recovers_marker_without_original_callback" time="2.962" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_opinion_marker_keeps_text_written_after_the_frozen_request" time="3.599" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_screenshot_analysis_restore_cannot_override_a_manual_phase" time="3.804" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_opinion_receipt_draft_conflict_preserves_the_original_request" time="2.311" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_navigation_uses_url_at_start_not_passive_overview_events" time="1.869" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_reference_preview_and_same_file_retry_after_not_found" time="3.656" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_rejected_reference_can_start_a_new_upload_after_reload[decode]" time="4.490" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_rejected_reference_can_start_a_new_upload_after_reload[pixels]" time="5.119" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_rejected_reference_can_start_a_new_upload_after_reload[basis]" time="4.337" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[422-body0]" time="3.206" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[422-body1]" time="3.162" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[403-body2]" time="3.379" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[500-body3]" time="3.338" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[409-body4]" time="3.261" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[409-body5]" time="3.172" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[422-body6]" time="3.480" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[200-None]" time="3.397" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_untrusted_upload_failure_keeps_original_request[200-body8]" time="3.312" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_committed_upload_with_lost_response_recovers_without_new_attempt" time="3.461" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_delayed_recipe_restore_does_not_close_manually_chosen_phase[False]" time="3.820" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_delayed_recipe_restore_does_not_close_manually_chosen_phase[True]" time="3.575" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[0-1440-900]" time="4.288" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[0-1280-800]" time="4.144" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[0-390-844]" time="4.397" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[1-1440-900]" time="4.370" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[1-1280-800]" time="4.376" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[1-390-844]" time="4.647" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[2-1440-900]" time="4.376" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[2-1280-800]" time="4.504" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_material_editor_keeps_preview_confirmation_and_return_in_context[2-390-844]" time="4.656" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_candidate_cards_show_real_fixed_images_and_release_on_navigation[project]" time="6.013" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_candidate_cards_show_real_fixed_images_and_release_on_navigation[screenshot]" time="6.242" /><testcase classname="tests.rebuild.test_pr103_repair_browser" name="test_restoring_a_saved_draft_by_real_selection_replaces_the_editor" time="7.783" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[method-first]" time="4.721" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[method-replacement]" time="5.082" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[method-retry]" time="4.587" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[asset-first]" time="5.978" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[asset-replacement]" time="4.726" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[asset-retry]" time="4.266" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[sample-first]" time="3.768" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[sample-replacement]" time="5.961" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_configuration_preserves_opinions_before_notes_are_ready[sample-retry]" time="3.811" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_selection_during_refresh_is_saved_and_not_revived[B]" time="3.543" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_selection_during_refresh_is_saved_and_not_revived[none]" time="3.308" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_editor_replacement_rebuilds_selection_and_rejects_late_reads[B]" time="3.318" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_editor_replacement_rebuilds_selection_and_rejects_late_reads[empty]" time="3.270" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_editor_replacement_rebuilds_selection_and_rejects_late_reads[absent]" time="3.296" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_method_restoration_is_independent_of_failed_catalog[reuse]" time="2.672" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_method_restoration_is_independent_of_failed_catalog[standard]" time="3.456" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_opinion_basis_maps_each_layer_exactly[True-original_image]" time="2.295" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_opinion_basis_maps_each_layer_exactly[True-svg]" time="2.030" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_opinion_basis_maps_each_layer_exactly[True-ppt]" time="2.140" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_opinion_basis_maps_each_layer_exactly[False-original_image]" time="2.080" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_opinion_basis_maps_each_layer_exactly[False-svg]" time="2.219" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_icon_opinion_basis_maps_each_layer_exactly[False-ppt]" time="2.114" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_screenshot_confirmation_freezes_all_formal_inputs_and_plan_matches" time="3.087" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_screenshot_old_confirmation_cannot_mark_a_restored_draft_confirmed[palette]" time="3.525" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_screenshot_old_confirmation_cannot_mark_a_restored_draft_confirmed[font]" time="3.229" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_screenshot_old_confirmation_cannot_mark_a_restored_draft_confirmed[dimensions]" time="3.292" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_primary_style_target_survives_restore_confirm_refresh_and_first_plan" time="4.550" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_rejected_upload_reload_with_lost_private_receipt_preserves_new_result" time="3.955" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_leaving_task_context_rebuilds_without_reload[\u7248\u672c]" time="3.308" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_leaving_task_context_rebuilds_without_reload[\u6587\u4ef6]" time="3.178" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions[\u8be6\u60c5-\u70b9\u6807\u6ce8]" time="2.561" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions[\u8be6\u60c5-\u6846\u9009\u6a21\u5f0f]" time="2.585" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions[\u56fe\u6807\u4f18\u5316-\u70b9\u6807\u6ce8]" time="2.629" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions[\u56fe\u6807\u4f18\u5316-\u6846\u9009\u6a21\u5f0f]" time="2.609" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions[\u7b14\u8bb0-\u70b9\u6807\u6ce8]" time="2.917" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions[\u7b14\u8bb0-\u6846\u9009\u6a21\u5f0f]" time="2.606" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions[\u8bd5\u4f5c\u4e0e\u5019\u9009-\u70b9\u6807\u6ce8]" time="2.524" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions[\u8bd5\u4f5c\u4e0e\u5019\u9009-\u6846\u9009\u6a21\u5f0f]" time="2.489" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_copy_private_note_opens_opinions_focuses_body_and_keeps_note" time="2.232" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_closing_narrow_tools_keeps_intentional_canvas_annotation[\u70b9\u6807\u6ce8]" time="2.434" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_closing_narrow_tools_keeps_intentional_canvas_annotation[\u6846\u9009\u6a21\u5f0f]" time="2.370" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_private_autosave_does_not_retire_a_held_business_receipt[False]" time="4.384" /><testcase classname="tests.rebuild.test_pr104_review_browser" name="test_private_autosave_does_not_retire_a_held_business_receipt[True]" time="4.293" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_page_history_offers_the_direct_before_snapshot_and_deduplicates_paging" time="2.687" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_same_page_other_layer_opinion_is_selectable_and_reaches_core_plan[original_image-svg]" time="3.808" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_same_page_other_layer_opinion_is_selectable_and_reaches_core_plan[svg-original_image]" time="3.609" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_same_page_other_layer_opinion_is_selectable_and_reaches_core_plan[ppt-svg]" time="3.574" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_same_page_other_layer_opinion_is_selectable_and_reaches_core_plan[content-svg]" time="3.956" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_other_layer_opinion_keeps_its_own_staleness_and_page_gates[own_layer_changed]" time="2.150" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_other_layer_opinion_keeps_its_own_staleness_and_page_gates[own_layer_missing]" time="2.306" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_other_layer_opinion_keeps_its_own_staleness_and_page_gates[other_page]" time="3.086" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_other_layer_opinion_keeps_its_own_staleness_and_page_gates[page_changed]" time="2.745" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_pressure_history_and_full_breakdown_use_visible_production_controls[current]" time="4.755" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_pressure_history_and_full_breakdown_use_visible_production_controls[historical]" time="4.981" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_pressure_history_and_full_breakdown_use_visible_production_controls[readonly]" time="4.008" /><testcase classname="tests.rebuild.test_pr104_supplemental_browser" name="test_pressure_candidate_phase_opens_the_decisions_subarea" time="84.185" /><testcase classname="tests.rebuild.test_pr105_candidate_metadata" name="test_metadata_damage_keeps_healthy_candidate_interactive[decision]" time="6.880" /><testcase classname="tests.rebuild.test_pr105_candidate_metadata" name="test_metadata_damage_keeps_healthy_candidate_interactive[missing]" time="5.339" /><testcase classname="tests.rebuild.test_pr105_draft_browser" name="test_candidate_recovery_survives_modal_and_allows_adoption[saved-False]" time="4.919" /><testcase classname="tests.rebuild.test_pr105_draft_browser" name="test_candidate_recovery_survives_modal_and_allows_adoption[saved-True]" time="4.533" /><testcase classname="tests.rebuild.test_pr105_draft_browser" name="test_candidate_recovery_survives_modal_and_allows_adoption[dirty-False]" time="4.368" /><testcase classname="tests.rebuild.test_pr105_draft_browser" name="test_candidate_recovery_survives_modal_and_allows_adoption[dirty-True]" time="4.477" /><testcase classname="tests.rebuild.test_pr105_draft_browser" name="test_candidate_recovery_survives_modal_and_allows_adoption[unknown-False]" time="5.190" /><testcase classname="tests.rebuild.test_pr105_draft_browser" name="test_candidate_recovery_survives_modal_and_allows_adoption[unknown-True]" time="5.586" /><testcase classname="tests.rebuild.test_pr105_draft_browser" name="test_candidate_recovery_survives_modal_and_allows_adoption[late-False]" time="4.873" /><testcase classname="tests.rebuild.test_pr105_draft_browser" name="test_candidate_recovery_survives_modal_and_allows_adoption[late-True]" time="5.276" /><testcase classname="tests.rebuild.test_pr105_inputs_browser" name="test_upload_receipt_preserves_material_action[False-keep]" time="2.834" /><testcase classname="tests.rebuild.test_pr105_inputs_browser" name="test_upload_receipt_preserves_material_action[False-remove]" time="2.799" /><testcase classname="tests.rebuild.test_pr105_inputs_browser" name="test_upload_receipt_preserves_material_action[True-keep]" time="2.715" /><testcase classname="tests.rebuild.test_pr105_inputs_browser" name="test_upload_receipt_preserves_material_action[True-remove]" time="2.839" /><testcase classname="tests.rebuild.test_pr105_inputs_browser" name="test_natural_task_poll_preserves_search_and_committed_pagination" time="7.223" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_current_scope_readable_draft_delivery_and_keyboard[1280-800]" time="2.716" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_current_scope_readable_draft_delivery_and_keyboard[1440-900]" time="2.690" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_current_scope_readable_draft_delivery_and_keyboard[390-844]" time="2.419" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_completed_content_returns_readable_outputs_without_new_production[write_only]" time="2.068" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_completed_content_returns_readable_outputs_without_new_production[content_full]" time="2.448" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_completed_overview_returns_content_without_prioritizing_unrequested_artwork[write_only]" time="3.661" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_pause_resume_keeps_pages_and_requires_explicit_instruction" time="3.147" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_two_windows_stale_control_keeps_text_and_current_pages" time="4.770" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_new_envelope_retains_path_details_and_readable_result" time="1.484" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_old_revision_new_opinion_then_restore_draft" time="3.353" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_two_window_offline_drafts_refresh_and_session_recovery[1280-800]" time="9.153" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_two_window_offline_drafts_refresh_and_session_recovery[1440-900]" time="6.424" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_two_window_offline_drafts_refresh_and_session_recovery[390-844]" time="6.432" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_revoke_preserves_actual_pages_and_shows_current_control" time="3.189" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_readonly_external_report_keeps_source_and_readable_packet" time="3.191" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_new_speech_request_uses_explicit_one_page_scope" time="3.457" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_confirmed_manuscript_import_compares_actual_copy_and_adopts_atomically" time="2.631" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_lost_control_response_refresh_recovers_same_operation" time="3.443" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_async_error_waits_for_actual_draft_conflict_resolution" time="4.985" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_historical_migration_is_explicit_and_does_not_grant_production" time="2.136" /><testcase classname="tests.rebuild.test_rc3_studio_control_browser" name="test_two_actual_versions_select_old_source_under_current_control_without_overwriting" time="13.658" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_launcher_creates_project_from_explicit_complete_manuscript[1440-900-write_only]" time="3.870" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_launcher_creates_project_from_explicit_complete_manuscript[1280-800-full_deck]" time="3.454" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_launcher_creates_project_from_explicit_complete_manuscript[390-844-speech_only]" time="3.435" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_import_requires_separate_exact_request_then_complete_adoption[None-order0]" time="3.775" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_import_requires_separate_exact_request_then_complete_adoption[None-order1]" time="4.442" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_import_requires_separate_exact_request_then_complete_adoption[rc3_browser2-order2]" time="3.448" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_invalid_complete_manuscript_never_changes_project" time="2.046" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_server_invalid_manuscript_preview_preserves_source_without_import" time="2.728" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_stale_import_keeps_complete_source_and_instruction_without_rebase" time="5.480" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_narrow_intake_full_scope_and_keyboard_remain_readable" time="1.885" /><testcase classname="tests.rebuild.test_rc3_studio_intake_browser" name="test_launcher_hard_limit_refusal_shows_safe_actual_limit" time="1.649" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_unresolved_requirement_refs_survive_edit_save_and_new_port[False]" time="9.262" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_unresolved_requirement_refs_survive_edit_save_and_new_port[True]" time="9.858" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect[missing_ref]" time="10.813"><failure message="AssertionError: Locator expected to be visible&#10;Actual value: None&#10;Error: element(s) not found &#10;Call log:&#10;  - Expect &quot;to_be_visible&quot; get_by_role(&quot;button&quot;, name=&quot;确认计划并创建交接&quot;, exact=True) with timeout 5000ms&#10;  - waiting for get_by_role(&quot;button&quot;, name=&quot;确认计划并创建交接&quot;, exact=True)&#10;&#10;Aria snapshot:&#10;- link &quot;跳到工作区&quot;:&#10;  - /url: &quot;#main&quot;&#10;- complementary:&#10;  - img &quot;Deck Master&quot;&#10;  - navigation &quot;项目工作区&quot;:&#10;    - button &quot;制作总览&quot;&#10;    - button &quot;内容与来源&quot;&#10;    - button &quot;整稿画廊&quot;&#10;    - button &quot;风格校准&quot;&#10;    - button &quot;任务与交付&quot;&#10;  - text: 当前项目&#10;  - strong: 工作台合成示例&#10;  - text: 合成验证项目&#10;  - paragraph: 当前为项目独立入口&#10;  - button &quot;连接状态&quot;&#10;- banner:&#10;  - strong: 工作台合成示例&#10;  - text: 当前稿&#10;  - region &quot;本次工作状态&quot;:&#10;    - button &quot;查看本次工作与范围&quot;: 内容进行中&#10;  - button &quot;查看待交接任务，0 项&quot;: 待交接 0&#10;- text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。&#10;- main:&#10;  - heading &quot;第 1 页 · 项目目标与阅读顺序&quot; [level=1]&#10;  - paragraph: SVG · 当前稿&#10;  - combobox &quot;转到页面&quot;:&#10;    - option &quot;第 1 / 3 页&quot; [selected]&#10;    - option &quot;第 2 / 3 页&quot;&#10;    - option &quot;第 3 / 3 页&quot;&#10;  - button &quot;上一页，没有上一页&quot; [disabled]: ← 上一页&#10;  - button &quot;下一页，第 2 页 · 材料如何成为内容&quot;: 下一页 →&#10;  - navigation &quot;本页生成链路&quot;:&#10;    - button &quot;01 来源，记录缺失&quot;: 01 来源 记录缺失&#10;    - button &quot;02 逐页稿，可查看&quot;: 02 逐页稿 可查看&#10;    - button &quot;03 提示词，记录缺失&quot;: 03 提示词 记录缺失&#10;    - button &quot;04 原图，可查看&quot;: 04 原图 可查看&#10;    - button &quot;05 SVG，可查看&quot;: 05 SVG 可查看&#10;    - button &quot;06 PPT 预览，尚未生成&quot;: 06 PPT 预览 尚未生成&#10;  - button &quot;回到整稿画廊&quot;&#10;  - button &quot;比较此页版本&quot;&#10;  - button &quot;以本页为风格参考&quot;&#10;  - group &quot;单页工具&quot;:&#10;    - button &quot;意见&quot; [pressed]&#10;    - button &quot;试作与候选&quot;&#10;    - button &quot;图标优化&quot;&#10;    - button &quot;笔记&quot;&#10;    - button &quot;详情&quot;&#10;  - region &quot;页面内容&quot;:&#10;    - group &quot;单页图稿阅读&quot;:&#10;      - button &quot;适应窗口&quot; [pressed]&#10;      - button &quot;原生 100% 阅读&quot;: 100%&#10;      - button &quot;缩小图稿&quot;: −&#10;      - button &quot;放大图稿&quot;: +&#10;      - status: 适应窗口 · 218%&#10;      - button &quot;全屏阅读&quot;&#10;    - paragraph: 可看&#10;    - img &quot;第 1 页 · 项目目标与阅读顺序 · SVG&quot;&#10;    - paragraph: SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。&#10;  - complementary:&#10;    - paragraph: 第 1 页 · SVG · 当前版本 R c76f02a2&#10;    - region &quot;版本绑定意见&quot;:&#10;      - heading &quot;标注与意见&quot; [level=2]&#10;      - paragraph: 当前图稿（SVG） · 底稿 R c76f02a2 · 草稿区域 0 个&#10;      - button &quot;整页意见&quot;&#10;      - text: 意见正文&#10;      - textbox &quot;意见正文&quot;:&#10;        - /placeholder: 写下这条意见要改什么。输入会自动保留；保存后进入正式记录。&#10;      - paragraph&#10;      - button &quot;保存意见&quot; [disabled]&#10;      - status: operation could not be verified; keep its original payload and ID 原输入与意见保留，请阅读当前版本后重新计划。&#10;      - paragraph: 先选「整页意见」，或打开标注工具，再保存意见。&#10;      - group: › 范围与标注工具&#10;      - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。&#10;      - heading &quot;已保存意见&quot; [level=3]&#10;      - heading &quot;本页整页意见（1）&quot; [level=4]&#10;      - article:&#10;        - checkbox &quot;选入意见 1&quot; [checked]&#10;        - text: 意见 1 · 修改建议&#10;        - paragraph: 本页整页意见 · 底稿 R 3777ccc6 · 待处理&#10;        - paragraph: 缩短标题&#10;        - button &quot;回到意见 1 的原版本&quot;&#10;      - heading &quot;当前图稿意见 · SVG（0）&quot; [level=4]&#10;      - paragraph: 此范围暂无意见。&#10;      - heading &quot;修改要求&quot; [level=3]&#10;      - paragraph: 目标：本页 SVG · 底稿 R c76f02a2&#10;      - paragraph: 本页整页意见｜缩短标题&#10;      - text: 修改要求&#10;      - textbox &quot;修改要求&quot;:&#10;        - /placeholder: 这段要求会成为制作依据。默认填入所选意见原文，可继续编辑或补充说明。&#10;        - text: 只改文字，保留原来的引用证据&#10;      - paragraph&#10;      - button &quot;预览修改影响&quot;&#10;      - paragraph: 结果会先作为候选返回；比较并明确采用后才会替换当前作品。&#10;- status: 单页 · SVG，R c76f02a2">workbench = (&lt;Page url='http://127.0.0.1:37919/#project=7c30ad6b9eb529a38024bbd8b93f573551a20cff1e20ca18842e565c7e1e051a&amp;surface=p...e.Store object at 0x7f4726554050&gt;, 'http://127.0.0.1:37919/', &lt;function workbench.&lt;locals&gt;.goto at 0x7f4727829a80&gt;, [])
+invalid = 'missing_ref'
+
+    @pytest.mark.parametrize('invalid', ['missing_ref', 'old_basis'])
+    def test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect(workbench, invalid):
+        import copy
+        from deck_master import ui_journal
+        page, context, store, url, _, _ = workbench
+        state = persisted_requirement(workbench)
+        record = next(r for r in ui_journal.list_drafts(store.project_root)['records']
+                      if r['draft']['content'].get('requirement') == state)
+        draft = copy.deepcopy(record['draft'])
+        if invalid == 'missing_ref':
+            draft['content']['requirement']['annotation_refs'][0]['sha256'] = '0' * 64
+        else:
+            draft['content']['requirement']['basis']['revision_id'] = store.read_object_json(
+                store.load_document()['annotations'][0])['base_revision']
+        ui_journal.save(store.project_root, draft=draft, expected_etag=record['etag'])
+        original = copy.deepcopy(draft['content']['requirement'])
+        other = isolated_context(workbench)
+        try:
+            test_page = other.new_page()
+            test_page.goto(url + '#' + page.url.split('#')[1])
+            expect(test_page.locator('.requirement-ref')).to_have_count(0)
+            expect(test_page.locator('.change-requirement')).to_contain_text('请重新选择')
+            text = '只改文字，保留原来的引用证据'
+            test_page.get_by_label('修改要求', exact=True).fill(text)
+            stored = saved_requirement(test_page, text)
+            assert stored['annotation_refs'] == original['annotation_refs']
+            assert stored['basis'] == original['basis']
+            test_page.reload()
+            expect(test_page.get_by_role('button', name='预览修改影响', exact=True)).to_be_disabled()
+            test_page.get_by_label('选入意见 1', exact=True).check()
+            expect(test_page.get_by_role('button', name='预览修改影响', exact=True)).to_be_enabled()
+            test_page.get_by_role('button', name='预览修改影响', exact=True).click()
+&gt;           expect(test_page.get_by_role('button', name='确认计划并创建交接', exact=True)).to_be_visible()
+E           AssertionError: Locator expected to be visible
+E           Actual value: None
+E           Error: element(s) not found 
+E           Call log:
+E             - Expect "to_be_visible" get_by_role("button", name="确认计划并创建交接", exact=True) with timeout 5000ms
+E             - waiting for get_by_role("button", name="确认计划并创建交接", exact=True)
+E           
+E           Aria snapshot:
+E           - link "跳到工作区":
+E             - /url: "#main"
+E           - complementary:
+E             - img "Deck Master"
+E             - navigation "项目工作区":
+E               - button "制作总览"
+E               - button "内容与来源"
+E               - button "整稿画廊"
+E               - button "风格校准"
+E               - button "任务与交付"
+E             - text: 当前项目
+E             - strong: 工作台合成示例
+E             - text: 合成验证项目
+E             - paragraph: 当前为项目独立入口
+E             - button "连接状态"
+E           - banner:
+E             - strong: 工作台合成示例
+E             - text: 当前稿
+E             - region "本次工作状态":
+E               - button "查看本次工作与范围": 内容进行中
+E             - button "查看待交接任务，0 项": 待交接 0
+E           - text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。
+E           - main:
+E             - heading "第 1 页 · 项目目标与阅读顺序" [level=1]
+E             - paragraph: SVG · 当前稿
+E             - combobox "转到页面":
+E               - option "第 1 / 3 页" [selected]
+E               - option "第 2 / 3 页"
+E               - option "第 3 / 3 页"
+E             - button "上一页，没有上一页" [disabled]: ← 上一页
+E             - button "下一页，第 2 页 · 材料如何成为内容": 下一页 →
+E             - navigation "本页生成链路":
+E               - button "01 来源，记录缺失": 01 来源 记录缺失
+E               - button "02 逐页稿，可查看": 02 逐页稿 可查看
+E               - button "03 提示词，记录缺失": 03 提示词 记录缺失
+E               - button "04 原图，可查看": 04 原图 可查看
+E               - button "05 SVG，可查看": 05 SVG 可查看
+E               - button "06 PPT 预览，尚未生成": 06 PPT 预览 尚未生成
+E             - button "回到整稿画廊"
+E             - button "比较此页版本"
+E             - button "以本页为风格参考"
+E             - group "单页工具":
+E               - button "意见" [pressed]
+E               - button "试作与候选"
+E               - button "图标优化"
+E               - button "笔记"
+E               - button "详情"
+E             - region "页面内容":
+E               - group "单页图稿阅读":
+E                 - button "适应窗口" [pressed]
+E                 - button "原生 100% 阅读": 100%
+E                 - button "缩小图稿": −
+E                 - button "放大图稿": +
+E                 - status: 适应窗口 · 218%
+E                 - button "全屏阅读"
+E               - paragraph: 可看
+E               - img "第 1 页 · 项目目标与阅读顺序 · SVG"
+E               - paragraph: SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。
+E             - complementary:
+E               - paragraph: 第 1 页 · SVG · 当前版本 R c76f02a2
+E               - region "版本绑定意见":
+E                 - heading "标注与意见" [level=2]
+E                 - paragraph: 当前图稿（SVG） · 底稿 R c76f02a2 · 草稿区域 0 个
+E                 - button "整页意见"
+E                 - text: 意见正文
+E                 - textbox "意见正文":
+E                   - /placeholder: 写下这条意见要改什么。输入会自动保留；保存后进入正式记录。
+E                 - paragraph
+E                 - button "保存意见" [disabled]
+E                 - status: operation could not be verified; keep its original payload and ID 原输入与意见保留，请阅读当前版本后重新计划。
+E                 - paragraph: 先选「整页意见」，或打开标注工具，再保存意见。
+E                 - group: › 范围与标注工具
+E                 - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。
+E                 - heading "已保存意见" [level=3]
+E                 - heading "本页整页意见（1）" [level=4]
+E                 - article:
+E                   - checkbox "选入意见 1" [checked]
+E                   - text: 意见 1 · 修改建议
+E                   - paragraph: 本页整页意见 · 底稿 R 3777ccc6 · 待处理
+E                   - paragraph: 缩短标题
+E                   - button "回到意见 1 的原版本"
+E                 - heading "当前图稿意见 · SVG（0）" [level=4]
+E                 - paragraph: 此范围暂无意见。
+E                 - heading "修改要求" [level=3]
+E                 - paragraph: 目标：本页 SVG · 底稿 R c76f02a2
+E                 - paragraph: 本页整页意见｜缩短标题
+E                 - text: 修改要求
+E                 - textbox "修改要求":
+E                   - /placeholder: 这段要求会成为制作依据。默认填入所选意见原文，可继续编辑或补充说明。
+E                   - text: 只改文字，保留原来的引用证据
+E                 - paragraph
+E                 - button "预览修改影响"
+E                 - paragraph: 结果会先作为候选返回；比较并明确采用后才会替换当前作品。
+E           - status: 单页 · SVG，R c76f02a2
+
+tests/rebuild/test_rc_closure_browser.py:182: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect[old_basis]" time="10.682"><failure message="AssertionError: Locator expected to be visible&#10;Actual value: None&#10;Error: element(s) not found &#10;Call log:&#10;  - Expect &quot;to_be_visible&quot; get_by_role(&quot;button&quot;, name=&quot;确认计划并创建交接&quot;, exact=True) with timeout 5000ms&#10;  - waiting for get_by_role(&quot;button&quot;, name=&quot;确认计划并创建交接&quot;, exact=True)&#10;&#10;Aria snapshot:&#10;- link &quot;跳到工作区&quot;:&#10;  - /url: &quot;#main&quot;&#10;- complementary:&#10;  - img &quot;Deck Master&quot;&#10;  - navigation &quot;项目工作区&quot;:&#10;    - button &quot;制作总览&quot;&#10;    - button &quot;内容与来源&quot;&#10;    - button &quot;整稿画廊&quot;&#10;    - button &quot;风格校准&quot;&#10;    - button &quot;任务与交付&quot;&#10;  - text: 当前项目&#10;  - strong: 工作台合成示例&#10;  - text: 合成验证项目&#10;  - paragraph: 当前为项目独立入口&#10;  - button &quot;连接状态&quot;&#10;- banner:&#10;  - strong: 工作台合成示例&#10;  - text: 当前稿&#10;  - region &quot;本次工作状态&quot;:&#10;    - button &quot;查看本次工作与范围&quot;: 内容进行中&#10;  - button &quot;查看待交接任务，0 项&quot;: 待交接 0&#10;- text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。&#10;- main:&#10;  - heading &quot;第 1 页 · 项目目标与阅读顺序&quot; [level=1]&#10;  - paragraph: SVG · 当前稿&#10;  - combobox &quot;转到页面&quot;:&#10;    - option &quot;第 1 / 3 页&quot; [selected]&#10;    - option &quot;第 2 / 3 页&quot;&#10;    - option &quot;第 3 / 3 页&quot;&#10;  - button &quot;上一页，没有上一页&quot; [disabled]: ← 上一页&#10;  - button &quot;下一页，第 2 页 · 材料如何成为内容&quot;: 下一页 →&#10;  - navigation &quot;本页生成链路&quot;:&#10;    - button &quot;01 来源，记录缺失&quot;: 01 来源 记录缺失&#10;    - button &quot;02 逐页稿，可查看&quot;: 02 逐页稿 可查看&#10;    - button &quot;03 提示词，记录缺失&quot;: 03 提示词 记录缺失&#10;    - button &quot;04 原图，可查看&quot;: 04 原图 可查看&#10;    - button &quot;05 SVG，可查看&quot;: 05 SVG 可查看&#10;    - button &quot;06 PPT 预览，尚未生成&quot;: 06 PPT 预览 尚未生成&#10;  - button &quot;回到整稿画廊&quot;&#10;  - button &quot;比较此页版本&quot;&#10;  - button &quot;以本页为风格参考&quot;&#10;  - group &quot;单页工具&quot;:&#10;    - button &quot;意见&quot; [pressed]&#10;    - button &quot;试作与候选&quot;&#10;    - button &quot;图标优化&quot;&#10;    - button &quot;笔记&quot;&#10;    - button &quot;详情&quot;&#10;  - region &quot;页面内容&quot;:&#10;    - group &quot;单页图稿阅读&quot;:&#10;      - button &quot;适应窗口&quot; [pressed]&#10;      - button &quot;原生 100% 阅读&quot;: 100%&#10;      - button &quot;缩小图稿&quot;: −&#10;      - button &quot;放大图稿&quot;: +&#10;      - status: 适应窗口 · 218%&#10;      - button &quot;全屏阅读&quot;&#10;    - paragraph: 可看&#10;    - img &quot;第 1 页 · 项目目标与阅读顺序 · SVG&quot;&#10;    - paragraph: SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。&#10;  - complementary:&#10;    - paragraph: 第 1 页 · SVG · 当前版本 R 13506ea4&#10;    - region &quot;版本绑定意见&quot;:&#10;      - heading &quot;标注与意见&quot; [level=2]&#10;      - paragraph: 当前图稿（SVG） · 底稿 R 13506ea4 · 草稿区域 0 个&#10;      - button &quot;整页意见&quot;&#10;      - text: 意见正文&#10;      - textbox &quot;意见正文&quot;:&#10;        - /placeholder: 写下这条意见要改什么。输入会自动保留；保存后进入正式记录。&#10;      - paragraph&#10;      - button &quot;保存意见&quot; [disabled]&#10;      - status: operation could not be verified; keep its original payload and ID 原输入与意见保留，请阅读当前版本后重新计划。&#10;      - paragraph: 先选「整页意见」，或打开标注工具，再保存意见。&#10;      - group: › 范围与标注工具&#10;      - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。&#10;      - heading &quot;已保存意见&quot; [level=3]&#10;      - heading &quot;本页整页意见（1）&quot; [level=4]&#10;      - article:&#10;        - checkbox &quot;选入意见 1&quot; [checked]&#10;        - text: 意见 1 · 修改建议&#10;        - paragraph: 本页整页意见 · 底稿 R c0588f95 · 待处理&#10;        - paragraph: 缩短标题&#10;        - button &quot;回到意见 1 的原版本&quot;&#10;      - heading &quot;当前图稿意见 · SVG（0）&quot; [level=4]&#10;      - paragraph: 此范围暂无意见。&#10;      - heading &quot;修改要求&quot; [level=3]&#10;      - paragraph: 目标：本页 SVG · 底稿 R 13506ea4&#10;      - paragraph: 本页整页意见｜缩短标题&#10;      - text: 修改要求&#10;      - textbox &quot;修改要求&quot;:&#10;        - /placeholder: 这段要求会成为制作依据。默认填入所选意见原文，可继续编辑或补充说明。&#10;        - text: 只改文字，保留原来的引用证据&#10;      - paragraph&#10;      - button &quot;预览修改影响&quot;&#10;      - paragraph: 结果会先作为候选返回；比较并明确采用后才会替换当前作品。&#10;- status: 单页 · SVG，R 13506ea4">workbench = (&lt;Page url='http://127.0.0.1:36267/#project=e15980a116050cdcc21c82e29949e418085ecac5bd6dd059b3ea74e2021cfa8f&amp;surface=p...e.Store object at 0x7f4727d9a240&gt;, 'http://127.0.0.1:36267/', &lt;function workbench.&lt;locals&gt;.goto at 0x7f473d724180&gt;, [])
+invalid = 'old_basis'
+
+    @pytest.mark.parametrize('invalid', ['missing_ref', 'old_basis'])
+    def test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect(workbench, invalid):
+        import copy
+        from deck_master import ui_journal
+        page, context, store, url, _, _ = workbench
+        state = persisted_requirement(workbench)
+        record = next(r for r in ui_journal.list_drafts(store.project_root)['records']
+                      if r['draft']['content'].get('requirement') == state)
+        draft = copy.deepcopy(record['draft'])
+        if invalid == 'missing_ref':
+            draft['content']['requirement']['annotation_refs'][0]['sha256'] = '0' * 64
+        else:
+            draft['content']['requirement']['basis']['revision_id'] = store.read_object_json(
+                store.load_document()['annotations'][0])['base_revision']
+        ui_journal.save(store.project_root, draft=draft, expected_etag=record['etag'])
+        original = copy.deepcopy(draft['content']['requirement'])
+        other = isolated_context(workbench)
+        try:
+            test_page = other.new_page()
+            test_page.goto(url + '#' + page.url.split('#')[1])
+            expect(test_page.locator('.requirement-ref')).to_have_count(0)
+            expect(test_page.locator('.change-requirement')).to_contain_text('请重新选择')
+            text = '只改文字，保留原来的引用证据'
+            test_page.get_by_label('修改要求', exact=True).fill(text)
+            stored = saved_requirement(test_page, text)
+            assert stored['annotation_refs'] == original['annotation_refs']
+            assert stored['basis'] == original['basis']
+            test_page.reload()
+            expect(test_page.get_by_role('button', name='预览修改影响', exact=True)).to_be_disabled()
+            test_page.get_by_label('选入意见 1', exact=True).check()
+            expect(test_page.get_by_role('button', name='预览修改影响', exact=True)).to_be_enabled()
+            test_page.get_by_role('button', name='预览修改影响', exact=True).click()
+&gt;           expect(test_page.get_by_role('button', name='确认计划并创建交接', exact=True)).to_be_visible()
+E           AssertionError: Locator expected to be visible
+E           Actual value: None
+E           Error: element(s) not found 
+E           Call log:
+E             - Expect "to_be_visible" get_by_role("button", name="确认计划并创建交接", exact=True) with timeout 5000ms
+E             - waiting for get_by_role("button", name="确认计划并创建交接", exact=True)
+E           
+E           Aria snapshot:
+E           - link "跳到工作区":
+E             - /url: "#main"
+E           - complementary:
+E             - img "Deck Master"
+E             - navigation "项目工作区":
+E               - button "制作总览"
+E               - button "内容与来源"
+E               - button "整稿画廊"
+E               - button "风格校准"
+E               - button "任务与交付"
+E             - text: 当前项目
+E             - strong: 工作台合成示例
+E             - text: 合成验证项目
+E             - paragraph: 当前为项目独立入口
+E             - button "连接状态"
+E           - banner:
+E             - strong: 工作台合成示例
+E             - text: 当前稿
+E             - region "本次工作状态":
+E               - button "查看本次工作与范围": 内容进行中
+E             - button "查看待交接任务，0 项": 待交接 0
+E           - text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。
+E           - main:
+E             - heading "第 1 页 · 项目目标与阅读顺序" [level=1]
+E             - paragraph: SVG · 当前稿
+E             - combobox "转到页面":
+E               - option "第 1 / 3 页" [selected]
+E               - option "第 2 / 3 页"
+E               - option "第 3 / 3 页"
+E             - button "上一页，没有上一页" [disabled]: ← 上一页
+E             - button "下一页，第 2 页 · 材料如何成为内容": 下一页 →
+E             - navigation "本页生成链路":
+E               - button "01 来源，记录缺失": 01 来源 记录缺失
+E               - button "02 逐页稿，可查看": 02 逐页稿 可查看
+E               - button "03 提示词，记录缺失": 03 提示词 记录缺失
+E               - button "04 原图，可查看": 04 原图 可查看
+E               - button "05 SVG，可查看": 05 SVG 可查看
+E               - button "06 PPT 预览，尚未生成": 06 PPT 预览 尚未生成
+E             - button "回到整稿画廊"
+E             - button "比较此页版本"
+E             - button "以本页为风格参考"
+E             - group "单页工具":
+E               - button "意见" [pressed]
+E               - button "试作与候选"
+E               - button "图标优化"
+E               - button "笔记"
+E               - button "详情"
+E             - region "页面内容":
+E               - group "单页图稿阅读":
+E                 - button "适应窗口" [pressed]
+E                 - button "原生 100% 阅读": 100%
+E                 - button "缩小图稿": −
+E                 - button "放大图稿": +
+E                 - status: 适应窗口 · 218%
+E                 - button "全屏阅读"
+E               - paragraph: 可看
+E               - img "第 1 页 · 项目目标与阅读顺序 · SVG"
+E               - paragraph: SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。
+E             - complementary:
+E               - paragraph: 第 1 页 · SVG · 当前版本 R 13506ea4
+E               - region "版本绑定意见":
+E                 - heading "标注与意见" [level=2]
+E                 - paragraph: 当前图稿（SVG） · 底稿 R 13506ea4 · 草稿区域 0 个
+E                 - button "整页意见"
+E                 - text: 意见正文
+E                 - textbox "意见正文":
+E                   - /placeholder: 写下这条意见要改什么。输入会自动保留；保存后进入正式记录。
+E                 - paragraph
+E                 - button "保存意见" [disabled]
+E                 - status: operation could not be verified; keep its original payload and ID 原输入与意见保留，请阅读当前版本后重新计划。
+E                 - paragraph: 先选「整页意见」，或打开标注工具，再保存意见。
+E                 - group: › 范围与标注工具
+E                 - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。
+E                 - heading "已保存意见" [level=3]
+E                 - heading "本页整页意见（1）" [level=4]
+E                 - article:
+E                   - checkbox "选入意见 1" [checked]
+E                   - text: 意见 1 · 修改建议
+E                   - paragraph: 本页整页意见 · 底稿 R c0588f95 · 待处理
+E                   - paragraph: 缩短标题
+E                   - button "回到意见 1 的原版本"
+E                 - heading "当前图稿意见 · SVG（0）" [level=4]
+E                 - paragraph: 此范围暂无意见。
+E                 - heading "修改要求" [level=3]
+E                 - paragraph: 目标：本页 SVG · 底稿 R 13506ea4
+E                 - paragraph: 本页整页意见｜缩短标题
+E                 - text: 修改要求
+E                 - textbox "修改要求":
+E                   - /placeholder: 这段要求会成为制作依据。默认填入所选意见原文，可继续编辑或补充说明。
+E                   - text: 只改文字，保留原来的引用证据
+E                 - paragraph
+E                 - button "预览修改影响"
+E                 - paragraph: 结果会先作为候选返回；比较并明确采用后才会替换当前作品。
+E           - status: 单页 · SVG，R 13506ea4
+
+tests/rebuild/test_rc_closure_browser.py:182: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_requirement_only_copy_is_saved_to_project_and_recovers" time="6.851" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_real_draft_conflict_compares_downloads_and_saves_all_texts[note-1280-800]" time="8.094" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_real_draft_conflict_compares_downloads_and_saves_all_texts[opinion-1280-800]" time="10.375" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_real_draft_conflict_compares_downloads_and_saves_all_texts[requirement-1280-800]" time="7.580"><failure message="AssertionError: Locator expected to be visible&#10;Actual value: None&#10;Error: element(s) not found &#10;Call log:&#10;  - Expect &quot;to_be_visible&quot; locator(&quot;.field-error[data-success]&quot;) with timeout 5000ms&#10;  - waiting for locator(&quot;.field-error[data-success]&quot;)&#10;&#10;Aria snapshot:&#10;- link &quot;跳到工作区&quot;:&#10;  - /url: &quot;#main&quot;&#10;- complementary:&#10;  - img &quot;Deck Master&quot;&#10;  - navigation &quot;项目工作区&quot;:&#10;    - button &quot;制作总览&quot;&#10;    - button &quot;内容与来源&quot;&#10;    - button &quot;整稿画廊&quot;&#10;    - button &quot;风格校准&quot;&#10;    - button &quot;任务与交付&quot;&#10;  - text: 当前项目&#10;  - strong: 工作台合成示例&#10;  - text: 合成验证项目&#10;  - paragraph: 当前为项目独立入口&#10;  - button &quot;连接状态&quot;&#10;- banner:&#10;  - strong: 工作台合成示例&#10;  - text: 当前稿&#10;  - region &quot;本次工作状态&quot;:&#10;    - button &quot;查看本次工作与范围&quot;: 内容进行中&#10;  - button &quot;查看待交接任务，0 项&quot;: 待交接 0&#10;- text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。&#10;- main:&#10;  - heading &quot;第 1 页 · 项目目标与阅读顺序&quot; [level=1]&#10;  - paragraph: SVG · 当前稿&#10;  - combobox &quot;转到页面&quot;:&#10;    - option &quot;第 1 / 3 页&quot; [selected]&#10;    - option &quot;第 2 / 3 页&quot;&#10;    - option &quot;第 3 / 3 页&quot;&#10;  - button &quot;上一页，没有上一页&quot; [disabled]: ← 上一页&#10;  - button &quot;下一页，第 2 页 · 材料如何成为内容&quot;: 下一页 →&#10;  - navigation &quot;本页生成链路&quot;:&#10;    - button &quot;01 来源，记录缺失&quot;: 01 来源 记录缺失&#10;    - button &quot;02 逐页稿，可查看&quot;: 02 逐页稿 可查看&#10;    - button &quot;03 提示词，记录缺失&quot;: 03 提示词 记录缺失&#10;    - button &quot;04 原图，可查看&quot;: 04 原图 可查看&#10;    - button &quot;05 SVG，可查看&quot;: 05 SVG 可查看&#10;    - button &quot;06 PPT 预览，尚未生成&quot;: 06 PPT 预览 尚未生成&#10;  - button &quot;回到整稿画廊&quot;&#10;  - button &quot;比较此页版本&quot;&#10;  - button &quot;以本页为风格参考&quot;&#10;  - group &quot;单页工具&quot;:&#10;    - button &quot;意见&quot; [pressed]&#10;    - button &quot;试作与候选&quot;&#10;    - button &quot;图标优化&quot;&#10;    - button &quot;笔记&quot;&#10;    - button &quot;详情&quot;&#10;  - region &quot;页面内容&quot;:&#10;    - group &quot;单页图稿阅读&quot;:&#10;      - button &quot;适应窗口&quot; [pressed]&#10;      - button &quot;原生 100% 阅读&quot;: 100%&#10;      - button &quot;缩小图稿&quot;: −&#10;      - button &quot;放大图稿&quot;: +&#10;      - status: 适应窗口 · 278%&#10;      - button &quot;全屏阅读&quot;&#10;    - paragraph: 可看&#10;    - img &quot;第 1 页 · 项目目标与阅读顺序 · SVG&quot;&#10;    - paragraph: SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。&#10;  - complementary:&#10;    - paragraph: 第 1 页 · SVG · 当前版本 R c0150a4b&#10;    - region &quot;待核实的业务保存&quot;:&#10;      - strong: 保存结果待核实 · 新的业务提交已暂停&#10;      - paragraph: 意见保存&#10;      - status: 尚未确认保存结果；可继续写草稿，请先核实原请求。operation could not be verified; keep its original payload and ID&#10;      - paragraph: 原请求目标：1 条意见&#10;      - button &quot;核实保存结果&quot;&#10;      - button &quot;查看原请求&quot;&#10;    - button &quot;个人草稿保存结果待核实&quot;&#10;    - region &quot;版本绑定意见&quot;:&#10;      - heading &quot;标注与意见&quot; [level=2]&#10;      - paragraph: 本页整页意见 · 底稿 R c0150a4b · 草稿区域 0 个&#10;      - button &quot;整页意见&quot;&#10;      - text: 意见正文&#10;      - textbox &quot;意见正文&quot;:&#10;        - /placeholder: 写下这条意见要改什么。输入会自动保留；保存后进入正式记录。&#10;        - text: 缩短标题&#10;      - paragraph&#10;      - button &quot;保存意见&quot; [disabled]&#10;      - paragraph: 针对整页写意见，不绑定区域。&#10;      - group: › 范围与标注工具&#10;      - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。&#10;      - heading &quot;已保存意见&quot; [level=3]&#10;      - heading &quot;本页整页意见（0）&quot; [level=4]&#10;      - paragraph: 此范围暂无意见。&#10;      - heading &quot;当前图稿意见 · SVG（0）&quot; [level=4]&#10;      - paragraph: 此范围暂无意见。&#10;      - paragraph: 尚无已保存意见。&#10;- status: 单页 · SVG，R c0150a4b">workbench = (&lt;Page url='http://127.0.0.1:37271/#project=4b7554c0af77230265f4095e7d76407eb5310eb08779aaf756a9d75d61711973&amp;surface=p...e.Store object at 0x7f473d357b30&gt;, 'http://127.0.0.1:37271/', &lt;function workbench.&lt;locals&gt;.goto at 0x7f47244902c0&gt;, [])
+tmp_path = PosixPath('/workspace/work/rc3/t04/r4-browser-02a6d44/test_real_draft_conflict_compa2')
+kind = 'requirement', width = 1280, height = 800
+
+    @pytest.mark.parametrize('kind,width,height', [
+        ('note', 1280, 800), ('opinion', 1280, 800), ('requirement', 1280, 800),
+        ('same_note', 1280, 800), ('all', 1440, 900), ('all', 1280, 800), ('all', 390, 844),
+    ])
+    def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, tmp_path, kind, width, height):
+        import copy
+        import os
+        from pathlib import Path
+        from deck_master import ui_journal
+        page, context, store, url, _, errors = workbench
+&gt;       state = persisted_requirement(workbench)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc_closure_browser.py:258: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc_closure_browser.py:70: in persisted_requirement
+    opinion(page)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+page = &lt;Page url='http://127.0.0.1:37271/#project=4b7554c0af77230265f4095e7d76407eb5310eb08779aaf756a9d75d61711973&amp;surface=page&amp;layer=svg&amp;zoom=1&amp;revision=c0150a4bf378440b9c61f19b07c3e712&amp;page=p01'&gt;
+text = '缩短标题'
+
+    def opinion(page, text='缩短标题'):
+        page.get_by_role('button', name='整页意见', exact=True).click()
+        open_opinion_face(page)
+        page.get_by_label('意见正文', exact=True).fill(text)
+        page.get_by_role('button', name='保存意见', exact=True).click()
+&gt;       expect(page.locator('.field-error[data-success]')).to_be_visible()
+E       AssertionError: Locator expected to be visible
+E       Actual value: None
+E       Error: element(s) not found 
+E       Call log:
+E         - Expect "to_be_visible" locator(".field-error[data-success]") with timeout 5000ms
+E         - waiting for locator(".field-error[data-success]")
+E       
+E       Aria snapshot:
+E       - link "跳到工作区":
+E         - /url: "#main"
+E       - complementary:
+E         - img "Deck Master"
+E         - navigation "项目工作区":
+E           - button "制作总览"
+E           - button "内容与来源"
+E           - button "整稿画廊"
+E           - button "风格校准"
+E           - button "任务与交付"
+E         - text: 当前项目
+E         - strong: 工作台合成示例
+E         - text: 合成验证项目
+E         - paragraph: 当前为项目独立入口
+E         - button "连接状态"
+E       - banner:
+E         - strong: 工作台合成示例
+E         - text: 当前稿
+E         - region "本次工作状态":
+E           - button "查看本次工作与范围": 内容进行中
+E         - button "查看待交接任务，0 项": 待交接 0
+E       - text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。
+E       - main:
+E         - heading "第 1 页 · 项目目标与阅读顺序" [level=1]
+E         - paragraph: SVG · 当前稿
+E         - combobox "转到页面":
+E           - option "第 1 / 3 页" [selected]
+E           - option "第 2 / 3 页"
+E           - option "第 3 / 3 页"
+E         - button "上一页，没有上一页" [disabled]: ← 上一页
+E         - button "下一页，第 2 页 · 材料如何成为内容": 下一页 →
+E         - navigation "本页生成链路":
+E           - button "01 来源，记录缺失": 01 来源 记录缺失
+E           - button "02 逐页稿，可查看": 02 逐页稿 可查看
+E           - button "03 提示词，记录缺失": 03 提示词 记录缺失
+E           - button "04 原图，可查看": 04 原图 可查看
+E           - button "05 SVG，可查看": 05 SVG 可查看
+E           - button "06 PPT 预览，尚未生成": 06 PPT 预览 尚未生成
+E         - button "回到整稿画廊"
+E         - button "比较此页版本"
+E         - button "以本页为风格参考"
+E         - group "单页工具":
+E           - button "意见" [pressed]
+E           - button "试作与候选"
+E           - button "图标优化"
+E           - button "笔记"
+E           - button "详情"
+E         - region "页面内容":
+E           - group "单页图稿阅读":
+E             - button "适应窗口" [pressed]
+E             - button "原生 100% 阅读": 100%
+E             - button "缩小图稿": −
+E             - button "放大图稿": +
+E             - status: 适应窗口 · 278%
+E             - button "全屏阅读"
+E           - paragraph: 可看
+E           - img "第 1 页 · 项目目标与阅读顺序 · SVG"
+E           - paragraph: SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。
+E         - complementary:
+E           - paragraph: 第 1 页 · SVG · 当前版本 R c0150a4b
+E           - region "待核实的业务保存":
+E             - strong: 保存结果待核实 · 新的业务提交已暂停
+E             - paragraph: 意见保存
+E             - status: 尚未确认保存结果；可继续写草稿，请先核实原请求。operation could not be verified; keep its original payload and ID
+E             - paragraph: 原请求目标：1 条意见
+E             - button "核实保存结果"
+E             - button "查看原请求"
+E           - button "个人草稿保存结果待核实"
+E           - region "版本绑定意见":
+E             - heading "标注与意见" [level=2]
+E             - paragraph: 本页整页意见 · 底稿 R c0150a4b · 草稿区域 0 个
+E             - button "整页意见"
+E             - text: 意见正文
+E             - textbox "意见正文":
+E               - /placeholder: 写下这条意见要改什么。输入会自动保留；保存后进入正式记录。
+E               - text: 缩短标题
+E             - paragraph
+E             - button "保存意见" [disabled]
+E             - paragraph: 针对整页写意见，不绑定区域。
+E             - group: › 范围与标注工具
+E             - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。
+E             - heading "已保存意见" [level=3]
+E             - heading "本页整页意见（0）" [level=4]
+E             - paragraph: 此范围暂无意见。
+E             - heading "当前图稿意见 · SVG（0）" [level=4]
+E             - paragraph: 此范围暂无意见。
+E             - paragraph: 尚无已保存意见。
+E       - status: 单页 · SVG，R c0150a4b
+
+tests/rebuild/test_rc_closure_browser.py:63: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_real_draft_conflict_compares_downloads_and_saves_all_texts[same_note-1280-800]" time="9.496" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_real_draft_conflict_compares_downloads_and_saves_all_texts[all-1440-900]" time="9.208" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_real_draft_conflict_compares_downloads_and_saves_all_texts[all-1280-800]" time="8.198"><failure message="AssertionError: Locator expected to be visible&#10;Actual value: None&#10;Error: element(s) not found &#10;Call log:&#10;  - Expect &quot;to_be_visible&quot; locator(&quot;.field-error[data-success]&quot;) with timeout 5000ms&#10;  - waiting for locator(&quot;.field-error[data-success]&quot;)&#10;&#10;Aria snapshot:&#10;- link &quot;跳到工作区&quot;:&#10;  - /url: &quot;#main&quot;&#10;- complementary:&#10;  - img &quot;Deck Master&quot;&#10;  - navigation &quot;项目工作区&quot;:&#10;    - button &quot;制作总览&quot;&#10;    - button &quot;内容与来源&quot;&#10;    - button &quot;整稿画廊&quot;&#10;    - button &quot;风格校准&quot;&#10;    - button &quot;任务与交付&quot;&#10;  - text: 当前项目&#10;  - strong: 工作台合成示例&#10;  - text: 合成验证项目&#10;  - paragraph: 当前为项目独立入口&#10;  - button &quot;连接状态&quot;&#10;- banner:&#10;  - strong: 工作台合成示例&#10;  - text: 当前稿&#10;  - region &quot;本次工作状态&quot;:&#10;    - button &quot;查看本次工作与范围&quot;: 内容进行中&#10;  - button &quot;查看待交接任务，0 项&quot;: 待交接 0&#10;- text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。&#10;- main:&#10;  - heading &quot;第 1 页 · 项目目标与阅读顺序&quot; [level=1]&#10;  - paragraph: SVG · 当前稿&#10;  - combobox &quot;转到页面&quot;:&#10;    - option &quot;第 1 / 3 页&quot; [selected]&#10;    - option &quot;第 2 / 3 页&quot;&#10;    - option &quot;第 3 / 3 页&quot;&#10;  - button &quot;上一页，没有上一页&quot; [disabled]: ← 上一页&#10;  - button &quot;下一页，第 2 页 · 材料如何成为内容&quot;: 下一页 →&#10;  - navigation &quot;本页生成链路&quot;:&#10;    - button &quot;01 来源，记录缺失&quot;: 01 来源 记录缺失&#10;    - button &quot;02 逐页稿，可查看&quot;: 02 逐页稿 可查看&#10;    - button &quot;03 提示词，记录缺失&quot;: 03 提示词 记录缺失&#10;    - button &quot;04 原图，可查看&quot;: 04 原图 可查看&#10;    - button &quot;05 SVG，可查看&quot;: 05 SVG 可查看&#10;    - button &quot;06 PPT 预览，尚未生成&quot;: 06 PPT 预览 尚未生成&#10;  - button &quot;回到整稿画廊&quot;&#10;  - button &quot;比较此页版本&quot;&#10;  - button &quot;以本页为风格参考&quot;&#10;  - group &quot;单页工具&quot;:&#10;    - button &quot;意见&quot; [pressed]&#10;    - button &quot;试作与候选&quot;&#10;    - button &quot;图标优化&quot;&#10;    - button &quot;笔记&quot;&#10;    - button &quot;详情&quot;&#10;  - region &quot;页面内容&quot;:&#10;    - group &quot;单页图稿阅读&quot;:&#10;      - button &quot;适应窗口&quot; [pressed]&#10;      - button &quot;原生 100% 阅读&quot;: 100%&#10;      - button &quot;缩小图稿&quot;: −&#10;      - button &quot;放大图稿&quot;: +&#10;      - status: 适应窗口 · 278%&#10;      - button &quot;全屏阅读&quot;&#10;    - paragraph: 可看&#10;    - img &quot;第 1 页 · 项目目标与阅读顺序 · SVG&quot;&#10;    - paragraph: SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。&#10;  - complementary:&#10;    - paragraph: 第 1 页 · SVG · 当前版本 R 061c711a&#10;    - region &quot;待核实的业务保存&quot;:&#10;      - strong: 保存结果待核实 · 新的业务提交已暂停&#10;      - paragraph: 意见保存&#10;      - status: 尚未确认保存结果；可继续写草稿，请先核实原请求。operation could not be verified; keep its original payload and ID&#10;      - paragraph: 原请求目标：1 条意见&#10;      - button &quot;核实保存结果&quot;&#10;      - button &quot;查看原请求&quot;&#10;    - button &quot;个人草稿保存结果待核实&quot;&#10;    - region &quot;版本绑定意见&quot;:&#10;      - heading &quot;标注与意见&quot; [level=2]&#10;      - paragraph: 本页整页意见 · 底稿 R 061c711a · 草稿区域 0 个&#10;      - button &quot;整页意见&quot;&#10;      - text: 意见正文&#10;      - textbox &quot;意见正文&quot;:&#10;        - /placeholder: 写下这条意见要改什么。输入会自动保留；保存后进入正式记录。&#10;        - text: 缩短标题&#10;      - paragraph&#10;      - button &quot;保存意见&quot; [disabled]&#10;      - paragraph: 针对整页写意见，不绑定区域。&#10;      - group: › 范围与标注工具&#10;      - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。&#10;      - heading &quot;已保存意见&quot; [level=3]&#10;      - heading &quot;本页整页意见（0）&quot; [level=4]&#10;      - paragraph: 此范围暂无意见。&#10;      - heading &quot;当前图稿意见 · SVG（0）&quot; [level=4]&#10;      - paragraph: 此范围暂无意见。&#10;      - paragraph: 尚无已保存意见。&#10;- status: 单页 · SVG，R 061c711a">workbench = (&lt;Page url='http://127.0.0.1:40897/#project=e9de19bdf1b5b4d30b6006004ed82b6b858f0523a61ae2ee454825fe2469443c&amp;surface=p...e.Store object at 0x7f473d2755b0&gt;, 'http://127.0.0.1:40897/', &lt;function workbench.&lt;locals&gt;.goto at 0x7f4727a196c0&gt;, [])
+tmp_path = PosixPath('/workspace/work/rc3/t04/r4-browser-02a6d44/test_real_draft_conflict_compa5')
+kind = 'all', width = 1280, height = 800
+
+    @pytest.mark.parametrize('kind,width,height', [
+        ('note', 1280, 800), ('opinion', 1280, 800), ('requirement', 1280, 800),
+        ('same_note', 1280, 800), ('all', 1440, 900), ('all', 1280, 800), ('all', 390, 844),
+    ])
+    def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, tmp_path, kind, width, height):
+        import copy
+        import os
+        from pathlib import Path
+        from deck_master import ui_journal
+        page, context, store, url, _, errors = workbench
+&gt;       state = persisted_requirement(workbench)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc_closure_browser.py:258: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc_closure_browser.py:70: in persisted_requirement
+    opinion(page)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+page = &lt;Page url='http://127.0.0.1:40897/#project=e9de19bdf1b5b4d30b6006004ed82b6b858f0523a61ae2ee454825fe2469443c&amp;surface=page&amp;layer=svg&amp;zoom=1&amp;revision=061c711aeb4046a685c99e0dd6037ed8&amp;page=p01'&gt;
+text = '缩短标题'
+
+    def opinion(page, text='缩短标题'):
+        page.get_by_role('button', name='整页意见', exact=True).click()
+        open_opinion_face(page)
+        page.get_by_label('意见正文', exact=True).fill(text)
+        page.get_by_role('button', name='保存意见', exact=True).click()
+&gt;       expect(page.locator('.field-error[data-success]')).to_be_visible()
+E       AssertionError: Locator expected to be visible
+E       Actual value: None
+E       Error: element(s) not found 
+E       Call log:
+E         - Expect "to_be_visible" locator(".field-error[data-success]") with timeout 5000ms
+E         - waiting for locator(".field-error[data-success]")
+E       
+E       Aria snapshot:
+E       - link "跳到工作区":
+E         - /url: "#main"
+E       - complementary:
+E         - img "Deck Master"
+E         - navigation "项目工作区":
+E           - button "制作总览"
+E           - button "内容与来源"
+E           - button "整稿画廊"
+E           - button "风格校准"
+E           - button "任务与交付"
+E         - text: 当前项目
+E         - strong: 工作台合成示例
+E         - text: 合成验证项目
+E         - paragraph: 当前为项目独立入口
+E         - button "连接状态"
+E       - banner:
+E         - strong: 工作台合成示例
+E         - text: 当前稿
+E         - region "本次工作状态":
+E           - button "查看本次工作与范围": 内容进行中
+E         - button "查看待交接任务，0 项": 待交接 0
+E       - text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。
+E       - main:
+E         - heading "第 1 页 · 项目目标与阅读顺序" [level=1]
+E         - paragraph: SVG · 当前稿
+E         - combobox "转到页面":
+E           - option "第 1 / 3 页" [selected]
+E           - option "第 2 / 3 页"
+E           - option "第 3 / 3 页"
+E         - button "上一页，没有上一页" [disabled]: ← 上一页
+E         - button "下一页，第 2 页 · 材料如何成为内容": 下一页 →
+E         - navigation "本页生成链路":
+E           - button "01 来源，记录缺失": 01 来源 记录缺失
+E           - button "02 逐页稿，可查看": 02 逐页稿 可查看
+E           - button "03 提示词，记录缺失": 03 提示词 记录缺失
+E           - button "04 原图，可查看": 04 原图 可查看
+E           - button "05 SVG，可查看": 05 SVG 可查看
+E           - button "06 PPT 预览，尚未生成": 06 PPT 预览 尚未生成
+E         - button "回到整稿画廊"
+E         - button "比较此页版本"
+E         - button "以本页为风格参考"
+E         - group "单页工具":
+E           - button "意见" [pressed]
+E           - button "试作与候选"
+E           - button "图标优化"
+E           - button "笔记"
+E           - button "详情"
+E         - region "页面内容":
+E           - group "单页图稿阅读":
+E             - button "适应窗口" [pressed]
+E             - button "原生 100% 阅读": 100%
+E             - button "缩小图稿": −
+E             - button "放大图稿": +
+E             - status: 适应窗口 · 278%
+E             - button "全屏阅读"
+E           - paragraph: 可看
+E           - img "第 1 页 · 项目目标与阅读顺序 · SVG"
+E           - paragraph: SVG 安全图像预览；这里没有自由编辑或 OCR 文字层。
+E         - complementary:
+E           - paragraph: 第 1 页 · SVG · 当前版本 R 061c711a
+E           - region "待核实的业务保存":
+E             - strong: 保存结果待核实 · 新的业务提交已暂停
+E             - paragraph: 意见保存
+E             - status: 尚未确认保存结果；可继续写草稿，请先核实原请求。operation could not be verified; keep its original payload and ID
+E             - paragraph: 原请求目标：1 条意见
+E             - button "核实保存结果"
+E             - button "查看原请求"
+E           - button "个人草稿保存结果待核实"
+E           - region "版本绑定意见":
+E             - heading "标注与意见" [level=2]
+E             - paragraph: 本页整页意见 · 底稿 R 061c711a · 草稿区域 0 个
+E             - button "整页意见"
+E             - text: 意见正文
+E             - textbox "意见正文":
+E               - /placeholder: 写下这条意见要改什么。输入会自动保留；保存后进入正式记录。
+E               - text: 缩短标题
+E             - paragraph
+E             - button "保存意见" [disabled]
+E             - paragraph: 针对整页写意见，不绑定区域。
+E             - group: › 范围与标注工具
+E             - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。
+E             - heading "已保存意见" [level=3]
+E             - heading "本页整页意见（0）" [level=4]
+E             - paragraph: 此范围暂无意见。
+E             - heading "当前图稿意见 · SVG（0）" [level=4]
+E             - paragraph: 此范围暂无意见。
+E             - paragraph: 尚无已保存意见。
+E       - status: 单页 · SVG，R 061c711a
+
+tests/rebuild/test_rc_closure_browser.py:63: AssertionError</failure></testcase><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_real_draft_conflict_compares_downloads_and_saves_all_texts[all-390-844]" time="9.288" /><testcase classname="tests.rebuild.test_rc_closure_browser" name="test_requirement_survives_reload_and_deselect" time="5.902" /><testcase time="1.067" /></testsuite></testsuites>

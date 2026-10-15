@@ -10,6 +10,8 @@ import json
 
 import pytest
 
+from rc3_fixtures import historical_snapshot, public_project, submit_host_fixture
+
 from deck_master import collaboration, eligibility, service
 from deck_master.changes import plan as changes_plan
 from deck_master.models import (bump_revision, canonical_json_bytes, content_identity,
@@ -53,38 +55,26 @@ def _page(pid: str, text: str) -> dict:
             "visual_spec": {"intent": "synthetic", "reference_mode": "new_design"}}
 
 
-def _project(tmp_path, *, pages=True, profile=None, region=True):
-    """A collaboration.v1 project (the T04 enforcement boundary)."""
-    project = tmp_path / "proj"
-    service.create(project, brief="enforcement",
-                   draft={"pages": [_page("p1", "第一页。"), _page("p2", "第二页。")]}
-                   if pages else None)
-    store = Store(project)
+def _project(tmp_path, *, pages=True, region=True):
+    """Current public RC3 input, or an explicitly historical reader fixture."""
     if region:
-        document = store.load_document()
-        bumped = bump_revision(document, {"operation_id": "bootstrap-collaboration",
-                                          "kind": "collaboration_update",
-                                          "description": "bootstrap region", "read_set": []})
-        bumped["collaboration"] = {
-            "schema_version": "collaboration.v1", "authority_policy": "traceable",
-            "quality_profile": profile or {
-                "content_review_requirement": "fidelity_only",
-                "requirement_origin": "confirmed_manuscript",
-                "override_decision_ref": None},
-            "request": None, "decisions": [], "authorizations": [],
-        }
-        require_writer(bumped, "collaboration.v1")
-        store.commit_change(base_revision=document["revision_id"], document=bumped,
-                            operation_id="bootstrap-collaboration")
+        project = public_project(tmp_path, create_input={"brief": "enforcement"},
+            manuscript={"pages": [_page("p1", "第一页。"), _page("p2", "第二页。")]}
+            if pages else None)["project"]
+    else:
+        project = historical_snapshot(tmp_path, scenario="fixed pre-migration entry safety",
+            pages=[_page("p1", "第一页。"), _page("p2", "第二页。")] if pages else [])['project']
     return project, Store(project)
 
 
 def _start(project, store, *, operation_id="op-start-1", intent="full_deck",
            content_intent=None, scope=None, **extra):
+    current = (store.load_document().get("collaboration") or {}).get("request") or {}
     payload = {"intent": intent, "content_intent": content_intent,
                "instruction_evidence": _declared(store),
                "scope": scope or _scope(),
-               "replace_request_id": extra.pop("replace_request_id", None)}
+               "replace_request_id": extra.pop("replace_request_id",
+                   current.get("request_id") if not current.get("closed") else None)}
     payload.update(extra)
     return collaboration.start_request(project, input=payload,
                                        base_revision=store.load_document()["revision_id"],
@@ -105,41 +95,56 @@ def _grant(project, store, *, actions, mode="execute", scope=None, operation_id=
 
 
 def _settle_preproduction(store, *, seed="settle"):
-    """Settle the preproduction review dimension for a draft-pages project.
+    """Submit explicit L1 synthetic fidelity reviews through the real Host flow.
 
-    Puts one passing preproduction review per required unit on the current
-    page bytes (resolver-fixture style object insertion — this settles the
-    review records themselves, never a task binding). Tests that exercise
-    another dimension (scope, authority, budget, the change flow) call this so
-    the unified T03 verdict stops answering for the review gap and the gate
-    judges the dimension under test.
+    The host_self label and evidence never claim independence or human/native
+    execution. The current confirmed-manuscript policy must permit this path.
     """
-    import uuid
-
     from deck_master import content_review
 
     document = store.load_document()
-    units = content_review.required_units(store, document)
+    request = document["collaboration"]["request"]
+    page_ids = request["scope"]["page_ids"]
+    dispatched = content_review.dispatch_preproduction_review(
+        store.project_root, page_ids=page_ids,
+        instruction=f"L1 synthetic fidelity protocol fixture: {seed}")
+    assert dispatched["status"] == "review_dispatched", dispatched
+    assert dispatched["requirement"] == "fidelity_only"
+    task = dispatched["task"]
+    document = store.load_document()
+    pages = [entry for entry in document["pages"] if entry["page_id"] in page_ids]
+    subjects = [ref for ref in (document.get("narrative"), document.get("content_plan")) if ref]
+    subjects += [entry["page"] for entry in pages]
     deps = [{"kind": "content", "identity": key, "sha256": ref["sha256"]}
             for key, ref in (("narrative", document.get("narrative")),
                              ("content_plan", document.get("content_plan"))) if ref]
     deps += [{"kind": "content", "identity": f"page:{entry['page_id']}",
-              "sha256": entry["page"]["sha256"]} for entry in document.get("pages") or []]
-    operation_id = f"review-settle-{seed}-{uuid.uuid4().hex[:6]}"
-    reviews = [store.put_json_object({
-        "schema_version": "deck_review.v1", "review_id": f"review-{seed}-{kind}",
+              "sha256": entry["page"]["sha256"]} for entry in pages]
+    deps += [{"kind": "source", "identity": source["source_id"],
+              "sha256": source["extract"]["sha256"]}
+             for source in document.get("sources") or [] if source.get("extract")]
+    execution_ref = f"L1-synthetic-fidelity-{seed}"
+    evidence = store.put_json_object({"evidence_level": "L1_SYNTHETIC",
+        "subjects": subjects, "human_or_native_evidence": False,
+        "observation": "Synthetic protocol fixture inspected the bound manuscript objects."})
+    reviews = [{
+        "schema_version": "deck_review.v2", "review_id": f"review-{seed}-{kind}",
         "kind": kind, "review_stage": "preproduction", "status": "pass",
-        "reviewer": {"type": "independent_host", "id": "model-b",
-                     "assurance": "host_attested"},
-        "subjects": [], "dependencies": deps,
-        "observations": [f"fixture settlement for the {kind} unit"],
-        "findings": [], "replaces": None}) for kind in units]
-    bumped = bump_revision(document, {"operation_id": operation_id, "kind": "review_update",
-                                      "description": "settle the preproduction reviews",
-                                      "read_set": []})
-    bumped["reviews"] = [*(document.get("reviews") or []), *reviews]
-    store.commit_change(base_revision=document["revision_id"], document=bumped,
-                        operation_id=operation_id)
+        "reviewer": {"type": "host_self", "id": "L1-synthetic-fidelity-host",
+            "execution_ref": execution_ref, "independence_confirmed": False,
+            "identity_receipt": None, "evidence_ref": evidence, "assurance": "host_attested"},
+        "subjects": subjects, "dependencies": deps,
+        "observations": [f"L1 synthetic fidelity fixture for the {kind} unit"],
+        "findings": [], "created_at": "2026-10-15T00:00:00Z", "replaces": None}
+        for kind in dispatched["units"]]
+    outcome = submit_host_fixture(store.project_root, task_id=task["task_id"],
+        execution_ref=execution_ref,
+        host_declaration={"supported_protocols": [task["protocol_version"]],
+                          "capabilities": task["required_capabilities"]},
+        result_payload={"kind": "review", "files": [], "pages": [], "page_order": [],
+            "artifact_specs": [], "reviews": reviews, "usage_events": [],
+            "notes": "L1 synthetic fidelity test; no independent/human/native review."})
+    assert outcome["status"] == "accepted", outcome
 
 
 def _task(document, *, task_id="task-1", kind="compose", status="running",
@@ -267,13 +272,10 @@ def test_continue_reports_a_blocked_dispatch_as_a_decision_card(tmp_path):
     _start(project, store, intent="content_only", content_intent="write_only",
            scope=_scope(layers=["narrative", "plan", "page_copy"]))
     outcome = service.continue_project(project)
-    assert outcome["status"] == "needs_input"
-    assert outcome["next_action"]
-    assert outcome["eligibility"]["reason_codes"][0] == "scope_exceeded"
-    assert "authority_insufficient" in outcome["eligibility"]["reason_codes"]
-    assert outcome["eligibility"]["responsible_role"] == "user"
-    assert outcome["eligibility"]["decision_card"]["kind"] == "scope_card"
-    # Nothing was dispatched: no host task beyond the initial draft import.
+    assert outcome["status"] == "completed"
+    assert outcome["completion"]["state"] == "completed"
+    assert outcome["next_action"] == "return_requested_content"
+    # The fixed manuscript is the requested output; stop without production.
     tasks = [store.read_object_json(ref) for ref in store.load_document()["tasks"]]
     assert not any(task["status"] in ("awaiting_host", "running") for task in tasks)
 
@@ -305,7 +307,8 @@ def test_review_only_request_refuses_page_import_and_blueprint_dispatch(tmp_path
     _start(project, store, intent="review_only", content_intent=None,
            scope=_scope(page_ids=["p1"], layers=["review"], purpose="review"))
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
-        service.import_draft(project, draft_payload={"pages": [_page("p1", "改稿。")]})
+        service.import_draft(project, draft_payload={"pages": [_page("p1", "改稿。")]},
+            base_revision=store.current_revision_id(), operation_id="refused-review-only-import")
     assert "scope_exceeded" in _blocked(excinfo)["reason_codes"]
     assert "review_only" in _blocked(excinfo)["message"]
     entry = next(e for e in store.load_document()["pages"] if e["page_id"] == "p1")
@@ -318,8 +321,9 @@ def test_blueprint_dispatch_requires_scope_and_authorization(tmp_path):
     project, store = _project(tmp_path)
     from test_rc3_notes_visual_inputs import _seed_imported_plan
     _seed_imported_plan(store)
-    _start(project, store, scope=_scope(page_ids=["p1"]))
+    _start(project, store)
     _settle_preproduction(store, seed="blueprint-scope")
+    _start(project, store, operation_id="op-narrow-blueprint", scope=_scope(page_ids=["p1"]))
     entry = next(e for e in store.load_document()["pages"] if e["page_id"] == "p1")
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         service.open_blueprint_task(store, store.load_document(), entry)
@@ -530,8 +534,9 @@ def test_accept_in_scope_composes_normally(tmp_path):
 
 def test_change_commit_refuses_pages_outside_the_request(tmp_path):
     project, store = _project(tmp_path)
-    _start(project, store, scope=_scope(page_ids=["p1"]))
+    _start(project, store)
     _settle_preproduction(store, seed="change-scope")
+    _start(project, store, operation_id="op-narrow-change", scope=_scope(page_ids=["p1"]))
     _grant(project, store, actions=("change.commit",), scope=_scope(page_ids=["p1"]))
     document = store.load_document()
     entry = next(e for e in document["pages"] if e["page_id"] == "p2")
@@ -603,7 +608,7 @@ def test_content_operation_requires_the_direction_decision(tmp_path):
     entry = next(e for e in document["pages"] if e["page_id"] == "p1")
     planned = content_ops.plan(project, input={
         "schema_version": "content_operation_input.v1", "project_id": document["project_id"],
-        "base_revision": document["revision_id"], "content_plan_ref": None,
+        "base_revision": document["revision_id"], "content_plan_ref": document["content_plan"],
         "action": "edit", "targets": [{"page_id": "p1", "page_ref": entry["page"]}],
         "instruction": "改一句上屏文案",
         "customer_visible": {"title": "标题p1", "body_blocks": [
@@ -697,6 +702,7 @@ def test_local_compile_needs_the_output_layer_in_scope(tmp_path):
     _start(project, store, operation_id="op-start-2", intent="full_deck",
            replace_request_id=store.load_document()["collaboration"]["request"]["request_id"],
            scope=_scope(page_ids=["p1", "p2"]))
+    _settle_preproduction(store, seed="local-compile")
     with pytest.raises(Exception) as excinfo:
         pipeline.produce(project)
     assert not isinstance(excinfo.value, eligibility.EligibilityBlocked)
@@ -740,13 +746,14 @@ def test_local_rendering_entries_use_the_same_layer_strictness(tmp_path):
     assert not isinstance(excinfo.value, eligibility.EligibilityBlocked)
 
 
-def test_restore_is_a_reporting_decision_not_a_veto(tmp_path):
-    """P3 regression: restore recovers content facts and keeps the current
-    control, so it reports instead of refusing; persistence=none still refuses a
-    project write through it (the T07 strict-read-only path)."""
+def test_restore_requires_migration_and_current_scope(tmp_path):
+    """Restore recovers historical facts under migrated current control.
+
+    Historical writes and persistence=none remain refused through the gate.
+    """
     from deck_master import eligibility_entries as entries
     row = entries.classify("operations", "restoration.commit")
-    assert "reporting-only" in row.gate and row.exempt is None
+    assert row.action == "restore" and row.exempt is None
     project, store = _project(tmp_path, region=False)
     document = store.load_document()
     bumped = bump_revision(document, {"operation_id": "older-revision",
@@ -756,6 +763,25 @@ def test_restore_is_a_reporting_decision_not_a_veto(tmp_path):
                         operation_id="older-revision")
     older = store.load_document()["revision_id"]
     from deck_master.editing import restore
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        restore(project, revision_id=older, base_revision=store.current_revision_id(),
+                operation_id="op-restore-before-migration")
+    assert "migration_required" in _blocked(excinfo)["reason_codes"]
+    from deck_master import collaboration_migration
+    described = collaboration_migration.describe(project)
+    collaboration_migration.apply(project, base_revision=store.current_revision_id(),
+        plan_digest=described["plan_digest"], operation_id="op-restore-migrate")
+    _start(project, store, intent="content_only", content_intent="write_only",
+           scope=_scope(layers=["page_copy"]))
+    before = store.load_document()
+    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
+        restore(project, revision_id=older, base_revision=before["revision_id"],
+                operation_id="op-restore-outside-scope")
+    assert "scope_exceeded" in _blocked(excinfo)["reason_codes"]
+    assert store.load_document() == before
+    _start(project, store, operation_id="op-restore-current-scope",
+           intent="content_only", content_intent="write_only",
+           scope=_scope(layers=["narrative", "plan", "page_copy", "speech"]))
     outcome = restore(project, revision_id=older,
                       base_revision=store.load_document()["revision_id"],
                       operation_id="op-restore-report")
@@ -827,7 +853,7 @@ def test_restore_is_not_refused_by_the_current_stop(tmp_path):
     assert outcome["status"] in ("edited", "restored")
     after = store.load_document()
     assert after["collaboration"]["request"]["paused"] is True
-    assert after["compatibility"]["minimum_writer"] == "rc3.v1"
+    assert after["compatibility"]["minimum_writer"] == "rc3-entry.v1"
 
 
 def test_control_plane_writes_still_record_while_paused(tmp_path):
@@ -863,22 +889,18 @@ def test_migration_apply_is_never_refused_by_the_gate(tmp_path):
                                             plan_digest=described["plan_digest"],
                                             operation_id="op-migrate")
     assert outcome["status"] == "accepted"
-    assert store.load_document()["compatibility"]["minimum_writer"] == "collaboration.v1"
+    assert store.load_document()["compatibility"]["minimum_writer"] == "rc3-entry.v1"
 
 
-def test_legacy_project_keeps_current_behaviour(tmp_path):
-    """The increment switch, asserted from the real entries: a project below the
-    collaboration writer is not blocked (shadow), while the resolver still
-    computes migration_required."""
+def test_legacy_readers_and_settlement_survive_but_new_production_requires_migration(tmp_path):
     project, store = _project(tmp_path, region=False)
     entry = next(e for e in store.load_document()["pages"] if e["page_id"] == "p1")
-    task = service.open_blueprint_task(store, store.load_document(), entry)
-    assert task["kind"] == "blueprint"
-    decision = eligibility.evaluate(store, store.load_document(), store.load_document(),
-                                    "dispatch.blueprint")
-    assert decision["enforcement"] == "shadow"
-    assert decision["allowed"] is False
-    assert "migration_required" in decision["reason_codes"]
+    before = store.load_document()
+    with pytest.raises(eligibility.EligibilityBlocked) as exc:
+        service.open_blueprint_task(store, before, entry)
+    assert "migration_required" in exc.value.decision["reason_codes"]
+    assert store.load_document() == before
+    assert service.continue_project(project)["next_action"] == "describe_and_apply_migration"
 
 
 def test_blocked_actions_never_write(tmp_path):

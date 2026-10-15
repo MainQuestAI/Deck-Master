@@ -1,0 +1,239 @@
+{
+  "schema_version": "rc3_fixed_installed_compatibility.v2",
+  "candidate": "573a46a85bf9-13e3d2708abf",
+  "status": "ACTUAL_OLD03_UPGRADE_ROLLBACK_ROLLFORWARD_AND_F8_CONTINUATION_COMPLETED",
+  "actual_host": "/root/rc3_04_owner/skills_install",
+  "old_identity": {
+    "python": "/workspace/work/rc3/candidate-03-197e7c6/prefix/.deck-master/releases/197e7c6183f5-82782488c28e/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-03-197e7c6/prefix/.deck-master/releases/197e7c6183f5-82782488c28e/venv",
+    "module_path": "/workspace/work/rc3/candidate-03-197e7c6/prefix/.deck-master/releases/197e7c6183f5-82782488c28e/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "module_sha256": "1a880a02d9f145c447043fc9bfc91ed0c228b7714909df20be1f3182f2b8889b",
+    "version": "1.0.0.dev2",
+    "source_sha": "197e7c6183f59c4ffb42c06ab1fb38ded92b455b",
+    "wheel_sha256": "82782488c28eda7dccf0e6c8b283d70cbaa5481c0e0b56d5a302ee6f0fa28be0"
+  },
+  "new_identity": {
+    "pid": 492513,
+    "time": "2026-10-15T06:02:32.760035+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "old_wheel_sha256": "82782488c28eda7dccf0e6c8b283d70cbaa5481c0e0b56d5a302ee6f0fa28be0",
+  "old_package_all_wheel_members_match_in_root_and_private_install": true,
+  "legacy_old_file_count_not_used_as_validation": true,
+  "actual_old_started_before_refusal": true,
+  "old03_current_pointer_Entry13_rejection": true,
+  "whole_project_files_unchanged_for_both_old_refusals": true,
+  "old_task_protocol_and_caps_unchanged_by_migration": true,
+  "new_migration_documented_imported_mapping": {
+    "path": ".deckmaster/objects/4e/4eae64947f97552d6f6a193a05017e0b92aba4475932c315f47c6acc34568842.json",
+    "sha256": "4eae64947f97552d6f6a193a05017e0b92aba4475932c315f47c6acc34568842"
+  },
+  "fixed_old_page_ref": {
+    "path": ".deckmaster/objects/4c/4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b.json",
+    "sha256": "4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b"
+  },
+  "old_original_page_bytes_sha256_after": "4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b",
+  "fixed_visible_copy_visual_slots_preserved": true,
+  "actual_new_speech_request_completed_closed": true,
+  "normal_two_continue_no_new_revision_or_task": true,
+  "old_task_before_new_content": {
+    "call_allowances": [
+      {
+        "allowance_id": "call-1",
+        "evidence": [
+          {
+            "path": ".deckmaster/objects/e6/e6797aca6d41a233f9a4929b020a041de25369ca0e845d9b5e5610f9791e9494.json",
+            "sha256": "e6797aca6d41a233f9a4929b020a041de25369ca0e845d9b5e5610f9791e9494"
+          }
+        ],
+        "evidence_level": "host_reported",
+        "execution_ref": "L1-compatibility-ledger-host",
+        "invocation_ref": null,
+        "state": "unknown"
+      }
+    ],
+    "cost_class": "host_reasoning",
+    "created_at": "2026-10-15T05:58:51Z",
+    "dependencies": [
+      {
+        "identity": "p1",
+        "kind": "content",
+        "sha256": "4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b"
+      }
+    ],
+    "dispatch_revision": "d3229055beaa46f7a55a65414838b7dd",
+    "error": {
+      "code": "migration_superseded",
+      "message": "legacy task retired by the collaboration migration; it may only settle its already-recorded calls",
+      "next_action": "settle_calls_then_start_new_request"
+    },
+    "execution_ref": "L1-compatibility-ledger-host",
+    "execution_started_at": "2026-10-15T05:58:51Z",
+    "inputs": [
+      {
+        "path": ".deckmaster/objects/4c/4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b.json",
+        "sha256": "4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b"
+      }
+    ],
+    "instruction": "L1 legacy in-flight call ledger only; no image invocation has occurred.",
+    "kind": "repair",
+    "method_release": {
+      "methods_sha256": "04e0adb16e9a274a5db75d48cfb73fd2513ae22e500f351f538bd044978f53c1",
+      "release_id": "197e7c6183f5-82782488c28e"
+    },
+    "operation_id": "repair-43b95bf949d2",
+    "produced_against": "74225d6d3255511fcd49f3449d41727180452d53b4319036b5ce744881635b92",
+    "result_refs": [],
+    "schema_version": "deck_task.v1",
+    "scope_pages": [
+      "p1"
+    ],
+    "status": "superseded",
+    "task_id": "3b5242f82ccb",
+    "updated_at": "2026-10-15T05:58:51Z",
+    "usage": {
+      "external_calls": null,
+      "source": "not_reported"
+    }
+  },
+  "old_task_after_new_content": {
+    "call_allowances": [
+      {
+        "allowance_id": "call-1",
+        "evidence": [
+          {
+            "path": ".deckmaster/objects/e6/e6797aca6d41a233f9a4929b020a041de25369ca0e845d9b5e5610f9791e9494.json",
+            "sha256": "e6797aca6d41a233f9a4929b020a041de25369ca0e845d9b5e5610f9791e9494"
+          }
+        ],
+        "evidence_level": "host_reported",
+        "execution_ref": "L1-compatibility-ledger-host",
+        "invocation_ref": null,
+        "state": "unknown"
+      }
+    ],
+    "cost_class": "host_reasoning",
+    "created_at": "2026-10-15T05:58:51Z",
+    "dependencies": [
+      {
+        "identity": "p1",
+        "kind": "content",
+        "sha256": "4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b"
+      }
+    ],
+    "dispatch_revision": "d3229055beaa46f7a55a65414838b7dd",
+    "error": {
+      "code": "migration_superseded",
+      "message": "legacy task retired by the collaboration migration; it may only settle its already-recorded calls",
+      "next_action": "settle_calls_then_start_new_request"
+    },
+    "execution_ref": "L1-compatibility-ledger-host",
+    "execution_started_at": "2026-10-15T05:58:51Z",
+    "inputs": [
+      {
+        "path": ".deckmaster/objects/4c/4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b.json",
+        "sha256": "4c89159398366fad9ff68fba79c50f4350f31c9d21552e80bd94234334f3829b"
+      }
+    ],
+    "instruction": "L1 legacy in-flight call ledger only; no image invocation has occurred.",
+    "kind": "repair",
+    "method_release": {
+      "methods_sha256": "04e0adb16e9a274a5db75d48cfb73fd2513ae22e500f351f538bd044978f53c1",
+      "release_id": "197e7c6183f5-82782488c28e"
+    },
+    "operation_id": "repair-43b95bf949d2",
+    "produced_against": "74225d6d3255511fcd49f3449d41727180452d53b4319036b5ce744881635b92",
+    "result_refs": [],
+    "schema_version": "deck_task.v1",
+    "scope_pages": [
+      "p1"
+    ],
+    "status": "superseded",
+    "task_id": "3b5242f82ccb",
+    "updated_at": "2026-10-15T05:58:51Z",
+    "usage": {
+      "external_calls": null,
+      "source": "not_reported"
+    }
+  },
+  "old_unknown_ledger_unchanged": true,
+  "actual_provider_calls": 0,
+  "ledger_evidence": "L1_CONTROLLED_SOFTWARE_LEDGER_ONLY: actual old API claim/allocate/begin plus new Runtime settlement, no real Provider/model event or paid-call evidence",
+  "actual_external_fee_tokens_model": "not_reported",
+  "private_installation": {
+    "prefix": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix",
+    "host_root": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host",
+    "registry": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-registry.json",
+    "old_own_installer_then_new_own_installer": true,
+    "upgrade_all_four_links": true,
+    "rollback_only_legacy_master_link_remains": true,
+    "rollforward_all_four_links": true,
+    "private_third_party_marker_and_config_unchanged": true,
+    "real_HOME_or_third_party_skill_modified": false
+  },
+  "F8": "Closed only for this exact actual new private old03 installed project and R2 continuation, without manual Page/mapping patch. R1 F8 remains original BLOCKED observation.",
+  "evidence": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/actual-old-identity.json",
+      "sha256": "4e5cd9d4591e00f9d72b359c1dc6db68a2030f7255a2c8cef5175c40db6df702"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/old-inflight-document.json",
+      "sha256": "7a2107fcd91c68baec3c1dfa32766461fbdf909109dd10e3c6013895dc8f7661"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/old-run-contract.json",
+      "sha256": "f6b6a8aed12c740a9f2b8d8ea8731b3753cbcdad59480a14072b606331e08ae3"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/new-migration-result.json",
+      "sha256": "a46eda97e2312b833ab79041c28eb1bfa851ad90695488d12eabdb9cdb780500"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/actual-old-write-refusal.json",
+      "sha256": "54cf6a2b3ecc35cb4426389af49a5afe2448bfddeadf21024c8b736f4bfc9e6e"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/new-settlement-after-old-refusal.json",
+      "sha256": "3100d03956bb29f92c00fad3a6125dd5bc2d0b9ca2fad202e8a004bec363ca27"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/actual-private-rollback-old-write-refusal.json",
+      "sha256": "08052b0b094f4e04ac19caef4fbca10005591a4261de2ec130b8da575991d9bb"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/old-installed-activated.json",
+      "sha256": "51c135c34f113ca2ef76e91ffbc940dbb122e26feb2720af8a9f8b2a8f0801f1"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/new-installed-activated.json",
+      "sha256": "07a5f0635a816fc3d881d2069c8350d3f2b9d72e0cdddf01a7635ed2c41797f7"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollback-four-links.json",
+      "sha256": "56f1482f5400ced50c724f405ebe463c5da69251d9a9d416b2f90deb02280c00"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollforward-four-links.json",
+      "sha256": "6147125e6cf01fae23606f39beebd34433abd7263326d7f948fcd804f0314f76"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-private-rollback-probe-process.json",
+      "sha256": "6b2bf9ba5436e2d082c4cf3c244f9f00bc5fb35173e54b98283968a2ed6401d7"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollforward-authored-envelope.json",
+      "sha256": "7d4cd8d2fa171b6f9663b5b9acb16d69ef78b6fed9bd8c889612e865b46cbfcf"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollforward-resumed-content.json",
+      "sha256": "97cdf0535612e3f29f066d4064f5008ccfff4931eee857dfec0c20ac730d03c6"
+    }
+  ]
+}

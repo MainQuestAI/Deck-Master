@@ -1,4 +1,4 @@
-"""External R1/R2 full production pipeline and disposable preview identity."""
+"""Actual engineering renders and preview identity, without production approval."""
 import json
 from pathlib import Path
 
@@ -12,12 +12,15 @@ from deck_master.store import Store
 from test_readback import _atom_page, FAMILY
 from test_external_review_readback import text
 from test_icon_quality import icon_store, confirm, input_for, dispatch, start, accept
+from test_service_flow import _prepare_production
+from engineering_render_helpers import render_engineering_diagnostic
 
 pytestmark=pytest.mark.render
 
 
 @pytest.mark.parametrize('case,expected',[('duplicate-hidden','fail'),('duplicate-visible','pass'),('no-fill','fail'),('solid','pass'),('partial-gradient','pass')])
 def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
+    """Formal assembly refuses; external engineering reports retain real failures."""
     duplicate=case.startswith('duplicate');words=['30%','30%'] if duplicate else ['REPORT','Body']
     page={'schema_version':'deck_page_package.v2',**_atom_page(words)}
     path=tmp_path/'project';service.create(path,brief='Synthetic external review evidence',draft={'pages':[page]},
@@ -32,10 +35,15 @@ def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
     pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
     store=Store(path);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'attach-proof-svg','kind':'artifact_adoption','description':'synthetic SVG fixture','read_set':[]})
     updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='attach-proof-svg')
-    report=pipeline.produce(path);doc=store.load_document()
-    stored=json.loads(store.read_object_bytes(store.read_object_json(doc['outputs']['render_report'])['file']))
+    _prepare_production(path, actions=[], max_external_calls=0,
+        scenario='L1 synthetic exact manuscript before actual duplicate/paint compiler readback: ' + case)
+    diagnostic=render_engineering_diagnostic(path,output_dir=tmp_path/'engineering')
+    report=diagnostic['report'];doc=store.load_document()
+    stored=json.loads(diagnostic['report_path'].read_bytes())
     assert report['status']==stored['status']==expected
-    rendered=store.read_object_json(doc['pages'][0]['ppt_preview'])['file'];png=tmp_path/'actual.png';png.write_bytes(store.read_object_bytes(rendered))
+    assert all(value is None for value in doc['outputs'].values())
+    assert diagnostic['provenance']['visual_acceptance']=='not_evaluated'
+    png=tmp_path/'actual.png';png.write_bytes(diagnostic['ppt_previews'][0].read_bytes())
     for filename in ('source.png','actual.png'):
         with Image.open(tmp_path/filename) as image:
             background=Image.new('RGBA',image.size,'white');background.alpha_composite(image.convert('RGBA'))
@@ -43,7 +51,7 @@ def test_actual_render_and_persisted_produce_report(tmp_path,case,expected):
             dark=sum(max(pixel)<180 for pixel in crop.getdata())
             assert (dark==0 if expected=='fail' else dark>10), (case,filename,dark)
     (tmp_path/'readback.json').write_text(json.dumps(stored,indent=2))
-    (tmp_path/'actual.pptx').write_bytes(store.read_object_bytes(store.read_object_json(doc['outputs']['pptx'])['file']))
+    (tmp_path/'actual.pptx').write_bytes(diagnostic['pptx_path'].read_bytes())
 
 
 def test_readback_implementation_change_cannot_reuse_old_candidate_check(icon_store,monkeypatch):

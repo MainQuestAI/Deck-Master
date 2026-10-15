@@ -5,9 +5,11 @@ import hashlib
 
 import pytest
 
+from rc3_fixtures import historical_snapshot
+
 from synthetic_review_provider import synthetic_user_context, synthetic_runtime_call
 
-from deck_master import collaboration, service
+from deck_master import collaboration, eligibility, service
 from deck_master.models import ModelError, bump_revision, require_writer
 from deck_master.store import ConflictError, Store
 
@@ -41,7 +43,10 @@ def _declared(store, kind: str = "host_attested_instruction", **over) -> dict:
 
 def _project(tmp_path, *, migrate=True):
     project = tmp_path / "proj"
-    service.create(project, brief="collaboration contracts")
+    if migrate:
+        service.create(project, brief="collaboration contracts")
+    else:
+        project = historical_snapshot(tmp_path, scenario="unmigrated control rejection")["project"]
     store = Store(project)
     if migrate:
         document = store.load_document()
@@ -118,19 +123,24 @@ def test_verified_user_event_requires_receipt_and_action_binding(tmp_path):
 
 def test_collaboration_writes_require_the_migrated_writer(tmp_path):
     project, store = _project(tmp_path, migrate=False)
-    with pytest.raises(ModelError, match="migration_required"):
+    with pytest.raises(eligibility.EligibilityBlocked) as rejected:
         _start(project, store)
+    assert "migration_required" in rejected.value.payload()["error"]["reason_codes"]
 
 
 def test_start_request_records_and_dedupes_by_source(tmp_path):
     project, store = _project(tmp_path)
     first = _start(project, store)
     assert first["status"] == "accepted" and first["request_id"].startswith("req-")
-    revision_after_first = store.load_document()["revision_id"]
+    first_document = store.load_document()
+    revision_after_first = first_document["revision_id"]
     # Same sources under a new operation id return the existing request.
     again = _start(project, store, operation_id="op-start-2")
     assert again["status"] == "already_started" and again["request_id"] == first["request_id"]
-    assert store.load_document()["revision_id"] == revision_after_first
+    again_document = store.load_document()
+    assert again["creates_request"] is False and again["refreshes_credit"] is False
+    for key in ("task", "pages", "outputs", "tasks", "collaboration"):
+        assert again_document[key] == first_document[key]
     # A different request while one is open requires the explicit replace id.
     with pytest.raises(ModelError, match="explicitly replaced"):
         _start(project, store, operation_id="op-start-3", intent="full_deck",

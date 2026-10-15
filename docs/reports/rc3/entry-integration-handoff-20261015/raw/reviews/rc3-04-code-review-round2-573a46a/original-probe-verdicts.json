@@ -1,0 +1,28 @@
+{
+  "F1": {
+    "closed": true,
+    "p2_retained": true
+  },
+  "F2": {
+    "closed": true,
+    "historical_id_returned": "req-4d8f06f642ec",
+    "current_id": "req-39eb621c60f9",
+    "request_state": "superseded",
+    "legacy_probe_boolean_is_not_verdict": true,
+    "credit_note": "No new work/credit is materialized. The old script computed a pure planner key for the retained current B; this is not a recreated A."
+  },
+  "F3": {
+    "closed": true
+  },
+  "F4": {
+    "closed": true
+  },
+  "F6": {
+    "closed": true,
+    "fixture_level": "L1_SYNTHETIC",
+    "helper": {
+      "path": "/workspace/work/rc3/reviews/rc3-04-code-snapshot-573a46a/tests/rebuild/test_export.py",
+      "sha256": "1aaeae0cc3c9cc7158cbc9dfa2b868643edbbec76ad7e52863d7eee281fcc53e"
+    }
+  }
+}

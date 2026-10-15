@@ -61,7 +61,7 @@ def test_authorized_first_two_initial_pages_reverse_arrival_remain_candidates(tm
     path,store,_=project(tmp_path)
     original=copy.deepcopy(store.load_document()['pages'])
     recipe=confirmed(path,store)
-    assert store.load_document()['compatibility']['minimum_writer']=='rc3.v1'
+    assert store.load_document()['compatibility']['minimum_writer']=='rc3-entry.v1'
     pair=dispatch(path,store,recipe,['p1','p2'])
     assert all(task['stage_request']['references']==[] for task in pair)
     assert all(task['collaboration_binding']['adoption_policy']=='candidate_only' for task in pair)
@@ -84,6 +84,8 @@ def test_authorized_first_two_initial_pages_reverse_arrival_remain_candidates(tm
 def test_new_auto_preparation_cannot_freeze_an_unrelated_prompt(tmp_path):
     path=tmp_path/'auto'
     service.create(path,brief='Synthetic auto freeze',draft={'pages':[enf._page('p1','Known 54 units.')]},project_format='workbench.v3')
+    from test_content_ops import prepare_editorial_project
+    prepare_editorial_project(path)
     summary=service.continue_project(path)['pending_tasks'][0]
     store=Store(path)
     service.task_start(path,task_id=summary['task_id'],execution_ref='synthetic-auto',supported_protocols=[generation.PROTOCOL],capabilities=summary['required_capabilities'])

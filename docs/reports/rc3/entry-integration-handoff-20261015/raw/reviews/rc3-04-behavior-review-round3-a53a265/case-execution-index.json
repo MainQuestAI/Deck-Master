@@ -1,0 +1,37 @@
+[
+  {
+    "raw_results": "run1/results.json",
+    "position": 0,
+    "case": "F9-exact-original-and-bounded-router-controls-installed",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run1/results.json",
+    "position": 1,
+    "case": "C6-public-inputs-update-auto",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run1/results.json",
+    "position": 2,
+    "case": "C6-public-editorial-rewrite-auto",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run1/results.json",
+    "position": 3,
+    "case": "C6-public-inputs-update-trial",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  },
+  {
+    "raw_results": "run1/results.json",
+    "position": 4,
+    "case": "C6-public-editorial-rewrite-trial",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC"
+  }
+]

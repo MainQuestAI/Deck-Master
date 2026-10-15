@@ -4,11 +4,70 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import uuid
 
 import pytest
 
 import deck_master.service as service
 from page_visual_helpers import pass_page_review
+from rc3_fixtures import authorize_scope, claim_fixture_task, evidence_for, settle_fidelity_review, source_snapshot
+
+
+def _prepare_production(project, *, actions, max_external_calls, scenario,
+                        max_candidate_count=0, membership=False, order=False):
+    """Explicit current L1 request, real fidelity workorder, bounded grant."""
+    from deck_master import collaboration
+    store = service.Store(project)
+    doc = store.load_document()
+    ids = [entry['page_id'] for entry in doc['pages']]
+    scope = {'subject': 'deck', 'page_ids': ids, 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['narrative', 'plan', 'page_copy', 'speech',
+            'design', 'blueprint', 'svg', 'review', 'output'],
+        'allow_page_membership_change': membership, 'allow_page_order_change': order, 'purpose': 'working'}
+    current = doc['collaboration']['request']
+    collaboration.start_request(project, input={'intent': 'full_deck', 'content_intent': None,
+        'scope': scope, 'replace_request_id': current['request_id'],
+        'instruction_evidence': evidence_for(project, text='L1 synthetic protocol scenario: ' + scenario,
+            locator='L1:production-request:' + scenario)},
+        base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+    settle_fidelity_review(project, page_ids=ids, execution_ref='L1-fidelity-production', scenario=scenario)
+    if actions:
+        authorize_scope(project, actions=actions, scope=scope, max_external_calls=max_external_calls,
+            max_candidate_count=max_candidate_count, adoption_policy='within_scope',
+            evidence=evidence_for(project, text=f'Authorize only {actions}, at most {max_external_calls} calls: {scenario}',
+                                  locator='L1:production-grant:' + scenario))
+    return scope
+
+
+def _import_current(project, *, draft_payload):
+    return service.import_draft(project, draft_payload=draft_payload,
+        base_revision=service.Store(project).current_revision_id(), operation_id=str(uuid.uuid4()),
+        instruction_evidence={'kind': 'host_attested_instruction',
+            'text': 'Import this exact explicitly selected complete manuscript.', 'source_locator': 'L1:current-import'})
+
+
+def _authorize_replacement_image(project, *, page_id, scenario):
+    """Explicitly extend the existing ledger ceiling by exactly one call."""
+    from deck_master import collaboration, eligibility
+    store = service.Store(project)
+    doc = store.load_document()
+    existing = next(item for item in collaboration.describe(project)['effective_authorizations']
+        if 'dispatch.blueprint' in item['record']['actions']
+        and page_id in item['record']['scope']['page_ids'])
+    record = existing['record']
+    budget = eligibility.authorization_budget(store, doc, existing['ref'])
+    ceiling = budget['ceiling'] + 1
+    return collaboration.grant(project, input={
+        'authorization_id': record['authorization_id'], 'replaces': existing['ref'],
+        'mode': record['mode'], 'actions': record['actions'], 'scope': record['scope'],
+        'max_external_calls': ceiling, 'max_candidate_count': record['max_candidate_count'],
+        'adoption_policy': record['adoption_policy'],
+        'instruction_evidence': evidence_for(project,
+            text=f'Explicitly approve one additional replacement image for {page_id}; '
+                 f'raise the existing total call ceiling from {budget["ceiling"]} to {ceiling}, '
+                 f'preserving its {budget["used"]} already-held calls and prior scope: {scenario}',
+            locator='L1:replacement-image:' + scenario)},
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
 
 
 def _write_brief(tmp_path: Path) -> tuple[Path, Path]:
@@ -76,7 +135,9 @@ def test_default_entry_does_not_invoke_legacy_planner(tmp_path: Path) -> None:
     # The work order derives from real sources; no array-modulo claim pairing
     # and no fixed page-role template is part of the dispatch.
     assert task["sources"], "task carries the real source entries"
-    assert "template" in task["instruction"].lower() or "templates" in task["instruction"].lower()
+    assert task['protocol_version'] == 'compose.v2'
+    assert task['collaboration_binding']['phase'] == 'framing'
+    assert task['method_resources']
 
 
 def test_import_draft_without_prior_create(tmp_path: Path) -> None:
@@ -94,8 +155,8 @@ def test_import_draft_without_prior_create(tmp_path: Path) -> None:
         ]
     }
     response = service.import_draft(tmp_path / "proj", draft_payload=draft)
-    assert response["status"] == "accepted"
-    assert response["next_action"] == "auto_view_then_production"
+    assert response["status"] == "created"
+    assert response["next_action"] == "inspect_imported_manuscript"
     document = service.Store(tmp_path / "proj").load_document()
     assert [entry["page_id"] for entry in document["pages"]] == ["d1"]
 
@@ -202,6 +263,7 @@ def _svg_for(page):
 
 
 def _drive_blueprints(project, store):
+    from rc3_fixtures import accept_synthetic_blueprint
     while True:
         document = store.load_document()
         missing = next((e for e in document["pages"] if not e.get("blueprint")), None)
@@ -213,8 +275,8 @@ def _drive_blueprints(project, store):
         staging.mkdir(parents=True, exist_ok=True)
         (staging / "reference.png").write_bytes(_png_bytes())
         envelope = _blueprint_envelope({"page_id": missing["page_id"], "ref": missing["page"]})
-        outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                                        produced_against=task["produced_against"], result_payload=envelope)
+        outcome = accept_synthetic_blueprint(project, task=task, result_payload=envelope,
+            execution_ref='L1-service-blueprint', scenario='Synthetic image bytes before actual local compile/render')
         assert outcome["status"] == "accepted"
         _drive_reconstructs(project, store, missing["page_id"])
         visual_task = service.continue_project(project)["pending_tasks"][0]
@@ -226,6 +288,7 @@ def _drive_reconstructs(project, store, page_id):
     missing = next(e for e in store.load_document()["pages"] if e["page_id"] == page_id)
     task = service.continue_project(project)["pending_tasks"][0]
     assert task["kind"] == "reconstruct", task["kind"]
+    claim_fixture_task(project, task)
     blueprint_sha = store.read_object_json(missing["blueprint"])["file"]["sha256"]
     page = store.read_object_json(missing["page"])
     svg = _svg_for(page).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
@@ -252,6 +315,8 @@ def _slide_count(pptx_bytes):
 def _produced_project(tmp_path, pages):
     project = tmp_path / "proj"
     service.create(project, brief="局部修改流", draft={"pages": pages})
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=len(pages), membership=True, order=True, scenario='Bounded local edit and actual reassembly')
     store = Store(project)
     _drive_blueprints(project, store)
     report = produce(project)
@@ -262,8 +327,8 @@ def _produced_project(tmp_path, pages):
 @pytest.mark.render
 def test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles(tmp_path):
     # AC-S05: editing p09 leaves the unrelated page's blueprint/SVG bytes and
-    # refs untouched, opens only a reconstruct (no new external image making),
-    # and the whole PPT is re-assembled afterwards; old artifacts stay findable.
+    # refs untouched. A stale formal image requires a new explicit bounded
+    # approval; whole-deck reassembly retains the old immutable artifacts.
     project, store = _produced_project(tmp_path, [
         _draft_page("p09", "条件收集", "在售后门户嵌入表单。"),
         _draft_page("p10", "处理方案", "自动分派到值班组。"),
@@ -288,14 +353,29 @@ def test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles(tmp_pat
                for slot in p10_hashes)
     assert after["pages"][0]["svg"] is None
 
-    # No new external image-making: the next step is a local reconstruct task.
+    # Formal consumed input changed: no new image call is inferred from the edit.
     response = service.continue_project(project)
-    assert response["next_action"] == "codex_reconstruct_svg"
-    assert response["pending_tasks"][0]["kind"] == "reconstruct"
+    assert response['status'] == 'needs_input'
+    assert not response['pending_tasks']
+    _authorize_replacement_image(project, page_id='p09', scenario='Changed selected-page copy')
+    settle_fidelity_review(project, page_ids=['p09', 'p10'], execution_ref='L1-copy-change-fidelity',
+        scenario='Confirmed changed copy before its explicitly approved replacement image')
+    from rc3_fixtures import accept_synthetic_blueprint
+    image_task = service.continue_project(project)['pending_tasks'][0]
+    assert image_task['kind'] == 'blueprint' and image_task['scope_pages'] == ['p09']
+    staging = store.staging_dir / image_task['operation_id']
+    staging.mkdir(parents=True, exist_ok=True)
+    (staging / 'reference.png').write_bytes(_png_bytes((235, 245, 250)))
+    accept_synthetic_blueprint(project, task=image_task,
+        result_payload=_blueprint_envelope({'page_id': 'p09', 'ref': after['pages'][0]['page']}),
+        execution_ref='L1-explicit-copy-replacement', scenario='One new bounded copy-change image')
+    response = service.continue_project(project)
+    assert response['pending_tasks'][0]['kind'] == 'reconstruct'
 
     # Re-assemble the whole deck and prove the untouched page still compiles in.
     fresh = store.load_document()
     task = response["pending_tasks"][0]
+    claim_fixture_task(project, task)
     blueprint_sha = store.read_object_json(fresh["pages"][0]["blueprint"])["file"]["sha256"]
     svg = _svg_for(edited).replace(b"<svg ", f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
     staging = project / ".deckmaster" / "staging" / task["operation_id"]
@@ -309,6 +389,7 @@ def test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles(tmp_pat
                                                   "provenance": {"source_type": "unknown",
                                                                  "tool": "host-reconstruct",
                                                                  "invocation_ref": None}}]})
+    pass_page_review(project, service.continue_project(project)['pending_tasks'][0])
     report = produce(project)
     assert report["status"] == "pass"
     new_pptx = store.load_document()["outputs"]["pptx"]
@@ -330,7 +411,7 @@ def test_shared_fact_update_applies_to_all_referencing_pages(tmp_path):
         page = store.read_object_json(entry["page"])
         page["customer_visible"]["body_blocks"][0]["text"] = "接口条件已齐备。"
         corrected.append(page)
-    outcome = service.import_draft(project, draft_payload={"pages": corrected, "page_order": ["p1", "p2"]})
+    outcome = _import_current(project, draft_payload={"pages": corrected, "page_order": ["p1", "p2"]})
     assert outcome["status"] == "accepted"
     after = store.load_document()
     for entry in after["pages"]:
@@ -357,7 +438,9 @@ def test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt(tmp_pa
     p2_svg_ref = p2_entry["svg"]
     reordered = [store.read_object_json(before["pages"][2]["page"]),
                  store.read_object_json(before["pages"][0]["page"])]
-    outcome = service.import_draft(project, draft_payload={"pages": reordered, "page_order": ["p3", "p1"]})
+    outcome = _import_current(project, draft_payload={"pages": reordered, "page_order": ["p3", "p1"]})
+    settle_fidelity_review(project, page_ids=['p3', 'p1'], execution_ref='L1-reordered-fidelity',
+        scenario='Actual reordered complete manuscript before local reassembly')
     assert outcome["status"] == "accepted"
     after = store.load_document()
     assert [e["page_id"] for e in after["pages"]] == ["p3", "p1"]
@@ -368,21 +451,39 @@ def test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt(tmp_pa
     old_svg_bytes = store.read_object_bytes(store.read_object_json(p2_svg_ref)["file"])
     assert old_svg_bytes.startswith(b"<svg")
 
-    # Re-attach the unchanged SVGs (content-addressed: same bytes, same ref) and
-    # re-assemble: the deleted page never glob-mixes back into the current PPT.
-    from deck_master.pipeline import artifact as adopt
-    work = store.staging_dir / "reattach"
-    work.mkdir(parents=True, exist_ok=True)
+    # The canonical import preserves exact surviving Artifact/preview refs;
+    # wrapping the same SVG bytes in new metadata would invalidate the preview.
     for entry in after["pages"]:
         prior = next(e for e in before["pages"] if e["page_id"] == entry["page_id"])
-        svg_bytes = store.read_object_bytes(store.read_object_json(prior["svg"])["file"])
-        svg_file = work / f"{entry['page_id']}.svg"
-        svg_file.write_bytes(svg_bytes)
-        entry["svg"] = adopt(store, svg_file, "svg", page_id=entry["page_id"])
-    bumped = bump_revision(after, {"operation_id": "reattach-svg", "kind": "task_update",
-                                   "description": "reattach unchanged svgs", "read_set": []})
-    bumped["pages"] = after["pages"]
-    store.commit_change(base_revision=after["revision_id"], document=bumped, operation_id="reattach-svg")
+        assert entry['svg'] == prior['svg']
+        assert entry['svg_preview'] == prior['svg_preview']
+
+    # Formal originals consumed the old Plan. Keeping their bytes does not
+    # authorize reusing that old Plan as the new production basis.
+    from rc3_fixtures import accept_synthetic_blueprint, call_facts
+    calls_before = call_facts(project)['tasks']
+    blocked = service.continue_project(project)
+    assert blocked['status'] == 'needs_input' and not blocked['pending_tasks']
+    assert call_facts(project)['tasks'] == calls_before
+    for page_id in ['p3', 'p1']:
+        _authorize_replacement_image(project, page_id=page_id,
+            scenario='Explicit replacement after confirmed complete-manuscript reorder: ' + page_id)
+    for page_id in ['p3', 'p1']:
+        image_task = service.continue_project(project)['pending_tasks'][0]
+        assert image_task['kind'] == 'blueprint' and image_task['scope_pages'] == [page_id]
+        current_entry = next(entry for entry in store.load_document()['pages'] if entry['page_id'] == page_id)
+        staging = store.staging_dir / image_task['operation_id']
+        staging.mkdir(parents=True, exist_ok=True)
+        (staging / 'reference.png').write_bytes(_png_bytes((235, 245, 250)))
+        result = accept_synthetic_blueprint(project, task=image_task,
+            result_payload=_blueprint_envelope({'page_id': page_id, 'ref': current_entry['page']}),
+            execution_ref='L1-reordered-blueprint', scenario='Confirmed new Plan, bounded replacement ' + page_id)
+        assert result['status'] == 'accepted'
+        _drive_reconstructs(project, store, page_id)
+        visual = service.continue_project(project)['pending_tasks'][0]
+        assert visual['review_stage'] == 'page_visual' and visual['scope_pages'] == [page_id]
+        assert pass_page_review(project, visual)['status'] == 'accepted'
+    assert store.read_object_bytes(store.read_object_json(p2_svg_ref)['file']) == old_svg_bytes
     report = produce(project)
     assert report["status"] == "pass"
     pptx = store.load_document()["outputs"]["pptx"]
@@ -481,6 +582,8 @@ def _style_design_pages(tmp_path):
     }
     project = tmp_path / "proj"
     service.create(project, brief="样式失效", draft={"pages": pages}, design=design)
+    _prepare_production(project, actions=[], max_external_calls=0,
+        scenario='Explicit legacy-image local style invalidation and real reconstruction')
     return project, Store(project)
 
 
@@ -540,6 +643,19 @@ def test_design_rejects_unreadable_asset_and_old_project_gets_recovery_hint(tmp_
     image = tmp_path / 'asset.png'
     Image.new('RGB', (8, 8), 'blue').save(image)
     service.import_asset(project, asset_id='logo', kind='logo', file_path=image)
+    # Reach the original asset-recovery path under a real, narrowly bounded
+    # production instruction, rather than stopping at absent authority.
+    scope = {'subject': 'pages', 'page_ids': ['p1'], 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['blueprint'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False,
+        'purpose': 'working'}
+    authorize_scope(project, actions=['dispatch.blueprint'], scope=scope,
+        max_external_calls=1, max_candidate_count=0, adoption_policy='within_scope',
+        evidence=evidence_for(project, text='L1 test: prepare at most one blueprint for p1 '
+            'only if its actual assets and review are valid; no provider call is made.',
+            locator='L1:unreadable-asset:bounded-production'))
+    settle_fidelity_review(project, page_ids=['p1'], execution_ref='L1-unreadable-asset-fidelity',
+        scenario='Exact confirmed one-page manuscript before asset fault injection')
     store = Store(project)
     before = store.load_document()
     changed = deepcopy(before['design_context'])
@@ -555,9 +671,13 @@ def test_design_rejects_unreadable_asset_and_old_project_gets_recovery_hint(tmp_
     damaged['design_context'] = changed
     store.commit_change(base_revision=before['revision_id'], document=damaged,
                         operation_id='old-bad-asset')
+    snapshot = source_snapshot(project)
     result = service.continue_project(project)
     assert result['status'] == 'needs_input'
     assert result['findings'][0]['code'] == 'broken_asset_reference'
+    assert result['findings'][0]['field'] == 'asset:logo'
+    assert result['next_action'] == 'restore_or_replace_asset'
+    assert source_snapshot(project) == snapshot
 
 
 def test_canvas_change_invalidates_all_pages_groupwise(tmp_path):
@@ -608,6 +728,7 @@ def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
         staging = project / ".deckmaster" / "staging" / task["operation_id"]
         staging.mkdir(parents=True, exist_ok=True)
         (staging / "page.svg").write_bytes(svg)
+        claim_fixture_task(project, task)
         service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
                               produced_against=task["produced_against"], result_payload={
                                   "kind": "reconstruct",
@@ -633,10 +754,17 @@ def test_reconstruct_after_style_change_uses_new_effective_style(tmp_path):
             svg_file = work / f"{entry['page_id']}.svg"
             svg_file.write_bytes(svg)
             entry["svg"] = adopt_artifact(store, svg_file, "svg", page_id=entry["page_id"])
+            entry['svg_preview'] = None
+            entry['ppt_preview'] = None
     bumped = _bump(current, {"operation_id": "rest-svg", "kind": "task_update",
                              "description": "restore text svgs", "read_set": []})
     bumped["pages"] = current["pages"]
     store.commit_change(base_revision=current["revision_id"], document=bumped, operation_id="rest-svg")
+    while True:
+        pending = service.continue_project(project)['pending_tasks'][0]
+        if pending.get('review_stage') != 'page_visual':
+            break
+        pass_page_review(project, pending)
     report = produce(project)
     assert report["status"] == "pass"
     rebuilt = store.load_document()
@@ -664,7 +792,9 @@ def test_pptx_artifact_and_export_declare_shape_text_editability(tmp_path):
     store = Store(project)
     deck = tmp_path / "deck.pptx"
     from pptx import Presentation
-    Presentation().save(deck)
+    presentation = Presentation()
+    presentation.slides.add_slide(presentation.slide_layouts[6]).name = 'p1'
+    presentation.save(deck)
     from deck_master.pipeline import artifact as adopt_artifact
     document = store.load_document()
     bumped = bump_revision(document, {"operation_id": "attach-pptx", "kind": "task_update",
@@ -693,7 +823,9 @@ def test_no_office_native_editing_claims_in_ui_or_export(tmp_path):
     store = Store(project)
     deck = tmp_path / "deck.pptx"
     from pptx import Presentation
-    Presentation().save(deck)
+    presentation = Presentation()
+    presentation.slides.add_slide(presentation.slide_layouts[6]).name = 'p1'
+    presentation.save(deck)
     from deck_master.pipeline import artifact as adopt_artifact
     document = store.load_document()
     bumped = bump_revision(document, {"operation_id": "attach-pptx", "kind": "task_update",

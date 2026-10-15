@@ -1,6 +1,7 @@
 import {get, revisionQuery, readableError} from './api.js';
 import {el, button, heading, version} from './dom.js';
 import {pageText} from './page-text.js';
+import {diffView} from './text-diff.js';
 
 export function changesetDesk(app, data) {
   const record = data.candidate, update = data.content_update;
@@ -34,6 +35,9 @@ export function changesetDesk(app, data) {
         body.replaceChildren(el('div', {class: 'candidate-columns'},
           el('section', {class: 'candidate-column', 'data-side': 'current'}, el('h2', {}, '固定基准正文'), el('p', {class: 'changeset-copy'}, left)),
           el('section', {class: 'candidate-column', 'data-side': 'candidate'}, el('h2', {}, '所选变更集正文'), el('p', {class: 'changeset-copy'}, right))));
+        const beforeNotes=previous.map(page=>page.page.speaker_notes||'').join('\n\n');
+        const afterNotes=mapping.relation==='removed'?'（候选将移除此页）':input?(input.speaker_notes||''):beforeNotes;
+        if(beforeNotes||afterNotes)body.append(diffView(beforeNotes,afterNotes,'固定基准口播稿','所选变更集口播稿'));
         loaded = true;
       } catch (error) {
         if (!disposed) body.replaceChildren(el('p', {role: 'alert'}, readableError(error) + ' 候选与当前稿件均保留。'), button('重试读取正文', load));

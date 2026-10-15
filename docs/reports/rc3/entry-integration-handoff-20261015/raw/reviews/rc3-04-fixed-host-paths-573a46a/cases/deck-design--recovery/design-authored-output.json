@@ -1,0 +1,297 @@
+{
+  "design_scheme_or_recipe": {
+    "path": ".deckmaster/objects/81/81c7cec9c3382622f93640c5fbb91141d21e07f1e4fa4a835829078ddfd7c29f.json",
+    "sha256": "81c7cec9c3382622f93640c5fbb91141d21e07f1e4fa4a835829078ddfd7c29f"
+  },
+  "coverage": {
+    "target_pages": [
+      "p1"
+    ],
+    "sample_proposed_only": [
+      "p1"
+    ],
+    "actual_image_candidates": 0,
+    "source_page_refs": [
+      {
+        "path": ".deckmaster/objects/06/06adb2d1c4ccf855fb6bdbdb2c2767f77e307717acafcec33c7131402d81d81b.json",
+        "sha256": "06adb2d1c4ccf855fb6bdbdb2c2767f77e307717acafcec33c7131402d81d81b"
+      }
+    ]
+  },
+  "layout_reasons": "固定稿的业务关系是三条件AND与三个不同责任人，不能把“管理员”合并；现有p1在18pt正文与64px边界下需实排核密度，不能直接声称可读。",
+  "content_basis": {
+    "plan_ref": {
+      "path": ".deckmaster/objects/57/5704e021276584f612b9c87df02e9e9afc9a8a29908a5fe5b00552de9234c61b.json",
+      "sha256": "5704e021276584f612b9c87df02e9e9afc9a8a29908a5fe5b00552de9234c61b"
+    },
+    "plan_mode": "imported_mapping",
+    "narrative_ref": null,
+    "page_visible_atoms": {
+      "p1": 21
+    },
+    "actual_full_pages_read": [
+      {
+        "content_mapping": {
+          "narrative_ref": null,
+          "plan_role_page_id": "p1",
+          "speech_segments": [],
+          "visible_links": [
+            {
+              "element_ref": "atom:p1:block:case-a:text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:block:case-c:text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:block:gate:text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:block:handoff:text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:mismatch:action:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:mismatch:owner:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:mismatch:resume:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:mismatch:trigger:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:ready:action:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:ready:owner:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:ready:resume:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:ready:trigger:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:unknown:action:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:unknown:owner:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:unknown:resume:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:cell:branches:unknown:trigger:display_text",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:column:branches:action:label",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:column:branches:owner:label",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:column:branches:resume:label",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:column:branches:trigger:label",
+              "narrative_node_ids": [],
+              "source_links": []
+            },
+            {
+              "element_ref": "atom:p1:title",
+              "narrative_node_ids": [],
+              "source_links": []
+            }
+          ]
+        },
+        "customer_visible": {
+          "body_blocks": [
+            {
+              "id": "gate",
+              "text": "先核对借阅人权限有效、申请与实物目录号匹配、管理员已登记本次领取；三项同时成立后值班员才交付。熟悉借阅人或书名相近都不能替代核验。",
+              "type": "paragraph"
+            },
+            {
+              "columns": [
+                {
+                  "id": "trigger",
+                  "label": "触发情境"
+                },
+                {
+                  "id": "action",
+                  "label": "值班员动作"
+                },
+                {
+                  "id": "owner",
+                  "label": "下一责任人"
+                },
+                {
+                  "id": "resume",
+                  "label": "交付前还需什么"
+                }
+              ],
+              "id": "branches",
+              "rows": [
+                {
+                  "cells": [
+                    {
+                      "column_id": "trigger",
+                      "display_text": "权限未知"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "登记待核验，写明借阅人和目录号；暂不交原件"
+                    },
+                    {
+                      "column_id": "owner",
+                      "display_text": "权限管理员"
+                    },
+                    {
+                      "column_id": "resume",
+                      "display_text": "核对权限有效，再连同目录号及领取登记一并检查"
+                    }
+                  ],
+                  "id": "unknown"
+                },
+                {
+                  "cells": [
+                    {
+                      "column_id": "trigger",
+                      "display_text": "申请目录号与实物号不符"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "停止本次领取，保留两号；不按标题相似更换"
+                    },
+                    {
+                      "column_id": "owner",
+                      "display_text": "库房管理员"
+                    },
+                    {
+                      "column_id": "resume",
+                      "display_text": "核对正确实物后重新检查本次领取条件"
+                    }
+                  ],
+                  "id": "mismatch"
+                },
+                {
+                  "cells": [
+                    {
+                      "column_id": "trigger",
+                      "display_text": "权限有效、目录号匹配且领取已登记"
+                    },
+                    {
+                      "column_id": "action",
+                      "display_text": "核对三项均齐，按本次记录交付"
+                    },
+                    {
+                      "column_id": "owner",
+                      "display_text": "值班员"
+                    },
+                    {
+                      "column_id": "resume",
+                      "display_text": "已满足本次交付条件；不代表之后可忽略新损伤"
+                    }
+                  ],
+                  "id": "ready"
+                }
+              ],
+              "type": "table"
+            },
+            {
+              "id": "handoff",
+              "text": "交接单保留八项：借阅人、申请目录号、实物目录号、权限状态、领取登记状态、损伤观察、下一责任人、未决项。未知要写明未知，不能填成没有问题；填完交接单不等于取得交付或恢复许可。",
+              "type": "paragraph"
+            },
+            {
+              "id": "case-a",
+              "text": "情境A：林宁申请A-17，实物A-17，本次领取已登记，权限未知。当前不交原件，权限状态写“待核验”，下一责任人写权限管理员，未决项写权限是否有效；损伤情况未给出，不填“无损伤”。",
+              "type": "paragraph"
+            },
+            {
+              "id": "case-c",
+              "text": "情境C：申请A-21、实物A-12且书名相同。目录号不匹配，交库房管理员核对两号；权限即使有效，也不能先拿相近书名的原件。",
+              "type": "paragraph"
+            }
+          ],
+          "title": "合成训练｜先过三项领取核验，再处理未决交接"
+        },
+        "page_id": "p1",
+        "schema_version": "deck_page_package.v2",
+        "speaker_notes": "",
+        "visual_spec": {
+          "intent": "用四列分支矩阵明确触发、动作、下一责任与恢复条件；八项交接单独成可查段落",
+          "reference_mode": "new_design"
+        }
+      }
+    ]
+  },
+  "physical_planning": {
+    "actual_canvas_input": {
+      "fit": "contain",
+      "height_px": 900,
+      "slide_height_in": 7.5,
+      "slide_width_in": 13.333333333333334,
+      "width_px": 1600
+    },
+    "contain_k": 0.8,
+    "body_pt": 18,
+    "body_svg_px": 29.999999999999996,
+    "heading_pt": 30,
+    "heading_svg_px": 49.99999999999999,
+    "actual_p_sldSz": "unverifiable: no PPTX produced",
+    "actual_role_runs": "unverifiable: no PPTX produced",
+    "svg_and_native_padding": "unverifiable: no render produced"
+  },
+  "responsibility_status": "requested_feasibility_scheme_returned",
+  "runtime_status": "suggestion",
+  "requires_content_tradeoff_before_claiming_fit": true,
+  "next_responsibility": "Content/user decide any overflow for exactly these target pages; image trial needs its own explicit scope and allowance.",
+  "method_applications": {
+    "collaboration-routing": "Executed only design.feasibility under exact named pages and zero-call execute grant; returned scheme, no production.",
+    "visual-reference": "No reference images were supplied; used actual fixed Page/Plan imported_mapping, no imaginary font/image observations.",
+    "style-calibration": "Authored all seven v3 recipe dimensions with actual registered font IDs; layout prose cannot override executable typography.",
+    "candidates-and-stages": "Proposal is not a candidate or adoption; no task, candidate, allowance or image call created.",
+    "blueprint-svg": "Kept Page atoms/owners/conditions as content truth; no fabricated blueprint or converter output, no frozen prompt modification.",
+    "physical-units": "Computed current contain k=0.8 and body SVGpx=29.999999999999996; actual p:sldSz/run/padding correctly remain unverifiable."
+  }
+}

@@ -1,5 +1,6 @@
 """Real Studio backup/clear/restore and explicit legacy-reading migration."""
 import json
+import os
 from pathlib import Path
 import pytest
 from deck_master import ui_journal, result_reading
@@ -20,7 +21,7 @@ def test_studio_clear_backup_download_restore_and_legacy_reading(store,tmp_path)
             json.dumps([second['task_id'],[r['sha256'] for r in second['result_refs']]]),'invalid legacy receipt']}}}
     ui_journal.save(project,draft=draft)
     server=WorkbenchServer(project);url=server.start()+'studio/';errors=[];requests=[]
-    evidence=Path('output/opendesign-completion/personal-recovery');evidence.mkdir(parents=True,exist_ok=True)
+    evidence=Path(os.environ.get('DECK_MASTER_BROWSER_EVIDENCE',str(tmp_path/'evidence')))/'personal-recovery';evidence.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch()
         try:

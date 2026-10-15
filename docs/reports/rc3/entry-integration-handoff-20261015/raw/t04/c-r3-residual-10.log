@@ -1,0 +1,92 @@
+...FF                                                                    [100%]
+=================================== FAILURES ===================================
+_______ test_public_copies_clean_immutable_artifacts_and_partial_failure _______
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/c-r3-residual-10/test_public_copies_clean_immut0')
+
+    def test_public_copies_clean_immutable_artifacts_and_partial_failure(tmp_path):
+        from deck_master.pipeline import artifact
+    
+        root, store = project(tmp_path)
+        doc = store.load_document()
+        from deck_master.compiler.native import attach_notes
+        raw = attach_notes(presentation(notes=''), [{'page_id':'p1','notes':''}])
+        deck = tmp_path / "deck.pptx"
+        deck.write_bytes(raw)
+        image = tmp_path / "blueprint.png"
+        meta = PngImagePlugin.PngInfo()
+        meta.add_text("prompt", CANARY)
+        Image.new("RGB", (10, 10), "red").save(image, pnginfo=meta)
+        changed = bump_revision(
+            copy.deepcopy(doc), {"operation_id": "artifacts", "kind": "task_update", "description": "artifacts", "read_set": []}
+        )
+        changed["outputs"]["pptx"] = artifact(store, deck, "pptx")
+        changed["pages"][0]["blueprint"] = artifact(store, image, "blueprint", page_id="p1")
+        store.commit_change(base_revision=doc["revision_id"], document=changed, operation_id="artifacts")
+        result = exports.create(root, output_dir=tmp_path / "clean")
+        assert (tmp_path / "clean" / "deck.pptx").read_bytes() != raw
+        assert store.read_object_bytes(store.read_object_json(changed["outputs"]["pptx"])["file"]) == raw
+        for item in result["manifest"]["files"]:
+            if item["path"] in ("deck.pptx", "page-001/blueprint.png"):
+                assert item["original_sha256"] and item["original_sha256"] != item["sha256"]
+        doc = store.load_document()
+        page = store.read_object_json(doc["pages"][0]["page"])
+        page["customer_visible"]["title"] = CANARY
+        changed = bump_revision(
+            copy.deepcopy(doc), {"operation_id": "private-visible", "kind": "task_update", "description": "private visible", "read_set": []}
+        )
+        changed["pages"][0]["page"] = store.put_json_object(page)
+        store.commit_change(base_revision=doc["revision_id"], document=changed, operation_id="private-visible")
+        export_id = "export-" + str(uuid.uuid4())
+>       with pytest.raises(OperationError, match="local path"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'local path'
+E         Actual message: 'export: selected Plan does not bind the exact current Page set'
+
+tests/rebuild/test_versioned_exports.py:299: AssertionError
+___________ test_studio_default_tasks_versions_and_actual_review_zip ___________
+
+tmp_path = PosixPath('/workspace/work/rc3/t04/c-r3-residual-10/test_studio_default_tasks_vers0')
+
+    @pytest.mark.browser
+    def test_studio_default_tasks_versions_and_actual_review_zip(tmp_path):
+        from playwright.sync_api import sync_playwright, expect
+        path=tmp_path/'project';create_sample(path,page_count=3,readonly=False);store=Store(path)
+        oldest=store.current_revision_id();task_set(store);reading=store.current_revision_id()
+        service.inputs_update(path,patch={'reason':'create independent current revision','task_patch':{'audience':'正式工作台验收'}},base_revision=reading,operation_id=str(uuid.uuid4()))
+        current=store.current_revision_id();assert len({oldest,reading,current})==3
+        evidence=Path('output/opendesign-completion/studio-delivery');evidence.mkdir(parents=True,exist_ok=True)
+        server=WorkbenchServer(path);requests=[];errors=[]
+        with sync_playwright() as runtime:
+            browser=runtime.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':900})
+            page.on('pageerror',lambda e:errors.append(str(e)))
+            page.on('request',lambda req:requests.append({'method':req.method,'url':req.url,'body':req.post_data}) if '/api/' in req.url else None)
+            try:
+                page.goto(server.start())
+                expect(page.locator('html')).to_have_attribute('data-workbench-ui','studio')
+                page.get_by_role('button',name='任务与交付',exact=True).click()
+                rows=page.locator('.studio-task-record');expect(rows).to_have_count(30)
+                expect(page.get_by_role('button',name='查询任务',exact=True)).to_be_enabled()
+                boxes=rows.first.evaluate("row=>['.studio-task-main','.studio-task-state','.run-task-open'].map(s=>{const b=row.querySelector(s).getBoundingClientRect();return {x:b.x,width:b.width}})")
+                main,state,action=boxes
+                assert main['x']+main['width']+12<=state['x'] and state['x']+state['width']+12<=action['x']
+                expect(page.locator('.studio-task-table-head')).to_be_visible()
+                expect(rows.first.locator('.run-requirement')).to_contain_text('create independent current revision')
+>               expect(rows.first.locator('.run-requirement')).not_to_contain_text('operation ')
+E               AssertionError: Locator expected not to contain text 'operation '
+E               Actual value: 要求：输入已更新（operation 7fa2ae4d-d753-4a7b-bbed-fa5a285ff645）：create independent current revision。读取新输入与 diff，提交 compose.v2 input_revision：changed_layers、每个变化层的 proposal Ref 与 diff。 影响分析：任务事实变化：audience；没有页面直接引用变化的来源。 
+E               Call log:
+E                 - Expect "not_to_contain_text" locator(".studio-task-record").first.locator(".run-requirement") with timeout 5000ms
+E                 - waiting for locator(".studio-task-record").first.locator(".run-requirement")
+E                   14 × locator resolved to <p class="run-requirement" title="输入已更新（operation 7fa2ae4d-d753-4a7b-bbed-fa5a285ff645）：create independent current revision。读取新输入与 diff，提交 compose.v2 input_revision：changed_layers、每个变化层的 proposal Ref 与 diff。 影响分析：任务事实变化：audience；没有页面直接引用变化的来源。">要求：输入已更新（operation 7fa2ae4d-d753-4a7b-bbed-fa5a28…</p>
+E                      - unexpected value "要求：输入已更新（operation 7fa2ae4d-d753-4a7b-bbed-fa5a285ff645）：create independent current revision。读取新输入与 diff，提交 compose.v2 input_revision：changed_layers、每个变化层的 proposal Ref 与 diff。 影响分析：任务事实变化：audience；没有页面直接引用变化的来源。"
+E               
+E               Aria snapshot:
+E               - paragraph: 要求：输入已更新（operation 7fa2ae4d-d753-4a7b-bbed-fa5a285ff645）：create independent current revision。读取新输入与 diff，提交 compose.v2 input_revision：changed_layers、每个变化层的 proposal Ref 与 diff。 影响分析：任务事实变化：audience；没有页面直接引用变化的来源。
+
+tests/rebuild/test_studio_delivery_browser.py:109: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_versioned_exports.py::test_public_copies_clean_immutable_artifacts_and_partial_failure
+FAILED tests/rebuild/test_studio_delivery_browser.py::test_studio_default_tasks_versions_and_actual_review_zip
+2 failed, 3 passed in 9.74s

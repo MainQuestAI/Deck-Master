@@ -959,7 +959,7 @@ def _accept_content_update(store: Store, *, document: dict, task: dict, envelope
                             result_digest=result_digest, response=response)
 
 
-def _compose_v2_targets(variant, payload: dict, task: dict) -> dict:
+def _compose_v2_targets(variant, payload: dict, task: dict, *, store, document) -> dict:
     """The write set one compose.v2 variant would touch (CONTRACTS §11.5).
 
     The v2 write set lives inside ``payload``; the acceptance gate must see the
@@ -998,10 +998,28 @@ def _compose_v2_targets(variant, payload: dict, task: dict) -> dict:
         layers = ["narrative"]
     if not page_ids:
         page_ids = [pid for pid in (task.get("scope_pages") or []) if pid]
-    return {"page_ids": page_ids, "layers": layers}
+    targets = {"page_ids": page_ids, "layers": layers}
+    if variant == "input_revision":
+        from .content_ops import _derived_source_scope
+        sources = _derived_source_scope(store, document, task)
+        old_order = [entry['page_id'] for entry in document['pages']]
+        diff = payload.get('diff') or {}
+        removed = diff.get('removed_page_ids') or []
+        if sources is not None:
+            # New identities have no current-page scope. Their authority comes
+            # only from the frozen sources; existing out-of-scope writes stay
+            # visible to this gate and the parser validates the complete result.
+            targets['page_ids'] = list(dict.fromkeys(sources + [pid for pid in page_ids if pid in old_order] + removed))
+        order = diff.get('page_order')
+        if isinstance(order, list):
+            targets['allow_page_membership_change'] = set(order) != set(old_order)
+            retained = set(order) & set(old_order)
+            targets['allow_page_order_change'] = ([pid for pid in order if pid in retained]
+                != [pid for pid in old_order if pid in retained])
+    return targets
 
 
-def _accept_targets(envelope: dict, task: dict) -> dict:
+def _accept_targets(envelope: dict, task: dict, *, store, document) -> dict:
     """The write target an accepted result would touch (page ids + layers).
 
     A compose result writes page copy; a review result writes review records;
@@ -1011,7 +1029,8 @@ def _accept_targets(envelope: dict, task: dict) -> dict:
     variant payload, so it gets its own extraction.
     """
     if envelope.get("schema_version") == COMPOSE_V2_SCHEMA:
-        return _compose_v2_targets(envelope.get("variant"), envelope.get("payload") or {}, task)
+        return _compose_v2_targets(envelope.get("variant"), envelope.get("payload") or {}, task,
+                                   store=store, document=document)
     page_ids: list[str] = []
     content_update = envelope.get("content_update") or {}
     for page in (envelope.get("pages") or []):
@@ -1196,14 +1215,6 @@ def _accept_result_locked(
             f"(task {task_id})",
             "produced_against does not match the dispatched dependency hash; rebase required",
         )
-    # Freshness is content-based: task-management revisions (claim, allocation)
-    # keep the result valid; a content change invalidates it (spec 09.7 recheck).
-    if not task_inputs_current(store, document, task):
-        raise StaleInputContext(
-            "(document)",
-            "project content moved since dispatch; read the new inputs and rebase",
-        )
-
     # Round-B: settle call facts BEFORE any content prevalidation, in its own
     # committed revision. A later content refusal must never erase already
     # observed call facts (spec 09.7 settle-then-adopt, as on the cancelled path).
@@ -1222,16 +1233,29 @@ def _accept_result_locked(
         store._commit_locked(blobs=[], base_revision=document["revision_id"], document=settled_doc,
                             operation_id=f"settle-{operation_id}")
         document = store.load_document()
+    # Freshness is content-based: task-management revisions (claim, allocation)
+    # keep the result valid; a content change invalidates it (spec 09.7 recheck).
+    if not task_inputs_current(store, document, task):
+        raise StaleInputContext(
+            "(document)",
+            "project content moved since dispatch; read the new inputs and rebase",
+        )
+
     # The adoption half of accept_result consumes the same judgement as every
     # other boundary (CONTRACTS §6.1 exception): the call facts above already
     # settled in their own committed revision, so a refusal here keeps the cost
     # and leaves the current draft untouched.
     from . import eligibility
     adoption = eligibility.evaluate(store, document, document, "task.accept",
-                                    {"task": task, "targets": _accept_targets(envelope, task),
+                                    {"task": task, "targets": _accept_targets(envelope, task, store=store, document=document),
                                      "record_only": _record_only(envelope, task)})
-    if adoption["enforcement"] == "active" and not adoption["allowed"]:
+    if not adoption["allowed"]:
         raise eligibility.EligibilityBlocked(adoption)
+    if "rc3-entry.v1" in (task.get("required_capabilities") or []):
+        from .generation import check_host
+        if task.get("status") != "running" or not task.get("execution_ref"):
+            raise TaskConflict(f"(task {task_id})/execution_ref", "claim the RC3 task with its actual Host protocol before adoption")
+        check_host(task)
     if (task.get("protocol_version") == "changes.v1"
             and "content_requirements_v1" in (task.get("required_capabilities") or [])):
         # Direct visual consumers have no change_binding. Their first adoption

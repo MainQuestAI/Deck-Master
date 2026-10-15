@@ -1,0 +1,785 @@
+{
+  "schema": "rc3_04_documentary_role_entry_index.v1",
+  "current_runtime_sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+  "count": 16,
+  "R3_new": 1,
+  "R2_reused": 15,
+  "actual_host_count": 1,
+  "new_independent_professional_execution_count": 0,
+  "basis": [
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+      "sha256": "50af7364494ffbc92944b13ba8e4be7b6049fc91e79e50d940f37041b4d21b35"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+      "sha256": "529556a28aec86c288f89b8251f4b855382d4c09bdc6a7be12dc1cbf389a1e8f"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-fifteen-path-and-lifecycle-reuse.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R2-fifteen-path-and-lifecycle-reuse.json",
+      "sha256": "3d481fb5cec0e81caadb5f6ae46813bb9aa2cf6500c6295604b0ca5327888d8c"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+      "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70"
+    }
+  ],
+  "paths": [
+    {
+      "case_id": "deck-master--named",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "deck-master：理解本次档案值班训练任务，给两页策划的范围、已知未知及交给Content的具体工作单；本次不制作图像。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/actual-application-record.json",
+        "sha256": "e1f38e1fef42576368cb514048da1ea8780f3f9dc6109566d0bbf1b2ce2b78ca"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/argument-workorder-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/argument-workorder-read.json",
+          "sha256": "b26fdf58fe7dcd109db4dfaf75cdae067abcc68ba744de3868f066dabc61f303"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/initial-read.json",
+          "sha256": "751d01b79d38ef3bad528ac7d51b99cce7b22176f98aa1c717d1154f4492db7f"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/argument-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/argument-accepted.json",
+          "sha256": "f79d6c094221d77613908a7b7d7ff0bc805d54037ba04d30d51ef2f119bdec54"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/framing-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/framing-accepted.json",
+          "sha256": "8b6173b39526472fbe4fefc8d28c07b3eed953d613b924303ad7fc1b324f387e"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/normal-completion.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/normal-completion.json",
+          "sha256": "71633939cb4a5557b7ae9baf8cad0db45bb8f25df8889c860f2064d0168a6f39"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/master-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/master-authored-output.json",
+          "sha256": "917ddd566e6d534e44b6b4411895282466d521c2340222685aff572fab39fa11"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-master--natural",
+      "evidence_phase": "R3_NEW_EXECUTION",
+      "actual_execution_source_sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+      "status": "ACTUAL_R3_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/actual-application-record.json",
+        "sha256": "b66971ecc11f2651aabd24e47feecd335d5fd6db251ddf033038700f51b52a21"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-authored.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-authored.json",
+          "sha256": "845a0bc058f3ed74ef644976975ee8de18501c546a7b83c35e745391de063dea"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-envelope.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-envelope.json",
+          "sha256": "c503a8cbe71aa99892d6d2f222dd2b93f3fdb443d2a68bbc4ccc1bd3ba97a44f"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-accepted.json",
+          "sha256": "8033d9315b1617c109e09be9b5250f2b49f80f51c30e5309d6ac91c7f77367ef"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-authored.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-authored.json",
+          "sha256": "bab4c4668c2a96574dd91d028499ee55e8855b7dd2f806fbc296de5ea3aadc4f"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-envelope.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-envelope.json",
+          "sha256": "289d74d36ea91b94ff0ea9ea2953bd7621c9126ff08e97ad7dd46fa8593a934b"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-accepted.json",
+          "sha256": "28c1019abc9fab8ec0b9bc8a2ac2fcf329b078d1a6eb3db87b55fc1d9dcf7e11"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-authored-output.json",
+          "sha256": "aca15ed6fe6f667ad62e2f8473871d721ce5dad8922c7db4c5eb4c21d9bc8144"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/normal-completion.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/normal-completion.json",
+          "sha256": "21824c6dc42b1f32aae45c5b926d385da9fbf5cc21cde186a9def1bf0d89c328"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+          "sha256": "9e31bd14a7e37de388b142f70285008b28e39ba1e67dfc134cf4dcc6b9a3241f"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-entry-guidance-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-entry-guidance-read.json",
+          "sha256": "4f096654bca3e5e288dd155d8e496fd4d552a60ad5d7988966d72dd93baca073"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+          "sha256": "5f6718dc8ff3cf596746138bbfd5a1c90c6bff39fc299cad742bb77389fa4fc9"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-master--master",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "延续Master当前项目，把档案借阅资格与损伤处置交给Content策划；沿用当前零调用授权，不扩大职责。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/actual-application-record.json",
+        "sha256": "9acddd855e1dd4de6a17dd736bd1ea4608c64b39e6b7adcb6d8294a9020776ff"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/argument-workorder-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/argument-workorder-read.json",
+          "sha256": "a06225a38ba59d9d9c450f99767160e1dbbebc4ee42afad7c0e5676cffba5056"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/initial-read.json",
+          "sha256": "392bdb4d668b741ada9f380d593a094aa420c5074875009bd1b8cbceb300130f"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/argument-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/argument-accepted.json",
+          "sha256": "d07575bef5e5dbf5f0d8833a2368a8d321389b03a42029b51b842ff74cd086e7"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/framing-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/framing-accepted.json",
+          "sha256": "4efdfc6e81e54408584f903b1429f95ca6719b080dd732cd8d0a11938d6b8521"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/normal-completion.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/normal-completion.json",
+          "sha256": "1d505e883b0924b066b3bfac25dda1ab53982c4eebb57829deb931e24758c654"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/master-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/master-authored-output.json",
+          "sha256": "c59f6e8ac0ab1bb8a34548632e9a7648f83e48d6bf765d9526e72ec8e3ca7064"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-master--recovery",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "恢复Master上次未完成的档案训练协调任务，先重新读当前请求与账目，给出下一责任和边界，不重复派工。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/actual-application-record.json",
+        "sha256": "f7787a68a44d38c48d8cc95c0c3a57ebf8d83ffa5f6f3c676e7d8bac6154ca57"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-workorder-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-workorder-read.json",
+          "sha256": "78caf7d53bbd0bcdbe7a25a62b4f2d36f1566824efb7029ba8d75996a687d008"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/before-interruption-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/before-interruption-read.json",
+          "sha256": "42fea380e74149f963fc56e3e3d7191c38a080d31ceab05052a741c8339d4ab6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/initial-read.json",
+          "sha256": "88cb64a05de50108e8f31d833f49be6a11655628cf6b08b154e23aa480eac841"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/resumed-current-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/resumed-current-read.json",
+          "sha256": "1d3853f05d7592a6c900759533f7c05d7401b69b71e84ae3402be8e7b8bfa6c2"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-accepted.json",
+          "sha256": "31dab61dd5faf029f96b908a5f793617839e40a40151240c73239505fb4279d0"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/framing-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/framing-accepted.json",
+          "sha256": "7dcd705fd2cc7f8d519a332e34f904d7f1fe3440fc53cc99121ac0ab590eb45b"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/normal-completion.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/normal-completion.json",
+          "sha256": "c43da394f9b1ffed132113df8571a4c9e6c9b0371a44ec3275df5e992ed85fcf"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/master-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/master-authored-output.json",
+          "sha256": "cd618f9956ed693c21b4235476a4417b55bd3c86175c91d586da0166fe97a294"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-content--named",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "deck-content：按合成档案规则策划两页值班训练；只交论证和计划，清楚区分权限/目录核验与阅览损伤处置，说明两个页职责和不确定收益；不写正文，不生图。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/actual-application-record.json",
+        "sha256": "6703ea70230360792a775d4e4c3a0b29682a52a3e813239bfa83730eb6a1f706"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/argument-workorder-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/argument-workorder-read.json",
+          "sha256": "cde00692885506be226c2cd998ce8bfddac5dbd527bfd214679fd4398b95fc74"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/initial-read.json",
+          "sha256": "6e3cf521ae4c6826c81e45957aaee1986f17adc6072686907f8cf779130bf944"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/argument-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/argument-accepted.json",
+          "sha256": "c00bd2309e145d958df6f84fcc0051ac49fec6a7ecde0014eb988a4cffa8c3a6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/framing-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/framing-accepted.json",
+          "sha256": "5fe6d241202ddcaefe8874cbd31dbee7c0e789354d422d9a3bc90293e0aa4a1d"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/normal-completion.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/normal-completion.json",
+          "sha256": "9217b54a1431423a4315d475d73721eb21af7f18b6daf8761ce319a0e84f674e"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/content-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/content-authored-output.json",
+          "sha256": "7c2ec42aa2e627c786c86e8fa49abb9d72873b05f86a3cb1d0a5f651a7de041c"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-content--natural",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "请按已策划的档案训练两页写完整逐页稿；由Host在委派内选择上一请求已完成的具体论证/Plan后写稿。保持八项交接、未知权限与错目录号两种责任、新损伤立即停阅边界；不写讲稿，不做图。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/actual-application-record.json",
+        "sha256": "10699f63eb5528cf6d320e5a7702ab98da281bc9cd0552f4c57e9cd51b246ecb"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/initial-read.json",
+          "sha256": "592f716cf070fce4265485b930f7db1415c48d31a1fb221602b7bed0382e9363"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/page-copy-workorder-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/page-copy-workorder-read.json",
+          "sha256": "0dfd3b11e0d94ff2ee3a539ad2adebbcce506d44cec376dd96d872f5b3647fff"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/normal-completion.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/normal-completion.json",
+          "sha256": "917d8baab064c87043344192f927bd32f087817e6fae226ee050b8d60d2baa7a"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/page-copy-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/page-copy-accepted.json",
+          "sha256": "22e2802752f4b6c40ffb99f1298fa746c05fa0ec3ca8bb0ac97e4c140aa0e6fd"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/select-prior-plan-0-adoption.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/select-prior-plan-0-adoption.json",
+          "sha256": "d2a0f32d326bcb76d6501f26f2eebfbd97ff38c400d5faf331fded9a275ed42f"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/select-prior-plan-1-adoption.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/select-prior-plan-1-adoption.json",
+          "sha256": "1e25d1ebe2730e363f4d873dbf3ce3eaedcd1bd33e0f5d0e090972b731539838"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/content-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/content-authored-output.json",
+          "sha256": "66f005b59c2b825c7b7ebe69dc3c8f13fe491bc30f2764e233c67aa0814577d5"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-content--master",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "Master连续交接：仅为固定档案两页写现场cues口播，约每页60秒；不动正文、页序或视觉，不补造Narrative；只交notes/segments和估时，零制作。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/actual-application-record.json",
+        "sha256": "79cdf8e157d223b48367cf6564f121cf6cae557384af1fb243fb607be19e36ce"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/initial-read.json",
+          "sha256": "7f8ded8feb12a9e460b9950ae1209021e67cff7e29c562c6cedde9bd6402e440"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/normal-completion.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/normal-completion.json",
+          "sha256": "fa027f328f3692bea841d2b65d9e4ce83c6eb0d994aba8043da3a89f55756fc6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/speech-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/speech-accepted.json",
+          "sha256": "3f6e9d79ee337709cdd82f00b02374ea34cb67de16e6070aac6980815eacb70f"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/content-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/content-authored-output.json",
+          "sha256": "9c4e4230fc65b291279314389379fdd4e40459aab4f2f63cefe163cce0914e69"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-content--recovery",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "恢复档案值班训练内容包：重读当前任务、材料和零制作授权，完成两页论证/Plan/完整自学正文及两个练习反馈；独立阅读不需讲稿，不生图。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/actual-application-record.json",
+        "sha256": "947a1eb1373f12a83af01056a5484b4f8c9a83077f19fb5b4f06601e613c9e0e"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/after-argument-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/after-argument-read.json",
+          "sha256": "8bfb7e2a308c83bfda0abe5d47d21c46412bc3d113bd8c0fe69da112d14fc798"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-workorder-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-workorder-read.json",
+          "sha256": "7a74daba5a22ac0b8d5d66b1d31338d8b82e5fb9ccadd114406a4d3f01144b4a"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/before-interruption-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/before-interruption-read.json",
+          "sha256": "dd2e9148655d49a28a6d8e7b6f7195ef48597290d638147dbcdaf7081dc0024e"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/initial-read.json",
+          "sha256": "87e4eeef996a14e0fef04970050f4b12fdb0832bed02d860e5e5daaa7194a174"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/resumed-current-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/resumed-current-read.json",
+          "sha256": "a88ff986dd07e7a25ad530893fc8ea1c497448b84d1a8a5ef58beb7db35c13af"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-0-adoption.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-0-adoption.json",
+          "sha256": "e50f4204cf29b4a117357353bbdca49da86d9f72a5e7386d8d0dd08d9db2f5e1"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-1-adoption.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-1-adoption.json",
+          "sha256": "1ebbd5a1067cb0313384ec1a2f72446563ffda8121f94051ef4b1f150d1cfdea"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-accepted.json",
+          "sha256": "e181c702f625986881c06ca51b1a3113bd880f43ff2378c745537f64bc1bdd01"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/framing-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/framing-accepted.json",
+          "sha256": "50d38c58ab95bf335f5b118c0d0e72606a4c9be7e67cde7579f5a06ca6d51ec6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/normal-completion.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/normal-completion.json",
+          "sha256": "0c0665ff8be7a584167693503ff82259b29f7e7477ee423ddf901054abc09257"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/page-copy-accepted.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/page-copy-accepted.json",
+          "sha256": "b428224434abb38b18efbe0d1dc0d637045fd91327a80fcf275c527f89342c8f"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/content-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/content-authored-output.json",
+          "sha256": "c11de73c596aa967a2357c954c25f10041ab11ef8154300633dabd5e040bf88e"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-design--named",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "deck-design：只为固定p1的领取核验全文做版式可行性方案，保留三条件、分支矩阵、八项交接与双案例，零图像；放不下就交具体取舍给Content。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/actual-application-record.json",
+        "sha256": "0e1fdd6d8d8d1469981337deeeb5f8154641c0ba4dcd134d8897ae24204afa0b"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/initial-read.json",
+          "sha256": "c2e89ef383f84ed1aa8ce71a80890449927ecf97d2feab3b9a6dd51acec63d8e"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-runtime-proposal.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-runtime-proposal.json",
+          "sha256": "3ea717530b0a0062dc09afd5db8585e45eb2bbce7ed3287042210d6310387c0d"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-authored-output.json",
+          "sha256": "8f6fe4714de53f3623898e9990387299105e583df5354b079bb585226f6a416c"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-design--natural",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "请给固定p2新损伤处置页出视觉方案，清楚保留停阅→保持原状→通知保管员以及保管员确认恢复；不要生图，不改正文。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/actual-application-record.json",
+        "sha256": "28ccc396c1e7203354a982e294a9e4c897cfd832d49ed17dcf3980ac75c2e7f6"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/initial-read.json",
+          "sha256": "e6d29ac822762e29fc8d1f7897caaba2b24c2f0a47624d34ad517121e526dd18"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-runtime-proposal.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-runtime-proposal.json",
+          "sha256": "6926a297ad9dcf40537a8bc04f7ee4a1c1550d94a5f63fa0c73dfa8bb077248a"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-authored-output.json",
+          "sha256": "0798ab8663dfc821b94af5850fc1aacd5d60cb7105327e7b3669dfca2ea6152c"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-design--master",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "Master连续调用Design：沿同项目固定两页稿做两页型方案，第一页面向条件核验，第二页突出新损伤的独立停阅触发；仅零图像规划。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/actual-application-record.json",
+        "sha256": "31b25fa069126bce5918df281ee6f53cee9e030360e3c7f1e16b8a17a3a37aad"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/initial-read.json",
+          "sha256": "a003b9dc8fdc37f0ea0d540ee4714204f0912c115a457b295d64db1433870a56"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-runtime-proposal.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-runtime-proposal.json",
+          "sha256": "88f328fac4b3c71a5d155421389fd950efcc354b43a1a9dc38bf01c348b1bda6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-authored-output.json",
+          "sha256": "e1af8f3451907991e279951ee1904f2fd495ef1d63128b7ac9b40262ca23f3a7"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-design--recovery",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "恢复固定p1方案任务，重新读取当前稿与设计范围，不重复调用或扩大页集合，只给完整稿18pt正文可行性与取舍。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/actual-application-record.json",
+        "sha256": "28220c2f3ca4303c900894d750ee629d18f961a946c90024cdb246c3a228cdb9"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/before-interruption-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/before-interruption-read.json",
+          "sha256": "38bd8ccd8270c620ee5a79472ad68d606fa59f0f33fae5e910c7856369029445"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/initial-read.json",
+          "sha256": "18cefdc42456579f6167988f7a7d9616e28231ae99421e980fce0f7bc88a43f1"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-before-application-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-before-application-read.json",
+          "sha256": "92d6dd192deea2786a5584fb5e196403a020c9fa5825ce8061f7a4fd2fc45a52"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+          "sha256": "42aef60959a4d7cbe8d058ac4250af4c95b07c00b9707b0e8f7cdbc2b9095f5b"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-runtime-proposal.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-runtime-proposal.json",
+          "sha256": "0c187e886da7af03843599481a1d141585d5ef136b0850498c6a69f6bb77a282"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-authored-output.json",
+          "sha256": "d94a48d57f2d0dca984615ae920d3f452398d32b3254194413654575b8d1f3e1"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-review--named",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "deck-review：只读检查固定档案两页稿与规则全文，定位权限/目录/损伤责任及八项交接；不制作、不修稿，作者自审如实标host_self。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-application-record.json",
+        "sha256": "71594ec940e9122316a573f0728fc4442e3ddec405e0823cfccebfff1b990da0"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-complete-source-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-complete-source-read.json",
+          "sha256": "01aa4515fac38a73a4b711700f16dd035b7469e7cf3688d33655f593ba6feb35"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/initial-read.json",
+          "sha256": "e8ecf2cc531bba17401a9260690ff70187f143d5e61fa13407153fa4749cdf63"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/supplemental-skill-method-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/supplemental-skill-method-read.json",
+          "sha256": "e12a9f093b4394c20e47abcdaf48ac96ae3530062002bdffd24156c4ca864063"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/strict-machine-packet.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/strict-machine-packet.json",
+          "sha256": "0717ea8262eae836c06f221cfa2ea4199dbddf267ddb07bfb4debf256e46f947"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/review-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/review-authored-output.json",
+          "sha256": "f78bf5f835d894a5a2b514e8eedcf02a9602d187027756aea5203a4ee03bfaaa"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-review--natural",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "只审稿：核对这份固定档案训练两页的触发条件、责任人和收益边界，说明具体证据与没验证的视觉维度；不要改稿或生图。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-application-record.json",
+        "sha256": "f41e821304a27a630e4e7c423a3a6b9249489c2ede30360f65410d4aa0e639e8"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-complete-source-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-complete-source-read.json",
+          "sha256": "488deac120f4f1742b807cfbedf360a4a0fdeb69e838c146c99a26e4df2420ee"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/initial-read.json",
+          "sha256": "001f3965d744076c7e7486437568e20373b94aa3d2c900a8ae633cda68ac77ac"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/supplemental-skill-method-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/supplemental-skill-method-read.json",
+          "sha256": "e12a9f093b4394c20e47abcdaf48ac96ae3530062002bdffd24156c4ca864063"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/strict-machine-packet.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/strict-machine-packet.json",
+          "sha256": "0717ea8262eae836c06f221cfa2ea4199dbddf267ddb07bfb4debf256e46f947"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/review-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/review-authored-output.json",
+          "sha256": "0cc55aa139ff093d06585e93da2572257061ff5c7cdc069e3792fb1b54c14005"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-review--master",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "Master连续交接Review：沿同一已完成内容项目与固定稿，只读检查权限未知、错目录号、新损伤三类责任；返回报告不回写Review或控制记录。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-application-record.json",
+        "sha256": "907c5da234b37e696ddcf11356ef6a4f6ccf4af2a0737dd417ee8f0ed9521f90"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-complete-source-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-complete-source-read.json",
+          "sha256": "8645b872f912ec2b1f1058d922264dc3c63d855e7602b7c42ed9b5a046a874f4"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/initial-read.json",
+          "sha256": "2d5c75945e041ab695a2156c02c04c7f61e10859bf14f9a34a1b5de2a439ce7d"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/supplemental-skill-method-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/supplemental-skill-method-read.json",
+          "sha256": "e12a9f093b4394c20e47abcdaf48ac96ae3530062002bdffd24156c4ca864063"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/strict-machine-packet.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/strict-machine-packet.json",
+          "sha256": "0717ea8262eae836c06f221cfa2ea4199dbddf267ddb07bfb4debf256e46f947"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/review-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/review-authored-output.json",
+          "sha256": "6a1bcfbb975faad4239fbac8ae449490b0565e774367a8f4b32ddc4bd41ce682"
+        }
+      ]
+    },
+    {
+      "case_id": "deck-review--recovery",
+      "evidence_phase": "R2_REUSED_EXACT_DEPENDENCIES",
+      "actual_execution_source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "original_instruction": "恢复只读审查固定档案训练全文，先重读当前source hash与工作单，检查停阅及保管员确认恢复边界；不得自动返修或新建生产项目。",
+      "actual_host": "/root/rc3_04_owner/skills_install",
+      "independent_identity": false,
+      "application_record": {
+        "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-application-record.json",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-application-record.json",
+        "sha256": "39225e85ef56e7791c7760081677c7b41e4dd99d79fc3211364697a4317ae043"
+      },
+      "read_output_and_runtime_records": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-complete-source-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-complete-source-read.json",
+          "sha256": "f986c183122c1c966ab1ec5e17681fa281908e5aabab6b723b721bb682a2a454"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/before-interruption-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/before-interruption-read.json",
+          "sha256": "2eaf39c50a374cf54395361cdf59327e7b97468ca3c7f358edf60d8a51ef1a59"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/initial-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/initial-read.json",
+          "sha256": "503032ff71cb4f466457042bd83a8d5be2553b8717ec11e258f4b864da80293a"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/resumed-before-application-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/resumed-before-application-read.json",
+          "sha256": "e9d10725dc778599b29932361089342a40e69a6f58d940c804b2db33d8a22f92"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/resumed-current-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/resumed-current-read.json",
+          "sha256": "d05837485be8e4dd45fafcdfb927da233262098a45806735b37816e0897fd394"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/supplemental-skill-method-read.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/supplemental-skill-method-read.json",
+          "sha256": "e12a9f093b4394c20e47abcdaf48ac96ae3530062002bdffd24156c4ca864063"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/strict-machine-packet.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/strict-machine-packet.json",
+          "sha256": "0717ea8262eae836c06f221cfa2ea4199dbddf267ddb07bfb4debf256e46f947"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/review-authored-output.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/review-authored-output.json",
+          "sha256": "45932ef0795fdd65d8405ff68bc93affb4e0a746cb6344875c9a4673fe07fec5"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Not a new R3 full sixteen-path run or sixteen independent models.",
+    "Review is same-Host, host_self/needs_reviewer; Design is a bounded zero-image suggestion.",
+    "Known synthetic source and prior scaffold; no blinded/fair E1 or human/provider/native/desktop claim.",
+    "R1 F7/F8 and R2 F9 original BLOCKED observations remain unchanged."
+  ]
+}

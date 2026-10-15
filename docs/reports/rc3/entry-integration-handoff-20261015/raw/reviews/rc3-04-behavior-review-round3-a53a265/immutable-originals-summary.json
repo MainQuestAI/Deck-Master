@@ -1,0 +1,37 @@
+[
+  {
+    "before": "run1/C6-editorial-auto-before.json",
+    "after": "run1/C6-editorial-auto-after.json",
+    "whole_tree_equal": true,
+    "document_equal": true,
+    "original_objects_checked": 14
+  },
+  {
+    "before": "run1/C6-editorial-trial-before.json",
+    "after": "run1/C6-editorial-trial-after.json",
+    "whole_tree_equal": true,
+    "document_equal": true,
+    "original_objects_checked": 14
+  },
+  {
+    "before": "run1/C6-inputs-auto-before.json",
+    "after": "run1/C6-inputs-auto-after.json",
+    "whole_tree_equal": true,
+    "document_equal": true,
+    "original_objects_checked": 10
+  },
+  {
+    "before": "run1/C6-inputs-trial-before.json",
+    "after": "run1/C6-inputs-trial-after.json",
+    "whole_tree_equal": true,
+    "document_equal": true,
+    "original_objects_checked": 10
+  },
+  {
+    "before": "run1/F9-source-before.json",
+    "after": "run1/F9-source-after.json",
+    "whole_tree_equal": true,
+    "document_equal": true,
+    "original_objects_checked": 5
+  }
+]

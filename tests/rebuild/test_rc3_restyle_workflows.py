@@ -13,6 +13,7 @@ from PIL import Image
 
 from deck_master import candidates, collaboration, editing, eligibility, generation, service, tasks, visual_styles
 from deck_master.models import canonical_json_bytes
+from deck_master.content import atom_ids
 from deck_master.native_image_evidence import NativeImageRegistry, NativeImageRuntime, image_binding
 from deck_master.production import stored_blueprint_request
 from test_rc3_design_recipes import input_value
@@ -123,7 +124,16 @@ def edit(path, store, page_id, mutate):
     doc = store.load_document()
     entry = next(item for item in doc["pages"] if item["page_id"] == page_id)
     page = store.read_object_json(entry["page"])
+    old_notes = page.get('speaker_notes', '')
     mutate(page)
+    mapping = page.get('content_mapping')
+    if mapping is not None and mapping.get('narrative_ref') is None:
+        previous = {link['element_ref']: link for link in mapping['visible_links']}
+        mapping['visible_links'] = [copy.deepcopy(previous.get(atom, {
+            'element_ref': atom, 'narrative_node_ids': [], 'source_links': []})) for atom in sorted(atom_ids(page))]
+        if page.get('speaker_notes', '') != old_notes:
+            from test_rc3_notes_visual_inputs import _set_notes
+            _set_notes(page, page.get('speaker_notes', ''))
     editing.edit_page(path, page=page, base_revision=doc["revision_id"], page_hash=entry["page"]["sha256"], operation_id=str(uuid.uuid4()))
 
 
@@ -300,8 +310,10 @@ def test_late_trial_result_refused_after_control_change_retains_consumed_fee_fac
     before_doc = store.load_document()
     with pytest.raises((eligibility.EligibilityBlocked, tasks.TaskConflict, generation.GenerationError)):
         accept(path, store, task, sent)
-    if control == "cancel":
-        # First cancelled submission records a late-settlement receipt; retry
+    if control in ("cancel", "replace_scope"):
+        assert tasks._lookup_task(before_doc, task["task_id"], store)["status"] == (
+            "cancelled" if control == "cancel" else "superseded")
+        # First cancelled/superseded submission records a late-settlement receipt; retry
         # cannot duplicate that fact or adopt the output.
         settled_pointer = store.read_current()
         with pytest.raises(tasks.TaskConflict, match="late result call facts were settled"):

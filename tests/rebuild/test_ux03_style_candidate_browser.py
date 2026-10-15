@@ -17,6 +17,7 @@ from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_content_candidates import content_intent
 from deck_master import changes as changes_mod
+from test_action_targets_browser import _prepare_browser_project
 
 pytestmark = pytest.mark.browser
 
@@ -32,6 +33,7 @@ def ux03_browser(tmp_path):
     playwright = pytest.importorskip('playwright.sync_api')
     path = tmp_path / 'ux03-project'
     create_sample(path, page_count=3, readonly=False)
+    _prepare_browser_project(path)
     store = Store(path)
     server = WorkbenchServer(path)
     with playwright.sync_playwright() as runtime:
@@ -254,6 +256,7 @@ def test_candidate_desk_rapid_switch_late_reply_and_decisions_target_displayed_o
     """AC11：同页两候选快速切换与晚回包；比较两侧保持固定；采用/保留只针对展示对象。"""
     import json
     import re
+    from urllib.parse import urlparse
     from playwright.sync_api import expect
     from test_candidates import candidate
     page, server, path, store = ux03_browser
@@ -287,10 +290,13 @@ def test_candidate_desk_rapid_switch_late_reply_and_decisions_target_displayed_o
     assert decision_bodies and decision_bodies[-1]['input']['candidate_id'] == cid2
 
     # 切回候选 1，再让候选 2 的状态回包晚到：晚回包被丢弃，展示对象不变。
-    page.get_by_role('button', name='刷新候选与当前状态', exact=True).click()
+    with page.expect_response(lambda response: urlparse(response.url).path == f'/api/candidates/{cid2}') as refreshed:
+        page.get_by_role('button', name='刷新候选与当前状态', exact=True).click()
+    refreshed.value.finished()
     held = []
     page.route(f'**/api/candidates/{cid2}', lambda route: held.append(route))
-    page.get_by_role('button', name='刷新候选与当前状态', exact=True).click()
+    with page.expect_request(lambda request: urlparse(request.url).path == f'/api/candidates/{cid2}'):
+        page.get_by_role('button', name='刷新候选与当前状态', exact=True).click()
     page.get_by_label('选择本页候选').select_option(index=0)
     expect(page.locator('.candidate-desk')).to_have_attribute('data-candidate-id', cid1)
     assert held, '候选 2 的状态请求应处于挂起状态'
@@ -368,7 +374,7 @@ def test_expansion_plan_carries_adopted_sample_and_explains_core_rejection(ux03_
 
 
 @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
-def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, width, height):
+def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height):
     from playwright.sync_api import expect
     page, server, path, store = ux03_browser
     page.set_viewport_size({'width': width, 'height': height})
@@ -395,6 +401,6 @@ def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, width, 
     pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(entry => entry.kind==='large').reduce((sum,entry)=>sum+entry.pins,0)")
     assert pins == 0
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-    evidence = Path('output/playwright/pr103-complete/breakdown'); evidence.mkdir(parents=True, exist_ok=True)
+    evidence = tmp_path / 'evidence' / 'breakdown'; evidence.mkdir(parents=True, exist_ok=True)
     page.locator('.visual-breakdown').scroll_into_view_if_needed()
     page.screenshot(path=str(evidence/f'summary-{width}.png'))

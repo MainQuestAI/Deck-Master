@@ -8,9 +8,11 @@ import pytest
 
 from deck_master import service
 from deck_master.models import bump_revision
-from deck_master.pipeline import artifact, produce
+from deck_master.pipeline import artifact
 from deck_master.production import project_prompt, resolve_design
 from deck_master.store import Store
+from test_service_flow import _prepare_production
+from engineering_render_helpers import render_engineering_diagnostic
 
 CANVAS_4_3 = {
     'width_px': 960,
@@ -65,9 +67,11 @@ def slide_size(pptx_bytes):
 @pytest.mark.render
 def test_document_canvas_is_prompt_and_compile_authority(tmp_path, resolvable_font_family):
     # AC-K14: a 4:3 Document canvas flows into the prompt projection, resolve_design,
-    # and the real produced PPT page size; no hidden 16:9 default appears anywhere.
+    # and the actual engineering PPT size; formal production stays stage-blocked.
     project = create_project(tmp_path)
     store = attach_svg(project, SVG_4_3.replace("Hiragino Sans GB", resolvable_font_family))
+    _prepare_production(project, actions=[], max_external_calls=0,
+        scenario='L1 synthetic exact 4:3 manuscript before actual PPT canvas compilation')
     document = store.load_document()
     assert document['design_context']['canvas'] == CANVAS_4_3
     assert (document['design_context']['canvas']['slide_width_in'],
@@ -84,19 +88,20 @@ def test_document_canvas_is_prompt_and_compile_authority(tmp_path, resolvable_fo
     assert '1280x720' not in request['prompt']
     assert request['projection']['canvas'] == CANVAS_4_3
 
-    report = produce(project)
+    diagnostic = render_engineering_diagnostic(project, output_dir=tmp_path / 'engineering')
+    report = diagnostic['report']
     assert report['status'] == 'pass'
     assert report['findings'] == []
 
     delivered = store.load_document()
-    pptx_ref = delivered['outputs']['pptx']
-    pptx_bytes = store.read_object_bytes(store.read_object_json(pptx_ref)['file'])
+    assert all(value is None for value in delivered['outputs'].values())
+    assert diagnostic['provenance']['visual_acceptance'] == 'not_evaluated'
+    pptx_bytes = diagnostic['pptx_path'].read_bytes()
     # 10in x 7.5in at 914400 EMU/in: the actual slide size, not 16:9 12192000 EMU.
     assert slide_size(pptx_bytes) == (9144000, 6858000)
-    entry = delivered['pages'][0]
-    assert entry['svg_preview'] and entry['ppt_preview']
-    render_report = json.loads(store.read_object_bytes(
-        store.read_object_json(delivered['outputs']['render_report'])['file']))
+    assert diagnostic['svg_previews'][0].is_file() and diagnostic['ppt_previews'][0].is_file()
+    render_report = json.loads(diagnostic['report_path'].read_bytes())
+    assert render_report == report
     assert render_report['visual_review'] == 'not_evaluated'
 
 

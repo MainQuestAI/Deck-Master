@@ -243,9 +243,27 @@ def settle_attempt(store, document, task, target, *, attempt_id, outcome, report
     attempt, prior_ref = _read_owned(store, task, "generation_attempts", attempt_id)
     if attempt["allowance_id"] != target["allowance_id"] or attempt["execution_ref"] != target["execution_ref"]:
         raise _error("generation_binding_conflict", "attempt_id", "attempt does not own this call allowance", conflict=True)
-    report = json.loads(report_bytes) if report_bytes else {}
+    # Empty Host input is not evidence. Wrapping it in non-empty observation
+    # metadata must not turn an unknown call into consumed/released, nor prove
+    # a newly supplied invocation identity. Exact known-state replay remains
+    # available without inventing a new report.
+    try:
+        report = json.loads(report_bytes) if report_bytes else {}
+    except (ValueError, UnicodeError, TypeError) as exc:
+        raise _error('generation_request_invalid', 'report', 'observation report must be a JSON object') from exc
     if not isinstance(report, dict):
         raise _error("generation_request_invalid", "report", "observation report must be a JSON object")
+    if not report and ((outcome == 'consumed' and target['state'] != 'consumed')
+            or (target['state'] == 'unknown' and outcome != 'unknown')
+            or (invocation_ref and not target.get('invocation_ref'))):
+        raise tasks.EnvelopeError('(settle)/report', 'changing this call fact requires its actual report')
+    if not report:
+        # No submitted observation means no new immutable evidence. In
+        # particular a known receipt can be read/replayed without an adapter
+        # and without manufacturing a different empty Host report.
+        settled = tasks._settle_target(store, document, task['task_id'], target['allowance_id'],
+            target, outcome, None, 'json', invocation_ref)
+        return task, settled, prior_ref
     output_ref = None
     if report.get("source") == "native_host_image.v1":
         from .native_image_evidence import (NativeObservationRejected, consume_image_context,
@@ -299,6 +317,19 @@ def settle_attempt(store, document, task, target, *, attempt_id, outcome, report
                     "coverage": {}, "output": None}
     validate_schema("tool_observation", metadata)
     canonical_report = canonical_json_bytes(metadata)
+    settlement_report = canonical_report
+    if (metadata['observer'] == 'host_reported' and target['state'] == 'consumed'
+            and invocation_ref and not target.get('invocation_ref')):
+        # A missing invocation can be enriched using the same original report.
+        # The optional metadata field changes, but the observed report does not;
+        # retain both immutable observations and all previous call evidence.
+        content = {key: value for key, value in metadata.items() if key != 'invocation_ref'}
+        for ref in attempt['observations']:
+            prior = store.read_object_json(ref)
+            if (prior.get('observer') == 'host_reported' and not prior.get('invocation_ref')
+                    and {key: value for key, value in prior.items() if key != 'invocation_ref'} == content):
+                settlement_report = store.read_object_bytes(ref)
+                break
     # A later native receipt may enrich a Host-only consumed fact without
     # changing consumption. Preserve the earlier report and its attempt version.
     settlement_target = target
@@ -308,10 +339,12 @@ def settle_attempt(store, document, task, target, *, attempt_id, outcome, report
         if not prior_native:
             settlement_target = {**target, "evidence": []}
     settled = tasks._settle_target(store, document, task["task_id"], target["allowance_id"], settlement_target, outcome,
-                                   canonical_report, "json", invocation_ref)
+                                   settlement_report, "json", invocation_ref)
     settled["evidence"] = list(target.get("evidence") or []) + [r for r in settled["evidence"] if r not in (target.get("evidence") or [])]
     settled["evidence_level"] = metadata["observer"]
     obs_ref = store.put_blob(canonical_report, ext="json")
+    if obs_ref not in settled['evidence']:
+        settled['evidence'].append(obs_ref)
     if obs_ref in attempt["observations"]:
         return task, settled, prior_ref
     updated_attempt = {**attempt, "previous_ref": prior_ref, "observations": [*attempt["observations"], obs_ref],

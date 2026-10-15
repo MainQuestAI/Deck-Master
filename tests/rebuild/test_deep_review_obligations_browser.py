@@ -17,7 +17,7 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_deep_review_fixes_browser import project_browser  # noqa: F401  (fixture reuse)
-from test_style_content_browser import confirm_recipe, open_style, toggle_phase  # noqa: F401
+from test_style_content_browser import confirm_recipe, open_style, toggle_phase, prepare_style_project  # noqa: F401
 from test_ux05_runs_delivery_browser import add_task  # noqa: F401
 
 pytestmark = pytest.mark.browser
@@ -33,6 +33,17 @@ INTERNAL = {
 @pytest.fixture
 def obligations_browser(tmp_path):
     yield from project_browser(tmp_path, page_count=30)
+
+
+@pytest.fixture
+def authorized_obligations_browser(tmp_path):
+    yield from project_browser(tmp_path, page_count=30,
+        prepare=lambda path: prepare_style_project(path, page_ids=['p02', 'p30'], max_calls=2))
+
+
+@pytest.fixture
+def historical_obligations_browser(tmp_path):
+    yield from project_browser(tmp_path, page_count=30, historical=True)
 
 
 def visible_text(page):
@@ -105,10 +116,10 @@ def test_selection_to_style_path_works_after_using_the_screenshot_source(obligat
     assert 'revision=' + store.current_revision_id() in page.url
 
 
-def test_style_handoff_appears_with_a_real_local_plan(obligations_browser):
+def test_style_handoff_appears_with_a_real_local_plan(authorized_obligations_browser):
     """plan-ready：本地服务即可建立单页试作计划——交接动作出现且可用（无需 Host）。"""
     from playwright.sync_api import expect
-    page, server, path, store = obligations_browser
+    page, server, path, store = authorized_obligations_browser
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     confirm_recipe(path, store)
@@ -130,10 +141,10 @@ def test_style_handoff_appears_with_a_real_local_plan(obligations_browser):
     expect(handoff).to_be_enabled()
 
 
-def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(obligations_browser):
+def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(historical_obligations_browser):
     """N13/AC18：历史 A 无待办、最新 B 有待办；顶栏入口到最新记录，历史仍可返回。"""
     from playwright.sync_api import expect
-    page, server, path, store = obligations_browser
+    page, server, path, store = historical_obligations_browser
     add_task(store, 'done-task-1', 'compose', 'completed', '第一版整理已完成。')
     historical = store.current_revision_id()
     add_task(store, 'todo-task-1', 'reconstruct', 'awaiting_host', '新版本待交接的 SVG 重建。')
@@ -162,10 +173,10 @@ def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(obl
     expect(page.locator('.run-task').filter(has_text='整理内容').first).to_contain_text('结果已记录')
 
 
-def test_topbar_pending_entry_always_lands_on_the_task_list(obligations_browser):
+def test_topbar_pending_entry_always_lands_on_the_task_list(historical_obligations_browser):
     """复审 F2/F4（跨模型一致）：顶栏承诺"查看待交接任务"，不被记住的子区劫持。"""
     from playwright.sync_api import expect
-    page, server, path, store = obligations_browser
+    page, server, path, store = historical_obligations_browser
     add_task(store, 'todo-task-2', 'reconstruct', 'awaiting_host', '待接手任务用于顶栏入口核对。')
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
@@ -208,11 +219,11 @@ def test_area_link_without_the_subarea_falls_back_to_tasks(obligations_browser):
     expect(page.locator('#runs-tasks')).to_be_visible()
 
 
-def test_persisting_a_non_task_area_drops_the_hidden_task_route(obligations_browser):
+def test_persisting_a_non_task_area_drops_the_hidden_task_route(historical_obligations_browser):
     """复审 F5：任务详情打开时切走子区，链接不得留下"任务已校验但无处显示"的状态。"""
     from playwright.sync_api import expect
     import urllib.parse
-    page, server, path, store = obligations_browser
+    page, server, path, store = historical_obligations_browser
     add_task(store, 'task-route-1', 'reconstruct', 'awaiting_host', '用于子区持久化与任务路由核对。')
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()

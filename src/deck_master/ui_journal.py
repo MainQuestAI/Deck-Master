@@ -74,7 +74,7 @@ def _capabilities(server_capabilities):
 
 
 def _effective_actions(*, project_format, sample_readonly, server_capabilities=None,
-                       workbench_protocol=None):
+                       workbench_protocol=None, collaboration_state=None):
     """Project-level availability, truthful to the real write gates.
 
     reason_code is a projection vocabulary, not the endpoints' error-envelope
@@ -97,6 +97,14 @@ def _effective_actions(*, project_format, sample_readonly, server_capabilities=N
             writable, reason = False, "sample_readonly"
         elif action in FORMAT_GATED and not workbench_protocol:
             writable, reason = False, "unsupported_project_format"
+        elif collaboration_state is not None and action in FORMAT_GATED | {"inputs"}:
+            request = collaboration_state.get("request") or {}
+            if not collaboration_state.get("migrated"):
+                writable, reason = False, "migration_required"
+            elif request.get("paused"):
+                writable, reason = False, "request_paused"
+            elif request.get("closed"):
+                writable, reason = False, "request_closed"
         actions.append({"action": action, "supported": supported,
                         "writable": writable, "reason_code": reason})
     return actions
@@ -123,6 +131,7 @@ def _pointer_gate(project):
 
 
 def project_info(project, *, server_capabilities=None):
+    from . import collaboration, collaboration_migration, content_production
     from .samples import sample_info
     from .store import SUPPORTED_WRITERS
     gate = _pointer_gate(project)
@@ -138,7 +147,17 @@ def project_info(project, *, server_capabilities=None):
                 "effective_actions": [{"action": action, "supported": capability in capabilities,
                                        "writable": False, "reason_code": reason}
                                       for action, capability in PROJECT_ACTIONS]}
-    store, doc, identity = context(project)
+    # Immutable snapshots can be read without creating a write lock. Retry if
+    # another window advanced current between the three pure projections;
+    # never publish mixed completion/request/migration bases to the browser.
+    for _ in range(3):
+        store, doc, identity = context(project)
+        collaboration_state = collaboration.describe(project)
+        migration = collaboration_migration.describe(project)
+        if doc["revision_id"] == collaboration_state["revision_id"] == migration["revision_id"]:
+            break
+    else:
+        raise LocalStateError("revision_id", "project state changed while reading; reload the current state")
     sample = sample_info(store.project_root)
     compatibility = doc.get("compatibility", {})
     project_format = compatibility.get("project_format", "deck_document.v1")
@@ -149,10 +168,15 @@ def project_info(project, *, server_capabilities=None):
             "core_readers": list(CORE_READERS), "core_writers": list(SUPPORTED_WRITERS),
             "host_execution": "handoff_required", "draft_journal": "ui_draft.v1",
             "sample": sample,
+            "control_revision_id": doc["revision_id"],
+            "collaboration": collaboration_state,
+            "completion": content_production.completion_status(store, doc),
+            "migration": migration,
             "effective_actions": _effective_actions(project_format=project_format,
                                                     workbench_protocol=store.workbench_protocol_required(doc),
                                                     sample_readonly=bool(sample and sample.get("readonly")),
-                                                    server_capabilities=server_capabilities)}
+                                                    server_capabilities=server_capabilities,
+                                                    collaboration_state=collaboration_state)}
 
 
 def _directory(store):

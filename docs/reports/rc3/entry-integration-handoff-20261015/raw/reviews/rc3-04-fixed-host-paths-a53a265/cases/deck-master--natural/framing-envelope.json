@@ -1,0 +1,176 @@
+{
+  "schema_version": "compose_result.v2",
+  "kind": "compose",
+  "variant": "framing",
+  "task_id": "78baef7afee6",
+  "operation_id": "compose-1cfeac756500",
+  "produced_against": "345c64c7b819f3b1a36c8590e3a45f4363a16e2b19d43806aae5ac4eb7550199",
+  "eligibility_digest": "a4df14678530c19888d181a490acd8c1126c74e3fb21a4d610111a871f4d1c85",
+  "payload": {
+    "narrative": {
+      "schema_version": "narrative.v1",
+      "narrative_id": "archive-duty-r2",
+      "version": 1,
+      "project_id": "deck-master--natural",
+      "origin": "host_composed",
+      "maturity": "framing",
+      "input_basis": [
+        {
+          "kind": "task_fact",
+          "identity": "brief",
+          "projection": "value",
+          "ref": null,
+          "sha256": "e44d766913469fba5b4df3074223926850485a680f8c21378c29a9aece7fce26"
+        }
+      ],
+      "communication_job": {
+        "mode": "train",
+        "audience_fact_key": "task.audience",
+        "audience_question": "原件领取条件不足和阅览中新损伤，分别先做什么、交给谁？",
+        "desired_outcome": "值班员能阻止错误交付，并在损伤时保持原状交保管员，记录可复核交接。",
+        "observable_success": "对权限未知、目录号不符、阅览中新脱页三个情境分别给出待核验、核对两号、立即停阅及对应责任人；不猜权限、不替换原件、不粘补。",
+        "use_mode": "read_alone",
+        "primary_use": "read_alone"
+      },
+      "central_node_id": null,
+      "nodes": [
+        {
+          "node_id": "eligibility",
+          "role": "explanation",
+          "statement": "领取原件先核对权限、目录号和本次登记，未知或不符各交给正确管理员。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-dcc6e474",
+              "source_version": {
+                "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+                "extract": {
+                  "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+                  "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+                }
+              },
+              "locator": "L2"
+            },
+            {
+              "source_id": "src-dcc6e474",
+              "source_version": {
+                "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+                "extract": {
+                  "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+                  "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+                }
+              },
+              "locator": "L3"
+            },
+            {
+              "source_id": "src-dcc6e474",
+              "source_version": {
+                "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+                "extract": {
+                  "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+                  "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+                }
+              },
+              "locator": "L4"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "damage",
+          "role": "explanation",
+          "statement": "阅览中新损伤独立触发停阅与保管员处置，资格齐全也不改变该边界。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-dcc6e474",
+              "source_version": {
+                "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+                "extract": {
+                  "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+                  "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+                }
+              },
+              "locator": "L5"
+            },
+            {
+              "source_id": "src-dcc6e474",
+              "source_version": {
+                "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+                "extract": {
+                  "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+                  "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+                }
+              },
+              "locator": "L8"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": []
+        },
+        {
+          "node_id": "handoff",
+          "role": "explanation",
+          "statement": "用八项交接字段保留已知、未知和下一责任，不用收益口号代替操作。",
+          "authority": "instruction",
+          "source_links": [
+            {
+              "source_id": "src-dcc6e474",
+              "source_version": {
+                "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+                "extract": {
+                  "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+                  "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+                }
+              },
+              "locator": "L6"
+            },
+            {
+              "source_id": "src-dcc6e474",
+              "source_version": {
+                "original_sha256": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9",
+                "extract": {
+                  "path": ".deckmaster/objects/7b/7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67.json",
+                  "sha256": "7bd92069fcdf94c44b0dec59c47fb4097dcb13db9586aed714ca5fc5c9624d67"
+                }
+              },
+              "locator": "L10"
+            }
+          ],
+          "qualification_node_ids": [],
+          "unresolved_issue_ids": []
+        }
+      ],
+      "edges": [],
+      "issues": [
+        {
+          "issue_id": "no-outcome-data",
+          "question": "当前材料是否能证明核验更快或损伤率降低？",
+          "impact": "advisory",
+          "affected_node_ids": [
+            "eligibility",
+            "damage"
+          ],
+          "resolution": "accepted_limit",
+          "resolution_ref": null
+        }
+      ],
+      "alternatives": [
+        {
+          "option_id": "by-trigger",
+          "description": "先讲领取关口，再讲阅览中损伤；两页按触发时点区分。",
+          "benefit": "避免把补齐登记作为损伤处理前置条件。",
+          "cost": "第二页需引用第一页面向同一交接单的字段，避免复制整张表。",
+          "affected_node_ids": [
+            "eligibility",
+            "damage",
+            "handoff"
+          ]
+        }
+      ],
+      "previous_ref": null
+    }
+  },
+  "usage_events": []
+}

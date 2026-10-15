@@ -1,0 +1,11 @@
+{
+  "status": "ROOT_ENVIRONMENT_SETUP_ERROR",
+  "cause": "Root omitted env.sh in first install shell; rsvg-convert absent from PATH; actual installed doctor render exit3 needs_tool. Original failed installation/log preserved.",
+  "failed_root": "/workspace/work/rc3/candidate-04-573a46a",
+  "corrected_root": "/workspace/work/rc3/candidate-04-573a46a-ready",
+  "same_dist_sha256": {
+    "release.json": "3e35bb994b328b2a8fb525c410fede9ce90c3e55c31515891be02858c155fe46",
+    "deck_master-1.0.0rc3.tar.gz": "15659ce01beed94133f6c38d0a3e9301f5130d4ec678dfadacdbd6051b74d15a",
+    "deck_master-1.0.0rc3-py3-none-any.whl": "13e3d2708abf0e18ff387c7a74ca96bf05bf187b050a308f9b1f145232bbe9e0"
+  }
+}

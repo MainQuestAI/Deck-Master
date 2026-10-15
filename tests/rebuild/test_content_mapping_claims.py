@@ -15,6 +15,7 @@ from deck_master.content_plan import check_time_budget, timing_budget
 from deck_master.models import ModelError, bump_revision, require_writer
 from deck_master.store import Store
 from deck_master.tasks import EnvelopeError
+from rc3_fixtures import claim_fixture_task
 
 from test_content_preproduction_review import (  # noqa: E402 - shared slice fixtures
     _argument_narrative, _deck, _independent_adapter, _page, _plan_input, _project,
@@ -25,6 +26,7 @@ def _submit_page_copy(project, store, *, pages, order, plan_input, page_task=Non
     document = store.load_document()
     task = page_task or content_production.open_phase_task(
         store, document, operation_id=f"pc-{order[0]}", phase="page_copy")
+    claim_fixture_task(project, task)
     return service.accept_result(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],

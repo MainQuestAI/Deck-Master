@@ -141,7 +141,10 @@ def test_actual_process_exit_preserves_exactly_one_committed_result(tmp_path, ph
         project_dir, store, task, envelope = pending(tmp_path)
         base = store.current_revision_id(); op = task['operation_id']
         request_file = tmp_path / 'request.json'
-        request_file.write_text(json.dumps({'task': task, 'envelope': envelope}))
+        # The helper-only Path is not part of the actual Task protocol sent to
+        # the independent process. Preserve every actual field and envelope.
+        request_file.write_text(json.dumps({'task': {key: value for key, value in task.items()
+            if not key.startswith('_fixture_')}, 'envelope': envelope}))
     else:
         store = project(tmp_path); project_dir = store.project_root
         base = store.current_revision_id(); op = str(uuid.uuid4()); request_file = tmp_path / 'unused'

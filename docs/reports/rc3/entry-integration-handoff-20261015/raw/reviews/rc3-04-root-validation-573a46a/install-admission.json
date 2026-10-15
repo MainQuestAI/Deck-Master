@@ -1,0 +1,14 @@
+{
+  "source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+  "source_tree": "135769e0b16d6397baa51b5c098425b9a80eb9ff",
+  "package_version": "1.0.0rc3",
+  "manifest_sha256": "fe17cde02538dece2cd311ec7c103f387ca2471b5b8e05945c5ec043f4a3eaae",
+  "wheel_sha256": "13e3d2708abf0e18ff387c7a74ca96bf05bf187b050a308f9b1f145232bbe9e0",
+  "sdist_sha256": "15659ce01beed94133f6c38d0a3e9301f5130d4ec678dfadacdbd6051b74d15a",
+  "actual_installed_python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+  "actual_module": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "canonical_files": 270,
+  "strict_byte_report_sha256": "0063a2bf4fd515c6269d1c834c27097448502e064cdd6a3f15504e45ed702cc4",
+  "scope": "actual fixed candidate bytes only; formal review and regression ongoing; no HOME activation",
+  "initial_root_environment_error": "install-first-attempt-environment-error.json"
+}

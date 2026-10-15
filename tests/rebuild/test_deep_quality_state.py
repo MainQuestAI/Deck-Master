@@ -11,6 +11,7 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from page_visual_helpers import pass_page_review
 from hostenv import resolve_host_font
+from test_service_flow import _prepare_production
 import test_candidates as artifacts
 import test_content_candidates as content
 
@@ -19,6 +20,8 @@ import test_content_candidates as content
 def project(tmp_path):
     path = tmp_path / 'quality-project'
     create_sample(path, page_count=1, readonly=False)
+    _prepare_production(path, actions=['change.commit', 'candidate.adopt'], max_external_calls=0,
+        max_candidate_count=2, scenario='Explicit immutable local candidate adoption and output lifecycle')
     return Store(path)
 
 
@@ -90,7 +93,7 @@ def test_input_trial_rejects_unclaimed_host_before_completion(project):
     payload = {'kind': 'compose', 'content_update': {'input_digest': task['input_digest'], 'upsert_pages': [], 'remove_page_ids': [],
                'page_order': [p['page_id'] for p in doc['pages']], 'unchanged_reason': 'Clarification does not change the existing page.'},
                'content_plan': copy.deepcopy(store.read_object_json(doc['content_plan'])['input'])}
-    with pytest.raises(GenerationError, match='requires'):
+    with pytest.raises(tasks.TaskConflict, match='claim the RC3 task'):
         content.accept(path, task, payload)
     assert store.read_current() == before
     assert candidates.listing(path)['candidates'] == []

@@ -84,7 +84,8 @@ def eligibility_digest(*, phase: str, write_scope: dict, basis) -> str:
     return sha256_bytes(canonical_json_bytes(payload))
 
 
-def binding_basis(store, document, *, phase: str, provided=None, page_ids=None) -> list[dict]:
+def binding_basis(store, document, *, phase: str, provided=None, page_ids=None,
+                  include_manuscript=True) -> list[dict]:
     """Registered minimum slices for the phase, plus the current pointers.
 
     ``merge_required_basis`` completes the registered minimum so a caller can
@@ -94,6 +95,8 @@ def binding_basis(store, document, *, phase: str, provided=None, page_ids=None) 
     """
     basis = dependency_slices.merge_required_basis(
         store, document, family="task", key=phase, provided=list(provided or []))
+    if not include_manuscript:
+        return basis
     for identity in ("narrative", "content_plan"):
         if identity == "content_plan" and phase in ("design", "production") and page_ids:
             for page_id in page_ids:
@@ -117,7 +120,7 @@ def binding_basis(store, document, *, phase: str, provided=None, page_ids=None) 
 def build_binding(store, document, *, phase: str, executor_type: str, write_scope: dict,
                   adoption_policy: str, request: dict | None = None,
                   authorization_ref: dict | None = None, decision_refs=(),
-                  basis=None) -> dict:
+                  basis=None, include_manuscript=True) -> dict:
     """Build the full binding dict for one dispatched task.
 
     ``request_id`` always comes from the *current* request; the binding cannot
@@ -139,7 +142,7 @@ def build_binding(store, document, *, phase: str, executor_type: str, write_scop
                          "a collaboration.v1 task needs the current open work request")
     scope = canonical_scope(write_scope)
     resolved_basis = binding_basis(store, document, phase=phase, provided=basis,
-                                   page_ids=scope.get("page_ids"))
+                                   page_ids=scope.get("page_ids"), include_manuscript=include_manuscript)
     binding = {
         "request_id": current["request_id"],
         "phase": phase,
@@ -352,7 +355,10 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
                                                                     targets)
     binding = build_binding(store, document, phase=phase, executor_type=executor_type,
                             write_scope=scope, adoption_policy=adoption_policy,
-                            authorization_ref=authorization_ref, decision_refs=decision_refs)
+                            authorization_ref=authorization_ref, decision_refs=decision_refs,
+                            include_manuscript=task.get('kind') != 'style_analyze')
     task["collaboration_binding"] = binding
+    task.setdefault("protocol_version", "changes.v1")
+    task["required_capabilities"] = list(dict.fromkeys([*task.get("required_capabilities", []), "collaboration.v1", "rc3-entry.v1"]))
     require_binding(document, task)
     return task

@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+from urllib.parse import urljoin
 import pytest
 from test_ui_design_browser import workbench_page  # noqa: F401
 
@@ -12,6 +13,12 @@ def test_layout_sections_and_style_routes(workbench_page, tmp_path, width, heigh
     from playwright.sync_api import expect
     page=workbench_page
     page.set_viewport_size({'width':width,'height':height})
+    plan=page.request.get(urljoin(page.url,'/api/content-plan')).json()['content_plan']
+    assert plan['schema_version']=='content_plan.v2'
+    chapters=plan['chapters']
+    assert [(chapter['title'],chapter['page_ids']) for chapter in chapters]==[
+        (title,[f'p{n:02}' for n in range(start,start+8)])
+        for title,start in [('项目与材料',1),('逐页制作',9),('检查与交付',17)]]
     out=Path(os.environ.get('CONTAINER_EVIDENCE',str(tmp_path/'evidence')))/str(width)
     out.mkdir(parents=True,exist_ok=True)
     records=[]
@@ -25,6 +32,18 @@ def test_layout_sections_and_style_routes(workbench_page, tmp_path, width, heigh
     for title in ['制作总览','内容与来源','整稿画廊','任务与交付','风格校准']:
         page.locator('.sidebar').get_by_role('button',name=title,exact=True).click()
         expect(page.get_by_role('heading',name=title,exact=True)).to_be_visible()
+        if title=='制作总览':
+            # The first matrix group contains pages 1–15, spanning two chapters.
+            expect(page.locator('.matrix .chapter-row')).to_have_text(['项目与材料','逐页制作'])
+        if title=='内容与来源':
+            for index,chapter in enumerate(chapters):
+                outline=page.locator('.outline-block').filter(has=page.get_by_role('heading',name=chapter['title'],exact=True))
+                expect(outline.locator('.outline-source-note')).to_contain_text(f'第 {index*8+1}–{index*8+8} 页')
+                choice=outline.get_by_role('combobox',name='章节内页面 '+chapter['title'],exact=True)
+                assert choice.locator('option').evaluate_all('ns=>ns.map(n=>n.value)')==chapter['page_ids']
+                choice.select_option(chapter['page_ids'][-1])
+                expect(choice).to_have_value(chapter['page_ids'][-1])
+                expect(outline.get_by_role('button',name='打开所选页',exact=True)).to_be_enabled()
         capture(title)
         if title=='任务与交付':
             for area in ['待决定','版本','文件']:

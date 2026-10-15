@@ -1,0 +1,29 @@
+{
+  "gate": "render",
+  "argv": [
+    "/workspace/work/rc3/reviews/env-04-r4-02a6d44/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/rebuild",
+    "-m",
+    "render and not browser",
+    "--basetemp=/workspace/work/rc3/t04/r4-render-02a6d44",
+    "--junitxml=/workspace/work/rc3/reviews/rc3-04-r4-root-validation-02a6d44/render.xml"
+  ],
+  "started_at_utc": "2026-10-15T08:33:56.375943+00:00",
+  "completed_at_utc": "2026-10-15T08:36:42.980214+00:00",
+  "elapsed_seconds": 166.604,
+  "pytest_exit": 0,
+  "python": "/workspace/work/rc3/reviews/env-04-r4-02a6d44/bin/python",
+  "module": "/workspace/work/rc3/reviews/rc3-04-r4-code-snapshot-02a6d44/src/deck_master/__init__.py",
+  "version": "1.0.0rc3",
+  "head": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+  "tree": "8a12383ab597dbd061ad53de6f5186c5343d19d4",
+  "tracked_files": 3935,
+  "source_before_after_equal": true,
+  "raw_log_sha256": "7556f9d8439c335c95e371855f4d0f44f5fea3bd4c8f8783657f2ee500a91a26",
+  "actual_summary_line": "71 passed, 2804 deselected, 22 warnings in 165.35s (0:02:45)",
+  "scope": "fixed source engineering regression; no model/human/professional acceptance"
+}

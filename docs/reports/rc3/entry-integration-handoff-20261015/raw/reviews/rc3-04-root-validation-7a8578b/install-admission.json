@@ -1,0 +1,36 @@
+{
+  "source_sha": "7a8578baa210a92b92ae98922ff3236edf4d5975",
+  "source_tree": "4b7c5a931998ced2de624ee0ec29ff4a9e023139",
+  "package_version": "1.0.0rc3",
+  "manifest_sha256": "50d1e8ce8ac3614757c8d1ad5f3dbb220a61cd3302a302fd9326f17664cab27e",
+  "wheel_sha256": "8d52fd31f7d7321876973e0980401d8a834edfa744cd0bcf5f1b908d1b88e8ee",
+  "sdist_sha256": "d962f3290f3b30f64c901db75cfc2741fd8e06a2cccf078e912b92177e362212",
+  "actual_installed_python": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/bin/python",
+  "actual_module": "/workspace/work/rc3/candidate-04-7a8578b/prefix/.deck-master/releases/7a8578baa210-8d52fd31f7d7/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "canonical_files": 269,
+  "generated_files": 1,
+  "four_skills": [
+    {
+      "role": "deck-master",
+      "wheel_path": "deck_master/resources/skill/SKILL.md",
+      "sha256": "497884c95fef034399f50c0389888bad322bcb4820a9ae1472a5f08a83fc5beb"
+    },
+    {
+      "role": "deck-content",
+      "wheel_path": "deck_master/resources/skills/deck-content/SKILL.md",
+      "sha256": "1b491717d0bb45e80813dfd24937eefab1dc162eecd62005c0e064511a0682e3"
+    },
+    {
+      "role": "deck-design",
+      "wheel_path": "deck_master/resources/skills/deck-design/SKILL.md",
+      "sha256": "a3997c0baef42da6a40d67adb621ada4fb5fbafb4c199699d6696707c1e45348"
+    },
+    {
+      "role": "deck-review",
+      "wheel_path": "deck_master/resources/skills/deck-review/SKILL.md",
+      "sha256": "3f754ae5c491e216ef6867afb8c268378dfd652439b3090cf9b517619fb3e2a0"
+    }
+  ],
+  "strict_byte_report_sha256": "71155724f8be65c4048187bfb7a10cfa986e7211362dd396f11571daa96768fd",
+  "scope": "Actualfixedcandidatebytesonly; Host16/UI/independentreviews/unit/render/CIpending; noactualHOMEactivation"
+}

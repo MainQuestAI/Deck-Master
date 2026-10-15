@@ -1,6 +1,8 @@
 """T15 export evidence: review/delivery purposes (AC-R09), honest status
 reporting (T15.03), and editability claims (AC-K16 export side)."""
+import copy
 import json
+import uuid
 from pathlib import Path
 
 import pytest
@@ -9,25 +11,96 @@ import deck_master.cli as cli
 import deck_master.service as service
 from deck_master.editing import export_project, review_status
 from deck_master.models import bump_revision, sha256_bytes
+from deck_master import collaboration, delivery_eligibility, exports
+from rc3_fixtures import authorize_scope, evidence_for, public_project
 from deck_master.store import Store, StoreError
 
 REQUIRED = ('content', 'blueprint_content', 'blueprint_fidelity', 'conversion',
             'readability', 'privacy')
 
 
-def _deck(tmp_path: Path) -> tuple[Path, Store]:
-    project = tmp_path / 'proj'
-    service.create(project, brief='导出验收', draft={'pages': [{
-        'schema_version': 'deck_page_package.v2', 'page_id': 'p1',
-        'customer_visible': {'title': '导出一页', 'body_blocks': [
-            {'id': 'b1', 'type': 'paragraph', 'text': '正文。'}]},
-        'visual_spec': {'intent': 'export', 'reference_mode': 'new_design'}}]})
+def export_scope(*, layers=None):
+    return {'subject': 'deck', 'page_ids': ['p1'], 'page_manifest_ref': None,
+            'external_artifact_ref': None,
+            'layers': list(layers or ['narrative', 'plan', 'page_copy', 'speech', 'design',
+                                      'blueprint', 'svg', 'review', 'output']),
+            'allow_page_membership_change': False, 'allow_page_order_change': False,
+            'purpose': 'working'}
+
+
+def _authorize_delivery(store):
+    """Explicit L1 test instruction, scoped execute grant and business consent.
+
+    This is authorization for synthetic test operations, never human review.
+    Refresh it explicitly after a policy change, whose basis invalidates consent.
+    """
+    project = store.project_root
+    evidence = evidence_for(project, text=(
+        'L1 synthetic instruction: review this one-page fixture and deliver its '
+        'selected output only when current checks and configured professional '
+        'policy are satisfied. No human or native execution is asserted.'),
+        locator='synthetic-l1:test_export:scoped-delivery')
+    authorize_scope(project, actions=['export.delivery', 'handoff.delivery',
+        'delivery.historical', 'studio.deliver', 'dispatch.host_task', 'review.record',
+        'review.import', 'change.commit', 'candidate.adopt'], scope=export_scope(),
+        max_external_calls=0, max_candidate_count=0,
+        adoption_policy='within_scope', evidence=evidence)
+    document = store.load_document()
+    collaboration.record_decision(project, input={
+        'topic': 'delivery_acceptance', 'scope': export_scope(layers=['output']),
+        'subject_refs': [],
+        'value': {'scenario': 'L1 synthetic scoped delivery only'},
+        'disposition': 'accepted', 'authority_mode': 'direct_user',
+        'instruction_evidence': evidence}, base_revision=document['revision_id'],
+        operation_id='synthetic-consent-' + uuid.uuid4().hex)
+
+
+def projection_subject(store, document, *, notes_policy=None):
+    """Materialize the exact sanitized public .pptx that the review names."""
+    packet = exports.create(store.project_root, revision=document['revision_id'],
+                            purpose='review', notes_policy=notes_policy)
+    data = exports.download(store.project_root, export_id=packet['export_id'],
+                            filename='deck.pptx')[0]
+    digest = sha256_bytes(data)
+    subject = {'path': f'.deckmaster/objects/{digest[:2]}/{digest}.pptx', 'sha256': digest}
+    assert store.read_object_bytes(subject) == data
+    return subject
+
+
+def selected_professional_policy(store, document=None, *, notes_policy=None):
+    document = document or store.load_document()
+    return delivery_eligibility.professional_policy(store, document,
+        selected_output=delivery_eligibility.selected_output(store, document,
+                                                             notes_policy=notes_policy))
+
+
+def _deck(tmp_path: Path, *, notes='') -> tuple[Path, Store]:
+    # Explicit current public intake and exact L1 scope. Seeded engineering
+    # artifacts below are synthetic, never claimed as actual production.
+    fixture = public_project(tmp_path, create_input={'brief':
+        'L1 synthetic export fixture: one fixed page, scoped review and delivery; no image generation',
+        'draft': {'pages': [{
+            'schema_version': 'deck_page_package.v2', 'page_id': 'p1',
+            'speaker_notes': notes,
+            'customer_visible': {'title': '导出一页', 'body_blocks': [
+                {'id': 'b1', 'type': 'paragraph', 'text': '正文。'}]},
+            'visual_spec': {'intent': 'export', 'reference_mode': 'new_design'}}]}},
+        request_input={'intent': 'full_deck', 'content_intent': None, 'scope': export_scope()})
+    project = fixture['project']
     store = Store(project)
     work = store.staging_dir / 'pptx'
     work.mkdir(parents=True, exist_ok=True)
     pptx_file = work / 'deck.pptx'
     from pptx import Presentation
-    Presentation().save(pptx_file)
+    presentation = Presentation()
+    slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+    box = slide.shapes.add_textbox(100000, 100000, 5000000, 1000000)
+    box.text_frame.text = '导出一页\n正文。'
+    presentation.save(pptx_file)
+    from deck_master.compiler.native import attach_notes
+    page = store.read_object_json(store.load_document()['pages'][0]['page'])
+    pptx_file.write_bytes(attach_notes(pptx_file.read_bytes(),
+        [{'page_id': 'p1', 'notes': page.get('speaker_notes', '')}]))
     svg_file = work / 'page.svg'
     svg_file.write_text('<svg viewBox="0 0 10 10"/>')
     report_file = work / 'readback.json'
@@ -41,30 +114,66 @@ def _deck(tmp_path: Path) -> tuple[Path, Store]:
     bumped['pages'][0]['svg'] = adopt_artifact(store, svg_file, 'svg', page_id='p1')
     bumped['pages'][0]['ppt_preview'] = adopt_artifact(store, svg_file, 'ppt_preview', page_id='p1')
     store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id='attach-pptx')
+    _authorize_delivery(store)
+    assert store.load_document()['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     return project, Store(project)
 
 
-def professional_dependencies(store, document):
+def qualify_synthetic_manuscript(store):
+    """L1 host_self fidelity review via the actual dispatch/claim/accept API."""
+    from deck_master import content_review
+    project = store.project_root
+    dispatched = content_review.dispatch_preproduction_review(project)
+    assert dispatched['status'] == 'review_dispatched'
+    assert dispatched['requirement'] == 'fidelity_only'
+    task = dispatched['task']
+    service.task_start(project, task_id=task['task_id'],
+        execution_ref='synthetic-l1-fidelity-host',
+        supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
+    document = store.load_document()
+    subjects = [document['content_plan'], *[entry['page'] for entry in document['pages']]]
+    deps = [{'kind': 'content', 'identity': 'content_plan',
+             'sha256': document['content_plan']['sha256']}]
+    deps.extend({'kind': 'content', 'identity': 'page:' + entry['page_id'],
+                 'sha256': entry['page']['sha256']} for entry in document['pages'])
+    evidence = store.put_json_object({'scenario': 'L1 synthetic host_self fidelity only'})
+    reviews = [{'schema_version': 'deck_review.v2', 'review_id': 'l1-fidelity-' + kind,
+        'kind': kind, 'review_stage': 'preproduction', 'status': 'pass',
+        'subjects': subjects, 'dependencies': deps,
+        'reviewer': {'type': 'host_self', 'id': 'synthetic-l1-fidelity-host',
+            'execution_ref': 'synthetic-l1-fidelity-host', 'independence_confirmed': False,
+            'identity_receipt': None, 'evidence_ref': evidence, 'assurance': 'host_attested'},
+        'observations': ['L1 synthetic fidelity check, no independent or human review.'],
+        'findings': [], 'created_at': '2026-10-15T00:00:00Z', 'replaces': None}
+        for kind in content_review.required_units(store, document)]
+    result = service.accept_result(project,
+        **{key: task[key] for key in ('task_id', 'operation_id', 'produced_against')},
+        result_payload={'kind': 'review', 'files': [], 'reviews': reviews})
+    assert result['status'] == 'accepted'
+    assert content_review.qualify_for_production(store, store.load_document())['allowed']
+
+
+def professional_dependencies(store, document, *, subject=None):
     """The runtime minimum dependency set for a professional review: the
-    current PPTX artifact plus every page content digest. An empty array is
+    exact selected public PPTX file plus every page content digest. An empty array is
     never a complete dependency list (AC-P02)."""
     deps = [{'kind': 'content', 'identity': f"page:{entry['page_id']}",
              'sha256': entry['page']['sha256']}
             for entry in document['pages'] if entry.get('page')]
     pptx_ref = document['outputs'].get('pptx')
     if pptx_ref:
-        deps.append({'kind': 'artifact', 'identity': 'pptx',
-                     'sha256': store.read_object_json(pptx_ref)['file']['sha256']})
+        selected = subject or delivery_eligibility.selected_output(store, document)['subject_ref']
+        deps.append({'kind': 'artifact', 'identity': 'pptx', 'sha256': selected['sha256']})
     return deps
 
 
 def human_professional_reviewer(document, *, event_id='evt-human-review-1',
                                 reviewer_id='reviewer-chen',
-                                adapter_id='synthetic-unit-fixture'):
+                                adapter_id='synthetic-unit-fixture', subjects=None):
     """Controlled L1 receipt fixture (CONTRACTS §12.1): proves the predicate
     combination only. This is a synthetic/unit fixture and must never be
     presented as a real human having reviewed real files."""
-    subjects = [document['outputs']['pptx']] + [
+    subjects = subjects if subjects is not None else [document['outputs']['pptx']] + [
         entry['page'] for entry in document['pages'] if entry.get('page')]
     return {
         'type': 'human_external', 'id': reviewer_id, 'execution_ref': None,
@@ -80,14 +189,20 @@ def human_professional_reviewer(document, *, event_id='evt-human-review-1',
 def _review(store, document, kind, status, *, seed, findings=(), reviewer=None,
             observations=None, dependencies=None, subjects=None):
     """Callers state who reviewed and what they executed. A seed only names the
-    record: seed="human" on a host_self record was the old false positive and
+    explicit L1 synthetic record: seed="human" on a host_self record was the old false positive and
     is gone (T01). Defaults name an explicit host_self reviewer."""
     page_ref = document['pages'][0]['page']
+    subject = projection_subject(store, document) if kind == 'professional_use' else None
+    selected_subjects = list(subjects if subjects is not None else ([subject, page_ref] if subject else [document['outputs']['pptx'], page_ref]))
+    reviewer = copy.deepcopy(reviewer)
+    if reviewer and reviewer.get('identity_receipt') and subjects is None:
+        reviewer['identity_receipt']['subjects'] = selected_subjects
     review = {
         'schema_version': 'deck_review.v1', 'review_id': f'rv-{seed}', 'kind': kind, 'status': status,
-        'subjects': list(subjects if subjects is not None else [document['outputs']['pptx'], page_ref]),
+        'subjects': selected_subjects,
         'dependencies': list(dependencies if dependencies is not None
-                             else professional_dependencies(store, document)),
+                             else professional_dependencies(store, document, subject=subject or
+                                 store.read_object_json(document['outputs']['pptx'])['file'])),
         'reviewer': reviewer or {'type': 'host_self', 'id': f'host-{seed}', 'execution_ref': None,
                                  'independence_confirmed': False},
         'observations': list(observations if observations is not None else ['实际检查记录']),
@@ -107,8 +222,8 @@ def _must_fix():
              'actual': '无', 'evidence': [], 'resolution': 'open'}]
 
 
-def _passing_deck(tmp_path):
-    project, store = _deck(tmp_path)
+def _passing_deck(tmp_path, *, notes=''):
+    project, store = _deck(tmp_path, notes=notes)
     for kind in REQUIRED:
         _review(store, store.load_document(), kind, 'pass', seed=f'pass-{kind}')
     return project, store
@@ -133,9 +248,8 @@ def test_review_export_of_failing_deck_marks_unresolved(tmp_path):
     assert sorted(report['unresolved']['missing_dimensions']) == sorted(
         f'{kind}:p1' for kind in REQUIRED if kind != 'conversion')
     # Exported bytes are the real current objects.
-    pptx = store.read_object_json(store.load_document()['outputs']['pptx'])
-    from deck_master.export_sanitize import pptx as clean_pptx
-    assert (tmp_path / 'review-out' / 'deck.pptx').read_bytes() == clean_pptx(store.read_object_bytes(pptx['file']), 'deck.pptx')
+    selected = delivery_eligibility.selected_output(store, store.load_document())
+    assert sha256_bytes((tmp_path / 'review-out' / 'deck.pptx').read_bytes()) == selected['file_sha256']
     assert report['editability'] == 'editable_shapes_and_text'
     assert report['evidence_level'] == 'engineering'
 
@@ -181,7 +295,7 @@ def test_adopting_an_existing_svg_candidate_invalidates_delivery_with_named_gaps
     """The audit's before/after pair: a passing deck exports, then adoption refuses."""
     import uuid as uuid_mod
     from deck_master import candidates as candidates_mod, exports
-    from test_candidates import accept, dispatch, plan as plan_adoption, start
+    from test_candidates import accept, dispatch, plan as plan_adoption
     project, store = _passing_deck(tmp_path)
     # The candidate/changes machinery works on explicit workbench.v3 projects, and
     # an SVG trial needs the current original image to exist.
@@ -192,11 +306,13 @@ def test_adopting_an_existing_svg_candidate_invalidates_delivery_with_named_gaps
     image_file = work / 'page.png'; Image.new('RGB', (960, 540), 'white').save(image_file)
     bumped = bump_revision(document, {'operation_id': 'workbench-basis', 'kind': 'task_update',
                                       'description': 'workbench basis', 'read_set': []})
-    bumped['compatibility'] = {'project_format': 'workbench.v3', 'minimum_writer': 'workbench-quality.v1'}
     bumped['pages'][0]['blueprint'] = adopt_artifact(store, image_file, 'blueprint', page_id='p1')
     store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id='workbench-basis')
     assert exports.create(project, purpose='delivery')['export_id']
-    task = dispatch(store, 'p1'); start(store, task)
+    qualify_synthetic_manuscript(store)
+    task = dispatch(store, 'p1')
+    service.task_start(project, task_id=task['task_id'], execution_ref='synthetic-l1-candidate-host',
+        supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
     candidate_id = accept(store, task)['candidate_ids'][0]
     value = plan_adoption(store, [candidate_id])
     candidates_mod.adopt(store.project_root, input=value, base_revision=value['base_revision'],
@@ -272,11 +388,12 @@ def test_export_reports_unknown_editability_for_unverified_legacy_pptx(tmp_path)
 
 def _set_policy(store, **updates):
     document = store.load_document()
-    bumped = bump_revision(document, {'operation_id': 'policy-' + '-'.join(updates), 'kind': 'policy_update',
-                                      'description': 'policy', 'read_set': []})
+    operation = 'synthetic-policy-' + uuid.uuid4().hex
+    bumped = bump_revision(document, {'operation_id': operation, 'kind': 'policy_update',
+                                      'description': 'Explicit L1 synthetic policy change', 'read_set': []})
     bumped['policy'] = {**bumped['policy'], **updates}
-    store.commit_change(base_revision=document['revision_id'], document=bumped,
-                        operation_id='policy-' + '-'.join(updates))
+    store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id=operation)
+    _authorize_delivery(store)
 
 
 def test_delivery_honors_professional_review_required_policy(tmp_path, synthetic_human_adapter):
@@ -286,14 +403,15 @@ def test_delivery_honors_professional_review_required_policy(tmp_path, synthetic
     # stay blocked (AC-P02). Only a receipt-carrying human review unlocks it.
     project, store = _passing_deck(tmp_path)
     _set_policy(store, professional_review_required_for_delivery=True)
-    with pytest.raises(StoreError, match='professional or human review'):
+    with pytest.raises(StoreError, match='verified human professional review'):
         export_project(project, output_dir=tmp_path / 'needs-human', purpose='delivery')
     assert not (tmp_path / 'needs-human').exists()
 
     _review(store, store.load_document(), 'professional_use', 'pass', seed='self-named-human')
-    with pytest.raises(StoreError, match='professional or human review') as failure:
+    with pytest.raises(StoreError, match='verified human professional review') as failure:
         export_project(project, output_dir=tmp_path / 'self-named', purpose='delivery')
-    reasons = {gap['reason'] for gap in failure.value.payload()['error']['gaps']}
+    assert 'professional_review_required' in failure.value.payload()['error']['reason_codes']
+    reasons = set(selected_professional_policy(store)['gap_reasons'])
     assert 'reviewer_not_human' in reasons
     assert not (tmp_path / 'self-named').exists()
 
@@ -314,7 +432,7 @@ def test_delivery_honors_professional_review_required_policy(tmp_path, synthetic
     _set_policy(store2, professional_review_required_for_delivery=True)
     _review(store2, store2.load_document(), 'professional_use', 'fail', seed='recorded-fail',
             findings=_must_fix())
-    with pytest.raises(StoreError, match='delivery requires every required check'):
+    with pytest.raises(StoreError, match='verified human professional review'):
         export_project(project2, output_dir=tmp_path / 'second' / 'fail-human', purpose='delivery')
     assert not (tmp_path / 'second' / 'fail-human').exists()
 

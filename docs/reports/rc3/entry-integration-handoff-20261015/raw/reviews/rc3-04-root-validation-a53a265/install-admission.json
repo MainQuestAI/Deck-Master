@@ -1,0 +1,14 @@
+{
+  "source_sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+  "source_tree": "31cca075ac76877908e04f030f0c4e815d3a6268",
+  "package_version": "1.0.0rc3",
+  "manifest_sha256": "a338a72fb577890e77fbf6f5b0f25663f551b85d77eb04f85706a9c59c59368e",
+  "wheel_sha256": "01177541b9a1bc38aefb50fd6c8e8499b6bae4a6afe59b7b467693fc1bd740fb",
+  "sdist_sha256": "37ab2d030bc207689534e3d039629600f56a0250c0da4d07d02decbdc035f01b",
+  "actual_installed_python": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/bin/python",
+  "actual_module": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "canonical_files": 270,
+  "generated_files": 1,
+  "strict_byte_report_sha256": "9209595b80d313436dd9bbd98443466f8e0da5668e55517271db907afc3bcb4c",
+  "scope": "Actual fixed candidate bytes only; no HOME activation; reviews and root broad regression ongoing"
+}

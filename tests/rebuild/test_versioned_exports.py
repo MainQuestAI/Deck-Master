@@ -10,7 +10,7 @@ from PIL import Image, PngImagePlugin
 from pptx import Presentation
 import pytest
 
-from deck_master import exports, service
+from deck_master import collaboration, delivery_eligibility, eligibility, exports, service
 from deck_master.export_sanitize import png, svg, pptx
 from deck_master.models import bump_revision, sha256_bytes
 from deck_master.operations import OperationError
@@ -19,7 +19,7 @@ from deck_master.store import Store
 CANARY = "/Users/private-customer/private-prompt-CANARY"
 
 
-def project(tmp_path):
+def project(tmp_path, *, delivery=False):
     root = tmp_path / "project"
     service.create(
         root,
@@ -38,7 +38,21 @@ def project(tmp_path):
             ]
         },
     )
-    return root, Store(root)
+    store=Store(root)
+    if delivery:
+        from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
+        settle_fidelity_review(root,page_ids=['p1'],execution_ref='L1-export-fidelity',
+            scenario='Fixed one-page manuscript for the explicit delivery-negative test')
+        scope={**store.load_document()['collaboration']['request']['scope'],'layers':['output']}
+        evidence=evidence_for(root,text='L1: attempt this one-page delivery only when actual engineering and current policy allow; no human quality claim.',
+            locator='L1:versioned-export:delivery-negative')
+        authorize_scope(root,actions=['export.delivery','delivery.historical'],scope=scope,
+            max_external_calls=0,max_candidate_count=0,adoption_policy='within_scope',evidence=evidence)
+        collaboration.record_decision(root,input={'topic':'delivery_acceptance','scope':scope,
+            'subject_refs':[],'value':'L1 scoped delivery only after required checks',
+            'disposition':'accepted','authority_mode':'direct_user','instruction_evidence':evidence},
+            base_revision=store.current_revision_id(),operation_id='L1-versioned-delivery-consent')
+    return root, store
 
 
 def test_png_metadata_removed_pixels_unchanged():
@@ -66,7 +80,7 @@ def test_svg_metadata_removed_links_and_gradients_preserved():
         svg(b'<svg><rect fill="url(https://example.org/private)"/></svg>', "image")
 
 
-def presentation():
+def presentation(*, notes=CANARY):
     deck = Presentation()
     slide = deck.slides.add_slide(deck.slide_layouts[6])
     box = slide.shapes.add_textbox(100, 100, 1000000, 1000000)
@@ -75,7 +89,7 @@ def presentation():
     run.hyperlink.address = "https://example.org/guide"
     box._element.xpath(".//p:cNvPr")[0].set("descr", "PRIVATE GENERATION PROMPT CANARY")
     deck.core_properties.author = CANARY
-    slide.notes_slide.notes_text_frame.text = CANARY
+    slide.notes_slide.notes_text_frame.text = notes
     stream = io.BytesIO()
     deck.save(stream)
     return stream.getvalue()
@@ -145,11 +159,11 @@ def test_download_whitelist_cross_project_and_tampering(tmp_path):
 
 
 def test_delivery_blocks_no_ppt_with_structured_gaps(tmp_path):
-    root, _ = project(tmp_path)
+    root, _ = project(tmp_path, delivery=True)
     with pytest.raises(exports.ExportError) as failure:
         exports.create(root, purpose="delivery")
     assert failure.value.exit_code == 3 and failure.value.http_status == 409
-    assert any(g["layer"] == "ppt" for g in failure.value.payload()["error"]["gaps"])
+    assert any(g['layer']=='ppt' for g in failure.value.payload()['error']['gaps'])
 
 
 def test_restore_plan_cancel_conflict_and_atomic_retry(tmp_path, monkeypatch):
@@ -188,14 +202,14 @@ def test_export_cli_and_same_origin_download_routes(tmp_path, capsys):
     from deck_master.web import WorkbenchServer
     from test_web import _get, _get_json, _post_json, _session_token
 
-    root, store = project(tmp_path)
+    root, store = project(tmp_path, delivery=True)
     revision = store.current_revision_id()
     assert cli.main(["export", "--project", str(root), "--revision", revision, "--purpose", "review", "--out", str(tmp_path / "cli")]) == 0
     result = json.loads(capsys.readouterr().out)
     assert result["revision_id"] == revision
     assert cli.main(["export", "--project", str(root), "--purpose", "delivery", "--out", str(tmp_path / "delivery")]) == 3
     error = json.loads(capsys.readouterr().err)
-    assert error["error"]["code"] == "delivery_blocked"
+    assert error['error']['code']=='delivery_blocked'
     instance = WorkbenchServer(root)
     url = instance.start().rstrip("/")
     try:
@@ -209,7 +223,7 @@ def test_export_cli_and_same_origin_download_routes(tmp_path, capsys):
         assert _get_json(url + "/api/exports/" + result["export_id"] + "/files/unknown")[0] == 404
         assert _post_json(url + "/api/exports", {"output_dir": "/tmp/escape"}, token=token, origin=url)[0] == 422
         status, error = _post_json(url + "/api/exports", {"purpose": "delivery"}, token=token, origin=url)
-        assert status == 409 and error["error"]["code"] == "delivery_blocked"
+        assert status == 409 and error['error']['code']=='delivery_blocked'
         status, plan = _post_json(
             url + "/api/history/plan-restore", {"revision_id": revision, "base_revision": revision}, token=token, origin=url
         )
@@ -253,7 +267,8 @@ def test_public_copies_clean_immutable_artifacts_and_partial_failure(tmp_path):
 
     root, store = project(tmp_path)
     doc = store.load_document()
-    raw = presentation()
+    from deck_master.compiler.native import attach_notes
+    raw = attach_notes(presentation(notes=''), [{'page_id':'p1','notes':''}])
     deck = tmp_path / "deck.pptx"
     deck.write_bytes(raw)
     image = tmp_path / "blueprint.png"
@@ -279,6 +294,8 @@ def test_public_copies_clean_immutable_artifacts_and_partial_failure(tmp_path):
         copy.deepcopy(doc), {"operation_id": "private-visible", "kind": "task_update", "description": "private visible", "read_set": []}
     )
     changed["pages"][0]["page"] = store.put_json_object(page)
+    from deck_master.content_ops import refresh_plan_links
+    refresh_plan_links(store, doc, changed, 'private-visible')
     store.commit_change(base_revision=doc["revision_id"], document=changed, operation_id="private-visible")
     export_id = "export-" + str(uuid.uuid4())
     with pytest.raises(OperationError, match="local path"):
@@ -339,15 +356,27 @@ def test_historical_delivery_uses_its_checks_and_input_alignment(tmp_path):
 
     root, store = _passing_deck(tmp_path)
     good = store.load_document()
+    # A later management-only revision keeps the selected artifact's factual
+    # inputs. Its explicit historical delivery still passes the real checks.
+    later=bump_revision(copy.deepcopy(good),{'operation_id':'unrelated-export-progress','kind':'task_update',
+        'description':'Synthetic management progress only','read_set':[]})
+    store.commit_change(base_revision=good['revision_id'],document=later,operation_id='unrelated-export-progress')
+    fixed_delivery=exports.create(root,purpose='delivery',revision=good['revision_id'])
+    assert fixed_delivery['revision_id']==good['revision_id']
+    checked=json.loads(exports.download(root,export_id=fixed_delivery['export_id'],filename='delivery.json')[0])
+    assert checked['input_alignment']=='current' and checked['review_status']=='pass'
     service.inputs_update(
         root,
         patch={"reason": "new audience", "task_patch": {"audience": "new audience"}},
-        base_revision=good["revision_id"],
+        base_revision=store.current_revision_id(),
         operation_id="new-input",
     )
     with pytest.raises(exports.ExportInputPending):
         exports.create(root, purpose="delivery")
-    historical = exports.create(root, purpose="delivery", revision=good["revision_id"])
+    with pytest.raises(eligibility.EligibilityBlocked) as historical_gap:
+        exports.create(root, purpose='delivery', revision=good['revision_id'])
+    assert 'basis_stale' in historical_gap.value.decision['reason_codes']
+    historical = exports.create(root, purpose="review", revision=good["revision_id"])
     assert historical["revision_id"] == good["revision_id"]
     report = json.loads(exports.download(root, export_id=historical["export_id"], filename="delivery.json")[0])
     assert report["input_alignment"] == "current" and report["review_status"] == "pass"
@@ -370,9 +399,10 @@ def test_stale_professional_review_cannot_satisfy_delivery_policy(tmp_path, synt
     changed["reviews"][-1] = store.put_json_object(record)
     store.commit_change(base_revision=doc["revision_id"], document=changed, operation_id="stale-professional")
     assert exports.describe(root)["check_summary"]["status"] == "pass"
-    with pytest.raises(exports.ExportError, match="professional or human review") as failure:
+    with pytest.raises(eligibility.EligibilityBlocked, match="verified human professional review") as failure:
         exports.create(root, purpose="delivery")
-    reasons = {gap["reason"] for gap in failure.value.payload()["error"]["gaps"]}
+    assert 'professional_review_required' in failure.value.decision['reason_codes']
+    reasons = set(failure.value.decision['delivery']['professional']['gap_reasons'])
     assert "required_dependencies_incomplete" in reasons, reasons
 
 

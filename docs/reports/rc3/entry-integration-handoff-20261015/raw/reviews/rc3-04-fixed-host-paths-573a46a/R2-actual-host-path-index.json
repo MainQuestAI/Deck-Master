@@ -1,0 +1,137 @@
+{
+  "schema_version": "rc3_fixed_installed_host_paths.v2",
+  "source_sha": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+  "source_tree": "135769e0b16d6397baa51b5c098425b9a80eb9ff",
+  "candidate": "573a46a85bf9-13e3d2708abf",
+  "manifest_sha256": "fe17cde02538dece2cd311ec7c103f387ca2471b5b8e05945c5ec043f4a3eaae",
+  "wheel_sha256": "13e3d2708abf0e18ff387c7a74ca96bf05bf187b050a308f9b1f145232bbe9e0",
+  "status": "15_ACTUAL_RESPONSIBILITIES_RETURNED__1_NEW_F9_BLOCKED",
+  "actual_host_count": 1,
+  "independent_review_execution_count": 0,
+  "expected_paths": 16,
+  "actual_responsibility_outputs": 15,
+  "product_blocked": 1,
+  "results": [
+    {
+      "case_id": "deck-master--named",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/actual-application-record.json",
+      "record_sha256": "e1f38e1fef42576368cb514048da1ea8780f3f9dc6109566d0bbf1b2ce2b78ca"
+    },
+    {
+      "case_id": "deck-master--natural",
+      "status": "BLOCKED",
+      "global_finding": "F9",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-actual-refusal.json",
+      "record_sha256": "47ce7b6878dea90f09b182712d59d64061e544755276fc25db3120d9dd151eb7"
+    },
+    {
+      "case_id": "deck-master--master",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/actual-application-record.json",
+      "record_sha256": "9acddd855e1dd4de6a17dd736bd1ea4608c64b39e6b7adcb6d8294a9020776ff"
+    },
+    {
+      "case_id": "deck-master--recovery",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/actual-application-record.json",
+      "record_sha256": "f7787a68a44d38c48d8cc95c0c3a57ebf8d83ffa5f6f3c676e7d8bac6154ca57"
+    },
+    {
+      "case_id": "deck-content--named",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/actual-application-record.json",
+      "record_sha256": "6703ea70230360792a775d4e4c3a0b29682a52a3e813239bfa83730eb6a1f706"
+    },
+    {
+      "case_id": "deck-content--natural",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/actual-application-record.json",
+      "record_sha256": "10699f63eb5528cf6d320e5a7702ab98da281bc9cd0552f4c57e9cd51b246ecb"
+    },
+    {
+      "case_id": "deck-content--master",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/actual-application-record.json",
+      "record_sha256": "79cdf8e157d223b48367cf6564f121cf6cae557384af1fb243fb607be19e36ce"
+    },
+    {
+      "case_id": "deck-content--recovery",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/actual-application-record.json",
+      "record_sha256": "947a1eb1373f12a83af01056a5484b4f8c9a83077f19fb5b4f06601e613c9e0e"
+    },
+    {
+      "case_id": "deck-design--named",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/actual-application-record.json",
+      "record_sha256": "0e1fdd6d8d8d1469981337deeeb5f8154641c0ba4dcd134d8897ae24204afa0b"
+    },
+    {
+      "case_id": "deck-design--natural",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/actual-application-record.json",
+      "record_sha256": "28ccc396c1e7203354a982e294a9e4c897cfd832d49ed17dcf3980ac75c2e7f6"
+    },
+    {
+      "case_id": "deck-design--master",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/actual-application-record.json",
+      "record_sha256": "31b25fa069126bce5918df281ee6f53cee9e030360e3c7f1e16b8a17a3a37aad"
+    },
+    {
+      "case_id": "deck-design--recovery",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/actual-application-record.json",
+      "record_sha256": "28220c2f3ca4303c900894d750ee629d18f961a946c90024cdb246c3a228cdb9"
+    },
+    {
+      "case_id": "deck-review--named",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-application-record.json",
+      "record_sha256": "71594ec940e9122316a573f0728fc4442e3ddec405e0823cfccebfff1b990da0"
+    },
+    {
+      "case_id": "deck-review--natural",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-application-record.json",
+      "record_sha256": "f41e821304a27a630e4e7c423a3a6b9249489c2ede30360f65410d4aa0e639e8"
+    },
+    {
+      "case_id": "deck-review--master",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-application-record.json",
+      "record_sha256": "907c5da234b37e696ddcf11356ef6a4f6ccf4af2a0737dd417ee8f0ed9521f90"
+    },
+    {
+      "case_id": "deck-review--recovery",
+      "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+      "record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-application-record.json",
+      "record_sha256": "39225e85ef56e7791c7760081677c7b41e4dd99d79fc3211364697a4317ae043"
+    }
+  ],
+  "original_R1_evidence": "Frozen unchanged at ../rc3-04-fixed-host-paths-7a8578b; no historical status rewritten.",
+  "original_findings": {
+    "F7": "CLOSED_FOR_EXACT_ORIGINAL_P2_NATURAL_REQUEST: actual design application/proposal returned; 15 routing controls separately PASS",
+    "F8": "CLOSED_FOR_ACTUAL_OLD03_NEW_PROJECT_LIFECYCLE: actual installed migration/rollback/rollforward speech completes",
+    "F9": "NEW_BLOCKED: original Master coordination/planning natural request incorrectly routes Content; no reword/controller bypass."
+  },
+  "installation_after": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/identity-after.json",
+    "sha256": "499cf7c0255065e697da68c4ce4f07d23643faf547a0c5785382b03493561050"
+  },
+  "fees": {
+    "actual_external_image_provider_calls": 0,
+    "actual_model_usage_tokens_price": "not_reported",
+    "old_ledger_unknown": "L1 controlled software state; no provider invocation or real charge asserted"
+  },
+  "retained_harness_failures": [
+    "design/review original combined application scripts reread a resumed-current filename already written by the explicit resume; exclusive-create raised FileExistsError before recovery output. Original stdout/stderr preserved; corrected new recovery-only script used a new read label and actually returned outputs. No product semantics patched."
+  ],
+  "limits": [
+    "15 outputs are current actual same-Host method applications, not 15 independent models.",
+    "No E1 blinded/fair-effect evidence, real provider/native image, human/listener/professional or desktop acceptance.",
+    "Full16/card PASS is not claimed because F9 remains BLOCKED.",
+    "No source/package/test/Git edits in this fixed phase. Only private projects/scripts/evidence/prefix/registry/Host root."
+  ]
+}

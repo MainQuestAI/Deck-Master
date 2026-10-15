@@ -1,0 +1,462 @@
+{
+  "schema_version": "rc3_studio_r3_live_handoff.v1",
+  "source_head": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+  "status": "C implementation and focused diagnostic verification complete; stopped for Owner integration",
+  "evidence_level": "L1_SYNTHETIC_REAL_HTTP_CHROMIUM",
+  "not_fixed_snapshot": true,
+  "python": "/workspace/work/rc3/venv-rc3-04/bin/python",
+  "package_origin": "/workspace/work/rc3/cards/rc3-04/src/deck_master/__init__.py",
+  "browser": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "environment": {
+    "PIP_NO_INDEX": "1",
+    "PIP_FIND_LINKS": "/workspace/work/rc3/wheelhouse",
+    "TMPDIR": "/workspace/work/rc3/t04",
+    "per_run_unique_basetemp": true
+  },
+  "owned_domain_files": [
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/src/deck_master/resources/static/v2/overview.js",
+      "sha256": "17c89c990aacb32b36547aac9db10bdf3ef5e2eca8d5207c35edef4b3ba2e96a",
+      "bytes": 32243
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/src/deck_master/resources/static/v2/launcher-ui.js",
+      "sha256": "efd01184b06bcaefb3fe2d83725590ca445dd1b3499d20dd0ac02ceadc717bdb",
+      "bytes": 14419
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/examples/workbench/w10_pressure.py",
+      "sha256": "e627ec24ffc81d0c85a8098bde4f4b4ca79eea58a50de6ffc2c18813af73f902",
+      "bytes": 22945
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_page_detail.py",
+      "sha256": "330ac25e06cfd25019998576e643285687a88c7335076c2e8c772c2ae9468fbf",
+      "bytes": 17120
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_run_desk.py",
+      "sha256": "baeb7e74bef176861207caedbd09f918a4dc07d030a9cb0921a171f4683b127d",
+      "bytes": 13070
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_studio_delivery_browser.py",
+      "sha256": "6b97f6dcf939d12a4e60d32f54d4b53e021e17bfc5353ae0494a4fd121b3827e",
+      "bytes": 14078
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_ui_journal.py",
+      "sha256": "71da4a5ffaa5a593b6a866db5fce935c83494a5d29c1dfffb9e44d648db5cfcf",
+      "bytes": 16437
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_ui_state_clear.py",
+      "sha256": "e995ec61325e504b7edd1aa3e413f464298c4ebe9dda2330ce6989989f31b8d5",
+      "bytes": 23601
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_usability_history.py",
+      "sha256": "f6dd44e02dffc7f97b4b1dfe8a63db35aea00c94dd0de95c91349bcd1d1c9baa",
+      "bytes": 2340
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_usability_pressure.py",
+      "sha256": "16bb7a56cbe65f0b5b6022472f43be6f4e3f88a3e53423e3adf28348446dc367",
+      "bytes": 2205
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_versioned_exports.py",
+      "sha256": "b1fbef2e68b7f9cd414c25be53790b5c750e0fc88109c28e21a1c43fc229fa67",
+      "bytes": 22848
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_workbench_actions.py",
+      "sha256": "252c0f0fb575c76a074db1685839b78f90779c3a6941ab673e354df88ed91c74",
+      "bytes": 25415
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_workbench_e2e.py",
+      "sha256": "c9371e4ff29a180ba78684a9eaeab0c2d58c8171c520e568af27fd1a63896bc5",
+      "bytes": 15809
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_workbench_operations.py",
+      "sha256": "9b7fe7993dace08e5f724e3dcf3323b77e7ddfdc562a18149c073f4928b23c36",
+      "bytes": 10151
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_workbench_reads.py",
+      "sha256": "7bf326f17abc1b276fff2205c54e08eed13fa2c828cc876e4cba2a68e9e157f0",
+      "bytes": 22595
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_web.py",
+      "sha256": "8d04a1aa9e68bbe2021040ee9b5f42125f0352582d21aaa953d43e5c8a92f28d",
+      "bytes": 18563
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_rc3_studio_control_browser.py",
+      "sha256": "4903d5220e98116b0dad0779d3ee379766a4ba54ed7524cbc0d581f0f65d404c",
+      "bytes": 28567
+    },
+    {
+      "path": "/workspace/work/rc3/cards/rc3-04/tests/rebuild/test_rc3_studio_intake_browser.py",
+      "sha256": "b4a28c3e5df479fb3082ee2a89ad0e02184f11f9bcebf0ac9101a1e78addc54e",
+      "bytes": 18693
+    }
+  ],
+  "unchanged_domain_files": [
+    "tests/rebuild/test_usability_pressure.py",
+    "tests/rebuild/test_web.py"
+  ],
+  "owner_core_dependency": {
+    "path": "/workspace/work/rc3/cards/rc3-04/src/deck_master/run_desk.py",
+    "sha256": "dabcee691af0d8f5561ba10a8c243b4cc4bc88b9397009a2d747e49d9236803b",
+    "bytes": 17949
+  },
+  "fixture_changes": [
+    "Current prepared-prompt tests explicitly qualify actual manuscript then grant only named blueprint preparation, one call/candidate ceiling; no call executes.",
+    "Run desk actually reviews all 3 Pages in the original full request, then starts a true p01/p02-only edit request and grants only needed bounded production actions on those 2 Pages.",
+    "Current Task claims declare actual Task protocol/capabilities. Only the explicit pressure helper claim line changes in examples/workbench/w10_pressure.py.",
+    "Old template and writer downgrade tests use explicitly stored historical facts, never dispatch new production on old projects. Modern writer pin and original strict historical StoreError are both verified.",
+    "T05 reader uses canonical full manuscript intake; only its feedback execution case has a scoped zero-call grant, actual claim and exact complete atom mapping.",
+    "History locates real changed Page revision separately from subsequent actual fidelity review commits.",
+    "Versioned export negative has explicit delivery consent/scope to reach original engineering no-PPT refusal (unchanged ExportError/CLI3). PPT stable identity/empty notes are truthful; pure metadata sanitizer private-note coverage stays.",
+    "Historical delivery passes under unchanged inputs with later management progress; current changed audience refuses old delivery, while readable selected old checks remain. Stale professional review remains refused by current shared predicate."
+  ],
+  "ui_changes": [
+    "O1: current completed content request gets actual requested-content panel. Unrequested production gaps remain factual in matrix; other actual pending/recovery actions are retained. A later active request is not labelled completed after explicit reload.",
+    "O2: only exact safe known draft/page_order hard-limit message with positive safe integer maps to Chinese page count/max recovery text. Arbitrary exception strings/paths/identities are never passed through.",
+    "Owner fixed modern input workorder whitelist summary after the original browser exposed UUID/protocol prose; C preserves raw Task/user reason and unknown prose fallback regression."
+  ],
+  "results": {
+    "unit_domain": "185 distinct unit cases have passing evidence: final-domain-13 has 181 passes and 4 startup failures; stable fresh-runtime-recheck-16 has those same 4 passes. These are separate runs, not an invented single 185-pass execution.",
+    "original_actual_browser": "Same browser test passes in 14 and again 17 after artifact destination edit; count once.",
+    "ui_observations": "O1/O2 real browser 08 has 2 passes.",
+    "historical_export_strengthening": "Case 15 verifies the latest additional positive and negative assertions after the 13 run had started."
+  },
+  "concurrent_build_identity_confound": {
+    "owner_report": "Owner explicitly reported final run_desk C6 source patch during startup of run13 and then froze all product source for run16.",
+    "observed": "Four detached runtime startup URL failures in 13; same four fresh stable cases pass in 16. Child log files inspected were empty.",
+    "inference": "Parent interpreter captures BUILD_ID at import; child launched after product source change can have a different build identity. Actual expected/observed BUILD_ID pair was not captured, so the exact mismatch is recorded as an inference from timing and fresh rerun, not fabricated proven values.",
+    "no_relaxation": "No health-identity check, CAS, permission, negative assertion, geometry tolerance or product gate was relaxed."
+  },
+  "runs": [
+    {
+      "name": "c-r3-first-domain-01",
+      "result": "43 failed, 141 passed, 1 deselected in 48.42s",
+      "interpretation": "Original thirteen-file domain failures, preserved before fixture edits.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-first-domain-01.log",
+        "sha256": "ce966f3be3bcfb8e24356a2d2cb93bdf15bde0961f4ac2e5b55d9a23c5664933",
+        "bytes": 165479
+      }
+    },
+    {
+      "name": "c-r3-first-ux-02",
+      "result": "2 failed, 30 deselected in 13.72s",
+      "interpretation": "Original actual-browser O1 completed overview and O2 hard-limit reason failures.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-first-ux-02.log",
+        "sha256": "102e885afb4c4b9f12f6732890a058d63783534fc47851bd9c6ff00157efd0af",
+        "bytes": 17339
+      }
+    },
+    {
+      "name": "c-r3-migrate-03",
+      "result": "19 failed, 133 passed in 45.96s",
+      "interpretation": "Partial fixture migration; incomplete manuscript fidelity and historical dispatch assumptions remained.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-migrate-03.log",
+        "sha256": "bd24cda91da34d8af8222849bc327b027b715091237540aac9ea018d867f54c1",
+        "bytes": 42921
+      }
+    },
+    {
+      "name": "c-r3-ux-04",
+      "result": "1 failed, 3 passed, 28 deselected in 14.07s",
+      "interpretation": "Safe hard-limit reason and existing completion cases passed. Two-window inactive-page poll did not refresh in 5s.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-ux-04.log",
+        "sha256": "6443bc61dfa59bb77b5de17e46ff1cded1b88f7fcf77d0e09bc4bb879a33a1fe",
+        "bytes": 3388
+      }
+    },
+    {
+      "name": "c-r3-residual-05",
+      "result": "3 failed, 44 passed, 1 deselected in 14.88s",
+      "interpretation": "Remaining writer floor, legacy template dispatch and missing visible-atom mapping fixtures.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-residual-05.log",
+        "sha256": "f6a3bb10f9e43def36ef94b85d111f00671c7dddc0825ba687df2c1ef4c7bd69",
+        "bytes": 51184
+      }
+    },
+    {
+      "name": "c-r3-ux-06",
+      "result": "1 failed, 1 passed, 30 deselected in 9.91s",
+      "interpretation": "Headless bring_to_front did not trigger normal focus refresh; no polling tolerance changed.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-ux-06.log",
+        "sha256": "faf53aa76dc2e4ac0ae9e37dc4845b397c0e1541595195052648834ddf851711",
+        "bytes": 3417
+      }
+    },
+    {
+      "name": "c-r3-residual-07",
+      "result": "4 failed, 16 passed in 3.17s",
+      "interpretation": "Fresh mapping had an obsolete removed-atom link; export assertions initially confused collaboration vs engineering rejection; imported PPT had nonempty old private notes.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-residual-07.log",
+        "sha256": "fbd95ec6d26151e22bef87326cea0956d77454f751260b34008f8bb90b202f85",
+        "bytes": 54878
+      }
+    },
+    {
+      "name": "c-r3-ux-08",
+      "result": "2 passed, 30 deselected in 4.78s",
+      "interpretation": "Actual O1/O2, including explicit user reload of later in_progress request; no auto-focus performance claim.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-ux-08.log",
+        "sha256": "c4bb3091c39ce0468281864939036361996c1fbd694d8eb2668de827ff78164c",
+        "bytes": 113
+      }
+    },
+    {
+      "name": "c-r3-studio-delivery-09",
+      "result": "1 failed in 0.98s",
+      "interpretation": "Environment: absent Playwright-downloaded Chromium; use existing /usr/bin/chromium explicitly, no install.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-studio-delivery-09.log",
+        "sha256": "c27813a23f6a8ce8c968247e035635a877e40424162e95a5caccb887182d2796",
+        "bytes": 4157
+      }
+    },
+    {
+      "name": "c-r3-residual-10",
+      "result": "2 failed, 3 passed in 9.74s",
+      "interpretation": "Privacy fixture needed coherent Plan/Page links; actual modern workorder exposed operation UUID/protocol text, sent to Owner without weakening assertion.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-residual-10.log",
+        "sha256": "fbca289595bff9c9d19cb35f4bb2ef88d83385b139b885a30f3ef5a1cc442592",
+        "bytes": 7621
+      }
+    },
+    {
+      "name": "c-r3-last-cases-11",
+      "result": "1 failed, 1 passed in 1.13s",
+      "interpretation": "Privacy negative passed; added real inputs_update summary regression still failed before Owner whitelist repair.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-last-cases-11.log",
+        "sha256": "bafc9d67c768836332c658e644dd6f4a09e94673e2cd41d0766ea5e6f4610265",
+        "bytes": 2049
+      }
+    },
+    {
+      "name": "c-r3-privacy-12",
+      "result": "1 passed",
+      "interpretation": "Original privacy/no-publication/immutable-output negative after coherent fixture links.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-privacy-12.log",
+        "sha256": "b6533422d1630740f5655134f45127452989eca69913155ff0cdf6331ecfe21d",
+        "bytes": 98
+      }
+    },
+    {
+      "name": "c-r3-final-domain-13",
+      "result": "4 failed, 181 passed, 1 deselected in 95.19s",
+      "interpretation": "All four failures detached service startup while Owner final C6 product patch overlapped this live interpreter; fresh stable rerun recorded separately.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-final-domain-13.log",
+        "sha256": "b17ebb0215a1f6b90401759ab239905686eac48dc51c0bb5cccce826a252a78e",
+        "bytes": 4383
+      }
+    },
+    {
+      "name": "c-r3-final-studio-14",
+      "result": "1 passed in 6.21s",
+      "interpretation": "Actual Chromium: original task search/pagination/1440 geometry/fixed history/real ZIP/narrow 390 assertions, no relaxation.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-final-studio-14.log",
+        "sha256": "30e412a1340fd6872fb3a232d85049d776a6b6ffba50e42c929f3367366283c0",
+        "bytes": 98
+      }
+    },
+    {
+      "name": "c-r3-historical-positive-15",
+      "result": "1 passed in 0.67s",
+      "interpretation": "Added legal historical delivery with unchanged semantic inputs under later management revision; changed audience still refuses basis_stale, old report stays readable.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-historical-positive-15.log",
+        "sha256": "142e711fac20a466998c8bbeb42619edb1e1722cf84dfe39f564f9b894494392",
+        "bytes": 98
+      }
+    },
+    {
+      "name": "c-r3-runtime-recheck-16",
+      "result": "4 passed in 1.12s",
+      "interpretation": "Fresh stable process reruns exactly the four startup failures; no product/test gate patch.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-runtime-recheck-16.log",
+        "sha256": "3efc219b4a7c964f30786f5ddd9f61369bfa66d6d5ac4533e92fcd62ee7366e2",
+        "bytes": 98
+      }
+    },
+    {
+      "name": "c-r3-artifact-location-17",
+      "result": ".                                                                        [100%]\n1 passed in 6.14s",
+      "interpretation": "Only original actual-browser case rerun after changing artifact destination to tmp_path/evidence.",
+      "raw_log": {
+        "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17.log",
+        "sha256": "34186e05a21f263934f2ebf5d60f79ff994ca757c1264fd414081253be6a7560",
+        "bytes": 98
+      }
+    }
+  ],
+  "relocated_original_artifacts": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-studio-browser/r3-live/artifact-relocation.json",
+    "sha256": "78fecf50760e80ee40e67954d3656b95bd7d6d0637b4564e0a4234debacfc86b",
+    "bytes": 3298
+  },
+  "current_default_test_artifact_destination": "tmp_path / evidence; no checkout/output/opendesign-completion directory is recreated by run17",
+  "visually_inspected": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-studio-browser/r3-live/opendesign-completion/studio-delivery/tasks-1440.png",
+      "sha256": "c80107f24660d086f2da609d65c1e0626bc6975c7182fa3dc217dd1a70c50dde",
+      "bytes": 168244
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-studio-browser/r3-live/opendesign-completion/studio-delivery/正在进行-390.png",
+      "sha256": "f4883ab11fef3d5c9e10487070d78131004a8cb25458f7465670ab13f51597e9",
+      "bytes": 125115
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-ux-08/test_completed_overview_return0/completed-content-overview.png",
+      "sha256": "42013519bae58677449c095bcaed20138c289a724244a0223bb73222d169699a",
+      "bytes": 124082
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-ux-08/test_launcher_hard_limit_refus0/hard-limit-safe-recovery.png",
+      "sha256": "e79ad522a052f0df5f88e274a017c728a5848da77145db1bb7875c6b531ffb9b",
+      "bytes": 114004
+    }
+  ],
+  "raw_browser_http_screenshots_downloads": [
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-ux-08/test_launcher_hard_limit_refus0/hard-limit-safe-recovery.png",
+      "sha256": "e79ad522a052f0df5f88e274a017c728a5848da77145db1bb7875c6b531ffb9b",
+      "bytes": 114004
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-ux-08/test_launcher_hard_limit_refus0/hard-limit-http.json",
+      "sha256": "07f071d82f466603e7665e6001164e5363f410b78f286570bf80235ac770cc6c",
+      "bytes": 2313
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-ux-08/test_completed_overview_return0/completed-content-overview.png",
+      "sha256": "42013519bae58677449c095bcaed20138c289a724244a0223bb73222d169699a",
+      "bytes": 124082
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/review.zip",
+      "sha256": "34fc8e59587d3a432bac60d91e6a20c5992748ef4721399b4c37a6facc10f45d",
+      "bytes": 40964
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/文件-390.png",
+      "sha256": "d0f0c2e2e04bc9120955f7f11db255d2249627655795d530118eea1e497ab1a4",
+      "bytes": 188596
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/requests.json",
+      "sha256": "ea1ed0a7f403dd69b16649d2b56457ce7ac321b2290908ff4961eff269877537",
+      "bytes": 14615
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/files-1440.png",
+      "sha256": "99d3ed70a685240929e0178f6768a03ef79ac3729323d89b2b353d2215ebb64f",
+      "bytes": 217740
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/versions-1440.png",
+      "sha256": "9f38060c801637f3c303f6ed0461f764313ac7ad9d95a7d4b51fc7e4f1b9a075",
+      "bytes": 146695
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/版本-390.png",
+      "sha256": "d57da85ea090a7b26906ce61291ed43320b3593660c54282730a40413ca39d88",
+      "bytes": 114142
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/正在进行-390.png",
+      "sha256": "f4883ab11fef3d5c9e10487070d78131004a8cb25458f7465670ab13f51597e9",
+      "bytes": 125115
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/tasks-1440.png",
+      "sha256": "c80107f24660d086f2da609d65c1e0626bc6975c7182fa3dc217dd1a70c50dde",
+      "bytes": 168244
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/evidence/last-ui.png",
+      "sha256": "f4883ab11fef3d5c9e10487070d78131004a8cb25458f7465670ab13f51597e9",
+      "bytes": 125115
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/workbench/thumbnails/035983b75b760c09553b0735c61ee83b2d5cb5018bb4771b06fe410e2fff47eb.png",
+      "sha256": "d58ded010956e80aaeb357c2e149525ca1267855d87c6ea4826932386191238f",
+      "bytes": 29075
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/workbench/thumbnails/6a4f046c3efe4a509482f6a86dbf498f123c05d5a3f3f9658d393f577ed6ea47.png",
+      "sha256": "dac1c7eaee5ed6075de48fb04bdebb5852a7b22a7870d6948cfbe063b66a11e2",
+      "bytes": 29106
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/workbench/thumbnails/abea415cc17626c401c0069f8ca1e9eb80fa909cb939475648dfe8109be8dfa1.png",
+      "sha256": "151c6c4e3c4397a58bf1ed71842fa1eeabacea9da7823b1ef49267a3e7a9f133",
+      "bytes": 28860
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/workbench/exports/export-ea96f1e9-d1fc-4094-9921-374a526a47bc/page-001/blueprint.png",
+      "sha256": "3caa43845d8d403b6388ffd2699f53db1fa8c3d801110d417f951ca87b13fe6c",
+      "bytes": 14929
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/workbench/exports/export-ea96f1e9-d1fc-4094-9921-374a526a47bc/page-002/blueprint.png",
+      "sha256": "6ffe443f6ebbb10b01412ff4a7d273fcdfbd39b9f324e24f313934071902ce04",
+      "bytes": 15042
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/workbench/exports/export-ea96f1e9-d1fc-4094-9921-374a526a47bc/page-003/blueprint.png",
+      "sha256": "e591e6a2e468c0d03d61ba4ed46e522255012bae03d4d26d40758b95157fd7c9",
+      "bytes": 15058
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/objects/6f/6ffe443f6ebbb10b01412ff4a7d273fcdfbd39b9f324e24f313934071902ce04.png",
+      "sha256": "6ffe443f6ebbb10b01412ff4a7d273fcdfbd39b9f324e24f313934071902ce04",
+      "bytes": 15042
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/objects/3c/3caa43845d8d403b6388ffd2699f53db1fa8c3d801110d417f951ca87b13fe6c.png",
+      "sha256": "3caa43845d8d403b6388ffd2699f53db1fa8c3d801110d417f951ca87b13fe6c",
+      "bytes": 14929
+    },
+    {
+      "path": "/workspace/work/rc3/t04/c-r3-artifact-location-17/test_studio_default_tasks_vers0/project/.deckmaster/objects/e5/e591e6a2e468c0d03d61ba4ed46e522255012bae03d4d26d40758b95157fd7c9.png",
+      "sha256": "e591e6a2e468c0d03d61ba4ed46e522255012bae03d4d26d40758b95157fd7c9",
+      "bytes": 15058
+    }
+  ],
+  "frozen_r2_review": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round2-573a46a/review.md",
+    "sha256": "3d7a044a793a547c3432956869e3a82daec1d54a7404f81ae43859fbb08086b0",
+    "bytes": 10321
+  },
+  "limits": [
+    "Live shared worktree diagnostic only; fixed R3 unit/render/installed and independent review remain Root/Owner work.",
+    "No native model, human/professional, audience or target PowerPoint desktop acceptance is claimed.",
+    "No new call or authorization is invented by frontend; no broad default grant/autouse patch/gate monkeypatch.",
+    "No Git integration, recursive agent, npm/Vite/build/lock edits by C."
+  ]
+}

@@ -1,0 +1,251 @@
+{
+  "schema_version": "rc3_04_b_resource_handoff.v1",
+  "evidence_scope": "L1_MUTABLE_WORKTREE_DIAGNOSTIC_ONLY_NOT_FINAL_FIXED_CANDIDATE",
+  "source_head": "634d75e4cc48368e53b088e47fa09c675cd2b998",
+  "source_dirty": true,
+  "source_tree": "4acb0e07536bd71882cea128d9247f772c049fcd",
+  "package_version": "1.0.0rc3",
+  "release_id": "634d75e4cc48-ada0b2c28037",
+  "wheel_path": "/workspace/work/rc3/t04/b-package-diagnostic-r3/release/deck_master-1.0.0rc3-py3-none-any.whl",
+  "wheel_sha256": "ada0b2c28037c56a5ba4e1f060c93e77e36f37bd73a206752bcfae1011f838d1",
+  "sdist_path": "/workspace/work/rc3/t04/b-package-diagnostic-r3/release/deck_master-1.0.0rc3.tar.gz",
+  "sdist_sha256": "6d5083695f975f0f153c4223e43566c8d2347305474712c0863785bcd393dc1d",
+  "canonical_method_root": "skills/deck-master/references",
+  "resource_count": 23,
+  "files": [
+    {
+      "canonical_source": "skills/deck-master/SKILL.md",
+      "sha256": "497884c95fef034399f50c0389888bad322bcb4820a9ae1472a5f08a83fc5beb",
+      "wheel_path": "deck_master/resources/skill/SKILL.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/SKILL.md",
+      "package_relative_path": "deck_master/resources/skill/SKILL.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/SKILL.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/agents/openai.yaml",
+      "sha256": "68aa81c35f89e4454e8a63bf1702a11d2be860e51d0f893132ea3a80fded63c3",
+      "wheel_path": "deck_master/resources/skill/agents/openai.yaml",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/agents/openai.yaml",
+      "package_relative_path": "deck_master/resources/skill/agents/openai.yaml",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/agents/openai.yaml"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/blueprint-svg.md",
+      "sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e",
+      "wheel_path": "deck_master/resources/skill/references/blueprint-svg.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/blueprint-svg.md",
+      "package_relative_path": "deck_master/resources/skill/references/blueprint-svg.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/candidates-and-stages.md",
+      "sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec",
+      "wheel_path": "deck_master/resources/skill/references/candidates-and-stages.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/candidates-and-stages.md",
+      "package_relative_path": "deck_master/resources/skill/references/candidates-and-stages.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/collaboration-routing.md",
+      "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+      "wheel_path": "deck_master/resources/skill/references/collaboration-routing.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/collaboration-routing.md",
+      "package_relative_path": "deck_master/resources/skill/references/collaboration-routing.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/content-calibration.md",
+      "sha256": "bb672652bf1f0e7c1248a423af8ce432793bc0eb2fd4905c9a423ebea0a9718c",
+      "wheel_path": "deck_master/resources/skill/references/content-calibration.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/content-calibration.md",
+      "package_relative_path": "deck_master/resources/skill/references/content-calibration.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-calibration.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/content-examples.md",
+      "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d",
+      "wheel_path": "deck_master/resources/skill/references/content-examples.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/content-examples.md",
+      "package_relative_path": "deck_master/resources/skill/references/content-examples.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/content-methods.md",
+      "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130",
+      "wheel_path": "deck_master/resources/skill/references/content-methods.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/content-methods.md",
+      "package_relative_path": "deck_master/resources/skill/references/content-methods.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/icon-quality.md",
+      "sha256": "a178377f8d956c6bc42b534905962c57073b615d58ddde566dffdef5314a000b",
+      "wheel_path": "deck_master/resources/skill/references/icon-quality.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/icon-quality.md",
+      "package_relative_path": "deck_master/resources/skill/references/icon-quality.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/icon-quality.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/input-update.md",
+      "sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6",
+      "wheel_path": "deck_master/resources/skill/references/input-update.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/input-update.md",
+      "package_relative_path": "deck_master/resources/skill/references/input-update.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/installation.md",
+      "sha256": "c43c48076c557e65bf90287e48bba45c9fcae80d1ca6d636d71d2a6966b7de18",
+      "wheel_path": "deck_master/resources/skill/references/installation.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/installation.md",
+      "package_relative_path": "deck_master/resources/skill/references/installation.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/installation.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/physical-units.md",
+      "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3",
+      "wheel_path": "deck_master/resources/skill/references/physical-units.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/physical-units.md",
+      "package_relative_path": "deck_master/resources/skill/references/physical-units.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/review-and-repair.md",
+      "sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a",
+      "wheel_path": "deck_master/resources/skill/references/review-and-repair.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/review-and-repair.md",
+      "package_relative_path": "deck_master/resources/skill/references/review-and-repair.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/source-reading.md",
+      "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+      "wheel_path": "deck_master/resources/skill/references/source-reading.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/source-reading.md",
+      "package_relative_path": "deck_master/resources/skill/references/source-reading.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/style-calibration.md",
+      "sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f",
+      "wheel_path": "deck_master/resources/skill/references/style-calibration.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/style-calibration.md",
+      "package_relative_path": "deck_master/resources/skill/references/style-calibration.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md"
+    },
+    {
+      "canonical_source": "skills/deck-master/references/visual-reference.md",
+      "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52",
+      "wheel_path": "deck_master/resources/skill/references/visual-reference.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/references/visual-reference.md",
+      "package_relative_path": "deck_master/resources/skill/references/visual-reference.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md"
+    },
+    {
+      "canonical_source": "skills/RESOLVER.md",
+      "sha256": "73f4d8613c1d27b40beb1598df61b907f4bb084c8ec20113ee24639ef63af299",
+      "wheel_path": "deck_master/resources/skills/RESOLVER.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/RESOLVER.md",
+      "package_relative_path": "deck_master/resources/skills/RESOLVER.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skills/RESOLVER.md"
+    },
+    {
+      "canonical_source": "skills/deck-content/SKILL.md",
+      "sha256": "1b491717d0bb45e80813dfd24937eefab1dc162eecd62005c0e064511a0682e3",
+      "wheel_path": "deck_master/resources/skills/deck-content/SKILL.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-content/SKILL.md",
+      "package_relative_path": "deck_master/resources/skills/deck-content/SKILL.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skills/deck-content/SKILL.md"
+    },
+    {
+      "canonical_source": "skills/deck-content/agents/openai.yaml",
+      "sha256": "fad8f336ddd95f77fa736d141b51b2421cdc603dbfaa9c511b4be594986c1bed",
+      "wheel_path": "deck_master/resources/skills/deck-content/agents/openai.yaml",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-content/agents/openai.yaml",
+      "package_relative_path": "deck_master/resources/skills/deck-content/agents/openai.yaml",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skills/deck-content/agents/openai.yaml"
+    },
+    {
+      "canonical_source": "skills/deck-design/SKILL.md",
+      "sha256": "a3997c0baef42da6a40d67adb621ada4fb5fbafb4c199699d6696707c1e45348",
+      "wheel_path": "deck_master/resources/skills/deck-design/SKILL.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-design/SKILL.md",
+      "package_relative_path": "deck_master/resources/skills/deck-design/SKILL.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skills/deck-design/SKILL.md"
+    },
+    {
+      "canonical_source": "skills/deck-design/agents/openai.yaml",
+      "sha256": "de93c548a95cee0676b4650c7588d5f17fb915da0bbe4a88417a293cf31d6664",
+      "wheel_path": "deck_master/resources/skills/deck-design/agents/openai.yaml",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-design/agents/openai.yaml",
+      "package_relative_path": "deck_master/resources/skills/deck-design/agents/openai.yaml",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skills/deck-design/agents/openai.yaml"
+    },
+    {
+      "canonical_source": "skills/deck-review/SKILL.md",
+      "sha256": "3f754ae5c491e216ef6867afb8c268378dfd652439b3090cf9b517619fb3e2a0",
+      "wheel_path": "deck_master/resources/skills/deck-review/SKILL.md",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-review/SKILL.md",
+      "package_relative_path": "deck_master/resources/skills/deck-review/SKILL.md",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skills/deck-review/SKILL.md"
+    },
+    {
+      "canonical_source": "skills/deck-review/agents/openai.yaml",
+      "sha256": "c48c2292832b0d1a97cd42aca6919b8591f8f922a1ec61964a7a543703d1cfc0",
+      "wheel_path": "deck_master/resources/skills/deck-review/agents/openai.yaml",
+      "host_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-review/agents/openai.yaml",
+      "package_relative_path": "deck_master/resources/skills/deck-review/agents/openai.yaml",
+      "installed_package_path": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/venv/lib/python3.12/site-packages/deck_master/resources/skills/deck-review/agents/openai.yaml"
+    }
+  ],
+  "generated_exceptions": [
+    {
+      "wheel_path": "deck_master/resources/method-inventory.json",
+      "sha256": "cc5295993ebe48f2040c69422084238ab871c0f062fd19d186fc6c17164dd5c3",
+      "generator": "tools/build_hook.py",
+      "extracted_manifest": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/method-inventory.json",
+      "explanation": "Generated by tools/build_hook.py from the exhaustive canonical Skill mapping; no editable source copy."
+    }
+  ],
+  "four_managed_links": [
+    {
+      "name": "deck-master",
+      "host_link": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/host/skills/deck-master",
+      "target": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/current/skill/deck-master",
+      "resolved_entry": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-master/SKILL.md",
+      "entry_sha256": "497884c95fef034399f50c0389888bad322bcb4820a9ae1472a5f08a83fc5beb"
+    },
+    {
+      "name": "deck-content",
+      "host_link": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/host/skills/deck-content",
+      "target": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/current/skill/deck-content",
+      "resolved_entry": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-content/SKILL.md",
+      "entry_sha256": "1b491717d0bb45e80813dfd24937eefab1dc162eecd62005c0e064511a0682e3"
+    },
+    {
+      "name": "deck-design",
+      "host_link": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/host/skills/deck-design",
+      "target": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/current/skill/deck-design",
+      "resolved_entry": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-design/SKILL.md",
+      "entry_sha256": "a3997c0baef42da6a40d67adb621ada4fb5fbafb4c199699d6696707c1e45348"
+    },
+    {
+      "name": "deck-review",
+      "host_link": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/host/skills/deck-review",
+      "target": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/current/skill/deck-review",
+      "resolved_entry": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/skill/deck-review/SKILL.md",
+      "entry_sha256": "3f754ae5c491e216ef6867afb8c268378dfd652439b3090cf9b517619fb3e2a0"
+    }
+  ],
+  "installed_release_manifest": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/prefix/.deck-master/releases/634d75e4cc48-ada0b2c28037/release.json",
+  "domain_source_bytes_match_wheel": {
+    "deck_master/method_resources.py": true,
+    "deck_master/install.py": true,
+    "deck_master/__init__.py": true
+  },
+  "lifecycle_evidence": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/lifecycle.json",
+  "actual_installed_workorder_methods": "/workspace/work/rc3/t04/b-lifecycle-diagnostic-r1/installed-workorder-methods.json",
+  "first_failed_install_log": "/workspace/work/rc3/t04/b-package-diagnostic-r1/install.log",
+  "fixed_snapshot_host_16_application": "NOT_RUN_WAIT_FINAL_INSTALLED_CANDIDATE",
+  "native_human_professional_desktop": "NOT_CLAIMED"
+}

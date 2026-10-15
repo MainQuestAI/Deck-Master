@@ -12,7 +12,7 @@ import pytest
 from deck_master import eligibility, eligibility_entries as entries
 
 SURFACE_MINIMUMS = {"service": 15, "operations": 40, "collaboration": 14,
-                    "cli": 60, "http": 80}
+                    "cli": 60, "http": 80, "public": 19}
 
 
 def test_no_unclassified_entry_on_any_surface():
@@ -33,6 +33,7 @@ def test_surface_discovery_finds_the_real_entries():
         "collaboration": entries.collaboration_surface(),
         "cli": entries.cli_surface(),
         "http": entries.http_surface(),
+        "public": entries.public_surface(),
     }
     for surface, discovered in surfaces.items():
         assert len(discovered) >= SURFACE_MINIMUMS[surface], (surface, len(discovered))
@@ -41,6 +42,8 @@ def test_surface_discovery_finds_the_real_entries():
     assert "collaboration.grant" in surfaces["collaboration"]
     assert "task call begin" in surfaces["cli"]
     assert "/api/changes/commit" in surfaces["http"]
+    assert {'legacy.import_legacy', 'registry.create_project', 'samples.create_sample',
+            'samples.create_gallery_sample'} <= surfaces['public']
 
 
 def test_every_classification_is_either_gated_or_explicitly_exempt():
@@ -148,3 +151,86 @@ def test_coverage_stats_are_reported():
     assert stats["by_surface"]["http"] >= 80
     for action in stats["actions"]:
         assert action in eligibility.ACTIONS
+
+
+def test_each_runtime_http_action_has_a_method_specific_classification():
+    from deck_master.collaboration_api import HTTP_ROUTES, http_action
+    discovered = entries.http_surface()
+    for (method, template), action in HTTP_ROUTES.items():
+        canonical = method + ' ' + template
+        assert canonical in discovered
+        row = entries.classify('http', canonical)
+        assert row is not None, canonical
+        dispatch = entries.classify('collaboration', f'collaboration_api.invoke[{action}]')
+        assert dispatch is not None
+        assert (row.action, row.exempt) == (dispatch.action, dispatch.exempt), canonical
+        concrete = template.format(project_id='fixed-project', authorization_id='fixed-authorization')
+        bound = http_action(method, concrete)
+        assert bound is not None and bound[1] == action
+        actual = entries.classify('http', method + ' ' + concrete)
+        assert actual is not None and (actual.action, actual.exempt) == (row.action, row.exempt)
+    assert entries.classify('http', 'GET /api/projects/fixed/collaboration/migration').exempt
+    assert entries.classify('http', 'POST /api/projects/fixed/collaboration/migration').action == 'migration.apply'
+    assert entries.classify('http', '/api/projects/fixed/collaboration/migration') is None
+
+
+def test_actual_cli_dispatch_actions_match_their_registered_gates():
+    actual = entries.cli_adapter_actions()
+    assert {'collaboration grant', 'collaboration pause', 'collaboration resume', 'collaboration revoke',
+            'eligibility', 'review evaluate', 'review import'} <= set(actual)
+    for command, action in actual.items():
+        cli = entries.classify('cli', command)
+        dispatch = entries.classify('collaboration', f'collaboration_api.invoke[{action}]')
+        assert cli is not None and dispatch is not None
+        assert (cli.action, cli.exempt) == (dispatch.action, dispatch.exempt), (command, action)
+    assert entries.classify('cli', 'import legacy').action == 'create'
+
+
+def test_new_core_public_creation_and_import_are_gated():
+    for name in ('legacy.import_legacy', 'registry.create_project', 'samples.create_sample', 'samples.create_gallery_sample'):
+        row = entries.classify('public', name)
+        assert row.action == 'create' and row.exempt is None
+    assert entries.classify('public', 'project_initialization.adopt_manuscript').action == 'import_draft'
+    for name in ('collaboration_region', 'instruction', 'request_defaults', 'imported_plan', 'prepare_manuscript'):
+        row = entries.classify('public', 'project_initialization.' + name)
+        assert row.action is None and row.exempt == entries.READ_REASONS['internal']
+    assert entries.classify('http', '/api/projects/create').action == 'create'
+    assert entries.classify('http', '/api/projects/sample').action == 'create'
+
+
+def test_strict_external_evaluation_is_exempt_but_persistent_review_import_is_gated():
+    for surface, name in [('collaboration', 'external_review.evaluate'), ('cli', 'review evaluate'),
+                          ('http', 'POST /api/reviews/evaluate')]:
+        row = entries.classify(surface, name)
+        assert row.action is None and row.exempt == entries.READ_REASONS['external_report']
+    for surface, name in [('collaboration', 'review_import.import_report'), ('cli', 'review import'),
+                          ('http', 'POST /api/projects/fixed/reviews/import')]:
+        row = entries.classify(surface, name)
+        assert row.action == 'review.import' and row.exempt is None
+    assert entries.classify('http', 'POST /api/projects/fixed/reviews/bindings').exempt == entries.READ_REASONS['read_model']
+    assert entries.classify('http', 'POST /api/projects/fixed/continue').action == 'continue_project'
+    assert entries.classify('http', 'POST /api/projects/fixed/draft/import').action == 'import_draft'
+
+
+@pytest.mark.parametrize('route', [
+    '/api/projects/new-project/collaboration/new-write',
+    'POST /api/projects/new-project/collaboration',
+    'POST /api/projects/new-project/collaboration/authorizations/auth/revoke/escalate',
+    'GET /api/projects/new-project/reviews/import',
+    '/api/changes/brand-new-write', '/api/content/brand-new-write', '/api/styles/brand-new-write',
+])
+def test_unknown_descendants_never_inherit_a_prefix_read_exemption(route):
+    assert entries.classify('http', route) is None
+
+
+def test_discovery_catches_new_parameterized_runtime_routes(monkeypatch):
+    from deck_master.collaboration_api import HTTP_ROUTES
+    route = ('POST', '/api/projects/{project_id}/collaboration/new-write')
+    monkeypatch.setitem(HTTP_ROUTES, route, 'grant')
+    assert entries.uncovered() == {'http': ['POST /api/projects/{project_id}/collaboration/new-write']}
+
+
+def test_discovery_catches_new_dispatcher_actions_even_before_frontend_wiring(monkeypatch):
+    from deck_master.collaboration_api import _FIELDS
+    monkeypatch.setitem(_FIELDS, 'unclassified.new_write', set())
+    assert entries.uncovered() == {'collaboration': ['collaboration_api.invoke[unclassified.new_write]']}

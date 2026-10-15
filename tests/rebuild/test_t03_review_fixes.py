@@ -10,10 +10,11 @@ import pytest
 
 from deck_master import collaboration, content_production, content_review, exports, models, service
 from deck_master import variant_requests
-from deck_master.errors import ImportRequiresPhasedPath
 from deck_master.models import ModelError, bump_revision
 from deck_master.store import Store
 from deck_master.tasks import EnvelopeError
+
+from rc3_fixtures import claim_fixture_task, evidence_for, historical_snapshot, source_snapshot
 
 from test_content_preproduction_review import (
     _argument_narrative, _deck, _instruction, _page, _plan_input, _project, _scope,
@@ -22,6 +23,7 @@ from test_variant_requests import _grant_variants, _produce_variant, _start_vari
 
 
 def _submit(project, task, payload, variant):
+    claim_fixture_task(project, task)
     return service.accept_result(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],
@@ -274,43 +276,66 @@ def _draft_payload():
                            {"id": "b1", "type": "paragraph", "text": "已确认的正文。"}]},
                        "speaker_notes": "",
                        "visual_spec": {"intent": "阅读", "reference_mode": "new_design"}}],
-            "page_order": ["d1"], "notes": "import"}
+            "page_order": ["d1"]}
 
 
-def test_import_draft_on_a_collaboration_project_is_blocked_with_recovery(tmp_path):
-    project, store = _deck(tmp_path)
-    # A draft outside the request scope is refused by the boundary's own scope
-    # judgement first (CONTRACTS §6.1 order: eligibility before the route
-    # check), with the concrete authorized/target page lists.
+def test_import_draft_on_a_collaboration_project_checks_actual_scope(tmp_path):
     from deck_master import eligibility
-    with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
-        service.import_draft(project, draft_payload=_draft_payload())
-    assert "scope_exceeded" in excinfo.value.payload()["error"]["reason_codes"]
-    # A draft inside the scope still stops on the writer-boundary route check,
-    # which names both real recovery paths instead of faking authority.
-    inside = _draft_payload()
-    inside["pages"][0]["page_id"] = "p1"
-    inside["page_order"] = ["p1"]
-    with pytest.raises(ImportRequiresPhasedPath) as excinfo:
-        service.import_draft(project, draft_payload=inside)
-    error = excinfo.value
-    assert error.error_code == "import_requires_phased_path" and error.exit_code == 4
-    assert "page_copy" in error.detail and "start_request" in error.detail or \
-        "work request" in error.detail
-    # No page, plan, output or unbound task was written.
-    document = Store(project).load_document()
-    assert [entry["page_id"] for entry in document["pages"]] == ["p1", "p2"]
-    assert not [ref for ref in document["tasks"]
-                if Store(project).read_object_json(ref).get("intent") == "import_draft"]
+    project, store = _deck(tmp_path)
+    before = store.load_document()
+    tree = source_snapshot(project)
+    with pytest.raises(eligibility.EligibilityBlocked) as blocked:
+        service.import_draft(project, draft_payload=_draft_payload(),
+            base_revision=before["revision_id"], operation_id="out-of-scope-import")
+    assert "scope_exceeded" in blocked.value.decision["reason_codes"]
+    assert store.load_document() == before and source_snapshot(project) == tree
+
+    # A current complete manuscript can change a selected Page while retaining
+    # the unselected Page. This is a public CAS import, not an unbound Task.
+    project = tmp_path / "current-fixed-manuscript"
+    page1 = _draft_payload()["pages"][0]
+    page1["page_id"] = "p1"
+    page2 = {**page1, "page_id": "p2"}
+    service.create(project, brief="L1 preserve fixed manuscript", draft={"pages": [page1, page2]})
+    store = Store(project)
+    document = store.load_document()
+    scope = {**document["collaboration"]["request"]["scope"], "subject": "pages",
+        "page_ids": ["p1"], "layers": ["page_copy", "plan"],
+        "allow_page_membership_change": False, "allow_page_order_change": False}
+    collaboration.start_request(project, input={"intent": "edit", "scope": scope,
+        "replace_request_id": document["collaboration"]["request"]["request_id"],
+        "instruction_evidence": evidence_for(project, text="L1 change only p1 copy; retain p2 and manuscript order.",
+            locator="synthetic-l1:t03-fixed-import")}, base_revision=document["revision_id"],
+        operation_id="fixed-import-request")
+    before = store.load_document()
+    pages = [store.read_object_json(entry["page"]) for entry in before["pages"]]
+    pages[0]["customer_visible"]["title"] += "（修订）"
+    result = service.import_draft(project, draft_payload={"pages": pages},
+        base_revision=before["revision_id"], operation_id="in-scope-import")
+    after = store.load_document()
+    assert result["status"] == "accepted" and result["write_set"]["page_ids"] == ["p1"]
+    assert after["pages"][1] == before["pages"][1]
+    assert after["tasks"] == before["tasks"] and after["collaboration"] == before["collaboration"]
 
 
-def test_import_draft_still_works_below_the_collaboration_writer(tmp_path):
-    project = tmp_path / "legacy"
-    service.create(project, brief="legacy import", sources=[], project_format="workbench.v3")
-    out = service.import_draft(project, draft_payload=_draft_payload())
-    assert out["status"] == "accepted"
-    document = Store(project).load_document()
-    assert [entry["page_id"] for entry in document["pages"]] == ["d1"]
+def test_existing_historical_import_requires_explicit_migration(tmp_path):
+    from deck_master import eligibility
+    fixture = historical_snapshot(tmp_path, scenario="L1 pre-collaboration import reader")
+    project = fixture["project"]
+    store = Store(project)
+    before, tree = store.load_document(), source_snapshot(project)
+    with pytest.raises(eligibility.EligibilityBlocked) as blocked:
+        service.import_draft(project, draft_payload=_draft_payload(),
+            base_revision=before["revision_id"], operation_id="historical-import")
+    assert "migration_required" in blocked.value.decision["reason_codes"]
+    assert store.load_document() == before and source_snapshot(project) == tree
+    # New standalone manuscript import still uses the actual canonical create
+    # path and publishes no legacy compose Task.
+    fresh = tmp_path / "new-manuscript"
+    service.import_draft(fresh, draft_payload=_draft_payload())
+    current = Store(fresh).load_document()
+    assert [entry["page_id"] for entry in current["pages"]] == ["d1"]
+    assert current["tasks"] == [] and current["compatibility"]["minimum_writer"] == "rc3-entry.v1"
 
 
 # ---------------------------------------------------------------------------
@@ -339,12 +364,25 @@ def test_produced_variant_cannot_be_reproduced_after_export_files_vanish(tmp_pat
     assert variant_requests.used_variant_ids(Store(project), document, group_id) == ["live"]
     # The Store's committed revision history still remembers the produced version.
     current = document["collaboration"]["request"]["request_id"]
+    retried = _start_variant(project, Store(project), variant_id="live", replace_request_id=current,
+                            operation_id="op-live-retry-after-delete")
+    after_retry = Store(project).load_document()
+    assert retried["status"] == "already_started"
+    assert retried["creates_request"] is False and retried["refreshes_credit"] is False
+    for key in ("collaboration", "pages", "tasks", "outputs"):
+        assert after_retry[key] == document[key]
     with pytest.raises(ModelError, match="already fixed in this group"):
         _start_variant(project, Store(project), variant_id="live", replace_request_id=current,
-                       operation_id="op-live-again-after-delete")
-    # And the second, still-unproduced version remains available.
+                       operation_id="op-live-again-after-delete", instruction_seed="new-repeat-fixed-live")
+    # A different version still needs its actual versioned source export.
+    from deck_master.store import ConflictError
+    with pytest.raises(ConflictError, match="variant_source_unavailable"):
+        _start_variant(project, Store(project), variant_id="read", replace_request_id=current,
+            operation_id="op-read-missing-source", source={"revision_id": export_one["revision_id"]})
+    fixed = exports.create(project, purpose="review", revision=export_one["revision_id"])
     second = _start_variant(project, Store(project), variant_id="read",
-                            replace_request_id=current, operation_id="op-read-after-delete")
+                            replace_request_id=current, operation_id="op-read-after-delete",
+                            source={"revision_id": fixed["revision_id"], "export_id": fixed["export_id"]})
     assert second["status"] == "accepted"
     fixed, truncated = variant_requests._history_variant_ids(
         Store(project), Store(project).load_document(), group_id)

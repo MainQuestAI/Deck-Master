@@ -8,6 +8,7 @@ import {contentOperation, contentPanel as panel, inputField, sourceReader} from 
 export function content(app, data) {
   if (!app.health.ui_capabilities?.includes('content_ops.v1')) return empty('核心需要升级', '内容与来源编辑需要支持内容操作的核心；已存稿件和原有命令仍可读取。');
   const plan = data.plan, inputs = data.inputs, pages = app.summary.pages, pageMap = new Map(pages.map(p => [p.page_id,p]));
+  const modernPlan = plan?.input?.schema_version === 'content_plan_input.v2';
   const ref = plan?.ref || null;
   const readingRevision = app.route.revision, controller = new AbortController();
   let disposed = false, impactAdopted = false;
@@ -39,7 +40,12 @@ export function content(app, data) {
   const adjustmentError=el('p',{class:'field-error',role:'alert',hidden:true,id:'content-adjustment-error'});
   for(const field of [splitPoint,mergeTitle])field.input.setAttribute('aria-describedby','content-adjustment-error');
   const summary = inputField('内容整合结论', plan?.input_summary || '', 3);
-  let goals = (plan?.goals || []).map(g => ({goal_id:g.goal_id,page_id:g.page_id,purpose:g.purpose || '',source_links:(g.source_links || []).map(l => ({source_id:l.source_id,source_version:l.source_version,locator:l.locator})),unresolved_facts:g.unresolved_facts || []}));
+  summary.input.readOnly = modernPlan;
+  const retainedSummary = el('p',{class:'muted',hidden:true},'原草稿中的整合说明保留供核对，尚未写入当前内容计划；当前计划通过章节和逐页职责记录。');
+  const showSummary = () => {summary.node.hidden=modernPlan&&!summary.input.value;retainedSummary.hidden=!modernPlan||!summary.input.value;};
+  showSummary();
+  let goals = (plan?.goals || []).map(g => ({goal_id:g.goal_id,page_id:g.page_id,purpose:g.purpose || '',source_links:(g.source_links || []).map(l => ({source_id:l.source_id,source_version:l.source_version,locator:l.locator})),
+    unresolved_facts:modernPlan?(plan.input.issues||[]).filter(issue=>issue.affected_page_ids.includes(g.page_id)).map(issue=>issue.question):g.unresolved_facts || []}));
   let chapters = structuredClone(plan?.chapters || []);
   const studio=studioStyle(),orderReview=el('div',{class:'studio-content-review stack'}),planReview=el('div',{class:'studio-content-review stack'});
   const goalSearch=el('input',{type:'search','aria-label':'搜索页面目标',placeholder:'搜索页码、标题或页面目标'});
@@ -50,6 +56,7 @@ export function content(app, data) {
   function read() { return {brief:brief.input.value,audience:audience.input.value,decisions:decisions.input.value,reason:reason.input.value,additions:additions.input.value,sources:sourceRows,uploads,order,selected:[...selected],instruction:instruction.input.value,split_point:splitPoint.input.value,merge_title:mergeTitle.input.value,adjustment_action:adjustmentAction,summary:summary.input.value,goals,chapters}; }
   function hydrate(s) {
     for (const [key,field] of Object.entries({brief,audience,decisions,reason,additions,instruction,split_point:splitPoint,merge_title:mergeTitle,summary})) if (key in s) field.input.value=s[key];
+    showSummary();
     if (s.sources) sourceRows=s.sources;
     if (Array.isArray(s.uploads)) uploads=s.uploads;
     if (s.order && s.order.length===pages.length && s.order.every(id=>pageMap.has(id)) && new Set(s.order).size===pages.length) order=s.order;
@@ -160,6 +167,7 @@ export function content(app, data) {
     }).filter(Boolean);
   }
   function chapterPages(chapter) {
+    if (Array.isArray(chapter.page_ids)) return new Set(chapter.page_ids);
     const chapterGoals = new Set(chapter.goal_ids);
     return new Set(goals.filter(goal => chapterGoals.has(goal.goal_id)).map(goal => goal.page_id));
   }
@@ -172,9 +180,10 @@ export function content(app, data) {
     const cards=goals.map(goal=>{
       const page=pageMap.get(goal.page_id);const purpose=inputField('页面目标 '+(page?.title || goal.page_id),goal.purpose,2);
       const unresolved=inputField('待确认事实 '+(page?.title || goal.page_id),goal.unresolved_facts.join('\n'),2);
+      unresolved.input.readOnly = modernPlan;
       const reading=el('p',{},goal.purpose),facts=el('p',{class:'muted'},goal.unresolved_facts.length?'待确认：'+goal.unresolved_facts.join('；'):'未记录待确认事实');
       const sourceLinks=el('div',{class:'studio-goal-linked row wrap'});
-      const renderLinks=()=>sourceLinks.replaceChildren(...(goal.source_links.length?goal.source_links.map(link=>button('查看目标来源 '+((inputs?.sources||[]).find(s=>s.source_id===link.source_id)?.name||'材料')+' · '+link.locator,()=>sourceReader(app,link))):[el('p',{class:'muted'},'尚未关联材料；请在待确认事实中说明依据缺口。')]));
+      const renderLinks=()=>sourceLinks.replaceChildren(...(goal.source_links.length?goal.source_links.map(link=>button('查看目标来源 '+((inputs?.sources||[]).find(s=>s.source_id===link.source_id)?.name||'材料')+' · '+link.locator,()=>sourceReader(app,link))):[el('p',{class:'muted'},modernPlan?'尚未关联材料；请核对本页来源和已记录的未决事项，登记材料后再关联。':'尚未关联材料；请在待确认事实中说明依据缺口。')]));
       const update=()=>{reading.textContent=goal.purpose;facts.textContent=goal.unresolved_facts.length?'待确认：'+goal.unresolved_facts.join('；'):'未记录待确认事实';renderLinks();changed();};
       purpose.input.addEventListener('input',()=>{goal.purpose=purpose.input.value;update();});unresolved.input.addEventListener('input',()=>{goal.unresolved_facts=unresolved.input.value.split('\n').filter(v=>v.trim());update();});
       renderLinks();
@@ -263,7 +272,16 @@ export function content(app, data) {
     }
     const value={content_plan_ref:ref,action,targets,instruction:actionInstruction};
     if(action==='reorder')value.page_order=order;
-    if(action==='outline')value.content_plan={schema_version:'content_plan_input.v1',input_summary:summary.input.value,chapters,goals,unresolved_facts:plan.unresolved_facts || []};
+    if(action==='outline') {
+      if(modernPlan) {
+        const edited=new Map(goals.map(goal=>[goal.page_id,goal]));
+        value.content_plan={...structuredClone(plan.input),chapters:structuredClone(chapters),
+          page_roles:plan.input.page_roles.map(role=>{
+            const goal=edited.get(role.page_id);
+            return goal?{...structuredClone(role),intended_takeaway:goal.purpose,source_links:structuredClone(goal.source_links)}:structuredClone(role);
+          })};
+      } else value.content_plan={schema_version:'content_plan_input.v1',input_summary:summary.input.value,chapters,goals,unresolved_facts:plan.unresolved_facts || []};
+    }
     operation.preview(value);
   }
   drawSources();drawPages();drawGoals();
@@ -363,7 +381,7 @@ export function content(app, data) {
     el('div',{class:'content-order-scroll'},pageList),studio?orderHelp:null,adjustmentTools));
   const planEvidence=styleDisclosure('查看完整页面目标与原始依据',el('ol',{},goals.map(g=>el('li',{},g.purpose))),el('pre',{class:'evidence-json'},JSON.stringify({chapters:plan?.chapters,unresolved_facts:plan?.unresolved_facts},null,2)));
   const planAction=!app.readonly&&button('预览内容计划变更',()=>preview('outline'));
-  const planTools=editable(el('div',{class:'stack'},el('p',{class:'muted'},'这里编辑章节、目标与待确认事实；正文请进入对应页面修改。'),summary.node,studio&&goalSearch,goalList,!studio&&planAction));
+  const planTools=editable(el('div',{class:'stack'},el('p',{class:'muted'},modernPlan?'这里编辑章节、页面目标与来源关联；已记录的篇幅、时长、口播安排和未决事项保持。正文请进入对应页面修改。':'这里编辑章节、目标与待确认事实；正文请进入对应页面修改。'),summary.node,retainedSummary,studio&&goalSearch,goalList,!studio&&planAction));
   const planPanel=ref?panel('内容计划',planTools,planReview,planEvidence):panel('内容计划',el('p',{},'尚未记录完整内容计划。'));
   if(studio&&ref&&planAction)planPanel.querySelector('.panel-head').append(planAction);
   const orderPanel=panel('逐页编辑与顺序',pageTools,orderReview);

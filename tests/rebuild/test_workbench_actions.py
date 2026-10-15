@@ -24,6 +24,8 @@ from deck_master.store import Store
 
 from test_generation_protocol import accept as accept_image, begin, flow, freeze, settle, start
 from test_candidates import adopt, candidate as svg_candidate, plan
+from test_candidates import store as candidate_store
+from test_workbench_reads import allow_blueprint_preparation
 
 SUMMARY_SCHEMA = json.loads(
     (Path(workbench.__file__).parent / "resources/contracts/workbench-summary.v1.schema.json").read_text())
@@ -85,8 +87,8 @@ def kinds(summary):
     return [action["kind"] for action in summary["next_actions"]["actions"]]
 
 
-def test_candidates_block_branches_pass_active_schema(project):
-    store = Store(project)
+def test_candidates_block_branches_pass_active_schema(candidate_store):
+    store = candidate_store; project = store.project_root
     summary = workbench.workbench_summary(project)
     assert summary["candidates"] == {"status": "not_recorded"}
     validate(summary)
@@ -101,7 +103,7 @@ def test_candidates_block_branches_pass_active_schema(project):
     assert compare[0]["enabled"] is True and compare[0]["state"] == "derived"
     assert compare[0]["source_refs"] and compare[0]["revision_id"] == summary["revision_id"]
     assert summary["pages"][0]["attention"]["status"] == "recorded"
-    assert {i["kind"] for i in summary["pages"][0]["attention"]["items"]} == {"compare_candidates", "prepare_stage"}
+    assert {i["kind"] for i in summary["pages"][0]["attention"]["items"]} == {"compare_candidates", "prepare_stage", "review_results"}
     validate(summary)
 
     adopt(store, plan(store, [cid]))
@@ -109,12 +111,12 @@ def test_candidates_block_branches_pass_active_schema(project):
     assert summary["candidates"]["count"] == 1 and summary["candidates"]["pending_count"] == 0
     assert summary["candidates"]["adopted_count"] == 1 and summary["candidates"]["unreadable_count"] == 0
     assert "compare_candidates" not in kinds(summary)
-    assert summary["pages"][0]["attention"] == {"status": "not_recorded"}
+    assert {i["kind"] for i in summary["pages"][0]["attention"]["items"]} == {"review_results"}
     validate(summary)
 
 
-def test_damaged_candidate_is_isolated_but_still_pending(project):
-    store = Store(project)
+def test_damaged_candidate_is_isolated_but_still_pending(candidate_store):
+    store = candidate_store; project = store.project_root
     svg_candidate(store)
     ref = store.load_document()["candidates"][0]
     (project / ref["path"]).write_bytes(b"corrupted candidate object")
@@ -208,6 +210,7 @@ def test_prompt_summary_prepared_frozen_submitted_and_no_text_leak(flow):
 
 def test_unreadable_prompt_records_are_isolated_per_branch(project):
     store = Store(project)
+    allow_blueprint_preparation(project, ['p01'])
     doc = store.load_document()
     service.open_blueprint_task(store, doc, doc["pages"][0])
     task_obj = store.read_object_json(store.load_document()["tasks"][-1])

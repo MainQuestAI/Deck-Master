@@ -7,21 +7,60 @@ import uuid
 
 import pytest
 
-from deck_master import service, styles
+from deck_master import collaboration, service, styles
 from deck_master.samples import create_gallery_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
+from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
 from test_workbench_actions import commit
 
 pytestmark = pytest.mark.browser
 
 
-@pytest.fixture
-def style_content_browser(tmp_path):
+def prepare_content_project(path, *, page_ids):
+    """Authorize the named L1 copy edit, with no production call allowance."""
+    store = Store(path)
+    scope = {'subject': 'pages', 'page_ids': list(page_ids), 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['page_copy', 'plan'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+    evidence = evidence_for(path, text=f'L1 browser copy edit on exactly {list(page_ids)}; '
+        'preserve all other pages, order, sources and visual originals; no image calls.',
+        locator='L1:content-browser:explicit-direction')
+    collaboration.record_decision(path, input={'topic': 'direction', 'disposition': 'accepted',
+        'authority_mode': 'direct_user', 'value': 'Preserve fixed facts; change only named copy',
+        'scope': scope, 'instruction_evidence': evidence, 'subject_refs': []},
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+    authorize_scope(path, actions=['content.operation'], scope=scope, max_external_calls=0,
+        max_candidate_count=0, adoption_policy='within_scope', evidence=evidence)
+
+
+def prepare_style_project(path, *, page_ids, max_calls=0):
+    """Explicit L1 style scope; no model call or quality approval is asserted."""
+    store = Store(path)
+    scope = {'subject': 'pages', 'page_ids': list(page_ids), 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['design', 'blueprint'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+    authorize_scope(path, actions=['style.propose', 'style.trial', 'style.expand',
+        'change.commit', 'candidate.adopt', 'allowance.allocate'], scope=scope,
+        max_external_calls=max_calls, max_candidate_count=max_calls,
+        adoption_policy='within_scope', evidence=evidence_for(path,
+            text=f'L1 browser fixture: plan style on exactly {list(page_ids)}; '
+                 f'authorize at most {max_calls} image calls/candidates; no provider is called.',
+            locator='L1:style-browser:explicit-scope'))
+    if max_calls:
+        settle_fidelity_review(path,
+            page_ids=[entry['page_id'] for entry in store.load_document()['pages']],
+            execution_ref='L1-style-browser-fidelity',
+            scenario='Exact fixed sample manuscript for bounded style trial planning')
+
+
+def style_content_session(tmp_path, *, style_calls=None):
     playwright = pytest.importorskip('playwright.sync_api')
     path = tmp_path / 'project'
     create_gallery_sample(path, page_count=30, readonly=False)
     store = Store(path)
+    if style_calls is not None:
+        prepare_style_project(path, page_ids=['p02', 'p30'], max_calls=style_calls)
     server = WorkbenchServer(path)
     with playwright.sync_playwright() as runtime:
         executable = shutil.which('chromium') or shutil.which('chromium-browser')
@@ -42,6 +81,16 @@ def style_content_browser(tmp_path):
         finally:
             browser.close()
             server.stop()
+
+
+@pytest.fixture
+def style_content_browser(tmp_path):
+    yield from style_content_session(tmp_path)
+
+
+@pytest.fixture
+def authorized_style_browser(tmp_path):
+    yield from style_content_session(tmp_path, style_calls=2)
 
 
 def open_style(page, with_targets=False):
@@ -143,9 +192,9 @@ def test_empty_requirements_dimensions_refresh_and_fixed_reference(style_content
     assert store.read_current() == before
 
 
-def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_content_browser):
+def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(authorized_style_browser):
     from playwright.sync_api import expect
-    page, server, path, store = style_content_browser
+    page, server, path, store = authorized_style_browser
     open_style(page, with_targets=True)
     page.get_by_role('combobox', name='风格参考原图').select_option('p01')
     page.get_by_role('checkbox', name='风格目标 第 2 页 · 材料如何成为内容', exact=True).check()
@@ -184,9 +233,9 @@ def test_confirmed_recipe_progression_edits_and_new_revision_invalidate(style_co
     assert store.load_document()['tasks'] == before_tasks
 
 
-def test_late_style_plan_leaving_face_cannot_restore_controls(style_content_browser):
+def test_late_style_plan_leaving_face_cannot_restore_controls(authorized_style_browser):
     from playwright.sync_api import expect
-    page, server, path, store = style_content_browser
+    page, server, path, store = authorized_style_browser
     confirm_recipe(path, store)
     page.reload()
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
@@ -216,13 +265,14 @@ def add_source(path, store, material):
         base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
     task = next(t for t in result['pending_tasks'] if t['kind'] == 'compose')
     service.task_start(path, task_id=task['task_id'], execution_ref='synthetic-content-browser',
-        supported_protocols=['compose.v1'], capabilities=task['required_capabilities'])
+        supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
     outline = copy.deepcopy(store.read_object_json(store.load_document()['content_plan'])['input'])
     envelope = {'kind':'compose','content_update':{'input_digest':task['project_context']['input_digest'],
         'page_order':[entry['page_id'] for entry in store.load_document()['pages']],
         'impact_summary':'合成材料影响判断：既有示例事实保持。','unchanged_reason':'合成材料只补充背景。'},'content_plan':outline}
+    from test_content_ops import v2_revision_envelope
     service.accept_result(path, task_id=task['task_id'], operation_id=task['operation_id'],
-        produced_against=task['produced_against'], result_payload=envelope)
+        produced_against=task['produced_against'], result_payload=v2_revision_envelope(store, task, envelope))
     return store.load_document()['sources'][0]
 
 

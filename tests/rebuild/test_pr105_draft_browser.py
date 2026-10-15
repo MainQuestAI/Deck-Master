@@ -7,6 +7,7 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_content_candidates import content_intent, start_task, page_envelope, accept
+from test_action_targets_browser import _prepare_browser_project
 
 pytestmark = pytest.mark.browser
 
@@ -17,6 +18,7 @@ def test_candidate_recovery_survives_modal_and_allows_adoption(tmp_path, single,
     from playwright.sync_api import sync_playwright, expect
     path = tmp_path/'project'
     create_sample(path, page_count=2, readonly=False)
+    _prepare_browser_project(path)
     store = Store(path)
     plan = changes.plan(path, input=content_intent(store))
     dispatched = changes.commit(path, plan_id=plan['plan_id'], base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))['operation_result']

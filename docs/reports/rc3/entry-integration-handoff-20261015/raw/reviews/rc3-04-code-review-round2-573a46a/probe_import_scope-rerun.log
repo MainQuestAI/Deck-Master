@@ -1,0 +1,1 @@
+{"error": {"type": "EligibilityBlocked", "message": "eligibility/import_draft: the target is outside the current request scope"}, "before_page_ids": ["p1", "p2"], "after_page_ids": ["p1", "p2"], "removed_unselected_page": false, "control_unchanged": true}

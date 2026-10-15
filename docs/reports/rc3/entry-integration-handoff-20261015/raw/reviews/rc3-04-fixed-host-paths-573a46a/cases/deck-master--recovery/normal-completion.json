@@ -1,0 +1,304 @@
+{
+  "identity": {
+    "pid": 488496,
+    "time": "2026-10-15T05:56:05.690762+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "completion": {
+    "state": "completed",
+    "request_id": "req-b9b84c57f10a",
+    "intent": "content_only",
+    "content_intent": "plan_only",
+    "artifact_revision_id": "ace4e7187f464b43a10414fc46640c4e",
+    "effective_scope": {
+      "allow_page_membership_change": true,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "page_ids": [
+        "p1",
+        "p2"
+      ],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    },
+    "outputs": [
+      {
+        "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+        "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+      },
+      {
+        "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+        "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+      }
+    ],
+    "checks": [
+      {
+        "kind": "requested_content",
+        "status": "pass",
+        "basis": "requested planning artifacts are available; no page production requested"
+      }
+    ],
+    "missing": [],
+    "responsible_role": "caller",
+    "next_action": "return_requested_content"
+  },
+  "request": {
+    "background_request_ids": [],
+    "closed": true,
+    "closed_reason": "completed",
+    "content_intent": "plan_only",
+    "instruction_evidence": {
+      "actor_id": null,
+      "assurance": "host_attested",
+      "kind": "host_attested_instruction",
+      "presentation_ref": null,
+      "source_locator": "create:actual-input",
+      "source_ref": {
+        "path": ".deckmaster/objects/5c/5c296fa29c112879626ad497fc73de32751026c346335dd1bf915161eb34726d.json",
+        "sha256": "5c296fa29c112879626ad497fc73de32751026c346335dd1bf915161eb34726d"
+      },
+      "transport_receipt_ref": null
+    },
+    "intent": "content_only",
+    "pause_reason": null,
+    "paused": false,
+    "request_id": "req-b9b84c57f10a",
+    "scope": {
+      "allow_page_membership_change": true,
+      "allow_page_order_change": false,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "page_ids": [
+        "p1",
+        "p2"
+      ],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    },
+    "variant": null
+  },
+  "continue_first": {
+    "status": "completed",
+    "project_id": "deck-master--recovery",
+    "revision_id": "ace4e7187f464b43a10414fc46640c4e",
+    "requested_action": "continue",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+        "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+      },
+      {
+        "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+        "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "return_requested_content",
+    "input_alignment": "no_content",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "completion": {
+      "state": "completed",
+      "request_id": "req-b9b84c57f10a",
+      "intent": "content_only",
+      "content_intent": "plan_only",
+      "artifact_revision_id": "ace4e7187f464b43a10414fc46640c4e",
+      "effective_scope": {
+        "allow_page_membership_change": true,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "plan"
+        ],
+        "page_ids": [
+          "p1",
+          "p2"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "outputs": [
+        {
+          "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+          "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+        },
+        {
+          "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+          "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+        }
+      ],
+      "checks": [
+        {
+          "kind": "requested_content",
+          "status": "pass",
+          "basis": "requested planning artifacts are available; no page production requested"
+        }
+      ],
+      "missing": [],
+      "responsible_role": "caller",
+      "next_action": "return_requested_content"
+    },
+    "eligibility": {
+      "allowed": true,
+      "action": "continue_project",
+      "enforcement": "active",
+      "reason_codes": [],
+      "reasons": [],
+      "responsible_role": "runtime",
+      "next_action": null,
+      "decision_card": null,
+      "scope": {
+        "allow_page_membership_change": true,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "plan"
+        ],
+        "page_ids": [
+          "p1",
+          "p2"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      }
+    }
+  },
+  "continue_second": {
+    "status": "completed",
+    "project_id": "deck-master--recovery",
+    "revision_id": "ace4e7187f464b43a10414fc46640c4e",
+    "requested_action": "continue",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+        "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+      },
+      {
+        "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+        "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "return_requested_content",
+    "input_alignment": "no_content",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "completion": {
+      "state": "completed",
+      "request_id": "req-b9b84c57f10a",
+      "intent": "content_only",
+      "content_intent": "plan_only",
+      "artifact_revision_id": "ace4e7187f464b43a10414fc46640c4e",
+      "effective_scope": {
+        "allow_page_membership_change": true,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "plan"
+        ],
+        "page_ids": [
+          "p1",
+          "p2"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "outputs": [
+        {
+          "path": ".deckmaster/objects/b7/b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca.json",
+          "sha256": "b711ac6494014df4c3a0e7be0fdd014e6438e547fce748ca1980e4c3aae005ca"
+        },
+        {
+          "path": ".deckmaster/objects/43/43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21.json",
+          "sha256": "43decbc4f4d16e96542650b0e0ee1b88bbdf46ef04d006ae11b67e01c24f3f21"
+        }
+      ],
+      "checks": [
+        {
+          "kind": "requested_content",
+          "status": "pass",
+          "basis": "requested planning artifacts are available; no page production requested"
+        }
+      ],
+      "missing": [],
+      "responsible_role": "caller",
+      "next_action": "return_requested_content"
+    },
+    "eligibility": {
+      "allowed": true,
+      "action": "continue_project",
+      "enforcement": "active",
+      "reason_codes": [],
+      "reasons": [],
+      "responsible_role": "runtime",
+      "next_action": null,
+      "decision_card": null,
+      "scope": {
+        "allow_page_membership_change": true,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "plan"
+        ],
+        "page_ids": [
+          "p1",
+          "p2"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      }
+    }
+  },
+  "revision_before": "ace4e7187f464b43a10414fc46640c4e",
+  "revision_after": "ace4e7187f464b43a10414fc46640c4e",
+  "tasks": [
+    {
+      "task_id": "f38dba9da364",
+      "kind": "compose",
+      "status": "completed",
+      "execution_ref": "/root/rc3_04_owner/skills_install:deck-master--recovery",
+      "call_allowances": [],
+      "generation_attempts": null
+    },
+    {
+      "task_id": "b0fa0b645b56",
+      "kind": "compose",
+      "status": "completed",
+      "execution_ref": "/root/rc3_04_owner/skills_install:deck-master--recovery",
+      "call_allowances": [],
+      "generation_attempts": null
+    }
+  ],
+  "artifact_objects": {
+    "narrative": null,
+    "plan": null,
+    "pages": []
+  }
+}

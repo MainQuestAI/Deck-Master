@@ -1,0 +1,797 @@
+[
+  {
+    "case": "C1-C2-C3-v2-editorial-imported-atom-and-historical-projection",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "operation": {
+        "status": "committed",
+        "operation_id": "47f27382-25ec-429c-948d-d1faf6c79d5a",
+        "committed_revision_id": "5ddf055571b845b288a8dec0ec82cee7",
+        "current_revision_id": "5ddf055571b845b288a8dec0ec82cee7",
+        "request_digest": "c8c690649847ac56b2f4e9ca922135e77e627ed220a437a3ca41d2f6fd7e6685",
+        "result_ref": {
+          "path": ".deckmaster/objects/02/020f1052bd9f3a3efd1264788046464bce1457b76ce6b14e4e516a29d97a4e74.json",
+          "sha256": "020f1052bd9f3a3efd1264788046464bce1457b76ce6b14e4e516a29d97a4e74"
+        },
+        "operation_result": {
+          "status": "edited",
+          "revision_id": "5ddf055571b845b288a8dec0ec82cee7",
+          "plan_ref": {
+            "path": ".deckmaster/objects/05/05d33509fca6a6bf63f47b75fe6a70e20700017adebbddbede82a382fdae804e.json",
+            "sha256": "05d33509fca6a6bf63f47b75fe6a70e20700017adebbddbede82a382fdae804e"
+          },
+          "action": "edit",
+          "task_ids": [],
+          "impact": {
+            "changed_pages": [
+              "p1"
+            ],
+            "deck_outputs_invalidated": true,
+            "host_required": false,
+            "image_calls": 0,
+            "preserved_originals_need_review": true,
+            "removed_pages": [],
+            "superseded_tasks": []
+          },
+          "image_calls": 0,
+          "mode": "auto",
+          "page_order": [
+            "p1",
+            "p2"
+          ],
+          "annotation_policy": "retain_original_basis"
+        }
+      },
+      "current_plan": {
+        "project_id": "C1-C3-imported-direct-edit",
+        "revision_id": "5ddf055571b845b288a8dec0ec82cee7",
+        "content_plan": {
+          "schema_version": "content_plan.v2",
+          "status": "recorded",
+          "relation": "known",
+          "ref": {
+            "path": ".deckmaster/objects/98/987d624b438c47d5f90ac1c2e542b910e4347f26d27fe21445ca592b412a71cf.json",
+            "sha256": "987d624b438c47d5f90ac1c2e542b910e4347f26d27fe21445ca592b412a71cf"
+          },
+          "plan_id": "plan-29500b2102924e29b36dcbd8489f4c54",
+          "version": 2,
+          "origin": "user_edited",
+          "mode": "imported_mapping",
+          "applicability": "current",
+          "chapter_count": 0,
+          "role_count": 2,
+          "goal_count": 2,
+          "page_roles": [
+            {
+              "audience_question": "Not recorded in the imported manuscript",
+              "content_profile": "mixed",
+              "density_rationale": "Imported content retained; density has not been assessed",
+              "intended_takeaway": "Not recorded in the imported manuscript",
+              "narrative_node_ids": [],
+              "page_id": "p1",
+              "required_qualifications": [],
+              "role": "Imported page; rhetorical role unverified",
+              "source_links": [],
+              "timing_seconds": null,
+              "transition_to_next": null,
+              "page_ref": {
+                "path": ".deckmaster/objects/b8/b8a9e003412b7b1582e5945073b7f73d94bf8877f0fe4cf6058ab60cefc5ef8c.json",
+                "sha256": "b8a9e003412b7b1582e5945073b7f73d94bf8877f0fe4cf6058ab60cefc5ef8c"
+              },
+              "basis_status": "current"
+            },
+            {
+              "audience_question": "Not recorded in the imported manuscript",
+              "content_profile": "mixed",
+              "density_rationale": "Imported content retained; density has not been assessed",
+              "intended_takeaway": "Not recorded in the imported manuscript",
+              "narrative_node_ids": [],
+              "page_id": "p2",
+              "required_qualifications": [],
+              "role": "Imported page; rhetorical role unverified",
+              "source_links": [],
+              "timing_seconds": null,
+              "transition_to_next": null,
+              "page_ref": {
+                "path": ".deckmaster/objects/15/15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118.json",
+                "sha256": "15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118"
+              },
+              "basis_status": "current"
+            }
+          ],
+          "goals": [
+            {
+              "audience_question": "Not recorded in the imported manuscript",
+              "content_profile": "mixed",
+              "density_rationale": "Imported content retained; density has not been assessed",
+              "intended_takeaway": "Not recorded in the imported manuscript",
+              "narrative_node_ids": [],
+              "page_id": "p1",
+              "required_qualifications": [],
+              "role": "Imported page; rhetorical role unverified",
+              "source_links": [],
+              "timing_seconds": null,
+              "transition_to_next": null,
+              "page_ref": {
+                "path": ".deckmaster/objects/b8/b8a9e003412b7b1582e5945073b7f73d94bf8877f0fe4cf6058ab60cefc5ef8c.json",
+                "sha256": "b8a9e003412b7b1582e5945073b7f73d94bf8877f0fe4cf6058ab60cefc5ef8c"
+              },
+              "basis_status": "current",
+              "goal_id": null,
+              "purpose": "Not recorded in the imported manuscript",
+              "unresolved_facts": []
+            },
+            {
+              "audience_question": "Not recorded in the imported manuscript",
+              "content_profile": "mixed",
+              "density_rationale": "Imported content retained; density has not been assessed",
+              "intended_takeaway": "Not recorded in the imported manuscript",
+              "narrative_node_ids": [],
+              "page_id": "p2",
+              "required_qualifications": [],
+              "role": "Imported page; rhetorical role unverified",
+              "source_links": [],
+              "timing_seconds": null,
+              "transition_to_next": null,
+              "page_ref": {
+                "path": ".deckmaster/objects/15/15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118.json",
+                "sha256": "15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118"
+              },
+              "basis_status": "current",
+              "goal_id": null,
+              "purpose": "Not recorded in the imported manuscript",
+              "unresolved_facts": []
+            }
+          ],
+          "input_summary": null,
+          "chapters": [],
+          "input": {
+            "chapters": [],
+            "issues": [],
+            "page_budget": {
+              "exact": null,
+              "max": null,
+              "target": null
+            },
+            "page_order": [
+              "p1",
+              "p2"
+            ],
+            "page_roles": [
+              {
+                "audience_question": "Not recorded in the imported manuscript",
+                "content_profile": "mixed",
+                "density_rationale": "Imported content retained; density has not been assessed",
+                "intended_takeaway": "Not recorded in the imported manuscript",
+                "narrative_node_ids": [],
+                "page_id": "p1",
+                "required_qualifications": [],
+                "role": "Imported page; rhetorical role unverified",
+                "source_links": [],
+                "timing_seconds": null,
+                "transition_to_next": null
+              },
+              {
+                "audience_question": "Not recorded in the imported manuscript",
+                "content_profile": "mixed",
+                "density_rationale": "Imported content retained; density has not been assessed",
+                "intended_takeaway": "Not recorded in the imported manuscript",
+                "narrative_node_ids": [],
+                "page_id": "p2",
+                "required_qualifications": [],
+                "role": "Imported page; rhetorical role unverified",
+                "source_links": [],
+                "timing_seconds": null,
+                "transition_to_next": null
+              }
+            ],
+            "schema_version": "content_plan_input.v2",
+            "speech_policy": {
+              "mode": "none",
+              "output": "none",
+              "source": "default"
+            },
+            "time_budget": {
+              "constraint": "unspecified",
+              "interaction_seconds": null,
+              "speaking_seconds": null,
+              "total_seconds": null
+            },
+            "tradeoff_issue_ids": []
+          },
+          "previous_ref": {
+            "path": ".deckmaster/objects/01/014032f024c51b69f027a58ddf675453ec770ffa95481c814e6dcfd0deaef737.json",
+            "sha256": "014032f024c51b69f027a58ddf675453ec770ffa95481c814e6dcfd0deaef737"
+          },
+          "basis": {
+            "input_digest": "7d44763564182455ca1e8de5bd58630634b3c8b5db78b5fae7fa9e1536bc8fd7",
+            "revision_id": "7f6e459b6cbb4a8b965f71d8307aae4d"
+          },
+          "narrative_ref": null,
+          "imported_manuscript": {
+            "claimed_confirmation_evidence": {
+              "actor_id": null,
+              "assurance": "unverified",
+              "kind": "approved_document",
+              "presentation_ref": null,
+              "source_locator": "import:actual-manuscript",
+              "source_ref": {
+                "path": ".deckmaster/objects/49/491e1944f6a0ed78585335143a6dabbb5683a1cec9872da2881b9a59c3117479.json",
+                "sha256": "491e1944f6a0ed78585335143a6dabbb5683a1cec9872da2881b9a59c3117479"
+              },
+              "transport_receipt_ref": null
+            },
+            "preserve_mainline": true,
+            "source_ref": {
+              "path": ".deckmaster/objects/49/491e1944f6a0ed78585335143a6dabbb5683a1cec9872da2881b9a59c3117479.json",
+              "sha256": "491e1944f6a0ed78585335143a6dabbb5683a1cec9872da2881b9a59c3117479"
+            },
+            "unresolved_mapping_items": [
+              "Original narrative relationships and source claims were not independently verified; original bytes remain in source_ref"
+            ]
+          },
+          "unresolved_facts": [
+            "Original narrative relationships and source claims were not independently verified; original bytes remain in source_ref"
+          ]
+        }
+      },
+      "all_atoms_mapped_without_fabricated_sources": true,
+      "unselected_page_original_ref_preserved": true,
+      "notes_preserved": true
+    }
+  },
+  {
+    "case": "C3-authored-new-atom-requires-real-mapping",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "refusal": "content_mapping: new visible atoms need explicit Narrative/source mappings; use a bounded host rewrite",
+      "authored_mapping_not_fabricated": true
+    }
+  },
+  {
+    "case": "reconciliation-pause-cancel-recovery-noop-and-output-retention",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "recovery": {
+        "status": "awaiting_host",
+        "project_id": "reconcile-cancel-recovery",
+        "revision_id": "ad835e2cd8b74b89962d551f5e347bd2",
+        "requested_action": "continue",
+        "result_refs": [],
+        "pending_tasks": [
+          {
+            "task_id": "10cbd884cdfb",
+            "operation_id": "compose-279558f25404",
+            "kind": "compose",
+            "intent": "input_revision",
+            "method_release": {
+              "methods_sha256": "9d20470b5acd415cf45b350b234cce10d3cf4c1b294fd0d3931408d5d5765560",
+              "release_id": "573a46a85bf9-13e3d2708abf"
+            },
+            "current_method_release": {
+              "release_id": "573a46a85bf9-13e3d2708abf",
+              "methods_sha256": "9d20470b5acd415cf45b350b234cce10d3cf4c1b294fd0d3931408d5d5765560"
+            },
+            "method_basis_status": "current",
+            "review_stage": "final",
+            "status": "awaiting_host",
+            "scope_pages": [
+              "p1",
+              "p2"
+            ],
+            "instruction": "输入已更新（operation b51b8e39-9a8f-49a8-adee-7319b2e64d34）：L1 actual input reconciliation and cancellation recovery。读取新输入与 diff，提交 compose.v2 input_revision：changed_layers、每个变化层的 proposal Ref 与 diff。",
+            "inputs": [],
+            "dispatch_revision": "ad835e2cd8b74b89962d551f5e347bd2",
+            "produced_against": "e756c79dbf3f7300a5f468cc3ae6ac35cbc63be4585dad2c9559ed741b97a170",
+            "call_allowances": [],
+            "sources": [],
+            "resolved_design_context": {
+              "allowed_asset_ids": [],
+              "assets": [],
+              "canvas": {
+                "fit": "contain",
+                "height_px": 900,
+                "slide_height_in": 7.5,
+                "slide_width_in": 13.333333333333334,
+                "width_px": 1600
+              },
+              "default_style_id": "default",
+              "fonts": [
+                {
+                  "asset_id": null,
+                  "face": "Regular",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "body",
+                  "weight": 400
+                },
+                {
+                  "asset_id": null,
+                  "face": "Bold",
+                  "fallback_font_ids": [],
+                  "family": "Noto Sans CJK SC",
+                  "font_id": "heading",
+                  "weight": 700
+                }
+              ],
+              "language": "zh-CN",
+              "styles": [
+                {
+                  "colors": {
+                    "accent": "#1478FF",
+                    "background": "#FFFFFF",
+                    "text": "#14213D"
+                  },
+                  "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+                  "style_id": "default",
+                  "typography": {
+                    "auxiliary_size_pt": 12,
+                    "body_font_id": "body",
+                    "body_size_pt": 18,
+                    "heading_font_id": "heading",
+                    "heading_size_pt": 30
+                  }
+                }
+              ]
+            },
+            "method_resources": [
+              {
+                "id": "source-reading",
+                "relative_path": "references/source-reading.md",
+                "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+                "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+              },
+              {
+                "id": "content-methods",
+                "relative_path": "references/content-methods.md",
+                "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+                "sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+              },
+              {
+                "id": "content-examples",
+                "relative_path": "references/content-examples.md",
+                "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+                "sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+              },
+              {
+                "id": "input-update",
+                "relative_path": "references/input-update.md",
+                "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+                "sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6"
+              }
+            ],
+            "project_context": {
+              "task": {
+                "audience": "new support staff",
+                "brief": "L1_SYNTHETIC fixed training; no benefits measurement.",
+                "existing_decisions": [],
+                "page_limit": null,
+                "presentation_mode": "read_alone",
+                "presentation_mode_source": "provided",
+                "scenario": "A bounded changed use context, same visible facts",
+                "title": "Deck task"
+              },
+              "input_digest": "1fa53599f19f0a8160395dddf5eff27df76fba4c347547aa2d9ade0f1db5c20f",
+              "dispatch_revision": "ad835e2cd8b74b89962d551f5e347bd2",
+              "current_revision": "ad835e2cd8b74b89962d551f5e347bd2",
+              "context_status": "current",
+              "input_alignment": "needs_reconciliation"
+            },
+            "staging_dir": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/run2/reconcile-cancel-recovery/.deckmaster/staging/compose-279558f25404",
+            "collaboration_binding": {
+              "adoption_policy": "within_scope",
+              "authorization_ref": null,
+              "decision_refs": [],
+              "eligibility_basis": [
+                {
+                  "identity": "brief",
+                  "kind": "task_fact",
+                  "projection": "value",
+                  "ref": null,
+                  "sha256": "b8cd2e71518e734149197856aa953699f4377a66b49dda8a08539ff683dd959e"
+                },
+                {
+                  "identity": "page_limit",
+                  "kind": "task_fact",
+                  "projection": "value",
+                  "ref": null,
+                  "sha256": "168c742cce44e10c930a9c2c77d1ebba571165136c17b6c5679ad46f046dde6d"
+                },
+                {
+                  "identity": "content_plan",
+                  "kind": "artifact",
+                  "projection": "content",
+                  "ref": {
+                    "path": ".deckmaster/objects/d0/d059135ea22a62b96baf6b967cbbedb612adf023e5f64a746038b24be4bfcd2c.json",
+                    "sha256": "d059135ea22a62b96baf6b967cbbedb612adf023e5f64a746038b24be4bfcd2c"
+                  },
+                  "sha256": "d059135ea22a62b96baf6b967cbbedb612adf023e5f64a746038b24be4bfcd2c"
+                }
+              ],
+              "eligibility_digest": "c6a9393d0c34b40ee43637b41e9d298f6fce43b0fbbf1e41418c544d00f80913",
+              "executor_type": "host",
+              "phase": "page_copy",
+              "request_id": "req-92153d329fae",
+              "write_scope": {
+                "allow_page_membership_change": false,
+                "allow_page_order_change": false,
+                "external_artifact_ref": null,
+                "layers": [
+                  "narrative",
+                  "page_copy",
+                  "plan",
+                  "speech"
+                ],
+                "page_ids": [
+                  "p1",
+                  "p2"
+                ],
+                "page_manifest_ref": null,
+                "purpose": "working",
+                "subject": "deck"
+              }
+            },
+            "execution_ref": null,
+            "protocol_version": "compose.v2",
+            "required_capabilities": [
+              "compose.v2",
+              "collaboration.v1",
+              "rc3-entry.v1"
+            ],
+            "source_reading": []
+          }
+        ],
+        "findings": [],
+        "next_action": "submit_host_results",
+        "input_alignment": "needs_reconciliation",
+        "review_url": null,
+        "view_status": "view_arrives_with_workbench",
+        "evidence_level": "engineering",
+        "completion": {
+          "state": "awaiting_decision",
+          "request_id": "req-92153d329fae",
+          "intent": "full_deck",
+          "content_intent": null,
+          "artifact_revision_id": "ad835e2cd8b74b89962d551f5e347bd2",
+          "effective_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "plan",
+              "page_copy",
+              "speech",
+              "review",
+              "output"
+            ],
+            "page_ids": [
+              "p1",
+              "p2"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "outputs": [
+            {
+              "path": ".deckmaster/objects/d0/d059135ea22a62b96baf6b967cbbedb612adf023e5f64a746038b24be4bfcd2c.json",
+              "sha256": "d059135ea22a62b96baf6b967cbbedb612adf023e5f64a746038b24be4bfcd2c"
+            },
+            {
+              "path": ".deckmaster/objects/2d/2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3.json",
+              "sha256": "2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3"
+            },
+            {
+              "path": ".deckmaster/objects/15/15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118.json",
+              "sha256": "15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118"
+            }
+          ],
+          "checks": [
+            {
+              "kind": "requested_content",
+              "status": "not_evaluated",
+              "basis": "imported manuscript retained without new argument"
+            }
+          ],
+          "missing": [
+            {
+              "code": "input_reconciliation_pending",
+              "next_action": "reconcile_current_inputs"
+            },
+            {
+              "code": "content_requirement",
+              "detail": "imported manuscript retained without new argument"
+            }
+          ],
+          "responsible_role": "content",
+          "next_action": "imported manuscript retained without new argument"
+        },
+        "eligibility": {
+          "allowed": true,
+          "action": "continue_project",
+          "enforcement": "active",
+          "reason_codes": [],
+          "reasons": [],
+          "responsible_role": "runtime",
+          "next_action": null,
+          "decision_card": null,
+          "scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "output",
+              "page_copy",
+              "plan",
+              "review",
+              "speech"
+            ],
+            "page_ids": [
+              "p1",
+              "p2"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          }
+        }
+      },
+      "adopted": {
+        "status": "accepted",
+        "project_id": "reconcile-cancel-recovery",
+        "revision_id": "caad0495941e430e9267ca4d81ad7b15",
+        "requested_action": "task accept",
+        "result_refs": [
+          {
+            "path": ".deckmaster/objects/3f/3fcd9c24599f7b8fe9ea68e28b3486ecb3c0ccecec58366c09bc1b0efa2282a2.json",
+            "sha256": "3fcd9c24599f7b8fe9ea68e28b3486ecb3c0ccecec58366c09bc1b0efa2282a2"
+          }
+        ],
+        "pending_tasks": [],
+        "findings": [],
+        "next_action": "continue_within_request",
+        "input_alignment": "current",
+        "review_url": null,
+        "view_status": "view_arrives_with_workbench",
+        "evidence_level": "engineering",
+        "current_revision_id": "caad0495941e430e9267ca4d81ad7b15",
+        "new_page_hashes": {},
+        "impact_summary": "Only contextual input changed; complete Plan and visible facts still apply",
+        "operation_result": {
+          "status": "accepted",
+          "revision_id": "caad0495941e430e9267ca4d81ad7b15",
+          "variant": "input_revision",
+          "adopted": true,
+          "changed_layers": [
+            "plan"
+          ],
+          "narrative_ref": null,
+          "impact_summary": "Only contextual input changed; complete Plan and visible facts still apply",
+          "new_page_hashes": {},
+          "plan_ref": {
+            "path": ".deckmaster/objects/3f/3fcd9c24599f7b8fe9ea68e28b3486ecb3c0ccecec58366c09bc1b0efa2282a2.json",
+            "sha256": "3fcd9c24599f7b8fe9ea68e28b3486ecb3c0ccecec58366c09bc1b0efa2282a2"
+          },
+          "page_refs": [
+            {
+              "path": ".deckmaster/objects/2d/2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3.json",
+              "sha256": "2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3"
+            },
+            {
+              "path": ".deckmaster/objects/15/15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118.json",
+              "sha256": "15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118"
+            }
+          ],
+          "result_refs": [
+            {
+              "path": ".deckmaster/objects/3f/3fcd9c24599f7b8fe9ea68e28b3486ecb3c0ccecec58366c09bc1b0efa2282a2.json",
+              "sha256": "3fcd9c24599f7b8fe9ea68e28b3486ecb3c0ccecec58366c09bc1b0efa2282a2"
+            }
+          ],
+          "invalidated_outputs": [],
+          "effective_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "page_copy",
+              "plan",
+              "speech"
+            ],
+            "page_ids": [
+              "p1",
+              "p2"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "next_action": "continue_within_request"
+        },
+        "variant": "input_revision",
+        "adopted": true,
+        "changed_layers": [
+          "plan"
+        ],
+        "page_refs": [
+          {
+            "path": ".deckmaster/objects/2d/2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3.json",
+            "sha256": "2d5886c5b15842d75ae9fd64aca535c578ae349170fe9aec37abcb58319050e3"
+          },
+          {
+            "path": ".deckmaster/objects/15/15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118.json",
+            "sha256": "15b6e90f156c6ea71674dc1b20ca698c5abd24794b2766c1b1f9e88835a7b118"
+          }
+        ],
+        "plan_ref": {
+          "path": ".deckmaster/objects/3f/3fcd9c24599f7b8fe9ea68e28b3486ecb3c0ccecec58366c09bc1b0efa2282a2.json",
+          "sha256": "3fcd9c24599f7b8fe9ea68e28b3486ecb3c0ccecec58366c09bc1b0efa2282a2"
+        },
+        "narrative_ref": null,
+        "invalidated_outputs": [],
+        "effective_scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "page_copy",
+            "plan",
+            "speech"
+          ],
+          "page_ids": [
+            "p1",
+            "p2"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        }
+      },
+      "pause_result": {
+        "status": "needs_input",
+        "project_id": "reconcile-cancel-recovery",
+        "revision_id": "fa986eaef8d2416ba6723bc3337efbda",
+        "requested_action": "continue",
+        "result_refs": [],
+        "pending_tasks": [],
+        "findings": [
+          {
+            "code": "request_paused",
+            "field": "eligibility/dispatch.compose",
+            "message": "L1 pause request before continue",
+            "reasons": [
+              {
+                "code": "request_paused",
+                "detail": "L1 pause request before continue"
+              }
+            ],
+            "responsible_role": "user",
+            "next_action": "resume the request explicitly (resume never widens scope) or cancel it",
+            "decision_card": {
+              "kind": "stop_card",
+              "action": "dispatch.compose",
+              "state": "paused"
+            }
+          }
+        ],
+        "next_action": "resume the request explicitly (resume never widens scope) or cancel it",
+        "input_alignment": "needs_reconciliation",
+        "review_url": null,
+        "view_status": "view_arrives_with_workbench",
+        "evidence_level": "engineering",
+        "eligibility": {
+          "allowed": false,
+          "action": "dispatch.compose",
+          "enforcement": "active",
+          "reason_codes": [
+            "request_paused"
+          ],
+          "reasons": [
+            {
+              "code": "request_paused",
+              "detail": "L1 pause request before continue"
+            }
+          ],
+          "responsible_role": "user",
+          "next_action": "resume the request explicitly (resume never widens scope) or cancel it",
+          "decision_card": {
+            "kind": "stop_card",
+            "action": "dispatch.compose",
+            "state": "paused"
+          },
+          "scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "output",
+              "page_copy",
+              "plan",
+              "review",
+              "speech"
+            ],
+            "page_ids": [
+              "p1",
+              "p2"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          }
+        }
+      },
+      "late_old_refusal": "(task 2f4d6437f0ae): result arrived after cancellation; call facts were settled",
+      "noop": {
+        "status": "committed",
+        "operation_id": "8c007f24-3ab8-42de-bb65-a465abfb9d54",
+        "committed_revision_id": "7fad543f7521482197a62cd16e22aa53",
+        "current_revision_id": "7fad543f7521482197a62cd16e22aa53",
+        "request_digest": "f0e84880209236d6f4724cf0178354e7089f8be8bd258513a947c1bf3c9be3b1",
+        "result_ref": {
+          "path": ".deckmaster/objects/35/3505e042f4f48aa484cd6b29cd8228f83f90be1dfef4ab25fb2c0dcd8921eb28.json",
+          "sha256": "3505e042f4f48aa484cd6b29cd8228f83f90be1dfef4ab25fb2c0dcd8921eb28"
+        },
+        "operation_result": {
+          "status": "unchanged",
+          "input_digest": "1fa53599f19f0a8160395dddf5eff27df76fba4c347547aa2d9ade0f1db5c20f",
+          "input_alignment": "current",
+          "revision_id": "7fad543f7521482197a62cd16e22aa53",
+          "diff": {
+            "task_fields_changed": [
+              "audience"
+            ],
+            "sources_added": [],
+            "sources_replaced": [],
+            "sources_removed": [],
+            "sources_metadata": [],
+            "noops": []
+          },
+          "reason": "L1 exact same audience has no semantic change"
+        }
+      },
+      "original_output_ref_preserved": {
+        "path": ".deckmaster/objects/75/7522e4da4d32c23a6de9876b8b16243bd1319b804778d407157407dbbc205a00.json",
+        "sha256": "7522e4da4d32c23a6de9876b8b16243bd1319b804778d407157407dbbc205a00"
+      },
+      "fixed_scope_and_zero_new_calls": true
+    }
+  },
+  {
+    "case": "Plan-only-nochange-trial-then-explicit-adoption",
+    "status": "FAIL",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "AssertionError",
+    "message": "",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_common.py\", line 83, in case\n    detail = fn()\n             ^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_content_r2.py\", line 192, in trial_no_change_case\n    assert adopted['status']=='adopted' and m.models.input_alignment(after['document'])=='current'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+  },
+  {
+    "case": "C5-spent-scope-revoked-does-not-erase-call-fact",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "exhausted_refusal": {
+        "type": "EligibilityBlocked",
+        "message": "eligibility/dispatch.blueprint: no remaining credit for a new external call; an exhausted budget only stops new calls (settlement and adoption stay available)"
+      },
+      "known_replay_after_revoke": {
+        "status": "already_settled",
+        "task_id": "dc32fddde0af",
+        "allowance_id": "call-1",
+        "attempt_id": "attempt-4fad6e0403494bf3b7fb35e42844fbea",
+        "attempt_ref": {
+          "path": ".deckmaster/objects/4a/4a3eb5a52cafbb3d99985ee53c321f9c647cf96e96a716d40b444fb9c14f53ac.json",
+          "sha256": "4a3eb5a52cafbb3d99985ee53c321f9c647cf96e96a716d40b444fb9c14f53ac"
+        }
+      },
+      "grade_not_upgraded": true
+    }
+  }
+]

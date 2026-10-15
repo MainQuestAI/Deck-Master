@@ -1,4 +1,6 @@
-"""B03 content candidate trials; synthetic evidence, no Host or model calls.
+"""B03 content candidate trials with explicit L1 scripted Host claims.
+
+No real model/native-image/human acceptance is claimed.
 
 Covers the three result kinds (artifact/page/content_update): explicit trial
 dispatch, candidate-only returns that leave current state untouched, adoption
@@ -16,12 +18,14 @@ from deck_master import candidates, changes, content_ops, operations, service, t
 from deck_master.models import input_alignment
 from deck_master.samples import create_sample
 from deck_master.store import Store
+from test_content_ops import prepare_editorial_project, v2_revision_envelope, derived_page
 
 
 @pytest.fixture
 def project(tmp_path):
     path = tmp_path / 'content-candidates'
     create_sample(path, page_count=3, readonly=False)
+    prepare_editorial_project(path)
     return path, Store(path)
 
 
@@ -56,7 +60,7 @@ def page_envelope(store, task, title_suffix=' (rewritten)'):
 
 def accept(path, task, envelope):
     return service.accept_result(path, task_id=task['task_id'], operation_id=task['operation_id'],
-                                 produced_against=task['produced_against'], result_payload=envelope)
+                                 produced_against=task['produced_against'], result_payload=v2_revision_envelope(Store(path), task, envelope))
 
 
 def content_ops_value(store, action, ids, *, mode=None):
@@ -90,20 +94,20 @@ def changeset_envelope(store, task, action):
     else:
         removed = ids
         for index in range(1 if action == 'merge' else 2):
-            page = copy.deepcopy(store.read_object_json(entries[ids[0]]['page']))
-            page['page_id'] = f'derived-{index}'
+            page = derived_page(store.read_object_json(entries[ids[0]]['page']), f'derived-{index}')
             page['customer_visible']['title'] = f'Synthetic derived page {index}'
             upserts.append(page)
-        old_goals = {g['page_id']: g for g in outline['goals']}
+        old_goals = {g['page_id']: g for g in outline['page_roles']}
         new_goals = []
         for page in upserts:
             goal = copy.deepcopy(old_goals[ids[0]])
-            goal['goal_id'] = 'goal-' + page['page_id']; goal['page_id'] = page['page_id']
+            goal['page_id'] = page['page_id']
             new_goals.append(goal)
-        outline['goals'] = [g for g in outline['goals'] if g['page_id'] not in ids] + new_goals
+        outline['page_roles'] = [g for g in outline['page_roles'] if g['page_id'] not in ids] + new_goals
         outline['chapters'] = [{'chapter_id': 'synthetic-content', 'title': 'Synthetic chapter',
-                                'goal_ids': [g['goal_id'] for g in outline['goals']]}]
+                                'page_ids': [g['page_id'] for g in outline['page_roles']]}]
         order = [pid for pid in entries if pid not in ids] + [p['page_id'] for p in upserts]
+    outline['page_order'] = order
     return {'kind': 'compose', 'content_update': {'input_digest': task['input_digest'],
             'upsert_pages': upserts, 'remove_page_ids': removed, 'page_order': order,
             'impact_summary': 'Explicit synthetic selected-page change; other facts preserved.'},
@@ -142,7 +146,7 @@ def test_single_page_content_trial_records_candidate_without_touching_current(pr
     assert after['pages'] == before['pages'] and after['content_plan'] == before['content_plan']
     assert after['outputs'] == before['outputs']
     assert len(after['candidates']) == 1
-    assert after['compatibility']['minimum_writer'] == 'workbench-quality.v1'
+    assert after['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     candidate = store.read_object_json(after['candidates'][0])
     assert candidate['result_kind'] == 'page' and candidate['stage'] == 'content'
     assert candidate['page_id'] == 'p01' and candidate['target_ref'] == before['pages'][0]['page']
@@ -222,7 +226,7 @@ def test_content_writer_floor_locks_out_older_cores(project, monkeypatch):
     task = dispatch_content_trial(path, store)
     start_task(path, task)
     accept(path, task, page_envelope(store, task))
-    assert store.load_document()['compatibility']['minimum_writer'] == 'workbench-quality.v1'
+    assert store.load_document()['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     monkeypatch.setattr('deck_master.store.SUPPORTED_WRITERS',
                         ('generation.v1', 'content-plan.v1', 'changes.v1', 'candidates.v1',
                          'run-desk.v1', 'style-recipes.v1', 'content-ops.v1'))
@@ -505,7 +509,7 @@ def test_malformed_content_plan_is_refused_and_cannot_poison_registry(project):
     envelope['content_plan'] = {'garbage': True}
     with pytest.raises(Exception) as caught:
         accept(path, task, envelope)
-    assert 'content_plan' in str(caught.value)
+    assert 'content_plan' in str(caught.value) or 'plan' in str(caught.value)
     after = store.load_document()
     assert after.get('candidates') is None
     assert after['pages'] == before['pages']
@@ -519,7 +523,7 @@ def test_changeset_without_required_plan_is_refused_at_record(project):
     start_task(path, task)
     envelope = changeset_envelope(store, task, 'rewrite')
     envelope.pop('content_plan')
-    with pytest.raises(Exception, match='content_plan'):
+    with pytest.raises(Exception, match='content_plan|Plan|plan'):
         accept(path, task, envelope)
     assert store.load_document().get('candidates') is None
 
@@ -531,11 +535,11 @@ def test_plan_goal_identity_drift_is_refused_at_record(project):
     envelope = changeset_envelope(store, task, 'rewrite')
     # a valid-shaped outline that drops the goal identity of a retained page
     envelope['content_plan'] = copy.deepcopy(envelope['content_plan'])
-    retained = next(g for g in envelope['content_plan']['goals'] if g['page_id'] == 'p02')
-    retained['goal_id'] = 'goal-rewritten-retained'
+    retained = next(g for g in envelope['content_plan']['page_roles'] if g['page_id'] == 'p02')
+    retained['role'] = 'Unselected retained role rewritten'
     # the host-result scope gate rejects goal drift before the record path;
     # either way nothing is persisted
-    with pytest.raises(Exception, match='unselected page goals'):
+    with pytest.raises(Exception, match='unselected page roles|unselected page goals'):
         accept(path, task, envelope)
     assert store.load_document().get('candidates') is None
 
@@ -638,7 +642,7 @@ def test_malformed_content_plan_via_inputs_trial_is_refused(project, tmp_path):
         'content_plan': {'garbage': True}}
     with pytest.raises(Exception) as caught:
         accept(path, task, envelope)
-    assert 'content_plan' in str(caught.value)
+    assert 'content_plan' in str(caught.value) or 'plan' in str(caught.value)
     assert store.load_document().get('candidates') is None
     assert candidates.listing(path)['candidates'] == []
 

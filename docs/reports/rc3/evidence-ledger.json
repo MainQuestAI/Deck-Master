@@ -154,13 +154,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：精确selected public PPTX/current-control谓词与合成SDK正负已验证；真实human professional_use/pass仍缺席，不以L1代签。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -173,13 +188,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：当前fixed unit与R2 installed行为覆盖身份/政策/依赖负例；R3按未变模块复用。普通JSON/Skill名不能提升受信人类。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -192,13 +222,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：review用途与professional gap分开；F4严格needs_reviewer409/4仍提供完整报告，R2实际installedUI下载通过，R3精确复用。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -211,13 +256,28 @@
         "RC3-04"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：新真实instruction source/确认稿imported_mapping/未知来源等级保真；F1完整写集合与F3source/version/locator原失败在R2关闭。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -230,13 +290,28 @@
         "RC3-04"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：F2 committed历史来源去重保原request/credit、closed授权不重开；pause/resume/明确scope与variant公开轨迹有界验证。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -249,13 +324,28 @@
         "RC3-04"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：真实audience basis stale与局部copy/notes依赖切片分开，四层原子采用/全失败回滚；R3按17未变安装模块复用R2行为。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -268,13 +358,28 @@
         "RC3-04"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：R2真实旧03安装迁移/rollback拒13/新settle unknown/rollforward speech完成F8；旧Page/visual/closed事实保留。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -577,13 +682,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：当前默认framing无implicit grant/零制作，R3原F9协调主句实际Master完成规划/下一责任并正常停止。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -596,13 +716,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：CLI/Studio canonical确认稿/fidelity/完整写集合/硬页限真实路径；F5实际新建与空项目future页scope在R2关闭，不重建既定主线。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -615,13 +750,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：严格源外report源全树hash/mtime/mode不变，Review真实只读；窄scope/越界拒绝保留，needs_reviewer不冒称独立专业结论。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -634,13 +784,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：418入口分类及正式writer统一资格/claim/CAS；F1/F3/F6原probe在R2关闭，R3固定unit2362/render71退出0。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -653,13 +818,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：撤回before/mid/accept、still-running stale先结算后业务拒绝、cancel/terminal replay/unknown事实保真；无新真实付费provider调用。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -672,13 +852,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：普通needs_reviewer、有效明确降级/委派/fidelity与human professional policy分离，报告和实际缺口可读。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -691,13 +886,28 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：共享父预算/耗尽后已发生结果与new begin区分，same-source不刷新credit；copy-only不授权图像，SVG/notes路径保持零额外image。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -997,13 +1207,29 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：实际CLI/installed Studio/Host三入口共享Runtime/合同/依据，R3 UI16delta断言通过；最终docsHEAD安装和7CI待Root。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -1018,13 +1244,29 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：16代表组合明确R3新1+R2精确复用15，同一个实际Host；Content独立出口/Design零图/Review host_self needs_reviewer均真实保留。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -1039,13 +1281,29 @@
         "RC3-05"
       ],
       "status": "NOT_RUN",
-      "evidence_layers": [],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
-      "limitations": [],
+      "findings": [
+        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：当前a53/1.0.0rc3实际隔离release、270canonical+1generated/四Role、23方法资源和真实工作单消费；无真实HOME激活。"
+      ],
+      "limitations": [
+        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+      ],
       "signed_by": null
     },
     {
@@ -1270,8 +1528,18 @@
       "capability_owner": "T07",
       "execution_card": "RC3-04",
       "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
+      "findings": [
+        "RC3-04运行a53a265实际隔离方法/合同/包/四Role字节与工作单应用证据；16组合为R3新1+R2复用15，同一个实际Host。最终docsHEAD CI PENDING_FINAL_HEAD，不以I03加载或合成门禁代签整个T07/专业/人类/全RC3。"
+      ]
     },
     {
       "cq_id": "CQ-08",
@@ -1331,8 +1599,18 @@
       "capability_owner": "T07",
       "execution_card": "RC3-04",
       "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/manifest.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+      ],
+      "findings": [
+        "RC3-04运行a53a265实际隔离方法/合同/包/四Role字节与工作单应用证据；16组合为R3新1+R2复用15，同一个实际Host。最终docsHEAD CI PENDING_FINAL_HEAD，不以I03加载或合成门禁代签整个T07/专业/人类/全RC3。"
+      ]
     }
   ],
   "draft_results": {

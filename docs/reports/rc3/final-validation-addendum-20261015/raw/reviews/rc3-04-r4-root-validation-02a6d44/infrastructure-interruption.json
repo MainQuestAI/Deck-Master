@@ -1,0 +1,66 @@
+{
+  "kind": "root_observed_infrastructure_interruption_not_broad_pass",
+  "observed_at": "2026-10-15T08:59:48.878827+00:00",
+  "actual_root_filesystem_full": "overlay 32G used30G Avail0 Use100%; independent /tmp 8.8G Avail8.8G at first df",
+  "observed_writer_failure": "new v3 draft mkdir OSError Errno28; originalv2 unchanged",
+  "root_actions": "SIGINT sent only exact Root source browser pid674717 and installed recovery pid757862; source second SIGINT after cleanup stall; no product/test mutation for infrastructure",
+  "browser_xml_partial_summary": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "4",
+      "skipped": "0",
+      "tests": "283",
+      "time": "1336.665",
+      "timestamp": "2026-10-15T08:33:56.610903+00:00",
+      "hostname": "a06a8ea56218"
+    }
+  ],
+  "browser_failures_preserved": [
+    {
+      "test": "tests.rebuild.test_rc_closure_browser::test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect[missing_ref]",
+      "outcome": "failure",
+      "message_first_line": "AssertionError: Locator expected to be visible"
+    },
+    {
+      "test": "tests.rebuild.test_rc_closure_browser::test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect[old_basis]",
+      "outcome": "failure",
+      "message_first_line": "AssertionError: Locator expected to be visible"
+    },
+    {
+      "test": "tests.rebuild.test_rc_closure_browser::test_real_draft_conflict_compares_downloads_and_saves_all_texts[requirement-1280-800]",
+      "outcome": "failure",
+      "message_first_line": "AssertionError: Locator expected to be visible"
+    },
+    {
+      "test": "tests.rebuild.test_rc_closure_browser::test_real_draft_conflict_compares_downloads_and_saves_all_texts[all-1280-800]",
+      "outcome": "failure",
+      "message_first_line": "AssertionError: Locator expected to be visible"
+    }
+  ],
+  "browser_exit": -2,
+  "browser_complete": false,
+  "installed_recovery_exit": 1,
+  "installed_recovery_complete": false,
+  "installed_recovery_note": "KeyboardInterrupt during run, pytest tmp_path teardown KeyError; no normal tests summary or required actual-evidence receipt. Dot/F/E prefix not counted as complete suite. Some early failures may predate disk full; exact focused diagnostic required before attributing all failures to infrastructure.",
+  "scope": "does not supersede real 3 unit failures C3 asset regression now R5; no software/model/human acceptance upgrade",
+  "raw_file_identities": {
+    "reviews/rc3-04-r4-root-validation-02a6d44/browser.log": {
+      "bytes": 7415,
+      "sha256": "c8365cc6949f4ead31f13be38c72a4d2a2c4140dc90f410e4e758a12ec738aed"
+    },
+    "reviews/rc3-04-r4-root-validation-02a6d44/browser.xml": {
+      "bytes": 95735,
+      "sha256": "2a61a4a23aa8464b986d1c788690b2c0cff854f67aca8627bfc1b9514b3fc4ba"
+    },
+    "reviews/rc3-04-r4-root-validation-02a6d44/browser-result.json": {
+      "bytes": 1117,
+      "sha256": "b8315845bd999fafbbccf877de320220668b8a5dee1a1c01a57c950ad0d29041"
+    },
+    "reviews/rc3-04-r4-installed-gates-02a6d44/recovery.log": {
+      "bytes": 8044,
+      "sha256": "0a7725ffb00e2114ed9aa82dd0731df1e96284e31482eefdf81a63dc2efd27d9"
+    }
+  },
+  "current_storage": "Filesystem      Size  Used Avail Use% Mounted on\noverlay          32G   27G  3.5G  89% /\nnone            8.8G  3.5G  5.4G  39% /tmp\n"
+}

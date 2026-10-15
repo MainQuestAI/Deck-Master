@@ -7,7 +7,7 @@ import importlib.util
 
 import pytest
 
-from deck_master import changes, generation, service, styles, tasks
+from deck_master import changes, content_ops, generation, service, styles, tasks
 from deck_master.models import bump_revision, content_identity
 from deck_master.operations import OperationError
 
@@ -57,7 +57,11 @@ def mutate(flow, pid, field='content'):
     else:
         artifact = store.read_object_json(entry['blueprint']); artifact['provenance']['tool'] = 'synthetic-concurrent-update'; entry['blueprint'] = store.put_json_object(artifact)
     updated = bump_revision(updated, {'operation_id': 'test-' + uuid.uuid4().hex, 'kind': 'task_update', 'description': 'Explicit synthetic mutation', 'read_set': []})
+    if field in ('content', 'density'):
+        content_ops.refresh_plan_links(store, doc, updated, updated['change']['operation_id'])
     store.commit_change(base_revision=doc['revision_id'], document=updated, operation_id=updated['change']['operation_id'])
+    if field in ('content', 'density'):
+        flow.qualify_fidelity()
 
 
 def test_proposal_and_confirmation_preserve_pages_and_do_not_dispatch(flow):
@@ -69,7 +73,7 @@ def test_proposal_and_confirmation_preserve_pages_and_do_not_dispatch(flow):
     op = str(uuid.uuid4()); result = styles.confirm(flow.project, proposal_id=proposal['proposal_id'], base_revision=before['revision_id'], operation_id=op)
     after = flow.store.load_document()
     assert before['pages'] == after['pages'] and before['tasks'] == after['tasks'] and content_identity(before) == content_identity(after)
-    assert after['compatibility']['minimum_writer'] == 'workbench-quality.v1'
+    assert after['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     recipe = styles.show(flow.project, recipe_id=result['operation_result']['recipe_id'])['recipe']
     assert recipe['suggestion_state'] == 'confirmed'
     mutate(flow, 'p03')
@@ -91,7 +95,7 @@ def test_recipe_revision_has_diff_and_does_not_mutate_old_fixed_input(flow):
     with pytest.raises(generation.GenerationError): generation.freeze(flow.project, task_id=task['task_id'], input=bad, base_revision=flow.store.current_revision_id(), operation_id=str(uuid.uuid4()))
     frozen = generation.freeze(flow.project, task_id=task['task_id'], input=original, base_revision=flow.store.current_revision_id(), operation_id=str(uuid.uuid4()))
     assert frozen['input']['style_recipe_ref'] == first['recipe_ref']
-    assert flow.store.load_document()['compatibility']['minimum_writer'] == 'rc3.v1'
+    assert flow.store.load_document()['compatibility']['minimum_writer'] == 'rc3-entry.v1'
 
 
 def test_conflicting_density_requires_explicit_new_proposal(flow):
@@ -119,7 +123,7 @@ def test_first_trial_then_adoption_then_explicit_expansion(flow):
     assert end['pages'][2]['blueprint'] != original[2]['blueprint'] and end['pages'][2]['svg'] is None
     for t in (task, next_task):
         current = flow.task(t['task_id']); assert len(current['call_allowances']) == 1 and current['call_allowances'][0]['state'] == 'consumed'
-    assert end['compatibility']['minimum_writer'] == 'rc3.v1'
+    assert end['compatibility']['minimum_writer'] == 'rc3-entry.v1'
 
 
 @pytest.mark.parametrize('field', ['content', 'blueprint'])

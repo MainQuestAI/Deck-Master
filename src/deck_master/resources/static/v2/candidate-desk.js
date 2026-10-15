@@ -133,6 +133,7 @@ export function candidateDesk(app, data) {
         el('h2', {}, label), el('p', {class: 'muted'}, version(leftRevision))),
         el('section', {class: 'candidate-column candidate-text-diff', 'data-side': 'candidate', 'data-candidate-id': selected.candidate_id},
           diffView(pageText(leftPage), pageText(selected.page), '当前正文', '候选正文'),
+          (leftPage?.speaker_notes||selected.page?.speaker_notes)&&diffView(leftPage?.speaker_notes||'',selected.page?.speaker_notes||'','当前口播稿','候选口播稿'),
           el('p', {class: 'muted'}, `候选返回 ${clock(selected.candidate.created_at)}`)));
       return;
     }

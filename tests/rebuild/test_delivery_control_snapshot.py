@@ -155,7 +155,7 @@ def test_restore_to_a_relaxed_snapshot_does_not_restore_its_policy(tmp_path):
     # Content came back; the control facts did not move.
     assert after["policy"]["professional_review_required_for_delivery"] is True
     assert after["collaboration"]["request"]["paused"] is True
-    assert after["compatibility"]["minimum_writer"] == "collaboration.v1"
+    assert after["compatibility"]["minimum_writer"] == "rc3-entry.v1"
     decision = eligibility.evaluate(store, after, after, "readiness.final")
     assert "professional_review_required" in decision["reason_codes"]
 

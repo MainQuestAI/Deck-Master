@@ -408,15 +408,9 @@ def _edit(store, *, page, base_revision, page_hash, operation_id):
 def export_project(project_dir, *, output_dir, purpose='working', revision=None, export_id=None, notes_policy=None):
     """Export a frozen public copy or explicitly internal recovery package."""
     from .exports import create
-    if purpose == "delivery":
-        # The delivery purpose consumes the unified gate (CONTRACTS §6.2 row 6);
-        # review/working/engineering copies stay report-only.
-        action = "delivery.historical" if revision else "export.delivery"
-        _eligibility_guard(Store(Path(project_dir).expanduser()), action,
-                           {"layers": ["output"]},
-                           {"expected_output_ref": (None if revision else
-                                                    (Store(Path(project_dir).expanduser())
-                                                     .load_document().get("outputs") or {}).get("pptx"))})
+    # exports.create owns the exact selected artifact/projection + current
+    # control judgement. A preliminary current-only check would disagree for
+    # historical files and for sanitized presenter-notes projections.
     return create(project_dir, output_dir=output_dir, purpose=purpose, revision=revision,
                   export_id=export_id, notes_policy=notes_policy)
 
@@ -502,7 +496,6 @@ def _restore(store, *, revision_id, base_revision, operation_id):
     # Restore recovers content/visual facts only; the current request,
     # decisions, withdrawals, pauses, budget and writer boundary stay as they
     # are (CONTRACTS §7.1). It is still a project write and consumes the gate.
-    _eligibility_guard(store, "restore")
     current=store.load_document()
     prior=operation_revision(store,current,operation_id)
     if prior:
@@ -515,9 +508,33 @@ def _restore(store, *, revision_id, base_revision, operation_id):
         parent=ancestor['parent_revision_id']
         ancestor=store.load_document(parent) if parent else None
     if ancestor is None:raise StoreError('revision_id','not a committed ancestor of current revision')
+    _eligibility_guard(store, 'restore', restore_targets(store, current, ancestor))
     updated=restore_document(store,current,ancestor,operation_id)
     store._commit_locked(base_revision=base_revision,document=updated,operation_id=operation_id,blobs=[])
     return {'status':'restored','revision_id':updated['revision_id'],'restored_from':revision_id}
+
+
+def restore_targets(store, current, ancestor):
+    """Actual changed content/visual targets of a restore under current control."""
+    current_pages = {entry['page_id']: entry for entry in current['pages']}
+    old_pages = {entry['page_id']: entry for entry in ancestor['pages']}
+    targets = sorted(pid for pid in current_pages.keys() | old_pages.keys()
+                     if current_pages.get(pid) != old_pages.get(pid))
+    layers = []
+    for pointer, layer in (('narrative', 'narrative'), ('content_plan', 'plan'), ('outputs', 'output')):
+        if current.get(pointer) != ancestor.get(pointer):
+            layers.append(layer)
+    for pid in targets:
+        before, after = current_pages.get(pid), old_pages.get(pid)
+        if not before or not after or before['page'] != after['page']:
+            layers.extend(['page_copy', 'speech'])
+        if not before or not after or before.get('blueprint') != after.get('blueprint'):
+            layers.append('blueprint')
+        if not before or not after or before.get('svg') != after.get('svg'):
+            layers.append('svg')
+    return {'page_ids': targets, 'layers': sorted(set(layers)),
+            'allow_page_membership_change': set(current_pages) != set(old_pages),
+            'allow_page_order_change': [e['page_id'] for e in current['pages']] != [e['page_id'] for e in ancestor['pages']]}
 
 
 def restore_document(store, current, past, operation_id):

@@ -1,0 +1,37 @@
+{
+  "decision": {
+    "status": "accepted",
+    "decision_ref": {
+      "path": ".deckmaster/objects/24/24d37e9149cd406a860b8ebbfa3391f792c0df96920e12fa6a29597169f5efb0.json",
+      "sha256": "24d37e9149cd406a860b8ebbfa3391f792c0df96920e12fa6a29597169f5efb0"
+    },
+    "decision_id": "dec-22d8ff2d71f0",
+    "assurance": "host_attested",
+    "revision_id": "0265454b305e48d781906b91a1c3eba7"
+  },
+  "result": {
+    "status": "accepted",
+    "adopted_refs": [
+      {
+        "path": ".deckmaster/objects/8b/8b2844c444176829f391c82f0376cf9b4ddd8145c16e2d98cc6f5f7647e628c7.json",
+        "sha256": "8b2844c444176829f391c82f0376cf9b4ddd8145c16e2d98cc6f5f7647e628c7"
+      }
+    ],
+    "invalidated_refs": [],
+    "adopted_kind": "content_plan.v2",
+    "creates_confirmation": false,
+    "authorizes_production": false,
+    "revision_id": "324c57121559477eb88fcc9c2633aada"
+  },
+  "identity": {
+    "pid": 489422,
+    "time": "2026-10-15T05:56:52.422001+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  }
+}

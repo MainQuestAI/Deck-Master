@@ -1,0 +1,324 @@
+[
+  {
+    "case": "G03-four-layer-real-adoption-rollback-replay-correct-auto",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "accepted": {
+        "status": "accepted",
+        "project_id": "four-layers",
+        "revision_id": "20c6cc218a1b4ad3b25e7c0a2d688c5c",
+        "requested_action": "task accept",
+        "result_refs": [
+          {
+            "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+            "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+          },
+          {
+            "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+            "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          },
+          {
+            "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+            "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+          },
+          {
+            "path": ".deckmaster/objects/dc/dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93.json",
+            "sha256": "dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93"
+          }
+        ],
+        "pending_tasks": [],
+        "findings": [],
+        "next_action": "continue_within_request",
+        "input_alignment": "current",
+        "review_url": null,
+        "view_status": "view_arrives_with_workbench",
+        "evidence_level": "engineering",
+        "current_revision_id": "20c6cc218a1b4ad3b25e7c0a2d688c5c",
+        "operation_result": {
+          "status": "accepted",
+          "revision_id": "20c6cc218a1b4ad3b25e7c0a2d688c5c",
+          "variant": "input_revision",
+          "adopted": true,
+          "changed_layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech"
+          ],
+          "narrative_ref": {
+            "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+            "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+          },
+          "plan_ref": {
+            "path": ".deckmaster/objects/dc/dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93.json",
+            "sha256": "dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93"
+          },
+          "page_refs": [
+            {
+              "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+              "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+            },
+            {
+              "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+              "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+            }
+          ],
+          "result_refs": [
+            {
+              "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+              "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+            },
+            {
+              "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+              "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+            },
+            {
+              "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+              "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+            },
+            {
+              "path": ".deckmaster/objects/dc/dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93.json",
+              "sha256": "dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93"
+            }
+          ],
+          "invalidated_outputs": [
+            null,
+            null,
+            null
+          ],
+          "effective_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "page_copy",
+              "plan",
+              "speech"
+            ],
+            "page_ids": [
+              "p1",
+              "p2"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "next_action": "continue_within_request"
+        },
+        "variant": "input_revision",
+        "adopted": true,
+        "changed_layers": [
+          "narrative",
+          "plan",
+          "page_copy",
+          "speech"
+        ],
+        "page_refs": [
+          {
+            "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+            "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+          },
+          {
+            "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+            "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          }
+        ],
+        "plan_ref": {
+          "path": ".deckmaster/objects/dc/dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93.json",
+          "sha256": "dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93"
+        },
+        "narrative_ref": {
+          "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+          "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+        },
+        "invalidated_outputs": [
+          null,
+          null,
+          null
+        ],
+        "effective_scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "page_copy",
+            "plan",
+            "speech"
+          ],
+          "page_ids": [
+            "p1",
+            "p2"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        }
+      },
+      "duplicate_rejected": {
+        "type": "EnvelopeError",
+        "message": "(result)/payload/proposals: plan has exactly one proposal; no last-wins"
+      },
+      "late_speech_body_rejected": {
+        "type": "EnvelopeError",
+        "message": "(result)/payload/proposals: speech changes only notes and speech segments"
+      },
+      "exact_replay": {
+        "status": "already_applied",
+        "project_id": "four-layers",
+        "revision_id": "20c6cc218a1b4ad3b25e7c0a2d688c5c",
+        "requested_action": "task accept",
+        "result_refs": [
+          {
+            "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+            "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+          },
+          {
+            "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+            "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          },
+          {
+            "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+            "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+          },
+          {
+            "path": ".deckmaster/objects/dc/dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93.json",
+            "sha256": "dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93"
+          }
+        ],
+        "pending_tasks": [],
+        "findings": [],
+        "next_action": null,
+        "input_alignment": "current",
+        "review_url": null,
+        "view_status": "view_arrives_with_workbench",
+        "evidence_level": "engineering",
+        "current_revision_id": "20c6cc218a1b4ad3b25e7c0a2d688c5c",
+        "operation_result": {
+          "adopted": true,
+          "changed_layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech"
+          ],
+          "effective_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "narrative",
+              "page_copy",
+              "plan",
+              "speech"
+            ],
+            "page_ids": [
+              "p1",
+              "p2"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "invalidated_outputs": [
+            null,
+            null,
+            null
+          ],
+          "narrative_ref": {
+            "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+            "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+          },
+          "next_action": "continue_within_request",
+          "page_refs": [
+            {
+              "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+              "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+            },
+            {
+              "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+              "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+            }
+          ],
+          "plan_ref": {
+            "path": ".deckmaster/objects/dc/dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93.json",
+            "sha256": "dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93"
+          },
+          "result_refs": [
+            {
+              "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+              "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+            },
+            {
+              "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+              "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+            },
+            {
+              "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+              "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+            },
+            {
+              "path": ".deckmaster/objects/dc/dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93.json",
+              "sha256": "dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93"
+            }
+          ],
+          "revision_id": "20c6cc218a1b4ad3b25e7c0a2d688c5c",
+          "status": "accepted",
+          "variant": "input_revision"
+        },
+        "same_revision": true,
+        "variant": "input_revision",
+        "adopted": true,
+        "changed_layers": [
+          "narrative",
+          "plan",
+          "page_copy",
+          "speech"
+        ],
+        "page_refs": [
+          {
+            "path": ".deckmaster/objects/20/205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3.json",
+            "sha256": "205f65b3692f3eae5aaff5d0db11339c4968d311bf94be2fb1e51cd9565cdae3"
+          },
+          {
+            "path": ".deckmaster/objects/cf/cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728.json",
+            "sha256": "cf8c8cb7f080c703090d7f3701dcd49ac8439357b024e8db139110d9c983b728"
+          }
+        ],
+        "plan_ref": {
+          "path": ".deckmaster/objects/dc/dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93.json",
+          "sha256": "dc0e8e57a042dc8c5234f1d1bf409b8d74fc779d2410c9179a3dcdacf3102f93"
+        },
+        "narrative_ref": {
+          "path": ".deckmaster/objects/23/23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3.json",
+          "sha256": "23561fb0c37c1f043941170c16c54b58c7e8c036d642e050b3a4c9bf328f16a3"
+        },
+        "invalidated_outputs": [
+          null,
+          null,
+          null
+        ],
+        "effective_scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "page_copy",
+            "plan",
+            "speech"
+          ],
+          "page_ids": [
+            "p1",
+            "p2"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        }
+      }
+    }
+  }
+]

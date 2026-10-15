@@ -14,27 +14,27 @@ from pathlib import Path
 
 import pytest
 
+from deck_master import collaboration
 from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
-from test_style_content_browser import confirm_recipe, open_style, toggle_phase
+from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
+from test_style_content_browser import open_style, toggle_phase, prepare_style_project, prepare_content_project
 from test_ux06_gallery_conflict_browser import gallery_pair, open_gallery  # noqa: F401
 
 pytestmark = pytest.mark.browser
 
-EVIDENCE = Path(os.environ.get('DECK_MASTER_UI_EVIDENCE_DIR', Path(__file__).resolve().parents[2] / 'output/playwright/ux-review/ux08'))
 WATCHED = ('/api/changes/plan', '/api/changes/commit', '/api/styles/propose', '/api/styles/confirm',
            '/api/styles/plan', '/api/content/plan', '/api/content/commit', '/api/exports', '/api/drafts/save')
 
 
-@pytest.fixture
-def walkthrough(tmp_path):
+def walkthrough_session(tmp_path, *, prepare):
     playwright = pytest.importorskip('playwright.sync_api')
     path = tmp_path / 'ux08-project'
     create_sample(path, page_count=30, readonly=False)
     store = Store(path)
+    prepare(path)
     server = WorkbenchServer(path)
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
     with playwright.sync_playwright() as runtime:
         executable = shutil.which('chromium') or shutil.which('chromium-browser')
         if not executable and not Path(runtime.chromium.executable_path).exists():
@@ -51,11 +51,62 @@ def walkthrough(tmp_path):
             server.stop()
 
 
+@pytest.fixture
+def style_walkthrough(tmp_path):
+    yield from walkthrough_session(tmp_path,
+        prepare=lambda path: prepare_style_project(path, page_ids=['p02'], max_calls=1))
+
+
+@pytest.fixture
+def content_walkthrough(tmp_path):
+    yield from walkthrough_session(tmp_path,
+        prepare=lambda path: prepare_content_project(path, page_ids=['p01']))
+
+
+@pytest.fixture
+def batch_walkthrough(tmp_path):
+    def prepare(path):
+        store = Store(path)
+        scope = {'subject': 'pages', 'page_ids': ['p02', 'p28'], 'page_manifest_ref': None,
+            'external_artifact_ref': None, 'layers': ['blueprint'],
+            'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+        authorize_scope(path, actions=['change.commit', 'allowance.allocate'], scope=scope,
+            max_external_calls=2, max_candidate_count=2, adoption_policy='within_scope',
+            evidence=evidence_for(path, text='L1 browser: two original-image trial candidates on p02/p28; '
+                'at most two calls; no provider invocation or adoption in this walkthrough.',
+                locator='L1:ux08:batch-trial'))
+        settle_fidelity_review(path,
+            page_ids=[entry['page_id'] for entry in store.load_document()['pages']],
+            execution_ref='L1-ux08-batch-fidelity', scenario='Exact sample manuscript before two-page trial')
+    yield from walkthrough_session(tmp_path, prepare=prepare)
+
+
+@pytest.fixture
+def delivery_walkthrough(tmp_path):
+    def prepare(path):
+        store = Store(path)
+        scope = {**store.load_document()['collaboration']['request']['scope'],
+            'layers': ['output'], 'allow_page_membership_change': False, 'allow_page_order_change': False}
+        evidence = evidence_for(path, text='L1 browser: request delivery of the fixed sample only if '
+            'actual engineering and professional gates permit it; no human approval is claimed.',
+            locator='L1:ux08:delivery-request')
+        authorize_scope(path, actions=['export.delivery'], scope=scope,
+            max_external_calls=0, max_candidate_count=0, adoption_policy='within_scope', evidence=evidence)
+        collaboration.record_decision(path, input={'topic': 'delivery_acceptance', 'scope': scope,
+            'subject_refs': [], 'value': 'L1 explicit request; actual delivery gates remain mandatory',
+            'disposition': 'accepted', 'authority_mode': 'direct_user', 'instruction_evidence': evidence},
+            base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+    yield from walkthrough_session(tmp_path, prepare=prepare)
+
+
 class Journal:
     """记录每步截图、实际请求 payload 与回执身份（不只是 method/path）。"""
 
-    def __init__(self, page, server, name):
+    def __init__(self, page, server, name, *, project):
         self.page, self.name = page, name
+        override = os.environ.get('DECK_MASTER_UI_EVIDENCE_DIR')
+        self.evidence = Path(override) if override else Path(project).parent / 'evidence'
+        self.evidence.mkdir(parents=True, exist_ok=True)
         self.steps, self.calls = [], []
         base = server.start().rstrip('/')
         self.base = base
@@ -87,12 +138,12 @@ class Journal:
         page.on('response', on_response)
 
     def shot(self, step):
-        target = EVIDENCE / f'{self.name}-{len(self.steps) + 1:02}-{step}.png'
+        target = self.evidence / f'{self.name}-{len(self.steps) + 1:02}-{step}.png'
         self.page.screenshot(path=str(target), full_page=False)
         self.steps.append({'step': step, 'screenshot': target.name})
 
     def flush(self):
-        (EVIDENCE / f'{self.name}-journal.json').write_text(
+        (self.evidence / f'{self.name}-journal.json').write_text(
             json.dumps({'steps': self.steps, 'calls': self.calls}, ensure_ascii=False, indent=2), encoding='utf-8')
 
 
@@ -119,10 +170,10 @@ def identity_of(body):
 
 # ---------------------------------------------------------------- 1 批量制作
 
-def test_batch_route_normal_result_and_lost_response_recovery(walkthrough):
+def test_batch_route_normal_result_and_lost_response_recovery(batch_walkthrough):
     from playwright.sync_api import expect
-    page, server, path, store = walkthrough
-    journal = Journal(page, server, 'batch')
+    page, server, path, store = batch_walkthrough
+    journal = Journal(page, server, 'batch', project=path)
     try:
         page.goto(server.start())
         page.get_by_role('heading', name='制作总览', exact=True).wait_for()
@@ -159,11 +210,11 @@ def test_batch_route_normal_result_and_lost_response_recovery(walkthrough):
 
 # ---------------------------------------------------------------- 2 风格校准
 
-def test_style_route_conflict_resolution_trial_plan_and_extension_error(walkthrough):
+def test_style_route_conflict_resolution_trial_plan_and_extension_error(style_walkthrough):
     """正常结果：冲突取舍→确认规范→单页试作计划→交接动作出现；失败：扩展未选页。"""
     from playwright.sync_api import expect
-    page, server, path, store = walkthrough
-    journal = Journal(page, server, 'style')
+    page, server, path, store = style_walkthrough
+    journal = Journal(page, server, 'style', project=path)
     try:
         page.goto(server.start())
         page.get_by_role('heading', name='制作总览', exact=True).wait_for()
@@ -201,10 +252,10 @@ def test_style_route_conflict_resolution_trial_plan_and_extension_error(walkthro
 
 # ---------------------------------------------------------------- 3 正文与来源
 
-def test_content_route_change_list_impact_and_draft_restore(walkthrough):
+def test_content_route_change_list_impact_and_draft_restore(content_walkthrough):
     from playwright.sync_api import expect
-    page, server, path, store = walkthrough
-    journal = Journal(page, server, 'content')
+    page, server, path, store = content_walkthrough
+    journal = Journal(page, server, 'content', project=path)
     before = store.current_revision_id()
     try:
         page.goto(server.start())
@@ -238,10 +289,10 @@ def test_content_route_change_list_impact_and_draft_restore(walkthrough):
 
 # ---------------------------------------------------------------- 4 比较与交付
 
-def test_delivery_route_version_identities_files_and_blocked_delivery(walkthrough):
+def test_delivery_route_version_identities_files_and_blocked_delivery(delivery_walkthrough):
     from playwright.sync_api import expect
-    page, server, path, store = walkthrough
-    journal = Journal(page, server, 'delivery')
+    page, server, path, store = delivery_walkthrough
+    journal = Journal(page, server, 'delivery', project=path)
     try:
         page.goto(server.start())
         page.get_by_role('heading', name='制作总览', exact=True).wait_for()
@@ -280,7 +331,7 @@ def test_recovery_route_real_gallery_conflict_reports_differences(gallery_pair):
     from playwright.sync_api import expect
     context, server, path, store = gallery_pair
     url = server.start()
-    journal = Journal(open_gallery(context, url, 'first'), server, 'recovery')
+    journal = Journal(open_gallery(context, url, 'first'), server, 'recovery', project=path)
     try:
         first = journal.page
         first.get_by_label(re.compile(r'^选择第 1 页 ')).check()

@@ -17,7 +17,7 @@ def _accept(registry, project, **kwargs):
         return service.accept_result(project, **kwargs)
 
 
-def _run(tmp_path):
+def _run(tmp_path, *, claim=True):
     project, store = _deck(tmp_path)
     registry = review_evidence.ProviderRegistry()
     provider = SyntheticProvider()
@@ -26,6 +26,9 @@ def _run(tmp_path):
     with review_evidence.ProviderRuntime(registry).bound():
         outcome = content_review.dispatch_preproduction_review(project, adapter_context=channel)
     task = outcome["task"]
+    from rc3_fixtures import claim_fixture_task
+    if claim:
+        claim_fixture_task(project, task, execution_ref="fixture-executor")
     document = store.load_document()
     reviewer = {"type": "independent_host", "id": "fixture-model", "execution_ref": "fixture-executor",
                 "independence_confirmed": True, "identity_receipt": None, "assurance": "host_attested"}
@@ -237,11 +240,12 @@ def test_user_event_must_persist_the_actual_authenticated_original_bytes(tmp_pat
 
 @pytest.mark.parametrize("claimed,accepted", [("fixture-executor", True), ("another-actual-claimed-executor", False)])
 def test_completed_receipt_rechecks_current_task_execution_after_claim(tmp_path, claimed, accepted):
-    project, store, registry, provider, channel, task, envelope, claims, selector = _run(tmp_path)
+    project, store, registry, provider, channel, task, envelope, claims, selector = _run(tmp_path, claim=False)
     assert not task.get("execution_ref")
     ctx = registry.review_context(store, store.load_document(), task, envelope, selector)
     with review_evidence.ProviderRuntime(registry).bound():
-        service.task_start(project, task_id=task["task_id"], execution_ref=claimed)
+        service.task_start(project, task_id=task["task_id"], execution_ref=claimed,
+            supported_protocols=[task["protocol_version"]], capabilities=task["required_capabilities"])
         before = store.current_revision_id()
         kwargs = {"task_id": task["task_id"], "operation_id": task["operation_id"],
                   "produced_against": task["produced_against"], "result_payload": envelope, "adapter_context": ctx}

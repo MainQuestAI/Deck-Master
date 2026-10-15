@@ -1,0 +1,48 @@
+{
+  "schema": "rc3_r5_integration_source_identity.v1",
+  "parent_head": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+  "parent_tree": "8a12383ab597dbd061ad53de6f5186c5343d19d4",
+  "non_docs_changes": [
+    {
+      "path": "src/deck_master/eligibility.py",
+      "parent_sha256": "dcb86f384022e694973500cfa2eb7faf50ffc988a0b6a0f3ffc3421912ff9b67",
+      "current_sha256": "493617a93591ff2520244ff95b601f98c61a2b9b0ce3640bc1616883fb1d83c9"
+    },
+    {
+      "path": "tests/rebuild/test_service_flow.py",
+      "parent_sha256": "cbcd18e62fe7ebc68aa98e355f817d1b405ef76c7ad771e190815226de6b26b9",
+      "current_sha256": "1edc67bded6ad971204806d2ec763064d1b6c2c9450f598df5cb9cab5ae81958"
+    },
+    {
+      "path": "tests/rebuild/test_t06_boundaries.py",
+      "parent_sha256": "67a25a05ca539c1b5f86710654c68fd886b704f95c61821b01aee0bc3ff1fd52",
+      "current_sha256": "13fd5fef806d8c8ff4ad6f47713c6a68269c43861d64fc4be36a9362ab55dd2f"
+    }
+  ],
+  "product_delta": "Only isolate ModelError at the existing typed blueprint/provenance/generation_request path; asset I/O, permission and design errors retain their contracts. No gate reorder or resolver change.",
+  "byte_identical_to_parent": {
+    "src/deck_master/resources/static/v2/content-sources.js": "27536e65f5420a773e2d8d6cf95d50c300dc34a5",
+    "src/deck_master/resources/static/v2/gallery.js": "5f7117a6a765a4a42cf5a9df2c0cbe9c591cd78a",
+    "src/deck_master/resources/static/v2/overview.js": "43ef22e29d9977fa54547fd5b794704985ae1a3e",
+    "src/deck_master/content_production.py": "05ae946a9fb4ea4c7520db819443df02fc6e4bfd",
+    "src/deck_master/production.py": "bcda0751c148a4f97580d4db0eb16a6a583d7b5c",
+    "examples/workbench/w11_browser.py": "6589a412f464f646afedd25734bee89ac68d77a9",
+    "examples/workbench/w12_offline_browser.py": "ba1342ed8a4e944e5374b2b274465df33467df81",
+    "skills": "7b9973fd38537136fa1e6a5b6835ead37d60e200",
+    "src/deck_master/resources/contracts": "4cbb83e6e04ef8e2a9a58fc529bb9329a0570a1a",
+    "pyproject.toml": "e8ca868422c21a458a7554cdf40e3ab6c3520067",
+    "tools/build_hook.py": "61a7229e124c5f0e4ee74b30d9d498232990cb45",
+    "tests/rebuild/test_rc3_corrupt_task_reading.py": "657c03f1d570e75ef23c15dd6258d6cae20b8f39",
+    "docs/reports/rc3/evidence-ledger.json": "b6b188a560e92bab2e001c1e4d5eeed2672b67a4"
+  },
+  "ledger_ac_cq_counts": [
+    37,
+    13
+  ],
+  "workers_all_stopped": true,
+  "focused": "actual L1: original3+C3 four passed; six exact neighboring cases passed; no mutable broad",
+  "source_integrity_after_disk_recovery": "Existing four source hashes, origins JSON and six safe original copies verified unchanged; no passed focused tests repeated",
+  "R4_broad": "INFRA_INTERRUPTED_NO_BROAD_PASS; observed failures pending Root diagnosis, not automatically attributed to disk",
+  "new_fixed_package_install_review_ci": "PENDING_NEW_FIXED_HEAD",
+  "human": "NOT_RUN_DEFERRED"
+}

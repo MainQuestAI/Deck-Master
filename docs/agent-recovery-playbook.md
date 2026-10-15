@@ -303,3 +303,28 @@ Engineering packages are internal. Recover only their `project/` directory into
 an isolated location and use a compatible writer. They include source materials
 and prompts, but exclude runtime authentication and personal drafts. They do not
 install software, migrate HOME, or change another running project.
+
+
+## RC3 role and installation recovery
+
+Reload the actual loaded Host entry after activate/rollback, resolve its managed
+release and use that release's Python. Do not borrow PATH/HOME methods. All four
+managed links share current; a foreign/occupied path aborts the switch before
+any pointer change. An interrupted switch compensates launcher/pointers/links;
+external changes are reported instead of overwritten. `--no-host-registration`
+leaves all Host paths untouched. Rollback can retire managed links absent from
+an older release; it does not downgrade project writer floors or call facts.
+
+Read the current request, scope, decisions, pause/revoke and completion before
+resuming Content/Design/Review. Do not restart an already completed sub-intent,
+refresh budget under a new operation ID, or restore old permissions with old
+content. `completion.state=completed` returns the requested content outputs;
+`needs_reviewer` returns readable artifacts plus the actual missing review.
+Review-only is strict external report persistence=none; recovery does not create
+a project or write a report into the source. A scope rejection is not success.
+
+For a historical draft, use migration describe/apply and preserve unknown facts.
+A confirmed imported manuscript can use imported_mapping without rebuilding
+Narrative. For an old variant's narrow edit, use start_request variant_transition
+with its exact revision/export and current CAS, not global history restore.
+Actual historical files still use current-control delivery eligibility.

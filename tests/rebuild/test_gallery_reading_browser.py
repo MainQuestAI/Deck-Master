@@ -52,6 +52,15 @@ def test_canvas_arrows_move_focus_without_leaving_gallery(gallery30):
     from playwright.sync_api import expect
     page, server, path, store = gallery30
     open_gallery(page, server)
+    # The real imported manuscript projects v2 page_ids, not legacy goal_ids.
+    plan = page.request.get(server.start() + 'api/content-plan').json()['content_plan']
+    assert plan['schema_version'] == 'content_plan.v2'
+    chapter = plan['chapters'][0]
+    assert chapter['page_ids'] == [entry['page_id'] for entry in store.load_document()['pages']]
+    chapter_filter = page.get_by_role('combobox', name='筛选章节', exact=True)
+    expect(chapter_filter.locator('option', has_text=chapter['title'])).to_have_attribute('value', chapter['chapter_id'])
+    chapter_filter.select_option(chapter['chapter_id'])
+    expect(page.locator('.gallery-legend')).to_contain_text('显示 30 / 30 页')
     viewport = page.get_by_label('整稿画廊阅读区')
     first = page.locator('.slide-cover').first
     expect(first).to_be_visible()

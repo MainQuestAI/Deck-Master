@@ -4,14 +4,11 @@ narrative it governed (MIGRATION §4, AC-C02/C04)."""
 import hashlib
 import uuid
 
-from deck_master import collaboration, restoration, service
-from deck_master.models import bump_revision, require_writer
+from rc3_fixtures import historical_snapshot, submit_host_fixture
+
+from deck_master import collaboration, collaboration_migration, content_production, restoration
+from deck_master.models import bump_revision
 from deck_master.store import Store
-
-
-def _ref(seed: str) -> dict:
-    digest = hashlib.sha256(seed.encode()).hexdigest()
-    return {"path": f".deckmaster/objects/{digest[:2]}/{digest}.json", "sha256": digest}
 
 
 def _page(pid: str, text: str) -> dict:
@@ -23,7 +20,8 @@ def _page(pid: str, text: str) -> dict:
 
 def _scope() -> dict:
     return {"subject": "pages", "page_ids": ["p1", "p2"], "page_manifest_ref": None,
-            "external_artifact_ref": None, "layers": ["narrative", "page_copy"],
+            "external_artifact_ref": None,
+            "layers": ["narrative", "plan", "page_copy", "speech"],
             "allow_page_membership_change": False, "allow_page_order_change": False,
             "purpose": "exploratory"}
 
@@ -35,11 +33,10 @@ def _declared(store) -> dict:
             "transport_receipt_ref": None, "presentation_ref": None}
 
 
-def _narrative_object() -> dict:
-    extract = _ref("extract")
+def _narrative_object(project_id) -> dict:
     return {
         "schema_version": "narrative.v1", "narrative_id": "nar-1", "version": 1,
-        "project_id": "proj", "origin": "host_composed", "maturity": "argument",
+        "project_id": project_id, "origin": "host_composed", "maturity": "argument",
         "input_basis": [],
         "communication_job": {"mode": "train", "audience_fact_key": "task.audience",
                               "audience_question": "如何记录未知", "desired_outcome": "能填写",
@@ -48,18 +45,16 @@ def _narrative_object() -> dict:
         "central_node_id": "n1",
         "nodes": [{"node_id": "n1", "role": "claim", "statement": "可接手 = 已知未知下一步",
                    "authority": "instruction",
-                   "source_links": [{"source_id": "s1",
-                                     "source_version": {"original_sha256": None, "extract": extract},
-                                     "locator": "L7"}],
+                   "source_links": [],
                    "qualification_node_ids": [], "unresolved_issue_ids": []}],
         "edges": [], "issues": [], "alternatives": [], "previous_ref": None,
     }
 
 
 def _build(tmp_path):
-    project = tmp_path / "proj"
-    service.create(project, brief="restore facts",
-                   draft={"pages": [_page("p1", "原始句。"), _page("p2", "第二页。")]})
+    project = historical_snapshot(tmp_path,
+        scenario="Fixed pre-migration restore facts: old content, call settlement and narrative",
+        pages=[_page("p1", "原始句。"), _page("p2", "第二页。")])["project"]
     store = Store(project)
     revisions = {"content": store.load_document()["revision_id"]}
     # Legacy facts: a completed task with a consumed call and a stop policy.
@@ -80,23 +75,12 @@ def _build(tmp_path):
     bumped["policy"] = {**bumped["policy"], "user_stop": True}
     store.commit_change(base_revision=document["revision_id"], document=bumped,
                         operation_id="facts")
-    # Migrate, then exercise the collaboration control surface.
-    store = Store(project)
-    document = store.load_document()
-    bumped = bump_revision(document, {"operation_id": "bootstrap", "kind": "collaboration_update",
-                                      "description": "bootstrap", "read_set": []})
-    bumped["collaboration"] = {
-        "schema_version": "collaboration.v1", "authority_policy": "traceable",
-        "quality_profile": {"content_review_requirement": "independent_model_or_human",
-                            "requirement_origin": "default_new_argument",
-                            "override_decision_ref": None},
-        "request": None, "decisions": [], "authorizations": []}
-    require_writer(bumped, "collaboration.v1")
-    store.commit_change(base_revision=document["revision_id"], document=bumped,
-                        operation_id="bootstrap")
-    store = Store(project)
-    collaboration.start_request(project, input={"intent": "content_only",
-                                                "content_intent": "write_only",
+    # Migrate through the actual service before any current-control write.
+    described = collaboration_migration.describe(project)
+    collaboration_migration.apply(project, base_revision=store.current_revision_id(),
+        plan_digest=described["plan_digest"], operation_id="op-migrate")
+    collaboration.start_request(project, input={"intent": "full_deck",
+                                                "content_intent": None,
                                                 "instruction_evidence": _declared(store),
                                                 "scope": _scope()},
                                 base_revision=store.load_document()["revision_id"],
@@ -111,19 +95,34 @@ def _build(tmp_path):
                                        reason="范围撤回",
                                        base_revision=store.load_document()["revision_id"],
                                        operation_id="op-revoke")
-    # Narrative becomes current content truth, then a page edit moves forward;
-    # the pause comes last because a paused request refuses new writes
-    # (CONTRACTS §7.1), and this fixture needs the edit before the stop.
-    store = Store(project)
-    narrative_ref = store.put_json_object(_narrative_object())
-    document = store.load_document()
-    bumped = bump_revision(document, {"operation_id": "set-narrative",
-                                      "kind": "content_update",
-                                      "description": "narrative", "read_set": []})
-    bumped["narrative"] = narrative_ref
-    store.commit_change(base_revision=document["revision_id"], document=bumped,
-                        operation_id="set-narrative")
-    revisions["narrative"] = store.load_document()["revision_id"]
+    # Establish the second target through an actual capability-aware L1 Host
+    # proposal, a subject-bound direction decision and the canonical adoption.
+    task = content_production.open_phase_task(store, store.load_document(),
+        operation_id="L1-narrative-result", phase="argument", page_ids=["p1", "p2"],
+        instruction="L1 synthetic Narrative for the explicit restore preservation test")
+    accepted = submit_host_fixture(project, task_id=task["task_id"],
+        execution_ref="L1-synthetic-restore-author",
+        host_declaration={"supported_protocols": [task["protocol_version"]],
+                          "capabilities": task["required_capabilities"]},
+        result_payload={"schema_version": "compose_result.v2", "kind": "compose",
+            "variant": "narrative", "task_id": task["task_id"],
+            "operation_id": task["operation_id"], "produced_against": task["produced_against"],
+            "eligibility_digest": task["collaboration_binding"]["eligibility_digest"],
+            "payload": {"narrative": _narrative_object(store.load_document()["project_id"])},
+            "usage_events": []})
+    narrative_ref = accepted["narrative_ref"]
+    decision = collaboration.record_decision(project, input={"topic": "direction",
+        "disposition": "accepted", "authority_mode": "direct_user", "value": "Use this synthetic direction",
+        "scope": {**_scope(), "layers": ["narrative", "plan"]},
+        "instruction_evidence": _declared(store), "subject_refs": [{"artifact_kind": "narrative",
+            "artifact_ref": narrative_ref, "projection": "direction"}]},
+        base_revision=store.current_revision_id(), operation_id="op-restore-direction")
+    content_production.adopt_proposal(project, input={"proposal_ref": narrative_ref,
+        "decision_ref": decision["decision_ref"], "write_scope": {**_scope(), "layers": ["narrative"]}},
+        base_revision=store.current_revision_id(), operation_id="op-restore-adopt")
+    revisions["narrative"] = store.current_revision_id()
+    # The scoped public edit precedes the pause. Restore may then recover old
+    # facts while leaving the current paused request and revoked grant intact.
     from deck_master.editing import edit_page
     store = Store(project)
     document = store.load_document()
@@ -160,7 +159,7 @@ def test_restore_to_pre_migration_snapshot_preserves_current_control(tmp_path):
     assert after["collaboration"]["request"]["request_id"] == \
         control["collaboration"]["request"]["request_id"]
     assert after["policy"]["user_stop"] is True
-    assert after["compatibility"]["minimum_writer"] == "rc3.v1"
+    assert after["compatibility"]["minimum_writer"] == "rc3-entry.v1"
     task = store.read_object_json(after["tasks"][0])
     assert task["status"] == "completed"
     assert task["call_allowances"][0]["state"] == "consumed"

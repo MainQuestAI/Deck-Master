@@ -17,6 +17,7 @@ from deck_master.models import bump_revision, sha256_bytes, validate_schema, req
 from deck_master.operations import OperationError
 from deck_master.pipeline import artifact, produce, output_matches_current_svg
 from deck_master.store import Store
+from rc3_fixtures import historical_snapshot
 
 TEXTS = ['用户原注：54/120 = 45%\r\n\r\n不是节约率\n末段甲\n',
          '提示：先说明版本未知\n\n\n末段乙', '完整口播：交接完成不等于解决\n末段丙']
@@ -58,11 +59,24 @@ def _attach_compiled(store, inputs, tmp_path):
 @pytest.mark.render
 def test_real_pipeline_to_export_preserves_full_notes_and_dependencies(tmp_path, resolvable_font_family):
     root, store, _ = _project(tmp_path, resolvable_font_family)
+    from test_page_visual_gate import _start, _accept, _svg_envelope
+    from page_visual_helpers import pass_page_review
+    # This is a current production pipeline, so construct all real formal
+    # stages using explicitly bounded L1 provider/reviewer fixtures. The lower
+    # compiler-only tests below continue to claim only their actual bytes.
+    original_svgs = {entry['page_id']: store.read_object_bytes(store.read_object_json(entry['svg'])['file'])
+        for entry in store.load_document()['pages']}
+    for pid in ('p-a', 'p-b', 'p-c'):
+        task, svg = _start(root, pid, svg_builder=lambda page: original_svgs[page['page_id']])
+        _accept(root, task, _svg_envelope(pid), file_name='page.svg', data=svg)
+        pending = service.continue_project(root)
+        assert pending['pending_tasks'][0]['review_stage'] == 'page_visual'
+        pass_page_review(root, pending['pending_tasks'][0])
     before = store.load_document()
     report = produce(root)
     assert report['status'] == 'pass' and report['desktop_editing'] == 'not_evaluated'
     doc = store.load_document()
-    assert doc['compatibility']['minimum_writer'] == 'rc3.v1'
+    assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     assert output_matches_current_svg(store, doc)
     assert [e['svg'] for e in doc['pages']] == [e['svg'] for e in before['pages']]
     assert doc['tasks'] == before['tasks']
@@ -259,6 +273,8 @@ def _editorial_fixture(tmp_path):
             'goals': goals, 'unresolved_facts': ['No actual model author or human acceptance claimed.']}
     service.create(root, brief='Synthetic formal editorial notes regression', project_format='workbench.v3',
                    draft={'pages': pages, 'content_plan': plan})
+    from test_content_ops import prepare_editorial_project
+    prepare_editorial_project(root, review=False)
     return root, Store(root)
 
 
@@ -292,6 +308,7 @@ def _compile_selected_export(root, store, tmp_path):
 @pytest.mark.parametrize('action', ['reorder', 'remove', 'split', 'merge'])
 def test_formal_editorial_identity_changes_then_actual_compile_and_export(tmp_path, action):
     from deck_master import content_ops, tasks
+    from test_content_ops import derived_page, v2_revision_envelope
     root, store = _editorial_fixture(tmp_path)
     original = copy.deepcopy(store.load_document())
     if action == 'reorder':
@@ -303,25 +320,26 @@ def test_formal_editorial_identity_changes_then_actual_compile_and_export(tmp_pa
         dispatch = _editorial_change(root, store, action, selected)
         task = tasks._lookup_task(store.load_document(), dispatch['task_ids'][0], store)
         service.task_start(root, task_id=task['task_id'], execution_ref='synthetic-notes-editorial-host',
-                           supported_protocols=['compose.v1'], capabilities=task['required_capabilities'])
+                           supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
         doc = store.load_document()
         template = store.read_object_json(next(e['page'] for e in doc['pages'] if e['page_id'] == 'p-a'))
         mapping = [('p-a1', '用户原注：54/120 = 45%\n不是节约率'), ('p-a2', '末段甲\n')] if action == 'split' else [
             ('p-ab', '合并口播：54/120 = 45%，不是节约率。\n先说明版本未知。')]
         new_pages = []
         for pid, notes in mapping:
-            page = copy.deepcopy(template)
-            page['page_id'] = pid
+            page = derived_page(template, pid)
             page['customer_visible']['title'] = 'Synthetic explicitly mapped ' + pid
             page['speaker_notes'] = notes
+            page['content_mapping']['speech_segments'][0]['end_codepoint'] = len(notes)
             new_pages.append(page)
         outline = copy.deepcopy(store.read_object_json(doc['content_plan'])['input'])
-        outline['goals'] = [g for g in outline['goals'] if g['page_id'] not in selected] + [
-            {'goal_id': 'g-' + p['page_id'], 'page_id': p['page_id'], 'purpose': p['page_id'],
-             'source_links': [], 'unresolved_facts': ['Synthetic mapped notes; no external fact.']} for p in new_pages]
-        outline['chapters'] = [{'chapter_id': 'mapped', 'title': 'Explicit synthetic mapping',
-                                 'goal_ids': [g['goal_id'] for g in outline['goals']]}]
         order = [e['page_id'] for e in doc['pages'] if e['page_id'] not in selected] + [p['page_id'] for p in new_pages]
+        role = outline['page_roles'][0]
+        outline['page_roles'] = [g for g in outline['page_roles'] if g['page_id'] not in selected] + [
+            {**copy.deepcopy(role), 'page_id': p['page_id'], 'role': 'Explicitly mapped synthetic notes',
+                'source_links': [], 'narrative_node_ids': [], 'required_qualifications': []} for p in new_pages]
+        outline['page_order'] = order
+        outline['chapters'] = [{'chapter_id': 'mapped', 'title': 'Explicit synthetic mapping', 'page_ids': order}]
         payload = {'kind': 'compose', 'content_update': {'input_digest': task['input_digest'],
                     'upsert_pages': new_pages, 'remove_page_ids': selected, 'page_order': order,
                     'impact_summary': 'Explicit supplied notes mapping; never copy all source notes to each derived page.'},
@@ -331,10 +349,10 @@ def test_formal_editorial_identity_changes_then_actual_compile_and_export(tmp_pa
         unchanged = copy.deepcopy(store.load_document())
         with pytest.raises((OperationError, service.ServiceError, ValueError)):
             service.accept_result(root, task_id=task['task_id'], operation_id=task['operation_id'],
-                                  produced_against=task['produced_against'], result_payload=unknown)
+                                  produced_against=task['produced_against'], result_payload=v2_revision_envelope(store, task, unknown))
         assert store.load_document() == unchanged
         service.accept_result(root, task_id=task['task_id'], operation_id=task['operation_id'],
-                              produced_against=task['produced_against'], result_payload=payload)
+                              produced_against=task['produced_against'], result_payload=v2_revision_envelope(store, task, payload))
         for pid, notes in mapping:
             lineage = content_ops.lineage(root, page_id=pid)['records'][0]['derivation']
             assert [p['page_id'] for p in lineage['source_pages']] == selected
@@ -355,7 +373,12 @@ def test_formal_editorial_identity_changes_then_actual_compile_and_export(tmp_pa
 
 
 def test_legacy_empty_notes_handoff_does_not_claim_or_bypass_new_notes_guarantee(tmp_path):
-    root, store, _ = _project(tmp_path, notes=['', '', ''])
+    fixture = historical_snapshot(tmp_path, scenario='Actual old zero-slide predicate exemption, no notes promise',
+        pages=[{'schema_version': 'deck_page_package.v2', 'page_id': pid,
+            'customer_visible': {'title': pid, 'body_blocks': []},
+            'visual_spec': {'intent': 'Explicit old predicate facts', 'reference_mode': 'new_design'}}
+            for pid in ('p-a', 'p-b', 'p-c')])
+    root, store = fixture['project'], Store(fixture['project'])
     candidate = tmp_path / 'old-synthetic-predicate.pptx'
     # Historical delivery-predicate fixture uses a zero-slide PPTX; it does
     # not claim real native compile/readback. New notes-aware outputs must

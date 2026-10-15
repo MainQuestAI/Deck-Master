@@ -1,0 +1,79 @@
+{
+  "activate": {
+    "status": "activated",
+    "release_id": "573a46a85bf9-13e3d2708abf",
+    "previous": "releases/197e7c6183f5-82782488c28e",
+    "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+    "cli_active": true,
+    "migration": {
+      "migrated": false,
+      "moved": null,
+      "removed_links": [],
+      "skipped_entries": []
+    },
+    "host_skill": "registered",
+    "skill_link": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/skills/deck-master",
+    "skill_links": [
+      {
+        "name": "deck-master",
+        "status": "registered",
+        "skill_link": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/skills/deck-master",
+        "skill_target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-master"
+      },
+      {
+        "name": "deck-content",
+        "status": "registered",
+        "skill_link": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/skills/deck-content",
+        "skill_target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-content"
+      },
+      {
+        "name": "deck-design",
+        "status": "registered",
+        "skill_link": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/skills/deck-design",
+        "skill_target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-design"
+      },
+      {
+        "name": "deck-review",
+        "status": "registered",
+        "skill_link": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/skills/deck-review",
+        "skill_target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-review"
+      }
+    ],
+    "skill_target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-master",
+    "skill_release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "final_links": {
+    "deck-master": {
+      "exists": true,
+      "target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-master",
+      "resolved": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-master"
+    },
+    "deck-content": {
+      "exists": true,
+      "target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-content",
+      "resolved": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-content"
+    },
+    "deck-design": {
+      "exists": true,
+      "target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-design",
+      "resolved": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-design"
+    },
+    "deck-review": {
+      "exists": true,
+      "target": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/current/skill/deck-review",
+      "resolved": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-review"
+    }
+  },
+  "protected_before": {
+    "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/config.toml": "858316659012c2ae2cb9fc622b7d1d5d52ef9f3019340154276bde9e210c2765",
+    "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/skills/third-party-preserved/marker.txt": "81793f9726ece175307fed46fbe25396bc307c8422e5192829376d87b3032eab"
+  },
+  "protected_after": {
+    "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/config.toml": "858316659012c2ae2cb9fc622b7d1d5d52ef9f3019340154276bde9e210c2765",
+    "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host/skills/third-party-preserved/marker.txt": "81793f9726ece175307fed46fbe25396bc307c8422e5192829376d87b3032eab"
+  },
+  "unchanged": true,
+  "actual_HOME_modified": false,
+  "host_root": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/private-host",
+  "prefix": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/prefix"
+}

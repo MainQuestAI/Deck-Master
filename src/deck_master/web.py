@@ -25,6 +25,7 @@ from . import workbench as workbench_mod
 from .errors import TypedServiceError, NEXT_ACTIONS_BY_CODE
 from .models import ModelError
 from .local_runtime import ServiceUnavailable
+from .capabilities import RUNTIME_PROTOCOL_CAPABILITIES
 
 STATE_FILE = "view.json"
 
@@ -58,7 +59,8 @@ def _write_state(project_dir: Path, state: dict) -> None:
 UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
-                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1")
+                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
+                   "external_review.v1", "delivery_eligibility.v1") + RUNTIME_PROTOCOL_CAPABILITIES
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
@@ -108,7 +110,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         origin=self.headers.get('Origin')
         allowed=(f'http://127.0.0.1:{self.server.server_port}',f'http://localhost:{self.server.server_port}')
         if not self._local_host() or origin not in allowed or not secrets.compare_digest(self.headers.get('X-Deck-Token',''),self.write_token):
-            self._send_json({'error':'same-origin session token required'},403)
+            from .collaboration_api import http_action, error_response
+            if http_action('POST', urlparse(self.path).path):
+                from .operations import OperationError
+                payload, status, _ = error_response(OperationError('session_required', 'transport',
+                    'same-origin session token required', http_status=403, exit_code=4))
+                self._send_json(payload, status)
+            else:
+                self._send_json({'error':'same-origin session token required'},403)
             return False
         return True
 
@@ -139,8 +148,50 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({'error': {'code': 'local_io_failed', 'message': 'local action failed; retain input and inspect the path or runtime log',
                                       'field': None, 'next_action': 'retry after checking local permissions and input'}}, 400)
 
+    def _collaboration_project(self, project_id):
+        # invoke rechecks the URL identity against the actual loaded Document.
+        return self.store.project_root
+
+    def _collaboration_route(self, method):
+        from .collaboration_api import http_action, invoke, error_response, WRITE_ACTIONS, MUTATING_ROUTES
+        from .operations import OperationError
+        parsed = urlparse(self.path)
+        route = http_action(method, parsed.path)
+        if route is None:
+            return False
+        project_id, action, bound = route
+        try:
+            query = parse_qs(parsed.query, keep_blank_values=True)
+            if method == 'POST':
+                if query:
+                    raise ModelError('query', 'POST arguments belong in the JSON body')
+                data = self._read_json_body()
+            else:
+                if action != 'delivery.describe' and query:
+                    raise ModelError('query', 'this read route takes no query arguments')
+                if any(len(v) != 1 or not v[0] for v in query.values()):
+                    raise ModelError('query', 'query arguments must occur once and be nonempty')
+                data = {key: value[0] for key, value in query.items()}
+            for key, value in bound.items():
+                if key in data and data[key] != value:
+                    raise ModelError(key, 'body identity does not match URL identity')
+                data[key] = value
+            project = self._collaboration_project(project_id) if project_id is not None else None
+            if project is not None and (action in WRITE_ACTIONS or action in MUTATING_ROUTES):
+                from .samples import sample_info
+                if (sample_info(project) or {}).get('readonly'):
+                    raise OperationError('sample_readonly', 'project', 'this synthetic example is read-only',
+                                         http_status=403, exit_code=4)
+            result, status, _ = invoke(project, action, data, expected_project_id=project_id)
+        except Exception as exc:
+            result, status, _ = error_response(exc)
+        self._send_json(result, status)
+        return True
+
     def do_POST(self):
         if not self._authorized_write():
+            return
+        if self._collaboration_route('POST'):
             return
         try:
             if urlparse(self.path).path == '/api/content/uploads':
@@ -288,6 +339,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802 - http.server API
         if not self._local_host():
             self._send_json({'error':'loopback Host required'},403);return
+        if self._collaboration_route('GET'):
+            return
         parsed = urlparse(self.path)
         if parsed.path.startswith('/api/ui-state/backups'):
             from . import personal_recovery
@@ -520,6 +573,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._send_json({"status": "ok", **self.runtime_state,
                              "project_identity": _project_identity(self.store.project_root),
                              "ui_available": (self.static_dir / 'studio' / 'index.html').is_file(),
+                             "protocol_capabilities": list(RUNTIME_PROTOCOL_CAPABILITIES),
                              "ui_capabilities": list(UI_CAPABILITIES)})
             return
         if parsed.path == "/api/file":

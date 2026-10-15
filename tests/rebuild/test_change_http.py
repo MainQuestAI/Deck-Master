@@ -10,11 +10,14 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_web import _get_json, _post_json, _session_token
+from test_service_flow import _prepare_production
 
 
 @pytest.fixture
 def running(tmp_path):
     project = tmp_path / 'sample'; create_sample(project, page_count=1, readonly=False)
+    _prepare_production(project, actions=['change.commit'], max_external_calls=0,
+        scenario='L1 explicit single-page zero-call content clarification via real HTTP/CLI handoff')
     server = WorkbenchServer(project); url = server.start().rstrip('/')
     try: yield project, Store(project), url, _session_token(url)
     finally: server.stop()

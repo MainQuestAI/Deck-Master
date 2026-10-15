@@ -148,9 +148,9 @@ def create_gallery_sample(project, *, page_count=30, readonly=True):
     old_plan = doc['content_plan']
     plan['plan_id'] = 'plan-' + uuid.uuid4().hex
     plan['version'] += 1; plan['previous_ref'] = old_plan
-    goal_ids = [goal['goal_id'] for goal in plan['input']['goals']]
+    goal_ids = [entry['page_id'] for entry in doc['pages']]
     chapter_size = (page_count + 2) // 3
-    plan['input']['chapters'] = [{'chapter_id': f'chapter-{i + 1}', 'title': title, 'goal_ids': goal_ids[i * chapter_size:(i + 1) * chapter_size]}
+    plan['input']['chapters'] = [{'chapter_id': f'chapter-{i + 1}', 'title': title, 'page_ids': goal_ids[i * chapter_size:(i + 1) * chapter_size]}
         for i, title in enumerate(['项目与材料', '逐页制作', '检查与交付'])]
     validate_schema('content_plan', plan)
     doc['content_plan'] = store.put_json_object(plan)

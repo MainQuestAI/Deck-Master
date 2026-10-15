@@ -11,6 +11,7 @@ import pytest
 from deck_master import content_production, service
 from deck_master.content_production import speech_policy
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task
 
 from test_content_preproduction_review import _page, _plan_input, _project, _source_link
 
@@ -104,6 +105,7 @@ def test_speech_phase_is_dispatched_only_when_notes_are_missing(tmp_path):
     task = content_production.open_phase_task(store, document, operation_id="pc-empty",
                                               phase="page_copy")
     page = _page(store, document, "p1", notes="")
+    claim_fixture_task(project, task)
     service.accept_result(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],

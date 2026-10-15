@@ -1,0 +1,42 @@
+{
+  "schema_version": "rc3_fixed_installed_B_handoff.v1",
+  "frozen": true,
+  "candidate": "7a8578baa210-8d52fd31f7d7",
+  "source_sha": "7a8578baa210a92b92ae98922ff3236edf4d5975",
+  "source_tree": "4b7c5a931998ced2de624ee0ec29ff4a9e023139",
+  "status": "R1_PARTIAL_WITH_F7_F8_PRODUCT_BLOCKERS",
+  "actual_host_identity": "/root/rc3_04_owner/skills_install",
+  "role_path_summary": {
+    "required": 16,
+    "actual_responsibility_outputs": 15,
+    "blocked": 1,
+    "F7": "Original Design-natural instruction misrouted because business text 保管员确认恢复 is treated as conversation recovery."
+  },
+  "compatibility_summary": "Old03 starts; refuses Entry13 write unchanged. New Runtime settles preserved old Task unknown idempotently. Actual private install/upgrade/rollback/rollforward links pass. Final Speech accept is F8 blocked for missing migrated Page role mapping.",
+  "not_claimed": [
+    "all16 PASS",
+    "independent16 agents/models",
+    "actual provider/image fee or native generation",
+    "real human/professional/desktop acceptance",
+    "E1 fair/blinded unfamiliar-task effect"
+  ],
+  "report_links": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/R1-actual-host-path-index.json",
+      "sha256": "3e44cc69c333d5dcdab6a007f80fba650e349bef8426feec665e501584b3441d"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/installed-identity-after.json",
+      "sha256": "89996a4ccb041a5da244c33cca3e0d51448df4097b2a168190d5b63cade65983"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/installed-final-bytes-match-root-release.json",
+      "sha256": "88d7f915f1f7081167a9b4463a98bb5eb48c3f0195832f8dc1d78fb2ae0ac41b"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/compatibility/R1-compatibility-lifecycle-index.json",
+      "sha256": "c340253d5fc25243772709b24b6df29bfb0ec34885363e88fdab633cccd3b9f0"
+    }
+  ],
+  "next_action": "Stop R1 mutation; Owner/Root integrate F7/F8 repairs and provide a new fixed installed candidate. Re-run original failed inputs and affected paths/positive controls against that identity; retain all R1 facts."
+}

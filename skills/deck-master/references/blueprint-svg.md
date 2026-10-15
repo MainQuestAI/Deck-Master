@@ -1,8 +1,8 @@
 # Codex 蓝图执行方法
 
-当前版本以 **Codex Desktop** 为唯一已验收宿主。蓝图通过当前会话内置
-ImageGen 工具生成；Deck Master 本地包不连接 Provider API、不读取 API Key，
-也不声明 Claude、OpenCode 或其他宿主兼容。
+历史版本记录了 Codex Desktop 路径；这不代表本轮实际人类桌面验收已完成。
+本轮按工作单和实际宿主能力使用当前会话内置 ImageGen 或受信 SDK 原生观察；
+Deck Master 本地包不连接 Provider API、不读取 API Key，不推定其他宿主兼容。
 
 收到 `kind=blueprint` 的任务后：
 
@@ -22,7 +22,7 @@ Provider 配置或向用户索取 API Key。
 ## generation.v1 工作单
 
 只对明确带 `protocol_version=generation.v1` 的工作单执行本节；旧任务保留上面的协议。
-新格式由 `create --project-format workbench.v3` 显式创建，已有项目不原地迁移。
+新建默认采用 workbench.v3/rc3；旧项目只读兼容，正式写入先按 migration describe/apply 显式迁移，不伪造历史批准。
 
 1. `task start` 带 `--supported-protocol generation.v1`，并逐项声明工作单的实际 required_capabilities，包括新请求的 content_requirements_v1。Desktop 执行身份用当前真实会话/轮次 `codex:<thread_id>:<turn_id>`；受信 SDK controller 使用实际可追踪的执行 locator，不伪造不可得的 thread/turn 或平台调用 ID。
 2. 从工作单的 `generation_input` 保存准确 JSON。Page、design_context、template_ref、basis 必须保留任务的真实基准；prompt 保留准确文本，references 写固定文件 Ref 与角色，parameters 只写将实际请求的参数。缺 model/seed 不从配置倒填；不保存密钥。准备内容不代表已经提交。
@@ -61,3 +61,7 @@ native SVG/readback 的正式 Page 原子绑定同时检查表格行列归属和
 reconstruct、repair 和 page_visual 工作单逐页读取 `page_design_contexts` 的完整配置：其中的 recipe_parameters、recipe_overrides、content_requirements 和 content_basis 来自该已采用蓝图的实际不可变 Request 与生产 Task，不能以项目 default 或 latest recipe 替换。Page atoms 仍是准确正文来源，原 PNG 是视觉参考；历史 Page/Plan Ref 保留作来源，notes 或未消费字段变化由当前视觉切片判断。新工作单用既有 changes.v1 声明实际 required_capabilities 后领取，包含适用的 content_requirements_v1、style_recipe、style_recipe_v3；直接 Host 重建没有 change plan 时不虚构 change_plan 能力或绑定。历史工作单保留原协议。缺失或冲突的新来源必须修复交接，不能自行回 default；读取已关闭的真实调用不重新认证其旧执行安装。
 
 可运行两阶段样例：`examples/workbench/w02_host_roundtrip.py`。prepare 只建立隔离合成项目并返回真实 ID；Host 在两阶段间执行真实 ImageGen；complete 采集、结算、采用并核对唯一调用账。它不替代 SVG/PPT、内容专业或用户验收。
+
+## 逻辑与物理单位
+
+实际读取工作单同时给出的 [physical-units 方法](physical-units.md)：从当前 canvas/物理页计算 contain k，核对 SVG_px*k*0.75pt；读取实际 p:sldSz、按明确角色逐run字号及 SVG/PPT 双层净空。固定样式不由外层包装补改，不调 converter 常数。

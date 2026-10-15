@@ -1,0 +1,56 @@
+{
+  "schema": "rc3_report_copy_manifest.v1",
+  "scope": "R4 fixed unit real failures and R5 targeted diagnostic, not R5 fixed full validation",
+  "parent_head": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+  "copy_policy": "Six exact report/log/diagnostic files only; no Stores, project records, registry, runtimeauth/HMAC, venv, packages, original customer files or browser session data. Original failures retained.",
+  "exact_copy_count": 6,
+  "exact_copy_bytes": 28682,
+  "files": [
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-r4-root-validation-02a6d44/unit.log",
+      "copied_path": "docs/reports/rc3/r5-asset-boundary-evidence-20261015/raw/rc3-04-r4-root-validation-02a6d44/unit.log",
+      "bytes": 13878,
+      "sha256": "3a7e877c3c4545af54af3a27495d68b8201952c3e29ea1bbc9055d9b383938ff"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-r4-root-validation-02a6d44/unit-result.json",
+      "copied_path": "docs/reports/rc3/r5-asset-boundary-evidence-20261015/raw/rc3-04-r4-root-validation-02a6d44/unit-result.json",
+      "bytes": 1156,
+      "sha256": "e48d3d078ab545a19ef47620b6dc6b03aebf84f77b1bfed18d035465520fdf2b"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r5/baseline.log",
+      "copied_path": "docs/reports/rc3/r5-asset-boundary-evidence-20261015/raw/rc3-04-owner-r5/baseline.log",
+      "bytes": 11272,
+      "sha256": "59d6804251b547075c804f01154a51726fd91f3ff6712e2c92feb106d3447645"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r5/exact.log",
+      "copied_path": "docs/reports/rc3/r5-asset-boundary-evidence-20261015/raw/rc3-04-owner-r5/exact.log",
+      "bytes": 98,
+      "sha256": "066135f3a71733445ad9fa0bdebeb5be8d00a6b08f47a0a9023764fa43ccba11"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r5/neighbors.log",
+      "copied_path": "docs/reports/rc3/r5-asset-boundary-evidence-20261015/raw/rc3-04-owner-r5/neighbors.log",
+      "bytes": 98,
+      "sha256": "c706c44da365ed4dd50a8b473b274867d633c3c0bebb74c9ac39bb8ef80d7afa"
+    },
+    {
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r5/exception-path-diagnostic.json",
+      "copied_path": "docs/reports/rc3/r5-asset-boundary-evidence-20261015/raw/rc3-04-owner-r5/exception-path-diagnostic.json",
+      "bytes": 2180,
+      "sha256": "1debaf64351a7e324d214fc56b227583a21153a85b7d1fd9ce364edc0e112c37"
+    }
+  ],
+  "new_CI": "PENDING_NEW_FIXED_HEAD",
+  "human": "NOT_RUN_DEFERRED",
+  "derived_files": [
+    {
+      "path": "docs/reports/rc3/r5-asset-boundary-evidence-20261015/integration-source-identity.json",
+      "sha256": "6eccf98209c5ecc137f4fd84958a76e9cf55ff083a3f014aa0be3f048bc32e03",
+      "bytes": 2895,
+      "provenance": "Owner derived from actual source bytes and parent Git objects; not an execution log or new installed identity"
+    }
+  ]
+}

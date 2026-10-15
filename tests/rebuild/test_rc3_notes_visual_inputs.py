@@ -10,10 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from deck_master import candidates, editing, generation, service, tasks
+from deck_master import candidates, collaboration, editing, generation, service, tasks
 from deck_master.models import ModelError
 from deck_master.production import stored_blueprint_request
 from deck_master.visual_dependencies import page_visual_equivalent
+from rc3_fixtures import authorize_scope, evidence_for, public_project, settle_fidelity_review
 
 
 def _module(name, filename):
@@ -31,15 +32,20 @@ content_trials = _module("rc3_synthetic_content_trials", "test_content_candidate
 flow = gen.flow
 
 
+def _set_notes(page, text):
+    """Keep a complete canonical mapping for the explicit synthetic notes."""
+    page["speaker_notes"] = text
+    if page.get('content_mapping') is not None:
+        page['content_mapping']['speech_segments'] = [{
+            'segment_id': 'L1-notes', 'start_codepoint': 0, 'end_codepoint': len(text),
+            'narrative_node_ids': [], 'kind': 'cue', 'estimated_seconds': None}] if text else []
+    return page
+
+
 def _edit_notes(store, page_id, text="中文 54/120=45%，不是节约率。\n\n末段原注"):
     doc = store.load_document()
     entry = next(entry for entry in doc["pages"] if entry["page_id"] == page_id)
-    page = store.read_object_json(entry["page"])
-    page["speaker_notes"] = text
-    segments = (page.get("content_mapping") or {}).get("speech_segments")
-    if segments and len(segments) == 1:
-        segments[0]["start_codepoint"] = 0
-        segments[0]["end_codepoint"] = len(text)
+    page = _set_notes(store.read_object_json(entry['page']), text)
     editing.edit_page(store.project_root, page=page, base_revision=doc["revision_id"],
                       page_hash=entry["page"]["sha256"], operation_id=str(uuid.uuid4()))
     return store.load_document()
@@ -159,6 +165,20 @@ def test_svg_trial_candidate_real_plan_adopt_after_notes_without_image_calls(tmp
 
 def test_confirmed_recipe_notes_equivalence_preserves_real_trial_dispatch(tmp_path):
     flow = sty.Flow(tmp_path)
+    doc = flow.store.load_document()
+    scope = copy.deepcopy(doc['collaboration']['request']['scope'])
+    scope.update(page_ids=['p01', 'p02', 'p03'], allow_page_membership_change=False,
+                 allow_page_order_change=False)
+    collaboration.start_request(flow.project, input={'intent': 'full_deck', 'content_intent': None,
+        'scope': scope, 'replace_request_id': doc['collaboration']['request']['request_id'],
+        'instruction_evidence': evidence_for(flow.project,
+            text='L1 confirmed style recipe and one explicit page trial, preserving notes.',
+            locator='L1:notes-style:request')}, base_revision=doc['revision_id'], operation_id='L1-notes-style-request')
+    settle_fidelity_review(flow.project, page_ids=scope['page_ids'], execution_ref='L1-notes-style-review',
+        scenario='Confirmed imported style fixture')
+    authorize_scope(flow.project, actions=['style.propose', 'change.commit', 'allowance.allocate', 'call.begin'],
+        scope=scope, max_external_calls=1, max_candidate_count=1, adoption_policy='within_scope',
+        evidence=evidence_for(flow.project, text='Authorize one L1 page style trial.', locator='L1:notes-style:grant'))
     recipe = sty.confirm(flow)
     before = flow.store.load_document()["pages"][1]
     _edit_notes(flow.store, "p02")
@@ -245,10 +265,8 @@ def test_visual_equivalence_never_restores_revoked_authority(tmp_path):
     assert store.load_document() == before
 
 
-def _seed_imported_plan(store):
-    """Schema-valid imported initial state, not a claimed import-flow proof."""
-    from deck_master import content_plan
-    from deck_master.models import bump_revision
+def _seed_imported_plan(store, *, speech_policy=None):
+    """Import explicit role/speech input through the canonical current entry."""
     doc = store.load_document()
     ids = [entry["page_id"] for entry in doc["pages"]]
     roles = [{"page_id": pid, "role": "detail", "audience_question": "What follows?",
@@ -260,23 +278,15 @@ def _seed_imported_plan(store):
              "page_roles": roles, "page_budget": {"exact": len(ids), "target": None, "max": None},
              "time_budget": {"total_seconds": None, "speaking_seconds": None,
                              "interaction_seconds": None, "constraint": "unspecified"},
-             "speech_policy": {"mode": "none", "source": "default", "output": "none"},
+             "speech_policy": speech_policy or {"mode": "none", "source": "default", "output": "none"},
              "issues": [], "tradeoff_issue_ids": []}
-    source_ref = store.put_json_object({"fixture": "synthetic authorized confirmed manuscript"})
-    ref = content_plan.build_v2_plan(
-        store, doc, {"task_id": None, "intent": "import_draft", "dispatch_revision": doc["revision_id"]},
-        value, doc["pages"], narrative_ref=None, mode="imported_mapping",
-        imported_manuscript={"source_ref": source_ref, "preserve_mainline": True,
-                             "unresolved_mapping_items": [],
-                             "claimed_confirmation_evidence": {
-                                 "kind": "host_attested_instruction", "source_ref": source_ref,
-                                 "source_locator": "test:synthetic-import", "actor_id": None,
-                                 "assurance": "host_attested", "transport_receipt_ref": None,
-                                 "presentation_ref": None}})
-    changed = bump_revision(doc, {"operation_id": "seed-import-mapping", "kind": "content_update",
-                                 "description": "Explicit schema-valid imported fixture", "read_set": []})
-    changed["content_plan"] = ref
-    store.commit_change(base_revision=doc["revision_id"], document=changed, operation_id="seed-import-mapping")
+    return service.import_draft(store.project_root,
+        draft_payload={'pages': [store.read_object_json(entry['page']) for entry in doc['pages']],
+                       'page_order': ids, 'content_plan': value},
+        base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()),
+        instruction_evidence={'kind': 'host_attested_instruction',
+            'text': 'Import this explicit confirmed manuscript role mapping and speech policy.',
+            'source_locator': 'L1:role-mapping-import'}, preserve_mainline=True)
 
 
 def _blueprint_with_imported_plan(tmp_path):
@@ -346,9 +356,20 @@ def test_real_task_detects_relationship_and_ownership_changes_with_same_literal_
                                 {"node_id": "n2", "label_ref": "atom:p1:block:b2:text", "status": "existing"}],
                             "edges": [{"edge_id": "e1", "from": "n1", "to": "n2",
                                        "direction": "forward", "relationship": "handoff", "label_ref": None}]}}
-    project = tmp_path / "relationship-protocol"
-    service.create(project, brief="Explicit synthetic visual regression", draft={"pages": [page]},
-                   project_format="workbench.v3")
+    scope = {'subject': 'deck', 'page_ids': ['p1'], 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['plan', 'page_copy', 'speech', 'blueprint', 'review'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+    project = public_project(tmp_path, create_input={'brief': 'Explicit synthetic visual regression'},
+        manuscript={'pages': [page]}, request_input={'intent': 'full_deck', 'content_intent': None,
+            'scope': scope, 'instruction_evidence': {'kind': 'host_attested_instruction',
+                'text': 'L1 generate exactly one synthetic relationship page.',
+                'source_locator': 'L1:relationships:request'}})['project']
+    settle_fidelity_review(project, page_ids=['p1'], execution_ref='L1-relationship-review',
+        scenario='Relationship and ownership visual basis')
+    authorize_scope(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        scope=scope, max_external_calls=1, max_candidate_count=0, adoption_policy='within_scope',
+        evidence=evidence_for(project, text='Authorize one bounded L1 relationship image call.',
+                              locator='L1:relationships:grant'))
     summary = service.continue_project(project)["pending_tasks"][0]
     store = Store(project)
     doc = store.load_document()
@@ -370,30 +391,55 @@ def test_real_task_detects_relationship_and_ownership_changes_with_same_literal_
 
 
 @pytest.mark.parametrize("kind", ["page", "content_update"])
-def test_content_candidate_first_notes_adoption_protects_current_same_cas_and_old_core_refuses(tmp_path, kind):
+def test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses(tmp_path, kind):
     import json
     import subprocess
     python = Path('/workspace/work/rc3/baseline-a/venv/bin/python')
-    path, store = content_trials.project.__wrapped__(tmp_path)
+    store = trial.store.__wrapped__(tmp_path)
+    path = store.project_root
+    if kind == 'content_update':
+        doc = store.load_document()
+        scope = doc['collaboration']['request']['scope']
+        collaboration.record_decision(path, input={'topic': 'direction', 'subject_refs': [],
+            'value': 'Retain the confirmed manuscript direction while rewriting the selected copy.',
+            'disposition': 'accepted', 'authority_mode': 'direct_user', 'scope': scope,
+            'instruction_evidence': evidence_for(path,
+                text='Use the existing direction for this explicit L1 selected-copy rewrite.',
+                locator='L1:content-notes:direction')}, base_revision=doc['revision_id'],
+            operation_id='L1-content-notes-direction')
+        authorize_scope(path, actions=['content.operation'], scope=scope, max_external_calls=0,
+            max_candidate_count=1, adoption_policy='within_scope', evidence=evidence_for(path,
+                text='Authorize one L1 content changeset trial and its explicit selection.',
+                locator='L1:content-notes:grant'))
     original = store.load_document()
-    assert original['compatibility']['minimum_writer'] != 'rc3.v1'
+    assert original['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     if kind == 'page':
         task = content_trials.dispatch_content_trial(path, store)
         envelope = content_trials.page_envelope(store, task)
-        envelope['pages'][0]['speaker_notes'] = '采用时保护中文 54/120=45%，不是节约率。\n\n末段'
+        _set_notes(envelope['pages'][0], '采用时保护中文 54/120=45%，不是节约率。\n\n末段')
     else:
+        _edit_notes(store, 'p01', '完整 changeset 备注。\n\n末段')
+        settle_fidelity_review(path, page_ids=['p01', 'p02'], execution_ref='L1-content-notes-fidelity',
+            scenario='Notes are current before a page-copy-only rewrite candidate')
+        original = store.load_document()
         task = content_trials.dispatch_content_ops_trial(path, store, 'rewrite', ['p01'])
         envelope = content_trials.changeset_envelope(store, task, 'rewrite')
-        envelope['content_update']['upsert_pages'][0]['speaker_notes'] = '完整 changeset 备注。\n\n末段'
+        content_trials.start_task(path, task)
+        refused = copy.deepcopy(envelope)
+        _set_notes(refused['content_update']['upsert_pages'][0], 'Unauthorized speech change via page_copy')
+        before = store.load_document()
+        with pytest.raises(tasks.EnvelopeError, match='page_copy cannot silently change speech'):
+            content_trials.accept(path, task, refused)
+        assert store.load_document() == before
     content_trials.start_task(path, task)
     result = content_trials.accept(path, task, envelope)
     recorded = store.load_document()
     assert recorded['pages'] == original['pages']
-    assert recorded['compatibility']['minimum_writer'] != 'rc3.v1'
+    assert recorded['compatibility']['minimum_writer'] == original['compatibility']['minimum_writer']
     outcome = content_trials.adopt(path, store, result['candidate_ids'])
     protected = store.load_document()
     assert protected['revision_id'] == outcome['revision_id']
-    assert protected['compatibility']['minimum_writer'] == 'rc3.v1'
+    assert protected['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     adopted_page = store.read_object_json(protected['pages'][0]['page'])
     assert adopted_page['speaker_notes'].endswith('末段')
     assert all(not store.read_object_json(ref).get('generation_attempts') for ref in protected['tasks'])
@@ -421,42 +467,36 @@ print(json.dumps(out))
     assert store.load_document() == protected
 
 
-def test_empty_notes_content_candidate_does_not_add_notes_writer(tmp_path):
-    path, store = content_trials.project.__wrapped__(tmp_path)
+def test_empty_notes_content_candidate_preserves_current_writer_floor(tmp_path):
+    store = trial.store.__wrapped__(tmp_path)
+    path = store.project_root
+    before_writer = store.load_document()['compatibility']['minimum_writer']
     task = content_trials.dispatch_content_trial(path, store)
     content_trials.start_task(path, task)
     envelope = content_trials.page_envelope(store, task)
-    envelope['pages'][0]['speaker_notes'] = ''
+    _set_notes(envelope['pages'][0], '')
     result = content_trials.accept(path, task, envelope)
     content_trials.adopt(path, store, result['candidate_ids'])
-    assert store.load_document()['compatibility']['minimum_writer'] == 'workbench-quality.v1'
+    assert store.load_document()['compatibility']['minimum_writer'] == before_writer == 'rc3-entry.v1'
 
 
 @pytest.mark.parametrize('output', ['pptx_notes', 'both', 'separate_script'])
 def test_explicit_content_candidate_policy_consumption_protects_writer_even_without_notes(tmp_path, output):
-    """A schema-valid legacy imported policy needs protection on adoption.
-
-    The seeded state is not a claim about the later RC3-04 import entrance.
-    """
-    from deck_master.models import bump_revision
-    path, store = content_trials.project.__wrapped__(tmp_path)
-    _seed_imported_plan(store)
-    doc = store.load_document()
-    plan = store.read_object_json(doc['content_plan'])
-    plan['input']['speech_policy'] = {'mode': 'cues', 'source': 'provided', 'output': output}
-    seeded = bump_revision(doc, {'operation_id': 'seed-notes-output-policy', 'kind': 'content_update',
-                                 'description': 'Explicit schema-valid legacy policy fixture', 'read_set': []})
-    seeded['content_plan'] = store.put_json_object(plan)
-    store.commit_change(base_revision=doc['revision_id'], document=seeded, operation_id='seed-notes-output-policy')
+    """Explicit canonical policy input remains protected even without notes."""
+    store = trial.store.__wrapped__(tmp_path)
+    path = store.project_root
+    _seed_imported_plan(store, speech_policy={'mode': 'cues', 'source': 'provided', 'output': output})
+    settle_fidelity_review(path, page_ids=['p01', 'p02'], execution_ref='L1-policy-fidelity',
+        scenario='Explicit imported speech output policy with empty original notes')
     task = content_trials.dispatch_content_trial(path, store)
     content_trials.start_task(path, task)
     envelope = content_trials.page_envelope(store, task, title_suffix='')
     assert not envelope['pages'][0].get('speaker_notes')
     result = content_trials.accept(path, task, envelope)
     before = store.load_document()
-    assert before['compatibility']['minimum_writer'] != 'rc3.v1'
+    assert before['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     content_trials.adopt(path, store, result['candidate_ids'])
     adopted = store.load_document()
-    assert adopted['compatibility']['minimum_writer'] == 'rc3.v1'
+    assert adopted['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     assert adopted['pages'] == before['pages']
     assert adopted['content_plan'] == before['content_plan']

@@ -1,0 +1,103 @@
+{
+  "schema_version": "rc3_b_fixed_handoff.v3",
+  "status": "F9_ACTUAL_R3_CLOSED__COMBINED_COVERAGE16_FROM_R3_ONE_PLUS_R2_FIFTEEN",
+  "time": "2026-10-15T06:50:09.379161+00:00",
+  "candidate": {
+    "source_sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+    "source_tree": "31cca075ac76877908e04f030f0c4e815d3a6268",
+    "release_id": "a53a265321ca-01177541b9a1",
+    "manifest_sha256": "a338a72fb577890e77fbf6f5b0f25663f551b85d77eb04f85706a9c59c59368e",
+    "wheel_sha256": "01177541b9a1bc38aefb50fd6c8e8499b6bae4a6afe59b7b467693fc1bd740fb",
+    "actual_python": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/bin/python"
+  },
+  "F9_original_instruction": "请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。",
+  "new_actual_application": {
+    "count": 1,
+    "role_entry": "Master-natural original F9",
+    "full_current_method_read": true,
+    "actual_return": "Task understanding, real scope, known/unknown, next responsibilities, current8-node Narrative and two-page Plan proposals",
+    "actual_runtime": "framing and argument actual claims/adoptions; normal completed+closed, two continue same revision and no visual production",
+    "same_actual_host": "/root/rc3_04_owner/skills_install"
+  },
+  "retained_actual_applications": {
+    "count": 15,
+    "release": "573a46a85bf9-13e3d2708abf",
+    "full_file_method_and_business_dependencies_compared": true,
+    "unchanged_package_files": 267,
+    "changed_package_files": 4,
+    "host_skill_files_all_same": 23,
+    "all_prior_natural_inputs_route_rechecked": true,
+    "F7_actual_design_output_reused": true,
+    "F8_real_old03_lifecycle_reused": true,
+    "new_R3_lifecycle_runs": 0
+  },
+  "finite_route_control_checks": 24,
+  "before_after": {
+    "Root_installed271_files_identical": true,
+    "Host_skill23_identical": true,
+    "canonical270_source_and_installed_match_Root_strict": true,
+    "Root_manifest_unchanged": true,
+    "only_possible_source_cache_changes": "Exact .pytest_cache differences from concurrent Root broad tests, if any, retained in identity-after.json; canonical bytes unchanged."
+  },
+  "historical_evidence": {
+    "R2_frozen_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+    "R2_frozen_sha256": "50af7364494ffbc92944b13ba8e4be7b6049fc91e79e50d940f37041b4d21b35",
+    "all_R2_frozen_handoff_artifact_hashes_checked_unchanged": true,
+    "R2_F9_remains_BLOCKED": true,
+    "no_rewriting_R1_or_R2_statuses": true
+  },
+  "fees_and_limits": {
+    "actual_Hosts": 1,
+    "independent_models_claimed": 0,
+    "new_Provider_or_image_calls": 0,
+    "actual_model_token_price": "not_reported",
+    "human_native_image_listener_desktop_acceptance": "NOT_RUN",
+    "E1_fair_effect_or_blinded": "NOT_EVALUATED; known prior synthetic source/scaffold",
+    "coverage_limit": "Combined16 representative responsibilities. This is one new R3 actual application plus15 retained R2 applications, not a new R3 sixteen-path run or independent16 models. Retained Review machine needs_reviewer and Design suggestions are unchanged."
+  },
+  "source_or_product_or_test_or_Git_mutations": false,
+  "spawn_or_HOME_activation": false,
+  "artifacts": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/identity-before.json",
+      "sha256": "b04ae455f949713765bb1a97792f36dee184ea42615bdaf688911b71912651ff"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/identity-after.json",
+      "sha256": "dbc889e90e5e35673d3bd33b2ed0ba93fd7782c71a7bf561e55c4b853b89f06d"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/changed-python-function-identity.json",
+      "sha256": "480d3c835d38fc2ef6f0d614aabc85a149cb61c6ba36bd4fc6cc951f4d1dc5c4"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+      "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-finite-routing-controls.json",
+      "sha256": "eaef757982f4ccae6243331d10292df5fa0a2c4684880bba2a4a47b1fb90fd53"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-fifteen-path-and-lifecycle-reuse.json",
+      "sha256": "3d481fb5cec0e81caadb5f6ae46813bb9aa2cf6500c6295604b0ca5327888d8c"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/actual-application-record.json",
+      "sha256": "b66971ecc11f2651aabd24e47feecd335d5fd6db251ddf033038700f51b52a21"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-combined-sixteen-path-coverage.json",
+      "sha256": "1718db3b0b2b30b767253bad5baaa5dc940a3daabcac47183dca89b01d360b2f"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/F9-actual-application.stdout",
+      "sha256": "6dca5066d1872f8627d49e4b2044dee2cdd9c171972b2980818b43c42f16c94d"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/F9-actual-application.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "next": "Root fixed suites/independent reviews decide the card. B stops after this frozen handoff."
+}

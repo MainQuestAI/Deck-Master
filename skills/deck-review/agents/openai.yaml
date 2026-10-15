@@ -1,0 +1,6 @@
+interface:
+  display_name: "Deck Review"
+  short_description: "只读审查项目快照、外部PPTX或明确文件集，检查内容、关系、口播、视觉与交付证据并返回具体findings；不制作、不自动修复，换Skill名称不产生独立身份。"
+  default_prompt: "Use $deck-review for the requested responsibility and preserve the current scope."
+policy:
+  allow_implicit_invocation: true

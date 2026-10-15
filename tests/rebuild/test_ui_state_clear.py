@@ -292,8 +292,8 @@ def test_http_plan_clear_and_readonly_refusal(tmp_path):
 
 def test_g54_candidates_gate_projection_endpoint_and_service_layer_agree(tmp_path):
     """B07/G54 一致性：candidates 族在投影（effective_actions）、HTTP 端点与服务层
-    三处同口径拒绝 v1 项目；run_desk 族内 feedback 对 v1 保持可写（族粒度已知
-    限制，见 ui_journal.FORMAT_GATED 注释）。"""
+    三处同口径拒绝 v1 项目。run_desk 族支持读取不授予执行许可；新建反馈任务
+    仍须通过当前入口的显式升级检查。"""
     import json as json_module
     import urllib.error
     import urllib.request
@@ -301,10 +301,10 @@ def test_g54_candidates_gate_projection_endpoint_and_service_layer_agree(tmp_pat
     from deck_master import candidates as candidates_service, service, ui_journal
     from deck_master.web import WorkbenchServer
 
-    project = tmp_path / 'v1-g54'
-    service.create(project, brief='G54 consistency', draft={'pages': [{'schema_version': 'deck_page_package.v2',
+    from rc3_fixtures import historical_snapshot
+    project = historical_snapshot(tmp_path, scenario='G54 historical v1 format gate', pages=[{'schema_version': 'deck_page_package.v2',
                    'page_id': 'p01', 'customer_visible': {'title': 'v1', 'body_blocks': []},
-                   'visual_spec': {'intent': 'g54', 'reference_mode': 'new_design'}}]})
+                   'visual_spec': {'intent': 'g54', 'reference_mode': 'new_design'}}])['project']
     info = ui_journal.project_info(project)
     candidates_action = next(item for item in info['effective_actions'] if item['action'] == 'candidates')
     assert candidates_action['writable'] is False and candidates_action['reason_code'] == 'unsupported_project_format'
@@ -332,11 +332,15 @@ def test_g54_candidates_gate_projection_endpoint_and_service_layer_agree(tmp_pat
             raise AssertionError('candidates plan must refuse v1 projects')
         except urllib.error.HTTPError as error:
             assert error.code == 409 and json_module.load(error)['error']['code'] == 'unsupported_project_format'
-        # run_desk 家族粒度限制的实证：feedback 对 v1 仍可写（assemble 走服务层 stage_format_required）
+        # Family-level read capability is not execution permission. Current
+        # entry admission refuses a new repair before explicit migration.
         feedback = json_module.dumps({'page_id': 'p01', 'instruction': 'g54', 'base_revision': doc['revision_id']}).encode()
         request = urllib.request.Request(base + '/api/feedback', data=feedback, headers=headers)
-        response = urllib.request.urlopen(request)
-        assert response.status == 200
+        with pytest.raises(urllib.error.HTTPError) as migration_gate:
+            urllib.request.urlopen(request)
+        assert migration_gate.value.code == 422
+        assert json_module.load(migration_gate.value)['error']['code'] == 'migration_required'
+        assert Store(project).load_document() == doc
     finally:
         server.stop()
 

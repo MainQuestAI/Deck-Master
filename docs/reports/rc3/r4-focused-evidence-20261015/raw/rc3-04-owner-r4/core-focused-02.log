@@ -1,0 +1,34 @@
+....................F                                                    [100%]
+=================================== FAILURES ===================================
+_ test_corrupt_task_cannot_erase_project_reading_or_establish_production_proof _
+
+icon_store = <deck_master.store.Store object at 0x7fb1c8d7df40>
+
+    def test_corrupt_task_cannot_erase_project_reading_or_establish_production_proof(icon_store):
+        store = icon_store
+        assert eligibility.preproduction_state(store, store.load_document())['satisfied'] is True
+        recipe = confirm(store)
+        task = dispatch(store, recipe)[0]
+        doc = store.load_document()
+        task_ref = next(ref for ref in doc['tasks'] if store.read_object_json(ref)['task_id'] == task['task_id'])
+        damaged = store.project_root / task_ref['path']
+        damaged.write_bytes(b'{broken task')
+        original = source_snapshot(store.project_root)
+        state = eligibility.preproduction_state(store, doc)
+        assert state['status'] == 'unreadable' and state['satisfied'] is False
+        assert set(state['missing_units']) == set(state['units'])
+        described = collaboration.describe(store.project_root)
+        info = ui_journal.project_info(store.project_root)
+        assert info['revision_id'] == described['revision_id'] == doc['revision_id']
+        for action in ('dispatch.blueprint', 'export.delivery'):
+            card = next(card for card in described['blocking_cards'] if card['action'] == action)
+            assert card['decision']['allowed'] is False
+>           assert 'unreadable' in json.dumps(card['decision'])
+E           assert 'unreadable' in '{"schema_version": "eligibility.v1", "allowed": false, "action": "export.delivery", "enforcement": "active", "scope":...ntrol_revision_id": "0a02c0132d7a417fba505b7d9ea070d0"}, "targets": {"page_ids": null, "layers": [], "subject": null}}'
+E            +  where '{"schema_version": "eligibility.v1", "allowed": false, "action": "export.delivery", "enforcement": "active", "scope":...ntrol_revision_id": "0a02c0132d7a417fba505b7d9ea070d0"}, "targets": {"page_ids": null, "layers": [], "subject": null}}' = <function dumps at 0x7fb1c9fc0b80>({'schema_version': 'eligibility.v1', 'allowed': False, 'action': 'export.delivery', 'enforcement': 'active', ...})
+E            +    where <function dumps at 0x7fb1c9fc0b80> = json.dumps
+
+tests/rebuild/test_rc3_corrupt_task_reading.py:31: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_rc3_corrupt_task_reading.py::test_corrupt_task_cannot_erase_project_reading_or_establish_production_proof
+1 failed, 20 passed in 5.55s

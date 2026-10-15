@@ -11,6 +11,8 @@ from deck_master.readback_text import _run_state
 from deck_master.store import Store
 from test_external_review_readback import text
 from test_readback import _atom_page, compile_and_readback, NS
+from test_service_flow import _prepare_production
+from engineering_render_helpers import render_engineering_diagnostic
 
 CASES = [
     ('start-zero', [(0,1),(0,0),(1,0)], 'fail'),
@@ -55,17 +57,22 @@ def test_unverifiable_native_stop_positions_cannot_pass(positions):
 @pytest.mark.render
 @pytest.mark.parametrize('name,stops,expected', [CASES[0],CASES[1],CASES[11]], ids=['start-zero','end-zero','partial'])
 def test_real_gradient_svg_ppt_and_persisted_check(tmp_path,name,stops,expected):
+    """Actual engineering evidence is external; no PageVisual or production pass."""
     page={'schema_version':'deck_page_package.v2',**_atom_page(['REPORT','Body'])};project=tmp_path/'project'
     service.create(project,brief='Synthetic gradient interval regression',draft={'pages':[page]},design={'canvas':{'width_px':200,'height_px':100,'slide_width_in':200/96,'slide_height_in':100/96,'fit':'contain'}})
     svg=tmp_path/'source.svg';svg.write_text('<svg viewBox="0 0 200 100"><rect width="200" height="100" fill="#ffffff"/>'+gradient_body(stops)+'</svg>')
     pipeline.run([pipeline.executable('rsvg-convert'),str(svg),'-o',str(tmp_path/'source.png')])
     store=Store(project);doc=store.load_document();updated=bump_revision(doc,{'operation_id':'gradient-proof','kind':'artifact_adoption','description':'synthetic explicit gradient','read_set':[]})
     updated['pages'][0]['svg']=pipeline.artifact(store,svg,'svg',page_id='p1');store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='gradient-proof')
-    report=pipeline.produce(project);doc=store.load_document();stored=json.loads(store.read_object_bytes(store.read_object_json(doc['outputs']['render_report'])['file']))
+    _prepare_production(project, actions=[], max_external_calls=0,
+        scenario='L1 synthetic exact gradient manuscript before actual raster/PPT/readback checks: ' + name)
+    diagnostic=render_engineering_diagnostic(project,output_dir=tmp_path/'engineering')
+    report=diagnostic['report'];doc=store.load_document();stored=json.loads(diagnostic['report_path'].read_bytes())
     assert report['status']==stored['status']==expected
-    for field,output in [('pptx','actual.pptx')]:
-        (tmp_path/output).write_bytes(store.read_object_bytes(store.read_object_json(doc['outputs'][field])['file']))
-    (tmp_path/'actual.png').write_bytes(store.read_object_bytes(store.read_object_json(doc['pages'][0]['ppt_preview'])['file']))
+    assert all(value is None for value in doc['outputs'].values())
+    assert diagnostic['provenance']['visual_acceptance']=='not_evaluated'
+    (tmp_path/'actual.pptx').write_bytes(diagnostic['pptx_path'].read_bytes())
+    (tmp_path/'actual.png').write_bytes(diagnostic['ppt_previews'][0].read_bytes())
     counts={}
     for image_name in ('source','actual'):
         with Image.open(tmp_path/(image_name+'.png')) as im:

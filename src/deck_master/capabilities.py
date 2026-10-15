@@ -18,6 +18,8 @@ from .method_resources import RELATIVE_PATHS, resolve_root, method_release
 from .models import sha256_bytes
 from .review_evidence import context_payload, current_registry
 
+RUNTIME_PROTOCOL_CAPABILITIES = ('collaboration.v1', 'rc3-entry.v1')
+
 
 def installation_identity():
     """Observed source/package/install identity; no cwd or other release lookup."""
@@ -77,6 +79,7 @@ def describe(adapter_context=None):
     return {
         "schema_version": "host_capabilities.v1",
         "package_version": __version__,
+        "protocol_capabilities": list(RUNTIME_PROTOCOL_CAPABILITIES),
         "installation_identity": installation_identity(),
         "status": "ready" if all(r["available"] for r in resources) else "needs_tool",
         **available,

@@ -1,0 +1,763 @@
+{
+  "schema": "rc3_04_documentary_finding_closure.v1",
+  "current_runtime_sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+  "findings": [
+    {
+      "id": "F1",
+      "kind": "independent_product_finding",
+      "original_phase": "R1",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "sha256": "002d53531ff471f2e408c79988653c753f5efd782093f5ef16bf87554c84eab3"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-import-scope-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-import-scope-result.json",
+          "sha256": "37f9fb202eb080316481f4ed5dbc70960fc2160099b0070beb1eea032d7baf78"
+        }
+      ],
+      "repair_phase": "R2",
+      "repair": "完整实际import写集合，拒越界增删/页序/层变化并保留合法窄import正例",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-import-scope-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-import-scope-result.json",
+          "sha256": "39da02ffa605ac845eff73bab9529f212120d068ddc33ecb8dd06cf3bbc4713f"
+        }
+      ],
+      "R3_reuse": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "sha256": "9f64ec6f6a13caabcec49ec19d7bd3cf9230b1dcaa3ad90d8d4878b51ad1bde3"
+        }
+      ],
+      "scope": "finite L1 closure and exact unchanged dependencies, not full professional AC/CI"
+    },
+    {
+      "id": "F2",
+      "kind": "independent_product_finding",
+      "original_phase": "R1",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "sha256": "002d53531ff471f2e408c79988653c753f5efd782093f5ef16bf87554c84eab3"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-request-source-replay-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-request-source-replay-result.json",
+          "sha256": "7beaf6eca0d11c0ac98a5174c13df87a43abc6335060754f65d04ea8897a44b0"
+        }
+      ],
+      "repair_phase": "R2",
+      "repair": "committed历史source去重/原request-credit边界，不重开closed授权",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-request-source-replay-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-request-source-replay-result.json",
+          "sha256": "8d2b2219fd994087aa8111dfb8a9c5ee5a3d7641c347326580d913a0cf6ef8b9"
+        }
+      ],
+      "R3_reuse": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "sha256": "9f64ec6f6a13caabcec49ec19d7bd3cf9230b1dcaa3ad90d8d4878b51ad1bde3"
+        }
+      ],
+      "scope": "finite L1 closure and exact unchanged dependencies, not full professional AC/CI"
+    },
+    {
+      "id": "F3",
+      "kind": "independent_product_finding",
+      "original_phase": "R1",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "sha256": "002d53531ff471f2e408c79988653c753f5efd782093f5ef16bf87554c84eab3"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-input-revision-source-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-input-revision-source-result.json",
+          "sha256": "d2c529eb85c2ef8eb67f66b5c2a3ba481f6f14bb31da6f63b2342febf2afd5be"
+        }
+      ],
+      "repair_phase": "R2",
+      "repair": "四层复用完整source/version/locator/atom/node验证；honest imported unknown保留",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-input-revision-source-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-input-revision-source-result.json",
+          "sha256": "e33f2a8d4e31df5a55a68ca61138bf344648661dd9af65602beef017c62aeacb"
+        }
+      ],
+      "R3_reuse": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "sha256": "9f64ec6f6a13caabcec49ec19d7bd3cf9230b1dcaa3ad90d8d4878b51ad1bde3"
+        }
+      ],
+      "scope": "finite L1 closure and exact unchanged dependencies, not full professional AC/CI"
+    },
+    {
+      "id": "F4",
+      "kind": "independent_product_finding",
+      "original_phase": "R1",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "sha256": "002d53531ff471f2e408c79988653c753f5efd782093f5ef16bf87554c84eab3"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-external-gap-status-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-external-gap-status-result.json",
+          "sha256": "4086e78afa5294eb713949d23729656d62bbf77e7e5313d7c662cbb4064b795d"
+        }
+      ],
+      "repair_phase": "R2",
+      "repair": "strict needs_reviewer=409/4，完整报告保留；旧export错误兼容单列",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-external-gap-status-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-external-gap-status-result.json",
+          "sha256": "ed6c7e4ec0d8b6f3f982fd3494a6f5609f94652925992ef6387da59779c110ec"
+        }
+      ],
+      "R3_reuse": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "sha256": "9f64ec6f6a13caabcec49ec19d7bd3cf9230b1dcaa3ad90d8d4878b51ad1bde3"
+        }
+      ],
+      "scope": "finite L1 closure and exact unchanged dependencies, not full professional AC/CI"
+    },
+    {
+      "id": "F6",
+      "kind": "independent_product_finding",
+      "original_phase": "R1",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+          "sha256": "002d53531ff471f2e408c79988653c753f5efd782093f5ef16bf87554c84eab3"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-delivery-pause-race-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-delivery-pause-race-result.json",
+          "sha256": "f3f1ccf1cea0fad3ad0cb0393e941c02be03538b85942a0c2b2c52b78b212854"
+        }
+      ],
+      "repair_phase": "R2",
+      "repair": "export同current control串行发布，pause/revoke等待竞态拒绝且无半包",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-delivery-pause-race-result.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-delivery-pause-race-result.json",
+          "sha256": "ccaafc5355bc15f5c25f884d9fea31f75fd8660ffe337ea34e1fcc019c3edcb7"
+        }
+      ],
+      "R3_reuse": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+          "sha256": "9f64ec6f6a13caabcec49ec19d7bd3cf9230b1dcaa3ad90d8d4878b51ad1bde3"
+        }
+      ],
+      "scope": "finite L1 closure and exact unchanged dependencies, not full professional AC/CI"
+    },
+    {
+      "id": "F5",
+      "kind": "independent_UI_product_finding",
+      "original_phase": "R1",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round1-7a8578b/review.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round1-7a8578b/review.md",
+          "sha256": "bc10fe863171b7ee65b38dcb400504183c09154d4bbd32ad89e2d8926ee9b43b"
+        }
+      ],
+      "repair_phase": "R2",
+      "repair": "Studio canonical确认稿新建/import preview+实际完整scope+CAS+独立确认，非空scope自动全权",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round2-573a46a/review.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round2-573a46a/review.md",
+          "sha256": "3d7a044a793a547c3432956869e3a82daec1d54a7404f81ae43859fbb08086b0"
+        }
+      ],
+      "R3_reuse": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+          "sha256": "19693ba1fc6e0294741bbb1987a9420e55689f42fdde4635432dec6c969fb250"
+        }
+      ]
+    },
+    {
+      "id": "F7",
+      "kind": "actual_Host_product_finding",
+      "original_phase": "R1",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/R1-FROZEN-B-HANDOFF.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-7a8578b/R1-FROZEN-B-HANDOFF.json",
+          "sha256": "5955e58b0990bee2d1abf830c29d3f3a8dccea7bd9a0e6829232dad1bd3553b9"
+        }
+      ],
+      "repair_phase": "R2",
+      "repair": "肯定动作/否定/业务对象区分，原保管员恢复p2视觉句不换词实际完成",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+          "sha256": "50af7364494ffbc92944b13ba8e4be7b6049fc91e79e50d940f37041b4d21b35"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/F7-exact-original-and-routing-controls.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/F7-exact-original-and-routing-controls.json",
+          "sha256": "300330d2b1dbf9fff971fafe398ffe91f83c84d95bdd14df35bf84f3e56b2fba"
+        }
+      ],
+      "R3_reuse": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+          "sha256": "529556a28aec86c288f89b8251f4b855382d4c09bdc6a7be12dc1cbf389a1e8f"
+        }
+      ]
+    },
+    {
+      "id": "F8",
+      "kind": "actual_old_wheel_lifecycle_product_finding",
+      "original_phase": "R1",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/R1-FROZEN-B-HANDOFF.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-7a8578b/R1-FROZEN-B-HANDOFF.json",
+          "sha256": "5955e58b0990bee2d1abf830c29d3f3a8dccea7bd9a0e6829232dad1bd3553b9"
+        }
+      ],
+      "repair_phase": "R2",
+      "repair": "真实旧03迁移后mappingless Page合法speech_only完成，原Page/visual/unknown不重写",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+          "sha256": "50af7364494ffbc92944b13ba8e4be7b6049fc91e79e50d940f37041b4d21b35"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/R2-compatibility-lifecycle-index.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/R2-compatibility-lifecycle-index.json",
+          "sha256": "472f9e6cc2997ee42eb2bfeff125359f90552e6c572b8acd674715cc40af01f1"
+        }
+      ],
+      "R3_reuse": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+          "sha256": "529556a28aec86c288f89b8251f4b855382d4c09bdc6a7be12dc1cbf389a1e8f"
+        }
+      ]
+    },
+    {
+      "id": "F9",
+      "kind": "actual_Host_product_finding",
+      "original_phase": "R2",
+      "original": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+          "sha256": "50af7364494ffbc92944b13ba8e4be7b6049fc91e79e50d940f37041b4d21b35"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-exact-reread-exception.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-exact-reread-exception.json",
+          "sha256": "f6f4ba9f509b137d14d09f9fcdc16383c2e1ad01350642d9b535a72a8ba9491b"
+        }
+      ],
+      "repair_phase": "R3",
+      "repair": "原协调主动作优先Master；原句逐字重放当前方法并实际两阶段产出/停止",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+          "sha256": "529556a28aec86c288f89b8251f4b855382d4c09bdc6a7be12dc1cbf389a1e8f"
+        }
+      ],
+      "not_RC3_03_F9": true
+    },
+    {
+      "id": "R2-C1",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "v2 editorial operation-plan可嵌实际v2输入，实际merge/split/rollback范围保留",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "R2-C2",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "真实v2 Plan projection可读，不伪造历史goal_id",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "R2-C3",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "recursive visible atom编辑保留原links、新合法imported/nullNarr unknown不造来源",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "R2-C4",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "stale bitmap continue返回合法fresh路径/明确gap，不崩溃且不自动给text-only生图",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "R2-C5",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "空report拒绝、known exact receipt replay、原report仅补缺invocation不升级fee/native",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "R2-Plan",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "完整chapters/qualification/source/硬页限校验，pending页数不伪provided批准",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "R2-reconcile-recovery",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "真实noop/trial/删除/取消后reopen与impact/digest保持四层同事务",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "R2-style-analysis",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "style analyze真实binding/claim/当前reference-font输入切片，不绑无关正文",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "R2-legacy-CLI",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R2-HANDOFF.md",
+      "repair_phase": "R2",
+      "repair": "新collaboration409/4与原export/handoff3专门adapter兼容，谓词不放宽",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+          "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+          "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+        }
+      ],
+      "R3_reuse_and_regression": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+          "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+        }
+      ],
+      "scope": "Finite explicit trajectories and fixed suite; no invented individual provider/human execution."
+    },
+    {
+      "id": "UI-O1",
+      "kind": "UI_observation",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R3-HANDOFF.md",
+      "repair_phase": "R3",
+      "repair": "实际completed内容请求总览，保留原生产矩阵/真实新request gaps",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+          "sha256": "19693ba1fc6e0294741bbb1987a9420e55689f42fdde4635432dec6c969fb250"
+        }
+      ],
+      "scope": "Presentation only; unchanged authority, raw facts, gates and fees."
+    },
+    {
+      "id": "UI-O2",
+      "kind": "UI_observation",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R3-HANDOFF.md",
+      "repair_phase": "R3",
+      "repair": "仅精确已知hardlimit安全count文案，unknown错误保留generic",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+          "sha256": "19693ba1fc6e0294741bbb1987a9420e55689f42fdde4635432dec6c969fb250"
+        }
+      ],
+      "scope": "Presentation only; unchanged authority, raw facts, gates and fees."
+    },
+    {
+      "id": "R3-C6",
+      "kind": "regression_exposed_real_product_correction",
+      "original_and_repair_account": "docs/reports/rc3/RC3-04-R3-HANDOFF.md",
+      "original_actual_browser_failure": {
+        "source_path": "/workspace/work/rc3/t04/c-r3-residual-10.log",
+        "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/t04/c-r3-residual-10.log",
+        "sha256": "fbca289595bff9c9d19cb35f4bb2ef88d83385b139b885a30f3ef5a1cc442592"
+      },
+      "repair_phase": "R3",
+      "repair": "实际inputs/editorial v2已知模板摘要；原用户reason/raw Task不变，unknown全文fallback",
+      "closure": [
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+          "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+          "sha256": "19693ba1fc6e0294741bbb1987a9420e55689f42fdde4635432dec6c969fb250"
+        },
+        {
+          "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+          "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+        }
+      ],
+      "scope": "Presentation only; unchanged authority, raw facts, gates and fees."
+    }
+  ],
+  "original_failure_policy": "Every original fixed failure retains its original candidate and status. Later closure never edits an original.",
+  "reuse_policy": "Each R3 reuse is explicitly backed by dependency/method/package comparisons in the cited fixed review.",
+  "not_final_AC_or_CI": true
+}

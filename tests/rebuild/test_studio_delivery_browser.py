@@ -1,6 +1,7 @@
 """Production defaults and prototype task/file structure retain real snapshot operations."""
 import io
 import json
+import shutil
 import uuid
 import zipfile
 from pathlib import Path
@@ -39,7 +40,7 @@ def test_task_search_filters_before_pagination_and_fixed_revision(tmp_path):
     service.inputs_update(path,patch={'reason':'after fixed task search','task_patch':{'audience':'新的阅读对象'}},base_revision=frozen,operation_id=str(uuid.uuid4()))
     assert run_desk.listing(path,revision=frozen,search='第 1 项')==searched
     assert store.read_current()!=before
-    shown=run_desk.listing(path,search='核对新材料与全稿正文')
+    shown=run_desk.listing(path,search='after fixed task search')
     assert len(shown['tasks'])==1 and shown['tasks'][0]['kind']=='compose'
     with pytest.raises(run_desk.RunReadError):run_desk.listing(path,search='x'*201)
 
@@ -62,10 +63,39 @@ def test_task_list_summary_only_transforms_verified_system_templates(tmp_path):
     assert run_desk.task_row(task)['display_instruction']==task['instruction']
     task['instruction']='Please preserve this entire English request, including content_update and Page v2.'
     assert run_desk.task_row(task)['display_instruction']==task['instruction']
-    initial=service.open_compose_task(store,store.load_document(),operation_id='initial-verified')
+    # Verify the legacy system template from an explicit historical writer;
+    # modern creation correctly opens a framing-only proposal instead.
+    from rc3_fixtures import historical_snapshot
+    old=Store(historical_snapshot(tmp_path,scenario='Stored legacy compose template reader')['project'])
+    historical=old.load_document()
+    initial=tasks.new_task(task_id='historical-initial',operation_id='initial-verified',kind='compose',
+        intent='initial',scope_pages=[],inputs=[],dependencies=[],dispatch_revision=historical['revision_id'],
+        produced_against=content_identity(historical),instruction=(
+            'Read every source in Task.sources plus the method resources; derive the '
+            "audience's open question and write complete visible copy as Page v2 with "
+            'an explicit page order. Same source supports different framings; do not '
+            'call a rule planner or fill pages from templates.'))
+    historical['tasks']=[old.put_json_object(initial)]
+    commit(old,historical,'record-historical-initial-task')
     initial_row=run_desk.task_row(initial)
     assert initial_row['display_instruction']=='阅读全部材料，围绕受众的问题组织完整正文与页面顺序。'
     assert initial_row['instruction'].startswith('Read every source in Task.sources')
+
+
+def test_actual_modern_input_workorder_summary_preserves_user_reason_and_raw_text(tmp_path):
+    path=tmp_path/'project';create_sample(path,page_count=2,readonly=False);store=Store(path)
+    reason='用户原文 API、Page v2；保留这一句。\n第二行。'
+    service.inputs_update(path,patch={'reason':reason,'task_patch':{'audience':'新的阅读对象'}},
+        base_revision=store.current_revision_id(),operation_id=str(uuid.uuid4()))
+    task=next(store.read_object_json(ref) for ref in store.load_document()['tasks']
+        if store.read_object_json(ref).get('intent')=='input_revision')
+    original=task['instruction'];row=run_desk.task_row(task)
+    assert row['display_instruction'].startswith(reason+' · ')
+    assert 'operation ' not in row['display_instruction']
+    assert 'compose.v2 input_revision' not in row['display_instruction']
+    assert row['instruction']==original and task['instruction']==original
+    task['instruction']+=' 用户另外添加的完整说明'
+    assert run_desk.task_row(task)['display_instruction']==task['instruction']
 
 
 @pytest.mark.browser
@@ -75,10 +105,10 @@ def test_studio_default_tasks_versions_and_actual_review_zip(tmp_path):
     oldest=store.current_revision_id();task_set(store);reading=store.current_revision_id()
     service.inputs_update(path,patch={'reason':'create independent current revision','task_patch':{'audience':'正式工作台验收'}},base_revision=reading,operation_id=str(uuid.uuid4()))
     current=store.current_revision_id();assert len({oldest,reading,current})==3
-    evidence=Path('output/opendesign-completion/studio-delivery');evidence.mkdir(parents=True,exist_ok=True)
+    evidence=tmp_path/'evidence';evidence.mkdir(parents=True,exist_ok=True)
     server=WorkbenchServer(path);requests=[];errors=[]
     with sync_playwright() as runtime:
-        browser=runtime.chromium.launch(args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':900})
+        browser=runtime.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':900})
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.on('request',lambda req:requests.append({'method':req.method,'url':req.url,'body':req.post_data}) if '/api/' in req.url else None)
         try:

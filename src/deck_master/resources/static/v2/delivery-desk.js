@@ -3,11 +3,12 @@ import {get, post, revisionQuery, readableError} from './api.js';
 import {el, button, modal, version, actionGroup, icon} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {productionView} from './production-view.js';
+import {deliveryJudgement, deliveryJudgementView, requestForm, admissionView} from './collaboration-desk.js';
 
 const names = {review: '审阅包', delivery: '正式交付包', engineering: '内部工程包'};
 const descriptions = {
   review: '可读正文、已有图稿与缺项说明。尚无 PPT 也可生成，不包含内部材料与完整提示词。',
-  delivery: '使用所选版本的质量检查、输入对齐和交付政策。存在未解决项时拒绝生成。',
+  delivery: '核对所选实际文件、口播保留方式与当前控制。存在未解决项时拒绝生成。',
   engineering: '包含原材料、完整提示词和恢复所需历史，仅供内部恢复；不含认证文件和个人草稿。',
 };
 const layerNames = {content: '逐页稿', page: '逐页稿', blueprint: '原图', svg: 'SVG', svg_preview: 'SVG 预览', ppt: '整稿 PPT', ppt_preview: 'PPT 预览',
@@ -54,16 +55,20 @@ function gapsView(app, gaps, revision) {
   render(); return node;
 }
 
-function exportFiles(record) {
+function exportFiles(record, app) {
   const studio=document.documentElement.dataset.workbenchUi==='studio';
   const archive = record.files[record.archive];
   const node = el('section', {class: 'export-result stack'}, el('div',{class:'studio-export-result-heading'},el('h3', {}, `${names[record.purpose]} · ${version(record.revision_id)}`),el('span',{class:'status'},'文件已生成')),
     el('p', {class:'export-archive-name'}, record.archive), el('div', {class:'export-downloads'},
       el('a', {class: 'download-link primary', href: exportURL(record, record.archive), download: record.archive}, '下载 ZIP'),
       record.files['deck.pptx'] && el('a', {class:'download-link', href:exportURL(record,'deck.pptx'), download:'deck.pptx'}, '下载 PPT')),
-    el('p', {class: 'muted hash-line'}, `ZIP SHA256 ${archive.sha256}`),
     el('p', {class: 'muted'}, '文件已生成。下载由浏览器完成；中断后可继续使用同一链接。'));
   const details = el('details', {}, el('summary', {}, `查看文件与哈希（${record.manifest.files.length} 项）`));
+  if (app.health.ui_capabilities?.includes('collaboration.v1') && !app.info.sample?.readonly) {
+    const source = {revision_id: record.revision_id, export_id: record.export_id};
+    node.append(button('以此文件来源局改', () => requestForm(app, {source, transition: 'edit_variant'})));
+    if (record.manifest.variant) node.append(button('从此版本开始下一版', () => requestForm(app, {source, transition: 'next_variant'})));
+  }
   let shown = 0; const list = el('ul', {class: 'export-file-list'}); const more = button('继续显示文件', append);
   function append() {
     for (const item of record.manifest.files.slice(shown, shown + 30)) list.append(el('li', {},
@@ -71,8 +76,8 @@ function exportFiles(record) {
       el('small', {class: 'hash-line'}, item.sha256)));
     shown += 30; more.hidden = shown >= record.manifest.files.length;
   }
-  details.append(list, more); details.addEventListener('toggle', () => { if (details.open && !shown) append(); });
-  if(studio) node.append(button(`查看文件与哈希（${record.manifest.files.length} 项）`,()=>{if(!shown)append();modal('文件清单与完整性校验',el('div',{class:'stack'},list,more));},false,{class:'studio-export-integrity'}));
+  details.append(el('p', {class: 'hash-line'}, `ZIP SHA256 ${archive.sha256}`), list, more); details.addEventListener('toggle', () => { if (details.open && !shown) append(); });
+  if(studio) node.append(button(`查看文件与哈希（${record.manifest.files.length} 项）`,()=>{if(!shown)append();modal('文件清单与完整性校验',el('div',{class:'stack'},el('p',{class:'hash-line'},`ZIP SHA256 ${archive.sha256}`),list,more));},false,{class:'studio-export-integrity'}));
   else node.append(details); return node;
 }
 
@@ -104,6 +109,15 @@ export function deliveryDesk(app) {
     el('h3', {class: 'export-group-title'}, '生成结果'), results);
   if(studio){node.classList.add('studio-files-desk'); results.append(el('p',{class:'muted export-empty'},'尚未在此浏览器生成文件。选择用途后，下载入口会显示在这里。'));}
   node.id = 'delivery-desk'; node.querySelector('h2').tabIndex = -1;
+  if (app.health.ui_capabilities?.includes('delivery_eligibility.v1')) {
+    const judgement = el('div', {class: 'stack'}, el('p', {role: 'status'}, '正在核对所选实际文件与当前控制。'));
+    node.querySelector('.panel-body').prepend(judgement);
+    const load = async () => {
+      try { const value = await deliveryJudgement(app, revision); if (!disposed) judgement.replaceChildren(deliveryJudgementView(value), button('重新核对当前控制', load)); }
+      catch (error) { if (!disposed) judgement.replaceChildren(admissionView(app, error), button('重读交付判断', load)); }
+    };
+    load();
+  }
   function read() {
     const value = JSON.parse(localStorage.getItem(key) || '[]');
     if (!Array.isArray(value) || value.some(v => !/^export-[a-f0-9-]{36}$/.test(v.export_id) || !names[v.purpose] || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(v.revision)))
@@ -118,7 +132,7 @@ export function deliveryDesk(app) {
     const row = el('section', {class: 'export-result stack'}, el('h3', {}, `${names[request.purpose]} · ${version(request.revision)}`), el('p', {role: 'status'}, note));
     const verify = button('核实这个文件包', async () => {
       verify.disabled = true;
-      try { const record = await get('/api/exports/' + request.export_id); if (!disposed) row.replaceWith(exportFiles(record)); }
+      try { const record = await get('/api/exports/' + request.export_id); if (!disposed) row.replaceWith(exportFiles(record, app)); }
       catch (error) {
         if (!disposed) row.append(el('p', {class: 'field-error'}, readableError(error)),
           error.code === 'export_not_found' && button('按原版本重试生成', () => generate(request, row)));
@@ -130,12 +144,12 @@ export function deliveryDesk(app) {
     if (!disposed) { row.replaceChildren(el('p', {role: 'status'}, `正在生成${names[request.purpose]} · ${version(request.revision)}，读取位置保持不变。`)); }
     try {
       const record = await post('/api/exports', request);
-      if (!disposed) row.replaceWith(exportFiles(record));
+      if (!disposed) row.replaceWith(exportFiles(record, app));
     } catch (error) {
       if (disposed) return;
       if (!error.status || error.status >= 500 || error.code === 'invalid_response') row.replaceWith(pending(request, '生成结果待核实；原版本、用途与编号已保留，勿改成当前新版本重试。'));
       else row.replaceChildren(el('h3', {}, `${names[request.purpose]}未生成 · ${version(request.revision)}`),
-        el('p', {class: 'field-error', role: 'alert'}, readableError(error)), gapsView(app, error.details?.gaps, request.revision));
+        admissionView(app, error), gapsView(app, error.details?.gaps, request.revision));
     }
   }
   async function create(purpose, trigger) {
@@ -249,6 +263,10 @@ export function historyDesk(app, history) {
   const versionControls = actionGroup(selected,
     button('读取所选版本', () => app.go({revision: selected.value, task_id: null})), more,
     app.summary.pages.length > 0 && button('逐页查看与固定比较', () => app.go({surface: 'page', page_id: app.summary.pages[0].page_id, layer: 'content', revision})), restore);
+  if (app.health.ui_capabilities?.includes('collaboration.v1') && app.info.collaboration?.request?.variant && !app.info.sample?.readonly) {
+    versionControls.append(button('以正在阅读的版本局改', () => requestForm(app, {source:{revision_id:revision},transition:'edit_variant'})),
+      button('从正在阅读的版本开始下一版', () => requestForm(app, {source:{revision_id:revision},transition:'next_variant'})));
+  }
   versionControls.classList.add('history-reading-controls');
   const historyHelp=el('p',{class:'muted'},'先读取历史版本并查看差异，再预览恢复影响。恢复会创建新版本，当前执行与调用记录不会回滚。');
   const allLabel=el('label',{class:'inline-control'},allRecords,'全部记录（包括执行与个人状态）');

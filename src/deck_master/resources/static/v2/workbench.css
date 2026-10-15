@@ -413,3 +413,19 @@ textarea{font-size:14px;line-height:1.7}
 /* Clear backup review keeps full values readable in the narrow dialog. */
 .recovery-differences{table-layout:fixed;width:100%;border-collapse:collapse;font-size:12px}
 .recovery-differences th,.recovery-differences td{padding:8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border);overflow-wrap:anywhere;white-space:pre-wrap}
+/* Current control facts stay separate from the fixed reading surface. */
+.collaboration-scope ul {margin:0;padding-left:24px;max-height:180px;overflow:auto;}
+.collaboration-form-fields {border:0;padding:0;margin:0;min-width:0;display:grid;gap:16px;}
+.collaboration-form-fields fieldset {border:1px solid var(--border,#e5e5e5);border-radius:8px;padding:12px;min-width:0;display:grid;gap:4px;max-height:240px;overflow:auto;}
+.collaboration-form-fields .inline-control {display:flex;align-items:center;gap:8px;min-height:44px;}
+.collaboration-form-fields input[type=checkbox] {width:20px;height:20px;flex-shrink:0;}
+.collaboration-record {border-top:1px solid var(--border,#e5e5e5);padding:12px 0;overflow-wrap:anywhere;}
+.delivery-judgement {border:1px solid var(--border,#e5e5e5);border-radius:12px;padding:16px;background:var(--surface-warm,#fafafa);overflow-wrap:anywhere;}
+.collaboration-admission {overflow-wrap:anywhere;}
+.draft-intake,.draft-import-impact {min-width:0;overflow-wrap:anywhere;}
+.draft-intake ol,.draft-import-impact ol {margin:0;padding-inline-start:24px;}
+.topbar .current-control-facts {min-width:0;flex:0 1 240px;margin-left:auto;}
+.collaboration-control {min-width:0;}
+.collaboration-control>button {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;min-height:44px;}
+.queued-modal {position:fixed;inset:0;margin:auto;width:min(720px,calc(100vw - 32px));max-height:calc(100dvh - 48px);border-radius:var(--radius-md);}
+@media(max-width:767px) {.topbar .current-control-facts {flex:0 1 150px;}.topbar .crumb {min-width:0;flex:1;}.topbar .crumb>strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.topbar .crumb>.version {display:none;}.collaboration-control>button {padding-inline:8px;font-size:11px;}}

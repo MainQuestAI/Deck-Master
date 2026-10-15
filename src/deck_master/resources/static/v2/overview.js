@@ -64,6 +64,23 @@ function todoButton(app, action, primary = false) {
 
 function todoPanel(app) {
   const block = app.summary.next_actions;
+  const completion=app.info.completion,request=app.info.collaboration?.request;
+  const currentRevision=app.info.control_revision_id||app.info.revision_id;
+  if(completion?.state==='completed'&&completion.intent==='content_only'&&completion.request_id===request?.request_id&&
+      !request.paused&&(!request.closed||request.closed_reason==='completed')&&app.route.revision===currentRevision&&
+      (!app.latest||app.latest.revision_id===currentRevision)) {
+    // Unrequested production slots remain factual in the matrix. They are not
+    // the next obligation after the actual requested content is complete.
+    const remaining=(block?.actions||[]).filter(action=>!['prepare_stage','refresh_stage'].includes(action.kind));
+    const content={plan_only:'论证与大纲',write_only:'上屏稿',speech_only:'口播稿',content_full:'完整内容'}[completion.content_intent]||'内容';
+    return el('section',{class:'overview-todos todo-clear','aria-label':'本次内容产物'},
+      el('h2',{},`本次${content}已完成`),
+      el('p',{},'约定的内容已返回，可继续阅读与核对。图稿、SVG 和 PPT 制作需要新的明确请求与范围。'),
+      button('阅读本次内容',()=>app.go(completion.content_intent==='plan_only'?{surface:'content'}:
+        {surface:'page',page_id:(completion.effective_scope?.page_ids||[]).find(id=>app.summary.pages.some(page=>page.page_id===id))||app.summary.pages[0]?.page_id,layer:'content'}),true),
+      remaining.length>0&&el('div',{class:'todo-secondary'},el('h3',{},'仍需核对的记录'),remaining.map(action=>el('article',{class:'todo-row'},
+        el('div',{},el('h3',{},todoTitle(action)),el('p',{},reasonText(action))),todoButton(app,action)))));
+  }
   if (block?.status === 'recorded' && block.actions?.length) {
     const [first, ...rest] = block.actions;
     const node = el('section', {class: 'overview-todos', 'aria-label': '制作待办'},
@@ -135,7 +152,11 @@ export function overview(app, data = {}) {
       button([studio && icon('gallery'), '查看整稿'], () => app.go({surface: 'gallery'}), true))));
   if (!studio) root.append(el('details', {class: 'overview-state-help'}, el('summary', {}, '如何理解制作状态'), el('p', {}, explanation)));
   const todo=todoPanel(app);root.append(todo);
-  const sync=event=>{const next=event.detail;if(next.revision_id===app.summary.revision_id&&next.reading_etag!==app.summary.reading_etag){app.summary=next;const updated=todoPanel(app);root.querySelector('.overview-todos')?.replaceWith(updated);}};app.root.addEventListener('summary-refreshed',sync);app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',sync));
+  const todoFacts=()=>canonical([app.latest?.revision_id,app.info.control_revision_id,app.info.completion,app.info.collaboration?.request,app.summary.reading_etag]);
+  let shownFacts=todoFacts();
+  const sync=event=>{const next=event.detail;if(next.revision_id===app.summary.revision_id&&next.reading_etag!==app.summary.reading_etag)app.summary=next;
+    const facts=todoFacts();if(facts!==shownFacts){shownFacts=facts;root.querySelector('.overview-todos')?.replaceWith(todoPanel(app));}};
+  app.root.addEventListener('summary-refreshed',sync);app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',sync));
   root.append(matrixPanel(app, data.overview));
   return root;
 }
@@ -377,11 +398,14 @@ function matrixPanel(app, saved) {
       const plan = await get('/api/content-plan' + revisionQuery(app.route.revision));
       if (disposed) return;
       const goalChapter = new Map();
-      for (const chapter of plan.content_plan?.chapters || [])
-        for (const goalId of chapter.goal_ids || []) goalChapter.set(goalId, chapter.title || chapter.chapter_id);
       const pageChapter = new Map();
+      for (const chapter of plan.content_plan?.chapters || []) {
+        const title = chapter.title || chapter.chapter_id;
+        if (Array.isArray(chapter.page_ids)) for (const pageId of chapter.page_ids) pageChapter.set(pageId, title);
+        else for (const goalId of chapter.goal_ids || []) goalChapter.set(goalId, title);
+      }
       for (const goal of plan.content_plan?.goals || [])
-        if (goal.page_id) pageChapter.set(goal.page_id, goalChapter.get(goal.goal_id) ?? null);
+        if (goal.page_id && !pageChapter.has(goal.page_id)) pageChapter.set(goal.page_id, goalChapter.get(goal.goal_id) ?? null);
       chapterTitleOf = pageId => pageChapter.get(pageId) ?? null;
       render();
     } catch { /* 章节分组保持关闭，不影响矩阵与待办 */ }

@@ -44,6 +44,12 @@ def bind_result(store, document, task, value, pages):
     Resolving a locator proves a reference exists, not that the cited claim is
     true. No missing plan, source, goal or source version is manufactured.
     """
+    if value is not None and value.get("schema_version") == "content_plan_input.v2":
+        previous = store.read_object_json(document["content_plan"]) if document.get("content_plan") else {}
+        mode = "imported_mapping" if previous.get("mode") == "imported_mapping" and not document.get("narrative") else "bound"
+        return build_v2_plan(store, document, task, value, pages, narrative_ref=document.get("narrative"),
+            mode=mode, imported_manuscript=previous.get("imported_manuscript") if mode == "imported_mapping" else None,
+            require_role_mapping=mode != "imported_mapping")
     required = task.get("protocol_version") == PROTOCOL
     if required:
         from .generation import check_host
@@ -152,7 +158,8 @@ def validate_source_links(store, document, links, where: str, _cache: dict | Non
             _fail(f"{where}[{index}]/locator", "locator does not exist in this stored source version")
 
 
-def validate_plan_input_v2(store, document, value: dict, *, mode="planned", imported_manuscript=None) -> None:
+def validate_plan_input_v2(store, document, value: dict, *, mode="planned", imported_manuscript=None,
+                           narrative_ref='current') -> None:
     """Structural input validation before any Page/Plan object is written."""
     from .models import validate_content_plan_semantics
     shell = {
@@ -165,14 +172,22 @@ def validate_plan_input_v2(store, document, value: dict, *, mode="planned", impo
     }
     validate_content_plan_semantics(shell, require_page_links=False)
     cache: dict = {}
+    narrative_ref = document.get('narrative') if narrative_ref == 'current' else narrative_ref
+    narrative = store.read_object_json(narrative_ref) if narrative_ref else {}
+    nodes = {node['node_id']: node for node in narrative.get('nodes') or []}
     for role in value.get("page_roles") or []:
+        if set(role.get('narrative_node_ids') or []) - set(nodes):
+            _fail('input/page_roles/' + role['page_id'] + '/narrative_node_ids', 'Plan references nodes outside its adopted Narrative')
+        if any(identity not in nodes or nodes[identity]['role'] != 'qualification'
+                for identity in role.get('required_qualifications') or []):
+            _fail('input/page_roles/' + role['page_id'] + '/required_qualifications', 'qualifications must name actual qualification nodes')
         validate_source_links(store, document, role.get("source_links"),
                               f"content_plan/input/page_roles/{role.get('page_id')}/source_links", cache)
 
 
 def build_v2_plan(store, document, task, plan_input: dict, page_refs: list[dict], *,
                   narrative_ref, mode: str = "bound", imported_manuscript=None,
-                  require_role_mapping: bool = True) -> dict:
+                  require_role_mapping: bool = True, origin=None) -> dict:
     """Store one content_plan.v2 for the same adoption swap.
 
     ``page_refs`` is the resulting [{page_id, page}] after the swap, so a bound
@@ -181,7 +196,7 @@ def build_v2_plan(store, document, task, plan_input: dict, page_refs: list[dict]
     """
     validate_plan_input_v2(store, document, plan_input,
                            mode="imported_mapping" if mode == "imported_mapping" else "planned",
-                           imported_manuscript=imported_manuscript)
+                           imported_manuscript=imported_manuscript, narrative_ref=narrative_ref)
     previous_ref = document.get("content_plan")
     previous = None
     if previous_ref:
@@ -214,7 +229,7 @@ def build_v2_plan(store, document, task, plan_input: dict, page_refs: list[dict]
         "version": version,
         "project_id": document["project_id"],
         "task_id": task.get("task_id"),
-        "origin": "user_imported" if task.get("intent") == "import_draft" else "host_composed",
+        "origin": origin or ("user_imported" if task.get("intent") == "import_draft" else "host_composed"),
         "basis": {"revision_id": task.get("dispatch_revision"),
                   "input_digest": task.get("input_digest")
                   or compute_input_digest(document)},
@@ -307,6 +322,8 @@ def projection(store, document, *, reader=None, page_id=None, summary=False, sch
         # the full validation here.
         if not schema_validated:
             validate_schema("content_plan", plan)
+        if plan['schema_version'] == 'content_plan.v2':
+            return _projection_v2(document, plan, ref, page_id=page_id, summary=summary)
         if plan["schema_version"] != "content_plan.v1":
             raise ValueError("not a content plan")
         if plan["project_id"] != document["project_id"]:
@@ -339,6 +356,51 @@ def projection(store, document, *, reader=None, page_id=None, summary=False, sch
     except READ_FAILURES:
         return {"status": "unreadable", "relation": "unknown", "ref": ref,
                 "error": {"code": "content_plan_unreadable", "message": "stored content plan is missing, invalid or damaged"}}
+
+
+def _projection_v2(document, plan, ref, *, page_id, summary):
+    if plan['project_id'] != document['project_id']:
+        raise ValueError('foreign content plan')
+    pages = {entry['page_id']: entry for entry in document['pages']}
+    linked = {entry['page_id']: entry for entry in plan['page_links']}
+    changed = plan['basis']['input_digest'] != compute_input_digest(document)
+    changed |= plan.get('narrative_ref') != document.get('narrative')
+    if plan['mode'] == 'planned':
+        changed |= bool(pages)
+    else:
+        changed |= list(linked) != list(pages)
+        changed |= any(pages.get(pid, {}).get('page') != link['page_ref'] for pid, link in linked.items())
+    result = {'schema_version': plan['schema_version'], 'status': 'recorded', 'relation': 'known',
+        'ref': ref, 'plan_id': plan['plan_id'], 'version': plan['version'], 'origin': plan['origin'],
+        'mode': plan['mode'], 'applicability': 'basis_changed' if changed else 'current',
+        'chapter_count': len(plan['input']['chapters']), 'role_count': len(plan['input']['page_roles']),
+        'goal_count': len(plan['input']['page_roles'])}
+    if summary:
+        return result
+    sources = {source['source_id']: source for source in document['sources']}
+    roles = [copy.deepcopy(role) for role in plan['input']['page_roles'] if page_id is None or role['page_id'] == page_id]
+    for role in roles:
+        link = linked.get(role['page_id'])
+        role['page_ref'] = link['page_ref'] if link else None
+        role['basis_status'] = ('planned' if plan['mode'] == 'planned' else
+            'current' if link and pages.get(role['page_id'], {}).get('page') == link['page_ref'] else 'changed')
+        for source_link in role['source_links']:
+            source = sources.get(source_link['source_id'])
+            source_link['relation'] = ('missing' if source is None else 'current'
+                if source_version(source) == source_link['source_version'] else 'version_changed')
+            source_link['verification'] = 'stored locator checked at adoption; claim not independently verified'
+    selected = {role['page_id'] for role in roles}
+    # Keep the older reading surface useful without inventing historical goal
+    # identities for v2 roles. New clients consume page_roles directly.
+    goals = [{**copy.deepcopy(role), 'goal_id': None, 'purpose': role['intended_takeaway'],
+        'unresolved_facts': []} for role in roles]
+    result.update(page_roles=roles, goals=goals, input_summary=None,
+        chapters=[copy.deepcopy(chapter) for chapter in plan['input']['chapters']
+            if page_id is None or set(chapter['page_ids']) & selected],
+        input=copy.deepcopy(plan['input']), previous_ref=plan['previous_ref'], basis=copy.deepcopy(plan['basis']),
+        narrative_ref=plan.get('narrative_ref'), imported_manuscript=copy.deepcopy(plan.get('imported_manuscript')),
+        unresolved_facts=copy.deepcopy((plan.get('imported_manuscript') or {}).get('unresolved_mapping_items') or []))
+    return result
 
 
 def show(project_dir, *, revision=None):

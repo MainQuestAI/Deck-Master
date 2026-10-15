@@ -1,0 +1,23 @@
+{
+  "python": "/workspace/work/rc3/venv-rc3-04/bin/python",
+  "package_origin": "/workspace/work/rc3/cards/rc3-04/src/deck_master/__init__.py",
+  "entry_inventory": {
+    "total": 418,
+    "gated": 155,
+    "exempt": 263,
+    "uncovered": {},
+    "stale": {}
+  },
+  "ruff": {
+    "changed_python_files": 49,
+    "status": "PASS",
+    "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  "git_diff_check_exit": 0,
+  "untracked": [
+    "docs/reports/rc3/RC3-04-R3-HANDOFF.md",
+    "tests/rebuild/engineering_render_helpers.py",
+    "tests/rebuild/test_rc3_run_summary.py"
+  ],
+  "status": "mutable final integration checks only"
+}

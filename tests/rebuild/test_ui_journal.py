@@ -299,6 +299,17 @@ def test_synthetic_factory_images_deterministic_and_browser_readonly(tmp_path):
 @pytest.mark.parametrize('surface', ['overview', 'content', 'gallery', 'style', 'runs', 'page'])
 def test_every_work_surface_and_task_location_can_be_restored(project, surface):
     store = Store(project)
+    # A disclosed stored read fixture supplies a task location; new confirmed
+    # samples correctly contain no implicit production Task or authorization.
+    from deck_master import tasks
+    from deck_master.models import bump_revision
+    doc = store.load_document()
+    task = tasks.new_task(task_id='L1-journal-location', operation_id='L1-journal-location',
+        kind='review', scope_pages=['p01'], instruction='Synthetic task location for journal reads',
+        inputs=[], dependencies=[], dispatch_revision=doc['revision_id'], produced_against=content_identity(doc))
+    updated = bump_revision({**doc, 'tasks': [*doc['tasks'], store.put_json_object(task)]},
+        {'operation_id': 'L1-journal-location', 'kind': 'task_update', 'description': 'Stored synthetic reader fact', 'read_set': []})
+    store.commit_change(base_revision=doc['revision_id'], document=updated, operation_id='L1-journal-location')
     info = journal.project_info(project)
     task_id = store.read_object_json(store.load_document()['tasks'][0])['task_id']
     value = {'schema_version': 'ui_position.v1', 'project_id': info['project_id'], 'project_identity': info['project_identity'],

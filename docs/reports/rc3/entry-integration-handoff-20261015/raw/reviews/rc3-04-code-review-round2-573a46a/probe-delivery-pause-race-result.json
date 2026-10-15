@@ -1,0 +1,1330 @@
+{
+  "evidence_level": "L1_SYNTHETIC",
+  "fixture_limit": "synthetic engineering facts; no human, model, renderer or desktop execution",
+  "helper": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-code-snapshot-573a46a/tests/rebuild/test_export.py",
+    "sha256": "1aaeae0cc3c9cc7158cbc9dfa2b868643edbbec76ad7e52863d7eee281fcc53e"
+  },
+  "before": {
+    "change": {
+      "description": "review",
+      "kind": "task_update",
+      "operation_id": "rv-pass-privacy",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [
+        {
+          "path": ".deckmaster/objects/a8/a880b17d670e5315f1fc65b97e4360252e85bdbb147fecefddb24e85768df18a.json",
+          "sha256": "a880b17d670e5315f1fc65b97e4360252e85bdbb147fecefddb24e85768df18a"
+        }
+      ],
+      "decisions": [
+        {
+          "path": ".deckmaster/objects/d3/d311bf3c52f278f61b159bc4a1dcf85483c4c27ce1e9dc5d4dac181d063fdc57.json",
+          "sha256": "d311bf3c52f278f61b159bc4a1dcf85483c4c27ce1e9dc5d4dac181d063fdc57"
+        }
+      ],
+      "quality_profile": {
+        "content_review_requirement": "fidelity_only",
+        "override_decision_ref": null,
+        "requirement_origin": "confirmed_manuscript"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": null,
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "create:actual-input",
+          "source_ref": {
+            "path": ".deckmaster/objects/0f/0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22.json",
+            "sha256": "0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "full_deck",
+        "pause_reason": null,
+        "paused": false,
+        "request_id": "req-9382f2a3d506",
+        "scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech",
+            "design",
+            "blueprint",
+            "svg",
+            "review",
+            "output"
+          ],
+          "page_ids": [
+            "p1"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T05:51:27.892085+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "content_basis": {
+      "input_digest": "354196163af2802311a753ebd9d8d138e826c4702fec0dbc19845b3196018614",
+      "input_revision_id": null,
+      "resolved_by_task_id": null
+    },
+    "content_plan": {
+      "path": ".deckmaster/objects/6c/6cfe9c375de90693af62cd18bda18efacc97c912ee2f3d11c10dc45e4288e2e1.json",
+      "sha256": "6cfe9c375de90693af62cd18bda18efacc97c912ee2f3d11c10dc45e4288e2e1"
+    },
+    "created_at": "2026-10-15T05:51:27Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "narrative": null,
+    "outputs": {
+      "pptx": {
+        "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+        "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+      },
+      "render_report": {
+        "path": ".deckmaster/objects/54/5423a91cb35a777f05d8288014560f5da3dbabdcac0278975a449d5e17a0040a.json",
+        "sha256": "5423a91cb35a777f05d8288014560f5da3dbabdcac0278975a449d5e17a0040a"
+      },
+      "trace": null
+    },
+    "pages": [
+      {
+        "blueprint": null,
+        "page": {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        },
+        "page_id": "p1",
+        "ppt_preview": {
+          "path": ".deckmaster/objects/f2/f204cf7894957c72e40dacb3be33799c29ac17708572398900f14028c69f5252.json",
+          "sha256": "f204cf7894957c72e40dacb3be33799c29ac17708572398900f14028c69f5252"
+        },
+        "svg": {
+          "path": ".deckmaster/objects/1a/1a586a5328b523995b41f1559e240d39e5b82a69cf17c3d537a6c8f69f16d25e.json",
+          "sha256": "1a586a5328b523995b41f1559e240d39e5b82a69cf17c3d537a6c8f69f16d25e"
+        },
+        "svg_preview": null
+      }
+    ],
+    "parent_revision_id": "ee3a0ceeb3b04488b31bd26567e66445",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "rc3-4997d4e4",
+    "reviews": [
+      {
+        "path": ".deckmaster/objects/6b/6b8f58eef1ef7e9f93f57a05d46f671ba71f3e98e1842efeed087d38620a0668.json",
+        "sha256": "6b8f58eef1ef7e9f93f57a05d46f671ba71f3e98e1842efeed087d38620a0668"
+      },
+      {
+        "path": ".deckmaster/objects/de/de90d5f86fba44ac8b517ef9c3015579fc30bb059d01cebe6a5bb55eff0a4c16.json",
+        "sha256": "de90d5f86fba44ac8b517ef9c3015579fc30bb059d01cebe6a5bb55eff0a4c16"
+      },
+      {
+        "path": ".deckmaster/objects/7b/7b37e21231293b6cca82924825c3f90d7ae6f9036988bc28ff91674c510c4945.json",
+        "sha256": "7b37e21231293b6cca82924825c3f90d7ae6f9036988bc28ff91674c510c4945"
+      },
+      {
+        "path": ".deckmaster/objects/14/14267adde00b336562e8c57abdaab8688dce5f32c9153994641cd6ea9a22a8b2.json",
+        "sha256": "14267adde00b336562e8c57abdaab8688dce5f32c9153994641cd6ea9a22a8b2"
+      },
+      {
+        "path": ".deckmaster/objects/57/571dd435db2cc2c62570b3f0c39b3f5cf1a38beccb95827b576ee8989e0da89c.json",
+        "sha256": "571dd435db2cc2c62570b3f0c39b3f5cf1a38beccb95827b576ee8989e0da89c"
+      },
+      {
+        "path": ".deckmaster/objects/81/81812d813e2397bc60106533eb464c97dfa008bc06d941469e128325e525cd16.json",
+        "sha256": "81812d813e2397bc60106533eb464c97dfa008bc06d941469e128325e525cd16"
+      }
+    ],
+    "revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+    "schema_version": "deck_document.v1",
+    "sources": [],
+    "task": {
+      "audience": "",
+      "brief": "L1 synthetic export fixture: one fixed page, scoped review and delivery; no image generation",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "live",
+      "presentation_mode_source": "default",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": []
+  },
+  "initial_readiness": {
+    "status": "ready",
+    "project_id": "rc3-4997d4e4",
+    "artifact_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+    "control_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+    "revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+    "selected_output": {
+      "artifact_ref": {
+        "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+        "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+      },
+      "subject_ref": {
+        "path": ".deckmaster/objects/f5/f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd.pptx",
+        "sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd"
+      },
+      "file_sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd",
+      "original_file_sha256": "a507cc4213933dc8164d31d897fa31e01e4b222e9d23f3c290872b692ec662af",
+      "notes_policy": {
+        "selection": "pptx_notes",
+        "source": "plan",
+        "speech_mode": "none",
+        "plan_sha256": "6cfe9c375de90693af62cd18bda18efacc97c912ee2f3d11c10dc45e4288e2e1",
+        "newlines": "LF",
+        "pptx_notes": true,
+        "separate_script": false,
+        "pages": [
+          {
+            "page_id": "p1",
+            "page_sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a",
+            "notes_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "projection": "sanitized_public"
+    },
+    "engineering_ready": true,
+    "engineering": {
+      "ready": true,
+      "summary": {
+        "status": "pass",
+        "current_outputs": {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        "dimensions": {
+          "content:p1": {
+            "review_id": "rv-pass-content",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "blueprint_content:p1": {
+            "review_id": "rv-pass-blueprint_content",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "blueprint_fidelity:p1": {
+            "review_id": "rv-pass-blueprint_fidelity",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "conversion:p1": {
+            "review_id": "rv-pass-conversion",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "readability:p1": {
+            "review_id": "rv-pass-readability",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "privacy:p1": {
+            "review_id": "rv-pass-privacy",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          }
+        },
+        "stale": [],
+        "missing_dimensions": [],
+        "output_facts": {
+          "render_report_missing": false,
+          "completeness": [],
+          "render_report_status": "pass",
+          "render_report_findings": []
+        },
+        "dimension_reasons": {},
+        "input_alignment": "current"
+      }
+    },
+    "review_status": "pass",
+    "unresolved": {
+      "missing_dimensions": [],
+      "failed_dimensions": []
+    },
+    "professional": {
+      "required": false,
+      "satisfied": true,
+      "human_signoff": false,
+      "evidence": {
+        "professional_use": "not_evaluated",
+        "desktop_editing": "not_evaluated"
+      },
+      "reviews_considered": 0,
+      "gap_reasons": [],
+      "reviews": []
+    },
+    "eligibility": {
+      "schema_version": "eligibility.v1",
+      "allowed": true,
+      "action": "export.delivery",
+      "enforcement": "active",
+      "scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "blueprint",
+          "design",
+          "narrative",
+          "output",
+          "page_copy",
+          "plan",
+          "review",
+          "speech",
+          "svg"
+        ],
+        "page_ids": [
+          "p1"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "required_artifact_refs": [
+        {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        }
+      ],
+      "required_decision_topics": [
+        "delivery_acceptance"
+      ],
+      "missing_decision_topics": [],
+      "reason_codes": [],
+      "reasons": [],
+      "responsible_role": "user",
+      "next_action": null,
+      "decision_card_ref_or_projection": null,
+      "dependency_slices": [],
+      "eligibility_digest": "4ecca663b42ed8214719ba1fabceb6f07c8c05c4399ca197fbc537d4f3745a93",
+      "authority_assurance": "host_attested",
+      "request_id": "req-9382f2a3d506",
+      "artifact_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+      "control_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+      "facts_only": false,
+      "binding": null,
+      "preproduction": null,
+      "delivery": {
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "output_pptx": {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        "artifact_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+        "control_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6"
+      },
+      "targets": {
+        "page_ids": null,
+        "layers": [],
+        "subject": null
+      }
+    },
+    "collaboration": {
+      "schema_version": "eligibility.v1",
+      "allowed": true,
+      "action": "export.delivery",
+      "enforcement": "active",
+      "scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "blueprint",
+          "design",
+          "narrative",
+          "output",
+          "page_copy",
+          "plan",
+          "review",
+          "speech",
+          "svg"
+        ],
+        "page_ids": [
+          "p1"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "required_artifact_refs": [
+        {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        }
+      ],
+      "required_decision_topics": [
+        "delivery_acceptance"
+      ],
+      "missing_decision_topics": [],
+      "reason_codes": [],
+      "reasons": [],
+      "responsible_role": "user",
+      "next_action": null,
+      "decision_card_ref_or_projection": null,
+      "dependency_slices": [],
+      "eligibility_digest": "4ecca663b42ed8214719ba1fabceb6f07c8c05c4399ca197fbc537d4f3745a93",
+      "authority_assurance": "host_attested",
+      "request_id": "req-9382f2a3d506",
+      "artifact_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+      "control_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+      "facts_only": false,
+      "binding": null,
+      "preproduction": null,
+      "delivery": {
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "output_pptx": {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        "artifact_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+        "control_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6"
+      },
+      "targets": {
+        "page_ids": null,
+        "layers": [],
+        "subject": null
+      }
+    },
+    "reason_codes": [],
+    "next_action": "deliver_selected_file"
+  },
+  "pause": {
+    "status": "accepted",
+    "request_id": "req-9382f2a3d506",
+    "revision_id": "c934ce761e1848c3bd7cfc885687ac20"
+  },
+  "at_pause": {
+    "change": {
+      "description": "pause request: Stop delivery before publication.",
+      "kind": "collaboration_update",
+      "operation_id": "8e859ce2-5648-4c81-975e-16e079883397",
+      "operation_receipt": {
+        "format": "operation_receipt.v1",
+        "request_digest": "f9388a9bfdab134bb1b93a5f800b0c6053dc274d71cfb462c799246b5baa4bcc",
+        "response": {
+          "request_id": "req-9382f2a3d506",
+          "revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+          "status": "accepted"
+        }
+      },
+      "payload_digest": "f9388a9bfdab134bb1b93a5f800b0c6053dc274d71cfb462c799246b5baa4bcc",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [
+        {
+          "path": ".deckmaster/objects/a8/a880b17d670e5315f1fc65b97e4360252e85bdbb147fecefddb24e85768df18a.json",
+          "sha256": "a880b17d670e5315f1fc65b97e4360252e85bdbb147fecefddb24e85768df18a"
+        }
+      ],
+      "decisions": [
+        {
+          "path": ".deckmaster/objects/d3/d311bf3c52f278f61b159bc4a1dcf85483c4c27ce1e9dc5d4dac181d063fdc57.json",
+          "sha256": "d311bf3c52f278f61b159bc4a1dcf85483c4c27ce1e9dc5d4dac181d063fdc57"
+        }
+      ],
+      "quality_profile": {
+        "content_review_requirement": "fidelity_only",
+        "override_decision_ref": null,
+        "requirement_origin": "confirmed_manuscript"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": null,
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "create:actual-input",
+          "source_ref": {
+            "path": ".deckmaster/objects/0f/0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22.json",
+            "sha256": "0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "full_deck",
+        "pause_reason": "Stop delivery before publication.",
+        "paused": true,
+        "request_id": "req-9382f2a3d506",
+        "scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech",
+            "design",
+            "blueprint",
+            "svg",
+            "review",
+            "output"
+          ],
+          "page_ids": [
+            "p1"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T05:51:28.047759+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "content_basis": {
+      "input_digest": "354196163af2802311a753ebd9d8d138e826c4702fec0dbc19845b3196018614",
+      "input_revision_id": null,
+      "resolved_by_task_id": null
+    },
+    "content_plan": {
+      "path": ".deckmaster/objects/6c/6cfe9c375de90693af62cd18bda18efacc97c912ee2f3d11c10dc45e4288e2e1.json",
+      "sha256": "6cfe9c375de90693af62cd18bda18efacc97c912ee2f3d11c10dc45e4288e2e1"
+    },
+    "created_at": "2026-10-15T05:51:27Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "narrative": null,
+    "outputs": {
+      "pptx": {
+        "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+        "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+      },
+      "render_report": {
+        "path": ".deckmaster/objects/54/5423a91cb35a777f05d8288014560f5da3dbabdcac0278975a449d5e17a0040a.json",
+        "sha256": "5423a91cb35a777f05d8288014560f5da3dbabdcac0278975a449d5e17a0040a"
+      },
+      "trace": null
+    },
+    "pages": [
+      {
+        "blueprint": null,
+        "page": {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        },
+        "page_id": "p1",
+        "ppt_preview": {
+          "path": ".deckmaster/objects/f2/f204cf7894957c72e40dacb3be33799c29ac17708572398900f14028c69f5252.json",
+          "sha256": "f204cf7894957c72e40dacb3be33799c29ac17708572398900f14028c69f5252"
+        },
+        "svg": {
+          "path": ".deckmaster/objects/1a/1a586a5328b523995b41f1559e240d39e5b82a69cf17c3d537a6c8f69f16d25e.json",
+          "sha256": "1a586a5328b523995b41f1559e240d39e5b82a69cf17c3d537a6c8f69f16d25e"
+        },
+        "svg_preview": null
+      }
+    ],
+    "parent_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "rc3-4997d4e4",
+    "reviews": [
+      {
+        "path": ".deckmaster/objects/6b/6b8f58eef1ef7e9f93f57a05d46f671ba71f3e98e1842efeed087d38620a0668.json",
+        "sha256": "6b8f58eef1ef7e9f93f57a05d46f671ba71f3e98e1842efeed087d38620a0668"
+      },
+      {
+        "path": ".deckmaster/objects/de/de90d5f86fba44ac8b517ef9c3015579fc30bb059d01cebe6a5bb55eff0a4c16.json",
+        "sha256": "de90d5f86fba44ac8b517ef9c3015579fc30bb059d01cebe6a5bb55eff0a4c16"
+      },
+      {
+        "path": ".deckmaster/objects/7b/7b37e21231293b6cca82924825c3f90d7ae6f9036988bc28ff91674c510c4945.json",
+        "sha256": "7b37e21231293b6cca82924825c3f90d7ae6f9036988bc28ff91674c510c4945"
+      },
+      {
+        "path": ".deckmaster/objects/14/14267adde00b336562e8c57abdaab8688dce5f32c9153994641cd6ea9a22a8b2.json",
+        "sha256": "14267adde00b336562e8c57abdaab8688dce5f32c9153994641cd6ea9a22a8b2"
+      },
+      {
+        "path": ".deckmaster/objects/57/571dd435db2cc2c62570b3f0c39b3f5cf1a38beccb95827b576ee8989e0da89c.json",
+        "sha256": "571dd435db2cc2c62570b3f0c39b3f5cf1a38beccb95827b576ee8989e0da89c"
+      },
+      {
+        "path": ".deckmaster/objects/81/81812d813e2397bc60106533eb464c97dfa008bc06d941469e128325e525cd16.json",
+        "sha256": "81812d813e2397bc60106533eb464c97dfa008bc06d941469e128325e525cd16"
+      }
+    ],
+    "revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+    "schema_version": "deck_document.v1",
+    "sources": [],
+    "task": {
+      "audience": "",
+      "brief": "L1 synthetic export fixture: one fixed page, scoped review and delivery; no image generation",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "live",
+      "presentation_mode_source": "default",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": []
+  },
+  "outcome": {
+    "error": {
+      "type": "EligibilityBlocked",
+      "message": "eligibility/export.delivery: Stop delivery before publication."
+    }
+  },
+  "after": {
+    "change": {
+      "description": "pause request: Stop delivery before publication.",
+      "kind": "collaboration_update",
+      "operation_id": "8e859ce2-5648-4c81-975e-16e079883397",
+      "operation_receipt": {
+        "format": "operation_receipt.v1",
+        "request_digest": "f9388a9bfdab134bb1b93a5f800b0c6053dc274d71cfb462c799246b5baa4bcc",
+        "response": {
+          "request_id": "req-9382f2a3d506",
+          "revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+          "status": "accepted"
+        }
+      },
+      "payload_digest": "f9388a9bfdab134bb1b93a5f800b0c6053dc274d71cfb462c799246b5baa4bcc",
+      "read_set": []
+    },
+    "collaboration": {
+      "authority_policy": "traceable",
+      "authorizations": [
+        {
+          "path": ".deckmaster/objects/a8/a880b17d670e5315f1fc65b97e4360252e85bdbb147fecefddb24e85768df18a.json",
+          "sha256": "a880b17d670e5315f1fc65b97e4360252e85bdbb147fecefddb24e85768df18a"
+        }
+      ],
+      "decisions": [
+        {
+          "path": ".deckmaster/objects/d3/d311bf3c52f278f61b159bc4a1dcf85483c4c27ce1e9dc5d4dac181d063fdc57.json",
+          "sha256": "d311bf3c52f278f61b159bc4a1dcf85483c4c27ce1e9dc5d4dac181d063fdc57"
+        }
+      ],
+      "quality_profile": {
+        "content_review_requirement": "fidelity_only",
+        "override_decision_ref": null,
+        "requirement_origin": "confirmed_manuscript"
+      },
+      "request": {
+        "background_request_ids": [],
+        "closed": false,
+        "closed_reason": null,
+        "content_intent": null,
+        "instruction_evidence": {
+          "actor_id": null,
+          "assurance": "host_attested",
+          "kind": "host_attested_instruction",
+          "presentation_ref": null,
+          "source_locator": "create:actual-input",
+          "source_ref": {
+            "path": ".deckmaster/objects/0f/0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22.json",
+            "sha256": "0fdac3bbb0ddca61e4c5a152c5d5698b54756280e590928dbb80db9fa6a5cd22"
+          },
+          "transport_receipt_ref": null
+        },
+        "intent": "full_deck",
+        "pause_reason": "Stop delivery before publication.",
+        "paused": true,
+        "request_id": "req-9382f2a3d506",
+        "scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan",
+            "page_copy",
+            "speech",
+            "design",
+            "blueprint",
+            "svg",
+            "review",
+            "output"
+          ],
+          "page_ids": [
+            "p1"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "variant": null
+      },
+      "schema_version": "collaboration.v1"
+    },
+    "committed_at": "2026-10-15T05:51:28.047759+00:00",
+    "compatibility": {
+      "minimum_writer": "rc3-entry.v1",
+      "project_format": "workbench.v3"
+    },
+    "content_basis": {
+      "input_digest": "354196163af2802311a753ebd9d8d138e826c4702fec0dbc19845b3196018614",
+      "input_revision_id": null,
+      "resolved_by_task_id": null
+    },
+    "content_plan": {
+      "path": ".deckmaster/objects/6c/6cfe9c375de90693af62cd18bda18efacc97c912ee2f3d11c10dc45e4288e2e1.json",
+      "sha256": "6cfe9c375de90693af62cd18bda18efacc97c912ee2f3d11c10dc45e4288e2e1"
+    },
+    "created_at": "2026-10-15T05:51:27Z",
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "narrative": null,
+    "outputs": {
+      "pptx": {
+        "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+        "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+      },
+      "render_report": {
+        "path": ".deckmaster/objects/54/5423a91cb35a777f05d8288014560f5da3dbabdcac0278975a449d5e17a0040a.json",
+        "sha256": "5423a91cb35a777f05d8288014560f5da3dbabdcac0278975a449d5e17a0040a"
+      },
+      "trace": null
+    },
+    "pages": [
+      {
+        "blueprint": null,
+        "page": {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        },
+        "page_id": "p1",
+        "ppt_preview": {
+          "path": ".deckmaster/objects/f2/f204cf7894957c72e40dacb3be33799c29ac17708572398900f14028c69f5252.json",
+          "sha256": "f204cf7894957c72e40dacb3be33799c29ac17708572398900f14028c69f5252"
+        },
+        "svg": {
+          "path": ".deckmaster/objects/1a/1a586a5328b523995b41f1559e240d39e5b82a69cf17c3d537a6c8f69f16d25e.json",
+          "sha256": "1a586a5328b523995b41f1559e240d39e5b82a69cf17c3d537a6c8f69f16d25e"
+        },
+        "svg_preview": null
+      }
+    ],
+    "parent_revision_id": "aec563d0d8f14bab94e5fe9fdf43bdd6",
+    "policy": {
+      "authoring_mode": "image_blueprint",
+      "external_call_limit": null,
+      "professional_review_required_for_delivery": false,
+      "user_stop": false
+    },
+    "project_id": "rc3-4997d4e4",
+    "reviews": [
+      {
+        "path": ".deckmaster/objects/6b/6b8f58eef1ef7e9f93f57a05d46f671ba71f3e98e1842efeed087d38620a0668.json",
+        "sha256": "6b8f58eef1ef7e9f93f57a05d46f671ba71f3e98e1842efeed087d38620a0668"
+      },
+      {
+        "path": ".deckmaster/objects/de/de90d5f86fba44ac8b517ef9c3015579fc30bb059d01cebe6a5bb55eff0a4c16.json",
+        "sha256": "de90d5f86fba44ac8b517ef9c3015579fc30bb059d01cebe6a5bb55eff0a4c16"
+      },
+      {
+        "path": ".deckmaster/objects/7b/7b37e21231293b6cca82924825c3f90d7ae6f9036988bc28ff91674c510c4945.json",
+        "sha256": "7b37e21231293b6cca82924825c3f90d7ae6f9036988bc28ff91674c510c4945"
+      },
+      {
+        "path": ".deckmaster/objects/14/14267adde00b336562e8c57abdaab8688dce5f32c9153994641cd6ea9a22a8b2.json",
+        "sha256": "14267adde00b336562e8c57abdaab8688dce5f32c9153994641cd6ea9a22a8b2"
+      },
+      {
+        "path": ".deckmaster/objects/57/571dd435db2cc2c62570b3f0c39b3f5cf1a38beccb95827b576ee8989e0da89c.json",
+        "sha256": "571dd435db2cc2c62570b3f0c39b3f5cf1a38beccb95827b576ee8989e0da89c"
+      },
+      {
+        "path": ".deckmaster/objects/81/81812d813e2397bc60106533eb464c97dfa008bc06d941469e128325e525cd16.json",
+        "sha256": "81812d813e2397bc60106533eb464c97dfa008bc06d941469e128325e525cd16"
+      }
+    ],
+    "revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+    "schema_version": "deck_document.v1",
+    "sources": [],
+    "task": {
+      "audience": "",
+      "brief": "L1 synthetic export fixture: one fixed page, scoped review and delivery; no image generation",
+      "existing_decisions": [],
+      "page_limit": null,
+      "presentation_mode": "live",
+      "presentation_mode_source": "default",
+      "scenario": "",
+      "title": "Deck task"
+    },
+    "tasks": []
+  },
+  "current_readiness": {
+    "status": "blocked",
+    "project_id": "rc3-4997d4e4",
+    "artifact_revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+    "control_revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+    "revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+    "selected_output": {
+      "artifact_ref": {
+        "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+        "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+      },
+      "subject_ref": {
+        "path": ".deckmaster/objects/f5/f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd.pptx",
+        "sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd"
+      },
+      "file_sha256": "f571df2bb9d07b0cea4cfbfd31f844f3f6bb3b721617ffc1445d0d91c79f9ccd",
+      "original_file_sha256": "a507cc4213933dc8164d31d897fa31e01e4b222e9d23f3c290872b692ec662af",
+      "notes_policy": {
+        "selection": "pptx_notes",
+        "source": "plan",
+        "speech_mode": "none",
+        "plan_sha256": "6cfe9c375de90693af62cd18bda18efacc97c912ee2f3d11c10dc45e4288e2e1",
+        "newlines": "LF",
+        "pptx_notes": true,
+        "separate_script": false,
+        "pages": [
+          {
+            "page_id": "p1",
+            "page_sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a",
+            "notes_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      "projection": "sanitized_public"
+    },
+    "engineering_ready": true,
+    "engineering": {
+      "ready": true,
+      "summary": {
+        "status": "pass",
+        "current_outputs": {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        "dimensions": {
+          "content:p1": {
+            "review_id": "rv-pass-content",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "blueprint_content:p1": {
+            "review_id": "rv-pass-blueprint_content",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "blueprint_fidelity:p1": {
+            "review_id": "rv-pass-blueprint_fidelity",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "conversion:p1": {
+            "review_id": "rv-pass-conversion",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "readability:p1": {
+            "review_id": "rv-pass-readability",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          },
+          "privacy:p1": {
+            "review_id": "rv-pass-privacy",
+            "status": "pass",
+            "reported_status": "pass",
+            "stale": false,
+            "open_must_fix": [],
+            "closed_findings": [],
+            "pending_judgments": []
+          }
+        },
+        "stale": [],
+        "missing_dimensions": [],
+        "output_facts": {
+          "render_report_missing": false,
+          "completeness": [],
+          "render_report_status": "pass",
+          "render_report_findings": []
+        },
+        "dimension_reasons": {},
+        "input_alignment": "current"
+      }
+    },
+    "review_status": "pass",
+    "unresolved": {
+      "missing_dimensions": [],
+      "failed_dimensions": []
+    },
+    "professional": {
+      "required": false,
+      "satisfied": true,
+      "human_signoff": false,
+      "evidence": {
+        "professional_use": "not_evaluated",
+        "desktop_editing": "not_evaluated"
+      },
+      "reviews_considered": 0,
+      "gap_reasons": [],
+      "reviews": []
+    },
+    "eligibility": {
+      "schema_version": "eligibility.v1",
+      "allowed": false,
+      "action": "export.delivery",
+      "enforcement": "active",
+      "scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "blueprint",
+          "design",
+          "narrative",
+          "output",
+          "page_copy",
+          "plan",
+          "review",
+          "speech",
+          "svg"
+        ],
+        "page_ids": [
+          "p1"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "required_artifact_refs": [
+        {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        }
+      ],
+      "required_decision_topics": [
+        "delivery_acceptance"
+      ],
+      "missing_decision_topics": [],
+      "reason_codes": [
+        "request_paused",
+        "authority_insufficient"
+      ],
+      "reasons": [
+        {
+          "code": "request_paused",
+          "detail": "Stop delivery before publication."
+        },
+        {
+          "code": "authority_insufficient",
+          "detail": "the covering authorization is not effective",
+          "reasons": [
+            "request_paused"
+          ],
+          "authorization_ids": [
+            "authz-ba96e1616a9e"
+          ]
+        }
+      ],
+      "responsible_role": "user",
+      "next_action": "resume the request explicitly (resume never widens scope) or cancel it",
+      "decision_card_ref_or_projection": {
+        "kind": "stop_card",
+        "action": "export.delivery",
+        "state": "paused"
+      },
+      "dependency_slices": [],
+      "eligibility_digest": "4ecca663b42ed8214719ba1fabceb6f07c8c05c4399ca197fbc537d4f3745a93",
+      "authority_assurance": "host_attested",
+      "request_id": "req-9382f2a3d506",
+      "artifact_revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+      "control_revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+      "facts_only": false,
+      "binding": null,
+      "preproduction": null,
+      "delivery": {
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "output_pptx": {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        "artifact_revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+        "control_revision_id": "c934ce761e1848c3bd7cfc885687ac20"
+      },
+      "targets": {
+        "page_ids": null,
+        "layers": [],
+        "subject": null
+      }
+    },
+    "collaboration": {
+      "schema_version": "eligibility.v1",
+      "allowed": false,
+      "action": "export.delivery",
+      "enforcement": "active",
+      "scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "blueprint",
+          "design",
+          "narrative",
+          "output",
+          "page_copy",
+          "plan",
+          "review",
+          "speech",
+          "svg"
+        ],
+        "page_ids": [
+          "p1"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "required_artifact_refs": [
+        {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        {
+          "path": ".deckmaster/objects/d5/d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a.json",
+          "sha256": "d52e38a62597716a507ba86e0ca0646e23e08ee6928b28e35c843e3d2686ed3a"
+        }
+      ],
+      "required_decision_topics": [
+        "delivery_acceptance"
+      ],
+      "missing_decision_topics": [],
+      "reason_codes": [
+        "request_paused",
+        "authority_insufficient"
+      ],
+      "reasons": [
+        {
+          "code": "request_paused",
+          "detail": "Stop delivery before publication."
+        },
+        {
+          "code": "authority_insufficient",
+          "detail": "the covering authorization is not effective",
+          "reasons": [
+            "request_paused"
+          ],
+          "authorization_ids": [
+            "authz-ba96e1616a9e"
+          ]
+        }
+      ],
+      "responsible_role": "user",
+      "next_action": "resume the request explicitly (resume never widens scope) or cancel it",
+      "decision_card_ref_or_projection": {
+        "kind": "stop_card",
+        "action": "export.delivery",
+        "state": "paused"
+      },
+      "dependency_slices": [],
+      "eligibility_digest": "4ecca663b42ed8214719ba1fabceb6f07c8c05c4399ca197fbc537d4f3745a93",
+      "authority_assurance": "host_attested",
+      "request_id": "req-9382f2a3d506",
+      "artifact_revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+      "control_revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+      "facts_only": false,
+      "binding": null,
+      "preproduction": null,
+      "delivery": {
+        "professional": {
+          "required": false,
+          "satisfied": true,
+          "human_signoff": false,
+          "evidence": {
+            "professional_use": "not_evaluated",
+            "desktop_editing": "not_evaluated"
+          },
+          "reviews_considered": 0,
+          "gap_reasons": [],
+          "reviews": []
+        },
+        "output_pptx": {
+          "path": ".deckmaster/objects/a8/a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da.json",
+          "sha256": "a87d17297c567ab87e5f41dcc3ea5ebfeb72294a50eb9d85c45a6993e459f2da"
+        },
+        "artifact_revision_id": "c934ce761e1848c3bd7cfc885687ac20",
+        "control_revision_id": "c934ce761e1848c3bd7cfc885687ac20"
+      },
+      "targets": {
+        "page_ids": null,
+        "layers": [],
+        "subject": null
+      }
+    },
+    "reason_codes": [
+      "request_paused",
+      "authority_insufficient"
+    ],
+    "next_action": "resume the request explicitly (resume never widens scope) or cancel it"
+  },
+  "fresh_after_pause_control": {
+    "type": "EligibilityBlocked",
+    "message": "eligibility/export.delivery: Stop delivery before publication."
+  },
+  "delivery_published_after_pause": false
+}

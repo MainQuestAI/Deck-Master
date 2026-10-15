@@ -1,0 +1,147 @@
+{
+  "verdict": "PASS_LIMITED_FIXED_CODE_REVIEW",
+  "must_fix": [],
+  "head": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+  "tree": "8a12383ab597dbd061ad53de6f5186c5343d19d4",
+  "parent": "8223df80be654c9a89a44cd97cf770fa01bf4383",
+  "scope": {
+    "product_files": 5,
+    "other_non_docs_files": 29,
+    "browser_files": 24,
+    "original_assert_expect_browser": 1379,
+    "current_assert_expect_browser": 1401,
+    "browser_semantic_assertion_replacements": 5,
+    "example_digest_location_replacement": 1,
+    "removed_test_functions": 0,
+    "changed_timeout_calls_or_values": 0
+  },
+  "actual_validation": {
+    "sdk_distinct_passed": 17,
+    "sdk_passed_cases": [
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "tests.rebuild.test_rc3_reconciliation_reasons",
+        "name": "test_v2_adoption_keeps_distinct_impact_and_unchanged_reason_and_exact_replay"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "tests.rebuild.test_rc3_reconciliation_reasons",
+        "name": "test_invalid_explicit_unchanged_reason_refuses_without_any_adoption[None]"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "tests.rebuild.test_rc3_reconciliation_reasons",
+        "name": "test_invalid_explicit_unchanged_reason_refuses_without_any_adoption[]"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "tests.rebuild.test_rc3_reconciliation_reasons",
+        "name": "test_invalid_explicit_unchanged_reason_refuses_without_any_adoption[  ]"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "tests.rebuild.test_rc3_reconciliation_reasons",
+        "name": "test_invalid_explicit_unchanged_reason_refuses_without_any_adoption[reason3]"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "tests.rebuild.test_rc3_reconciliation_reasons",
+        "name": "test_invalid_explicit_unchanged_reason_refuses_without_any_adoption[reason4]"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "tests.rebuild.test_rc3_corrupt_task_reading",
+        "name": "test_corrupt_task_cannot_erase_project_reading_or_establish_production_proof"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "",
+        "name": "test_absent_reason_preserves_summary_fallback"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "",
+        "name": "test_explicit_reason_strips_only_boundary_whitespace"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "",
+        "name": "test_proposal_only_keeps_reason_without_adopting_content"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "",
+        "name": "test_expected_read_errors_are_explicit_missing_proof[error0]"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "",
+        "name": "test_expected_read_errors_are_explicit_missing_proof[error1]"
+      },
+      {
+        "xml": "finite-sdk-corrected.xml",
+        "classname": "",
+        "name": "test_unexpected_programming_error_is_not_silenced"
+      },
+      {
+        "xml": "finite-sdk-scope-negative-corrected.xml",
+        "classname": "rc3-04-r4-code-review-02a6d44.test_independent_boundaries",
+        "name": "test_reason_cannot_authorize_invalid_page_scope"
+      },
+      {
+        "xml": "fixture-authority-final.xml",
+        "classname": "rc3-04-r4-code-review-02a6d44.test_fixture_authority",
+        "name": "test_zero_call_style_helper_is_exact_named_scope_not_approval"
+      },
+      {
+        "xml": "fixture-authority-final.xml",
+        "classname": "rc3-04-r4-code-review-02a6d44.test_fixture_authority",
+        "name": "test_copy_helper_keeps_named_pages_and_no_visual_or_delivery_actions"
+      },
+      {
+        "xml": "fixture-authority-final.xml",
+        "classname": "rc3-04-r4-code-review-02a6d44.test_fixture_authority",
+        "name": "test_editorial_helper_names_all_current_pages_and_only_local_candidates"
+      }
+    ],
+    "js_exact_source_fragment_logic_passed": 9,
+    "actual_browser_this_reviewer": "NOT_RUN",
+    "broad_this_reviewer": "NOT_RUN",
+    "installed_release_this_reviewer": "NOT_RUN",
+    "human_or_desktop": "NOT_RUN_USER_DEFERRED",
+    "real_native_or_provider": "NOT_RUN"
+  },
+  "source_unchanged": {
+    "head_equal": true,
+    "tree_equal": true,
+    "status_before": "",
+    "status_after": "",
+    "origins_equal": true,
+    "version_equal": true,
+    "python_equal": true,
+    "all_tracked_bytes_and_modes_equal": true,
+    "tracked_count": 3935,
+    "before_sha256": "52ba9d424064d79539608f6e6a92a63d48576e88a0815411fbff1d88ae3ff85b",
+    "after_sha256": "52ba9d424064d79539608f6e6a92a63d48576e88a0815411fbff1d88ae3ff85b"
+  },
+  "old_ci_status": "FAIL_PRESERVED_90_FAILED_342_PASSED_4_ERROR",
+  "new_ci_status": "NOT_ASSESSED_BY_THIS_REVIEW",
+  "evidence_mapping": {
+    "summary_event_count": 94,
+    "counts": {
+      "FAILED": 90,
+      "ERROR": 4
+    },
+    "canonical_log_events_equal_mapping": true,
+    "test_functions_exist_in_current": true
+  },
+  "report_sha256": "da8830a8278c5d375b16dfccbecbf64a47dd8bfae1e3a7c5af0e0143a3b70e86",
+  "static_audit_sha256": "3bce2702560a10463e66a09922177de0a6c0faf520a1ef79165a641e6885c48a",
+  "reviewer_errors_sha256": "b506b750d98ea4fdd5ef6afa72d8c09cf3305d206319d35ffcb07fb6daca4eb4",
+  "limitations": [
+    "Limited fixed-source review only; does not authorize final merge without remaining review/regression/install/exact-head CI checks",
+    "JS probes execute exact fragments, not browser/DOM/route/visual checks",
+    "17 SDK cases passed across separate runs; author errors and original failures remain, no single-run 17-pass claim",
+    "No immutable original, production gate, professional/human evidence or RC3-05 implementation was changed or replaced"
+  ]
+}

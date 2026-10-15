@@ -6,7 +6,7 @@ import copy
 import re
 
 from . import operations
-from .editing import restore_document
+from .editing import restore_document, restore_targets
 from .local_state import project_path
 from .models import input_alignment, validate_schema
 from .snapshots import load_snapshot
@@ -66,7 +66,6 @@ def commit(project, *, plan_id, base_revision, operation_id):
         raise operations.OperationError("invalid_restore_plan", "plan_id", "use the immutable restoration plan ID")
     store = Store(project_path(project))
     from . import eligibility
-    eligibility.guard(store, store.load_document(), "restore")
     digest = plan_id.removeprefix("restore-plan-")
     plan_ref = {"path": f".deckmaster/objects/{digest[:2]}/{digest}.json", "sha256": digest}
     planned = store.read_object_json(plan_ref)
@@ -84,6 +83,7 @@ def commit(project, *, plan_id, base_revision, operation_id):
         past = load_snapshot(store, planned["source_revision"])
         if planned != _plan(store, current, past):
             raise operations.OperationError("restore_basis_changed", "plan_id", "restoration impact changed; plan again", exit_code=5)
+        eligibility.guard(store, current, "restore", context={"targets": restore_targets(store, current, past)})
         updated = restore_document(store, current, past, operation_id)
         return operations.commit_locked(
             store,

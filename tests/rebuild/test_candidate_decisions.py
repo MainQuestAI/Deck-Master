@@ -18,12 +18,17 @@ from deck_master.operations import OperationError
 from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
+from rc3_fixtures import claim_fixture_task
+from test_service_flow import _prepare_production
 
 
 @pytest.fixture
 def store(tmp_path):
     project = tmp_path / 'decision-project'
     create_sample(project, page_count=2, readonly=False)
+    _prepare_production(project, actions=['change.commit', 'candidate.adopt'],
+        max_external_calls=0, max_candidate_count=4,
+        scenario='L1 fixed two-page candidate decision transactions, four local trials and no image calls')
     return Store(project)
 
 
@@ -40,10 +45,7 @@ def dispatch(store, page='p01', *, layer='svg'):
 
 
 def start(store, task):
-    return service.task_start(store.project_root, task_id=task['task_id'], execution_ref='synthetic-b04',
-                              supported_protocols=['changes.v1', 'generation.v1'],
-                              capabilities=['change_plan', 'generation_request_freeze', 'attempt_binding',
-                                            'native_tool_observation', 'candidate_result'])
+    return claim_fixture_task(store.project_root, task, execution_ref='synthetic-b04')
 
 
 def envelope(store, task, width=20):

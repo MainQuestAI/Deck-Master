@@ -15,7 +15,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from PIL import Image, ImageDraw
-from deck_master import candidates, changes, generation, observations, service, tasks
+from deck_master import candidates, changes, collaboration, content_review, generation, observations, service, tasks
 from deck_master.models import canonical_json_bytes
 from deck_master.samples import create_sample
 from deck_master.store import Store
@@ -31,6 +31,52 @@ class SyntheticW07:
         create_sample(self.project, page_count=pages, readonly=False)
         self.store = Store(self.project)
         self.runtime = self.root / 'local-only' / 'synthetic-runtime'
+        document = self.store.load_document()
+        scope = document['collaboration']['request']['scope']
+        evidence = {'kind': 'host_attested_instruction', 'text':
+            'Explicit L1 synthetic fixture only: exercise bounded local style/change '
+            'transactions on these sample pages; at most four calls/candidates per '
+            'page. Synthetic observations never prove model or professional quality.',
+            'source_locator': 'synthetic-w07:declared-test-scope'}
+        collaboration.grant(self.project, input={'mode': 'execute', 'scope': scope,
+            'actions': ['change.commit', 'candidate.adopt', 'style.propose', 'style.trial', 'style.expand',
+                'design.update', 'dispatch.host_task', 'dispatch.blueprint', 'allowance.allocate',
+                'call.begin', 'generation.dispatch', 'render.preview', 'compile.svg', 'compile.ppt',
+                'stage.assemble', 'page.edit', 'review.record'],
+            'max_external_calls': pages * 4, 'max_candidate_count': pages * 4,
+            'adoption_policy': 'within_scope', 'instruction_evidence': evidence},
+            base_revision=document['revision_id'], operation_id=str(uuid.uuid4()))
+        self.qualify_fidelity()
+
+    def qualify_fidelity(self):
+        """Explicit host_self protocol observations, never an independence claim."""
+        document = self.store.load_document()
+        page_ids = [entry['page_id'] for entry in document['pages']]
+        dispatched = content_review.dispatch_preproduction_review(self.project, page_ids=page_ids,
+            instruction='L1 synthetic fixture: inspect exactly the current fixed manuscript objects')
+        assert dispatched['status'] == 'review_dispatched' and dispatched['requirement'] == 'fidelity_only', dispatched
+        task = dispatched['task']
+        document = self.store.load_document()
+        subjects = [ref for ref in (document.get('narrative'), document.get('content_plan')) if ref]
+        subjects += [entry['page'] for entry in document['pages']]
+        dependencies = [{'kind': 'content', 'identity': key, 'sha256': ref['sha256']}
+            for key, ref in (('narrative', document.get('narrative')), ('content_plan', document.get('content_plan'))) if ref]
+        dependencies += [{'kind': 'content', 'identity': 'page:' + entry['page_id'], 'sha256': entry['page']['sha256']}
+            for entry in document['pages']]
+        evidence = self.store.put_json_object({'evidence_level': 'L1_SYNTHETIC',
+            'subjects': subjects, 'human_or_native_evidence': False,
+            'observations': ['Synthetic fixture inspected the exact sample manuscript objects.']})
+        reviews = [{'schema_version': 'deck_review.v2', 'review_id': 'synthetic-w07-' + uuid.uuid4().hex,
+            'kind': kind, 'review_stage': 'preproduction', 'status': 'pass', 'subjects': subjects,
+            'dependencies': dependencies, 'reviewer': {'type': 'host_self', 'id': 'synthetic-w07-fidelity-host',
+                'execution_ref': 'L1-synthetic-w07-fidelity', 'independence_confirmed': False,
+                'identity_receipt': None, 'evidence_ref': evidence, 'assurance': 'host_attested'},
+            'observations': ['L1 synthetic fidelity protocol fixture; no quality/model/human claim.'],
+            'findings': [], 'created_at': '2026-10-15T00:00:00Z', 'replaces': None} for kind in dispatched['units']]
+        service.task_start(self.project, task_id=task['task_id'], execution_ref='L1-synthetic-w07-fidelity',
+            supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
+        return service.accept_result(self.project, task_id=task['task_id'], operation_id=task['operation_id'],
+            produced_against=task['produced_against'], result_payload={'kind': 'review', 'reviews': reviews})
 
     def dispatch(self, page_id='p01', *, mode='trial', stage='blueprint', reference_page=None, instruction='Synthetic browser flow'):
         doc = self.store.load_document(); entry = next(p for p in doc['pages'] if p['page_id'] == page_id)
@@ -52,7 +98,8 @@ class SyntheticW07:
     def start(self, task):
         service.task_start(self.project, task_id=task['task_id'], execution_ref=EXECUTION,
                            supported_protocols=['generation.v1', 'changes.v1'],
-                           capabilities=[*generation.CAPABILITIES, 'change_plan', 'candidate_result'])
+                           capabilities=[*generation.CAPABILITIES, 'change_plan', 'candidate_result',
+                               'collaboration.v1', 'rc3-entry.v1'])
 
     def image(self, task, variant=1):
         self.start(task)

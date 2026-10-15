@@ -1,0 +1,271 @@
+[
+  {
+    "case": "F8-honest-old03-and-oldR1-mappingless-speech-continuation",
+    "status": "PASS",
+    "evidence_level": "L1_SYNTHETIC",
+    "detail": {
+      "old03-mappingless": {
+        "accepted": {
+          "status": "accepted",
+          "project_id": "old03-mappingless",
+          "revision_id": "f5eb165249c8488aa40a2f78d6d563d1",
+          "requested_action": "task accept",
+          "result_refs": [
+            {
+              "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+              "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+            },
+            {
+              "path": ".deckmaster/objects/76/7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff.json",
+              "sha256": "7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff"
+            }
+          ],
+          "pending_tasks": [],
+          "findings": [],
+          "next_action": "speech_review_or_production",
+          "input_alignment": "legacy_current",
+          "review_url": null,
+          "view_status": "view_arrives_with_workbench",
+          "evidence_level": "engineering",
+          "current_revision_id": "f5eb165249c8488aa40a2f78d6d563d1",
+          "operation_result": {
+            "status": "accepted",
+            "revision_id": "f5eb165249c8488aa40a2f78d6d563d1",
+            "variant": "speech",
+            "adopted": true,
+            "page_refs": {
+              "p1": {
+                "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+                "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+              }
+            },
+            "plan_ref": {
+              "path": ".deckmaster/objects/76/7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff.json",
+              "sha256": "7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff"
+            },
+            "plan_note": null,
+            "result_refs": [
+              {
+                "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+                "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+              },
+              {
+                "path": ".deckmaster/objects/76/7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff.json",
+                "sha256": "7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff"
+              }
+            ],
+            "invalidated_outputs": [
+              "pptx",
+              "render_report",
+              "trace"
+            ],
+            "invalidated_reviews": [],
+            "next_action": "speech_review_or_production"
+          },
+          "variant": "speech",
+          "adopted": true,
+          "page_refs": {
+            "p1": {
+              "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+              "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+            }
+          },
+          "plan_ref": {
+            "path": ".deckmaster/objects/76/7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff.json",
+            "sha256": "7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff"
+          },
+          "invalidated_outputs": [
+            "pptx",
+            "render_report",
+            "trace"
+          ],
+          "invalidated_reviews": [],
+          "plan_note": null
+        },
+        "fake_node_refused": {
+          "type": "EnvelopeError",
+          "message": "(result)/payload/updates[0]/speech_segments[0]: narrative nodes not in the current Narrative: ['imagined-legacy-node']"
+        },
+        "old_page_sha256": "fd8c98bc31e10640cd033e9cd98991f27749a7ab5b3b46296697313c50675db0",
+        "new_page_sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211",
+        "completion": {
+          "state": "completed",
+          "request_id": "req-16513f547dda",
+          "intent": "content_only",
+          "content_intent": "speech_only",
+          "artifact_revision_id": "f5eb165249c8488aa40a2f78d6d563d1",
+          "effective_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "speech",
+              "plan"
+            ],
+            "page_ids": [
+              "p1"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "outputs": [
+            {
+              "path": ".deckmaster/objects/76/7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff.json",
+              "sha256": "7692bdba7fa74fc7a8abf040368f42aad0cbe0c41b1f38d228daf372df1960ff"
+            },
+            {
+              "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+              "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+            }
+          ],
+          "checks": [
+            {
+              "kind": "requested_content",
+              "status": "pass",
+              "basis": "requested speaking notes and mappings are current"
+            }
+          ],
+          "missing": [],
+          "responsible_role": "caller",
+          "next_action": "return_requested_content"
+        }
+      },
+      "oldR1-empty-roles": {
+        "accepted": {
+          "status": "accepted",
+          "project_id": "oldR1-empty-roles",
+          "revision_id": "4e1e57f1bda14d6a91fc9d5aa359411e",
+          "requested_action": "task accept",
+          "result_refs": [
+            {
+              "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+              "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+            },
+            {
+              "path": ".deckmaster/objects/90/90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f.json",
+              "sha256": "90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f"
+            }
+          ],
+          "pending_tasks": [],
+          "findings": [],
+          "next_action": "speech_review_or_production",
+          "input_alignment": "legacy_current",
+          "review_url": null,
+          "view_status": "view_arrives_with_workbench",
+          "evidence_level": "engineering",
+          "current_revision_id": "4e1e57f1bda14d6a91fc9d5aa359411e",
+          "operation_result": {
+            "status": "accepted",
+            "revision_id": "4e1e57f1bda14d6a91fc9d5aa359411e",
+            "variant": "speech",
+            "adopted": true,
+            "page_refs": {
+              "p1": {
+                "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+                "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+              }
+            },
+            "plan_ref": {
+              "path": ".deckmaster/objects/90/90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f.json",
+              "sha256": "90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f"
+            },
+            "plan_note": null,
+            "result_refs": [
+              {
+                "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+                "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+              },
+              {
+                "path": ".deckmaster/objects/90/90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f.json",
+                "sha256": "90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f"
+              }
+            ],
+            "invalidated_outputs": [
+              "pptx",
+              "render_report",
+              "trace"
+            ],
+            "invalidated_reviews": [],
+            "next_action": "speech_review_or_production"
+          },
+          "variant": "speech",
+          "adopted": true,
+          "page_refs": {
+            "p1": {
+              "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+              "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+            }
+          },
+          "plan_ref": {
+            "path": ".deckmaster/objects/90/90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f.json",
+            "sha256": "90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f"
+          },
+          "invalidated_outputs": [
+            "pptx",
+            "render_report",
+            "trace"
+          ],
+          "invalidated_reviews": [],
+          "plan_note": null
+        },
+        "fake_node_refused": {
+          "type": "EnvelopeError",
+          "message": "(result)/payload/updates[0]/speech_segments[0]: narrative nodes not in the current Narrative: ['imagined-legacy-node']"
+        },
+        "old_page_sha256": "fd8c98bc31e10640cd033e9cd98991f27749a7ab5b3b46296697313c50675db0",
+        "new_page_sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211",
+        "completion": {
+          "state": "completed",
+          "request_id": "req-6a7f4bc37534",
+          "intent": "content_only",
+          "content_intent": "speech_only",
+          "artifact_revision_id": "4e1e57f1bda14d6a91fc9d5aa359411e",
+          "effective_scope": {
+            "allow_page_membership_change": false,
+            "allow_page_order_change": false,
+            "external_artifact_ref": null,
+            "layers": [
+              "speech",
+              "plan"
+            ],
+            "page_ids": [
+              "p1"
+            ],
+            "page_manifest_ref": null,
+            "purpose": "working",
+            "subject": "deck"
+          },
+          "outputs": [
+            {
+              "path": ".deckmaster/objects/90/90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f.json",
+              "sha256": "90e8c424f18c56d880c19989870272b7db006452d352e23e13dc825cc661887f"
+            },
+            {
+              "path": ".deckmaster/objects/00/0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211.json",
+              "sha256": "0093c6322a057ffca781f27f542662f8937b1815d2a66fca5f780e6b95877211"
+            }
+          ],
+          "checks": [
+            {
+              "kind": "requested_content",
+              "status": "pass",
+              "basis": "requested speaking notes and mappings are current"
+            }
+          ],
+          "missing": [],
+          "responsible_role": "caller",
+          "next_action": "return_requested_content"
+        }
+      }
+    }
+  },
+  {
+    "case": "style-only-input-binding-bounded-proposal-zero-calls",
+    "status": "FAIL",
+    "evidence_level": "L1_SYNTHETIC",
+    "exception": "EligibilityBlocked",
+    "message": "eligibility/allowance.allocate: no remaining credit for a new external call; an exhausted budget only stops new calls (settlement and adoption stay available)",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_common.py\", line 83, in case\n    detail = fn()\n             ^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_remaining_corrected.py\", line 109, in style_binding_case\n    zero=r2.reject_no_write(project,'style-zero-image-budget',lambda:m.call('analysis cannot allocate image call',m.tasks.allocate_call_allowances,\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_r2.py\", line 59, in reject_no_write\n    fn()\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_remaining_corrected.py\", line 109, in <lambda>\n    zero=r2.reject_no_write(project,'style-zero-image-budget',lambda:m.call('analysis cannot allocate image call',m.tasks.allocate_call_allowances,\n                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/probe_common.py\", line 52, in call\n    value = fn(*args, **kwargs)\n            ^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/tasks.py\", line 1562, in locked\n    return function(store, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/tasks.py\", line 1619, in allocate_call_allowances\n    eligibility.guard(store, document, \"allowance.allocate\",\n  File \"/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/eligibility.py\", line 1614, in guard\n    raise EligibilityBlocked(decision)\ndeck_master.eligibility.EligibilityBlocked: eligibility/allowance.allocate: no remaining credit for a new external call; an exhausted budget only stops new calls (settlement and adoption stay available)\n"
+  }
+]

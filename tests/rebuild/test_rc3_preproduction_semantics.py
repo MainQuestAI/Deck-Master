@@ -208,7 +208,7 @@ def test_relevant_plan_role_or_global_progression_stales_review(tmp_path, change
         if change == "role":
             value["page_roles"][0]["role"] = "新页职责"
         elif change == "qualification":
-            value["page_roles"][0]["required_qualifications"].append("新的适用限制")
+            value["page_roles"][0]["required_qualifications"].append("q-new")
         elif change == "other_page_progression":
             value["page_roles"][1]["transition_to_next"] = "后续论证推进改变"
         elif change == "time_budget":
@@ -228,7 +228,7 @@ def test_unconsumed_plan_fields_do_not_stale_current_review(tmp_path, change):
         elif change == "timing":
             value["page_roles"][0]["timing_seconds"] = 99
         elif change == "other_qualification":
-            value["page_roles"][1]["required_qualifications"].append("另一页限定")
+            value["page_roles"][1]["required_qualifications"].append("q-other")
     current = _plan_edit(store, mutate)
     assert current["content_plan"] != original["content_plan"]
     _assert_gate(store, original, allowed=True)

@@ -1,5 +1,6 @@
 """Gallery selection hands off to the existing fixed-revision batch transaction."""
 import json
+import os
 import uuid
 from pathlib import Path
 
@@ -17,7 +18,7 @@ def test_gallery_selected_pages_enter_real_batch_without_reselection(tmp_path,ac
     from playwright.sync_api import sync_playwright,expect
     project=tmp_path/'project';create_sample(project,page_count=30,readonly=False);store=Store(project)
     revision=store.current_revision_id();before=store.read_current();server=WorkbenchServer(project);calls=[];errors=[]
-    out=Path('output/opendesign-completion/gallery-batch');out.mkdir(parents=True,exist_ok=True)
+    out=Path(os.environ.get('DECK_MASTER_BROWSER_EVIDENCE',str(tmp_path/'evidence')))/'gallery-batch'/action;out.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch(args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':900})
         page.on('pageerror',lambda error:errors.append(str(error)))

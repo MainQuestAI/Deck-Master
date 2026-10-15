@@ -13,6 +13,7 @@ a timeout succeeds instead of failing on CAS.
 """
 from __future__ import annotations
 
+import copy
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -87,7 +88,7 @@ def _verified_event(evidence: dict, adapter_context, action_binding, *, project_
 
 
 def resolve_evidence(declared: dict, adapter_context=None, *, where: str = "evidence",
-                     action_binding: str | None = None, project_id=None, request_id=None) -> dict:
+                     action_binding: str | None = None, project_id=None, request_id=None, store=None) -> dict:
     """Compute the recorded Evidence (CONTRACTS §4).
 
     A declared ``user_event`` is only verified_user when a matching trusted
@@ -100,6 +101,14 @@ def resolve_evidence(declared: dict, adapter_context=None, *, where: str = "evid
     if "assurance" in declared:
         raise ModelError(f"{where}/assurance",
                          "assurance is computed by the runtime adapter context and is never client-settable")
+    if "text" in declared:
+        if (store is None or set(declared) - {"kind", "text", "source_locator"}
+                or declared.get("kind") != "host_attested_instruction"
+                or not isinstance(declared.get("text"), str) or not declared["text"].strip()):
+            raise ModelError(where, "raw instructions contain only kind=host_attested_instruction, nonempty text and source_locator")
+        declared = {"kind": "host_attested_instruction",
+                    "source_ref": store.put_blob(declared["text"].encode("utf-8"), ext="txt"),
+                    "source_locator": declared.get("source_locator")}
     kind = declared.get("kind")
     source_ref = declared.get("source_ref")
     if not isinstance(source_ref, dict) or not source_ref.get("path") or not source_ref.get("sha256"):
@@ -304,12 +313,46 @@ def _request_source_key(request: dict) -> str:
     source = evidence.get("source_ref") or {}
     variant = request.get("variant") or {}
     return sha256_bytes(canonical_json_bytes({
-        "locator": locator or source.get("sha256"),
+        "locator": locator,
+        "source_sha256": source.get("sha256"),
         "intent": request.get("intent"),
         "content_intent": request.get("content_intent"),
         "scope": request.get("scope"),
         "variant_id": variant.get("variant_id"),
+        "variant_group_id": variant.get("group_id"),
     }))
+
+
+def _matching_request_source(store, document, candidate):
+    """Read committed ancestry, not a disposable replay/source cache.
+
+    A match identifies the original request; its latest committed state and the
+    current control remain separate. Replaying a superseded source never
+    reopens that request, restores its grants or creates a new credit identity.
+    """
+    from .snapshots import committed_snapshots
+    histories = [document]
+    if store.current_revision_id() is not None:
+        histories.extend(committed_snapshots(store))
+    requests = [(snapshot, (snapshot.get('collaboration') or {}).get('request')) for snapshot in histories]
+    source_key = _request_source_key(candidate)
+    match = next(((snapshot, request) for snapshot, request in requests
+        if request and _request_source_key(request) == source_key), None)
+    if match is None:
+        return None
+    _, original = match
+    latest_snapshot, latest = next((snapshot, request) for snapshot, request in requests
+        if request and request['request_id'] == original['request_id'])
+    current = (document.get('collaboration') or {}).get('request')
+    current_id = (current or {}).get('request_id')
+    state = ('closed' if latest.get('closed') else 'superseded' if latest['request_id'] != current_id
+        else 'paused' if latest.get('paused') else 'open')
+    return {'status': 'already_started', 'request_id': latest['request_id'],
+        'request_source_key': source_key, 'request_state': state,
+        'request': copy.deepcopy(latest), 'effective_scope': copy.deepcopy(latest['scope']),
+        'request_revision_id': latest_snapshot['revision_id'],
+        'current_request_id': current_id, 'current_request': copy.deepcopy(current),
+        'revision_id': document['revision_id'], 'creates_request': False, 'refreshes_credit': False}
 
 
 # ---------------------------------------------------------------------------
@@ -337,131 +380,173 @@ def describe(project) -> dict:
     result["authority_policy"] = region.get("authority_policy")
     result["quality_profile"] = region.get("quality_profile")
     result["request"] = region.get("request")
+    result["request_source_key"] = _request_source_key(region["request"]) if region.get("request") else None
     result["decisions"] = [record for _, record in _region_records(store, region, "decisions")]
     result["authorizations"] = [record for _, record in _region_records(store, region, "authorizations")]
+    result["effective_decisions"] = [{"ref": ref, "record": record,
+        **dependency_slices.decision_effectiveness(store, document, ref)}
+        for ref, record in _region_records(store, region, "decisions")]
+    result["effective_authorizations"] = [{"ref": ref, "record": record,
+        **dependency_slices.authorization_effectiveness(store, document, ref)}
+        for ref, record in _region_records(store, region, "authorizations")]
+    from . import eligibility
+    result["blocking_cards"] = []
+    for action in ("dispatch.compose", "dispatch.blueprint", "export.delivery"):
+        decision = eligibility.evaluate(store, document, document, action)
+        if not decision["allowed"]:
+            result["blocking_cards"].append({"action": action, "decision": decision})
     return result
+
+
+def _stage_request(store, document, input, *, operation_id, digest, adapter_context=None):
+    """Validate and stage the common request change for one owning transaction."""
+    region = _require_region(store, document)
+    transition = input.get("variant_transition") or {}
+    if transition.get("kind") == "edit_variant" and input.get("variant") is None:
+        from .snapshots import load_snapshot
+        source = transition.get("source") or {}
+        selected = load_snapshot(store, source.get("revision_id"))
+        variant = ((selected.get("collaboration") or {}).get("request") or {}).get("variant")
+        if not variant:
+            raise ModelError("variant_transition/source", "the selected committed source has no variant")
+        input = {**input, "variant": copy.deepcopy(variant)}
+    declared = input.get("instruction_evidence")
+    evidence = resolve_evidence(declared, adapter_context, store=store,
+                                where="collaboration/request/instruction_evidence",
+                                action_binding=digest, project_id=document["project_id"],
+                                request_id=(region.get("request") or {}).get("request_id"))
+    _require_stored_evidence_refs(store, evidence, "collaboration/request/instruction_evidence")
+    current = region.get("request")
+    replace_request_id = input.get("replace_request_id")
+    candidate = {
+        "request_id": _stable_id("req", operation_id),
+        "intent": input.get("intent"),
+        "content_intent": input.get("content_intent"),
+        "instruction_evidence": evidence,
+        "scope": input.get("scope"),
+        "paused": False,
+        "pause_reason": None,
+        "closed": False,
+        "closed_reason": None,
+        "background_request_ids": list(input.get("background_request_ids") or []),
+        "variant": input.get("variant"),
+    }
+    _require_scope_refs(store, candidate["scope"], "collaboration/request/scope")
+    if input.get("request_source_key") is not None and input["request_source_key"] != _request_source_key(candidate):
+        raise ModelError("collaboration/request/request_source_key", "does not match the Runtime-computed source key")
+    same_source = _matching_request_source(store, document, candidate)
+    if same_source:
+        return None, same_source
+    if current is not None and not current.get("closed"):
+        if replace_request_id != current.get("request_id"):
+            raise ModelError(
+                "collaboration/request",
+                "an open request must be explicitly replaced: pass replace_request_id "
+                "naming the current request",
+            )
+    elif replace_request_id is not None and (current is None or current.get("request_id") != replace_request_id):
+        raise ModelError("collaboration/request/replace_request_id",
+                         "replace_request_id must name the current open request")
+    if input.get("variant") is not None:
+        from .variant_requests import validate_variant_request
+        posture = validate_variant_request(store, document, input,
+                                 replace_request_id=replace_request_id)
+        if posture["already_fixed"] and not input.get("variant_transition"):
+            raise ModelError("variant_transition", "variant_source_required: select a fixed revision and versioned export for the sequential transition")
+        if current is not None and not current.get("closed"):
+            from .variant_requests import shared_narrative_check
+            group = (input["variant"] or {}).get("group_id")
+            check = shared_narrative_check(store, document, group)
+            if not check["ok"]:
+                raise ModelError("collaboration/request/variant/narrative_ref", check["reason"])
+    updated_region = {**region, "request": candidate}
+    updated = {**document, "collaboration": updated_region}
+    response = {"request_id": candidate["request_id"], "request_source_key": _request_source_key(candidate),
+                "effective_scope": candidate["scope"],
+                "assurance": evidence["assurance"]}
+    if current is not None and current.get("request_id") != candidate["request_id"]:
+        # Replace (CONTRACTS §12): the old request's unfinished scope stops
+        # by default — its authorizations are reported as no longer
+        # executable and its open tasks as affected. Only the explicitly
+        # listed background ids keep running.
+        background = set(candidate.get("background_request_ids") or [])
+        paused = [record.get("authorization_id")
+                  for _, record in _region_records(store, region, "authorizations")
+                  if record.get("request_id") == current.get("request_id")
+                  and record.get("request_id") not in background]
+        response["prior_request_disposition"] = {
+            "request_id": current.get("request_id"),
+            "disposition": "superseded",
+            "background_request_ids": sorted(background),
+        }
+        response["paused_authorizations"] = sorted(paused)
+        affected = []
+        unbound = []
+        for ref in document.get("tasks") or []:
+            try:
+                task = store.read_object_json(ref)
+            except Exception:  # noqa: BLE001 - unreadable tasks cannot be affected
+                continue
+            if task.get("status") not in ("awaiting_host", "running", "queued"):
+                continue
+            task_request = (task.get("collaboration_binding") or {}).get("request_id")
+            if task_request is None:
+                # A still-active task without a binding cannot be attributed
+                # to the request it belongs to, so it is reported as affected
+                # too — it can no longer be accepted as production, only
+                # settled. The report never pretends it was covered before.
+                affected.append(task.get("task_id"))
+                unbound.append({"task_id": task.get("task_id"),
+                                "status": task.get("status"),
+                                "reason": "no_collaboration_binding",
+                                "handling": "only settled call facts remain; "
+                                            "re-dispatch through the collaboration-aware path"})
+                continue
+            if task_request == current.get("request_id") and task_request not in background:
+                affected.append(task.get("task_id"))
+        response["affected_tasks"] = sorted(affected)
+        affected_ids = set(affected)
+        retired = []
+        for ref in document.get('tasks') or []:
+            try:
+                task = store.read_object_json(ref)
+            except (StoreError, OSError, ValueError, TypeError):
+                retired.append(ref)
+                continue
+            retired.append(store.put_json_object({**task, 'status': 'superseded', 'updated_at': _now_iso()})
+                if task.get('task_id') in affected_ids else ref)
+        updated['tasks'] = retired
+        if unbound:
+            response["unbound_tasks"] = unbound
+    if input.get("variant_transition") is not None:
+        from .variant_requests import apply_transition
+        updated, transition = apply_transition(store, document, updated, input)
+        response["variant_transition"] = transition
+    models.validate_collaboration_region(updated["collaboration"])
+    return updated, response
 
 
 def start_request(project, *, input: dict, base_revision: str, operation_id: str,
                   adapter_context=None) -> dict:
-    """Start or replace the current work request (CONTRACT §2, §12 start/replace).
-
-    Deduplication: the same instruction source with the same normalized
-    intent/scope maps to the same source key, so retries under a new operation
-    id return the existing request instead of creating a second one.
-    """
     store = Store(Path(project).expanduser())
     digest = write_digest(ACTION_REQUEST_START, input)
-
     @tasks_mod._project_transaction
-    def locked(store: Store):
+    def locked(store):
         document = store.load_document()
-        from . import eligibility
-        eligibility.guard(store, document, "request.start")
         replay = replay_or_conflict(store, document, operation_id, ACTION_REQUEST_START, digest)
         if replay:
             return replay
+        from . import eligibility
+        eligibility.guard(store, document, "request.start")
         if document["revision_id"] != base_revision:
-            raise StoreError("base_revision", "base revision is not current; reload and retry")
-        region = _require_region(store, document)
-        declared = input.get("instruction_evidence")
-        evidence = resolve_evidence(declared, adapter_context,
-                                    where="collaboration/request/instruction_evidence",
-                                    action_binding=digest, project_id=document["project_id"],
-                                    request_id=(region.get("request") or {}).get("request_id"))
-        _require_stored_evidence_refs(store, evidence, "collaboration/request/instruction_evidence")
-        current = region.get("request")
-        replace_request_id = input.get("replace_request_id")
-        if input.get("variant") is not None:
-            from .variant_requests import validate_variant_request
-            validate_variant_request(store, document, input,
-                                     replace_request_id=replace_request_id)
-            if current is not None and not current.get("closed"):
-                from .variant_requests import shared_narrative_check
-                group = (input["variant"] or {}).get("group_id")
-                check = shared_narrative_check(store, document, group)
-                if not check["ok"]:
-                    raise ModelError("collaboration/request/variant/narrative_ref", check["reason"])
-        candidate = {
-            "request_id": _stable_id("req", operation_id),
-            "intent": input.get("intent"),
-            "content_intent": input.get("content_intent"),
-            "instruction_evidence": evidence,
-            "scope": input.get("scope"),
-            "paused": False,
-            "pause_reason": None,
-            "closed": False,
-            "closed_reason": None,
-            "background_request_ids": list(input.get("background_request_ids") or []),
-            "variant": input.get("variant"),
-        }
-        _require_scope_refs(store, candidate["scope"], "collaboration/request/scope")
-        if current is not None and not current.get("closed"):
-            if _request_source_key(current) == _request_source_key(candidate):
-                return {"status": "already_started", "request_id": current["request_id"],
-                        "revision_id": document["revision_id"]}
-            if replace_request_id != current.get("request_id"):
-                raise ModelError(
-                    "collaboration/request",
-                    "an open request must be explicitly replaced: pass replace_request_id "
-                    "naming the current request",
-                )
-        elif replace_request_id is not None and (current is None or current.get("request_id") != replace_request_id):
-            raise ModelError("collaboration/request/replace_request_id",
-                             "replace_request_id must name the current open request")
-        updated_region = {**region, "request": candidate}
-        updated = {**document, "collaboration": updated_region}
-        response = {"request_id": candidate["request_id"],
-                    "effective_scope": candidate["scope"],
-                    "assurance": evidence["assurance"]}
-        if current is not None and current.get("request_id") != candidate["request_id"]:
-            # Replace (CONTRACTS §12): the old request's unfinished scope stops
-            # by default — its authorizations are reported as no longer
-            # executable and its open tasks as affected. Only the explicitly
-            # listed background ids keep running.
-            background = set(candidate.get("background_request_ids") or [])
-            paused = [record.get("authorization_id")
-                      for _, record in _region_records(store, region, "authorizations")
-                      if record.get("request_id") == current.get("request_id")
-                      and record.get("request_id") not in background]
-            response["prior_request_disposition"] = {
-                "request_id": current.get("request_id"),
-                "disposition": "superseded",
-                "background_request_ids": sorted(background),
-            }
-            response["paused_authorizations"] = sorted(paused)
-            affected = []
-            unbound = []
-            for ref in document.get("tasks") or []:
-                try:
-                    task = store.read_object_json(ref)
-                except Exception:  # noqa: BLE001 - unreadable tasks cannot be affected
-                    continue
-                if task.get("status") not in ("awaiting_host", "running", "queued"):
-                    continue
-                task_request = (task.get("collaboration_binding") or {}).get("request_id")
-                if task_request is None:
-                    # A still-active task without a binding cannot be attributed
-                    # to the request it belongs to, so it is reported as affected
-                    # too — it can no longer be accepted as production, only
-                    # settled. The report never pretends it was covered before.
-                    affected.append(task.get("task_id"))
-                    unbound.append({"task_id": task.get("task_id"),
-                                    "status": task.get("status"),
-                                    "reason": "no_collaboration_binding",
-                                    "handling": "only settled call facts remain; "
-                                                "re-dispatch through the collaboration-aware path"})
-                    continue
-                if task_request == current.get("request_id") and task_request not in background:
-                    affected.append(task.get("task_id"))
-            response["affected_tasks"] = sorted(affected)
-            if unbound:
-                response["unbound_tasks"] = unbound
+            raise ConflictError("base_revision", "base revision is not current; reload and retry")
+        updated, response = _stage_request(store, document, input, operation_id=operation_id,
+            digest=digest, adapter_context=adapter_context)
+        if updated is None:
+            updated = document
         return commit_collaboration_change(store, document, operation_id=operation_id,
-                                                action=ACTION_REQUEST_START, digest=digest,
-                                                description="start work request", updated=updated,
-                                                response=response)
-
+            action=ACTION_REQUEST_START, digest=digest, description="start work request",
+            updated=updated, response=response)
     return locked(store)
 
 
@@ -491,7 +576,7 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         topic = input.get("topic")
         delegation_ref = input.get("delegation_ref")
         authority_mode = input.get("authority_mode")
-        evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context,
+        evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context, store=store,
                                     where="collaboration/decision/evidence",
                                     action_binding=digest, project_id=document["project_id"],
                                     request_id=(region.get("request") or {}).get("request_id"))
@@ -589,7 +674,7 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
         request = region.get("request")
         if request is None or request.get("closed"):
             raise ModelError("collaboration/request", "a grant requires the current open work request")
-        evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context,
+        evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context, store=store,
                                     where="collaboration/authorization/evidence",
                                     action_binding=digest, project_id=document["project_id"],
                                     request_id=(region.get("request") or {}).get("request_id"))
@@ -643,6 +728,22 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
             "stop_conditions": list(input.get("stop_conditions") or []),
             "created_at": _now_iso(),
         }
+        if authorization['delivery_binding'] == 'exact_artifact':
+            from .delivery_eligibility import selected_output
+            selected = selected_output(store, document, notes_policy=(input.get('constraints') or {}).get('delivery_notes_policy'))
+            if not selected.get('file_sha256'):
+                raise ModelError('authorization/delivery_binding', 'exact_artifact requires the actual current output')
+            authorization['constraints']['fixed_delivery'] = {
+                'artifact_ref': document['outputs']['pptx'], 'subject_ref': selected['subject_ref'],
+                'file_sha256': selected['file_sha256'], 'notes_policy': selected['notes_policy'],
+                'source_request_id': request['request_id']}
+            for kind, identity, projection in [('task_fact', 'brief', 'value'), ('task_fact', 'audience', 'value'),
+                    ('artifact', 'pptx', 'content')]:
+                dep = dependency_slices.make_dependency_slice(store, document, kind=kind, identity=identity, projection=projection)
+                if dep not in authorization['basis']:
+                    authorization['basis'].append(dep)
+        elif 'fixed_delivery' in authorization['constraints']:
+            raise ModelError('authorization/constraints/fixed_delivery', 'fixed file bindings are computed by the Runtime')
         models.validate_authorization_semantics(authorization)
         _require_scope_refs(store, authorization["scope"], "collaboration/authorization/scope")
         _require_stored_refs(store, authorization["decision_refs"], "collaboration/authorization/decision_refs")
@@ -702,7 +803,7 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
         if not (reason or "").strip():
             raise ModelError("collaboration/revoke/reason", "a revocation records its reason")
         if instruction_evidence is not None:
-            evidence = resolve_evidence(instruction_evidence, adapter_context,
+            evidence = resolve_evidence(instruction_evidence, adapter_context, store=store,
                                         where="collaboration/revoke/evidence",
                                         action_binding=digest, project_id=document["project_id"],
                                     request_id=(region.get("request") or {}).get("request_id"))
@@ -713,8 +814,9 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
                              f"no authorization {authorization_id!r} in the current region")
         head_ref, target = head
         if target.get("status") == "revoked":
-            return {"status": "already_revoked", "authorization_id": authorization_id,
-                    "revision_id": document["revision_id"]}
+            return commit_collaboration_change(store, document, operation_id=operation_id,
+                action=ACTION_REVOKE, digest=digest, description="record already revoked request",
+                updated=document, response={"status": "already_revoked", "authorization_id": authorization_id})
         revoked = {**target, "status": "revoked", "replaces": head_ref}
         models.validate_authorization_semantics(revoked)
         revoked_ref = store.put_json_object(revoked)
@@ -733,16 +835,16 @@ def revoke_authorization(project, *, authorization_id: str, reason: str, base_re
 
 
 def pause_request(project, *, reason: str, base_revision: str, operation_id: str,
-                  adapter_context=None, instruction_evidence: dict | None = None) -> dict:
+                  adapter_context=None, instruction_evidence: dict | None = None, request_id=None) -> dict:
     """Pause the current request; reads keep working, new production stops
     being eligible (enforcement in T04)."""
     return _set_pause(project, paused=True, reason=reason, base_revision=base_revision,
                       operation_id=operation_id, adapter_context=adapter_context,
-                      instruction_evidence=instruction_evidence)
+                      instruction_evidence=instruction_evidence, request_id=request_id)
 
 
 def resume_request(project, *, instruction_evidence: dict, base_revision: str,
-                   operation_id: str, adapter_context=None) -> dict:
+                   operation_id: str, adapter_context=None, request_id=None) -> dict:
     """Resume the paused request. It never widens scope: eligibility re-derives
     from the unchanged request (CONTRACT §7.1). A resume requires its explicit
     instruction evidence — "继续" is a user action we must be able to trace."""
@@ -751,14 +853,14 @@ def resume_request(project, *, instruction_evidence: dict, base_revision: str,
                          "a resume requires instruction evidence")
     return _set_pause(project, paused=False, reason=None, base_revision=base_revision,
                       operation_id=operation_id, adapter_context=adapter_context,
-                      instruction_evidence=instruction_evidence)
+                      instruction_evidence=instruction_evidence, request_id=request_id)
 
 
 def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_id: str,
-               adapter_context=None, instruction_evidence=None) -> dict:
+               adapter_context=None, instruction_evidence=None, request_id=None) -> dict:
     store = Store(Path(project).expanduser())
     action = ACTION_PAUSE if paused else ACTION_RESUME
-    digest = write_digest(action, {"reason": reason, "instruction_evidence": instruction_evidence})
+    digest = write_digest(action, {"reason": reason, "instruction_evidence": instruction_evidence, "request_id": request_id})
 
     @tasks_mod._project_transaction
     def locked(store: Store):
@@ -775,14 +877,18 @@ def _set_pause(project, *, paused: bool, reason, base_revision: str, operation_i
         request = region.get("request")
         if request is None or request.get("closed"):
             raise ModelError("collaboration/request", "no open request to pause or resume")
+        if request_id is not None and request_id != request["request_id"]:
+            raise ConflictError("request_id", "the current request changed")
         if paused and not (reason or "").strip():
             raise ModelError("collaboration/request/pause_reason", "pausing records its reason")
         if bool(request.get("paused")) == paused:
-            return {"status": "already_paused" if paused else "already_active",
-                    "request_id": request["request_id"], "revision_id": document["revision_id"]}
+            return commit_collaboration_change(store, document, operation_id=operation_id,
+                action=action, digest=digest, description="record unchanged pause state",
+                updated=document, response={"status": "already_paused" if paused else "already_active",
+                                            "request_id": request["request_id"]})
         if instruction_evidence is not None:
             evidence = resolve_evidence(
-                instruction_evidence, adapter_context,
+                instruction_evidence, adapter_context, store=store,
                 where=f"collaboration/request/{'pause' if paused else 'resume'}/evidence",
                 action_binding=digest, project_id=document["project_id"],
                                     request_id=(region.get("request") or {}).get("request_id"))

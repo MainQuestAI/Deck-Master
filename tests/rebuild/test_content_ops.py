@@ -8,6 +8,8 @@ import pytest
 
 from deck_master import content_ops, content_plan, operations, service, tasks
 from deck_master.models import content_identity
+from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
+from deck_master import collaboration
 from deck_master.samples import create_sample
 from deck_master.store import Store
 
@@ -15,7 +17,69 @@ from deck_master.store import Store
 @pytest.fixture
 def project(tmp_path):
     path = tmp_path / 'project'; create_sample(path, page_count=3, readonly=False)
+    prepare_editorial_project(path)
     return path, Store(path)
+
+
+def prepare_editorial_project(path, *, review=True):
+    """Explicit L1 scope/direction/grant; the sample itself has no privilege."""
+    store = Store(path)
+    scope = store.load_document()['collaboration']['request']['scope']
+    evidence = evidence_for(path, text='L1 synthetic editorial protocol: edit only named Page identities ' + ','.join(scope['page_ids']) +
+        '; include explicit order/membership and at most ten candidate records/four image calls.',
+        locator='L1:classic-editorial-request')
+    collaboration.record_decision(path, input={'topic': 'direction', 'disposition': 'accepted',
+        'authority_mode': 'direct_user', 'value': 'L1 synthetic editorial direction', 'scope': scope,
+        'instruction_evidence': evidence, 'subject_refs': []},
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+    authorize_scope(path, actions=['content.operation', 'change.commit', 'candidate.adopt',
+        'dispatch.blueprint', 'call.begin', 'allowance.allocate'], scope=scope,
+        max_external_calls=4, max_candidate_count=10, adoption_policy='within_scope', evidence=evidence)
+    if review:
+        selected = [entry['page_id'] for entry in store.load_document()['pages']
+                    if entry['page_id'] in scope['page_ids']]
+        settle_fidelity_review(path, page_ids=selected, execution_ref='L1-classic-fidelity-' + uuid.uuid4().hex[:8],
+            scenario='Classic editorial fixture: current exact manuscript; no independent/human/native claim')
+
+
+def v2_revision_envelope(store, task, envelope):
+    """Serialize the authored changeset into this Task's actual v2 contract.
+
+    Invalid authored Page/Plan/proposal contents are preserved for core rejection.
+    This helper supplies protocol bindings, never permissions or review facts.
+    """
+    if task.get('protocol_version') != 'compose.v2' or envelope.get('schema_version'):
+        return envelope
+    update = envelope.get('content_update') or {}
+    proposals = [{'layer': 'page_copy', 'ref': store.put_json_object(page)}
+                 for page in update.get('upsert_pages', [])]
+    if 'content_plan' in envelope:
+        proposals.append({'layer': 'plan', 'ref': store.put_json_object(envelope['content_plan'])})
+    removed = update.get('remove_page_ids', [])
+    changed = [p['page_id'] for p in update.get('upsert_pages', [])] + list(removed)
+    diff = {'input_digest': update.get('input_digest'),
+        'summary': update.get('impact_summary') or update.get('unchanged_reason') or 'Explicit L1 reconciliation',
+        'changed_page_ids': list(dict.fromkeys(changed)),
+        'removed_page_ids': removed, 'page_order': update.get('page_order', [])}
+    if 'unchanged_reason' in update:
+        diff['unchanged_reason'] = update['unchanged_reason']
+    return {'schema_version': 'compose_result.v2', 'kind': 'compose', 'variant': 'input_revision',
+        'task_id': task['task_id'], 'operation_id': task['operation_id'],
+        'produced_against': task['produced_against'],
+        'eligibility_digest': task['collaboration_binding']['eligibility_digest'],
+        'payload': {'changed_layers': (['page_copy'] if update.get('upsert_pages') or removed else []) + ['plan'], 'proposals': proposals, 'diff': diff},
+        'usage_events': envelope.get('usage_events', [])}
+
+
+def derived_page(page, pid):
+    original = page['page_id']
+    result = copy.deepcopy(page)
+    result['page_id'] = pid
+    mapping = result['content_mapping']
+    mapping['plan_role_page_id'] = pid
+    for link in mapping['visible_links']:
+        link['element_ref'] = link['element_ref'].replace('atom:' + original + ':', 'atom:' + pid + ':', 1)
+    return result
 
 
 def value(store, action='edit', ids=('p02',), **extra):
@@ -40,7 +104,7 @@ def dispatch(path, store, action, ids):
 
 
 def start(path, task):
-    service.task_start(path, task_id=task['task_id'], execution_ref='synthetic-editorial-host', supported_protocols=['compose.v1'], capabilities=task['required_capabilities'])
+    service.task_start(path, task_id=task['task_id'], execution_ref='synthetic-editorial-host', supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
 
 
 def result(store, task, action='rewrite'):
@@ -54,19 +118,20 @@ def result(store, task, action='rewrite'):
     else:
         removed = ids
         for i in range(1 if action == 'merge' else 2):
-            page = copy.deepcopy(store.read_object_json(entries[ids[0]]['page'])); page['page_id'] = 'derived-' + str(i); page['customer_visible']['title'] = 'Synthetic derived page ' + str(i); upserts.append(page)
-        old_goals = {g['page_id']: g for g in outline['goals']}; new_goals = []
+            page = derived_page(store.read_object_json(entries[ids[0]]['page']), 'derived-' + str(i)); page['customer_visible']['title'] = 'Synthetic derived page ' + str(i); upserts.append(page)
+        old_goals = {g['page_id']: g for g in outline['page_roles']}; new_goals = []
         for page in upserts:
-            goal = copy.deepcopy(old_goals[ids[0]]); goal['goal_id'] = 'goal-' + page['page_id']; goal['page_id'] = page['page_id']; new_goals.append(goal)
-        outline['goals'] = [g for g in outline['goals'] if g['page_id'] not in ids] + new_goals
-        outline['chapters'] = [{'chapter_id': 'synthetic-editorial', 'title': 'Synthetic editorial chapter', 'goal_ids': [g['goal_id'] for g in outline['goals']]}]
+            goal = copy.deepcopy(old_goals[ids[0]]); goal['page_id'] = page['page_id']; new_goals.append(goal)
+        outline['page_roles'] = [g for g in outline['page_roles'] if g['page_id'] not in ids] + new_goals
+        outline['chapters'] = [{'chapter_id': 'synthetic-editorial', 'title': 'Synthetic editorial chapter', 'page_ids': [g['page_id'] for g in outline['page_roles']]}]
         order = [pid for pid in entries if pid not in ids] + [p['page_id'] for p in upserts]
+    outline['page_order'] = order
     return {'kind': 'compose', 'content_update': {'input_digest': task['input_digest'], 'upsert_pages': upserts,
             'remove_page_ids': removed, 'page_order': order, 'impact_summary': 'Explicit synthetic selected-page edit; all other facts preserved.'}, 'content_plan': outline}
 
 
 def accept(path, task, envelope):
-    return service.accept_result(path, task_id=task['task_id'], operation_id=task['operation_id'], produced_against=task['produced_against'], result_payload=envelope)
+    return service.accept_result(path, task_id=task['task_id'], operation_id=task['operation_id'], produced_against=task['produced_against'], result_payload=v2_revision_envelope(Store(path), task, envelope))
 
 
 def test_direct_edit_preserves_original_unselected_and_rebinds_outline(project):
@@ -95,7 +160,7 @@ def test_reorder_remove_preserve_objects_and_history(project):
     commit(path, store, value(store, 'remove', ('p01',)))
     doc = store.load_document(); assert doc['pages'] == [old['p03'], old['p02']]
     assert store.load_document(before['revision_id'])['pages'] == before['pages']
-    assert {g['page_id'] for g in content_plan.show(path)['content_plan']['goals']} == {'p02', 'p03'}
+    assert {g['page_id'] for g in content_plan.show(path)['content_plan']['page_roles']} == {'p02', 'p03'}
 
 
 def test_reorder_keeps_page_generation_task_but_remove_supersedes_it(project):
@@ -136,16 +201,19 @@ def test_host_result_scope_and_new_identity_lineage(project, action, ids):
 def test_rewrite_cannot_change_unselected_page_or_goals(project):
     path, store = project; task = dispatch(path, store, 'rewrite', ('p02',)); start(path, task); e = result(store, task)
     before = store.current_revision_id(); extra = store.read_object_json(store.load_document()['pages'][0]['page']); e['content_update']['upsert_pages'].append(extra)
-    with pytest.raises(operations.OperationError): accept(path, task, e)
+    with pytest.raises((tasks.EnvelopeError, operations.OperationError)): accept(path, task, e)
     assert store.current_revision_id() == before
-    e = result(store, task); e['content_plan']['goals'][0]['purpose'] = 'Unselected goal changed'
-    with pytest.raises(operations.OperationError): accept(path, task, e)
+    e = result(store, task); e['content_plan']['page_roles'][0]['role'] = 'Unselected goal changed'
+    with pytest.raises((tasks.EnvelopeError, operations.OperationError)): accept(path, task, e)
     assert store.current_revision_id() == before
 
 
 def test_split_cannot_reuse_removed_historical_id(project):
     path, store = project; commit(path, store, value(store, 'remove', ('p01',))); task = dispatch(path, store, 'split', ('p02',)); start(path, task)
-    e = result(store, task, 'split'); e['content_update']['upsert_pages'][0]['page_id'] = 'p01'; e['content_update']['page_order'][-2] = 'p01'
+    e = result(store, task, 'split'); e['content_update']['upsert_pages'][0] = derived_page(e['content_update']['upsert_pages'][0], 'p01'); e['content_update']['page_order'][-2] = 'p01'
+    e['content_plan']['page_roles'][-2]['page_id'] = 'p01'
+    e['content_plan']['page_order'] = e['content_update']['page_order']
+    e['content_plan']['chapters'][0]['page_ids'][-2] = 'p01'
     with pytest.raises(operations.OperationError, match='historical'): accept(path, task, e)
 
 
@@ -185,7 +253,7 @@ def test_versioned_source_locator_does_not_fake_precision(project, tmp_path):
 
 def test_outline_keeps_page_copy_separate_and_requires_dual_basis(project):
     path, store = project; before = copy.deepcopy(store.load_document()); outline = copy.deepcopy(store.read_object_json(before['content_plan'])['input'])
-    outline['goals'][1]['purpose'] += ' Explicit outline goal edit'
+    outline['page_roles'][1]['role'] += ' Explicit outline goal edit'
     input = value(store, 'outline', (), content_plan=outline); commit(path, store, input)
     after = store.load_document(); assert after['pages'] == before['pages'] and after['outputs'] == before['outputs']
     assert store.read_object_json(after['content_plan'])['input'] == outline

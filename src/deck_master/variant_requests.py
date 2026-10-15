@@ -199,14 +199,16 @@ def validate_variant_request(store, document, candidate: dict, *, replace_reques
                          "the carried declaration has no variant ids to work from")
     used = used_variant_ids(store, document, group_id)
     history_used, truncated = _history_variant_ids(store, document, group_id)
-    if variant["variant_id"] in used:
+    transition = candidate.get("variant_transition") or {}
+    editing = transition.get("kind") == "edit_variant" and candidate.get("intent") == "edit"
+    if variant["variant_id"] in used and not editing:
         raise ModelError("collaboration/request/variant/variant_id",
                          f"this variant was already fixed in this group: {variant['variant_id']!r}; "
                          "edit that version through its own revision instead of producing it twice")
     current = (document.get("collaboration") or {}).get("request")
     open_current = current is not None and not current.get("closed")
-    if used or open_current:
-        if not open_current or replace_request_id != current.get("request_id"):
+    if open_current:
+        if replace_request_id != current.get("request_id"):
             raise ModelError(
                 "collaboration/request/replace_request_id",
                 "a variant sub-request is sequential: pass replace_request_id naming the "
@@ -216,10 +218,10 @@ def validate_variant_request(store, document, candidate: dict, *, replace_reques
             if prior.get("group_id") != group_id:
                 raise ModelError("collaboration/request/variant/group_id",
                                  "the current open request belongs to another variant group")
-            if prior.get("variant_id") == variant["variant_id"]:
+            if prior.get("variant_id") == variant["variant_id"] and not editing:
                 raise ModelError("collaboration/request/variant/variant_id",
                                  "the replacement must be the other declared variant")
-    elif replace_request_id not in (None, ""):
+    elif replace_request_id not in (None, "") and (current is None or replace_request_id != current.get("request_id")):
         raise ModelError("collaboration/request/replace_request_id",
                          "the first version starts a request; there is nothing to replace yet")
     return {"group_id": group_id, "variant_id": variant["variant_id"], "label": variant["label"],
@@ -254,3 +256,104 @@ def shared_narrative_check(store, document, group_id: str) -> dict:
 
 def digest_of(value) -> str:
     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
+
+
+def _fixed_narrative(store, document, group_id):
+    values = []
+    revision = document.get("revision_id")
+    seen = set()
+    while revision:
+        if revision in seen:
+            raise ModelError("variant/history", "cyclic committed history")
+        seen.add(revision)
+        snap = store.load_document(revision)
+        request = (snap.get("collaboration") or {}).get("request") or {}
+        if ((request.get("variant") or {}).get("group_id") == group_id
+                and snap.get("narrative") and snap.get("pages") and snap.get("content_plan")):
+            values.append(snap["narrative"])
+        revision = snap.get("parent_revision_id")
+    return values[-1] if values else None
+
+
+def require_fixed_narrative(store, document, narrative_ref):
+    variant = current_request_variant(document) or {}
+    if not variant:
+        return
+    fixed = _fixed_narrative(store, document, variant["group_id"])
+    if fixed is not None and narrative_ref != fixed:
+        from .store import ConflictError
+        raise ConflictError("variant/narrative_ref", "same-source variants must preserve their fixed shared Narrative")
+
+
+def apply_transition(store, document, updated, input):
+    """Select historical content under current control in the request transaction."""
+    from .snapshots import load_snapshot
+    from . import exports
+    from .collaboration_scope import scope_gaps
+    from .store import ConflictError
+    transition = input["variant_transition"]
+    if not isinstance(transition, dict) or set(transition) != {"kind", "source"}:
+        raise ModelError("variant_transition", "name kind and fixed source")
+    kind = transition["kind"]
+    source = transition["source"]
+    if kind not in ("next_variant", "edit_variant") or not isinstance(source, dict) or set(source) - {"revision_id", "export_id"}:
+        raise ModelError("variant_transition", "unsupported transition/source fields")
+    if kind == "edit_variant" and input.get("intent") != "edit":
+        raise ModelError("variant_transition", "historical version edits require intent=edit")
+    snap = load_snapshot(store, source.get("revision_id"))
+    if not source.get("revision_id"):
+        raise ModelError("variant_transition/source/revision_id", "an explicit committed source revision is required")
+    source_variant = current_request_variant(snap) or {}
+    target = input.get("variant") or {}
+    if not source_variant or source_variant.get("group_id") != target.get("group_id"):
+        raise ModelError("variant_transition/source", "source belongs to another variant group")
+    if (kind == "edit_variant") != (source_variant.get("variant_id") == target.get("variant_id")):
+        raise ModelError("variant_transition/source", "next selects the other version; edit selects this source version")
+    records = [record for record in _export_records(store) if record.get("revision_id") == snap["revision_id"]]
+    if source.get("export_id"):
+        records = [record for record in records if record.get("export_id") == source["export_id"]]
+    if not records or not snap.get("content_plan") or not snap.get("pages") or not snap.get("narrative"):
+        raise ConflictError("variant_transition/source", "variant_source_unavailable: fix the complete source revision and versioned export first")
+    record = exports.show(store.project_root, export_id=records[0]["export_id"])
+    if record["manifest"].get("variant", {}).get("narrative_ref") != snap["narrative"]:
+        raise ConflictError("variant_transition/source", "export and actual source Narrative differ")
+    for name in record["files"]:
+        exports.download(store.project_root, export_id=record["export_id"], filename=name)
+    fixed = _fixed_narrative(store, document, target["group_id"])
+    if fixed is not None and snap["narrative"] != fixed:
+        raise ConflictError("variant_transition/source", "the source changed the fixed shared argument")
+    if kind == "edit_variant":
+        selected = {entry["page_id"] for entry in snap["pages"]}
+        request_scope = input.get("scope") or {}
+        if not set(request_scope.get("page_ids") or []) <= selected:
+            raise ModelError("variant_transition/scope", "edit targets must belong to the selected version")
+        for key in ("narrative", "content_plan", "pages", "outputs", "content_basis", "style_recipes"):
+            if key in snap:
+                updated[key] = snap[key]
+        from .models import compute_input_digest
+        if (snap.get("content_basis") or {}).get("input_digest") != compute_input_digest(document):
+            # Content is selected, but current user/task facts remain authoritative.
+            # The old basis is retained so normal reconciliation cannot be skipped.
+            updated["content_basis"] = snap.get("content_basis") or {
+                "input_digest": compute_input_digest(snap), "input_revision_id": None, "resolved_by_task_id": None}
+    else:
+        updated["narrative"] = snap["narrative"]
+        updated["pages"] = []
+        updated.pop("content_plan", None)
+        updated["outputs"] = dict.fromkeys(document["outputs"])
+        updated.pop("content_basis", None)
+    # History/call facts and current control are never replaced by source state.
+    retired = []
+    refs = []
+    current_request = (document.get("collaboration") or {}).get("request") or {}
+    for ref in document.get("tasks", []):
+        task = store.read_object_json(ref)
+        if (task.get("status") in ("queued", "awaiting_host", "running")
+                and (task.get("collaboration_binding") or {}).get("request_id") == current_request.get("request_id")):
+            ref = store.put_json_object({**task, "status": "superseded"}); retired.append(task["task_id"])
+        refs.append(ref)
+    updated["tasks"] = refs
+    return updated, {"kind": kind, "source_revision_id": snap["revision_id"],
+        "source_export_id": record["export_id"], "source_manifest_sha256": sha256_bytes(canonical_json_bytes(record["manifest"])),
+        "variant": target, "narrative_ref": snap["narrative"], "preserved_export_ids": [record["export_id"]],
+        "affected_tasks": retired, "reused_refs": [snap["narrative"]], "detached_refs": []}

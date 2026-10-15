@@ -1,0 +1,14 @@
+{
+  "source_sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+  "test_kind": "fixed_snapshot_unit",
+  "exit_code": 0,
+  "raw_log_sha256": "0353df1f913ec9f881b14a4c85154a502881280c4803307e5d41f823bc03f14a",
+  "summary": "=============== 2362 passed, 506 deselected in 460.23s (0:07:40) ===============",
+  "failures": [],
+  "counts": {
+    "passed": 2362,
+    "failed": 0,
+    "deselected": 506,
+    "seconds": 460.23
+  }
+}

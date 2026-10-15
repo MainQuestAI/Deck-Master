@@ -86,7 +86,11 @@ def synthetic_runtime_call(function, *args, **kwargs):
 
 
 def dispatch_with_synthetic_provider(*args, **kwargs):
-    return synthetic_runtime_call(content_review.dispatch_preproduction_review, *args, **kwargs)
+    result = synthetic_runtime_call(content_review.dispatch_preproduction_review, *args, **kwargs)
+    if result.get("task"):
+        from rc3_fixtures import claim_fixture_task
+        claim_fixture_task(args[0], result["task"], execution_ref="exec-independent")
+    return result
 
 
 def synthetic_user_context(store, document, *, action_binding, declared, actor_id="u-1"):

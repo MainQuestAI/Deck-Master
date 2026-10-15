@@ -1,6 +1,8 @@
 import {get, post, readableError} from './api.js';
 import {el, button, heading, empty, field, modal, version, toast} from './dom.js';
 import {surfaces, layers} from './routes.js';
+import {externalReviewForm} from './collaboration-desk.js';
+import {draftIntake} from './draft-intake.js';
 
 export function localURL(value) {
   try {
@@ -70,7 +72,8 @@ export async function launcher(root, health) {
   }
   root.replaceChildren(el('header', {class: 'launcher-brand'}, el('img', {class: 'brand-logo', src: '/v2/assets/deck-master-logo/logo-horizontal-light.svg', alt: 'Deck Master', width: 176, height: 46}), el('span', {class: 'muted'}, '本机制作工作台')),
     el('main', {id: 'main'}, heading('项目', '打开正在制作的方案。材料、逐页内容、制作依据和每版产物，都在同一个地方。', button('新建项目', createForm, true)),
-      el('div', {class: 'toolbar'}, el('div', {class: 'row wrap'}, button('选择项目文件夹', registerForm), button('打开只读示例', async event => {
+      el('div', {class: 'toolbar'}, el('div', {class: 'row wrap'}, button('选择项目文件夹', registerForm),
+        health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',()=>externalReviewForm()),button('打开只读示例', async event => {
         const trigger = event.currentTarget; trigger.disabled = true;
         try { const data = await post('/api/projects/sample', {}); await open(data.project.entry_id); }
         catch (error) { message.textContent = readableError(error); trigger.disabled = false; }
@@ -104,15 +107,22 @@ export async function launcher(root, health) {
     const title = field('项目名称（必填）', el('input', {required: true, maxlength: 200, autocomplete: 'off'}));
     const brief = field('用途（必填）', el('textarea', {required: true, rows: 3, placeholder: '这份方案要帮助听众作出什么判断？'}));
     const audience = field('受众（必填）', el('input', {required: true, placeholder: '例如：第一次了解这个方案的业务负责人'}));
+    const work = field('本次约定产物', el('select', {}, el('option', {value:'full_deck'}, '完整方案'),
+      el('option', {value:'plan_only'}, '论证与大纲'), el('option', {value:'write_only'}, '上屏稿'),
+      el('option', {value:'speech_only'}, '已有稿件的口播稿'), el('option', {value:'content_full'}, '完整内容')),
+      '内容工作完成后正常返回约定产物，不自动继续原图制作。口播工作须选入已有完整稿件。');
+    const manuscript = draftIntake();
+    const mode = field('阅读方式（可选）', el('select', {}, el('option', {value:''}, '尚未明确指定'),
+      el('option', {value:'live'}, '现场讲述'), el('option', {value:'read_alone'}, '独立阅读'), el('option', {value:'mixed'}, '讲述与独立阅读')));
     const parent = field('保存到哪个文件夹（必填）', el('input', {required: true, autocomplete: 'off', placeholder: '现有父目录的完整路径'}));
     const folder = field('新项目文件夹名（必填）', el('input', {required: true, placeholder: '例如：我的方案', pattern: '[^/\\\\]+', autocomplete: 'off'}), '将在上述位置创建新目录；不能覆盖已有目录。');
     const limit = field('页数目标（可选）', el('input', {type: 'number', min: 1, step: 1}));
     const error = el('p', {class: 'field-error', role: 'alert'});
-    const form = el('form', {class: 'stack'}, title.node, brief.node, audience.node,
+    const form = el('form', {class: 'stack'}, title.node, brief.node, audience.node, manuscript.node, work.node, mode.node,
       el('div', {class: 'form-pair'}, parent.node, folder.node), button('选择保存文件夹', event => picker(parent.input, parent.error, event.currentTarget)),
-      limit.node, el('p', {class: 'muted'}, '材料列表暂为空。创建后补充材料，再交接内容整理；创建项目不会启动模型。'), error);
+      limit.node, el('p', {class: 'muted'}, '可从用途开始，也可选入完整确认稿；确认稿按明确页序建立导入映射，保留来源。创建项目不会启动模型或授予制作权限。'), error);
     const submit = button('创建项目', () => form.requestSubmit(), true);
-    const dialog = modal('新建项目', form, [submit]);
+    const dialog = modal('新建项目', form, [submit], {protectDraft:true});
     // 创建成功后关闭对话框也要刷新列表：新项目出现在列表里，而不是邀请用户
     // 在同一路径再次创建（F13/N14 的另一半）。
     dialog.addEventListener('close', refresh, {once:true});
@@ -120,6 +130,15 @@ export async function launcher(root, health) {
       event.preventDefault(); submit.disabled = true; error.textContent = '';
       const path = parent.input.value.trim().replace(/\/+$/, '') + '/' + folder.input.value.trim();
       const data = {path, title: title.input.value.trim(), brief: brief.input.value.trim(), audience: audience.input.value.trim()};
+      if (manuscript.payload) data.draft = manuscript.payload;
+      if (work.input.value==='speech_only'&&!manuscript.payload) {
+        error.textContent='口播工作需要已有完整稿件，请先选择确认稿 JSON 文件。'; submit.disabled=false; manuscript.input.focus(); return;
+      }
+      if (mode.input.value) data.presentation_mode=mode.input.value;
+      if (work.input.value!=='full_deck') data.request_input={intent:'content_only',content_intent:work.input.value,
+        scope:{subject:'deck',page_ids:manuscript.pages.map(page=>page.page_id),page_manifest_ref:null,external_artifact_ref:null,
+          layers:work.input.value==='plan_only'?['narrative','plan']:work.input.value==='write_only'?['narrative','plan','page_copy']:work.input.value==='speech_only'?['speech']:['narrative','plan','page_copy','speech'],
+          allow_page_membership_change:work.input.value!=='speech_only',allow_page_order_change:work.input.value!=='speech_only',purpose:'working'}};
       if (limit.input.value) data.page_limit = Number(limit.input.value);
       // 依据已发生事实恢复（F13/N14 + UX-06b）：创建成功后无论登记还是打开失败，
       // 主动作都是「登记并打开这个位置」——登记按路径幂等，不会重复创建或覆盖；
@@ -145,7 +164,13 @@ export async function launcher(root, health) {
         if (!result.registered) throw new Error('项目已完整建立，但未能登记；请重新登记并打开这个位置，不要重复创建。');
         await open(result.project.entry_id);
       } catch (failure) {
-        error.textContent = readableError(failure);
+        // Translate only the known hard-limit failure and its safe integer.
+        // Arbitrary exception prose may contain private paths or identities.
+        const hardLimit=(failure.path||failure.field)==='draft/page_order'&&
+          /^actual manuscript exceeds the provided hard maximum page_limit=(\d+)$/.exec(failure.message);
+        error.textContent=hardLimit&&Number.isSafeInteger(Number(hardLimit[1]))&&Number(hardLimit[1])>0?
+          `确认稿有 ${manuscript.pages.length} 页，超过本次明确页数上限 ${hardLimit[1]} 页。原文件与输入保留。请调整完整稿件或页数上限后重试。`:
+          readableError(failure);
         const lost = !created && (!failure.status || failure.status >= 500 || failure.code === 'invalid_response');
         if (created) error.append(' ', recovery(created));
         else if (lost) {

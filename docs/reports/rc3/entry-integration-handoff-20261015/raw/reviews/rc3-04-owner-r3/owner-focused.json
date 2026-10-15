@@ -1,0 +1,87 @@
+{
+  "kind": "OWNER_R3_FOCUSED_MUTABLE_NOT_FIXED_PASS",
+  "base_head": "573a46a85bf93d71a13652756bc3a6cdb1fab6ae",
+  "python": "/workspace/work/rc3/venv-rc3-04/bin/python",
+  "owned_hashes": {
+    "src/deck_master/method_resources.py": "1aea3e14a381eddd022bd036e5977714f6c7f71c98d98b1f698aec7318b88acf",
+    "tests/rebuild/rc3_fixtures.py": "29737e12ca9307c24496a9b31443414583fdb36fa95fd472116976534ad9fa51",
+    "tests/rebuild/test_rc3_four_skills.py": "de49a89569cb6041c5a8f4c456564997bea51400a065c8d4e58c7299e029d96f",
+    "tests/rebuild/test_rc3_notes_files.py": "0eac8157334f24de96fdb947c4c08d2511a24050914d05265f2406130b375992",
+    "tests/rebuild/test_rc3_notes_transactions.py": "0504d6a0e87136bb66762901f74d4c2e8cfcf7acbd3ff3d298888a4df10d6839",
+    "tests/rebuild/test_page_visual_gate.py": "7475a5071dc13dd106717f60b142d0fb36f1c65ac88413a3de267bb2b24c6792"
+  },
+  "logs": {
+    "/workspace/work/rc3/reviews/rc3-04-owner-r3/notes-baseline.log": "c4aeb4a70323d36e2790083729fb361b71dd5e0ef77ecc56da47bc1cc782d60b",
+    "/workspace/work/rc3/reviews/rc3-04-owner-r3/notes-focused-1.log": "f1459f89cdb690637d355af82fa936f190bad4c8b7ea1cf2a848a4fc07ad485f",
+    "/workspace/work/rc3/reviews/rc3-04-owner-r3/notes-focused-2.log": "603da2d24ff21105a4ff9c7181bf257dad4ed76f74f1d3146d312bdbba7bffaa",
+    "/workspace/work/rc3/reviews/rc3-04-owner-r3/notes-last-two.log": "ca692766693eb222e2c6502df68e46bcb44323e14f3a6cdd97e558e1c88f7bb0",
+    "/workspace/work/rc3/reviews/rc3-04-owner-r3/f9-routing.log": "e9f0d8f23502e884ed3aad3dfed483ede8c1d9b799c72a6bc952936854e0a462"
+  },
+  "entry_discovery": {
+    "uncovered": {},
+    "stale": {},
+    "stats": {
+      "total": 418,
+      "gated": 155,
+      "exempt": 263,
+      "by_surface": {
+        "service": 17,
+        "operations": 45,
+        "collaboration": 41,
+        "cli": 175,
+        "http": 121,
+        "public": 19
+      },
+      "actions": [
+        "allowance.allocate",
+        "annotation.save",
+        "asset.import",
+        "authorization.grant",
+        "authorization.revoke",
+        "call.begin",
+        "call.settle",
+        "candidate.adopt",
+        "candidate.select",
+        "change.commit",
+        "change.plan",
+        "compile.ppt",
+        "content.inputs_update",
+        "content.operation",
+        "continue_project",
+        "create",
+        "decision.record",
+        "design.update",
+        "dispatch.blueprint",
+        "dispatch.compose",
+        "dispatch.host_task",
+        "export.delivery",
+        "generation.dispatch",
+        "handoff.delivery",
+        "import_draft",
+        "migration.apply",
+        "page.edit",
+        "proposal.adopt",
+        "readiness.final",
+        "render.preview",
+        "request.pause",
+        "request.resume",
+        "request.start",
+        "restore",
+        "review.import",
+        "stage.assemble",
+        "style.propose",
+        "task.accept",
+        "task.cancel",
+        "task.start"
+      ]
+    }
+  },
+  "notes": {
+    "initial": "16 failed/50 passed/5 render deselected",
+    "second": "64 passed/2 failed/5 render deselected",
+    "third": "69 passed/2 failed all71 domain",
+    "last_two_actual_render": "2 passed; optional original SVG builder and actual visual finding identity fixes"
+  },
+  "f9": "43 focused passed; exact original Master-natural sentence, F7 controls preserved",
+  "limits": "Mutable focused diagnostics; formal R3 fixed source/installed verification remains with Root. No original R1/R2 evidence rewritten."
+}

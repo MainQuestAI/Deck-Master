@@ -29,6 +29,7 @@ from deck_master.web import WorkbenchServer
 from test_candidates import candidate
 from test_content_candidates import content_intent
 from test_workbench_actions import commit
+from test_action_targets_browser import _prepare_browser_project
 
 pytestmark = pytest.mark.browser
 
@@ -41,6 +42,7 @@ def ux00_browser(tmp_path):
     playwright = pytest.importorskip('playwright.sync_api')
     path = tmp_path / 'ux00-project'
     create_sample(path, page_count=3, readonly=False)
+    _prepare_browser_project(path)
     store = Store(path)
     server = WorkbenchServer(path)
     with playwright.sync_playwright() as runtime:

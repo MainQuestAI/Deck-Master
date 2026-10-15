@@ -9,6 +9,7 @@ import {gallery} from './gallery.js';
 import {BusinessOperations} from './business-operations.js';
 import {actionTargets} from './action-targets.js';
 import {changesetDesk} from './changeset-desk.js';
+import {collaborationBanner} from './collaboration-desk.js';
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
@@ -71,6 +72,7 @@ export class Project {
       this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), value => {
         if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
         this.latest = value;
+        if (this.health.ui_capabilities?.includes('collaboration.v1')) this.refreshControl();
         const count = value.task_counts.awaiting_host || 0;
         if (this.pendingButton) {
           this.pendingButton.textContent = `待交接 ${count}`;
@@ -85,8 +87,22 @@ export class Project {
       addEventListener('pageshow', event => { if (event.persisted) { this.summaryPoll.start(); this.summaryPoll.refresh(); } });
     }
   }
+  async refreshControl() {
+    const serial = this.controlRead = (this.controlRead || 0) + 1;
+    try {
+      const info = await get('/api/project');
+      if (serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
+      this.info = info;
+      // Refresh only the control facts. Draft editors, fixed canvases and open
+      // decisions keep their DOM and confirmed basis across another window's
+      // pause/revoke/CAS update.
+      const banner = collaborationBanner(this);
+      this.controlSlot?.replaceChildren(...(banner ? [banner] : []));
+    } catch { /* Existing fixed reading and the regular sync recovery remain. */ }
+  }
   async loadRoute(initial = null, focus = true) {
     const serial = ++this.generation;
+    this.controlRead = (this.controlRead || 0) + 1;
     const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
     this.navigationPending = true;
     // Keep the old snapshot visible, but do not accept actions against it while
@@ -215,6 +231,8 @@ export class Project {
       reader_upgrade_required: '项目指针需要更新的核心读取，请用匹配的核心打开。',
       writer_upgrade_required: '项目由更新的核心写入，请用匹配的核心继续。',
       fixed_revision: '正在看历史版本，只读；回到当前版本后可操作。'};
+    Object.assign(reasons, {migration_required: '需先查看并确认升级影响；现有稿件仍可读。',
+      request_paused: '本次请求已暂停；读取、取消和费用结算仍可进行。', request_closed: '本次请求已结束；请按新的明确要求开始下一请求。'});
     const actions = (this.info.effective_actions || []).map(item => {
       // 历史视图的 fixed_revision 组合：个人草稿与按固定版本导出不受影响——
       // 交付面在同一路由真实提供按该历史版本固定的导出（服务端按 revision 生成）。
@@ -280,6 +298,8 @@ export class Project {
     this.notice = el('div', {class: 'notice', role: 'status', hidden: true});
     const banners = el('div', {class: 'banners'}, this.notice);
     if (this.business) banners.append(this.business.node);
+    const collaboration = collaborationBanner(this);
+    this.controlSlot = el('div', {class: 'current-control-facts'}, collaboration);
     this.syncCompact = document.documentElement.dataset.workbenchUi === 'studio';
     this.syncNotice = el('p', {class: 'runtime-sync', role: 'status'});
     this.syncRetry = button('重试同步', () => this.summaryPoll?.refresh(), false, {hidden:true});
@@ -314,7 +334,7 @@ export class Project {
     this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
     this.navigationStatus = el('span', {class: 'status navigation-status', hidden: true}, '正在读取工作面');
     const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿'), this.navigationStatus),
-      this.pendingButton);
+      this.controlSlot, this.pendingButton);
     this.root.className = 'shell';
     this.root.replaceChildren(aside, el('div', {class: 'content'}, top, banners, this.main));
   }

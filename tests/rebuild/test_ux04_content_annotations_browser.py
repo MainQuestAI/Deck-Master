@@ -22,6 +22,7 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_workbench_actions import commit
+from test_studio_content_browser import authorize_content_edits
 
 pytestmark = pytest.mark.browser
 
@@ -64,6 +65,7 @@ def test_same_text_body_nodes_are_distinguishable_and_editable_separately(ux04_b
     from deck_master import content_ops
     from test_content_ops import commit as ops_commit, value as ops_value
     page, server, path, store = ux04_browser
+    authorize_content_edits(path)
     url = server.start()
     doc = store.load_document()
     entry = next(e for e in doc['pages'] if e['page_id'] == 'p01')
@@ -239,7 +241,7 @@ def test_icon_opinions_distinguish_same_text_layers_and_old_basis(ux04_browser, 
     expect(page.locator('.icon-workbench [role=status]')).to_contain_text('图标要求已复制')
     payload = page.evaluate('JSON.parse(window.iconCopy)')
     assert payload['annotation_refs'] == [old_ref] and payload['opinions'] == [old_record['annotation']]
-    output = Path('output/playwright/pr103-complete/icon-identities'); output.mkdir(parents=True, exist_ok=True)
+    output = path.parent / 'evidence' / 'icon-identities'; output.mkdir(parents=True, exist_ok=True)
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     assert all(label.bounding_box()['height'] >= 44 for label in labels.all())
     page.screenshot(path=str(output/f'same-text-three-bases-{width}.png'), full_page=True)
@@ -252,6 +254,7 @@ def test_same_text_ranges_validate_per_node_and_feed_text_annotation(ux04_browse
     from deck_master import content_ops
     from test_content_ops import commit as ops_commit, value as ops_value
     page, server, path, store = ux04_browser
+    authorize_content_edits(path)
     url = server.start()
     doc = store.load_document()
     entry = next(e for e in doc['pages'] if e['page_id'] == 'p01')

@@ -3,17 +3,38 @@ import json
 import os
 from pathlib import Path
 import re
+import uuid
 import pytest
+from deck_master import collaboration
 from deck_master.samples import create_gallery_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
+from rc3_fixtures import authorize_scope, evidence_for
 
 pytestmark=pytest.mark.browser
+
+
+def authorize_content_edits(project):
+    """Explicit L1 editorial permission; no image calls or candidate adoption."""
+    store = Store(project)
+    scope = dict(store.load_document()['collaboration']['request']['scope'])
+    scope['layers'] = ['plan', 'page_copy', 'speech', 'review']
+    evidence = evidence_for(project,
+        text='L1 browser editorial exercise on named Pages ' + ','.join(scope['page_ids']) +
+             ': preserve facts and sources; allow explicit order/membership changes; no image calls.',
+        locator='L1:content-browser:direction-and-zero-call-grant')
+    collaboration.record_decision(project, input={'topic': 'direction', 'disposition': 'accepted',
+        'authority_mode': 'direct_user', 'value': 'Preserve the synthetic manuscript facts and source versions.',
+        'scope': scope, 'instruction_evidence': evidence, 'subject_refs': []},
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+    authorize_scope(project, actions=['content.operation'], scope=scope, max_external_calls=0,
+        max_candidate_count=0, adoption_policy='within_scope', evidence=evidence)
 
 
 def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
     from playwright.sync_api import sync_playwright,expect
     project=tmp_path/'content-project';create_gallery_sample(project,page_count=24,readonly=False)
+    authorize_content_edits(project)
     store=Store(project);initial=store.load_document();assert initial['content_plan']
     server=WorkbenchServer(project)
     out=Path(os.environ.get('STUDIO_CONTENT_EVIDENCE',str(tmp_path/'evidence')));out.mkdir(parents=True,exist_ok=True)
@@ -100,7 +121,8 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
             expect(page.get_by_role('button',name='确认并交接内容调整',exact=True)).to_be_disabled()
             assert store.load_document()['tasks']==before_tasks
             nav.get_by_role('button',name='内容计划',exact=True).click()
-            summary=page.get_by_label('内容整合结论',exact=True);summary.fill('完整内容计划验证：保持全部稳定页面身份')
+            expect(page.get_by_label('内容整合结论',exact=True)).to_have_attribute('readonly','')
+            chapter_name=page.get_by_label('章节名称 1',exact=True);chapter_name.fill('完整内容计划验证：保持全部稳定页面身份')
             card=page.locator('.studio-goal-card').first
             card.get_by_role('button',name='编辑页面目标',exact=True).click()
             expect(card).to_contain_text('尚未登记材料。可以先保留页面目标与待确认事实，登记材料后再关联。')
@@ -117,8 +139,13 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
             expect(page).to_have_url(re.compile('revision='+revision))
             expect(page.locator('#content-area-plan')).to_be_visible()
             final=store.load_document();saved=store.read_object_json(final['content_plan'])['input']
-            assert saved['input_summary']=='完整内容计划验证：保持全部稳定页面身份'
-            assert any(g['purpose']=='页面目标已按正式编辑器调整' for g in saved['goals'])
+            assert saved['schema_version']=='content_plan_input.v2'
+            assert saved['chapters'][0]['title']=='完整内容计划验证：保持全部稳定页面身份'
+            assert any(role['intended_takeaway']=='页面目标已按正式编辑器调整' for role in saved['page_roles'])
+            previous_input=store.read_object_json(after_order['content_plan'])['input']
+            for key in ['page_budget','time_budget','speech_policy','issues','tradeoff_issue_ids','page_order']:
+                assert saved[key]==previous_input[key]
+            assert saved['page_roles'][1:]==previous_input['page_roles'][1:]
             assert final['pages']==after_order['pages'] and final['tasks']==after_order['tasks']
             for width,height in [(1440,900),(1280,800),(390,844)]:
                 page.set_viewport_size({'width':width,'height':height})
@@ -132,7 +159,7 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
             expect(page.locator('.content-order-row').first.get_by_role('checkbox')).to_be_disabled()
             expect(page.get_by_role('button',name='预览页序变更',exact=True)).to_have_count(0)
             nav.get_by_role('button',name='内容计划',exact=True).click()
-            expect(page.get_by_label('内容整合结论',exact=True)).to_have_attribute('readonly','')
+            expect(page.get_by_label('章节名称 1',exact=True)).to_have_attribute('readonly','')
             expect(page.get_by_role('button',name='预览内容计划变更',exact=True)).to_have_count(0)
             nav.get_by_role('button',name='工作笔记',exact=True).click()
             expect(page.get_by_label('个人草稿',exact=True)).to_have_attribute('readonly','')
@@ -150,6 +177,7 @@ def test_studio_content_overview_starts_with_chapters_and_materials(tmp_path):
     from test_content_candidates import start_task,accept
     import uuid,copy
     project=tmp_path/'overview';create_gallery_sample(project,page_count=24,readonly=False);store=Store(project)
+    authorize_content_edits(project)
     material=tmp_path/'范围与事实.md';material.write_text('# 隔离合成材料\n原有章节与页面无需改变。')
     update=content_ops.inputs(project,input={'reason':'隔离界面验证：加入原文材料','source_changes':{'add':[{'path':str(material)}]}},base_revision=store.current_revision_id(),operation_id=str(uuid.uuid4()))['operation_result']
     task=tasks._lookup_task(store.load_document(),update['pending_tasks'][0]['task_id'],store);start_task(project,task)
@@ -191,6 +219,7 @@ def test_studio_goal_material_links_keep_fixed_source_versions_and_recover(tmp_p
     from deck_master import content_ops,tasks
     from test_content_candidates import start_task,accept
     project=tmp_path/'goal-links';create_gallery_sample(project,page_count=24,readonly=False);store=Store(project)
+    authorize_content_edits(project)
     materials=[]
     for name,text in [('业务事实.md','# 已登记的事实\n第一条事实。\n第二条事实。'),('范围约束.md','# 范围约束\n保留全部页面身份。')]:
         path=tmp_path/name;path.write_text(text);materials.append(path)
@@ -225,7 +254,8 @@ def test_studio_goal_material_links_keep_fixed_source_versions_and_recover(tmp_p
             expect(card.locator('.studio-goal-linked button')).to_have_count(2)
             page.get_by_role('button',name='预览内容计划变更',exact=True).click();submit=page.get_by_role('button',name='确认内容变更',exact=True);expect(submit).to_be_enabled()
             posted=json.loads(next(r['body'] for r in reversed(requests) if r['url']=='content/plan'))['input']
-            links=posted['content_plan']['goals'][0]['source_links'];assert len(links)==2
+            assert posted['content_plan']['schema_version']=='content_plan_input.v2'
+            links=posted['content_plan']['page_roles'][0]['source_links'];assert len(links)==2
             sources={s['source_id']:s for s in before['sources']}
             for link in links:
                 source=sources[link['source_id']];assert link['source_version']=={'original_sha256':source.get('original_sha256'),'extract':source.get('extract')}
@@ -245,7 +275,11 @@ def test_studio_goal_material_links_keep_fixed_source_versions_and_recover(tmp_p
             with page.expect_response(lambda r:r.url.endswith('/api/content/commit') and r.request.method=='POST') as receipt:submit.click()
             assert receipt.value.ok;revision=receipt.value.json()['operation_result']['revision_id'];expect(page).to_have_url(re.compile('revision='+revision))
             page.wait_for_function('(el)=>!el.isConnected',arg=old_card)
-            saved=store.load_document();assert store.read_object_json(saved['content_plan'])['input']['goals'][0]['source_links']==links
+            saved=store.load_document();saved_input=store.read_object_json(saved['content_plan'])['input']
+            assert saved_input['page_roles'][0]['source_links']==links
+            before_input=store.read_object_json(before['content_plan'])['input']
+            for key in ['chapters','page_order','page_budget','time_budget','speech_policy','issues','tradeoff_issue_ids']:
+                assert saved_input[key]==before_input[key]
             assert saved['pages']==before['pages'] and saved['sources']==before['sources']
             # A material update between preview and commit must reject the old binding.
             card=page.locator('.studio-goal-card').first;card.get_by_role('button',name='编辑页面目标',exact=True).click()
@@ -273,7 +307,9 @@ def test_studio_goal_material_links_keep_fixed_source_versions_and_recover(tmp_p
 def test_studio_split_merge_fields_preview_cancel_refresh_and_dispatch(tmp_path,action,label,field,value,count):
     from playwright.sync_api import sync_playwright,expect
     from deck_master import tasks
-    project=tmp_path/action;create_gallery_sample(project,page_count=24,readonly=False);store=Store(project);before=store.load_document();server=WorkbenchServer(project)
+    project=tmp_path/action;create_gallery_sample(project,page_count=24,readonly=False);store=Store(project)
+    authorize_content_edits(project)
+    before=store.load_document();server=WorkbenchServer(project)
     out=Path(os.environ.get('STUDIO_CONTENT_EVIDENCE',str(tmp_path/'evidence')));out.mkdir(parents=True,exist_ok=True);requests=[];errors=[]
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});page.on('pageerror',lambda e:errors.append(str(e)))
@@ -323,6 +359,7 @@ def test_old_poll_cannot_invalidate_newly_read_content_plan(tmp_path, old_poll_e
     from playwright.sync_api import sync_playwright, expect
     project = tmp_path / 'project'
     create_gallery_sample(project, page_count=24, readonly=False)
+    authorize_content_edits(project)
     store = Store(project)
     server = WorkbenchServer(project)
     with sync_playwright() as runtime:

@@ -9,6 +9,8 @@ from deck_master import service
 from deck_master import tasks as tasks_mod
 from deck_master.models import default_design_context
 from deck_master.production import project_prompt
+from rc3_fixtures import accept_synthetic_blueprint, claim_fixture_task
+from test_service_flow import _prepare_production, _authorize_replacement_image
 
 
 def test_continue_reconstructs_first_page_before_next_blueprint(tmp_path: Path) -> None:
@@ -24,6 +26,8 @@ def test_continue_reconstructs_first_page_before_next_blueprint(tmp_path: Path) 
               "visual_spec": {"intent": "第二页图", "reference_mode": "new_design"}}
     project = tmp_path / "project"
     service.create(project, brief="two-page order", draft={"pages": [first, second]})
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=2, scenario='One page reconstruction precedes the next bounded image call')
     store = Store(project)
     image_path = tmp_path / "first.png"
     Image.new("RGB", (120, 80), "white").save(image_path)
@@ -44,6 +48,23 @@ COMPOSE = SPEC / "examples/roundtrips/result-envelope/compose.json"
 
 def _page() -> dict:
     return json.loads(COMPOSE.read_text("utf-8"))["pages"][0]
+
+
+def _draft() -> dict:
+    authored = json.loads(COMPOSE.read_text('utf-8'))
+    return {'pages': authored['pages'], 'page_order': authored['page_order']}
+
+
+def _begin_blueprint(project, task, execution_ref):
+    from deck_master import generation
+    store = service.Store(project)
+    claim_fixture_task(project, task, execution_ref=execution_ref)
+    value = generation.prepared_input(store, store.load_document(), task)
+    frozen = generation.freeze(project, task_id=task['task_id'], input=value,
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+    attempt = tasks_mod.call_begin(store, task_id=task['task_id'], allowance_id='call-1',
+        execution_ref=execution_ref, request_id=frozen['request_id'])
+    return frozen, attempt
 
 
 def test_prompt_projects_all_visible_fields_and_excludes_internal_notes() -> None:
@@ -87,7 +108,7 @@ def test_blueprint_task_exposes_only_allowed_asset_bytes(tmp_path: Path) -> None
     logo = tmp_path / "logo.svg"
     logo.write_text("<svg xmlns='http://www.w3.org/2000/svg' width='80' height='20'/>")
     project = tmp_path / "project"
-    draft = json.loads(COMPOSE.read_text("utf-8"))
+    draft = _draft()
     service.create(
         project,
         brief="brand test",
@@ -99,6 +120,8 @@ def test_blueprint_task_exposes_only_allowed_asset_bytes(tmp_path: Path) -> None
             "allowed_asset_ids": ["brand-logo"],
         },
     )
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=1, scenario='Only explicitly allowed asset bytes enter the blueprint workorder')
     task = service.continue_project(project)["pending_tasks"][0]
     files = task["production_request"]["permitted_asset_files"]
     assert len(files) == 1
@@ -109,8 +132,10 @@ def test_blueprint_task_exposes_only_allowed_asset_bytes(tmp_path: Path) -> None
 
 def test_continue_dispatches_one_codex_blueprint_with_allowance(tmp_path: Path) -> None:
     project = tmp_path / "project"
-    draft = json.loads(COMPOSE.read_text("utf-8"))
+    draft = _draft()
     service.import_draft(project, draft_payload=draft)
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=1, scenario='One actual bounded blueprint dispatch')
     response = service.continue_project(project)
     assert response["status"] == "awaiting_host"
     assert response["next_action"] == "codex_generate_blueprint"
@@ -137,20 +162,22 @@ def test_prompt_is_stable_and_page_specific() -> None:
 
 def test_settle_records_invocation_ref_and_can_enrich_old_consumed_fact(tmp_path: Path) -> None:
     project = tmp_path / "project"
-    draft = json.loads(COMPOSE.read_text("utf-8"))
+    draft = _draft()
     service.import_draft(project, draft_payload=draft)
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=1, scenario='Host-reported call settlement enriches the same actual attempt')
     task = service.continue_project(project)["pending_tasks"][0]
     store = service.Store(project)
-    service.task_start(project, task_id=task["task_id"], execution_ref="codex-test")
-    tasks_mod.call_begin(
-        store, task_id=task["task_id"], allowance_id="call-1", execution_ref="codex-test"
-    )
+    _, attempt = _begin_blueprint(project, task, 'codex-test')
     tasks_mod.call_settle(
         store,
         task_id=task["task_id"],
         allowance_id="call-1",
+        attempt_id=attempt['attempt_id'],
         outcome="consumed",
-        report_bytes=b"{}",
+        report_bytes=json.dumps({'evidence_level': 'L1_SYNTHETIC',
+            'observation': 'Synthetic Host reports the begun fixture call consumed; no native or fee receipt.',
+            'invocation_ref': 'exec-test-1'}).encode(),
         invocation_ref="exec-test-1",
     )
     current = store.load_document()
@@ -161,26 +188,32 @@ def test_settle_records_invocation_ref_and_can_enrich_old_consumed_fact(tmp_path
 def test_call_operation_ids_include_task_identity(tmp_path: Path) -> None:
     """Two pages/tasks may both own call-1 without transaction collisions."""
     project = tmp_path / "project"
-    draft = json.loads(COMPOSE.read_text("utf-8"))
+    draft = _draft()
     service.import_draft(project, draft_payload=draft)
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=2, scenario='Two bounded tasks retain distinct local call identities')
     first = service.continue_project(project)["pending_tasks"][0]
     store = service.Store(project)
-    service.task_start(project, task_id=first["task_id"], execution_ref="exec-1")
-    tasks_mod.call_begin(store, task_id=first["task_id"], allowance_id="call-1", execution_ref="exec-1")
+    _, first_attempt = _begin_blueprint(project, first, 'exec-1')
     tasks_mod.call_settle(
         store, task_id=first["task_id"], allowance_id="call-1", outcome="consumed",
-        report_bytes=b"{}", invocation_ref="inv-1"
+        attempt_id=first_attempt['attempt_id'],
+        report_bytes=json.dumps({'evidence_level': 'L1_SYNTHETIC',
+            'observation': 'Synthetic Host reports the first begun fixture call consumed; no native or fee receipt.',
+            'invocation_ref': 'inv-1'}).encode(), invocation_ref="inv-1"
     )
     service.task_cancel(project, task_id=first["task_id"])
     # A second task deliberately reuses the allowance's local name.
     document = store.load_document()
     page_entry = document["pages"][0]
     second_obj = service.open_blueprint_task(store, document, page_entry)
-    service.task_start(project, task_id=second_obj["task_id"], execution_ref="exec-2")
-    tasks_mod.call_begin(store, task_id=second_obj["task_id"], allowance_id="call-1", execution_ref="exec-2")
+    _, second_attempt = _begin_blueprint(project, second_obj, 'exec-2')
     result = tasks_mod.call_settle(
         store, task_id=second_obj["task_id"], allowance_id="call-1", outcome="consumed",
-        report_bytes=b"{}", invocation_ref="inv-2"
+        attempt_id=second_attempt['attempt_id'],
+        report_bytes=json.dumps({'evidence_level': 'L1_SYNTHETIC',
+            'observation': 'Synthetic Host reports the second begun fixture call consumed; no native or fee receipt.',
+            'invocation_ref': 'inv-2'}).encode(), invocation_ref="inv-2"
     )
     assert result["status"] == "settled"
 
@@ -229,6 +262,8 @@ def _create_project(tmp_path: Path) -> Path:
     project = tmp_path / "proj"
     service.create(project, brief="原图往返", sources=[material],
                    draft={"pages": [deepcopy(ROUNDTRIP_PAGE)]})
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=1, scenario='Immutable L1 original and prompt through actual local reconstruction')
     return project
 
 
@@ -272,13 +307,14 @@ def _adopt_blueprint(tmp_path: Path, project: Path) -> dict:
     assert task["kind"] == "blueprint"
     store = Store(project)
     page_ref = store.load_document()["pages"][0]["page"]
-    envelope = _blueprint_envelope(page_ref, _real_png(), "提交给宿主的真实 prompt")
+    prompt = task['generation_input']['prompt']
+    envelope = _blueprint_envelope(page_ref, _real_png(), prompt)
     staging = project / ".deckmaster" / "staging" / task["operation_id"]
     staging.mkdir(parents=True, exist_ok=True)
     (staging / "reference.png").write_bytes(_real_png())
-    (staging / "submitted-prompt.txt").write_bytes("提交给宿主的真实 prompt".encode("utf-8"))
-    outcome = service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                                    produced_against=task["produced_against"], result_payload=envelope)
+    (staging / "submitted-prompt.txt").write_bytes(prompt.encode('utf-8'))
+    outcome = accept_synthetic_blueprint(project, task=task, result_payload=envelope,
+        execution_ref='L1-production-author', scenario='Synthetic immutable image/prompt protocol fixture')
     assert outcome["status"] == "accepted"
     return Store(project).load_document()
 
@@ -300,6 +336,7 @@ def _reconstruct_envelope(svg_bytes: bytes) -> dict:
 
 
 def _accept_reconstruct(project: Path, task: dict, svg_bytes: bytes) -> dict:
+    claim_fixture_task(project, task)
     staging = project / ".deckmaster" / "staging" / task["operation_id"]
     staging.mkdir(parents=True, exist_ok=True)
     (staging / "page.svg").write_bytes(svg_bytes)
@@ -347,11 +384,21 @@ def test_copy_roundtrip_keeps_original_page_prompt_and_blueprint(tmp_path: Path)
         store.read_object_json(new_entry["blueprint"])["provenance"]["submitted_prompt"]) == prompt_bytes
     assert new_entry["blueprint"] == blueprint_ref
 
-    # A small copy edit forces SVG rework (not regeneration of the original
-    # image): the next step is a reconstruct task, not a new blueprint task.
+    # A formally observed image is bound to the old copy. Preserving it never
+    # promotes it to the new Page or grants another call after the one-call cap.
+    calls_before = [call for ref in after['tasks'] for call in store.read_object_json(ref).get('call_allowances', [])]
     response = service.continue_project(project)
-    assert response["next_action"] == "codex_reconstruct_svg"
-    assert response["pending_tasks"][0]["kind"] == "reconstruct"
+    assert response['status'] == 'needs_input' and not response['pending_tasks']
+    assert [call for ref in store.load_document()['tasks']
+            for call in store.read_object_json(ref).get('call_allowances', [])] == calls_before
+    assert store.load_document()['pages'][0]['blueprint'] == blueprint_ref
+    _authorize_replacement_image(project, page_id='p1', scenario='Changed copy replaces stale formal image')
+    from rc3_fixtures import settle_fidelity_review
+    settle_fidelity_review(project, page_ids=['p1'], execution_ref='L1-copy-fidelity',
+        scenario='Confirmed changed manuscript before an explicit replacement-image approval')
+    fresh = service.continue_project(project)['pending_tasks'][0]
+    assert fresh['kind'] == 'blueprint' and fresh['scope_pages'] == ['p1']
+    assert fresh['task_id'] not in [store.read_object_json(ref)['task_id'] for ref in after['tasks']]
 
 
 def test_previews_never_become_reference_and_reencode_fails_binding(tmp_path: Path) -> None:
@@ -420,19 +467,9 @@ def artifact_helper(store: Store, path: Path, role: str, page_ref: dict) -> dict
 
 def _review_task(project: Path, label: str) -> dict:
     store = Store(project)
-    document = store.load_document()
-    page_ref = document["pages"][0]["page"]
-    task = tasks_mod.new_task(
-        task_id=uuid.uuid4().hex[:12], operation_id=label, kind="review", scope_pages=["p1"],
-        instruction="review the current outputs", inputs=[page_ref],
-        dependencies=[{"kind": "content", "identity": "page:p1", "sha256": page_ref["sha256"]}],
-        dispatch_revision=document["revision_id"], produced_against=content_identity(document),
-    )
-    task_ref = store.put_json_object(task)
-    bumped = tasks_mod.bump_revision(document, {"operation_id": label + "-dispatch", "kind": "task_update",
-                                                "description": "open review", "read_set": []})
-    bumped["tasks"] = list(bumped.get("tasks") or []) + [task_ref]
-    store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id=label + "-dispatch")
+    task = service.open_host_task(store, kind='review', page_ids=['p1'], review_stage='final',
+        instruction='L1 engineering review of current outputs: ' + label)
+    claim_fixture_task(project, task)
     return task
 
 
@@ -451,8 +488,9 @@ def _review_envelope(task: dict, status: str, subjects: list, finding: bool) -> 
         "kind": "conversion",
         "status": status,
         "subjects": subjects,
-        "dependencies": [{"kind": "content", "identity": "page:p1",
-                          "sha256": task["inputs"][0]["sha256"]}],
+        "dependencies": [{**dep, 'identity': 'page:' + dep['identity']}
+            if dep['kind'] == 'content' and dep['identity'] in task['scope_pages'] else dep
+            for dep in task['dependencies']],
         "reviewer": {"type": "host_self", "id": "test", "execution_ref": None,
                      "independence_confirmed": False},
         "observations": ["工程测试记录"],
@@ -487,6 +525,10 @@ def test_new_design_mode_and_failed_review_is_preserved(tmp_path: Path) -> None:
                  f'</svg>').encode()
     task = _open_host_task(project, "reconstruct")
     _accept_reconstruct(project, task, svg_bytes)
+    from page_visual_helpers import pass_page_review
+    visual = service.continue_project(project)['pending_tasks'][0]
+    assert visual['review_stage'] == 'page_visual'
+    pass_page_review(project, visual)
     stale_review = _open_host_task(project, "review")
     from deck_master.pipeline import produce
     produce(project)
@@ -521,7 +563,8 @@ def test_new_design_mode_and_failed_review_is_preserved(tmp_path: Path) -> None:
                                         result_payload=envelope)
         assert outcome["status"] == "accepted"
     document = store.load_document()
-    assert len(document["reviews"]) == 1 + len(required)
+    assert len([ref for ref in document['reviews']
+                if store.read_object_json(ref).get('review_stage', 'final') == 'final']) == 1 + len(required)
     assert store.read_object_bytes(fail_ref) == fail_bytes
     assert store.read_object_json(fail_ref)["status"] == "fail"
     # P1-02: the preserved fail keeps its finding open — a plain stack of

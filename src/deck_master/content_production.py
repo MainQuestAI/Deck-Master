@@ -79,7 +79,7 @@ _FORBIDDEN_V2_SLOTS = ("files", "pages", "page_order", "artifact_specs", "review
                        "content_update", "content_plan", "notes", "generation_result",
                        "style_analysis")
 
-_CAPABILITIES = ["compose.v2", "collaboration.v1"]
+_CAPABILITIES = ["compose.v2", "collaboration.v1", "rc3-entry.v1"]
 
 # Registered adoption projections per proposal schema (models.REGISTERED_PROJECTIONS):
 # a decision may only promote the slice it actually names.
@@ -184,8 +184,12 @@ def open_phase_task(store, document, *, operation_id: str, intent: str = "initia
     (external review F06).
     """
     from . import eligibility
+    requested_layers = list(PHASE_SPEC[phase or FRAMING]["layers"])
+    if intent == "input_revision":
+        request_scope = ((document.get("collaboration") or {}).get("request") or {}).get("scope") or {}
+        requested_layers = [layer for layer in CHANGED_LAYERS if layer in request_scope.get("layers", [])]
     eligibility.guard(store, document, "dispatch.compose",
-                      context={"targets": {"page_ids": sorted(page_ids or [])}})
+                      context={"targets": {"page_ids": sorted(page_ids or []), "layers": requested_layers}})
     task = build_phase_task(store, document, operation_id=operation_id, intent=intent,
                             input_revision_id=input_revision_id, phase=phase,
                             adoption_policy=adoption_policy, page_ids=page_ids,
@@ -231,16 +235,17 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
                                   "adoption_policy": "proposal_only",
                                   "allow_page_membership_change": False})
     write_scope = write_scope_for(store, document, phase, page_ids=page_ids)
+    if intent == "input_revision":
+        requested = ((document.get("collaboration") or {}).get("request") or {}).get("scope") or {}
+        write_scope["layers"] = [layer for layer in CHANGED_LAYERS if layer in requested.get("layers", [])]
+        write_scope["allow_page_membership_change"] = bool(requested.get("allow_page_membership_change"))
+        write_scope["allow_page_order_change"] = bool(requested.get("allow_page_order_change"))
     if page_ids is not None and phase == PAGE_COPY:
         # Naming exact pages narrows the scope: that dispatch cannot add pages.
         write_scope = {**write_scope, "allow_page_membership_change": False}
     policy = adoption_policy or spec["adoption_policy"]
-    methods = None
-    try:
-        from .method_resources import method_release, method_resources
-        methods = method_resources("compose", intent=intent, phase=phase)
-    except Exception:  # noqa: BLE001 - method files are dispatched read-only
-        methods = None
+    from .method_resources import method_release, method_resources
+    methods = method_resources("compose", intent=intent, phase=phase)
     task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=operation_id,
@@ -365,6 +370,8 @@ def _proposals_for_phase(store, document, variant: str) -> dict | None:
             continue
         if (task.get("protocol_version") == "compose.v2" and task.get("status") == "completed"
                 and expected_variant(task) == variant and task.get("produced_against") == identity
+                and (task.get('collaboration_binding') or {}).get('request_id') ==
+                    ((document.get('collaboration') or {}).get('request') or {}).get('request_id')
                 and task.get("result_refs")):
             return {"task_id": task["task_id"], "refs": list(task["result_refs"])}
     return None
@@ -394,7 +401,7 @@ def _phased_content_active(store, document) -> bool:
     return False
 
 
-def content_phase_status(store, document, *, explicit_speech_mode: str | None = None) -> dict:
+def _full_content_phase_status(store, document, *, explicit_speech_mode: str | None = None) -> dict:
     """Which content phase comes next and why (read-only; CONTRACTS §5, §6.3).
 
     ``explicit_speech_mode`` lets a caller pass an explicit user request (or a
@@ -473,6 +480,86 @@ def content_phase_status(store, document, *, explicit_speech_mode: str | None = 
     return {"action": "complete", "phase": None, "reason": "content phases are current"}
 
 
+def content_phase_status(store, document, *, explicit_speech_mode=None):
+    """Stop at the current request's actual content responsibility."""
+    request = (document.get("collaboration") or {}).get("request") or {}
+    intent = request.get("content_intent") if request.get("intent") == "content_only" else None
+    if intent == "plan_only":
+        proposals = _proposals_for_phase(store, document, "narrative")
+        refs = (proposals or {}).get("refs", [])
+        planned = any(store.read_object_json(ref).get("schema_version") == "content_plan.v2" for ref in refs)
+        if planned or (document.get("narrative") and document.get("content_plan")):
+            return {"action": "complete", "phase": None, "proposal_refs": refs,
+                    "reason": "requested planning artifacts are available; no page production requested"}
+    if intent in ("write_only", "speech_only"):
+        entries = document.get("pages") or []
+        wanted = set(request.get("scope", {}).get("page_ids") or [])
+        selected = [entry for entry in entries if entry["page_id"] in wanted]
+        if intent == "speech_only":
+            if not selected:
+                return {"action": "blocked", "phase": None, "reason": "speech_only requires fixed current Pages"}
+            complete = False
+            selected_refs = {entry["page"]["sha256"] for entry in selected}
+            for ref in document.get("tasks") or []:
+                task = store.read_object_json(ref)
+                if (task.get("status") == "completed" and expected_variant(task) == "speech"
+                        and (task.get("collaboration_binding") or {}).get("request_id") == request.get("request_id")
+                        and selected_refs <= {r["sha256"] for r in task.get("result_refs", [])}):
+                    complete = True
+            if complete:
+                return {"action": "complete", "phase": None, "reason": "requested speaking notes and mappings are current"}
+            kind = effective_speech_kind(store, document, explicit_mode=explicit_speech_mode) or "cue"
+            return {"action": "dispatch", "phase": SPEECH, "page_ids": [e["page_id"] for e in selected],
+                    "speech_kind": kind, "reason": "write only the requested speaking notes"}
+        if entries and document.get("content_plan"):
+            return {"action": "complete", "phase": None, "reason": "requested visible manuscript is available"}
+        if not document.get("narrative"):
+            return {"action": "blocked", "phase": None, "reason": "write_only needs adopted direction or an imported manuscript"}
+        return {"action": "dispatch", "phase": PAGE_COPY, "reason": "write the agreed visible manuscript only"}
+    return _full_content_phase_status(store, document, explicit_speech_mode=explicit_speech_mode)
+
+
+def completion_status(store, document):
+    """Pure request-scoped completion; unreadable facts remain explicit gaps."""
+    request = (document.get("collaboration") or {}).get("request") or {}
+    missing = []
+    try:
+        phase = content_phase_status(store, document) if request.get("intent") in ("full_deck", "content_only") else {}
+    except (StoreError, OSError, ValueError, KeyError, TypeError) as exc:
+        phase = {"action": "blocked", "reason": f"content facts require recovery: {type(exc).__name__}"}
+    action = phase.get("action")
+    state = "completed" if action == "complete" and request.get("intent") == "content_only" else (
+        "awaiting_decision" if action in ("await_decision", "blocked") else "in_progress")
+    for ref in document.get("tasks") or []:
+        try:
+            task = store.read_object_json(ref)
+        except (StoreError, OSError, ValueError, KeyError, TypeError):
+            missing.append({"code": "unreadable_task", "ref": ref, "next_action": "recover_task_facts"})
+            state = "needs_recovery"
+            continue
+        if (task.get("status") in ("running", "awaiting_host", "queued")
+                and (task.get("collaboration_binding") or {}).get("request_id") == request.get("request_id")
+                and state != "needs_recovery"):
+            state = "in_progress"
+    if models.input_alignment(document) == 'needs_reconciliation':
+        state = 'awaiting_decision'
+        missing.append({'code': 'input_reconciliation_pending', 'next_action': 'reconcile_current_inputs'})
+    refs = ([document["narrative"]] if document.get("narrative") else [])
+    refs += ([document["content_plan"]] if document.get("content_plan") else [])
+    ids = set((request.get("scope") or {}).get("page_ids") or [])
+    refs += [entry["page"] for entry in document.get("pages") or [] if entry["page_id"] in ids]
+    refs += phase.get("proposal_refs") or []
+    if state == "awaiting_decision":
+        missing.append({"code": "content_requirement", "detail": phase.get("reason")})
+    return {"state": state, "request_id": request.get("request_id"), "intent": request.get("intent"),
+        "content_intent": request.get("content_intent"), "artifact_revision_id": document["revision_id"],
+        "effective_scope": request.get("scope"), "outputs": refs,
+        "checks": [{"kind": "requested_content", "status": "pass" if state == "completed" else "not_evaluated",
+                    "basis": phase.get("reason")}],
+        "missing": missing, "responsible_role": "content" if state != "completed" else "caller",
+        "next_action": "return_requested_content" if state == "completed" else phase.get("reason")}
+
+
 def next_phase_task(store, document, *, explicit_speech_mode: str | None = None):
     """Dispatch the next content phase task, or None when none is due."""
     status = content_phase_status(store, document, explicit_speech_mode=explicit_speech_mode)
@@ -510,10 +597,11 @@ def _stamp_speech_kind(store, task, kind) -> None:
     """Record the requested speech kind on the task so acceptance can enforce it."""
     stage_request = {"mode": "auto", "stage": "content", "references": [],
                      "speech_kind": kind}
-    updated = {**task, "stage_request": stage_request}
+    document = store.load_document()
+    latest = tasks_mod._lookup_task(document, task["task_id"], store)
+    updated = {**latest, "stage_request": stage_request}
     models.validate_task_semantics(updated)
     ref = store.put_json_object(updated)
-    document = store.load_document()
     bumped = bump_revision(document, {
         "operation_id": f"speech-kind-{uuid.uuid4().hex[:12]}", "kind": "task_update",
         "description": f"speech phase requested {kind}", "read_set": []})
@@ -566,6 +654,17 @@ def _complete_task(store, new_document, task, result_refs):
     models.validate_task_semantics(updated_task)
     task_ref = store.put_json_object(updated_task)
     tasks_mod._replace_task_in_document(new_document, task, task_ref, store)
+    close_completed_content_request(store, new_document)
+
+
+def close_completed_content_request(store, document):
+    """Finish only this declared content request in its actual adoption swap."""
+    region = document.get('collaboration') or {}
+    request = region.get('request') or {}
+    if (request.get('intent') == 'content_only' and not request.get('closed')
+            and completion_status(store, document)['state'] == 'completed'):
+        document['collaboration'] = {**region, 'request': {**request, 'closed': True, 'closed_reason': 'completed'}}
+    return document
 
 
 def _payload_object(payload, key, where):
@@ -708,7 +807,7 @@ def _require_mapping_links_current(mapping, known_nodes, where) -> None:
 
 
 def _check_mapping_against(
-        store, document, narrative, narrative_ref, plan_input, page,
+        store, document, narrative, narrative_ref, plan_input, page, *, require_role_mapping=True,
 ):
     """Page content_mapping must point at the adopted Narrative and real atoms.
 
@@ -716,7 +815,7 @@ def _check_mapping_against(
     by the page validator) and the attached source locators must exist in the
     stored source version.
     """
-    from .content_plan import validate_source_links
+    from .content_plan import ContentPlanError, validate_source_links
     mapping = page.get("content_mapping")
     if mapping is None:
         raise tasks_mod.EnvelopeError(
@@ -728,9 +827,9 @@ def _check_mapping_against(
         raise tasks_mod.EnvelopeError(
             f"(result)/payload/pages/{page['page_id']}/content_mapping/narrative_ref",
             "page mapping must reference the adopted current Narrative; a page cannot switch semantics")
-    known_nodes = {node["node_id"] for node in narrative.get("nodes") or []}
+    known_nodes = {node["node_id"] for node in (narrative or {}).get("nodes") or []}
     roles = {role["page_id"]: role for role in plan_input.get("page_roles") or []}
-    if mapping.get("plan_role_page_id") != page["page_id"] or page["page_id"] not in roles:
+    if mapping.get("plan_role_page_id") != page["page_id"] or (require_role_mapping and page["page_id"] not in roles):
         raise tasks_mod.EnvelopeError(
             f"(result)/payload/pages/{page['page_id']}/content_mapping/plan_role_page_id",
             "the mapping must name this page's plan role")
@@ -750,7 +849,7 @@ def _check_mapping_against(
                 store, document, link.get("source_links"),
                 f"page/{page['page_id']}/content_mapping/visible_links[{index}]/source_links",
                 cache)
-        except (ModelError, StoreError) as exc:
+        except (ModelError, StoreError, ContentPlanError) as exc:
             raise tasks_mod.EnvelopeError(
                 f"(result)/payload/pages/{page['page_id']}/content_mapping/visible_links[{index}]",
                 str(exc)) from exc
@@ -991,11 +1090,12 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
             models.validate_content_plan_semantics(plan)
             role = next((role for role in plan['input']['page_roles']
                          if role['page_id'] == page_id), None)
-            if role is None:
-                raise tasks_mod.EnvelopeError(where, "imported page has no current role mapping")
+            link = next((link for link in plan.get('page_links') or [] if link['page_id'] == page_id), None)
+            if link is None or link['page_ref'] != entry['page']:
+                raise tasks_mod.EnvelopeError(where, 'imported Page has no exact current Plan link')
             mapping = {'narrative_ref': None, 'plan_role_page_id': page_id,
                        'visible_links': [{'element_ref': atom, 'narrative_node_ids': [],
-                                         'source_links': copy.deepcopy(role.get('source_links') or [])}
+                                         'source_links': copy.deepcopy((role or {}).get('source_links') or [])}
                                         for atom in sorted(atom_ids(current))],
                        'speech_segments': []}
         if mapping.get("narrative_ref") != narrative_ref:
@@ -1127,6 +1227,9 @@ def effective_speech_kind(store, document, *, explicit_mode: str | None = None) 
             plan_input = None
     mode = speech_policy(document, plan_input=plan_input, explicit_mode=explicit_mode)["mode"]
     if mode == "none":
+        request = (document.get("collaboration") or {}).get("request") or {}
+        if request.get("intent") == "content_only" and request.get("content_intent") == "speech_only":
+            return "cue"
         return None
     return "verbatim" if mode == "verbatim" else "cue"
 
@@ -1217,8 +1320,11 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
                                                          for pid in changed_page_ids):
         raise tasks_mod.EnvelopeError("(result)/payload/diff/changed_page_ids",
                                       "must be an array of page ids")
-    _require_pages_in_scope(changed_page_ids, task, binding,
+    old_ids = {entry['page_id'] for entry in document.get('pages') or []}
+    _require_pages_in_scope([pid for pid in changed_page_ids if pid in old_ids], task, binding,
                             "(result)/payload/diff/changed_page_ids")
+    if set(changed_page_ids) - old_ids and not (binding.get('write_scope') or {}).get('allow_page_membership_change'):
+        raise tasks_mod.EnvelopeError("(result)/payload/diff/changed_page_ids", "new page membership is outside the task scope")
     proposal_by_layer: dict[str, list[dict]] = {layer: [] for layer in changed_layers}
     for index, proposal in enumerate(proposals):
         if not isinstance(proposal, dict) or not proposal.get("layer") or not proposal.get("ref"):
@@ -1234,54 +1340,229 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             raise tasks_mod.EnvelopeError(f"(result)/payload/proposals[{index}]/ref",
                                           f"referenced object is not in the store: {exc}") from exc
         proposal_by_layer[layer].append(proposal)
-    silent = sorted(layer for layer, items in proposal_by_layer.items() if not items)
+    removals = diff.get('removed_page_ids')
+    removes_copy = isinstance(removals, list) and bool(removals) and all(isinstance(pid, str) and pid for pid in removals)
+    silent = sorted(layer for layer, items in proposal_by_layer.items()
+        if not items and not (layer == 'page_copy' and removes_copy))
     if silent:
         raise tasks_mod.EnvelopeError(
             "(result)/payload/proposals",
             f"a changed layer without any substantive proposal cannot be claimed: {silent}")
 
-    page_proposals = proposal_by_layer.get("page_copy") or []
-    upserts = []
-    for proposal in page_proposals:
-        obj = store.read_object_json(proposal["ref"])
-        if obj.get("schema_version") != "deck_page_package.v2":
-            raise tasks_mod.EnvelopeError("(result)/payload/proposals",
-                                          "page_copy proposals carry complete Page v2 objects")
-        upserts.append(obj)
-    plan_input = None
-    for proposal in proposal_by_layer.get("plan") or []:
-        obj = store.read_object_json(proposal["ref"])
-        if obj.get("schema_version") != "content_plan_input.v2":
-            raise tasks_mod.EnvelopeError("(result)/payload/proposals",
-                                          "plan proposals carry the plan input to bind")
-        plan_input = obj
+    # Parse every declared layer before constructing a single committed write set.
+    single = {}
+    for layer in ("narrative", "plan"):
+        items = proposal_by_layer.get(layer) or []
+        if len(items) > 1:
+            raise tasks_mod.EnvelopeError("(result)/payload/proposals", f"{layer} has exactly one proposal; no last-wins")
+        if items:
+            single[layer] = store.read_object_json(items[0]["ref"])
+    narrative_ref = document.get("narrative")
+    narrative = store.read_object_json(narrative_ref) if narrative_ref else None
+    if "narrative" in single:
+        narrative = single["narrative"]
+        models.validate_narrative_semantics(narrative)
+        _narrative_project_check(narrative, document)
+        from .content_plan import ContentPlanError, validate_source_links
+        for node in narrative.get('nodes') or []:
+            try:
+                validate_source_links(store, document, node.get('source_links'),
+                    '(result)/payload/proposals/narrative/nodes/' + node['node_id'] + '/source_links')
+            except ContentPlanError as exc:
+                raise tasks_mod.EnvelopeError('(result)/payload/proposals/narrative', str(exc)) from exc
+        narrative_ref = proposal_by_layer["narrative"][0]["ref"]
+        from .variant_requests import require_fixed_narrative
+        require_fixed_narrative(store, document, narrative_ref)
+    known_nodes = {node["node_id"] for node in (narrative or {}).get("nodes", [])}
+    entries = {entry["page_id"]: entry for entry in document.get("pages") or []}
+    pages = {pid: copy.deepcopy(store.read_object_json(entry["page"])) for pid, entry in entries.items()}
+    changed_pages = set()
+    for layer in ("page_copy", "speech"):
+        seen_pages = set()
+        for proposal in proposal_by_layer.get(layer) or []:
+            page = store.read_object_json(proposal["ref"])
+            if page.get("schema_version") != "deck_page_package.v2":
+                raise tasks_mod.EnvelopeError("(result)/payload/proposals", f"{layer} carries complete Page v2 proposals")
+            check_page(page)
+            if page.get("content_mapping") is None:
+                raise tasks_mod.EnvelopeError("(result)/payload/proposals", "each declared Page layer carries its complete mapping")
+            pid = page["page_id"]
+            if pid in seen_pages:
+                raise tasks_mod.EnvelopeError("(result)/payload/proposals", f"duplicate {layer} page {pid}")
+            seen_pages.add(pid)
+            if pid in entries or not (binding.get('write_scope') or {}).get('allow_page_membership_change'):
+                _require_pages_in_scope([pid], task, binding, "(result)/payload/proposals/page_id")
+            if layer == "speech":
+                if pid not in entries:
+                    raise tasks_mod.EnvelopeError("(result)/payload/proposals", "speech cannot add a Page")
+                original = store.read_object_json(entries[pid]["page"])
+                before = copy.deepcopy(original); after = copy.deepcopy(page)
+                for value in (before, after):
+                    value.pop("speaker_notes", None)
+                    if value.get("content_mapping"):
+                        value["content_mapping"].pop("speech_segments", None)
+                if before != after:
+                    raise tasks_mod.EnvelopeError("(result)/payload/proposals", "speech changes only notes and speech segments")
+                segments = (page.get('content_mapping') or {}).get('speech_segments') or []
+                expected_kind = effective_speech_kind(store, document) or 'cue'
+                if (not segments or any(segment.get('estimated_seconds') is None for segment in segments)
+                        or any(segment.get('kind') not in (('cue', 'verbatim') if expected_kind == 'verbatim' else ('cue',)) for segment in segments)
+                        or expected_kind == 'verbatim' and not any(segment.get('kind') == 'verbatim' for segment in segments)):
+                    raise tasks_mod.EnvelopeError('(result)/payload/proposals/speech', 'speech requires the requested kind, complete mapping and honest per-segment estimates')
+                target = copy.deepcopy(pages[pid])
+                target["speaker_notes"] = page.get("speaker_notes", "")
+                target.setdefault("content_mapping", copy.deepcopy(page.get("content_mapping") or {}))["speech_segments"] = copy.deepcopy((page.get("content_mapping") or {}).get("speech_segments", []))
+                pages[pid] = target
+            else:
+                if "speech" not in changed_layers and pid in entries:
+                    original = store.read_object_json(entries[pid]["page"])
+                    if page.get("speaker_notes", "") != original.get("speaker_notes", ""):
+                        raise tasks_mod.EnvelopeError("(result)/payload/proposals", "page_copy cannot silently change speech")
+                pages[pid] = copy.deepcopy(page)
+            changed_pages.add(pid)
     removed = diff.get("removed_page_ids") or []
-    current_order = [entry["page_id"] for entry in document.get("pages") or []]
-    page_order = diff.get("page_order")
-    if page_order is None:
-        page_order = [pid for pid in current_order if pid not in removed]
-        page_order += [page["page_id"] for page in upserts if page["page_id"] not in current_order]
-    content_update = {
-        "input_digest": expected_digest,
-        "upsert_pages": upserts,
-        "remove_page_ids": list(removed),
-        "page_order": list(page_order),
-        "impact_summary": summary.strip(),
-    }
-    if not upserts and not removed and not changed_page_ids:
-        content_update["unchanged_reason"] = summary.strip()
+    if not isinstance(removed, list) or any(not isinstance(pid, str) or not pid for pid in removed) or len(removed) != len(set(removed)):
+        raise tasks_mod.EnvelopeError('(result)/payload/diff/removed_page_ids', 'removed pages are unique non-empty page identities')
+    if removed and "page_copy" not in changed_layers:
+        raise tasks_mod.EnvelopeError("(result)/payload/diff", "only page_copy may remove pages")
+    if set(removed) - set(entries):
+        raise tasks_mod.EnvelopeError("(result)/payload/diff", "cannot remove absent pages")
+    _require_pages_in_scope(removed, task, binding, "(result)/payload/diff/removed_page_ids")
+    for pid in removed:
+        pages.pop(pid, None)
+    old_order = list(entries)
+    order = diff.get("page_order") or [pid for pid in old_order if pid in pages] + [pid for pid in pages if pid not in entries]
+    if len(order) != len(set(order)) or set(order) != set(pages):
+        raise tasks_mod.EnvelopeError("(result)/payload/diff/page_order", "page order covers the complete resulting set exactly once")
+    scope = binding.get("write_scope") or {}
+    if set(order) != set(old_order) and not scope.get("allow_page_membership_change"):
+        raise tasks_mod.EnvelopeError("(result)/payload/diff/page_order", "page membership is outside this task's scope")
+    if set(order) == set(old_order) and order != old_order and not scope.get("allow_page_order_change"):
+        raise tasks_mod.EnvelopeError("(result)/payload/diff/page_order", "page order is outside this task's scope")
+    old_plan = store.read_object_json(document["content_plan"]) if document.get("content_plan") else None
+    plan_input = single.get("plan") or (copy.deepcopy(old_plan["input"]) if old_plan else None)
+    if plan_input is not None and plan_input.get("schema_version") == "content_plan.v2":
+        models.validate_content_plan_semantics(plan_input)
+        if plan_input["project_id"] != document["project_id"]:
+            raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Plan belongs to another project")
+        plan_input = plan_input["input"]
     if plan_input is not None:
-        def _plan_build(new_pages, _input=plan_input):
-            from .content_plan import build_v2_plan
-            return build_v2_plan(store, document, task, _input, new_pages,
-                                 narrative_ref=document.get("narrative"), mode="bound")
-        return tasks_mod._accept_content_update(
-            store, document=document, task=task, envelope=envelope, content_update=content_update,
-            result_digest=result_digest, produced_against=produced_against, staged=staged,
-            plan_build=_plan_build)
-    return tasks_mod._accept_content_update(
-        store, document=document, task=task, envelope=envelope, content_update=content_update,
-        result_digest=result_digest, produced_against=produced_against, staged=staged)
+        models.validate_schema("content_plan_input", plan_input)
+        if plan_input["page_order"] != order:
+            raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Plan and resulting page order must match")
+        for role in plan_input["page_roles"]:
+            if set(role.get("narrative_node_ids", [])) - known_nodes:
+                raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Plan references nodes outside the new Narrative")
+    elif pages:
+        raise tasks_mod.EnvelopeError("(result)/payload/proposals", "reconciled Pages need their complete Plan mapping")
+    imported_mapping = bool(old_plan and old_plan.get('mode') == 'imported_mapping' and narrative_ref is None)
+    if plan_input is not None:
+        from .content_plan import ContentPlanError, validate_plan_input_v2
+        try:
+            validate_plan_input_v2(store, document, plan_input,
+                mode='imported_mapping' if imported_mapping else 'planned',
+                imported_manuscript=old_plan.get('imported_manuscript') if imported_mapping else None,
+                narrative_ref=narrative_ref)
+        except ContentPlanError as exc:
+            raise tasks_mod.EnvelopeError('(result)/payload/proposals/plan', str(exc)) from exc
+    for page in pages.values():
+        mapping = page.get("content_mapping")
+        if mapping is None:
+            raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Page mapping is missing")
+        if "narrative" in changed_layers:
+            mapping["narrative_ref"] = narrative_ref
+        if mapping.get("narrative_ref") != narrative_ref:
+            raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Page mapping binds another Narrative")
+        check_page(page)
+        _check_mapping_against(store, document, narrative, narrative_ref, plan_input, page,
+            require_role_mapping=not imported_mapping)
+    virtual_update = {'input_digest': expected_digest, 'upsert_pages': [pages[pid] for pid in sorted(changed_pages)],
+        'remove_page_ids': list(removed), 'page_order': order, 'impact_summary': summary.strip()}
+    violation = tasks_mod.page_limit_violation({**document, 'pages': [{'page_id': pid} for pid in order]})
+    if violation:
+        raise tasks_mod.EnvelopeError('(result)/payload/diff/page_order', violation)
+    if not changed_pages and not removed:
+        unchanged_reason = diff.get('unchanged_reason', summary)
+        if not isinstance(unchanged_reason, str) or not unchanged_reason.strip():
+            raise tasks_mod.EnvelopeError('(result)/payload/diff/unchanged_reason',
+                                          'an unchanged result needs a concrete reason')
+        virtual_update['unchanged_reason'] = unchanged_reason.strip()
+    if set(changed_page_ids) != changed_pages | set(removed):
+        raise tasks_mod.EnvelopeError("(result)/payload/diff/changed_page_ids", "diff must identify exactly the substantive Page proposals and removals")
+    if task.get('content_operation_ref'):
+        if set(changed_layers) - {'page_copy', 'plan'}:
+            raise tasks_mod.EnvelopeError('(result)/payload/changed_layers', 'the editorial operation does not authorize Narrative or speech changes')
+        from .content_ops import validate_host_result
+        validate_host_result(store, document, task, virtual_update, plan_input)
+    from .candidates import is_trial, record_result
+    if is_trial(task):
+        converted = {'kind': 'compose', 'content_update': virtual_update, 'content_plan': plan_input}
+        return record_result(store, document=document, task=task,
+            updated_task={**task, 'status': 'completed', 'updated_at': tasks_mod._utc_now_iso()},
+            artifacts=[], artifact_refs=[], generation_binding=None, envelope=converted,
+            receipt_envelope=envelope, content_update=virtual_update,
+            produced_against=produced_against, result_digest=result_digest)
+    new_pages = []
+    for pid in order:
+        page = pages[pid]
+        ref = store.put_json_object(page)
+        previous = entries.get(pid)
+        entry = {"page_id": pid, "page": ref, "blueprint": None, "svg": None,
+                 "svg_preview": None, "ppt_preview": None}
+        if previous:
+            entry.update(previous); entry["page"] = ref
+            from .visual_dependencies import page_visual_digest
+            if page_visual_digest(page) != page_visual_digest(store.read_object_json(previous["page"])):
+                entry.update(svg=None, svg_preview=None, ppt_preview=None)
+        new_pages.append(entry)
+    updated = bump_revision(document, {"operation_id": task["operation_id"], "kind": "content_update",
+        "description": summary.strip(), "read_set": []})
+    updated["pages"] = new_pages
+    updated["narrative"] = narrative_ref
+    updated["content_basis"] = {"input_digest": expected_digest, "input_revision_id": task.get("input_revision_id"),
+                                "resolved_by_task_id": task["task_id"]}
+    result_refs = [entry["page"] for entry in new_pages if entries.get(entry["page_id"], {}).get("page") != entry["page"]]
+    if "narrative" in changed_layers:
+        result_refs.append(narrative_ref)
+    if plan_input is not None:
+        from .content_plan import build_v2_plan
+        mode = "imported_mapping" if old_plan and old_plan.get("mode") == "imported_mapping" and narrative_ref is None else ("bound" if new_pages else "planned")
+        plan_ref = build_v2_plan(store, document, task, plan_input, new_pages, narrative_ref=narrative_ref,
+            mode=mode, imported_manuscript=old_plan.get("imported_manuscript") if mode == "imported_mapping" else None,
+            require_role_mapping=mode != "imported_mapping")
+        updated["content_plan"] = plan_ref; result_refs.append(plan_ref)
+    if binding.get("adoption_policy") in ("proposal_only", "candidate_only"):
+        proposed = [*result_refs]
+        pending = bump_revision(document, {"operation_id": task["operation_id"], "kind": "task_update",
+            "description": "input revision proposals retained without adopting content or clearing reconciliation", "read_set": []})
+        _complete_task(store, pending, task, proposed)
+        return tasks_mod._commit_adoption(store, document=pending, base_revision=document["revision_id"],
+            task=task, envelope=envelope, produced_against=produced_against, result_digest=result_digest,
+            response={"status": "accepted", "revision_id": pending["revision_id"], "variant": "input_revision",
+                "adopted": False, "changed_layers": changed_layers, "proposal_refs": proposed,
+                'impact_summary': summary.strip(), 'new_page_hashes': {},
+                **({'unchanged_reason': virtual_update['unchanged_reason']} if 'unchanged_reason' in virtual_update else {}),
+                "result_refs": proposed, "next_action": "adopt_with_covering_decision"})
+    actual_plan_change = plan_input != (old_plan or {}).get('input')
+    if (any(entry['page'] != entries.get(entry['page_id'], {}).get('page') for entry in new_pages)
+            or order != list(entries) or narrative_ref != document.get('narrative') or actual_plan_change):
+        updated["outputs"] = dict.fromkeys(document["outputs"])
+    if task.get('content_operation_ref'):
+        from .content_ops import bind_derivation
+        bind_derivation(store, document, updated, task, {entry['page_id']: entry['page'] for entry in new_pages if entry['page_id'] in changed_pages})
+    _complete_task(store, updated, task, result_refs)
+    models.validate_document_semantics(updated)
+    return tasks_mod._commit_adoption(store, document=updated, base_revision=document["revision_id"],
+        task=task, envelope=envelope, produced_against=produced_against, result_digest=result_digest,
+        response={"status": "accepted", "revision_id": updated["revision_id"], "variant": "input_revision",
+            "adopted": True, "changed_layers": changed_layers, "narrative_ref": narrative_ref,
+            'impact_summary': summary.strip(),
+            **({'unchanged_reason': virtual_update['unchanged_reason']} if 'unchanged_reason' in virtual_update else {}),
+            'new_page_hashes': {entry['page_id']: entry['page']['sha256'] for entry in new_pages if entry['page_id'] in changed_pages},
+            "plan_ref": updated.get("content_plan"), "page_refs": [entry["page"] for entry in new_pages],
+            "result_refs": result_refs, "invalidated_outputs": [ref for key, ref in document['outputs'].items()
+                if ref and updated['outputs'].get(key) != ref],
+            "effective_scope": scope, "next_action": "continue_within_request"})
 
 
 # ---------------------------------------------------------------------------
@@ -1395,6 +1676,8 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
                                  "a framing proposal sets no direction; adopt an argument Narrative")
             if document.get("narrative") and document["narrative"] != proposal_ref:
                 invalidated.append({"ref": document["narrative"], "reason": "narrative_replaced"})
+            from .variant_requests import require_fixed_narrative
+            require_fixed_narrative(store, document, proposal_ref)
             updated["narrative"] = proposal_ref
             current_plan_ref = document.get("content_plan")
             if current_plan_ref:

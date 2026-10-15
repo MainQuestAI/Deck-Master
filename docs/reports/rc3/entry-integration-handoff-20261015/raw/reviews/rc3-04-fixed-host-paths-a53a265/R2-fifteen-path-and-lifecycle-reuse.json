@@ -1,0 +1,1175 @@
+{
+  "status": "FIFTEEN_ORIGINAL_R2_ACTUAL_OUTPUTS_REUSABLE_UNDER_PRECISE_BYTES_AND_ROUTE_CHECKS",
+  "path_count": 15,
+  "paths": [
+    {
+      "case_id": "deck-master--named",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/actual-application-record.json",
+        "sha256": "e1f38e1fef42576368cb514048da1ea8780f3f9dc6109566d0bbf1b2ce2b78ca"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.843321+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/master-authored-output.json",
+        "sha256": "917ddd566e6d534e44b6b4411895282466d521c2340222685aff572fab39fa11"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "input-update",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+          "R2_and_R3_sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6"
+        },
+        {
+          "id": "review-and-repair",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R2_and_R3_sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a"
+        },
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "content-examples",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R2_and_R3_sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "named",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-master--master",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/actual-application-record.json",
+        "sha256": "9acddd855e1dd4de6a17dd736bd1ea4608c64b39e6b7adcb6d8294a9020776ff"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.846318+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/master-authored-output.json",
+        "sha256": "c59f6e8ac0ab1bb8a34548632e9a7648f83e48d6bf765d9526e72ec8e3ca7064"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "input-update",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+          "R2_and_R3_sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6"
+        },
+        {
+          "id": "review-and-repair",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R2_and_R3_sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a"
+        },
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "content-examples",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R2_and_R3_sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "master",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-master--recovery",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/actual-application-record.json",
+        "sha256": "f7787a68a44d38c48d8cc95c0c3a57ebf8d83ffa5f6f3c676e7d8bac6154ca57"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.850853+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/master-authored-output.json",
+        "sha256": "cd618f9956ed693c21b4235476a4417b55bd3c86175c91d586da0166fe97a294"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "input-update",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+          "R2_and_R3_sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6"
+        },
+        {
+          "id": "review-and-repair",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R2_and_R3_sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a"
+        },
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "content-examples",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R2_and_R3_sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "recovery",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-content--named",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/actual-application-record.json",
+        "sha256": "6703ea70230360792a775d4e4c3a0b29682a52a3e813239bfa83730eb6a1f706"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.856106+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/content-authored-output.json",
+        "sha256": "7c2ec42aa2e627c786c86e8fa49abb9d72873b05f86a3cb1d0a5f651a7de041c"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "content-examples",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R2_and_R3_sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+        },
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "named",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-content--natural",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/actual-application-record.json",
+        "sha256": "10699f63eb5528cf6d320e5a7702ab98da281bc9cd0552f4c57e9cd51b246ecb"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.862678+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/content-authored-output.json",
+        "sha256": "66f005b59c2b825c7b7ebe69dc3c8f13fe491bc30f2764e233c67aa0814577d5"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "content-examples",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R2_and_R3_sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+        },
+        {
+          "id": "input-update",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/input-update.md",
+          "R2_and_R3_sha256": "30c8bf8331cc8f93a351aeff120d85aa49b317d608b36059e37a657fe1587ac6"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "text": "请按已策划的档案训练两页写完整逐页稿；由Host在委派内选择上一请求已完成的具体论证/Plan后写稿。保持八项交接、未知权限与错目录号两种责任、新损伤立即停阅边界；不写讲稿，不做图。",
+        "expected_skill": "deck-content",
+        "expected_content_intent": "write_only",
+        "origin": "Exact original R2 natural-path entry reused with route dependency rechecked",
+        "actual_route": {
+          "skill": "deck-content",
+          "content_intent": "write_only",
+          "explicit_name": false,
+          "authority": "routing_suggestion_only"
+        },
+        "status": "PASS",
+        "entry_reader_status": "runtime_returned_bytes",
+        "host_application": "not_recorded"
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-content--master",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/actual-application-record.json",
+        "sha256": "79cdf8e157d223b48367cf6564f121cf6cae557384af1fb243fb607be19e36ce"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.867379+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/content-authored-output.json",
+        "sha256": "9c4e4230fc65b291279314389379fdd4e40459aab4f2f63cefe163cce0914e69"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "content-examples",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R2_and_R3_sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+        },
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "master",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-content--recovery",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/actual-application-record.json",
+        "sha256": "947a1eb1373f12a83af01056a5484b4f8c9a83077f19fb5b4f06601e613c9e0e"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.878998+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/content-authored-output.json",
+        "sha256": "c11de73c596aa967a2357c954c25f10041ab11ef8154300633dabd5e040bf88e"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "content-examples",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-examples.md",
+          "R2_and_R3_sha256": "cace2f4dfb12c904bcaa4b011239cc186516510fbe90a56cfc2b35f53f6c995d"
+        },
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "recovery",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-design--named",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/actual-application-record.json",
+        "sha256": "0e1fdd6d8d8d1469981337deeeb5f8154641c0ba4dcd134d8897ae24204afa0b"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.881714+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-authored-output.json",
+        "sha256": "8f6fe4714de53f3623898e9990387299105e583df5354b079bb585226f6a416c"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "visual-reference",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+          "R2_and_R3_sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52"
+        },
+        {
+          "id": "style-calibration",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+          "R2_and_R3_sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f"
+        },
+        {
+          "id": "candidates-and-stages",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+          "R2_and_R3_sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec"
+        },
+        {
+          "id": "blueprint-svg",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+          "R2_and_R3_sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e"
+        },
+        {
+          "id": "physical-units",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R2_and_R3_sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "named",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-design--natural",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/actual-application-record.json",
+        "sha256": "28ccc396c1e7203354a982e294a9e4c897cfd832d49ed17dcf3980ac75c2e7f6"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.883502+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-authored-output.json",
+        "sha256": "0798ab8663dfc821b94af5850fc1aacd5d60cb7105327e7b3669dfca2ea6152c"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "visual-reference",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+          "R2_and_R3_sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52"
+        },
+        {
+          "id": "style-calibration",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+          "R2_and_R3_sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f"
+        },
+        {
+          "id": "candidates-and-stages",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+          "R2_and_R3_sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec"
+        },
+        {
+          "id": "blueprint-svg",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+          "R2_and_R3_sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e"
+        },
+        {
+          "id": "physical-units",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R2_and_R3_sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "text": "请给固定p2新损伤处置页出视觉方案，清楚保留停阅→保持原状→通知保管员以及保管员确认恢复；不要生图，不改正文。",
+        "expected_skill": "deck-design",
+        "expected_content_intent": null,
+        "origin": "Exact original R2 finite F7 controls",
+        "actual_route": {
+          "skill": "deck-design",
+          "content_intent": null,
+          "explicit_name": false,
+          "authority": "routing_suggestion_only"
+        },
+        "status": "PASS",
+        "entry_reader_status": "runtime_returned_bytes",
+        "host_application": "not_recorded"
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-design--master",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/actual-application-record.json",
+        "sha256": "31b25fa069126bce5918df281ee6f53cee9e030360e3c7f1e16b8a17a3a37aad"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.885267+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-authored-output.json",
+        "sha256": "e1af8f3451907991e279951ee1904f2fd495ef1d63128b7ac9b40262ca23f3a7"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "visual-reference",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+          "R2_and_R3_sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52"
+        },
+        {
+          "id": "style-calibration",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+          "R2_and_R3_sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f"
+        },
+        {
+          "id": "candidates-and-stages",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+          "R2_and_R3_sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec"
+        },
+        {
+          "id": "blueprint-svg",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+          "R2_and_R3_sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e"
+        },
+        {
+          "id": "physical-units",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R2_and_R3_sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "master",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-design--recovery",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/actual-application-record.json",
+        "sha256": "28220c2f3ca4303c900894d750ee629d18f961a946c90024cdb246c3a228cdb9"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.888762+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-authored-output.json",
+        "sha256": "d94a48d57f2d0dca984615ae920d3f452398d32b3254194413654575b8d1f3e1"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "visual-reference",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+          "R2_and_R3_sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52"
+        },
+        {
+          "id": "style-calibration",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+          "R2_and_R3_sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f"
+        },
+        {
+          "id": "candidates-and-stages",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+          "R2_and_R3_sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec"
+        },
+        {
+          "id": "blueprint-svg",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+          "R2_and_R3_sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e"
+        },
+        {
+          "id": "physical-units",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R2_and_R3_sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "recovery",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-review--named",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-application-record.json",
+        "sha256": "71594ec940e9122316a573f0728fc4442e3ddec405e0823cfccebfff1b990da0"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.891256+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/review-authored-output.json",
+        "sha256": "f78bf5f835d894a5a2b514e8eedcf02a9602d187027756aea5203a4ee03bfaaa"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "review-and-repair",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R2_and_R3_sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a"
+        },
+        {
+          "id": "physical-units",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R2_and_R3_sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        },
+        {
+          "id": "content-calibration",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-master/references/content-calibration.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/skill/deck-master/references/content-calibration.md",
+          "R2_and_R3_sha256": "bb672652bf1f0e7c1248a423af8ce432793bc0eb2fd4905c9a423ebea0a9718c"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "named",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-review--natural",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-application-record.json",
+        "sha256": "f41e821304a27a630e4e7c423a3a6b9249489c2ede30360f65410d4aa0e639e8"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.893554+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/review-authored-output.json",
+        "sha256": "0cc55aa139ff093d06585e93da2572257061ff5c7cdc069e3792fb1b54c14005"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "review-and-repair",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R2_and_R3_sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a"
+        },
+        {
+          "id": "physical-units",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R2_and_R3_sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        },
+        {
+          "id": "content-calibration",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-master/references/content-calibration.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/skill/deck-master/references/content-calibration.md",
+          "R2_and_R3_sha256": "bb672652bf1f0e7c1248a423af8ce432793bc0eb2fd4905c9a423ebea0a9718c"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "text": "只审稿：核对这份固定档案训练两页的触发条件、责任人和收益边界，说明具体证据与没验证的视觉维度；不要改稿或生图。",
+        "expected_skill": "deck-review",
+        "expected_content_intent": null,
+        "origin": "Exact original R2 natural-path entry reused with route dependency rechecked",
+        "actual_route": {
+          "skill": "deck-review",
+          "content_intent": null,
+          "explicit_name": false,
+          "authority": "routing_suggestion_only"
+        },
+        "status": "PASS",
+        "entry_reader_status": "runtime_returned_bytes",
+        "host_application": "not_recorded"
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-review--master",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-application-record.json",
+        "sha256": "907c5da234b37e696ddcf11356ef6a4f6ccf4af2a0737dd417ee8f0ed9521f90"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.896170+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/review-authored-output.json",
+        "sha256": "6a1bcfbb975faad4239fbac8ae449490b0565e774367a8f4b32ddc4bd41ce682"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "review-and-repair",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R2_and_R3_sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a"
+        },
+        {
+          "id": "physical-units",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R2_and_R3_sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        },
+        {
+          "id": "content-calibration",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-master/references/content-calibration.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/skill/deck-master/references/content-calibration.md",
+          "R2_and_R3_sha256": "bb672652bf1f0e7c1248a423af8ce432793bc0eb2fd4905c9a423ebea0a9718c"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "master",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    },
+    {
+      "case_id": "deck-review--recovery",
+      "status": "R2_ACTUAL_HOST_OUTPUT_REUSED_WITH_EXACT_UNCHANGED_DEPENDENCIES",
+      "R2_original_record": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-application-record.json",
+        "sha256": "39225e85ef56e7791c7760081677c7b41e4dd99d79fc3211364697a4317ae043"
+      },
+      "R2_original_identity": {
+        "pid": 491200,
+        "time": "2026-10-15T06:01:47.900589+00:00",
+        "host_identity": "/root/rc3_04_owner/skills_install",
+        "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+        "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+        "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+        "package_version": "1.0.0rc3",
+        "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+        "release_id": "573a46a85bf9-13e3d2708abf"
+      },
+      "R2_actual_output": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/review-authored-output.json",
+        "sha256": "45932ef0795fdd65d8405ff68bc93affb4e0a746cb6344875c9a4673fe07fec5"
+      },
+      "same_method_file_hashes": [
+        {
+          "id": "collaboration-routing",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+          "R2_and_R3_sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "source-reading",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/source-reading.md",
+          "R2_and_R3_sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/content-methods.md",
+          "R2_and_R3_sha256": "ca27c8fea86784d1236c2b5d13ff51ad8616a5f594ce8ca037742def1dc71130"
+        },
+        {
+          "id": "review-and-repair",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/review-and-repair.md",
+          "R2_and_R3_sha256": "9a047739b90f4e91ea4d27a7bf83959bb84e7e650198f21c66e09ca396499c2a"
+        },
+        {
+          "id": "physical-units",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+          "R2_and_R3_sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        },
+        {
+          "id": "content-calibration",
+          "R2_original_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-master/references/content-calibration.md",
+          "R3_same_canonical_method_path": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/skill/deck-master/references/content-calibration.md",
+          "R2_and_R3_sha256": "bb672652bf1f0e7c1248a423af8ce432793bc0eb2fd4905c9a423ebea0a9718c"
+        }
+      ],
+      "business_dependency_manifest": {
+        "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+        "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70",
+        "unchanged_package_files": 267,
+        "preserves_original_dispatch_method_release": true
+      },
+      "R3_route_dependency": {
+        "entry_mode": "recovery",
+        "route_request_executed_for_role_entry": false,
+        "reason": "Only natural mode calls route_request; explicit/master/recovery entry behavior remains unchanged."
+      },
+      "not_reexecuted_in_R3": true,
+      "limits": "Retained actual R2 release/source/Host identity, not relabeled as a new R3 execution or independent model."
+    }
+  ],
+  "F7": {
+    "evidence": "Included original exact p2 actual Design output among15",
+    "R3_exact_route_recheck": {
+      "text": "请给固定p2新损伤处置页出视觉方案，清楚保留停阅→保持原状→通知保管员以及保管员确认恢复；不要生图，不改正文。",
+      "expected_skill": "deck-design",
+      "expected_content_intent": null,
+      "origin": "Exact original R2 finite F7 controls",
+      "actual_route": {
+        "skill": "deck-design",
+        "content_intent": null,
+        "explicit_name": false,
+        "authority": "routing_suggestion_only"
+      },
+      "status": "PASS",
+      "entry_reader_status": "runtime_returned_bytes",
+      "host_application": "not_recorded"
+    },
+    "actual_R3_design_application_rerun": false
+  },
+  "F8_lifecycle": {
+    "original_report": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/R2-compatibility-lifecycle-index.json",
+    "original_report_sha256": "472f9e6cc2997ee42eb2bfeff125359f90552e6c572b8acd674715cc40af01f1",
+    "explicit_unchanged_business_modules": {
+      "install.py": {
+        "R2_sha256": "e0d5f4d335eb5148a0ccd5e07d494fe456167edbe2b8948be440f259bb766bf7",
+        "R3_sha256": "e0d5f4d335eb5148a0ccd5e07d494fe456167edbe2b8948be440f259bb766bf7"
+      },
+      "collaboration_migration.py": {
+        "R2_sha256": "411ba600b66e9f1e0552bc42dc15b79a6ace79a9781d96bb5669476bfa901751",
+        "R3_sha256": "411ba600b66e9f1e0552bc42dc15b79a6ace79a9781d96bb5669476bfa901751"
+      },
+      "project_initialization.py": {
+        "R2_sha256": "d91c7bf3da8f40db44472df3809d8af9baf49dcd816b41f8e34ebcad1597f7bc",
+        "R3_sha256": "d91c7bf3da8f40db44472df3809d8af9baf49dcd816b41f8e34ebcad1597f7bc"
+      },
+      "content_production.py": {
+        "R2_sha256": "8c2b7bae33b809d86a95b4b76812582740d553995a8478d09e93d2aa32eedbcb",
+        "R3_sha256": "8c2b7bae33b809d86a95b4b76812582740d553995a8478d09e93d2aa32eedbcb"
+      },
+      "collaboration.py": {
+        "R2_sha256": "a323b1c551ff0165d508d4509e1c603b06967efc65091dc2766448fc7928a654",
+        "R3_sha256": "a323b1c551ff0165d508d4509e1c603b06967efc65091dc2766448fc7928a654"
+      },
+      "eligibility.py": {
+        "R2_sha256": "0a472196e790ed70a6626df8d17f78dde396f343e0e148efd6eb6f4610aed31a",
+        "R3_sha256": "0a472196e790ed70a6626df8d17f78dde396f343e0e148efd6eb6f4610aed31a"
+      },
+      "tasks.py": {
+        "R2_sha256": "197e728175ebef3151b290b19650a18845e881b980c1e2ec110d937412a88ede",
+        "R3_sha256": "197e728175ebef3151b290b19650a18845e881b980c1e2ec110d937412a88ede"
+      },
+      "generation.py": {
+        "R2_sha256": "a2974611f90cc39572f9b16394733de883d6d8e6a900ead4bbc989be2c501cad",
+        "R3_sha256": "a2974611f90cc39572f9b16394733de883d6d8e6a900ead4bbc989be2c501cad"
+      },
+      "models.py": {
+        "R2_sha256": "c5cc610f9fa08eba09dfc31b589b0d893ef4dfc928bb86cd46c99e63f12d9a62",
+        "R3_sha256": "c5cc610f9fa08eba09dfc31b589b0d893ef4dfc928bb86cd46c99e63f12d9a62"
+      },
+      "store.py": {
+        "R2_sha256": "e6618576cbc51c690a035d5802e088fb2ba5060e9199e36da9bc6893aedb2421",
+        "R3_sha256": "e6618576cbc51c690a035d5802e088fb2ba5060e9199e36da9bc6893aedb2421"
+      },
+      "dependency_slices.py": {
+        "R2_sha256": "b735195a1fa9a10ad249379abd8afe16435cdeedd31f414f1a1cea0afa1c8254",
+        "R3_sha256": "b735195a1fa9a10ad249379abd8afe16435cdeedd31f414f1a1cea0afa1c8254"
+      },
+      "service.py": {
+        "R2_sha256": "8b9efc267d1f9dc00254acea5a1e1a8f02f20c752b2f608e5b5ffeb975293872",
+        "R3_sha256": "8b9efc267d1f9dc00254acea5a1e1a8f02f20c752b2f608e5b5ffeb975293872"
+      }
+    },
+    "R3_lifecycle_rerun": false,
+    "new_R3_activation_claimed": false,
+    "retains_R2_old03_new_project_and_old_Page_ledger_bytes": "Original frozen record only; no mutation."
+  },
+  "changed_ui_and_task_summary_evidence": "Not covered by retained Host paths; Root current fixed suites and independent reviewers own those deltas."
+}

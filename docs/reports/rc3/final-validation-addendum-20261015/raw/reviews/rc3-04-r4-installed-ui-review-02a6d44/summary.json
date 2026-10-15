@@ -1,0 +1,15 @@
+{
+  "status": "PASS_LIMITED_R4_INSTALLED_UI",
+  "must_fix": [],
+  "head": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+  "tree": "8a12383ab597dbd061ad53de6f5186c5343d19d4",
+  "source_tracked_files": 3935,
+  "package_files": 358,
+  "all_five_before_after_and_cross_run_identities_equal": true,
+  "case_families": 6,
+  "successful_executions": 7,
+  "preserved_review_author_failed_executions": 5,
+  "stopped_server_count": 10,
+  "all_stopped_ports_closed": true,
+  "broad_ci_model_human_desktop_acceptance": false
+}

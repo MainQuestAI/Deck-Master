@@ -1,0 +1,68 @@
+{
+  "identity": {
+    "pid": 489901,
+    "time": "2026-10-15T05:57:29.046055+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "output": {
+    "findings": [],
+    "source_unchanged": true,
+    "coverage": {
+      "source_files": {
+        "manuscript.json": "ead23b7e9462eb792bf4d2b9284f4b99951970952ff71d3823a69f64382ca132",
+        "rules.txt": "68285d1368e8f28d69c1abc55bcacee68dfae01099304416e9967c5275687da9"
+      },
+      "visible_pages": [
+        "p1",
+        "p2"
+      ],
+      "rules_read": "L1-L10 complete",
+      "actual_text_checks": [
+        "p1 branches row unknown keeps pending state and routes to permission administrator (rules L3/L7).",
+        "p1 mismatch branch/case C preserve A-21 versus A-12 and route to stockroom administrator, not title matching (L4/L9).",
+        "p1 handoff paragraph lists all eight fields; case A keeps unobserved damage unknown rather than zero (L6/L7).",
+        "p2 priority/case B stop reading before paperwork; keep condition unchanged, notify conservator, no self-repair, conservator decides resumption (L5/L8).",
+        "p2 transfer distinguishes all three owners; limits paragraph identifies synthetic rules and absent duration/damage-rate/benefit measurements (L1/L10)."
+      ]
+    },
+    "limitations": [
+      "Author and reviewer are the same actual Host; host_self, no independent review receipt.",
+      "Text/relationship inspection only; no actual image, SVG, PPTX, p:sldSz, role-specific native font runs or rendered ink clearance exists in these files.",
+      "No actual listener understanding, human professional or desktop acceptance.",
+      "The strict Runtime packet records no integrated reviewer and remains needs_reviewer; this authored model analysis is separately attached, never used to rewrite that fact."
+    ],
+    "evidence_level": "actual_host_model_text_application_on_synthetic_source; host_self; not independently verified",
+    "reviewer": {
+      "type": "host_self",
+      "actual_host_identity": "/root/rc3_04_owner/skills_install",
+      "independence_confirmed": false
+    },
+    "status": "requested_readonly_text_review_returned",
+    "runtime_machine_status": "needs_reviewer",
+    "unverified_dimensions": {
+      "blueprint_content": "not_evaluated: no image",
+      "blueprint_fidelity": "not_evaluated: no original blueprint",
+      "conversion": "not_evaluated: no PPTX",
+      "readability": "not_evaluated: no actual render",
+      "professional_human": "not_evaluated",
+      "desktop": "not_evaluated"
+    },
+    "finding_grade_basis": "F0 factual/authority/essential-boundary distortion; F1 task/argument rebuild; F2 local substantive use defect; F3 preference. No F0-F2 text defect identified in the exact covered manuscript by this same author; this is not independent acceptance.",
+    "scope_action": "No fixes, imports, project creation, Task or review/control writes.",
+    "method_applications": {
+      "collaboration-routing": "Selected strict read-only responsibility, preserved source scope and no permission inference. Recovery/master context reads never authorized writes.",
+      "source-reading": "Read all rules L1-L10 and both complete actual authored pages, binding source file SHA and concrete rules to each judgement.",
+      "content-methods": "Checked three-condition AND, distinct next-owner branches, page progression, visible qualifications and no effect claims rather than counting labels/words.",
+      "review-and-repair": "Reported exact page/row/case observations and unverified dimensions; did not manufacture final six-dimension PASS or repair content.",
+      "physical-units": "No actual PPTX exists, so p:sldSz, per-role effective runs, SVG/PPT ink padding are explicitly unverifiable; no min-font or text-coverage substitute.",
+      "content-calibration_supplemental": "Applied six shallow-draft contrasts: matrix cells distinguish actions/owners; second page adds independent damage priority; eight fields/cases provide full instructions; no empty benefit chart, no forced density or invented metrics."
+    },
+    "route_specific_behavior": "Point-named Review read the actual source only and returned findings/coverage outside it."
+  }
+}

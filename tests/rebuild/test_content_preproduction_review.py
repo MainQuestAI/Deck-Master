@@ -9,6 +9,8 @@ import pathlib
 
 import pytest
 
+from rc3_fixtures import claimed_phase_task
+
 from synthetic_review_provider import synthetic_context, accept_with_synthetic_provider, dispatch_with_synthetic_provider
 from deck_master.review_evidence import EvidenceRejected
 
@@ -149,7 +151,7 @@ def _deck(tmp_path, *, quality=None, plan_mode="bound"):
     """A project with an adopted Narrative, bound Plan and two pages."""
     project, store = _project(tmp_path, quality=quality)
     document = store.load_document()
-    task = content_production.open_phase_task(store, document, operation_id="arg", phase="argument")
+    task = claimed_phase_task(store, document, operation_id="arg", phase="argument")
     accept_with_synthetic_provider(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],
@@ -176,7 +178,7 @@ def _deck(tmp_path, *, quality=None, plan_mode="bound"):
         project, input={"proposal_ref": proposal_ref, "decision_ref": decision["decision_ref"],
                         "write_scope": _scope(layers=["narrative"])},
         base_revision=store.load_document()["revision_id"], operation_id="op-adopt")
-    task = content_production.open_phase_task(store, store.load_document(),
+    task = claimed_phase_task(store, store.load_document(),
                                               operation_id="pc", phase="page_copy")
     document = store.load_document()
     pages = [_page(store, document, "p1"), _page(store, document, "p2", notes="第二页口播。")]

@@ -1,0 +1,1968 @@
+{
+  "schema": "rc3_report_copy_manifest.v1",
+  "scope": "RC3-04 documentary handoff only; no runtime state, authority or final professional acceptance",
+  "source_runtime_sha": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+  "source_runtime_tree": "31cca075ac76877908e04f030f0c4e815d3a6268",
+  "copy_policy": "Explicit evidence field and filename allowlist. Byte-exact files only, no derived redaction in raw/. No project Store, registry, runtimeauth/HMAC, venv, binary package, customer material or source cache copied. Credential pattern and nonempty secret-field scan passed; filenames and documentary scope were also selected explicitly.",
+  "exact_copy_count": 279,
+  "exact_copy_bytes": 12469058,
+  "files": [
+    {
+      "role": "fixed_candidate_package_or_method_identity",
+      "source_path": "/workspace/work/rc3/candidate-04-a53a265/capabilities.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/candidate-04-a53a265/capabilities.json",
+      "bytes": 4791,
+      "sha256": "165ea72ded117dc9396d1f61e44b063ee26df979a4ef285eb7cc3a1a4d70ae25"
+    },
+    {
+      "role": "fixed_candidate_package_or_method_identity",
+      "source_path": "/workspace/work/rc3/candidate-04-a53a265/manifest.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/candidate-04-a53a265/manifest.json",
+      "bytes": 8753,
+      "sha256": "a338a72fb577890e77fbf6f5b0f25663f551b85d77eb04f85706a9c59c59368e"
+    },
+    {
+      "role": "fixed_candidate_package_or_method_identity",
+      "source_path": "/workspace/work/rc3/candidate-04-a53a265/method-bytes.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/candidate-04-a53a265/method-bytes.json",
+      "bytes": 51563,
+      "sha256": "9b2841ce0d8d4332a9544defb0f5d5295ae78ab03f3c19411d14966141efe7bd"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-handoff.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-adapter-external/diagnostic/r3-handoff.json",
+      "bytes": 3645,
+      "sha256": "f271032bba56526d33beb41a452532336da695aa49e587930c127f28384e2c2e"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-misc-install/handoff-six-files.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-adapter-external/diagnostic/r3-misc-install/handoff-six-files.json",
+      "bytes": 71664,
+      "sha256": "eafdc6c77c5fec297fc7a11e5a43ebff908474b7022ac0f13ffb93086fc14706"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-adapter-external/diagnostic/r3-render-five/handoff-six-files.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-adapter-external/diagnostic/r3-render-five/handoff-six-files.json",
+      "bytes": 17129,
+      "sha256": "b94e6219b11ed824c09b9c579fa97c09520b9bcef3cf09b757e92d05d3bb3bae"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/case-execution-index.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/case-execution-index.json",
+      "bytes": 8461,
+      "sha256": "dbabb6336ca039e7d6c4ae8002c8409b7a448922205bad746997d3b26f935664"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/report.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/report.md",
+      "bytes": 10658,
+      "sha256": "3d1f02f95975b10b001977fae0703684493d42f4eae511b3fa8667a1ba565117"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/review-status.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/review-status.json",
+      "bytes": 1625,
+      "sha256": "8becc90367a63d5077d558080b6b8ac806b705c6996886515bc06efb2cb8d5b7"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run1/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/run1/results.json",
+      "bytes": 10281,
+      "sha256": "3736b63466ca1500d97507455dbb3a104dbe386ead8a25fb730f62c47236baed"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run2/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/run2/results.json",
+      "bytes": 12880,
+      "sha256": "a367c011bcbe8a9afc5cbebf9d9e89491957e3f69191ad7bad6517f198ab1551"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run3/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/run3/results.json",
+      "bytes": 8053,
+      "sha256": "823c02f19ddc2844a19bfcdf22298e9b9a23772063a2b7eb0b6abb7ca5080c74"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run4/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/run4/results.json",
+      "bytes": 8145,
+      "sha256": "96815ec4f78e0cd59a9f455b8e0c1766df32c1c4000b38ccf096c892428d26f6"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run5/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/run5/results.json",
+      "bytes": 14649,
+      "sha256": "ae187f5c1009c1e145dfa7bd3a7f933a3da507c77e1a60f25f27c186a88b0fc6"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run6/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/run6/results.json",
+      "bytes": 10494,
+      "sha256": "de8a17753d28b3a060b9cfadc9fac35b77356e7b56e39da303203c563bec25c8"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run7/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/run7/results.json",
+      "bytes": 48181,
+      "sha256": "642b91ec61febb7199bf69a4a74f9ef17cdb622bd508a532777e7e6960c31212"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round1-7a8578b/run8/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round1-7a8578b/run8/results.json",
+      "bytes": 14437,
+      "sha256": "29b80f34d188366f6d0db9638e0e8b9e9dab167ebf3aec6a13ee39955a56d902"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/case-execution-index.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/case-execution-index.json",
+      "bytes": 3553,
+      "sha256": "d833d88b232dad0752dc2cfc179bbbf8d328a7bad4079bb6f75136f5cf64e98f"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/immutable-originals-summary.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/immutable-originals-summary.json",
+      "bytes": 8676,
+      "sha256": "ebb773387a8c71ef8a0fcfa43e4f90353db53aa22b900c83aa93b54b08ec209b"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/report.md",
+      "bytes": 10725,
+      "sha256": "ae12afd0a74d20abfc6864bff2db3d046c660c9c72c670df3754fc6625f23c87"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/review-status.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/review-status.json",
+      "bytes": 1176,
+      "sha256": "a87500ebb621753e809d4326a1f5adfa64b188b06d80ec81a8f6248844714969"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/run1/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/run1/results.json",
+      "bytes": 9474,
+      "sha256": "8974ce36cc219bec3db147182c07c1986eb38a9a7c1c7feffb1d8cabad30c2a3"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/run2/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/run2/results.json",
+      "bytes": 32999,
+      "sha256": "a8547c0fd6359a69a1617f4cd8c1d6b19521b0780d0068d9ed881364b0f91b4d"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/run3/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/run3/results.json",
+      "bytes": 18988,
+      "sha256": "60bc970138c593f53baaad232cfe695f2e64561a6b3c7c19d28a947c0038e404"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/run4/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/run4/results.json",
+      "bytes": 13624,
+      "sha256": "b75f1329982f1dd98bc4dfacea731a618d6c9d0d66d743f092a89c102f9eaf20"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round2-573a46a/run5/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round2-573a46a/run5/results.json",
+      "bytes": 1934,
+      "sha256": "18c3b0001106ab7aaf68dbe62eb0e72de682d1a3f601f486c79dccda36da5ff6"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/case-execution-index.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/case-execution-index.json",
+      "bytes": 895,
+      "sha256": "6c03898d773a7304faa24bfcf755ab943c434d25ac6f2d8af01b740476bb2c8e"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/immutable-originals-summary.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/immutable-originals-summary.json",
+      "bytes": 998,
+      "sha256": "76e7f348d933785748c1c98a776e642b2f84ecd2e27e7dd0f0e015cf70eceeeb"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/r2-r3-byte-delta.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/r2-r3-byte-delta.json",
+      "bytes": 13424,
+      "sha256": "be3e3a8ba033622031a41eb8bcd3ead1f0bfdd671d0dbf8b6d2cb962f9063c2e"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/report.md",
+      "bytes": 6520,
+      "sha256": "cd12d8ff76b506b55a0ce80cc6442f83e27e8e39372511f7f0c7759cbaecf4d6"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/review-status.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/review-status.json",
+      "bytes": 912,
+      "sha256": "b235b2d208bb92655db71267efb0723382de4ffcfaa46c3d71fbc5cf462c4de4"
+    },
+    {
+      "role": "independent_installed_behavior_actual_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/run1/results.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/run1/results.json",
+      "bytes": 27957,
+      "sha256": "aa4e7d0c4a5056f7ca7952a7544fb1ca74c0fb108a855e1c2229d89ebab4bb80"
+    },
+    {
+      "role": "independent_installed_behavior_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-behavior-review-round3-a53a265/test-delta-readonly-review.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-behavior-review-round3-a53a265/test-delta-readonly-review.md",
+      "bytes": 3088,
+      "sha256": "4d0821d6088096c4fa6c458edf5f2ae72d3a641f1cd1961d258e238d8a046f2c"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-delivery-pause-race-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-delivery-pause-race-result.json",
+      "bytes": 50603,
+      "sha256": "f3f1ccf1cea0fad3ad0cb0393e941c02be03538b85942a0c2b2c52b78b212854"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-delivery-pause-race.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-delivery-pause-race.log",
+      "bytes": 190,
+      "sha256": "91acc0226ddf60da87348f63773d50a17449f6ac68c734e28a561e6827d52d27"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-external-gap-status-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-external-gap-status-result.json",
+      "bytes": 4820,
+      "sha256": "4086e78afa5294eb713949d23729656d62bbf77e7e5313d7c662cbb4064b795d"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-external-gap-status.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-external-gap-status.log",
+      "bytes": 93,
+      "sha256": "87a096ca13801ce225f5fa52dcba51195a72dfaa12791674b58faf74ead6ba4c"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-import-scope-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-import-scope-result.json",
+      "bytes": 18419,
+      "sha256": "37f9fb202eb080316481f4ed5dbc70960fc2160099b0070beb1eea032d7baf78"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-import-scope.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-import-scope.log",
+      "bytes": 135,
+      "sha256": "1c3725a6ac7479cde8e61d8d9eb563048b90c698336c6b5f593d6d4eb75841d6"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-input-revision-source-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-input-revision-source-result.json",
+      "bytes": 22259,
+      "sha256": "d2c529eb85c2ef8eb67f66b5c2a3ba481f6f14bb31da6f63b2342febf2afd5be"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-input-revision-source.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-input-revision-source.log",
+      "bytes": 66,
+      "sha256": "dfe0bbeb2fb2a6bb0b770cbbb695d4681f8c53f594c1d30f66a6851d8cbdf6ef"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-request-source-replay-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-request-source-replay-result.json",
+      "bytes": 14209,
+      "sha256": "7beaf6eca0d11c0ac98a5174c13df87a43abc6335060754f65d04ea8897a44b0"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe-request-source-replay.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe-request-source-replay.log",
+      "bytes": 327,
+      "sha256": "677cbcb555ca5112592f0258fdce95fd4005c3a5f3b4a9cf7ceb5ea847aa6726"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe_delivery_pause_race.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe_delivery_pause_race.py",
+      "bytes": 3464,
+      "sha256": "c0f919688279e679d2a0b5cbb73e54956cd088b4064259ea14e8080b94cd4a14"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe_external_gap_status.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe_external_gap_status.py",
+      "bytes": 1075,
+      "sha256": "f51a6e5c87c50747a079c874a5571b3ac2d9c1ba9610dfbe1e9d392b374f6468"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe_import_scope.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe_import_scope.py",
+      "bytes": 3091,
+      "sha256": "7138430aa6fc9123c1b1391db369b55e444e20ef4e501509411b029b14eb5197"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe_input_revision_sources.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe_input_revision_sources.py",
+      "bytes": 3015,
+      "sha256": "5a485ce30daaadae8a317b0f365d4f5c9218e27315d73ffd691235da5c743760"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/probe_request_source_replay.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/probe_request_source_replay.py",
+      "bytes": 2597,
+      "sha256": "ceb4a52dcda353b4c470886cc1b66d92ab89a4811557812c8a685d013bdc8571"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/report.md",
+      "bytes": 13189,
+      "sha256": "002d53531ff471f2e408c79988653c753f5efd782093f5ef16bf87554c84eab3"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round1-7a8578b/review-status.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round1-7a8578b/review-status.json",
+      "bytes": 815,
+      "sha256": "1ede0e10b915522ce459fda2ae4cb4987cdc78454045374614cb270d0d0616ae"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/F9-readonly-router-confirmation.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/F9-readonly-router-confirmation.json",
+      "bytes": 659,
+      "sha256": "8cdeecc1a27042278dbe329ebcf57ce41f4e8f80d1a398882e0bd9d6fa63225f"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/execution-record.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/execution-record.md",
+      "bytes": 5394,
+      "sha256": "38aa2376ba66017b233c58422b4900ad26d27e2ef5088002b205bbea844929aa"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/original-probe-verdicts.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/original-probe-verdicts.json",
+      "bytes": 772,
+      "sha256": "ac5f347f805fc6d0a6e20b720990c876df6c82b935242c9e9f083a039788a808"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-delivery-pause-race-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-delivery-pause-race-result.json",
+      "bytes": 46148,
+      "sha256": "ccaafc5355bc15f5c25f884d9fea31f75fd8660ffe337ea34e1fcc019c3edcb7"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-external-gap-status-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-external-gap-status-result.json",
+      "bytes": 5506,
+      "sha256": "ed6c7e4ec0d8b6f3f982fd3494a6f5609f94652925992ef6387da59779c110ec"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-import-scope-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-import-scope-result.json",
+      "bytes": 17158,
+      "sha256": "39da02ffa605ac845eff73bab9529f212120d068ddc33ecb8dd06cf3bbc4713f"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-input-revision-source-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-input-revision-source-result.json",
+      "bytes": 16012,
+      "sha256": "e33f2a8d4e31df5a55a68ca61138bf344648661dd9af65602beef017c62aeacb"
+    },
+    {
+      "role": "original_failure_or_fixed_rerun_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe-request-source-replay-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe-request-source-replay-result.json",
+      "bytes": 19244,
+      "sha256": "8d2b2219fd994087aa8111dfb8a9c5ee5a3d7641c347326580d913a0cf6ef8b9"
+    },
+    {
+      "role": "fixed_original_failure_rerun_log",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_delivery_pause_race-rerun.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_delivery_pause_race-rerun.log",
+      "bytes": 185,
+      "sha256": "60917b301632f6f04b1f3508e1a040a3c0201d95176456c242a2fca2a62cdcde"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_delivery_pause_race.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_delivery_pause_race.py",
+      "bytes": 3464,
+      "sha256": "81c803ba3b3e858227f010803e0795865bbac73bb5baa53a727b706fa7f69e6a"
+    },
+    {
+      "role": "fixed_original_failure_rerun_log",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_external_gap_status-rerun.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_external_gap_status-rerun.log",
+      "bytes": 93,
+      "sha256": "a5223bc4c550340cb88dd39cbd4d717b935b8194121b9f39b70c419e7494aca8"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_external_gap_status.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_external_gap_status.py",
+      "bytes": 1075,
+      "sha256": "f51a6e5c87c50747a079c874a5571b3ac2d9c1ba9610dfbe1e9d392b374f6468"
+    },
+    {
+      "role": "fixed_original_failure_rerun_log",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_import_scope-rerun.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_import_scope-rerun.log",
+      "bytes": 256,
+      "sha256": "9161e39172114f5f5682e384c930cbca4dbe69d5941193a361df02862d7b1913"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_import_scope.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_import_scope.py",
+      "bytes": 3091,
+      "sha256": "7138430aa6fc9123c1b1391db369b55e444e20ef4e501509411b029b14eb5197"
+    },
+    {
+      "role": "fixed_original_failure_rerun_log",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_input_revision_sources-rerun.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_input_revision_sources-rerun.log",
+      "bytes": 307,
+      "sha256": "799a5f2f467ca9d9a2e16a65affee1a52b4dd20b5b3edb667ac9690b717e845b"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_input_revision_sources.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_input_revision_sources.py",
+      "bytes": 3015,
+      "sha256": "5a485ce30daaadae8a317b0f365d4f5c9218e27315d73ffd691235da5c743760"
+    },
+    {
+      "role": "fixed_original_failure_rerun_log",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_request_source_replay-rerun.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_request_source_replay-rerun.log",
+      "bytes": 328,
+      "sha256": "5f0ae94b4e3d1125d4d24e3c15c692cc9624769fd5262886838c245178c44ad9"
+    },
+    {
+      "role": "original_failure_reproduction_script",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/probe_request_source_replay.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/probe_request_source_replay.py",
+      "bytes": 2597,
+      "sha256": "ceb4a52dcda353b4c470886cc1b66d92ab89a4811557812c8a685d013bdc8571"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/report.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/report.md",
+      "bytes": 12214,
+      "sha256": "4d4d9e617cdde8288655dfe54b4ad336dbf25d5da535371049f596e9d600d349"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round2-573a46a/source-identity-verification.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round2-573a46a/source-identity-verification.json",
+      "bytes": 319,
+      "sha256": "f8c8cf0e9f4f39f1cfd13a1a2d5d1a949958d7a6410224ee251025e51ad649a9"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/assertion-delta.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/assertion-delta.json",
+      "bytes": 16959,
+      "sha256": "f3614e904c99d408079eb288594cb4bc66a7ffba46c59e4f2cb143b0a4133fb1"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/execution-record.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/execution-record.md",
+      "bytes": 2163,
+      "sha256": "a55b22f5ac8e4113b89cdc15a816847af2ae618c2144c6cf48e4151442a30dcd"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/focused-summary.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/focused-summary.log",
+      "bytes": 98,
+      "sha256": "dfe2b721a090df50b67651ee3f18ea29bf11acda61e8526bb45d738e3ec88049"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/prior-report-integrity.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/prior-report-integrity.json",
+      "bytes": 599,
+      "sha256": "ef31f8bde44a300a1536d7a255690a5d71600baf543ceefec8ba711287c319b4"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/probe-f9-c6-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/probe-f9-c6-result.json",
+      "bytes": 12470,
+      "sha256": "555262ebee991a3f467949fbf82de2d1518e087d9add23d6021215b565a77f2e"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/probe-f9-c6.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/probe-f9-c6.log",
+      "bytes": 54,
+      "sha256": "cce078c3d3977e02f484c8340ec6a273ddb6359a9cb5a315c43fc4ba81dd04d1"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/probe_f9_and_c6.py",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/probe_f9_and_c6.py",
+      "bytes": 5676,
+      "sha256": "6db1bbbab6a8af4922a1fdafaa721b87c4725cd2a647c4cefeca4647c1a1ed3e"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/r2-closure-reuse.json",
+      "bytes": 2750,
+      "sha256": "9f64ec6f6a13caabcec49ec19d7bd3cf9230b1dcaa3ad90d8d4878b51ad1bde3"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/report.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/report.md",
+      "bytes": 12810,
+      "sha256": "8b332bd82b009c05b399c8c29ca97160d1a7645b0a5b56d38ecf98a5e3b3c191"
+    },
+    {
+      "role": "independent_code_report_or_finite_probe",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-code-review-round3-a53a265/source-identity-verification.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-code-review-round3-a53a265/source-identity-verification.json",
+      "bytes": 319,
+      "sha256": "90ff82b72ddc2791d42e2325f25dcba2269d3e995c90764b2b33330d9e723dbd"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/F7-exact-original-and-routing-controls.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/F7-exact-original-and-routing-controls.json",
+      "bytes": 8026,
+      "sha256": "300330d2b1dbf9fff971fafe398ffe91f83c84d95bdd14df35bf84f3e56b2fba"
+    },
+    {
+      "role": "actual_host_fixed_handoff",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/R2-FROZEN-B-HANDOFF.json",
+      "bytes": 5944,
+      "sha256": "50af7364494ffbc92944b13ba8e4be7b6049fc91e79e50d940f37041b4d21b35"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/R2-actual-host-path-index.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/R2-actual-host-path-index.json",
+      "bytes": 7800,
+      "sha256": "6c1cb160aaec5df0a3bcaea02c90304d52c73d6e6fedcda8867c772a519f417d"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/actual-application-record.json",
+      "bytes": 5293,
+      "sha256": "79cdf8e157d223b48367cf6564f121cf6cae557384af1fb243fb607be19e36ce"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/content-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/content-authored-output.json",
+      "bytes": 26662,
+      "sha256": "9c4e4230fc65b291279314389379fdd4e40459aab4f2f63cefe163cce0914e69"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/initial-read.json",
+      "bytes": 148895,
+      "sha256": "7f8ded8feb12a9e460b9950ae1209021e67cff7e29c562c6cedde9bd6402e440"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/normal-completion.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/normal-completion.json",
+      "bytes": 33387,
+      "sha256": "fa027f328f3692bea841d2b65d9e4ce83c6eb0d994aba8043da3a89f55756fc6"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/speech-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--master/speech-accepted.json",
+      "bytes": 8230,
+      "sha256": "3f6e9d79ee337709cdd82f00b02374ea34cb67de16e6070aac6980815eacb70f"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/actual-application-record.json",
+      "bytes": 6469,
+      "sha256": "6703ea70230360792a775d4e4c3a0b29682a52a3e813239bfa83730eb6a1f706"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/argument-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/argument-accepted.json",
+      "bytes": 8010,
+      "sha256": "c00bd2309e145d958df6f84fcc0051ac49fec6a7ecde0014eb988a4cffa8c3a6"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/argument-workorder-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/argument-workorder-read.json",
+      "bytes": 165756,
+      "sha256": "cde00692885506be226c2cd998ce8bfddac5dbd527bfd214679fd4398b95fc74"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/content-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/content-authored-output.json",
+      "bytes": 24919,
+      "sha256": "7c2ec42aa2e627c786c86e8fa49abb9d72873b05f86a3cb1d0a5f651a7de041c"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/framing-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/framing-accepted.json",
+      "bytes": 6412,
+      "sha256": "5fe6d241202ddcaefe8874cbd31dbee7c0e789354d422d9a3bc90293e0aa4a1d"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/initial-read.json",
+      "bytes": 165449,
+      "sha256": "6e3cf521ae4c6826c81e45957aaee1986f17adc6072686907f8cf779130bf944"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/normal-completion.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--named/normal-completion.json",
+      "bytes": 9726,
+      "sha256": "9217b54a1431423a4315d475d73721eb21af7f18b6daf8761ce319a0e84f674e"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/actual-application-record.json",
+      "bytes": 7469,
+      "sha256": "10699f63eb5528cf6d320e5a7702ab98da281bc9cd0552f4c57e9cd51b246ecb"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/content-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/content-authored-output.json",
+      "bytes": 91596,
+      "sha256": "66f005b59c2b825c7b7ebe69dc3c8f13fe491bc30f2764e233c67aa0814577d5"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/initial-read.json",
+      "bytes": 71603,
+      "sha256": "592f716cf070fce4265485b930f7db1415c48d31a1fb221602b7bed0382e9363"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/normal-completion.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/normal-completion.json",
+      "bytes": 98662,
+      "sha256": "917d8baab064c87043344192f927bd32f087817e6fae226ee050b8d60d2baa7a"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/page-copy-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/page-copy-accepted.json",
+      "bytes": 8761,
+      "sha256": "22e2802752f4b6c40ffb99f1298fa746c05fa0ec3ca8bb0ac97e4c140aa0e6fd"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/page-copy-workorder-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/page-copy-workorder-read.json",
+      "bytes": 172487,
+      "sha256": "0dfd3b11e0d94ff2ee3a539ad2adebbcce506d44cec376dd96d872f5b3647fff"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/select-prior-plan-0-adoption.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/select-prior-plan-0-adoption.json",
+      "bytes": 1632,
+      "sha256": "d2a0f32d326bcb76d6501f26f2eebfbd97ff38c400d5faf331fded9a275ed42f"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/select-prior-plan-1-adoption.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--natural/select-prior-plan-1-adoption.json",
+      "bytes": 1635,
+      "sha256": "1e25d1ebe2730e363f4d873dbf3ce3eaedcd1bd33e0f5d0e090972b731539838"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/actual-application-record.json",
+      "bytes": 8571,
+      "sha256": "947a1eb1373f12a83af01056a5484b4f8c9a83077f19fb5b4f06601e613c9e0e"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/after-argument-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/after-argument-read.json",
+      "bytes": 171922,
+      "sha256": "8bfb7e2a308c83bfda0abe5d47d21c46412bc3d113bd8c0fe69da112d14fc798"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-0-adoption.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-0-adoption.json",
+      "bytes": 1632,
+      "sha256": "e50f4204cf29b4a117357353bbdca49da86d9f72a5e7386d8d0dd08d9db2f5e1"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-1-adoption.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-1-adoption.json",
+      "bytes": 1635,
+      "sha256": "1ebbd5a1067cb0313384ec1a2f72446563ffda8121f94051ef4b1f150d1cfdea"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-accepted.json",
+      "bytes": 8016,
+      "sha256": "e181c702f625986881c06ca51b1a3113bd880f43ff2378c745537f64bc1bdd01"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-workorder-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/argument-workorder-read.json",
+      "bytes": 165902,
+      "sha256": "7a74daba5a22ac0b8d5d66b1d31338d8b82e5fb9ccadd114406a4d3f01144b4a"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/before-interruption-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/before-interruption-read.json",
+      "bytes": 165769,
+      "sha256": "dd2e9148655d49a28a6d8e7b6f7195ef48597290d638147dbcdaf7081dc0024e"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/content-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/content-authored-output.json",
+      "bytes": 95521,
+      "sha256": "c11de73c596aa967a2357c954c25f10041ab11ef8154300633dabd5e040bf88e"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/framing-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/framing-accepted.json",
+      "bytes": 6714,
+      "sha256": "50d38c58ab95bf335f5b118c0d0e72606a4c9be7e67cde7579f5a06ca6d51ec6"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/initial-read.json",
+      "bytes": 165595,
+      "sha256": "87e4eeef996a14e0fef04970050f4b12fdb0832bed02d860e5e5daaa7194a174"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/normal-completion.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/normal-completion.json",
+      "bytes": 102573,
+      "sha256": "0c0665ff8be7a584167693503ff82259b29f7e7477ee423ddf901054abc09257"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/page-copy-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/page-copy-accepted.json",
+      "bytes": 8770,
+      "sha256": "b428224434abb38b18efbe0d1dc0d637045fd91327a80fcf275c527f89342c8f"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/resumed-current-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-content--recovery/resumed-current-read.json",
+      "bytes": 165769,
+      "sha256": "a88ff986dd07e7a25ad530893fc8ea1c497448b84d1a8a5ef58beb7db35c13af"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/actual-application-record.json",
+      "bytes": 6916,
+      "sha256": "31b25fa069126bce5918df281ee6f53cee9e030360e3c7f1e16b8a17a3a37aad"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-authored-output.json",
+      "bytes": 19274,
+      "sha256": "e1af8f3451907991e279951ee1904f2fd495ef1d63128b7ac9b40262ca23f3a7"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-runtime-proposal.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/design-runtime-proposal.json",
+      "bytes": 25197,
+      "sha256": "88f328fac4b3c71a5d155421389fd950efcc354b43a1a9dc38bf01c348b1bda6"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--master/initial-read.json",
+      "bytes": 53877,
+      "sha256": "a003b9dc8fdc37f0ea0d540ee4714204f0912c115a457b295d64db1433870a56"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/actual-application-record.json",
+      "bytes": 6920,
+      "sha256": "0e1fdd6d8d8d1469981337deeeb5f8154641c0ba4dcd134d8897ae24204afa0b"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-authored-output.json",
+      "bytes": 11713,
+      "sha256": "8f6fe4714de53f3623898e9990387299105e583df5354b079bb585226f6a416c"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-runtime-proposal.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/design-runtime-proposal.json",
+      "bytes": 18749,
+      "sha256": "3ea717530b0a0062dc09afd5db8585e45eb2bbce7ed3287042210d6310387c0d"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--named/initial-read.json",
+      "bytes": 53589,
+      "sha256": "c2e89ef383f84ed1aa8ce71a80890449927ecf97d2feab3b9a6dd51acec63d8e"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/actual-application-record.json",
+      "bytes": 6913,
+      "sha256": "28ccc396c1e7203354a982e294a9e4c897cfd832d49ed17dcf3980ac75c2e7f6"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-authored-output.json",
+      "bytes": 10265,
+      "sha256": "0798ab8663dfc821b94af5850fc1aacd5d60cb7105327e7b3669dfca2ea6152c"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-runtime-proposal.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/design-runtime-proposal.json",
+      "bytes": 17838,
+      "sha256": "6926a297ad9dcf40537a8bc04f7ee4a1c1550d94a5f63fa0c73dfa8bb077248a"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--natural/initial-read.json",
+      "bytes": 53685,
+      "sha256": "e6d29ac822762e29fc8d1f7897caaba2b24c2f0a47624d34ad517121e526dd18"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/actual-application-record.json",
+      "bytes": 8346,
+      "sha256": "28220c2f3ca4303c900894d750ee629d18f961a946c90024cdb246c3a228cdb9"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/before-interruption-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/before-interruption-read.json",
+      "bytes": 53531,
+      "sha256": "38bd8ccd8270c620ee5a79472ad68d606fa59f0f33fae5e910c7856369029445"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-authored-output.json",
+      "bytes": 11713,
+      "sha256": "d94a48d57f2d0dca984615ae920d3f452398d32b3254194413654575b8d1f3e1"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-runtime-proposal.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-runtime-proposal.json",
+      "bytes": 18679,
+      "sha256": "0c187e886da7af03843599481a1d141585d5ef136b0850498c6a69f6bb77a282"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/initial-read.json",
+      "bytes": 53531,
+      "sha256": "18cefdc42456579f6167988f7a7d9616e28231ae99421e980fce0f7bc88a43f1"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-before-application-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-before-application-read.json",
+      "bytes": 53531,
+      "sha256": "92d6dd192deea2786a5584fb5e196403a020c9fa5825ce8061f7a4fd2fc45a52"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "bytes": 53531,
+      "sha256": "42aef60959a4d7cbe8d058ac4250af4c95b07c00b9707b0e8f7cdbc2b9095f5b"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/actual-application-record.json",
+      "bytes": 7697,
+      "sha256": "9acddd855e1dd4de6a17dd736bd1ea4608c64b39e6b7adcb6d8294a9020776ff"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/argument-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/argument-accepted.json",
+      "bytes": 8010,
+      "sha256": "d07575bef5e5dbf5f0d8833a2368a8d321389b03a42029b51b842ff74cd086e7"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/argument-workorder-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/argument-workorder-read.json",
+      "bytes": 91963,
+      "sha256": "a06225a38ba59d9d9c450f99767160e1dbbebc4ee42afad7c0e5676cffba5056"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/framing-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/framing-accepted.json",
+      "bytes": 6412,
+      "sha256": "4efdfc6e81e54408584f903b1429f95ca6719b080dd732cd8d0a11938d6b8521"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/initial-read.json",
+      "bytes": 91936,
+      "sha256": "392bdb4d668b741ada9f380d593a094aa420c5074875009bd1b8cbceb300130f"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/master-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/master-authored-output.json",
+      "bytes": 3488,
+      "sha256": "c59f6e8ac0ab1bb8a34548632e9a7648f83e48d6bf765d9526e72ec8e3ca7064"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/normal-completion.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--master/normal-completion.json",
+      "bytes": 9726,
+      "sha256": "1d505e883b0924b066b3bfac25dda1ab53982c4eebb57829deb931e24758c654"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/actual-application-record.json",
+      "bytes": 7704,
+      "sha256": "e1f38e1fef42576368cb514048da1ea8780f3f9dc6109566d0bbf1b2ce2b78ca"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/argument-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/argument-accepted.json",
+      "bytes": 8008,
+      "sha256": "f79d6c094221d77613908a7b7d7ff0bc805d54037ba04d30d51ef2f119bdec54"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/argument-workorder-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/argument-workorder-read.json",
+      "bytes": 92013,
+      "sha256": "b26fdf58fe7dcd109db4dfaf75cdae067abcc68ba744de3868f066dabc61f303"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/framing-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/framing-accepted.json",
+      "bytes": 6410,
+      "sha256": "8b6173b39526472fbe4fefc8d28c07b3eed953d613b924303ad7fc1b324f387e"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/initial-read.json",
+      "bytes": 91986,
+      "sha256": "751d01b79d38ef3bad528ac7d51b99cce7b22176f98aa1c717d1154f4492db7f"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/master-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/master-authored-output.json",
+      "bytes": 3460,
+      "sha256": "917ddd566e6d534e44b6b4411895282466d521c2340222685aff572fab39fa11"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/normal-completion.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--named/normal-completion.json",
+      "bytes": 9722,
+      "sha256": "71633939cb4a5557b7ae9baf8cad0db45bb8f25df8889c860f2064d0168a6f39"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-actual-refusal.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-actual-refusal.json",
+      "bytes": 1337,
+      "sha256": "47ce7b6878dea90f09b182712d59d64061e544755276fc25db3120d9dd151eb7"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-exact-reread-exception.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--natural/F9-exact-reread-exception.json",
+      "bytes": 2073,
+      "sha256": "f6f4ba9f509b137d14d09f9fcdc16383c2e1ad01350642d9b535a72a8ba9491b"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/actual-application-record.json",
+      "bytes": 8927,
+      "sha256": "f7787a68a44d38c48d8cc95c0c3a57ebf8d83ffa5f6f3c676e7d8bac6154ca57"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-accepted.json",
+      "bytes": 8014,
+      "sha256": "31dab61dd5faf029f96b908a5f793617839e40a40151240c73239505fb4279d0"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-workorder-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/argument-workorder-read.json",
+      "bytes": 92007,
+      "sha256": "78caf7d53bbd0bcdbe7a25a62b4f2d36f1566824efb7029ba8d75996a687d008"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/before-interruption-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/before-interruption-read.json",
+      "bytes": 91812,
+      "sha256": "42fea380e74149f963fc56e3e3d7191c38a080d31ceab05052a741c8339d4ab6"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/framing-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/framing-accepted.json",
+      "bytes": 6711,
+      "sha256": "7dcd705fd2cc7f8d519a332e34f904d7f1fe3440fc53cc99121ac0ab590eb45b"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/initial-read.json",
+      "bytes": 91980,
+      "sha256": "88cb64a05de50108e8f31d833f49be6a11655628cf6b08b154e23aa480eac841"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/master-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/master-authored-output.json",
+      "bytes": 3532,
+      "sha256": "cd618f9956ed693c21b4235476a4417b55bd3c86175c91d586da0166fe97a294"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/normal-completion.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/normal-completion.json",
+      "bytes": 9734,
+      "sha256": "c43da394f9b1ffed132113df8571a4c9e6c9b0371a44ec3275df5e992ed85fcf"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/resumed-current-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-master--recovery/resumed-current-read.json",
+      "bytes": 91812,
+      "sha256": "1d3853f05d7592a6c900759533f7c05d7401b69b71e84ae3402be8e7b8bfa6c2"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-application-record.json",
+      "bytes": 7617,
+      "sha256": "907c5da234b37e696ddcf11356ef6a4f6ccf4af2a0737dd417ee8f0ed9521f90"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-complete-source-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/actual-complete-source-read.json",
+      "bytes": 67367,
+      "sha256": "8645b872f912ec2b1f1058d922264dc3c63d855e7602b7c42ed9b5a046a874f4"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/initial-read.json",
+      "bytes": 66693,
+      "sha256": "2d5c75945e041ab695a2156c02c04c7f61e10859bf14f9a34a1b5de2a439ce7d"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/review-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/review-authored-output.json",
+      "bytes": 4853,
+      "sha256": "6a1bcfbb975faad4239fbac8ae449490b0565e774367a8f4b32ddc4bd41ce682"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/strict-machine-packet.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/strict-machine-packet.json",
+      "bytes": 22065,
+      "sha256": "0717ea8262eae836c06f221cfa2ea4199dbddf267ddb07bfb4debf256e46f947"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/supplemental-skill-method-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--master/supplemental-skill-method-read.json",
+      "bytes": 8320,
+      "sha256": "e12a9f093b4394c20e47abcdaf48ac96ae3530062002bdffd24156c4ca864063"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-application-record.json",
+      "bytes": 7594,
+      "sha256": "71594ec940e9122316a573f0728fc4442e3ddec405e0823cfccebfff1b990da0"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-complete-source-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/actual-complete-source-read.json",
+      "bytes": 67367,
+      "sha256": "01aa4515fac38a73a4b711700f16dd035b7469e7cf3688d33655f593ba6feb35"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/initial-read.json",
+      "bytes": 66679,
+      "sha256": "e8ecf2cc531bba17401a9260690ff70187f143d5e61fa13407153fa4749cdf63"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/review-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/review-authored-output.json",
+      "bytes": 4825,
+      "sha256": "f78bf5f835d894a5a2b514e8eedcf02a9602d187027756aea5203a4ee03bfaaa"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/strict-machine-packet.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/strict-machine-packet.json",
+      "bytes": 22065,
+      "sha256": "0717ea8262eae836c06f221cfa2ea4199dbddf267ddb07bfb4debf256e46f947"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/supplemental-skill-method-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--named/supplemental-skill-method-read.json",
+      "bytes": 8320,
+      "sha256": "e12a9f093b4394c20e47abcdaf48ac96ae3530062002bdffd24156c4ca864063"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-application-record.json",
+      "bytes": 7611,
+      "sha256": "f41e821304a27a630e4e7c423a3a6b9249489c2ede30360f65410d4aa0e639e8"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-complete-source-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/actual-complete-source-read.json",
+      "bytes": 67367,
+      "sha256": "488deac120f4f1742b807cfbedf360a4a0fdeb69e838c146c99a26e4df2420ee"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/initial-read.json",
+      "bytes": 66816,
+      "sha256": "001f3965d744076c7e7486437568e20373b94aa3d2c900a8ae633cda68ac77ac"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/review-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/review-authored-output.json",
+      "bytes": 4831,
+      "sha256": "0cc55aa139ff093d06585e93da2572257061ff5c7cdc069e3792fb1b54c14005"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/strict-machine-packet.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/strict-machine-packet.json",
+      "bytes": 22065,
+      "sha256": "0717ea8262eae836c06f221cfa2ea4199dbddf267ddb07bfb4debf256e46f947"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/supplemental-skill-method-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--natural/supplemental-skill-method-read.json",
+      "bytes": 8320,
+      "sha256": "e12a9f093b4394c20e47abcdaf48ac96ae3530062002bdffd24156c4ca864063"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-application-record.json",
+      "bytes": 9057,
+      "sha256": "39225e85ef56e7791c7760081677c7b41e4dd99d79fc3211364697a4317ae043"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-complete-source-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/actual-complete-source-read.json",
+      "bytes": 67367,
+      "sha256": "f986c183122c1c966ab1ec5e17681fa281908e5aabab6b723b721bb682a2a454"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/before-interruption-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/before-interruption-read.json",
+      "bytes": 66689,
+      "sha256": "2eaf39c50a374cf54395361cdf59327e7b97468ca3c7f358edf60d8a51ef1a59"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/initial-read.json",
+      "bytes": 66689,
+      "sha256": "503032ff71cb4f466457042bd83a8d5be2553b8717ec11e258f4b864da80293a"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/resumed-before-application-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/resumed-before-application-read.json",
+      "bytes": 66689,
+      "sha256": "e9d10725dc778599b29932361089342a40e69a6f58d940c804b2db33d8a22f92"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/resumed-current-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/resumed-current-read.json",
+      "bytes": 66689,
+      "sha256": "d05837485be8e4dd45fafcdfb927da233262098a45806735b37816e0897fd394"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/review-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/review-authored-output.json",
+      "bytes": 4871,
+      "sha256": "45932ef0795fdd65d8405ff68bc93affb4e0a746cb6344875c9a4673fe07fec5"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/strict-machine-packet.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/strict-machine-packet.json",
+      "bytes": 22065,
+      "sha256": "0717ea8262eae836c06f221cfa2ea4199dbddf267ddb07bfb4debf256e46f947"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/supplemental-skill-method-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-review--recovery/supplemental-skill-method-read.json",
+      "bytes": 8320,
+      "sha256": "e12a9f093b4394c20e47abcdaf48ac96ae3530062002bdffd24156c4ca864063"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/R2-compatibility-lifecycle-index.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/R2-compatibility-lifecycle-index.json",
+      "bytes": 11530,
+      "sha256": "472f9e6cc2997ee42eb2bfeff125359f90552e6c572b8acd674715cc40af01f1"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollback-four-links.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollback-four-links.json",
+      "bytes": 4526,
+      "sha256": "56f1482f5400ced50c724f405ebe463c5da69251d9a9d416b2f90deb02280c00"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollforward-four-links.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollforward-four-links.json",
+      "bytes": 4988,
+      "sha256": "6147125e6cf01fae23606f39beebd34433abd7263326d7f948fcd804f0314f76"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollforward-resumed-content.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/compatibility/lifecycle/actual-rollforward-resumed-content.json",
+      "bytes": 56618,
+      "sha256": "97cdf0535612e3f29f066d4064f5008ccfff4931eee857dfec0c20ac730d03c6"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/four-actual-process-recoveries.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/four-actual-process-recoveries.json",
+      "bytes": 3081,
+      "sha256": "e7b24f396689deba14f27d70c3c3adf8f26f0fbf61f698f2dba75d80dcd60726"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/setup.stderr",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-573a46a/setup.stderr",
+      "bytes": 1339,
+      "sha256": "ed4726be89d9068764c53664402765d93045c4b07e0377339ca0092ab23a9a59"
+    },
+    {
+      "role": "actual_host_fixed_handoff",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/R1-FROZEN-B-HANDOFF.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-7a8578b/R1-FROZEN-B-HANDOFF.json",
+      "bytes": 2213,
+      "sha256": "5955e58b0990bee2d1abf830c29d3f3a8dccea7bd9a0e6829232dad1bd3553b9"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/R1-actual-host-path-index.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-7a8578b/R1-actual-host-path-index.json",
+      "bytes": 7367,
+      "sha256": "3e44cc69c333d5dcdab6a007f80fba650e349bef8426feec665e501584b3441d"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/cases/deck-design--natural/config.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-7a8578b/cases/deck-design--natural/config.json",
+      "bytes": 561,
+      "sha256": "e2447e2a1da3b5dda4bc845051dc333e1f23a2900b57dcc69b848ef2f007a036"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/compatibility/R1-compatibility-lifecycle-index.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-7a8578b/compatibility/R1-compatibility-lifecycle-index.json",
+      "bytes": 6281,
+      "sha256": "c340253d5fc25243772709b24b6df29bfb0ec34885363e88fdab633cccd3b9f0"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/compatibility/lifecycle/rollforward-F8-blocked-current.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-7a8578b/compatibility/lifecycle/rollforward-F8-blocked-current.json",
+      "bytes": 51264,
+      "sha256": "f4adddb9825caff0b6e57ae03fb068de8ab66a3520d93382208cb33877afbb39"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-7a8578b/compatibility/lifecycle/rollforward-continue.stderr",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-7a8578b/compatibility/lifecycle/rollforward-continue.stderr",
+      "bytes": 2281,
+      "sha256": "0fd970720af0c573ab618f5d1bc3786b62914d5b1f1b335160f6458f39b0fb79"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R2-R3-unchanged-package-dependencies.json",
+      "bytes": 62757,
+      "sha256": "48c082927fa7ac3baf0df57dcb452f32fb70daab88ec3614053840c35c1c1c70"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R2-fifteen-path-and-lifecycle-reuse.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R2-fifteen-path-and-lifecycle-reuse.json",
+      "bytes": 90033,
+      "sha256": "3d481fb5cec0e81caadb5f6ae46813bb9aa2cf6500c6295604b0ca5327888d8c"
+    },
+    {
+      "role": "actual_host_fixed_handoff",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R3-FROZEN-B-HANDOFF.json",
+      "bytes": 5482,
+      "sha256": "529556a28aec86c288f89b8251f4b855382d4c09bdc6a7be12dc1cbf389a1e8f"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-combined-sixteen-path-coverage.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R3-combined-sixteen-path-coverage.json",
+      "bytes": 1543,
+      "sha256": "1718db3b0b2b30b767253bad5baaa5dc940a3daabcac47183dca89b01d360b2f"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/R3-finite-routing-controls.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/R3-finite-routing-controls.json",
+      "bytes": 22304,
+      "sha256": "eaef757982f4ccae6243331d10292df5fa0a2c4684880bba2a4a47b1fb90fd53"
+    },
+    {
+      "role": "actual_host_responsibility_application",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/actual-application-record.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/actual-application-record.json",
+      "bytes": 16171,
+      "sha256": "b66971ecc11f2651aabd24e47feecd335d5fd6db251ddf033038700f51b52a21"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-accepted.json",
+      "bytes": 7994,
+      "sha256": "28c1019abc9fab8ec0b9bc8a2ac2fcf329b078d1a6eb3db87b55fc1d9dcf7e11"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-authored.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-authored.json",
+      "bytes": 19568,
+      "sha256": "bab4c4668c2a96574dd91d028499ee55e8855b7dd2f806fbc296de5ea3aadc4f"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-envelope.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-envelope.json",
+      "bytes": 20962,
+      "sha256": "289d74d36ea91b94ff0ea9ea2953bd7621c9126ff08e97ad7dd46fa8593a934b"
+    },
+    {
+      "role": "actual_host_full_current_method_read",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/argument-workorder-read.json",
+      "bytes": 165177,
+      "sha256": "5f6718dc8ff3cf596746138bbfd5a1c90c6bff39fc299cad742bb77389fa4fc9"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-accepted.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-accepted.json",
+      "bytes": 6396,
+      "sha256": "8033d9315b1617c109e09be9b5250f2b49f80f51c30e5309d6ac91c7f77367ef"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-authored.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-authored.json",
+      "bytes": 6510,
+      "sha256": "845a0bc058f3ed74ef644976975ee8de18501c546a7b83c35e745391de063dea"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-envelope.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/framing-envelope.json",
+      "bytes": 7218,
+      "sha256": "c503a8cbe71aa99892d6d2f222dd2b93f3fdb443d2a68bbc4ccc1bd3ba97a44f"
+    },
+    {
+      "role": "actual_host_full_current_method_read",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/initial-read.json",
+      "bytes": 164870,
+      "sha256": "9e31bd14a7e37de388b142f70285008b28e39ba1e67dfc134cf4dcc6b9a3241f"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-authored-output.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-authored-output.json",
+      "bytes": 6383,
+      "sha256": "aca15ed6fe6f667ad62e2f8473871d721ce5dad8922c7db4c5eb4c21d9bc8144"
+    },
+    {
+      "role": "actual_host_full_current_method_read",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-entry-guidance-read.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/master-entry-guidance-read.json",
+      "bytes": 22711,
+      "sha256": "4f096654bca3e5e288dd155d8e496fd4d552a60ad5d7988966d72dd93baca073"
+    },
+    {
+      "role": "actual_host_method_read_or_authored_output_or_runtime_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/normal-completion.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/cases/deck-master--natural/normal-completion.json",
+      "bytes": 9712,
+      "sha256": "21824c6dc42b1f32aae45c5b926d385da9fbf5cc21cde186a9def1bf0d89c328"
+    },
+    {
+      "role": "actual_host_original_failure_or_precise_reuse",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-a53a265/changed-python-function-identity.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-fixed-host-paths-a53a265/changed-python-function-identity.json",
+      "bytes": 1116,
+      "sha256": "480d3c835d38fc2ef6f0d614aabc85a149cb61c6ba36bd4fc6cc951f4d1dc5c4"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round1-7a8578b/evidence-manifest.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round1-7a8578b/evidence-manifest.json",
+      "bytes": 7808,
+      "sha256": "a67bf754f6c24e342607a2bfd6d7f0be8648a0dd627c4fada382c809e01e83da"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round1-7a8578b/evidence/05-confirmed-import-compare.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round1-7a8578b/evidence/05-confirmed-import-compare.png",
+      "bytes": 142631,
+      "sha256": "e8372d45f27f72c4647d08592fb1222d759e1de6f855a03b986fbed34353f8ae"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round1-7a8578b/evidence/08-empty-project-new-request-scope.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round1-7a8578b/evidence/08-empty-project-new-request-scope.png",
+      "bytes": 132350,
+      "sha256": "b2ce9f25fbd19954ae265fd23b084fa8ce93c737936a95163685b0ffc20e10d2"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round1-7a8578b/review.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round1-7a8578b/review.json",
+      "bytes": 5763,
+      "sha256": "ddcd7f08673a3187af296f30d1bb318d07016e83dc4d608c765d8e386d112d1b"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round1-7a8578b/review.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round1-7a8578b/review.md",
+      "bytes": 9601,
+      "sha256": "bc10fe863171b7ee65b38dcb400504183c09154d4bbd32ad89e2d8926ee9b43b"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round2-573a46a/evidence-manifest.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round2-573a46a/evidence-manifest.json",
+      "bytes": 10775,
+      "sha256": "40d7bf33daaba33ae7e7406553d1d69f9e2c8beb9ceaf595a71be2aa4cc7e368"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round2-573a46a/evidence/01-launcher-manuscript-preview.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round2-573a46a/evidence/01-launcher-manuscript-preview.png",
+      "bytes": 120276,
+      "sha256": "30e9db3d74f19a5fb5d0117ab20ecb0ac770b6f91539b40a81b15bfe7272519b"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round2-573a46a/evidence/12-http409-readable-downloadable-report.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round2-573a46a/evidence/12-http409-readable-downloadable-report.png",
+      "bytes": 181549,
+      "sha256": "2b5ea753138efaef0ef318909341cb51bc79c3535477351328bb60c8f4db148a"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round2-573a46a/evidence/15-hardlimit-with-supplied-outline-refused.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round2-573a46a/evidence/15-hardlimit-with-supplied-outline-refused.png",
+      "bytes": 156908,
+      "sha256": "5cd302fd6184b9dfcef7ac0d50bda512bf53be85b741858b5cd04ebf16a150d6"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round2-573a46a/review.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round2-573a46a/review.json",
+      "bytes": 7122,
+      "sha256": "b52d558be3ea325fcd45e06140e95e064a7a0952c35cd7542e68828cc03bd0af"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round2-573a46a/review.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round2-573a46a/review.md",
+      "bytes": 10321,
+      "sha256": "3d7a044a793a547c3432956869e3a82daec1d54a7404f81ae43859fbb08086b0"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence-manifest.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence-manifest.json",
+      "bytes": 8121,
+      "sha256": "2e146280347beaf6d398978676cbd0d8967cc362d9f82c4206ddfd043a8c634f"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/01-completed-request-overview.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/01-completed-request-overview.png",
+      "bytes": 126212,
+      "sha256": "e01a94327b090a98c2917255b9989ed8644e6e5f1e5fa15dbb281cf4310c1c32"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/02-current-input-update-safe-summary.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/02-current-input-update-safe-summary.png",
+      "bytes": 111605,
+      "sha256": "9745487d6150636b58ef9c09d654b6d66cde3da71985339e0fab99b89ab12e31"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/03-input-task-summary-narrow.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/03-input-task-summary-narrow.png",
+      "bytes": 81619,
+      "sha256": "8b75e43cd236e466c3e252b3cb00f053370513648035a6e74cf9831308cf3552"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/04c-native-details-actual-full-instruction.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/04c-native-details-actual-full-instruction.png",
+      "bytes": 128788,
+      "sha256": "8a4d3f2e6a1dcafb27278191217b136c2760e605951efa73adfc8855e5079aaa"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/05-read-completed-copy.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/05-read-completed-copy.png",
+      "bytes": 136558,
+      "sha256": "ffcf2f0912d762b1856b6b9f7fe779b002d561d3a9fa5d33fa8bc26fd6dbaad1"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/06b-new-current-request-not-completed.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/06b-new-current-request-not-completed.png",
+      "bytes": 116822,
+      "sha256": "385e2317717e3354b55fa58db2216084d3bccf3457290f83a342692ab5419664"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/07-known-hard-limit-safe-explanation.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/07-known-hard-limit-safe-explanation.png",
+      "bytes": 157358,
+      "sha256": "e8f99d9bea4f5ec1cee4666656842f3ed13194abfa9c32e075b6aad50cf91527"
+    },
+    {
+      "role": "actual_ui_original_failure_or_fixed_screenshot",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/09-other-error-safe-generic-fallback.png",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/09-other-error-safe-generic-fallback.png",
+      "bytes": 81145,
+      "sha256": "fc365affa8717750753fbb0cdfa0492b160e80a74691c17a5c2f98ff3acadc90"
+    },
+    {
+      "role": "actual_installed_ui_identity_or_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/actual-http-task-detail.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/actual-http-task-detail.json",
+      "bytes": 2450,
+      "sha256": "2cd143ae5648d00fa8868c977de3cb3012c728c8002e4f3180a760bd86903195"
+    },
+    {
+      "role": "actual_installed_ui_identity_or_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/installed-origin.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/installed-origin.json",
+      "bytes": 475,
+      "sha256": "83282bb1d92a6815ca83383906b9ec7475d4b43d02e229ca98f35584dfe29be8"
+    },
+    {
+      "role": "actual_installed_ui_identity_or_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/r2-reuse-boundary.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/r2-reuse-boundary.json",
+      "bytes": 2850,
+      "sha256": "97e2a77608ab2ddf1247617014265199eaf68eee16166242a0ee07985c9977a6"
+    },
+    {
+      "role": "actual_installed_ui_identity_or_result",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/summary-api-case.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/evidence/summary-api-case.json",
+      "bytes": 15266,
+      "sha256": "fb0e0449aecec070edbdbdc2338bf7ecc5c509ffc57b076d515e1c16366e8436"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/review.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/review.json",
+      "bytes": 6551,
+      "sha256": "c0f8571971b9b84969e43bd805227659de8d1b07bccd0b32db8e2f77ded7be77"
+    },
+    {
+      "role": "independent_actual_installed_ui_report",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-installed-ui-review-round3-a53a265/review.md",
+      "bytes": 8790,
+      "sha256": "19693ba1fc6e0294741bbb1987a9420e55689f42fdde4635432dec6c969fb250"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r3-entry-a53a265.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-owner-r3-entry-a53a265.json",
+      "bytes": 16571,
+      "sha256": "7278bb52650e2ee31420c05d13170c225e2fda0213f92c8127a7bfcb5e24c550"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/c6-summary-final.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-owner-r3/c6-summary-final.log",
+      "bytes": 98,
+      "sha256": "8a8087ec1a9d7ac3a3e24f4d4f2cf4dc5d8454a9ee0514098651a820529b6109"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/f9-routing.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-owner-r3/f9-routing.log",
+      "bytes": 99,
+      "sha256": "e9f0d8f23502e884ed3aad3dfed483ede8c1d9b799c72a6bc952936854e0a462"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/failure-domain-map.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-owner-r3/failure-domain-map.json",
+      "bytes": 5698,
+      "sha256": "f615549e3d0e449a4e36038bde42ffd9348c2de8dc4b02dbe61ba491780e6f39"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/final-static-checks.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-owner-r3/final-static-checks.json",
+      "bytes": 664,
+      "sha256": "cdc74189de947687c877be5d80602e3f2419fbcc7fa6f3f4096219d21d60d1b8"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-owner-r3/owner-focused.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-owner-r3/owner-focused.json",
+      "bytes": 3493,
+      "sha256": "a9f90709251b9570fa3cedabe43d1e9602b6340adb663c99cea5555c0d3ed988"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-r3-design-notes-fixtures/handoff.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-r3-design-notes-fixtures/handoff.json",
+      "bytes": 6053,
+      "sha256": "7a63d6421bfb2b3f048069245b330e2887f73e3c7756de36927aa5bfe85bb438"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/install-admission.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/install-admission.json",
+      "bytes": 1065,
+      "sha256": "cabb48801254617b0ff6e4cb383d0e5908756e606236d4438953c7ef7b1737b7"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/install-first-attempt-environment-error.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/install-first-attempt-environment-error.json",
+      "bytes": 692,
+      "sha256": "ca36422e9896c63be09b217ed011f49c22e78e416e409676c287410f45474646"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/render-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/render-result.json",
+      "bytes": 2556,
+      "sha256": "4f72b46612c0641c36f5f838ff31b02034a783e4c18ab3d2a0640b90de6baa50"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/render.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/render.log",
+      "bytes": 75000,
+      "sha256": "96c3bbe500d6de824c8476833753e86c1bfaf8ebe98fa346a8c4c0a7a54bafbb"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/root-regression-summary.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/root-regression-summary.json",
+      "bytes": 946,
+      "sha256": "b389483e504d3a56a9f3b13d6826d82d0e4901d9ffb4ea460641c5852f13e47e"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/ruff.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/ruff.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/strict-installed-byte-audit.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/strict-installed-byte-audit.json",
+      "bytes": 147297,
+      "sha256": "0063a2bf4fd515c6269d1c834c27097448502e064cdd6a3f15504e45ed702cc4"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/unit-result-expanded.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/unit-result-expanded.json",
+      "bytes": 164072,
+      "sha256": "11ee59d07b55fbffc402742c8288a75a9691e4a94b4cae0f985ca89c97bd9d9c"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-573a46a/unit.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-573a46a/unit.log",
+      "bytes": 945416,
+      "sha256": "58c74a03bbcc05424ebc74cc6ca00068516bcb0e6d00504bfe89b1d49941c8b1"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/install-admission.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/install-admission.json",
+      "bytes": 1811,
+      "sha256": "0e405989f61b1292c855ab5e24e66678a6687033b1de4e2796bba0f566f5c2c0"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/render-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/render-result.json",
+      "bytes": 5997,
+      "sha256": "fd20176fd9583721c1b01e4ad27de2ec01d8015e9935eb26b5cba2b8f83fb9fc"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/render.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/render.log",
+      "bytes": 141948,
+      "sha256": "e16ff1db2413885e2faf1545ca4b1b4410483a37cad1ac342b673431ca23c104"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/root-regression-summary.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/root-regression-summary.json",
+      "bytes": 853,
+      "sha256": "41eccae1ff4190b128a97b4c2a9daae44e28ae5a51d826c9b8f13a15e27fc5fc"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/ruff.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/ruff.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/strict-installed-byte-audit.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/strict-installed-byte-audit.json",
+      "bytes": 144681,
+      "sha256": "71155724f8be65c4048187bfb7a10cfa986e7211362dd396f11571daa96768fd"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/unit-result-expanded.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/unit-result-expanded.json",
+      "bytes": 83563,
+      "sha256": "eba9757a3fa0d433281983195fda3576fe64893510454cc22e1fefb8316b8e15"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/unit-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/unit-result.json",
+      "bytes": 76733,
+      "sha256": "fc504587f2040939f04241e21fa76f31052b1e4b6305434f8fcc61eac3e8a2db"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-7a8578b/unit.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-7a8578b/unit.log",
+      "bytes": 2647099,
+      "sha256": "a09557431f47a1b50ff89e2ddd84d73c3e17fb9f99be80dc3087cd3f632d0ad9"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/install-admission.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/install-admission.json",
+      "bytes": 998,
+      "sha256": "1acd9b80b2f52b3e874eaec4a0039608bf8d2a02fc262cab17b4195323d396e0"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/render-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/render-result.json",
+      "bytes": 444,
+      "sha256": "26fa3013257024023040f3374fce7236854fe02b140513a8a703b12f23e15a65"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/render.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/render.log",
+      "bytes": 4288,
+      "sha256": "f378031faaa0affe9eee1e2e55f1b9100f45af092652688cda666a95e42a2a76"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/root-regression-summary.json",
+      "bytes": 863,
+      "sha256": "f7f42dd03e2cf6546b4bf15b252762c02a394108628f655573449ab31b769b32"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/ruff.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/ruff.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/strict-installed-byte-audit.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/strict-installed-byte-audit.json",
+      "bytes": 145149,
+      "sha256": "9209595b80d313436dd9bbd98443466f8e0da5668e55517271db907afc3bcb4c"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/unit-result.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/unit-result.json",
+      "bytes": 423,
+      "sha256": "807df938df19461a642884c2e74a03a9fa75dbdbaddfa61f96abe03700c967ed"
+    },
+    {
+      "role": "fixed_root_install_or_regression_original",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-root-validation-a53a265/unit.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-root-validation-a53a265/unit.log",
+      "bytes": 13892,
+      "sha256": "0353df1f913ec9f881b14a4c85154a502881280c4803307e5d41f823bc03f14a"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-studio-browser/r3-live/artifact-relocation.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-studio-browser/r3-live/artifact-relocation.json",
+      "bytes": 3298,
+      "sha256": "78fecf50760e80ee40e67954d3656b95bd7d6d0637b4564e0a4234debacfc86b"
+    },
+    {
+      "role": "owner_or_worker_diagnostic_identity_not_fixed_pass",
+      "source_path": "/workspace/work/rc3/reviews/rc3-04-studio-browser/r3-live/handoff.json",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/reviews/rc3-04-studio-browser/r3-live/handoff.json",
+      "bytes": 23801,
+      "sha256": "6dd328d661425d37ab3cb974133564c36c3b24c481270d5bae1926f18b973fbe"
+    },
+    {
+      "role": "original_actual_browser_C6_failure_not_fixed_snapshot",
+      "source_path": "/workspace/work/rc3/t04/c-r3-residual-10.log",
+      "copied_path": "docs/reports/rc3/entry-integration-handoff-20261015/raw/t04/c-r3-residual-10.log",
+      "bytes": 7621,
+      "sha256": "fbca289595bff9c9d19cb35f4bb2ef88d83385b139b885a30f3ef5a1cc442592"
+    }
+  ],
+  "derived_navigation": "README/report/maps/identity/index JSON are navigation, not raw original evidence and not runtime decisions.",
+  "final_head_ci": "PENDING_FINAL_HEAD",
+  "human_owner_listener_professional_desktop": "NOT_RUN_DEFERRED",
+  "private_key_or_token_copied": false
+}

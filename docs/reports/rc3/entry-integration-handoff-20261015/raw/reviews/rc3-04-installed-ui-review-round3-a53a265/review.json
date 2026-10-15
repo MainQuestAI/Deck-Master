@@ -1,0 +1,108 @@
+{
+  "status": "PASS_LIMITED_R3_UI_DELTA",
+  "head": "a53a265321ca6bb15f347bbe23b5143fe8b7378c",
+  "tree": "31cca075ac76877908e04f030f0c4e815d3a6268",
+  "product_python": "/workspace/work/rc3/candidate-04-a53a265/prefix/.deck-master/releases/a53a265321ca-01177541b9a1/venv/bin/python",
+  "scope": [
+    "UI-O1 completed-request overview and later real active request",
+    "UI-O2 concrete safe hard-limit error plus other-error negative",
+    "R3-C6 real inputs_update Task safe main summary, unchanged raw instruction and unknown-append fallback"
+  ],
+  "checks": [
+    {
+      "check": "UIO1_completed_panel_returns_requested_content",
+      "status": "PASS",
+      "detail": "Actual new installed write_only project; original stage matrix still honestly records missing blueprint/SVG/PPT, while requested content is complete."
+    },
+    {
+      "check": "UIO1_read_action_opens_real_copy",
+      "status": "PASS",
+      "detail": "Actual read button opens the existing first-page visible copy; no generated content or production Task is claimed."
+    },
+    {
+      "check": "UIO1_new_request_cannot_reuse_completed_state",
+      "status": "PASS",
+      "detail": "A real explicit new speech request replaces the completed request. Explicit reload/current-version selection shows the in-progress state and factual artifact gaps; no stale completion masks it. CAS base proves the intervening read did not change the business revision."
+    },
+    {
+      "check": "C6_real_input_update_workorder",
+      "status": "PASS",
+      "detail": "Actual installed public service.create + service.inputs_update changes audience and creates its real workorder; no direct Store Task fixture insertion."
+    },
+    {
+      "check": "C6_visible_summary_keeps_user_terms_and_removes_known_wrapper",
+      "status": "PASS",
+      "detail": "Actual Studio main-list .run-requirement at1440/390 preserves user API, Page v2, proposal Ref and the complete original reason, stripping only exact recognized core wrapper text. Narrow summary is intentionally a concise/truncated row, not a claim every word is painted at once."
+    },
+    {
+      "check": "C6_raw_HTTP_and_immutable_Task_unchanged",
+      "status": "PASS",
+      "detail": "Actual HTTP task detail and original stored Task retain the entire unchanged instruction after browser inspection."
+    },
+    {
+      "check": "C6_full_instruction_still_available_in_details",
+      "status": "PASS",
+      "detail": "Actual browser native details click showed the full original instruction; screenshot04c was visually inspected. Repeated expanded-state persistence is not asserted; some additional captures show the details collapsed again."
+    },
+    {
+      "check": "C6_unknown_append_falls_back_without_dropping_words",
+      "status": "PASS",
+      "detail": "Read-only in-memory copy of the actual Task plus one unknown sentence returns the entire instruction. It is not a newly stored Task or a second actual browser workload."
+    },
+    {
+      "check": "UIO2_actual_limit_reason_safe_and_form_retained",
+      "status": "PASS",
+      "detail": "Real three-page source with supplied outline max null still refuses under actual hard limit2; visible explanation gives actual count/limit/correction, with no internal path/key/command."
+    },
+    {
+      "check": "UIO2_other_error_is_not_misclassified_as_page_limit",
+      "status": "PASS",
+      "detail": "Actual different failure uses nonexistent private parent: visible existing readable fallback says select a new project folder under an existing writable directory. No arbitrary-exception universality or language-translation claim."
+    },
+    {
+      "check": "affected_narrow_geometry",
+      "status": "PASS",
+      "detail": "Actual task-list and hard-limit error surfaces do not horizontally overflow at390×844. Full original viewport/a11y matrix is outside scope."
+    },
+    {
+      "check": "no_browser_app_pageerror",
+      "status": "PASS",
+      "detail": "One wrong private role locator timeout is recorded separately as a probe-author error, not an app pageerror or product fix."
+    },
+    {
+      "check": "R2_F4_F5_reuse_boundary_is_exact",
+      "status": "PASS",
+      "detail": "Nine relevant adapter/import/service/collaboration/intake files match R2. Only method_resources.py, overview.js, launcher-ui.js, run_desk.py differ. R2 eighteen executions remain bound to their original R2 identity."
+    },
+    {
+      "check": "snapshot_before_after_identical",
+      "status": "PASS",
+      "detail": "Fixed source3622 tracked entries+HEAD/tree/clean, installed381 entries and both source files retain the captured bytes/modes/mtimes as applicable."
+    },
+    {
+      "check": "installed-package_before_after_identical",
+      "status": "PASS",
+      "detail": "Fixed source3622 tracked entries+HEAD/tree/clean, installed381 entries and both source files retain the captured bytes/modes/mtimes as applicable."
+    },
+    {
+      "check": "external_before_after_identical",
+      "status": "PASS",
+      "detail": "Fixed source3622 tracked entries+HEAD/tree/clean, installed381 entries and both source files retain the captured bytes/modes/mtimes as applicable."
+    }
+  ],
+  "must_fix": [],
+  "evidence_level": "L1_SYNTHETIC_REAL_INSTALLED_HTTP_CHROMIUM",
+  "not_run": [
+    "R2 complete eighteen-case rerun, F4/confirmed import/CAS/variant/professional/recovery matrices; relevant original evidence is only reused within exact delta boundary",
+    "Four Skills sixteen actual Host outputs or full source/unit/render/browser/recovery CI",
+    "New model/native-image author/reviewer calls or effect/human/desktop acceptance",
+    "Actual stored Task with unknown appended text shown in browser: unknown-suffix control is an explicit in-memory read-only projection only",
+    "Sustained expanded-details state across repeated refresh/keyboard/capture; actual full raw details was observed in04c, other collapsed captures remain raw rather than being relabelled open",
+    "Full keyboard traversal, screen reader, all viewport or a11y compliance"
+  ],
+  "probe_author_errors": [
+    "Wrong get_by_role(group,name=› 制作要求与执行身份) timed out; native details summary is not that named group. Error and corrections remain in driver transcript.",
+    "A private DOM error lookup initially selected the first empty field-error element; later all nonempty errors were inspected and captured. No product message was lost."
+  ],
+  "card_acceptance": "NOT_CLAIMED; other code/behavior/F9/broad suite/CI remain Root-owned"
+}

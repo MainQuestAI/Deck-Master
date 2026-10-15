@@ -27,12 +27,44 @@ async function request(path, options) {
     if (response.status === 403) token = null;
     const failure = new ApiError(typeof error === 'string' ? error : error.message || '本次操作未完成，当前输入仍保留。',
       error.code || 'request_failed', response.status, error.field);
-    failure.details = typeof error === 'object' ? error : {}; throw failure;
+    failure.path = typeof error === 'object' ? error.path || error.field || null : null;
+    failure.field ||= failure.path;
+    // New collaboration envelopes nest facts in details; old workbench errors
+    // keep them directly beside code/field. Preserve both forms and any readable
+    // partial report even when admission returns HTTP 409.
+    failure.details = typeof error === 'object' ? {...error, ...(error.details || {})} : {};
+    failure.result = payload.result ?? null;
+    failure.envelope = payload;
+    failure.recoverable = error.recoverable;
+    throw failure;
   }
   return payload;
 }
 export function readableError(error) {
   const labels = {
+    migration_required: '此项目需要先确认升级控制记录。已有稿件保留；升级不会批准制作或授予额度。',
+    request_paused: '当前请求已暂停。稿件和报告仍可阅读；明确恢复后才能继续本次制作。',
+    request_closed: '当前请求已结束。已有产物保留，请按新的明确要求开始下一请求。',
+    authorization_revoked: '本次授权已撤回。已有稿件和调用记录保留；旧版本也不能恢复该授权。',
+    needs_reviewer: '还需要符合要求的审阅者。当前稿件和可读报告保留，请查看审阅范围与缺口。',
+    professional_review_required: '还缺所选实际文件的专业复核。稿件和审阅包仍可阅读，请核对文件与复核范围。',
+    scope_exceeded: '本次动作超出明确范围。输入仍保留，请核对所选页、层与用途。',
+    authority_insufficient: '当前授权不足以执行本次动作。输入仍保留，请查看实际范围与下一责任。',
+    authority_channel_unavailable: '当前连接不能核实所需授权。输入仍保留，请通过支持的指令通道继续。',
+    budget_exhausted: '当前制作额度已用完。已有结果保留，不会自动重试或刷新额度。',
+    budget_unknown: '已有调用费用尚待核实。已有稿件保留，请先核实原调用。',
+    basis_stale: '本次依据已过期。输入和固定比较仍保留，请读取当前状态后重新确认影响。',
+    binding_stale: '任务绑定的依据已过期。原稿与调用事实保留，请按当前依据重新计划。',
+    binding_invalid: '任务没有可核实的当前绑定。原稿和已发生调用保留，请通过当前请求重新计划。',
+    preproduction_blocked: '制作前审阅仍有缺口。当前稿件和报告可读，请处理明确问题后继续。',
+    engineering_checks_required: '所选实际文件的工程检查尚未完成，请核对文件与未完成项。',
+    persistence_none: '这是严格只读工作。报告应保留在来源之外，导入须作为单独的明确动作。',
+    user_stop: '项目处于用户停止状态。读取和原调用核实仍可进行。',
+    invalid_input: '本次要求有未满足的字段或范围。输入仍保留，请查看具体依据后调整。',
+    object_not_found: '没有找到明确选择的项目或记录。输入仍保留，请核对来源位置与版本。',
+    source_not_found: '没有找到明确选择的源文件。原稿未改，请核对文件位置。',
+    source_changed: '来源在读取期间发生变化。可读报告已保留，请固定来源后重新审阅。',
+    conflict: '项目已由另一项操作更新。本次输入仍保留，请读取当前状态并比较后重试。',
     material_upload_invalid:'材料文件未接收。请检查支持的文件类型、文件名及 64 MiB 大小限制；已有材料保留。',
     material_upload_not_found:'尚未找到这个文件的接收记录。可重新选择原文件，沿原编号继续上传。',
     material_upload_conflict:'此接收编号对应另一份文件。已接收内容保留，请重新选入要添加的文件。',

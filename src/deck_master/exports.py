@@ -1,6 +1,7 @@
 """Frozen-revision exports. Public copies and internal recovery bundles are distinct."""
 
 from __future__ import annotations
+from contextlib import nullcontext
 import copy
 import html
 import json
@@ -48,7 +49,9 @@ def _context(project, revision):
     return store, doc, _logical_identity(str(store.project_root), doc["revision_id"])
 
 
-def _facts(store, doc):
+def _facts(store, doc, *, selected_output=None):
+    control = store.load_document()
+    doc = {**doc, "policy": control["policy"], "reviews": control.get("reviews", [])}
     from .editing import check_summary
     from .production_detail import projection
     from .workbench import _ReadContext, _deck_output
@@ -88,7 +91,7 @@ def _facts(store, doc):
     for key, reason in (summary.get("dimension_reasons") or {}).items():
         gaps.append(quality_gap(key, reason))
     from .delivery_eligibility import professional_policy
-    professional = professional_policy(store, doc)
+    professional = professional_policy(store, doc, selected_output=selected_output)
     if professional["required"] and not professional["satisfied"]:
         # Report the named professional gaps wherever this snapshot's gaps are
         # listed, including when the engineering gate refuses first.
@@ -235,6 +238,11 @@ def _artifact(store, ref, role, page_id):
 
 def resolve_notes_policy(store, document, notes_policy=None):
     """Resolve a projection choice against this exact selected snapshot."""
+    if isinstance(notes_policy, dict):
+        resolved = resolve_notes_policy(store, document, notes_policy.get('selection') if notes_policy.get('source') == 'explicit' else None)
+        if resolved != notes_policy:
+            raise ExportError('invalid_notes_policy', 'resolved notes policy belongs to another selected snapshot', exit_code=2, http_status=422)
+        return resolved
     choices = ('pptx_notes', 'separate_script', 'both', 'pure_reading')
     if notes_policy is not None and notes_policy not in choices:
         raise ExportError('invalid_notes_policy', 'choose pptx_notes, separate_script, both or pure_reading',
@@ -433,7 +441,9 @@ def variant_metadata(store, doc):
 
 
 def _bundle(store, doc, identity, purpose, export_id, target, notes_policy):
-    facts = _facts(store, doc)
+    from .delivery_eligibility import selected_output
+    selected = selected_output(store, doc, notes_policy=notes_policy) if purpose != "engineering" else None
+    facts = _facts(store, doc, selected_output=selected)
     _gate(store, doc, facts, purpose)
     report = _public_report(doc, facts, purpose)
     report['notes_policy'] = notes_policy
@@ -446,6 +456,8 @@ def _bundle(store, doc, identity, purpose, export_id, target, notes_policy):
         (target / "delivery.json").write_bytes(canonical_json_bytes(report))
     else:
         originals = _write_public(store, doc, target, report)
+        if (target / "deck.pptx").is_file():
+            store.put_blob((target / "deck.pptx").read_bytes(), ext="pptx")
     files = []
     for path in sorted(target.rglob("*")):
         if path.is_file():
@@ -493,67 +505,88 @@ def create(project, *, purpose="review", revision=None, export_id=None, output_d
     store, doc, identity = _context(project, revision)
     resolved_notes = resolve_notes_policy(store, doc, notes_policy)
     if purpose == "delivery":
-        # One delivery judgement for every entry (CONTRACTS §8): the selected
-        # artifact snapshot read under the current control determines whether
-        # this delivery is authorized and professionally evidenced.
-        from . import eligibility
-        action = "delivery.historical" if revision else "export.delivery"
-        control = store.load_document()
-        decision = eligibility.evaluate(store, doc, control, action,
-                                        {"expected_output_ref": (doc.get("outputs") or {}).get("pptx")})
-        if decision["enforcement"] == "active" and not decision["allowed"]:
-            raise eligibility.EligibilityBlocked(decision)
+        _guard_delivery(store, doc, revision, resolved_notes)
     cache = safe_path(store.project_root, ".deckmaster", "workbench", "exports")
     cache.mkdir(parents=True, exist_ok=True)
     final = safe_path(cache, export_id)
     with local_lock(safe_path(cache, "exports.lock")):
-        if final.exists():
-            result = _record(store, identity, export_id)
-            old_policy = result['manifest'].get('notes_policy')
-            if (result["revision_id"] != doc["revision_id"] or result["purpose"] != purpose
-                    or (old_policy != resolved_notes and (old_policy is not None or notes_policy is not None))):
-                raise ExportError("export_id_conflict", "export ID already belongs to another fixed request", exit_code=5)
-        else:
-            stage = Path(tempfile.mkdtemp(prefix=".export-", dir=cache))
-            try:
-                manifest, filename = _bundle(store, doc, identity, purpose, export_id, stage, resolved_notes)
-                allowed = {v["path"]: {"sha256": v["sha256"], "size": v["size"]} for v in manifest["files"]}
-                for name in ("manifest.json", filename):
-                    raw = (stage / name).read_bytes()
-                    allowed[name] = {"sha256": sha256_bytes(raw), "size": len(raw)}
-                result = {
-                    "schema_version": "export_record.v1",
-                    "export_id": export_id,
-                    "project_identity": identity,
-                    "revision_id": doc["revision_id"],
-                    "purpose": purpose,
-                    "archive": filename,
-                    "files": allowed,
-                    "manifest": manifest,
-                }
-                (stage / "export-record.json").write_bytes(canonical_json_bytes(result))
-                stage.rename(final)
-            except BaseException:
-                shutil.rmtree(stage)
-                raise
-    response = {"status": "exported", **copy.deepcopy(result), "download_url": f"/api/exports/{export_id}/files/{result['archive']}"}
-    if output_dir is not None:
-        destination = Path(output_dir).expanduser()
-        if destination.exists():
-            raise ExportError(
-                "export_destination_exists", "destination exists; choose a new output directory", exit_code=2, http_status=422
-            )
-        destination.mkdir(parents=True, exist_ok=False)
-        try:
-            for name in result["files"]:
-                path = destination / name
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(download(project, export_id=export_id, filename=name)[0])
-        except BaseException:
-            shutil.rmtree(destination)
-            raise
-        response["output_dir"] = str(destination)
+        # The lock order is exports -> project. A request pause/revocation can
+        # commit while an export waits for the cache lock. Once admitted again,
+        # delivery publication and any external copy serialize with control
+        # writes through the same project lock, including the final rename.
+        with store._locked() if purpose == 'delivery' else nullcontext():
+            if purpose == 'delivery':
+                if revision is None:
+                    doc = store.load_document()
+                    resolved_notes = resolve_notes_policy(store, doc, notes_policy)
+                _guard_delivery(store, doc, revision, resolved_notes)
+            if final.exists():
+                result = _record(store, identity, export_id)
+                old_policy = result['manifest'].get('notes_policy')
+                if (result["revision_id"] != doc["revision_id"] or result["purpose"] != purpose
+                        or (old_policy != resolved_notes and (old_policy is not None or notes_policy is not None))):
+                    raise ExportError("export_id_conflict", "export ID already belongs to another fixed request", exit_code=5)
+            else:
+                stage = Path(tempfile.mkdtemp(prefix=".export-", dir=cache))
+                try:
+                    manifest, filename = _bundle(store, doc, identity, purpose, export_id, stage, resolved_notes)
+                    allowed = {v["path"]: {"sha256": v["sha256"], "size": v["size"]} for v in manifest["files"]}
+                    for name in ("manifest.json", filename):
+                        raw = (stage / name).read_bytes()
+                        allowed[name] = {"sha256": sha256_bytes(raw), "size": len(raw)}
+                    result = {
+                        "schema_version": "export_record.v1", "export_id": export_id,
+                        "project_identity": identity, "revision_id": doc["revision_id"],
+                        "purpose": purpose, "archive": filename, "files": allowed, "manifest": manifest,
+                    }
+                    (stage / "export-record.json").write_bytes(canonical_json_bytes(result))
+                    stage.rename(final)
+                except BaseException:
+                    shutil.rmtree(stage)
+                    raise
+            response = {"status": "exported", **copy.deepcopy(result), "download_url": f"/api/exports/{export_id}/files/{result['archive']}"}
+            if output_dir is not None:
+                destination = Path(output_dir).expanduser()
+                _copy_bundle(project, result, destination)
+                response['output_dir'] = str(destination)
     return response
+
+
+def _guard_delivery(store, doc, revision, notes_policy):
+    if input_alignment(doc) == 'needs_reconciliation':
+        # Flow Quality SPEC §5.4 / AC-13 keeps this existing export failure at
+        # CLI exit 3. New collaboration admission/report gaps remain exit 4.
+        raise ExportInputPending('input_reconciliation_pending',
+            'selected snapshot inputs await Host reconciliation', revision=doc['revision_id'],
+            gaps=[{'page_id': None, 'layer': 'content', 'reason': 'needs_reconciliation'}])
+    from . import eligibility
+    from .delivery_eligibility import selected_output
+    selected = selected_output(store, doc, notes_policy=notes_policy)
+    action = 'delivery.historical' if revision else 'export.delivery'
+    decision = eligibility.evaluate(store, doc, store.load_document(), action,
+        {'expected_output_ref': (doc.get('outputs') or {}).get('pptx'), 'selected_output': selected})
+    if not decision['allowed']:
+        raise eligibility.EligibilityBlocked(decision)
+
+
+def _copy_bundle(project, result, destination):
+    if destination.exists():
+        raise ExportError('export_destination_exists', 'destination exists; choose a new output directory',
+            exit_code=2, http_status=422)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix='.delivery-', dir=destination.parent))
+    try:
+        for name in result['files']:
+            path = stage / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(download(project, export_id=result['export_id'], filename=name)[0])
+        if destination.exists():
+            raise ExportError('export_destination_exists', 'destination exists; choose a new output directory',
+                exit_code=2, http_status=422)
+        stage.rename(destination)
+    except BaseException:
+        shutil.rmtree(stage)
+        raise
 
 
 def _id(value):

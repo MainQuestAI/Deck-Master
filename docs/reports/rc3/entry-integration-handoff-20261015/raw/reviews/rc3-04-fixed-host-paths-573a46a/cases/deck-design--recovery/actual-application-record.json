@@ -1,0 +1,113 @@
+{
+  "case_id": "deck-design--recovery",
+  "status": "ACTUAL_HOST_RESPONSIBILITY_RETURNED",
+  "executed": true,
+  "actual_host_identity": "/root/rc3_04_owner/skills_install",
+  "independent_identity": false,
+  "original_instruction": "恢复固定p1方案任务，重新读取当前稿与设计范围，不重复调用或扩大页集合，只给完整稿18pt正文可行性与取舍。",
+  "identity": {
+    "pid": 491200,
+    "time": "2026-10-15T06:01:47.888762+00:00",
+    "host_identity": "/root/rc3_04_owner/skills_install",
+    "python": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/bin/python",
+    "prefix": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv",
+    "module_path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "package_version": "1.0.0rc3",
+    "module_sha256": "1e8b8e6a791d8199800897aecce01b96920df2c47e0d581d97586332ea5b0682",
+    "release_id": "573a46a85bf9-13e3d2708abf"
+  },
+  "skill_entry": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/skill/deck-design/SKILL.md",
+  "skill_entry_sha256": "a3997c0baef42da6a40d67adb621ada4fb5fbafb4c199699d6696707c1e45348",
+  "actual_method_reads": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/before-interruption-read.json",
+      "sha256": "38bd8ccd8270c620ee5a79472ad68d606fa59f0f33fae5e910c7856369029445"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/initial-read.json",
+      "sha256": "18cefdc42456579f6167988f7a7d9616e28231ae99421e980fce0f7bc88a43f1"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-before-application-read.json",
+      "sha256": "92d6dd192deea2786a5584fb5e196403a020c9fa5825ce8061f7a4fd2fc45a52"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "sha256": "42aef60959a4d7cbe8d058ac4250af4c95b07c00b9707b0e8f7cdbc2b9095f5b"
+    }
+  ],
+  "actual_method_applications": [
+    {
+      "id": "collaboration-routing",
+      "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/collaboration-routing.md",
+      "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+      "method_read_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "application": "Read actual request, scope, prior grants and completion. No role label or repeat continue creates authority; finish requested responsibility only."
+    },
+    {
+      "id": "visual-reference",
+      "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/visual-reference.md",
+      "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52",
+      "method_read_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "application": "No supplied visual references; use actual complete Pages and imported_mapping Plan, never infer fonts or visual findings from a nonexistent image."
+    },
+    {
+      "id": "style-calibration",
+      "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/style-calibration.md",
+      "sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f",
+      "method_read_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "application": "Author seven v3 recipe dimensions, real registered font IDs, exact named target pages, proposed samples and uncovered cases; no adopted recipe/visual fit claimed."
+    },
+    {
+      "id": "candidates-and-stages",
+      "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/candidates-and-stages.md",
+      "sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec",
+      "method_read_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "application": "Zero-image feasibility proposal only, no candidate/adoption/extension/allowance and no production Task created."
+    },
+    {
+      "id": "blueprint-svg",
+      "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+      "sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e",
+      "method_read_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "application": "Actual Page is text/relationship truth. No blueprint or conversion was requested; do not inject fonts, synthesize images or alter converter constants."
+    },
+    {
+      "id": "physical-units",
+      "path": "/workspace/work/rc3/candidate-04-573a46a-ready/prefix/.deck-master/releases/573a46a85bf9-13e3d2708abf/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/physical-units.md",
+      "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3",
+      "method_read_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+      "application": "Use actual 1600x900 canvas and 13⅓x7.5in input: contain k=.8 and 18pt body requires about30 SVGpx. Actual p:sldSz, role-specific native runs and SVG/PPT ink padding remain unverifiable without actual artifacts."
+    }
+  ],
+  "actual_output": {
+    "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-authored-output.json",
+    "sha256": "d94a48d57f2d0dca984615ae920d3f452398d32b3254194413654575b8d1f3e1"
+  },
+  "runtime_records": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/design-runtime-proposal.json",
+      "sha256": "0c187e886da7af03843599481a1d141585d5ef136b0850498c6a69f6bb77a282"
+    }
+  ],
+  "recovery": {
+    "actual_exit_record": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/actual-interruption.json",
+    "recorded_exit_code": 75,
+    "before_pid": 489892,
+    "resumed_pid": 489893,
+    "same_project_request_task": true,
+    "reread_current_scope_workorder_ledger": "/workspace/work/rc3/reviews/rc3-04-fixed-host-paths-573a46a/cases/deck-design--recovery/resumed-current-read.json",
+    "actual_process_exit_source": "interrupt.py uses os._exit(75). Design/Review additionally record subprocess returncode75; initial Master/Content outer shell did not separately retain child returncode, actual before/after PIDs and exact exit source retained."
+  },
+  "provenance": {
+    "actual_agent": "Current Codex collaboration agent /root/rc3_04_owner/skills_install, one same author throughout",
+    "platform_thread_turn_item_ids": "not exposed, not fabricated",
+    "runtime_returned_bytes": "Separately recorded only as read evidence; actual payload/decision/report and Runtime response files above are the application.",
+    "new_tool_native_human_execution": "No image/native/provider/human/desktop execution claimed."
+  },
+  "limitations": [
+    "Known synthetic archive source and same-author prior scaffold; no E1 fairness/effect result.",
+    "Review output is host_self text/relationship judgement, not independent professional acceptance.",
+    "Design is scoped zero-image feasibility, not rendered-fit approval."
+  ]
+}

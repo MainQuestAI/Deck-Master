@@ -84,7 +84,7 @@ def test_studio_icon_missing_layer_continues_exact_page_without_dispatch(tmp_pat
         changed=bump_revision(changed,{'operation_id':str(uuid.uuid4()),'kind':'artifact_adoption','description':'test missing original','read_set':[]})
         store.commit_change(base_revision=before['revision_id'],document=changed,operation_id=changed['change']['operation_id'])
     before=store.read_current();revision=store.current_revision_id();server=WorkbenchServer(project)
-    out=Path('output/opendesign-completion/icon-continuation');out.mkdir(parents=True,exist_ok=True)
+    out=Path(os.environ.get('DECK_MASTER_BROWSER_EVIDENCE',str(tmp_path/'evidence')))/'icon-continuation';out.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch(args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':900});writes=[]
         page.on('request',lambda req:writes.append(req.url) if req.method=='POST' and '/api/changes/' in req.url else None)
