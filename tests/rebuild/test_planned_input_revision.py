@@ -146,10 +146,10 @@ def produced_pages(tmp_path):
     return project, store, plan
 
 
-def existing_revision(project, store):
+def existing_revision(project, store, *, operation_id="s02-update-existing", audience="Synthetic final clarified audience"):
     service.inputs_update(project, patch={"reason": "Explicit subsequent synthetic audience clarification",
-        "task_patch": {"audience": "Synthetic final clarified audience"}},
-        base_revision=store.current_revision_id(), operation_id="s02-update-existing")
+        "task_patch": {"audience": audience}},
+        base_revision=store.current_revision_id(), operation_id=operation_id)
     task = next(store.read_object_json(ref) for ref in reversed(store.load_document()["tasks"])
                 if store.read_object_json(ref).get("intent") == "input_revision" and store.read_object_json(ref)["status"] == "awaiting_host")
     service.task_start(project, task_id=task["task_id"], execution_ref="synthetic-s02-existing-author",
@@ -223,4 +223,102 @@ def test_removing_every_actual_page_does_not_silently_reclassify_old_bound_plan(
         "summary": "Explicit all-page removal without supplying a replacement Plan", "changed_page_ids": ids, "removed_page_ids": ids, "page_order": []}}
     before = fingerprint(project)
     with pytest.raises(EnvelopeError, match="Plan and resulting page order must match"): submit(project, task, payload)
+    assert fingerprint(project) == before
+
+
+def planning_with_existing_pages(tmp_path, *, one_page=True):
+    from deck_master import collaboration
+    project, store, _ = produced_pages(tmp_path)
+    if one_page:
+        task = existing_revision(project, store)
+        doc = store.load_document()
+        removed = [p["page_id"] for p in doc["pages"] if p["page_id"] != "p5"]
+        payload = {"changed_layers": ["page_copy", "plan"],
+            "proposals": [{"layer": "plan", "ref": store.put_json_object(_plan_input(doc, ["p5"], source_links=[_source_link(store, doc, "L1")]))}],
+            "diff": {"input_digest": task["input_digest"], "summary": "Explicit synthetic membership change retains one actual representative Page.", "changed_page_ids": removed, "removed_page_ids": removed, "page_order": ["p5"]}}
+        submit(project, task, payload)
+    doc = store.load_document()
+    evidence = {"kind": "host_attested_instruction", "source_ref": store.put_blob(b"SYNTHETIC planning only; preserve actual Pages, propose future plan.", ext="txt"),
+        "source_locator": "synthetic:s02-planning", "actor_id": None, "transport_receipt_ref": None, "presentation_ref": None}
+    collaboration.start_request(project, input={"intent": "content_only", "content_intent": "plan_only", "scope": _scope(layers=["narrative", "plan"], allow_page_membership_change=False),
+        "instruction_evidence": evidence, "replace_request_id": doc["collaboration"]["request"]["request_id"]},
+        base_revision=doc["revision_id"], operation_id="s02-plan-existing-request")
+    task = existing_revision(project, store, operation_id="s02-plan-existing-input", audience="Distinct synthetic future planning audience")
+    return project, store, task
+
+
+@pytest.mark.parametrize("one_page,new_narrative", [(True, False), (False, False), (True, True)])
+def test_explicit_planned_order_preserves_current_real_pages_and_blocks_production(tmp_path, one_page, new_narrative):
+    from deck_master import content_review
+    from deck_master.design_requirements import resolve_content_requirements
+    project, store, task = planning_with_existing_pages(tmp_path, one_page=one_page)
+    doc = store.load_document(); before_pages = deepcopy(doc["pages"])
+    payload = planned_payload(store, task)
+    if new_narrative:
+        narrative = store.read_object_json(payload["proposals"][0]["ref"])
+        narrative["version"] += 1
+        nref = store.put_json_object(narrative)
+        payload["proposals"][0]["ref"] = nref
+        plan = store.read_object_json(payload["proposals"][1]["ref"])
+        plan["narrative_ref"] = nref
+        payload["proposals"][1]["ref"] = store.put_json_object(plan)
+    else:
+        payload["changed_layers"] = ["plan"]
+        payload["proposals"] = [payload["proposals"][1]]
+    result = submit(project, task, payload)
+    after = store.load_document(); plan = store.read_object_json(after["content_plan"])
+    assert result["status"] == "accepted" and after["pages"] == before_pages
+    assert plan["mode"] == "planned" and plan["page_links"] == [] and len(plan["input"]["page_order"]) == 6
+    assert content_plan.projection(store, after)["applicability"] == "basis_changed"
+    assert all(row["page_ref"] is None for row in content_plan.projection(store, after)["page_roles"])
+    assert content_production.content_phase_status(store, after)["action"] == "complete"  # real plan_only response
+    assert content_review.preproduction_status(store, after)["status"] != "pass"
+    page_ref = after["pages"][0]["page"]
+    page = store.read_object_json(page_ref)
+    with pytest.raises(models.ModelError, match="link every current Page|planned|bound"):
+        resolve_content_requirements(store, after, page_ref)
+    assert page["content_mapping"]["narrative_ref"] == doc["narrative"]  # historical Page mapping is not rewritten
+    if new_narrative: assert after["narrative"] != doc["narrative"]
+    # The plan_only request is truly closed. Open a real new request before a
+    # later Narrative-only revision; never change closed-request enforcement.
+    from deck_master import collaboration
+    current = store.load_document()
+    evidence = {"kind": "host_attested_instruction", "source_ref": store.put_blob(b"SYNTHETIC new follow-up planning request; preserve existing Page evidence.", ext="txt"),
+        "source_locator": "synthetic:s02-followup", "actor_id": None, "transport_receipt_ref": None, "presentation_ref": None}
+    collaboration.start_request(project, input={"intent": "content_only", "content_intent": "plan_only", "scope": _scope(layers=["narrative", "plan"], allow_page_membership_change=False),
+        "instruction_evidence": evidence, "replace_request_id": current["collaboration"]["request"]["request_id"]},
+        base_revision=current["revision_id"], operation_id="s02-followup-plan-request")
+    # Inherit planned semantics and preserve sample refs, not fake bound links.
+    task = existing_revision(project, store, operation_id="s02-plan-narrative-followup", audience="Another distinct planning clarification")
+    narrative = store.read_object_json(store.load_document()["narrative"]); narrative["version"] += 1
+    nref = store.put_json_object(narrative)
+    submit(project, task, {"changed_layers": ["narrative"], "proposals": [{"layer": "narrative", "ref": nref}],
+        "diff": {"input_digest": task["input_digest"], "summary": "Future Narrative revision only, existing sample stays historical.", "changed_page_ids": []}})
+    after = store.load_document(); retained = store.read_object_json(after["content_plan"])
+    assert retained["mode"] == "planned" and retained["page_links"] == [] and after["pages"] == before_pages
+    assert retained["narrative_ref"] == nref and content_plan.projection(store, after)["applicability"] == "basis_changed"
+
+
+@pytest.mark.parametrize("fault,match", [("page-write", "outside"), ("diff-order", "resulting set"),
+    ("bound", "order must match"), ("qualification", "actual qualification nodes"),
+    ("source", "source identity or version"), ("narrative", "another Narrative")])
+def test_planned_with_sample_does_not_relax_scope_bound_or_plan_semantics(tmp_path, fault, match):
+    project, store, task = planning_with_existing_pages(tmp_path)
+    payload = planned_payload(store, task)
+    payload["changed_layers"] = ["plan"]; payload["proposals"] = [payload["proposals"][1]]
+    plan = store.read_object_json(payload["proposals"][0]["ref"])
+    if fault == "page-write":
+        payload["changed_layers"].append("page_copy")
+        payload["proposals"].append({"layer": "page_copy", "ref": store.load_document()["pages"][0]["page"]})
+        payload["diff"]["changed_page_ids"] = ["p5"]
+    if fault == "diff-order": payload["diff"]["page_order"] = plan["input"]["page_order"]
+    if fault == "bound":
+        plan["mode"] = "bound"
+        plan["page_links"] = [{"page_id": pid, "page_ref": store.load_document()["pages"][0]["page"], "plan_role_page_id": pid} for pid in plan["input"]["page_order"]]
+    if fault == "qualification": plan["input"]["page_roles"][0]["required_qualifications"] = ["n1"]
+    if fault == "source": plan["input"]["page_roles"][0]["source_links"][0]["source_version"]["original_sha256"] = "a" * 64
+    if fault == "narrative": plan["narrative_ref"] = store.put_json_object({"other": "Narrative"})
+    payload["proposals"][0]["ref"] = store.put_json_object(plan)
+    before = fingerprint(project)
+    with pytest.raises((EnvelopeError, models.ModelError, eligibility.EligibilityBlocked), match=match): submit(project, task, payload)
     assert fingerprint(project) == before

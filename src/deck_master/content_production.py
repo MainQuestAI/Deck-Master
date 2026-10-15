@@ -1454,11 +1454,14 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         if not pages and plan_input["mode"] != "planned":
             raise tasks_mod.EnvelopeError("(result)/payload/proposals/plan/mode", "without actual Pages an input revision can only deliver a planned Plan")
         plan_input = plan_input["input"]
+    planning_only = False
     if plan_input is not None:
         models.validate_schema("content_plan_input", plan_input)
-        # CONTRACTS §11.2: before Page production, this is a proposed order,
-        # not Document.pages membership. Real resulting Pages still bind exactly.
-        planning_only = not pages and ("plan" in single or old_plan and old_plan.get("mode") == "planned" and not removed)
+        # Explicit/retained planning may coexist with an unchanged real sample.
+        # Its proposed order is not a second current Document.pages order.
+        planned = submitted_plan["mode"] == "planned" if submitted_plan is not None else bool(old_plan and old_plan.get("mode") == "planned")
+        planning_only = (not pages and ("plan" in single or planned and not removed)
+            or planned and not changed_pages and not removed and order == old_order)
         if plan_input["page_order"] != order and not planning_only:
             raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Plan and resulting page order must match")
         for role in plan_input["page_roles"]:
@@ -1477,6 +1480,11 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         except ContentPlanError as exc:
             raise tasks_mod.EnvelopeError('(result)/payload/proposals/plan', str(exc)) from exc
     for page in pages.values():
+        if planning_only:
+            # These unchanged Pages remain evidence of the earlier manuscript.
+            # Do not rebind them to a future Narrative/Plan or new source facts.
+            check_page(page)
+            continue
         mapping = page.get("content_mapping")
         if mapping is None:
             raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Page mapping is missing")
@@ -1526,6 +1534,9 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             produced_against=produced_against, result_digest=result_digest)
     new_pages = []
     for pid in order:
+        if planning_only:
+            new_pages.append(copy.deepcopy(entries[pid]))
+            continue
         page = pages[pid]
         ref = store.put_json_object(page)
         previous = entries.get(pid)
@@ -1548,7 +1559,7 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         result_refs.append(narrative_ref)
     if plan_input is not None:
         from .content_plan import build_v2_plan
-        mode = "imported_mapping" if old_plan and old_plan.get("mode") == "imported_mapping" and narrative_ref is None else ("bound" if new_pages else "planned")
+        mode = "planned" if planning_only else ("imported_mapping" if imported_mapping else ("bound" if new_pages else "planned"))
         plan_ref = build_v2_plan(store, document, task, plan_input, new_pages, narrative_ref=narrative_ref,
             mode=mode, imported_manuscript=old_plan.get("imported_manuscript") if mode == "imported_mapping" else None,
             require_role_mapping=mode != "imported_mapping")
@@ -1565,7 +1576,8 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
                 'impact_summary': summary.strip(), 'new_page_hashes': {},
                 **({'unchanged_reason': virtual_update['unchanged_reason']} if 'unchanged_reason' in virtual_update else {}),
                 "result_refs": proposed, "next_action": "adopt_with_covering_decision"})
-    actual_plan_change = plan_input != (old_plan or {}).get('input')
+    actual_plan_change = (plan_input != (old_plan or {}).get('input')
+        or plan_input is not None and mode != (old_plan or {}).get('mode'))
     if (any(entry['page'] != entries.get(entry['page_id'], {}).get('page') for entry in new_pages)
             or order != list(entries) or narrative_ref != document.get('narrative') or actual_plan_change):
         updated["outputs"] = dict.fromkeys(document["outputs"])
