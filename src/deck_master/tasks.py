@@ -1232,6 +1232,15 @@ def _accept_result_locked(
                                      "record_only": _record_only(envelope, task)})
     if adoption["enforcement"] == "active" and not adoption["allowed"]:
         raise eligibility.EligibilityBlocked(adoption)
+    if (task.get("protocol_version") == "changes.v1"
+            and "content_requirements_v1" in (task.get("required_capabilities") or [])):
+        # Direct visual consumers have no change_binding. Their first adoption
+        # still needs the declared Host contract and a real named claim. Exact
+        # terminal replay returned above; call facts already settled separately.
+        from .generation import check_host
+        if task.get("status") != "running" or not task.get("execution_ref"):
+            raise TaskConflict(f"(task {task_id})/execution_ref", "claim the design consumer before returning its result")
+        check_host(task)
     if task["kind"] == "style_analyze":
         from .generation import check_host
         check_host(task)

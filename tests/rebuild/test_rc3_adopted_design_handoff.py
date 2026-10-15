@@ -55,22 +55,54 @@ def _style_digest(effective):
         **({'recipe_parameters': effective['recipe_parameters']} if 'recipe_parameters' in effective else {})}))
 
 
+def _visual_inputs(store, sent):
+    doc=store.load_document()
+    for role,media,blob,ext in [('svg','image/svg+xml',b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"/>','svg'),
+            ('svg_preview','image/png',sent[2].png,'png')]:
+        artifact={'schema_version':'deck_artifact.v1','artifact_id':'synthetic-f7-'+role,'page_id':'p1',
+            'role':role,'file':store.put_blob(blob,ext=ext),'media_type':media,
+            'created_at':'2026-10-15T00:00:00Z','dependencies':[],'derived_from':[],
+            'provenance':{'source_type':'unknown'},'limitations':['Synthetic L1 dependency inputs; no render or fidelity verdict']}
+        models.validate_artifact_semantics(artifact)
+        doc['pages'][0][role]=store.put_json_object(artifact)
+    _commit(store,doc,'Synthetic L1 SVG/preview dependency inputs only')
+
+
+def _svg_payload(store, task):
+    doc=store.load_document();entry=doc['pages'][0];page=store.read_object_json(entry['page'])
+    stage=store.staging_dir/task['operation_id'];stage.mkdir(exist_ok=True)
+    # Text-only protocol diagnostic, deliberately no visual-fidelity verdict.
+    text=''.join(f'<text x="20" y="{30+i*18}" font-family="Arial">{escape(atom["text"])}</text>'
+                 for i,atom in enumerate(visible_atoms(page)))
+    (stage/'sample.svg').write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">{text}</svg>')
+    return {'kind':task['kind'],'files':[{'file_id':'svg','path':'sample.svg','media_type':'image/svg+xml'}],
+        'artifact_specs':[{'role':'svg','page_id':'p1','file_id':'svg',
+                          'provenance':{'source_type':'host_generated','tool':'synthetic-svg-writer'}}]}
+
+
+def _review_payload(store, task):
+    requirement=service.task_summary(store,store.load_document(),task)['page_visual_requirements'][0]
+    evidence=store.put_json_object({'synthetic':'L1 host_self contract diagnostic only, no model or human review'})
+    reviews=[]
+    for kind in requirement['review_kinds']:
+        record={'schema_version':'deck_review.v2','review_id':'synthetic-f8-'+kind,'kind':kind,
+            'review_stage':'page_visual','status':'pass','subjects':requirement['subject_refs'],
+            'dependencies':requirement['dependencies'],'reviewer':{'type':'host_self','id':'synthetic-f8-self',
+                'execution_ref':'synthetic-f8-consumer','independence_confirmed':False,'identity_receipt':None,
+                'evidence_ref':evidence,'assurance':'host_attested'},
+            'observations':['Explicit synthetic self-review protocol diagnostic; no visual-quality or independent acceptance.'],
+            'findings':[],'created_at':'2026-10-15T00:00:00Z','replaces':None}
+        models.validate_review_semantics(record);reviews.append(record)
+    return {'kind':'review','reviews':reviews}
+
+
 @pytest.mark.parametrize('kind,stage', [('reconstruct',None),('repair',None),('review','page_visual')])
 def test_formal_adoption_hands_full_immutable_context_to_every_visual_consumer(tmp_path, kind, stage):
     _,store,_,sent,author = _adopted(tmp_path)
     frozen = sent[0]
     original = store.read_object_bytes(frozen['request_ref'])
     if stage == 'page_visual':
-        doc=store.load_document()
-        for role,media,blob,ext in [('svg','image/svg+xml',b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"/>','svg'),
-                ('svg_preview','image/png',sent[2].png,'png')]:
-            artifact={'schema_version':'deck_artifact.v1','artifact_id':'synthetic-f7-'+role,'page_id':'p1',
-                'role':role,'file':store.put_blob(blob,ext=ext),'media_type':media,
-                'created_at':'2026-10-15T00:00:00Z','dependencies':[],'derived_from':[],
-                'provenance':{'source_type':'unknown'},'limitations':['Synthetic L1 dependency inputs; no render or fidelity verdict']}
-            models.validate_artifact_semantics(artifact)
-            doc['pages'][0][role]=store.put_json_object(artifact)
-        _commit(store,doc,'Synthetic L1 SVG/preview dependency inputs only')
+        _visual_inputs(store,sent)
     task = _open(store, kind=kind, review_stage=stage)
     doc = store.load_document()
     summary = service.task_summary(store, doc, task)
@@ -220,17 +252,12 @@ def test_svg_accept_and_asset_materialization_share_the_adopted_design(tmp_path)
     task=_open(store)
     service.task_start(path,task_id=task['task_id'],execution_ref='synthetic-svg-writer',
         supported_protocols=['changes.v1'],capabilities=task['required_capabilities'])
-    doc=store.load_document();entry=doc['pages'][0];page=store.read_object_json(entry['page'])
-    stage=store.staging_dir/task['operation_id'];stage.mkdir(exist_ok=True)
-    # Text-only protocol diagnostic, deliberately no visual-fidelity verdict.
-    text=''.join(f'<text x="20" y="{30+i*18}" font-family="Arial">{escape(atom["text"])}</text>'
-                 for i,atom in enumerate(visible_atoms(page)))
-    (stage/'sample.svg').write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">{text}</svg>')
+    doc=store.load_document();entry=doc['pages'][0]
+    payload=_svg_payload(store,task)
+    stage=store.staging_dir/task['operation_id']
     assert pipeline.page_asset_paths(store,doc,entry,stage)=={}
     result=service.accept_result(path,**{key:task[key] for key in ('task_id','operation_id','produced_against')},
-        result_payload={'kind':'reconstruct','files':[{'file_id':'svg','path':'sample.svg','media_type':'image/svg+xml'}],
-            'artifact_specs':[{'role':'svg','page_id':'p1','file_id':'svg',
-                              'provenance':{'source_type':'host_generated','tool':'synthetic-svg-writer'}}]})
+        result_payload=payload)
     assert result['status']=='accepted'
     doc=store.load_document()
     assert doc['pages'][0]['svg'] and doc['pages'][0]['blueprint']==entry['blueprint']
@@ -316,3 +343,55 @@ def test_content_requalification_can_review_changed_page_before_new_visual_produ
     # image's design. Requalification must precede the next image generation.
     summary=service.task_summary(store,store.load_document(),task)
     assert 'content_requirements' not in summary['page_design_contexts']['p1']
+
+
+@pytest.mark.parametrize('kind,stage',[('reconstruct',None),('repair',None),('review','page_visual')])
+@pytest.mark.parametrize('fault',['no_claim','missing_cap','missing_execution'])
+def test_direct_new_consumers_reject_first_adoption_without_actual_claim_and_caps(tmp_path,kind,stage,fault):
+    path,store,_,sent,author=_adopted(tmp_path)
+    if stage=='page_visual':_visual_inputs(store,sent)
+    task=_open(store,kind=kind,review_stage=stage)
+    assert not task.get('change_binding') and task['protocol_version']=='changes.v1'
+    payload=_review_payload(store,task) if kind=='review' else _svg_payload(store,task)
+    if fault!='no_claim':
+        service.task_start(path,task_id=task['task_id'],execution_ref='synthetic-f8-consumer',
+            supported_protocols=['changes.v1'],capabilities=task['required_capabilities'])
+        current=tasks._lookup_task(store.load_document(),task['task_id'],store)
+        if fault=='missing_cap':current['host_protocol']['capabilities'].remove('content_requirements_v1')
+        else:current['execution_ref']=None
+        document=tasks._replace_task_ref(store.load_document(),current,store.put_json_object(current),store)
+        _commit(store,document,'Synthetic L1 damaged saved Host claim; not a public authority bypass')
+    before=store.load_document()
+    error=generation.GenerationError if fault=='missing_cap' else tasks.TaskConflict
+    with pytest.raises(error):
+        service.accept_result(path,**{key:task[key] for key in ('task_id','operation_id','produced_against')},
+                              result_payload=payload)
+    assert store.load_document()==before
+    assert tasks._lookup_task(before,author['task_id'],store)['call_allowances'][0]['state']=='consumed'
+    assert generation.show(path,attempt_id=sent[1]['attempt_id'])['call']['state']=='consumed'
+
+
+@pytest.mark.parametrize('kind,stage',[('reconstruct',None),('repair',None),('review','page_visual')])
+def test_direct_new_consumers_full_claim_accept_then_exact_terminal_replay_without_new_write(tmp_path,kind,stage):
+    path,store,_,sent,author=_adopted(tmp_path)
+    if stage=='page_visual':_visual_inputs(store,sent)
+    task=_open(store,kind=kind,review_stage=stage)
+    payload=_review_payload(store,task) if kind=='review' else _svg_payload(store,task)
+    service.task_start(path,task_id=task['task_id'],execution_ref='synthetic-f8-consumer',
+        supported_protocols=['changes.v1'],capabilities=task['required_capabilities'])
+    binding={key:task[key] for key in ('task_id','operation_id','produced_against')}
+    accepted=service.accept_result(path,**binding,result_payload=payload)
+    assert accepted['status']=='accepted'
+    closed=tasks._lookup_task(store.load_document(),task['task_id'],store)
+    assert closed['status']=='completed'
+    # A terminal replay recovers the exact committed operation. It does not
+    # become a second adoption or require a new claim on the completed Task.
+    closed['host_protocol']['capabilities'].remove('content_requirements_v1')
+    document=tasks._replace_task_ref(store.load_document(),closed,store.put_json_object(closed),store)
+    _commit(store,document,'Synthetic terminal-declaration fault to prove original receipt recovery order')
+    before=store.load_document()
+    replay=service.accept_result(path,**binding,result_payload=payload)
+    assert replay['status']=='already_applied' and replay['operation_result']['status']=='accepted'
+    assert store.load_document()==before
+    assert tasks._lookup_task(before,author['task_id'],store)['call_allowances'][0]['state']=='consumed'
+    assert generation.show(path,attempt_id=sent[1]['attempt_id'])['call']['state']=='consumed'
