@@ -72,6 +72,15 @@ def checked(ref):
     return read(ref['path'])
 
 
+def invocation_identity(ref):
+    spawn = checked(ref).get('spawn', {})
+    executor, turn = spawn.get('canonical_task_name'), spawn.get('native_turn_id')
+    require(isinstance(executor, str) and executor.startswith('/root/')
+            and spawn.get('returned_task_name') == executor and isinstance(turn, str) and turn.strip(),
+            'observable executor/native_turn_id required; unknown identity cannot gain original credit')
+    return executor, turn
+
+
 def events(journal, kind):
     return [e['data'] for e in journal.events() if e['kind'] == kind]
 
@@ -487,6 +496,12 @@ def bind_original(cj, config, slot, proof_path):
                     and final.get('observed_status') == 'completed'
                     and final.get('status_observation_tool') == 'collaboration.list_agents'
                     and final['sender'] in final.get('observed_completed_agents', []), 'A/B actual completed FINAL required')
+            text = final.get('raw_final_message')
+            require(isinstance(text, str) and text.strip(), 'A/B nonempty full native FINAL carrier required')
+            try:
+                text.encode('utf-8')
+            except UnicodeEncodeError as exc:
+                raise CampaignError('A/B full native FINAL carrier must be UTF-8') from exc
             authors.add(final['sender'])
             raw_refs.append(item['raw'])
             validated.append(item['observation'])
@@ -530,11 +545,13 @@ def bind_original(cj, config, slot, proof_path):
         require(any(r['invocation'] == lineage['invocation'] and r['method_read'] == lineage['method_read']
                     and r['completion'] == lineage['completion'] for r in receipts), 'summary sidecars must be actual completeness stage')
     require(not authors & set(checked(config['exposure_registry'])['excluded_identities']), 'excluded author in original proof')
-    previous_invocations = {r['sha256'] for e in events(cj, 'original_bound') for r in e['invocations']}
-    require(not previous_invocations & {r['sha256'] for r in receipt_invocations}, 'same actual invocation cannot fill another slot')
+    previous_invocations = {invocation_identity(r) for e in events(cj, 'original_bound') for r in e['invocations']}
+    identities = [invocation_identity(r) for r in receipt_invocations]
+    require(not previous_invocations & set(identities), 'same actual invocation cannot fill another slot')
     record = {'slot': slot, 'proof': reference(proof_path), 'snapshot': proof['original_snapshot'],
               'raw_originals': raw_refs, 'lineage': proof['lineage_read_execution'],
-              'validated_refs': validated, 'author_identities': sorted(authors), 'invocations': receipt_invocations}
+              'validated_refs': validated, 'author_identities': sorted(authors), 'invocations': receipt_invocations,
+              'invocation_identities': [{'executor': executor, 'native_turn_id': turn} for executor, turn in identities]}
     cj.append('original_bound', record)
     return record
 

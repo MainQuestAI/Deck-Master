@@ -136,13 +136,29 @@ the existing `rc3-campaign-original-native-snapshot.v1`, containing the actual
 raw/observation refs and completeness_source_observation. SDK outcomes can be
 failures; they cannot replace raw originals or imply quality.
 
+Every selected A/B stage must retain its actual completion Ref with intact
+file/hash binding and a full `completion.raw_final_message` string. Missing,
+empty, whitespace-only or non-UTF-8 FINAL is refused without original-slot
+credit. The separate formal-envelope/raw Ref is also checked. A/B's formal file
+and native FINAL may contain different text; C keeps exact FINAL/raw equality.
+The completed FINAL and its method/read/invocation receipts must belong to that
+same selected stage, rather than another stage's completion carrier.
+
 The lineage sidecar is a separate Root observation with slot, lineage_known,
 author_identities, earliest_complete_snapshot_sha256 and
 earlier_complete_snapshot_refs=[]; invocation/method_read/completion refs bind
 the actual completeness execution. For A/B, `stage_receipts` lists every selected
 ordinal and its own invocation/method_read/completion refs in manifest order.
-Completion hashes/read-record hashes/actual senders must match. Same actual
-invocation cannot fill a different slot; excluded authors are refused. These are
+Completion hashes/read-record hashes/actual senders must match. Cross-slot
+deduplication reads each pinned invocation's stable
+`(spawn.canonical_task_name, spawn.native_turn_id)` identity, with returned actor
+matching canonical actor. Whole-file SHA still checks integrity but changes to
+transcription time, unrelated metadata or JSON serialization cannot make the
+same actual turn eligible for another slot. Missing/unknown stable identity is
+refused; it is never invented. One actor may perform different actual turns,
+including multiple legitimate stages within an arm. Bound records separately
+retain these observable `invocation_identities`; previous bound invocation refs
+are rechecked and parsed when binding a new slot. Excluded authors are refused. These are
 host-attested actual chronology/read/execution observations, not a content judge
 or platform attestation. All transitive refs are rechecked at barrier inspection.
 
@@ -175,6 +191,13 @@ and no-repair identity, necessary repair/readonly closure, no run reset, unknown
 lineage/cross-case actors, six slots/SDK snapshot rejection, transitive ref tamper,
 early private contamination, and crash accounting. A clean isolated import
 asserts no deck_master or old native_only module was loaded.
+
+R1 regressions additionally cover missing/empty/whitespace/non-text/non-UTF-8
+A/B FINAL, an invalid earlier selected stage, missing or changed completion
+carriers, legal unequal A/B carriers, repeated actual turns behind changed
+metadata, unknown turn identity, and legitimate multiple turns by one actor.
+These synthetic checks support a repair review; they do not close independent
+R1 findings or constitute independent R2 approval.
 
 Fixed old d0/d9/bf bytes, existing actual native fullFINAL/read primitives and
 Cyber method identities may support precise unchanged-dependency reuse. New case

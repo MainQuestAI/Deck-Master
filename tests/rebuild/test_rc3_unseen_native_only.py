@@ -1,5 +1,6 @@
 """Synthetic recorder engineering, never unseen input/native/SDK evidence."""
 import importlib.util
+import json
 import subprocess
 import sys
 from copy import deepcopy
@@ -210,7 +211,8 @@ def test_excluded_unknown_lineage_and_cross_case_followup_still_preserve_cost(se
     assert not reused['eligible'] and 'cross case' in reused['exclusion_reason']
 
 
-def bind_proof(setup, case, arm, *, fail_timepoint=False):
+def bind_proof(setup, case, arm, *, fail_timepoint=False, executor=None, turns=None,
+               final_message='full original', invocation_metadata=None):
     tmp, journal, state, config = setup
     slot = f'{case}-{arm}'
     tag = ('bad-' if fail_timepoint else '') + slot
@@ -220,27 +222,104 @@ def bind_proof(setup, case, arm, *, fail_timepoint=False):
         completion = snap['observation']; method = u.reference(dest/'method-read.json'); invocation = e['invocation']
         authors = [e['executor']]
     else:
-        raw = u.write_once(tmp/f'{tag}-raw', b'SYNTHETIC original envelope, SDK status independent.\n')
-        executor = f'/root/{slot}-author'
-        invocation = stored(tmp, f'{tag}-invoke.json', observation(spawn={'canonical_task_name':executor,'returned_task_name':executor}))
-        method = stored(tmp, f'{tag}-read.json', {'executor': executor, 'fixture': 'full neutral method bytes read'})
-        completion = stored(tmp, f'{tag}-completion.json', observation(model_output_bytes_sha256=raw['sha256'],
-            all_method_bytes_read=True, method_read_record_sha256=method['sha256'], completion={
-              'sender':executor,'message_type':'FINAL_ANSWER','status_observation_tool':'collaboration.list_agents',
-              'observed_status':'completed','observed_completed_agents':[executor],'raw_final_message':'full original'}))
+        executor = executor or f'/root/{slot}-author'
+        originals, stage_receipts = [], []
+        for ordinal, turn in enumerate(turns or [f'{slot}-actual-turn'], 1):
+            stage = f'{tag}-{ordinal}'
+            raw = u.write_once(tmp/f'{stage}-raw', b'SYNTHETIC original envelope, SDK status independent.\n')
+            spawn = {'canonical_task_name': executor, 'returned_task_name': executor}
+            if turn is not None:
+                spawn['native_turn_id'] = turn
+            invocation = stored(tmp, f'{stage}-invoke.json', observation(spawn=spawn, metadata=invocation_metadata))
+            method = stored(tmp, f'{stage}-read.json', {'executor': executor, 'fixture': 'full neutral method bytes read'})
+            final = {'sender': executor, 'message_type': 'FINAL_ANSWER', 'status_observation_tool': 'collaboration.list_agents',
+                     'observed_status': 'completed', 'observed_completed_agents': [executor]}
+            message = final_message[ordinal-1] if isinstance(final_message, list) else final_message
+            if message is not None:
+                final['raw_final_message'] = message
+            record = observation(model_output_bytes_sha256=raw['sha256'], all_method_bytes_read=True,
+                                 method_read_record_sha256=method['sha256'], completion=final)
+            # JSON can carry escaped unpaired surrogates; these are not a UTF-8 native FINAL.
+            completion = u.write_once(tmp/f'{stage}-completion.json', (json.dumps(record, ensure_ascii=True)+'\n').encode())
+            originals.append({'ordinal': ordinal, 'raw': raw, 'observation': completion})
+            stage_receipts.append({'ordinal': ordinal, 'invocation': invocation, 'method_read': method, 'completion': completion})
         manifest = stored(tmp, f'{tag}-complete-manifest.json', {'format':'rc3-native-complete-draft-manifest.v1',
-            'complete_native_manuscript_observed':True,'assurance':'host_attested','raw_stage_ordinals':[1],
+            'complete_native_manuscript_observed':True,'assurance':'host_attested','raw_stage_ordinals':list(range(1, len(originals)+1)),
             'completeness_source_observation':completion})
         snap_ref = stored(tmp, f'{tag}-snapshot.json', {'format':'rc3-campaign-original-native-snapshot.v1',
             'timepoint':'qualified_for_owner' if fail_timepoint else 'original_complete','native_complete_manifest':manifest,
-            'native_originals':[{'ordinal':1,'raw':raw,'observation':completion}]})
+            'native_originals':originals})
         authors=[executor]
-    stage_receipts = [] if arm == 'C' else [{'ordinal':1, 'invocation':invocation, 'method_read':method, 'completion':completion}]
+    if arm == 'C':
+        stage_receipts = []
     lineage = stored(tmp, f'{tag}-lineage.json', observation(slot=slot, earliest_complete_snapshot_sha256=snap_ref['sha256'],
         earlier_complete_snapshot_refs=[],lineage_known=True,author_identities=authors,
         invocation=invocation,method_read=method,completion=completion,stage_receipts=stage_receipts))
     return stored(tmp, f'{tag}-proof.json', observation(slot=slot,input_identity=u.input_identity(config,case),
         method_identity=config['barrier_methods'][slot],original_snapshot=snap_ref,lineage_read_execution=lineage))
+
+
+@pytest.mark.parametrize('message', [None, '', ' \t\r\n', 17, '\ud800', ['', 'full later stage']])
+def test_AB_original_requires_real_nonempty_FINAL_without_slot_credit(setup, message):
+    _, _, state, config = setup
+    proof = bind_proof(setup, u.CASES[0], 'A', final_message=message,
+                       turns=['stage-1', 'stage-2'] if isinstance(message, list) else None)
+    cj = u.Journal(state['campaign'])
+    with pytest.raises(u.CampaignError, match='full native FINAL carrier'):
+        u.bind_original(cj, config, u.SLOTS[0], proof['path'])
+    assert not u.events(cj, 'original_bound') and len(u.barrier(cj)['missing']) == 6
+
+
+@pytest.mark.parametrize('tamper', ['missing', 'hash_changed'])
+def test_AB_declared_completion_carrier_must_exist_and_hash_match(setup, tamper):
+    _, _, state, config = setup
+    proof = bind_proof(setup, u.CASES[0], 'A')
+    snap = u.checked(u.read(proof['path'])['original_snapshot'])
+    carrier = Path(snap['native_originals'][0]['observation']['path'])
+    if tamper == 'missing':
+        carrier.unlink()
+    else:
+        carrier.write_text('changed neutral completion only')
+    cj = u.Journal(state['campaign'])
+    with pytest.raises((u.CampaignError, FileNotFoundError)):
+        u.bind_original(cj, config, u.SLOTS[0], proof['path'])
+    assert not u.events(cj, 'original_bound')
+
+
+def test_AB_different_FINAL_and_envelope_with_same_actor_distinct_turns_are_valid(setup):
+    _, _, state, config = setup
+    cj = u.Journal(state['campaign'])
+    actor = '/root/neutral_shared_actor'
+    # Two legitimate stages by one actor in A; another actual turn in B.
+    for arm, turns in [('A', ['actual-layer-1', 'actual-layer-2']), ('B', ['actual-layer-3'])]:
+        proof = bind_proof(setup, u.CASES[0], arm, executor=actor, turns=turns)
+        bound = u.bind_original(cj, config, f'{u.CASES[0]}-{arm}', proof['path'])
+        assert [row['native_turn_id'] for row in bound['invocation_identities']] == turns
+        for item in u.checked(bound['snapshot'])['native_originals']:
+            assert Path(item['raw']['path']).read_text() != u.checked(item['observation'])['completion']['raw_final_message']
+    assert len(u.events(cj, 'original_bound')) == 2
+
+
+def test_actual_turn_reuse_is_rejected_despite_different_metadata_and_JSON_bytes(setup):
+    _, _, state, config = setup
+    cj = u.Journal(state['campaign'])
+    proofs = [bind_proof(setup, u.CASES[0], arm, executor='/root/same_actual_actor', turns=['one-actual-turn'],
+                         invocation_metadata={'wrapper': arm, 'transcription': u.c.now()}) for arm in ('A', 'B')]
+    first = u.bind_original(cj, config, u.SLOTS[0], proofs[0]['path'])
+    second_lineage = u.checked(u.read(proofs[1]['path'])['lineage_read_execution'])
+    assert first['invocations'][0]['sha256'] != second_lineage['invocation']['sha256']
+    with pytest.raises(u.CampaignError, match='same actual invocation'):
+        u.bind_original(cj, config, u.SLOTS[1], proofs[1]['path'])
+    assert [row['slot'] for row in u.events(cj, 'original_bound')] == [u.SLOTS[0]]
+
+
+def test_AB_unknown_stable_actual_turn_identity_cannot_gain_credit(setup):
+    _, _, state, config = setup
+    cj = u.Journal(state['campaign'])
+    proof = bind_proof(setup, u.CASES[0], 'A', turns=[None])
+    with pytest.raises(u.CampaignError, match='unknown identity'):
+        u.bind_original(cj, config, u.SLOTS[0], proof['path'])
+    assert not u.events(cj, 'original_bound')
 
 
 def test_six_slot_barrier_exact_native_not_sdk_or_second_draft(setup):
