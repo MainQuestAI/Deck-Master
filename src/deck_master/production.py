@@ -170,6 +170,139 @@ def consumed_design(resolved):
     return result
 
 
+def adopted_blueprint_design(store, document, page_entry):
+    """Read the adopted image's owned, immutable generation design, if modern.
+
+    Closed observations are historical facts: reading their Request does not
+    reauthenticate an old execution against this reader's installation. No
+    latest recipe, caller label or current writer floor supplies a missing
+    lineage. A genuinely older Request without requirements stays legacy.
+    """
+    from . import generation, tasks
+    from .models import validate_artifact_semantics, validate_schema
+    from .store import StoreError
+
+    ref = page_entry.get("blueprint")
+    if ref is None:
+        return None
+    where = "blueprint/provenance/generation_request"
+    try:
+        artifact = store.read_object_json(ref)
+        validate_artifact_semantics(artifact)
+        if artifact["role"] != "blueprint" or artifact["page_id"] != page_entry["page_id"]:
+            raise ModelError(where, "adopted blueprint has a different page or role")
+        provenance = artifact["provenance"]
+        request_ref = provenance.get("generation_request")
+        if request_ref is None:
+            # A stripped modern provenance must not become a legacy fallback.
+            for task_ref in document.get("tasks") or []:
+                owner = store.read_object_json(task_ref)
+                if (page_entry["page_id"] not in (owner.get("scope_pages") or [])
+                        or "content_requirements_v1" not in (owner.get("required_capabilities") or [])):
+                    continue
+                for result_ref in owner.get("result_refs") or []:
+                    result = store.read_object_json(result_ref)
+                    if (result_ref == ref or (result.get("schema_version") == "deck_artifact.v1"
+                            and result.get("role") == "blueprint" and result.get("page_id") == artifact["page_id"]
+                            and result.get("file") == artifact["file"])):
+                        raise ModelError(where, "modern blueprint is missing its owned generation Request")
+            if provenance.get("generation_attempt") is not None:
+                raise ModelError(where, "generation provenance has no Request")
+            return None
+        request = store.read_object_json(request_ref)
+        validate_schema("generation_request", request)
+        if (request["project_id"] != document["project_id"]
+                or request["input_hash"] != sha256_bytes(canonical_json_bytes(request["input"]))):
+            raise ModelError(where, "generation Request project or frozen hash differs")
+        owner = tasks._lookup_task(document, request["task_id"], store)
+        if (owner["kind"] != "blueprint" or owner["scope_pages"] != [page_entry["page_id"]]
+                or request_ref not in (owner.get("generation_requests") or [])
+                or ref not in (owner.get("result_refs") or [])):
+            raise ModelError(where, "Request and adopted blueprint are not owned by their actual Task")
+        attempt_ref = provenance.get("generation_attempt")
+        if attempt_ref is None or attempt_ref not in (owner.get("generation_attempts") or []):
+            raise ModelError(where, "generation Attempt is not owned by the actual Task")
+        attempt = store.read_object_json(attempt_ref)
+        validate_schema("generation_attempt", attempt)
+        if (attempt["task_id"] != owner["task_id"] or attempt["project_id"] != document["project_id"]
+                or attempt["request_ref"] != request_ref or artifact["file"] not in attempt["output_refs"]
+                or provenance.get("generated_from_page") != request["input"]["page"]["page_ref"]):
+            raise ModelError(where, "adopted image, Page and Attempt do not bind the same Request")
+        prepared, _ = stored_blueprint_request(store, owner)
+        resolved = (prepared or {}).get("resolved_design_context")
+        frozen = request["input"]["design_context"]
+        modern = ("content_requirements_v1" in (owner.get("required_capabilities") or [])
+                  or resolved is not None or "content_requirements" in frozen or "content_basis" in frozen)
+        if not modern:
+            return None
+        if (resolved is None or frozen != resolved
+                or request["input"]["page"] != {"page_id": page_entry["page_id"],
+                                                  "page_ref": resolved["content_basis"]["page_ref"]}):
+            raise ModelError(where, "modern Request does not retain its full actual preparation")
+        # The original formal preparation checks Page membership and prompt
+        # projection; the frozen Request must retain those exact consumer inputs.
+        expected = generation.prepared_input(store, document, owner)
+        for key in ("page", "design_context", "prompt", "references", "basis", "template_ref"):
+            if request["input"][key] != expected[key]:
+                raise ModelError(where, "frozen Request differs from its owned preparation: " + key)
+        recipe_ref = request["input"].get("style_recipe_ref")
+        if (recipe_ref != expected.get("style_recipe_ref")
+                or recipe_ref != resolved["content_basis"]["recipe_ref"]
+                or request["input"]["constraints"] != expected["constraints"]):
+            raise ModelError(where, "frozen recipe or constraints differ from the actual Task")
+        return {"resolved_design_context": deepcopy(resolved), "recipe_ref": deepcopy(recipe_ref)}
+    except (StoreError, OSError, ValueError, KeyError, TypeError) as exc:
+        if isinstance(exc, ModelError):
+            raise
+        raise ModelError(where, "unreadable or invalid adopted generation lineage") from exc
+
+
+def resolve_page_design(store, document, page_entry, *, require_current=False):
+    """Full immutable adopted design for writers; legacy Pages keep old behavior."""
+    bound = adopted_blueprint_design(store, document, page_entry)
+    if bound is None:
+        page = store.read_object_json(page_entry["page"])
+        return resolve_design(page, document["design_context"],
+                              document["design_context"].get("assets") or [])[0]
+    resolved = bound["resolved_design_context"]
+    if require_current and consumed_design(resolved) != consumed_design(
+            resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"])):
+        raise ModelError("blueprint/content_basis", "adopted blueprint's consumed Page/Plan/design inputs changed")
+    return resolved
+
+
+def resolve_page_rendering_design(store, document, page_entry):
+    """Current rendering slice using the adopted image's exact recipe identity.
+
+    This lets a dependency checker report a relevant current change, while a
+    writer receives the original complete context only after freshness checks.
+    """
+    bound = adopted_blueprint_design(store, document, page_entry)
+    if bound is not None:
+        return resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"])
+    return resolve_page_design(store, document, page_entry)
+
+
+def design_handoff_protocol_fields(store, document, entries):
+    """Existing envelope protocol, explicit capabilities for new consumers.
+
+    This is not a change-plan binding: direct Host tasks need no fictitious
+    change_plan capability. Historical tasks are never rewritten by this read.
+    """
+    capabilities = set()
+    for entry in entries:
+        bound = adopted_blueprint_design(store, document, entry)
+        if bound is None:
+            continue
+        resolve_page_design(store, document, entry, require_current=True)
+        capabilities.add("content_requirements_v1")
+        if bound["recipe_ref"] is not None:
+            capabilities.add("style_recipe")
+            if store.read_object_json(bound["recipe_ref"])["schema_version"] == "style_recipe.v3":
+                capabilities.add("style_recipe_v3")
+    return {"protocol_version": "changes.v1", "required_capabilities": sorted(capabilities)} if capabilities else {}
+
+
 def style_font_fingerprint(design, style, asset_sha):
     """Font-reality slice of a style fingerprint (P1-06).
 

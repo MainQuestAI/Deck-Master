@@ -1304,9 +1304,8 @@ def _accept_result_locked(
         entry = next(e for e in document['pages'] if e['page_id'] == task['scope_pages'][0])
         subjects = {(ref['path'], ref['sha256']) for ref in (entry['page'], entry['blueprint'], entry['svg'], entry['svg_preview'])}
         from .editing import _current_artifact_digests
-        from .production import resolve_design
-        page = store.read_object_json(entry['page'])
-        effective, _ = resolve_design(page, document['design_context'], document['design_context'].get('assets') or [])
+        from .production import resolve_page_design
+        effective = resolve_page_design(store, document, entry, require_current=True)
         digests = _current_artifact_digests(store, document)
         required_deps = {f"content:page:{entry['page_id']}", f"blueprint:{entry['page_id']}",
                          f"artifact:svg:{entry['page_id']}", f"style:{entry['page_id']}"}

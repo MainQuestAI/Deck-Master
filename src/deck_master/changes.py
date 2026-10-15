@@ -240,6 +240,13 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
         inputs.append(store.put_json_object(request))
         protocol = protocol_fields(basis, store=store)
         protocol['required_capabilities'].append('change_plan')
+    elif action['kind'] in ('reconstruct', 'repair') and action['write_slots'] == ['svg']:
+        from .production import design_handoff_protocol_fields
+        handoff = design_handoff_protocol_fields(store, basis, [entry])
+        if handoff:
+            protocol['required_capabilities'].extend(handoff['required_capabilities'])
+            from .models import require_writer
+            require_writer(ledger, 'rc3.v1')
     task = tasks.new_task(task_id=task_id, operation_id=str(uuid.uuid4()), kind=action['kind'],
                           scope_pages=[action['page_id']], instruction=plan['input']['instruction'], inputs=inputs,
                           dependencies=[{'kind': 'content', 'identity': 'page:' + action['page_id'], 'sha256': action['page_ref']['sha256']}],

@@ -13,7 +13,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 from .compiler import CompileOptions, SvgInput, compile_deck
 from .compiler.svg import parse_svg, image_elements, XLINK_HREF
-from .production import resolve_design
+from .production import resolve_page_design
 from .content import visible_atoms
 from .models import bump_revision, validate_artifact_semantics
 from .store import Store, StoreError
@@ -67,9 +67,26 @@ def artifact(store,path,role,*,page_id=None,dependencies=(),derived_from=()):
 
 def page_asset_paths(store, document, entry, work, *, page=None):
     """Materialize exactly the assets the current Page permits for SVG parsing."""
-    page = page or store.read_object_json(entry['page'])
-    effective, _ = resolve_design(page, document['design_context'],
-                                  document['design_context'].get('assets', []))
+    if entry.get('page') is None and page is not None and entry.get('blueprint') is None:
+        # Initial compose may supply a new Page and SVG together. There is no
+        # adopted image lineage yet; retain the actual proposed Page resolver.
+        from .production import resolve_design
+        effective, _ = resolve_design(page, document['design_context'],
+                                       document['design_context'].get('assets') or [])
+    else:
+        effective = resolve_page_design(store, document, entry, require_current=True)
+    if page is not None:
+        if 'content_requirements' in effective:
+            from .visual_dependencies import page_visual_digest
+            from .models import ModelError
+            if page_visual_digest(page) != page_visual_digest(store.read_object_json(entry['page'])):
+                raise ModelError('svg/page', 'a new visible Page cannot claim the adopted blueprint context')
+        else:
+            # Legacy combined Page/SVG repairs retain their actual proposed
+            # Page asset overrides; do not silently parse against the old Page.
+            from .production import resolve_design
+            effective, _ = resolve_design(page, document['design_context'],
+                                           document['design_context'].get('assets') or [])
     mapping = {}
     for asset in effective['assets']:
         try:

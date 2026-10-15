@@ -56,4 +56,8 @@ control 仅绑定该 Task 的真实视觉输入/目标和当前控制；仅 note
 
 native SVG/readback 的正式 Page 原子绑定同时检查表格行列归属和节点责任实际几何。合法整体平移/缩放保留关系；同文字换归属或反箭头不能仅凭文字集合通过。工程编译检查与真实非作者模型阅图、人类验收分别记录。
 
+## 已采用蓝图的重建交接
+
+reconstruct、repair 和 page_visual 工作单逐页读取 `page_design_contexts` 的完整配置：其中的 recipe_parameters、recipe_overrides、content_requirements 和 content_basis 来自该已采用蓝图的实际不可变 Request 与生产 Task，不能以项目 default 或 latest recipe 替换。Page atoms 仍是准确正文来源，原 PNG 是视觉参考；历史 Page/Plan Ref 保留作来源，notes 或未消费字段变化由当前视觉切片判断。新工作单用既有 changes.v1 声明实际 required_capabilities 后领取，包含适用的 content_requirements_v1、style_recipe、style_recipe_v3；直接 Host 重建没有 change plan 时不虚构 change_plan 能力或绑定。历史工作单保留原协议。缺失或冲突的新来源必须修复交接，不能自行回 default；读取已关闭的真实调用不重新认证其旧执行安装。
+
 可运行两阶段样例：`examples/workbench/w02_host_roundtrip.py`。prepare 只建立隔离合成项目并返回真实 ID；Host 在两阶段间执行真实 ImageGen；complete 采集、结算、采用并核对唯一调用账。它不替代 SVG/PPT、内容专业或用户验收。

@@ -57,7 +57,8 @@ def is_visual_task(task):
 
 def visual_task_inputs_current(store, document, task):
     """Actual dispatched visual inputs; no task.preparation/cache inference."""
-    from .production import resolve_design, stored_blueprint_request
+    from .production import (consumed_design, resolve_page_design,
+                             resolve_page_rendering_design, stored_blueprint_request)
     from .snapshots import load_snapshot
     try:
         if not is_visual_task(task) or not task.get("scope_pages"):
@@ -69,6 +70,12 @@ def visual_task_inputs_current(store, document, task):
         target = task.get("stage_request", {}).get("target_reference_ref")
         if target is not None and any(entry.get("blueprint") != target for entry in document["pages"] if entry["page_id"] in task["scope_pages"]):
             return False
+        if task.get("kind") != "blueprint":
+            for entry in document["pages"]:
+                if entry["page_id"] in task["scope_pages"]:
+                    # Validate the actual adopted lineage even on the identity
+                    # fast path; an already-stale image cannot seed new work.
+                    resolve_page_design(store, document, entry, require_current=True)
         if content_identity(document) == task.get("produced_against"):
             return True
         dispatched = load_snapshot(store, task["dispatch_revision"])
@@ -83,14 +90,14 @@ def visual_task_inputs_current(store, document, task):
             old, current = before[page_id], after[page_id]
             if not page_visual_equivalent(store, old["page"], current["page"], page_id):
                 return False
-            old_page, new_page = store.read_object_json(old["page"]), store.read_object_json(current["page"])
             if prepared and prepared.get("resolved_design_context"):
-                from .production import consumed_design, resolve_generation_design
+                from .production import resolve_generation_design
                 recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
                 if consumed_design(prepared["resolved_design_context"]) != consumed_design(
                         resolve_generation_design(store, document, current, recipe_ref=recipe_ref)):
                     return False
-            elif resolve_design(old_page, dispatched["design_context"], dispatched["design_context"].get("assets") or []) != resolve_design(new_page, document["design_context"], document["design_context"].get("assets") or []):
+            elif consumed_design(resolve_page_rendering_design(store, dispatched, old)) != consumed_design(
+                    resolve_page_rendering_design(store, document, current)):
                 return False
             slots = ("blueprint", "svg", "svg_preview") if task.get("review_stage") == "page_visual" else (("blueprint", "svg") if task.get("kind") in ("reconstruct", "repair", "review") else ())
             if task.get("stage_request", {}).get("mode") == "trial":

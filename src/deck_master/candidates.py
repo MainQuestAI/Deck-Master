@@ -50,6 +50,9 @@ def generation_basis(store, document, page_id, stage, *, preserve_blueprint=Fals
         if prepared and prepared.get('resolved_design_context'):
             design = consumed_design(resolve_generation_design(store, document, entry,
                        recipe_ref=task.get('stage_request', {}).get('style_recipe_ref')))
+    elif stage == 'svg':
+        from .production import consumed_design, resolve_page_rendering_design
+        design = consumed_design(resolve_page_rendering_design(store, document, entry))
     if stage == 'content':
         # Precise single-page scope: the Page identity decides adoption
         # concurrency; the digests stay recorded dispatch facts, not gates.
