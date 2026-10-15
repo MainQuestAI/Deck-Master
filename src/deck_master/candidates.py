@@ -37,13 +37,25 @@ def result_kind(candidate):
     return candidate.get('result_kind', 'artifact')
 
 
-def generation_basis(store, document, page_id, stage, *, preserve_blueprint=False):
+def generation_basis(store, document, page_id, stage, *, preserve_blueprint=False, task=None):
     from .production import resolve_design
     entry = next((e for e in document['pages'] if e['page_id'] == page_id), None)
     if entry is None:
         return None
     page = store.read_object_json(entry['page'])
     design, _ = resolve_design(page, document['design_context'], document['design_context'].get('assets') or [])
+    if stage != 'content' and task and task.get('kind') == 'blueprint':
+        from .production import stored_blueprint_request, resolve_generation_design
+        prepared, _ = stored_blueprint_request(store, task)
+        if prepared and prepared.get('resolved_design_context'):
+            design = _recorded_design_basis(store, resolve_generation_design(store, document, entry,
+                recipe_ref=task.get('stage_request', {}).get('style_recipe_ref')),
+                prepared['resolved_design_context'])
+    elif stage == 'svg':
+        from .production import adopted_blueprint_design, resolve_page_rendering_design
+        bound = adopted_blueprint_design(store, document, entry)
+        design = _recorded_design_basis(store, resolve_page_rendering_design(store, document, entry),
+            bound['resolved_design_context'] if bound else None)
     if stage == 'content':
         # Precise single-page scope: the Page identity decides adoption
         # concurrency; the digests stay recorded dispatch facts, not gates.
@@ -52,6 +64,22 @@ def generation_basis(store, document, page_id, stage, *, preserve_blueprint=Fals
     return {'page_ref': entry['page'], 'input_digest': compute_input_digest(document),
             'design_digest': sha256_bytes(canonical_json_bytes(design)),
             'blueprint_ref': entry.get('blueprint') if stage == 'svg' or preserve_blueprint else None}
+
+
+def _recorded_design_basis(store, current, frozen):
+    """Keep the historical candidate digest encoding without consuming audit versions.
+
+    The immutable actual preparation supplies the old Ref shell only after
+    the shared semantic comparison proves it equivalent to current inputs.
+    No candidate, Request or basis is rewritten by this read.
+    """
+    from .production import consumed_design
+    if frozen is not None and consumed_design(current, store=store) == consumed_design(frozen, store=store):
+        current = frozen
+    result = {key: value for key, value in current.items() if key != 'content_basis'}
+    if current.get('content_basis'):
+        result['consumed_basis'] = current['content_basis']['consumed']
+    return result
 
 
 def inputs_current(store, document, task):
@@ -191,7 +219,7 @@ def _state(store, document, candidate, task=None):
         target = entry.get(candidate['stage']) if entry else None
         target_reference = (task or {}).get('stage_request', {}).get('target_reference_ref')
         preserve_blueprint = candidate['stage'] == 'blueprint' and bool(target_reference)
-        basis = generation_basis(store, document, candidate['page_id'], candidate['stage'], preserve_blueprint=preserve_blueprint)
+        basis = generation_basis(store, document, candidate['page_id'], candidate['stage'], preserve_blueprint=preserve_blueprint, task=task)
         expected = candidate['generation_basis']
         if preserve_blueprint:
             # Earlier v2 candidates stored a null blueprint basis. Their exact
@@ -326,7 +354,7 @@ def record_result(store, *, document, task, updated_task, artifacts, artifact_re
                  'created_at': tasks._utc_now_iso(), 'page_id': page_id, 'stage': stage,
                  'base_revision': task['dispatch_revision'],
                  'generation_basis': generation_basis(store, dispatched, page_id, stage,
-                     preserve_blueprint=bool(task.get('stage_request', {}).get('target_reference_ref'))),
+                     preserve_blueprint=bool(task.get('stage_request', {}).get('target_reference_ref')), task=task),
                  'request_ref': generation_binding['request_ref'] if generation_binding else None,
                  'attempt_ref': generation_binding['attempt_ref'] if generation_binding else None,
                  'target_ref': entry.get(stage), 'result_ref': artifact_refs[0], 'status': 'available'}

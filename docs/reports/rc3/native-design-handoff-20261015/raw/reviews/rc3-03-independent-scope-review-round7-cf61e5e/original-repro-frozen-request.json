@@ -1,0 +1,191 @@
+{
+  "status": "frozen",
+  "revision_id": "4ebaa84bbf0b47a3a0c14cf666b5f3e4",
+  "request_id": "req-0127360134b340a08d02d470d9716c42",
+  "request_ref": {
+    "path": ".deckmaster/objects/00/00e54a440b03a0c2686cbbdf13244610bc43b1a62049ec49cc7e6ea154e3e165.json",
+    "sha256": "00e54a440b03a0c2686cbbdf13244610bc43b1a62049ec49cc7e6ea154e3e165"
+  },
+  "input_hash": "6e8fb4ca8fa23f02ebbc48058f80fa75a85b9837795b53e9c77cd4506e3c959b",
+  "input": {
+    "schema_version": "generation_input.v1",
+    "prompt": "设计试作，完整保留目标页正文、单位、限定、表格归属与关系。\n只有结构化 recipe_parameters 执行；规划文字不覆盖参数。\n意图：initial_design\n固定正文，明确关系，只调整视觉表达。\n\nUse case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a quantitative judgment requires data absent from the input, return that gap to the content stage for the necessary evidence; preserve the fixed copy and qualifications. Do not substitute a decorative quantity chart or invent schematic data. Preserve qualitative mechanisms or teaching illustrations only when the fixed manuscript explicitly requests them and they create no quantitative impression. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"content_requirements\": {\n    \"content_profile\": \"simple\",\n    \"density_rationale\": \"One actual rule\",\n    \"layout_hint\": null,\n    \"mode\": \"fidelity\",\n    \"page_id\": \"p1\",\n    \"page_role\": {\n      \"audience_question\": \"What follows?\",\n      \"intended_takeaway\": \"Record the known rule\",\n      \"role\": \"detail\",\n      \"transition_to_next\": null\n    },\n    \"required_qualifications\": [],\n    \"schema_version\": \"content_requirements.v1\",\n    \"structure_refs\": {\n      \"atom_ids\": [\n        \"atom:p1:block:b1:text\",\n        \"atom:p1:title\"\n      ],\n      \"edge_ids\": [],\n      \"node_ids\": []\n    },\n    \"visual_intent\": \"synthetic\"\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"id\": \"b1\",\n        \"text\": \"第一页。\",\n        \"type\": \"paragraph\"\n      }\n    ],\n    \"callouts\": [],\n    \"footnotes\": [],\n    \"labels\": [],\n    \"subtitle\": \"\",\n    \"title\": \"标题p1\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"p1\",\n  \"permitted_assets\": [],\n  \"recipe_overrides\": [],\n  \"recipe_parameters\": {\n    \"composition\": \"主链置上方，异常表置下方。\",\n    \"density\": \"完整保留两行异常表，每行不拆分归属。\",\n    \"icons\": \"只在人工确认节点使用单色人物图标。\",\n    \"lines\": \"主链使用2px实线单向箭头。\",\n    \"palette\": {\n      \"accent\": \"#006688\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#132133\"\n    },\n    \"spacing\": \"四周保留48px安全边距，表格单元格保留12px内距。\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#006688\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#132133\"\n    },\n    \"layout_notes\": \"density: 完整保留两行异常表，每行不拆分归属。\\ncomposition: 主链置上方，异常表置下方。\\nspacing: 四周保留48px安全边距，表格单元格保留12px内距。\\nlines: 主链使用2px实线单向箭头。\\nicons: 只在人工确认节点使用单色人物图标。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [],\n    \"intent\": \"synthetic\",\n    \"layout_hint\": \"\",\n    \"nodes\": [],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+    "page": {
+      "page_id": "p1",
+      "page_ref": {
+        "path": ".deckmaster/objects/4e/4e25504d34bb152e688da683fc709d48b7b223a185240b72776f2a75cc001f6b.json",
+        "sha256": "4e25504d34bb152e688da683fc709d48b7b223a185240b72776f2a75cc001f6b"
+      }
+    },
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "content_basis": {
+        "consumed": {
+          "decision_slices": [
+            {
+              "decision_ref": {
+                "path": ".deckmaster/objects/2a/2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07.json",
+                "sha256": "2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07"
+              },
+              "sha256": "1d3b6e9a4158626e3dbcb0dbb49d0601eb4b2b2901b44fd7909c77810134d598"
+            }
+          ],
+          "page_semantics_sha256": "85269f5451541b82cbb846f7b48393370dce6385521fc7bf4fb5ea19a611c8ff",
+          "plan_global_sha256": "18e55d030da52492c7964dbe768336d73b915e2014c449f2c7ada5485adbec84",
+          "plan_page_sha256": "8823c836f8ab003104421491529fbf7a8c12d06066722c26614e605babc77396",
+          "recipe_parameters_sha256": "043b18560965fda7848f738d579e49bccd7edeeec02d970a1dfaa64ca7ccb116"
+        },
+        "decision_refs": [
+          {
+            "path": ".deckmaster/objects/2a/2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07.json",
+            "sha256": "2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07"
+          }
+        ],
+        "page_ref": {
+          "path": ".deckmaster/objects/4e/4e25504d34bb152e688da683fc709d48b7b223a185240b72776f2a75cc001f6b.json",
+          "sha256": "4e25504d34bb152e688da683fc709d48b7b223a185240b72776f2a75cc001f6b"
+        },
+        "plan_ref": {
+          "path": ".deckmaster/objects/82/82e61daf260649f62313de8cdfc326cc22166e4dd1b2347bdf8b8dcee467293e.json",
+          "sha256": "82e61daf260649f62313de8cdfc326cc22166e4dd1b2347bdf8b8dcee467293e"
+        },
+        "recipe_ref": {
+          "path": ".deckmaster/objects/90/90a08b8934416da09986ae1b2aa01f17da84f622bb39a10f6593ecf6585c4144.json",
+          "sha256": "90a08b8934416da09986ae1b2aa01f17da84f622bb39a10f6593ecf6585c4144"
+        },
+        "schema_version": "content_basis.v1"
+      },
+      "content_requirements": {
+        "content_profile": "simple",
+        "density_rationale": "One actual rule",
+        "layout_hint": null,
+        "mode": "fidelity",
+        "page_id": "p1",
+        "page_role": {
+          "audience_question": "What follows?",
+          "intended_takeaway": "Record the known rule",
+          "role": "detail",
+          "transition_to_next": null
+        },
+        "required_qualifications": [],
+        "schema_version": "content_requirements.v1",
+        "structure_refs": {
+          "atom_ids": [
+            "atom:p1:block:b1:text",
+            "atom:p1:title"
+          ],
+          "edge_ids": [],
+          "node_ids": []
+        },
+        "visual_intent": "synthetic"
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "recipe_overrides": [],
+      "recipe_parameters": {
+        "composition": "主链置上方，异常表置下方。",
+        "density": "完整保留两行异常表，每行不拆分归属。",
+        "icons": "只在人工确认节点使用单色人物图标。",
+        "lines": "主链使用2px实线单向箭头。",
+        "palette": {
+          "accent": "#006688",
+          "background": "#FFFFFF",
+          "text": "#132133"
+        },
+        "spacing": "四周保留48px安全边距，表格单元格保留12px内距。",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      },
+      "styles": [
+        {
+          "colors": {
+            "accent": "#006688",
+            "background": "#FFFFFF",
+            "text": "#132133"
+          },
+          "layout_notes": "density: 完整保留两行异常表，每行不拆分归属。\ncomposition: 主链置上方，异常表置下方。\nspacing: 四周保留48px安全边距，表格单元格保留12px内距。\nlines: 主链使用2px实线单向箭头。\nicons: 只在人工确认节点使用单色人物图标。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "template_ref": null,
+    "references": [],
+    "parameters": {
+      "transparent_background": false
+    },
+    "constraints": {
+      "preserve_target_content": true,
+      "style_recipe_ref": {
+        "path": ".deckmaster/objects/90/90a08b8934416da09986ae1b2aa01f17da84f622bb39a10f6593ecf6585c4144.json",
+        "sha256": "90a08b8934416da09986ae1b2aa01f17da84f622bb39a10f6593ecf6585c4144"
+      },
+      "recipe_parameters": {
+        "composition": "主链置上方，异常表置下方。",
+        "density": "完整保留两行异常表，每行不拆分归属。",
+        "icons": "只在人工确认节点使用单色人物图标。",
+        "lines": "主链使用2px实线单向箭头。",
+        "palette": {
+          "accent": "#006688",
+          "background": "#FFFFFF",
+          "text": "#132133"
+        },
+        "spacing": "四周保留48px安全边距，表格单元格保留12px内距。",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      }
+    },
+    "basis": {
+      "project_id": "proj",
+      "revision_id": "316da48c2c614fe0a6e9264ad90fdca3",
+      "produced_against": "aba6c80470701fd1c151cc94033db4d0ee93e0fea7f093228c6fdfa556166dca"
+    },
+    "style_recipe_ref": {
+      "path": ".deckmaster/objects/90/90a08b8934416da09986ae1b2aa01f17da84f622bb39a10f6593ecf6585c4144.json",
+      "sha256": "90a08b8934416da09986ae1b2aa01f17da84f622bb39a10f6593ecf6585c4144"
+    }
+  },
+  "observer": "core_frozen"
+}

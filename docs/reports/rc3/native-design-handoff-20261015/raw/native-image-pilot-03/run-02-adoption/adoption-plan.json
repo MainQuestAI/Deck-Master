@@ -1,0 +1,39 @@
+{
+  "status": "planned",
+  "plan_id": "adopt-plan-15c9c02627172c1528f141ca46222cc7ee62ca65ff33a8d0ac148068609f4265",
+  "plan_ref": {
+    "path": ".deckmaster/objects/15/15c9c02627172c1528f141ca46222cc7ee62ca65ff33a8d0ac148068609f4265.json",
+    "sha256": "15c9c02627172c1528f141ca46222cc7ee62ca65ff33a8d0ac148068609f4265"
+  },
+  "plan": {
+    "schema_version": "candidate_adoption.v1",
+    "project_id": "actual-q2",
+    "base_revision": "293f8427236d45c6baa69e23a2f1c781",
+    "selections": [
+      {
+        "candidate_id": "candidate-a36cb3e3313141bc983e8e288b087c44",
+        "candidate_ref": {
+          "path": ".deckmaster/objects/be/be744b2b9b41ad63c2555986a7f2404e0a0d8dcd23236ed162aeea65345533f4.json",
+          "sha256": "be744b2b9b41ad63c2555986a7f2404e0a0d8dcd23236ed162aeea65345533f4"
+        },
+        "result_kind": "artifact",
+        "page_id": "p04",
+        "stage": "blueprint",
+        "target_ref": null,
+        "result_ref": {
+          "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+          "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+        },
+        "basis_digest": "113dd04bd3c614ca4ba673d52e64594f32570b8c5cb3101e0d4d91a1f9347467",
+        "downstream": [
+          "svg",
+          "svg_preview",
+          "ppt_preview",
+          "deck_outputs",
+          "quality_applicability"
+        ]
+      }
+    ],
+    "max_calls": 0
+  }
+}

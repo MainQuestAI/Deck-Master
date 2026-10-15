@@ -1,0 +1,121 @@
+{
+  "status": "PASS",
+  "scope": "actual p04 image request / original PNG / immutable installed-5db reconstruct handoff",
+  "evidence_kind": "host_attested actual native image; not human/platform-signed/fair E2/E3",
+  "image_source_sha": "8057905162f20926cfc1a0a96252bc6745f4e700",
+  "reader_source_sha": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+  "reader_installation": {
+    "module_path": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "module_sha256": "1a880a02d9f145c447043fc9bfc91ed0c228b7714909df20be1f3182f2b8889b",
+    "python_executable": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/bin/python",
+    "python_prefix": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv",
+    "method_root": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/resources/skill",
+    "method_source": "packaged",
+    "source": null,
+    "install": {
+      "release_id": "5dbdf72089d6-94f6f31fcadf",
+      "source_sha": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+      "source_tree": null,
+      "source_dirty": false,
+      "package_version": "1.0.0.dev2",
+      "wheel_sha256": "94f6f31fcadf4e5a493b77b7dcefd7cebe43edc033f9268266fdba07eeb9ffb2",
+      "status": "candidate_ready"
+    },
+    "metadata_version": "1.0.0.dev2"
+  },
+  "request_id": "req-52a64541f69e4cd39fec2161ee5c3f97",
+  "request_ref": {
+    "path": ".deckmaster/objects/85/85815c301b12ddf8d4f3e1c706ba5d8086674377e6217b70ce525b54596b83a7.json",
+    "sha256": "85815c301b12ddf8d4f3e1c706ba5d8086674377e6217b70ce525b54596b83a7"
+  },
+  "attempt_id": "attempt-d4f9d802f6394622a463be40ec3ba24e",
+  "page_id": "p04",
+  "original_png_sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+  "actual_dimensions": [
+    1672,
+    941
+  ],
+  "requested_canvas": [
+    1600,
+    900
+  ],
+  "actual_model": null,
+  "actual_seed": null,
+  "dollar_cost": null,
+  "automatic_adoption": false,
+  "automatic_expansion": false,
+  "visual_observation": "Auditor viewed original PNG: four forward-linked responsibility nodes, two exception rows with three column owners, human-only formal submission boundary are visible.",
+  "limitations": [
+    "Actual returned dimensions differ from requested canvas; original bytes were preserved.",
+    "No new 5db image call is claimed. The 5db reader retains the old Request identity.",
+    "This is one engineering page, not a full-deck risk matrix or fair E2 comparison.",
+    "Final SVG/PPTX/render/readback and independent visual review remain pending Root binding."
+  ],
+  "checked_files": [
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/actual-root-tool-return.json",
+      "sha256": "64d39a32a06581de502773474e8963a703d0df3b035f69d961821d68be466563",
+      "bytes": 2140708
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/actual-tool-callback.json",
+      "sha256": "8430835976bf7dba52114e6c3d18340861dad46af9d55bada0eacdf1c85461ae",
+      "bytes": 13870
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/settlement.json",
+      "sha256": "cbf8ab0f9a4144b27451d94c9290502d02da400331b5444e9b3b2592f3dfc2ac",
+      "bytes": 712
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/actual-generation-attempt.json",
+      "sha256": "b03b4bd652eb232a870695ea22dd24e2f9e498a7d36d04bd6936b50c62a85d40",
+      "bytes": 19019
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/installed-execution-identity.json",
+      "sha256": "3590466f64055a5fde576a19b5f8edcd5ddfc942216b7d72232c6feb63b2caed",
+      "bytes": 1126
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-reconstruction-5dbdf72/workorder.json",
+      "sha256": "6e441aee32df145b7fd868e9315f6e54c09944c7d469e67c04e89751b99cd63d",
+      "bytes": 27120
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-reconstruction-5dbdf72/reader-installation-identity.json",
+      "sha256": "d75386bbfdd03d5286621875c959a200a805d03598ca40653fe8acf4d636acef",
+      "bytes": 1126
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-reconstruction-5dbdf72/fixed-page.json",
+      "sha256": "b788cd56870a8dd65df3e4eaa73d281ad4ea377dcac024562f2d9be76ebfebbf",
+      "bytes": 22320
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/85/85815c301b12ddf8d4f3e1c706ba5d8086674377e6217b70ce525b54596b83a7.json",
+      "sha256": "85815c301b12ddf8d4f3e1c706ba5d8086674377e6217b70ce525b54596b83a7",
+      "bytes": 21622
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b",
+      "bytes": 15340
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+      "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef",
+      "bytes": 30634
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+      "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e",
+      "bytes": 15493
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/original-blueprint.png",
+      "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+      "bytes": 1595347
+    }
+  ]
+}

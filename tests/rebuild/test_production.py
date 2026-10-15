@@ -66,7 +66,8 @@ def test_prompt_projects_all_visible_fields_and_excludes_internal_notes() -> Non
     assert "不要把这一段加入图中" not in prompt
     assert "所有企业与数字均为合成输入" not in prompt
     assert "do not add claims or invent numeric values" in prompt
-    assert "use an unlabeled schematic marked 示意数据" in prompt
+    assert "return that gap to the content stage for the necessary evidence" in prompt
+    assert "use an unlabeled schematic marked 示意数据" not in prompt
 
 
 def test_only_allowed_assets_enter_prompt() -> None:

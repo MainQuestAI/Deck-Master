@@ -1,0 +1,4 @@
+rg: /workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/sdk*: No such file or directory (os error 2)
+ls: cannot access '/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/schemas': No such file or directory
+Both are read-only discovery path failures (exit 2), not SDK rejections. Resolved by reading service.py and locating resources/contracts with rg --files. No dependency installation or workaround of SDK acceptance occurred.
+Large combined cat/JSON outputs were truncated by tool token limits. Full required packet files were re-read separately; supporting IR was re-extracted by text shapes. The extra whole-Narrative/Plan output was not counted as complete full-deck reading.

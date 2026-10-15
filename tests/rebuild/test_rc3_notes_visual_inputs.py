@@ -208,6 +208,7 @@ def test_visual_accept_refuses_old_presenter_text_after_actual_call_settlement(f
 
 def _controlled_blueprint(tmp_path):
     project, store = enf._project(tmp_path)
+    _seed_imported_plan(store)
     enf._start(project, store)
     enf._settle_preproduction(store, seed="rc3-notes-control")
     grant = enf._grant(project, store, actions=("dispatch.blueprint", "allowance.allocate", "task.start"))

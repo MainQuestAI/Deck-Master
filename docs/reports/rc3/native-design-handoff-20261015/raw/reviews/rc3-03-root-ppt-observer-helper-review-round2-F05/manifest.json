@@ -1,0 +1,58 @@
+{
+  "files": {
+    "F05-helper-role-fix.diff": {
+      "bytes": 3912,
+      "sha256": "05e8169ea807bb0fd99686c91b8383be73aa9fbeedaa8f09efefe661d908bea4"
+    },
+    "initial-0a148342-review.md": {
+      "bytes": 1117,
+      "sha256": "2b5d3007d512b32233f1da11da2434938aa21d21932ebf43ec77fe3b06a4b5d9"
+    },
+    "inspect_readonly.py": {
+      "bytes": 5064,
+      "sha256": "49e4c9c971da2443231ad90c0683d080cb0d6845c7387212cfdb665c0b1a273d"
+    },
+    "observe-native-ppt-0a148342.py": {
+      "bytes": 9935,
+      "sha256": "0a148342c51aad0efd46f6910fc59ebefe0f95baee1d7d6a6c5b48fa79021e52"
+    },
+    "observe-native-ppt-7fe47e10.py": {
+      "bytes": 11829,
+      "sha256": "7fe47e10d9e419cd8408aa8316c032fca6ff122e2e15059c118419ac27232251"
+    },
+    "prior-helper-3a3162ac.py": {
+      "bytes": 7541,
+      "sha256": "3a3162ac343ab5e7a56ad7572349b0c7106071116edf2a42c08d55ba85a90e29"
+    },
+    "readonly-check-attempt2.log": {
+      "bytes": 1137,
+      "sha256": "9de0167b4a73e1415bd811dbb4a1bfc4b392bed29cfd94953f5abf314c5c8b19"
+    },
+    "readonly-check.log": {
+      "bytes": 948,
+      "sha256": "9c6429f1bb1e4d527ee45255a53fafbb2da2df3ea277b0d682310cc196d5cedf"
+    },
+    "readonly-field-and-predicate-observations.json": {
+      "bytes": 9606,
+      "sha256": "526ee69332a939fc49ddb9246139d4eed0828aff3deb03a75c3b0f181d649e0e"
+    },
+    "report.md": {
+      "bytes": 6374,
+      "sha256": "ebea2703ebae4f3330eb8e0a228618748eb3df27923fd21d52b8a9f1d966e31e"
+    },
+    "revised-role-check.log": {
+      "bytes": 133,
+      "sha256": "2559366919337a37430f8aaa6464210d900fbd4178ce8c579f771e612d35c689"
+    },
+    "revised-role-predicate-observations.json": {
+      "bytes": 16110,
+      "sha256": "c636ea7225a029cb67e9b959e6e85891bccd8ac1b0ada0bd190ab4d549a67a63"
+    },
+    "verify_role_revision_readonly.py": {
+      "bytes": 4507,
+      "sha256": "f34a97ca903e8766584658b4782db9baff90f2697091f2ab1dda86bd7c1ead69"
+    }
+  },
+  "reviewed_helper_sha256": "7fe47e10d9e419cd8408aa8316c032fca6ff122e2e15059c118419ac27232251",
+  "scope": "helper_source_measurement_review_only_no_actual_new_conversion"
+}

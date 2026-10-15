@@ -13,7 +13,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 from .compiler import CompileOptions, SvgInput, compile_deck
 from .compiler.svg import parse_svg, image_elements, XLINK_HREF
-from .production import resolve_design
+from .production import resolve_page_design
 from .content import visible_atoms
 from .models import bump_revision, validate_artifact_semantics
 from .store import Store, StoreError
@@ -67,9 +67,26 @@ def artifact(store,path,role,*,page_id=None,dependencies=(),derived_from=()):
 
 def page_asset_paths(store, document, entry, work, *, page=None):
     """Materialize exactly the assets the current Page permits for SVG parsing."""
-    page = page or store.read_object_json(entry['page'])
-    effective, _ = resolve_design(page, document['design_context'],
-                                  document['design_context'].get('assets', []))
+    if entry.get('page') is None and page is not None and entry.get('blueprint') is None:
+        # Initial compose may supply a new Page and SVG together. There is no
+        # adopted image lineage yet; retain the actual proposed Page resolver.
+        from .production import resolve_design
+        effective, _ = resolve_design(page, document['design_context'],
+                                       document['design_context'].get('assets') or [])
+    else:
+        effective = resolve_page_design(store, document, entry, require_current=True)
+    if page is not None:
+        if 'content_requirements' in effective:
+            from .visual_dependencies import page_visual_digest
+            from .models import ModelError
+            if page_visual_digest(page) != page_visual_digest(store.read_object_json(entry['page'])):
+                raise ModelError('svg/page', 'a new visible Page cannot claim the adopted blueprint context')
+        else:
+            # Legacy combined Page/SVG repairs retain their actual proposed
+            # Page asset overrides; do not silently parse against the old Page.
+            from .production import resolve_design
+            effective, _ = resolve_design(page, document['design_context'],
+                                           document['design_context'].get('assets') or [])
     mapping = {}
     for asset in effective['assets']:
         try:
@@ -184,6 +201,8 @@ def readback(pptx_path,pages,expected_pages):
                     findings.append({'page_id':page['page_id'],'code':'missing_visible_atom','atom_id':atom['atom_id'],'text':atom['text']})
             from .readback_text import _check_required_text
             findings.extend(_check_required_text(root, source, page))
+            from .readback_relations import check_native_relations
+            findings.extend(check_native_relations(root, source, page))
             # AC-K10: real text overflow — a shape box leaving the slide bounds.
             for sp in root.findall('.//p:sp',ns):
                 name_node=sp.find('p:nvSpPr/p:cNvPr',ns)
@@ -244,9 +263,28 @@ def readback(pptx_path,pages,expected_pages):
                     findings.append({'page_id':page['page_id'],'code':'missing_edge','edge_id':edge_id})
                     continue
                 if edge.get('direction') in ('both','undirected'):continue
-                start,end=edge_endpoints(sp)
+                endpoints=edge_endpoints(sp)
+                if endpoints is None:
+                    findings.append({'page_id':page['page_id'],'code':'unverifiable_edge_geometry',
+                                     'edge_id':edge_id,'from':edge.get('from'),'to':edge.get('to')})
+                    continue
+                start,end=endpoints
                 from_center=node_centers.get(edge.get('from'));to_center=node_centers.get(edge.get('to'))
                 if start is None or from_center is None or to_center is None:continue
+                # Native arrow decorations are visible semantics independent
+                # of path point order. headEnd is the start decoration;
+                # moving a triangle there reverses an otherwise unchanged line.
+                head = sp.find('p:spPr/a:ln/a:headEnd', ns)
+                tail = sp.find('p:spPr/a:ln/a:tailEnd', ns)
+                head_arrow = head is not None and head.get('type', 'none') != 'none'
+                if head_arrow:
+                    findings.append({'page_id': page['page_id'], 'code': 'reversed_arrow',
+                                     'edge_id': edge_id, 'from': edge.get('from'), 'to': edge.get('to'),
+                                     'element': sp.find('p:nvSpPr/p:cNvPr', ns).get('name'),
+                                     'detail': 'native start decoration points against the declared forward relationship',
+                                     'native_arrow_endings': {'head': head.get('type'),
+                                                              'tail': tail.get('type') if tail is not None else None}})
+                    continue
                 # P1-05: dual-endpoint verification with a declared tolerance.
                 # Reversal is judged on the START point; reachability on both
                 # ends (a short stub near A that never arrives at B fails).

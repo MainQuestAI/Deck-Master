@@ -113,6 +113,10 @@
           }
         }
       }
+    },
+    "execution_identity": {
+      "type": "object",
+      "description": "Actual executing SDK/package identity captured atomically with this begun attempt; absent on historical attempts."
     }
   },
   "required": [

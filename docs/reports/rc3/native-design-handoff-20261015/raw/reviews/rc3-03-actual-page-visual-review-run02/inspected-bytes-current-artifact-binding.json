@@ -1,0 +1,29 @@
+{
+  "blueprint": {
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/original-blueprint.png",
+    "local_sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+    "stored_file_ref": {
+      "path": ".deckmaster/objects/8c/8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c.png",
+      "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c"
+    },
+    "bytes_equal_to_current_stored_file": true
+  },
+  "svg": {
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/p04-native-v1.svg",
+    "local_sha256": "1223a9d6c9c89bb998434395e58dfee8c77c3d95d918fca7b8a613c54739a00b",
+    "stored_file_ref": {
+      "path": ".deckmaster/objects/12/1223a9d6c9c89bb998434395e58dfee8c77c3d95d918fca7b8a613c54739a00b.svg",
+      "sha256": "1223a9d6c9c89bb998434395e58dfee8c77c3d95d918fca7b8a613c54739a00b"
+    },
+    "bytes_equal_to_current_stored_file": true
+  },
+  "svg_preview": {
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-02-native-svg-preview/actual-p04-preview.png",
+    "local_sha256": "654e94f95b34f61e2914da5ccf96d8442986751e2c6dec536c763c1f44af6cd6",
+    "stored_file_ref": {
+      "path": ".deckmaster/objects/65/654e94f95b34f61e2914da5ccf96d8442986751e2c6dec536c763c1f44af6cd6.png",
+      "sha256": "654e94f95b34f61e2914da5ccf96d8442986751e2c6dec536c763c1f44af6cd6"
+    },
+    "bytes_equal_to_current_stored_file": true
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "before_revision": "3f4a0acb0617417dbba7cd84bc27de3d",
+  "after_revision": "53e2d16c951f41d3b525746e04dcee6e",
+  "page_order_unchanged": true,
+  "page_deltas": {
+    "p01": {},
+    "p02": {},
+    "p03": {},
+    "p04": {
+      "svg": {
+        "before": {
+          "path": ".deckmaster/objects/b6/b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3.json",
+          "sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3"
+        },
+        "after": {
+          "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+          "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+        }
+      },
+      "svg_preview": {
+        "before": {
+          "path": ".deckmaster/objects/75/752aa116cf15babcaae31396ce19111a23387a71577160c42b8d929f70c789ad.json",
+          "sha256": "752aa116cf15babcaae31396ce19111a23387a71577160c42b8d929f70c789ad"
+        },
+        "after": null
+      }
+    },
+    "p05": {},
+    "p06": {},
+    "p07": {},
+    "p08": {}
+  },
+  "all_page_content_refs_unchanged": true,
+  "other_seven_page_entries_unchanged": true,
+  "document_outputs_unchanged": true,
+  "review_field_unchanged": true,
+  "historical_ref_files_unchanged": true,
+  "historical_ref_count": 13,
+  "v1_evidence_files_unchanged": true,
+  "v1_evidence_file_count": 16,
+  "all_packet_original_inputs_unchanged": true,
+  "changed_top_level_fields": [
+    "change",
+    "committed_at",
+    "pages",
+    "parent_revision_id",
+    "revision_id",
+    "tasks"
+  ],
+  "unmodified_top_level_fields": [
+    "candidate_adoptions",
+    "candidates",
+    "changes",
+    "collaboration",
+    "compatibility",
+    "content_basis",
+    "content_plan",
+    "created_at",
+    "design_context",
+    "narrative",
+    "outputs",
+    "policy",
+    "project_id",
+    "reviews",
+    "schema_version",
+    "sources",
+    "style_recipes",
+    "task"
+  ],
+  "review_limitation": "NewSVG has a different artifactRef; oldreviewsubjects do not cover it. This author does not run or overwrite independent reviews."
+}

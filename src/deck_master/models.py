@@ -35,11 +35,17 @@ SCHEMA_FILES = {
     "compose_result_v2": "compose-result.v2.schema.json",
     "review_v2": "review.v2.schema.json",
     "authenticated_review_receipt": "authenticated-review-receipt.v1.schema.json",
+    "native_image_receipt": "native-image-receipt.v1.schema.json",
+    "content_requirements": "content-requirements.v1.schema.json",
+    "content_basis": "content-basis.v1.schema.json",
     "style_reference": "style-reference.v1.schema.json",
     "visual_style_spec": "visual-style-spec.v1.schema.json",
     "style_input_v2": "style-input.v2.schema.json",
     "style_proposal_v2": "style-proposal.v2.schema.json",
     "style_recipe_v2": "style-recipe.v2.schema.json",
+    "style_input_v3": "style-input.v3.schema.json",
+    "style_proposal_v3": "style-proposal.v3.schema.json",
+    "style_recipe_v3": "style-recipe.v3.schema.json",
     "icon_input": "icon-input.v1.schema.json",
     "icon_recipe": "icon-recipe.v1.schema.json",
     "action_targets": "action-targets.v1.schema.json",
@@ -176,8 +182,11 @@ def validate_schema(kind: str, obj: Any) -> None:
         dispatched = _VERSIONED_KINDS.get(kind, {}).get(obj.get("schema_version"))
         if dispatched:
             kind = dispatched
-    if kind in ("style_input", "style_proposal", "style_recipe") and isinstance(obj, dict) and obj.get("schema_version") == kind + ".v2":
-        kind += "_v2"
+    if kind in ("style_input", "style_proposal", "style_recipe") and isinstance(obj, dict):
+        for version in ("v2", "v3"):
+            if obj.get("schema_version") == kind + "." + version:
+                kind += "_" + version
+                break
     errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
     worst = best_match(errors) if errors else None
     if worst is None:
@@ -450,7 +459,7 @@ def validate_narrative_semantics(narrative: dict[str, Any]) -> None:
         raise ModelError("narrative/central_node_id", "central node id must exist in nodes")
 
 
-def validate_content_plan_semantics(plan: dict[str, Any]) -> None:
+def validate_content_plan_semantics(plan: dict[str, Any], *, require_page_links=True) -> None:
     """ContentPlan v2 semantics (CONTRACTS §11.2): stable page order, role
     coverage, local issue registry, budget coherence and mode-specific
     requirements. Equality with the committed Document.pages order (mode=bound)
@@ -468,7 +477,7 @@ def validate_content_plan_semantics(plan: dict[str, Any]) -> None:
     unknown = sorted(set(roles) - set(page_order))
     if unknown:
         raise ModelError("content_plan/input/page_roles", f"roles for pages outside page_order: {unknown}")
-    if set(roles) != set(page_order):
+    if plan.get("mode") != "imported_mapping" and set(roles) != set(page_order):
         raise ModelError("content_plan/input/page_roles", "every planned page requires exactly one role")
     for chapter in data.get("chapters") or []:
         unknown = sorted(set(chapter.get("page_ids") or []) - set(page_order))
@@ -497,7 +506,7 @@ def validate_content_plan_semantics(plan: dict[str, Any]) -> None:
     if plan.get("imported_manuscript"):
         validate_evidence_semantics(plan["imported_manuscript"]["claimed_confirmation_evidence"],
                                     "content_plan/imported_manuscript/claimed_confirmation_evidence")
-    if mode == "bound":
+    if require_page_links and mode in ("bound", "imported_mapping"):
         links = [link.get("page_id") for link in plan.get("page_links") or []]
         if len(links) != len(set(links)) or set(links) != set(page_order):
             raise ModelError("content_plan/page_links",
@@ -550,7 +559,8 @@ def collaboration_required(document) -> bool:
 # list grows with the cards that introduce new projections (T03/T05/T06).
 REGISTERED_PROJECTIONS = (
     "direction", "page_roles", "page_order", "visible_copy", "speech",
-    "style.palette", "style.density",
+    "style.palette", "style.density", "style.typography", "style.composition",
+    "style.spacing", "style.lines", "style.icons",
 )
 
 

@@ -270,7 +270,7 @@ def test_adopted_request_and_attempt_are_explicit_not_latest_guess(flow):
     project, store, task, native = flow
     start(flow)
     frozen = freeze(flow)
-    other = freeze(flow, prompt='different request on the same page')
+    other = freeze(flow, parameters={'transparent_background': True})
     attempt = begin(flow, frozen)
     locator, raw = native()
     settle(flow, attempt, locator)

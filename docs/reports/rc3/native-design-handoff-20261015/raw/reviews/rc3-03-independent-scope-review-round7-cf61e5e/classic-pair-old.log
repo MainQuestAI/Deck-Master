@@ -1,0 +1,21 @@
+{
+  "phase": "old",
+  "module": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "evidence_kind": "disposable classic public SDK path, zero model calls",
+  "facts": {
+    "initial_compatibility": null,
+    "workbench_protocol_required_before": false,
+    "task_protocol": null,
+    "task_capabilities": null,
+    "generation_input_present": false,
+    "requirements_added_to_classic_request": false,
+    "requirements_added_to_classic_context": false,
+    "after_existing_edit_compatibility": {
+      "minimum_writer": "rc3.v1",
+      "project_format": "workbench.v3"
+    },
+    "workbench_protocol_required_after": false,
+    "task_current_after_existing_notes_edit": true
+  },
+  "actual_image_calls": 0
+}

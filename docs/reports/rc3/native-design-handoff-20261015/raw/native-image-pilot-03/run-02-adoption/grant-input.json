@@ -1,0 +1,38 @@
+{
+  "mode": "execute",
+  "actions": [
+    "candidate.select",
+    "candidate.adopt"
+  ],
+  "scope": {
+    "subject": "pages",
+    "page_ids": [
+      "p04"
+    ],
+    "page_manifest_ref": null,
+    "external_artifact_ref": null,
+    "layers": [
+      "blueprint"
+    ],
+    "allow_page_membership_change": false,
+    "allow_page_order_change": false,
+    "purpose": "exploratory"
+  },
+  "decision_refs": [],
+  "delegated_topics": [],
+  "max_external_calls": 0,
+  "max_candidate_count": 0,
+  "adoption_policy": "within_scope",
+  "instruction_evidence": {
+    "kind": "host_attested_instruction",
+    "source_ref": {
+      "path": ".deckmaster/objects/5a/5ab3e1905887fec256849ea2330fecb627e9f5e6299f945dba89810ab1527b1f.json",
+      "sha256": "5ab3e1905887fec256849ea2330fecb627e9f5e6299f945dba89810ab1527b1f"
+    },
+    "source_locator": "actual user RC3 task plus Root bounded adoption choice and actual independent model assessment",
+    "actor_id": "root-host-controller",
+    "transport_receipt_ref": null,
+    "presentation_ref": null
+  },
+  "stop_conditions": []
+}

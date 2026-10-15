@@ -1,0 +1,67 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_native_only_arrow_ending_reversal_with_unchanged_endpoints_is_located __
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-arrow-ending-baseline/test_native_only_arrow_ending_0')
+
+    def test_native_only_arrow_ending_reversal_with_unchanged_endpoints_is_located(tmp_path):
+        page = _page()
+        svg = ET.fromstring(_svg(page))
+        # This edge uses actual native line-end decorations; no second explicit
+        # polygon may obscure which direction the native line itself conveys.
+        for parent in svg.iter():
+            for child in list(parent):
+                if child.get("id") == "arrowhead-human-to-submit":
+                    parent.remove(child)
+        svg_path = tmp_path / "native-endings-source.svg"
+        svg_path.write_bytes(ET.tostring(svg))
+        compiled = compile_deck([SvgInput(PAGE_ID, svg_path, page["speaker_notes"])],
+                                CompileOptions(fonts=host_fonts()), tmp_path / "native-endings-compiled")
+        parsed = parse_svg(svg_path.read_bytes(), page_id=PAGE_ID)
+        correct = tmp_path / "native-ending-forward.pptx"
+        reversed_pptx = tmp_path / "native-ending-reversed.pptx"
+        _native_arrow_ending(compiled.pptx_path, correct, reverse=False)
+        _native_arrow_ending(correct, reversed_pptx, reverse=True)
+        correct_xml, correct_text = _native_texts(correct)
+        reversed_xml, reversed_text = _native_texts(reversed_pptx)
+        assert correct_text == reversed_text
+        correct_edge = next(shape for shape in correct_xml.findall(".//p:sp", NS)
+                            if shape.find("p:nvSpPr/p:cNvPr", NS).get("name") == "edge-human-to-submit")
+        reversed_edge = next(shape for shape in reversed_xml.findall(".//p:sp", NS)
+                             if shape.find("p:nvSpPr/p:cNvPr", NS).get("name") == "edge-human-to-submit")
+        for path in ("p:nvSpPr/p:cNvPr", "p:spPr/a:xfrm", "p:spPr/a:custGeom"):
+            assert ET.tostring(correct_edge.find(path, NS)) == ET.tostring(reversed_edge.find(path, NS))
+        good_line, bad_line = (edge.find("p:spPr/a:ln", NS) for edge in (correct_edge, reversed_edge))
+        assert good_line.find("a:headEnd", NS).get("type") == bad_line.find("a:tailEnd", NS).get("type") == "none"
+        assert good_line.find("a:tailEnd", NS).get("type") == bad_line.find("a:headEnd", NS).get("type") == "triangle"
+        # Check every remaining native XML object/attribute, not just text: only
+        # these two line-end decorations are allowed to differ in the paired deck.
+        for line in (good_line, bad_line):
+            for tag in ("headEnd", "tailEnd"):
+                for ending in line.findall("a:" + tag, NS):
+                    line.remove(ending)
+        assert ET.tostring(correct_xml) == ET.tostring(reversed_xml)
+        good_report = readback(correct, [parsed], [page])
+        bad_report = readback(reversed_pptx, [parsed], [page])
+        for name, report in (("forward", good_report), ("reversed", bad_report)):
+            (tmp_path / f"native-ending-{name}-readback.json").write_text(
+                json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        good_png = render_deck(correct, tmp_path / "native-ending-forward-render", fonts=host_fonts())
+        bad_png = render_deck(reversed_pptx, tmp_path / "native-ending-reversed-render", fonts=host_fonts())
+        assert len(good_png) == len(bad_png) == 1
+        with Image.open(good_png[0]) as forward_image, Image.open(bad_png[0]) as reversed_image:
+            assert forward_image.size == reversed_image.size
+            assert forward_image.convert("RGB").tobytes() != reversed_image.convert("RGB").tobytes()
+        assert good_report["status"] == "pass", good_report
+>       assert bad_report["status"] == "fail", bad_report
+E       AssertionError: {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。
+E         10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+E       assert 'pass' == 'fail'
+E         
+E         - fail
+E         + pass
+
+tests/rebuild/test_rc3_design_native.py:353: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_rc3_design_native.py::test_native_only_arrow_ending_reversal_with_unchanged_endpoints_is_located
+1 failed, 13 deselected in 1.95s

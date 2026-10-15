@@ -1,0 +1,359 @@
+{
+  "frozen_canvas": {
+    "fit": "contain",
+    "height_px": 900,
+    "slide_height_in": 7.5,
+    "slide_width_in": 13.333333333333334,
+    "width_px": 1600
+  },
+  "compile_width_px_at_96ppi": 1280.0,
+  "compile_height_px_at_96ppi": 720.0,
+  "actual_emu": [
+    12192000,
+    6858000
+  ],
+  "expected_emu": [
+    12192000,
+    6858000
+  ],
+  "physical_canvas_matches": true,
+  "template_type_attribute": "screen4x3",
+  "actual_point_sizes": [
+    18.0,
+    30.0
+  ],
+  "frozen_body_size_pt": 18,
+  "frozen_heading_size_pt": 30,
+  "explicit_pilot_heading_atoms": [
+    "atom:p04:block:exceptions-heading:text",
+    "atom:p04:title"
+  ],
+  "individual_visible_run_checks": [
+    {
+      "shape_name": "atom:p04:title",
+      "text": "建议流程保留两条分支：条件可核对／条件未知",
+      "role": "heading",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 30.0,
+      "required_minimum_pt": 30,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:subtitle",
+      "text": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "main-chain-frozen-qualification:0",
+      "text": "主链只适用于条件可核对情形。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:collect:text",
+      "text": "现场人员提供型号、",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:collect:text",
+      "text": "版本与现象；接单人员",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:collect:text",
+      "text": "核对可核查条件。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:retrieve:text",
+      "text": "只读助手返回许可资料",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:retrieve:text",
+      "text": "片段及来源。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:review:text",
+      "text": "指定人员核查引用",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:review:text",
+      "text": "适用性，记录采用／",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:review:text",
+      "text": "未采用及原因。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:submit:text",
+      "text": "人员在现有系统",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:label:submit:text",
+      "text": "完成正式提交。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:block:exceptions-heading:text",
+      "text": "未知与不适用信息仍随请求交接",
+      "role": "heading",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 30.0,
+      "required_minimum_pt": 30,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:column:exceptions:trigger:label",
+      "text": "触发条件",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:column:exceptions:action:label",
+      "text": "接单人员动作",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:column:exceptions:handoff:label",
+      "text": "交接及继续条件",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "text": "型号或版本待补／",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "text": "确实不可得",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "text": "保留已知条件、未知字段及原因；",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "text": "能补则请求可核对信息，",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "text": "不能强制填入猜测。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "text": "不能补出时交指定业务核查人判断下一步；",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "text": "取得可核查条件后按主链继续。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "text": "具体责任人与恢复规则须在启动前明确。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "text": "引用适用性无法确认、",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "text": "引用冲突／不适用，",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "text": "或问题仍不确定",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "text": "保留设备条件、来源位置",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "text": "和未决点；候选引用不能标成",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "text": "可直接采用的结论。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "text": "交核查人确认资料适用性和下一步；",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "text": "无法确认则继续标明未决，",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "text": "不把找到资料记为故障已解决。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:callout:boundary:text",
+      "text": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    },
+    {
+      "shape_name": "atom:p04:callout:boundary:text",
+      "text": "能力边界：引用问答不等于诊断正确或操作获批。",
+      "role": "body",
+      "role_basis": "explicit fixed-p04 pilot mapping; not inferred from size or bold",
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "status": "pass"
+    }
+  ],
+  "typography_matches_fixed_pilot": true,
+  "assumption": "actual fixed pilot has body and heading only, no auxiliary text"
+}

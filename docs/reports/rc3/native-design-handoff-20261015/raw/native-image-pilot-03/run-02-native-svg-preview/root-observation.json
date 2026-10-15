@@ -1,0 +1,13 @@
+{
+  "action": "preview",
+  "completed": true,
+  "mechanical_check_status": "preview_binding_pass; visual_quality_not_evaluated",
+  "quality_or_desktop_pass": null,
+  "all_eight_page_content_refs_unchanged": true,
+  "other_seven_page_entries_unchanged": true,
+  "narrative_content_plan_outputs_unchanged": true,
+  "project_document_unchanged": false,
+  "actual_new_image_calls": 0,
+  "human_acceptance": null,
+  "desktop_acceptance": null
+}

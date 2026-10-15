@@ -1,0 +1,322 @@
+{
+  "status": "PASS",
+  "evidence_kind": "independent installed public SDK, synthetic authority, zero image calls",
+  "cases": [
+    {
+      "case": "same_version_twice",
+      "expected_current": true,
+      "actual_current": true,
+      "same_consumed_design": true,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [
+        {
+          "path": ".deckmaster/objects/40/403ec87488ef730b148f4ad9f6fedee05e59e0634d90a71703296c7f851d2046.json",
+          "sha256": "403ec87488ef730b148f4ad9f6fedee05e59e0634d90a71703296c7f851d2046"
+        }
+      ],
+      "old_ref": {
+        "path": ".deckmaster/objects/2a/2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07.json",
+        "sha256": "2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/40/403ec87488ef730b148f4ad9f6fedee05e59e0634d90a71703296c7f851d2046.json",
+        "sha256": "403ec87488ef730b148f4ad9f6fedee05e59e0634d90a71703296c7f851d2046"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/same_version_twice/proj",
+      "task_id": "task-596cda547a0b4390a144fb6ef3203ed2",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "value",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [
+        {
+          "path": ".deckmaster/objects/2f/2fba19f77c09f4a48969a5f2108704f06ea102e12729b07a185741ea90873b80.json",
+          "sha256": "2fba19f77c09f4a48969a5f2108704f06ea102e12729b07a185741ea90873b80"
+        }
+      ],
+      "old_ref": {
+        "path": ".deckmaster/objects/2a/2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07.json",
+        "sha256": "2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/2f/2fba19f77c09f4a48969a5f2108704f06ea102e12729b07a185741ea90873b80.json",
+        "sha256": "2fba19f77c09f4a48969a5f2108704f06ea102e12729b07a185741ea90873b80"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/value/proj",
+      "task_id": "task-8e7db1b5c28248259af2319317eeb785",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "scope",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [],
+      "old_ref": {
+        "path": ".deckmaster/objects/2a/2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07.json",
+        "sha256": "2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/c2/c250c7c93281ec4b7a67c844fd9a8c91af675d2d168e98a5cd4d45921ccde5c4.json",
+        "sha256": "c250c7c93281ec4b7a67c844fd9a8c91af675d2d168e98a5cd4d45921ccde5c4"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/scope/proj",
+      "task_id": "task-8761121351e149c787a34c181fb1108e",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "layers",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [
+        {
+          "path": ".deckmaster/objects/8e/8e01916fb4cf05bf9c5f9e724ac288b53e172dfb2ba905e1004edde88bba30b0.json",
+          "sha256": "8e01916fb4cf05bf9c5f9e724ac288b53e172dfb2ba905e1004edde88bba30b0"
+        }
+      ],
+      "old_ref": {
+        "path": ".deckmaster/objects/2a/2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07.json",
+        "sha256": "2a82e1b9a15412702514f386a18e6b5a9a654e148c377a923e45ee04fce3de07"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/8e/8e01916fb4cf05bf9c5f9e724ac288b53e172dfb2ba905e1004edde88bba30b0.json",
+        "sha256": "8e01916fb4cf05bf9c5f9e724ac288b53e172dfb2ba905e1004edde88bba30b0"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/layers/proj",
+      "task_id": "task-62ad86e87e004328ade18992f6863523",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "topic_to_speech",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [],
+      "old_ref": {
+        "path": ".deckmaster/objects/38/383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33.json",
+        "sha256": "383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/c5/c5509ba7c786e3370c8bef94afa5a1a1756b6b52b2d46c6779a35de3172a1108.json",
+        "sha256": "c5509ba7c786e3370c8bef94afa5a1a1756b6b52b2d46c6779a35de3172a1108"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/topic_to_speech/proj",
+      "task_id": "task-0bebf46a0f974dc3a32f4ec34261f3e0",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "topic_to_tradeoff",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [
+        {
+          "path": ".deckmaster/objects/54/5425503ff810df728c37b1bfbe58e11156fe7923dc8aad0a63525ab5ffb6d21b.json",
+          "sha256": "5425503ff810df728c37b1bfbe58e11156fe7923dc8aad0a63525ab5ffb6d21b"
+        }
+      ],
+      "old_ref": {
+        "path": ".deckmaster/objects/38/383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33.json",
+        "sha256": "383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/54/5425503ff810df728c37b1bfbe58e11156fe7923dc8aad0a63525ab5ffb6d21b.json",
+        "sha256": "5425503ff810df728c37b1bfbe58e11156fe7923dc8aad0a63525ab5ffb6d21b"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/topic_to_tradeoff/proj",
+      "task_id": "task-968c3d4f016b40cb8e5b7b3acd10fb71",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "reject",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [],
+      "old_ref": {
+        "path": ".deckmaster/objects/38/383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33.json",
+        "sha256": "383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/82/82fec063774f2b6f2056b4b4ae0132a730cd9d4ecdf9dedf5f324e0fa660bc65.json",
+        "sha256": "82fec063774f2b6f2056b4b4ae0132a730cd9d4ecdf9dedf5f324e0fa660bc65"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/reject/proj",
+      "task_id": "task-737cf181961e4858a1321d6f3f6b70d1",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "withdrawn",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [],
+      "old_ref": {
+        "path": ".deckmaster/objects/38/383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33.json",
+        "sha256": "383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/71/713dccde6a6ebff20d2f683b37881a52386cfc98cda8b760ea57ede497fcec0d.json",
+        "sha256": "713dccde6a6ebff20d2f683b37881a52386cfc98cda8b760ea57ede497fcec0d"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/withdrawn/proj",
+      "task_id": "task-c45f5d7e1531443f9ab4794d06c0487a",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "new_identity_equal_value",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [
+        {
+          "path": ".deckmaster/objects/38/383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33.json",
+          "sha256": "383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33"
+        },
+        {
+          "path": ".deckmaster/objects/d3/d3a812a8075a557fc852ef215783b700df6645d1d8319c82cb7046480b4a189f.json",
+          "sha256": "d3a812a8075a557fc852ef215783b700df6645d1d8319c82cb7046480b4a189f"
+        }
+      ],
+      "old_ref": {
+        "path": ".deckmaster/objects/38/383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33.json",
+        "sha256": "383067b8a39fd7f9fd1249f0804635966b444cee55a479941dbe3f85a0e47e33"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/d3/d3a812a8075a557fc852ef215783b700df6645d1d8319c82cb7046480b4a189f.json",
+        "sha256": "d3a812a8075a557fc852ef215783b700df6645d1d8319c82cb7046480b4a189f"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/new_identity_equal_value/proj",
+      "task_id": "task-eb2a70480b104d65b66ff2e2027b5e3e",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "unrelated_p2_style",
+      "expected_current": true,
+      "actual_current": true,
+      "same_consumed_design": true,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [],
+      "old_ref": {
+        "path": ".deckmaster/objects/16/16de436677a3b8194c74edc8e2d417d2f0c4d2c1f8efa1938b82c4e498d11c16.json",
+        "sha256": "16de436677a3b8194c74edc8e2d417d2f0c4d2c1f8efa1938b82c4e498d11c16"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/a7/a78b32e5316ab10edea514edab71ec185f27016f575814cb34eb2e46ec6bcde4.json",
+        "sha256": "a78b32e5316ab10edea514edab71ec185f27016f575814cb34eb2e46ec6bcde4"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/unrelated_p2_style/proj",
+      "task_id": "task-e0c6757e376b4b58ad3f10e1bfde0056",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "unrelated_p1_speech",
+      "expected_current": true,
+      "actual_current": true,
+      "same_consumed_design": true,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [],
+      "old_ref": {
+        "path": ".deckmaster/objects/69/69740b4c39ba21c6f2a6617a0984cf0ef031635983b80019bdb76aaff635d6c9.json",
+        "sha256": "69740b4c39ba21c6f2a6617a0984cf0ef031635983b80019bdb76aaff635d6c9"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/b2/b2c67ff001a89a59456bfb8f40223afc3d73b66a26c64d8bdb2e396dfaa42088.json",
+        "sha256": "b2c67ff001a89a59456bfb8f40223afc3d73b66a26c64d8bdb2e396dfaa42088"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/unrelated_p1_speech/proj",
+      "task_id": "task-cadf8aae109c48a885bd1dedc0202a2b",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "scope_p2_to_p1",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [
+        {
+          "path": ".deckmaster/objects/3d/3d39fc85768378b03f0d67f1d5986d924c8bdc9af64291fa0336eb1785197173.json",
+          "sha256": "3d39fc85768378b03f0d67f1d5986d924c8bdc9af64291fa0336eb1785197173"
+        }
+      ],
+      "old_ref": {
+        "path": ".deckmaster/objects/16/16de436677a3b8194c74edc8e2d417d2f0c4d2c1f8efa1938b82c4e498d11c16.json",
+        "sha256": "16de436677a3b8194c74edc8e2d417d2f0c4d2c1f8efa1938b82c4e498d11c16"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/3d/3d39fc85768378b03f0d67f1d5986d924c8bdc9af64291fa0336eb1785197173.json",
+        "sha256": "3d39fc85768378b03f0d67f1d5986d924c8bdc9af64291fa0336eb1785197173"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/scope_p2_to_p1/proj",
+      "task_id": "task-86410276a313415e9be7f0757286c4f4",
+      "frozen_preparation_unchanged": true
+    },
+    {
+      "case": "topic_speech_to_style",
+      "expected_current": false,
+      "actual_current": false,
+      "same_consumed_design": false,
+      "manuscript_content_identity_unchanged": true,
+      "actual_basis_refs": [
+        {
+          "path": ".deckmaster/objects/0d/0d891fb048c58108d2ae415829174fa9e0f191179d1ea355c27b009c561c50c4.json",
+          "sha256": "0d891fb048c58108d2ae415829174fa9e0f191179d1ea355c27b009c561c50c4"
+        }
+      ],
+      "old_ref": {
+        "path": ".deckmaster/objects/69/69740b4c39ba21c6f2a6617a0984cf0ef031635983b80019bdb76aaff635d6c9.json",
+        "sha256": "69740b4c39ba21c6f2a6617a0984cf0ef031635983b80019bdb76aaff635d6c9"
+      },
+      "new_ref": {
+        "path": ".deckmaster/objects/0d/0d891fb048c58108d2ae415829174fa9e0f191179d1ea355c27b009c561c50c4.json",
+        "sha256": "0d891fb048c58108d2ae415829174fa9e0f191179d1ea355c27b009c561c50c4"
+      },
+      "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/matrix/topic_speech_to_style/proj",
+      "task_id": "task-e55614e62f5944c5af04251985b1050e",
+      "frozen_preparation_unchanged": true
+    }
+  ],
+  "faults": [
+    {
+      "fault": "foreign_project",
+      "rejected": true,
+      "error": "content_basis/decision_refs: decision is outside its actual project/Page design"
+    },
+    {
+      "fault": "foreign_page",
+      "rejected": true,
+      "error": "content_basis/decision_refs: decision is outside its actual project/Page design"
+    },
+    {
+      "fault": "foreign_topic",
+      "rejected": true,
+      "error": "content_basis/decision_refs: decision is outside its actual project/Page design"
+    },
+    {
+      "fault": "mismatched_refs",
+      "rejected": true,
+      "error": "content_basis/decision_refs: decision slices differ from their actual audit Refs"
+    }
+  ],
+  "frozen_digest_tamper": {
+    "type": "GenerationError",
+    "message": "input/design_context: input does not match the dispatched task basis"
+  },
+  "external_calls": 0,
+  "limitations": [
+    "withdrawn status is explicit synthetic schema-valid injection because no public status writer exists."
+  ]
+}

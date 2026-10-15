@@ -1,0 +1,519 @@
+{
+  "page_id": "p04",
+  "width": 1600.0,
+  "height": 900.0,
+  "shape_count": 59,
+  "native_texts": [
+    {
+      "id": "page-title:0",
+      "kind": "text",
+      "atom_id": "atom:p04:title",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "建议流程保留两条分支：条件可核对／条件未知",
+      "x": 50.0,
+      "y": 86.0,
+      "font_size": 40.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": true
+    },
+    {
+      "id": "page-subtitle:0",
+      "kind": "text",
+      "atom_id": "atom:p04:subtitle",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+      "x": 50.0,
+      "y": 128.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "main-chain-frozen-qualification:0",
+      "kind": "text",
+      "atom_id": null,
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "主链只适用于条件可核对情形。",
+      "x": 68.0,
+      "y": 190.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": true
+    },
+    {
+      "id": "collect-label:0",
+      "kind": "text",
+      "atom_id": "atom:p04:label:collect:text",
+      "node_ref": "collect",
+      "edge_ref": null,
+      "text": "现场人员提供型号、",
+      "x": 82.0,
+      "y": 250.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "collect-label:1",
+      "kind": "text",
+      "atom_id": "atom:p04:label:collect:text",
+      "node_ref": "collect",
+      "edge_ref": null,
+      "text": "版本与现象；接单人员",
+      "x": 82.0,
+      "y": 280.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "collect-label:2",
+      "kind": "text",
+      "atom_id": "atom:p04:label:collect:text",
+      "node_ref": "collect",
+      "edge_ref": null,
+      "text": "核对可核查条件。",
+      "x": 82.0,
+      "y": 310.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "retrieve-label:0",
+      "kind": "text",
+      "atom_id": "atom:p04:label:retrieve:text",
+      "node_ref": "retrieve",
+      "edge_ref": null,
+      "text": "只读助手返回许可资料",
+      "x": 462.0,
+      "y": 264.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "retrieve-label:1",
+      "kind": "text",
+      "atom_id": "atom:p04:label:retrieve:text",
+      "node_ref": "retrieve",
+      "edge_ref": null,
+      "text": "片段及来源。",
+      "x": 462.0,
+      "y": 294.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "review-label:0",
+      "kind": "text",
+      "atom_id": "atom:p04:label:review:text",
+      "node_ref": "review",
+      "edge_ref": null,
+      "text": "指定人员核查引用适用性，",
+      "x": 842.0,
+      "y": 250.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "review-label:1",
+      "kind": "text",
+      "atom_id": "atom:p04:label:review:text",
+      "node_ref": "review",
+      "edge_ref": null,
+      "text": "记录采用／未采用",
+      "x": 842.0,
+      "y": 280.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "review-label:2",
+      "kind": "text",
+      "atom_id": "atom:p04:label:review:text",
+      "node_ref": "review",
+      "edge_ref": null,
+      "text": "及原因。",
+      "x": 842.0,
+      "y": 310.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "submit-label:0",
+      "kind": "text",
+      "atom_id": "atom:p04:label:submit:text",
+      "node_ref": "submit",
+      "edge_ref": null,
+      "text": "人员在现有系统",
+      "x": 1222.0,
+      "y": 264.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "submit-label:1",
+      "kind": "text",
+      "atom_id": "atom:p04:label:submit:text",
+      "node_ref": "submit",
+      "edge_ref": null,
+      "text": "完成正式提交。",
+      "x": 1222.0,
+      "y": 294.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "exceptions-heading:0",
+      "kind": "text",
+      "atom_id": "atom:p04:block:exceptions-heading:text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "未知与不适用信息仍随请求交接",
+      "x": 50.0,
+      "y": 412.0,
+      "font_size": 40.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": true
+    },
+    {
+      "id": "column-trigger:0",
+      "kind": "text",
+      "atom_id": "atom:p04:column:exceptions:trigger:label",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "触发条件",
+      "x": 68.0,
+      "y": 472.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": true
+    },
+    {
+      "id": "column-action:0",
+      "kind": "text",
+      "atom_id": "atom:p04:column:exceptions:action:label",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "接单人员动作",
+      "x": 390.0,
+      "y": 472.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": true
+    },
+    {
+      "id": "column-handoff:0",
+      "kind": "text",
+      "atom_id": "atom:p04:column:exceptions:handoff:label",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "交接及继续条件",
+      "x": 916.0,
+      "y": 472.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": true
+    },
+    {
+      "id": "unknown-trigger:0",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "型号或版本待补／",
+      "x": 68.0,
+      "y": 530.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unknown-trigger:1",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "确实不可得",
+      "x": 68.0,
+      "y": 560.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unknown-action:0",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "保留已知条件、未知字段及原因；",
+      "x": 390.0,
+      "y": 530.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unknown-action:1",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "能补则请求可核对信息，",
+      "x": 390.0,
+      "y": 560.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unknown-action:2",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "不能强制填入猜测。",
+      "x": 390.0,
+      "y": 590.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unknown-handoff:0",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "不能补出时交指定业务核查人判断下一步；",
+      "x": 916.0,
+      "y": 530.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unknown-handoff:1",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "取得可核查条件后按主链继续。",
+      "x": 916.0,
+      "y": 560.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unknown-handoff:2",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "具体责任人与恢复规则须在启动前明确。",
+      "x": 916.0,
+      "y": 590.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unsuitable-trigger:0",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "引用适用性无法确认、",
+      "x": 68.0,
+      "y": 656.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unsuitable-trigger:1",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "引用冲突／不适用，",
+      "x": 68.0,
+      "y": 686.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unsuitable-trigger:2",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "或问题仍不确定",
+      "x": 68.0,
+      "y": 716.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unsuitable-action:0",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "保留设备条件、来源位置和未决点；",
+      "x": 390.0,
+      "y": 656.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unsuitable-action:1",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "候选引用不能标成可直接采用的结论。",
+      "x": 390.0,
+      "y": 686.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unsuitable-handoff:0",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "交核查人确认资料适用性和下一步；",
+      "x": 916.0,
+      "y": 656.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unsuitable-handoff:1",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "无法确认则继续标明未决，",
+      "x": 916.0,
+      "y": 686.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "unsuitable-handoff:2",
+      "kind": "text",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "不把找到资料记为故障已解决。",
+      "x": 916.0,
+      "y": 716.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "boundary-text:0",
+      "kind": "text",
+      "atom_id": "atom:p04:callout:boundary:text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。",
+      "x": 68.0,
+      "y": 796.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    },
+    {
+      "id": "boundary-text:1",
+      "kind": "text",
+      "atom_id": "atom:p04:callout:boundary:text",
+      "node_ref": null,
+      "edge_ref": null,
+      "text": "能力边界：引用问答不等于诊断正确或操作获批。",
+      "x": 68.0,
+      "y": 828.0,
+      "font_size": 24.0,
+      "font_family": "Noto Sans CJK SC",
+      "bold": false
+    }
+  ],
+  "edge_paths": [
+    {
+      "id": "edge-collect-retrieve",
+      "edge_ref": "collect-retrieve",
+      "commands": [
+        {
+          "moveTo": {
+            "x": 230.0,
+            "y": 272.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 610.0,
+            "y": 272.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-retrieve-review",
+      "edge_ref": "retrieve-review",
+      "commands": [
+        {
+          "moveTo": {
+            "x": 610.0,
+            "y": 272.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 990.0,
+            "y": 272.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-review-submit",
+      "edge_ref": "review-submit",
+      "commands": [
+        {
+          "moveTo": {
+            "x": 990.0,
+            "y": 272.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1370.0,
+            "y": 272.0
+          }
+        }
+      ]
+    }
+  ]
+}

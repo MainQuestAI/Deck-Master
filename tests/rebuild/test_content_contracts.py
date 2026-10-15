@@ -230,6 +230,7 @@ def test_imported_mapping_requires_manuscript_evidence():
     with pytest.raises(ModelError, match="imported_mapping requires"):
         models.validate_content_plan_semantics(_plan(mode="imported_mapping", narrative_ref=None))
     models.validate_content_plan_semantics(_plan(mode="imported_mapping", narrative_ref=None,
+        page_links=[{"page_id":"p1", "page_ref":_ref("page"), "plan_role_page_id":"p1"}],
         imported_manuscript={"source_ref": _ref("manuscript"),
                              "claimed_confirmation_evidence": {
                                  "kind": "approved_document", "assurance": "unverified",

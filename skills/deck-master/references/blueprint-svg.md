@@ -24,7 +24,7 @@ Provider 配置或向用户索取 API Key。
 只对明确带 `protocol_version=generation.v1` 的工作单执行本节；旧任务保留上面的协议。
 新格式由 `create --project-format workbench.v3` 显式创建，已有项目不原地迁移。
 
-1. `task start` 带 `--supported-protocol generation.v1`，并分别带 `--capability generation_request_freeze`、`--capability attempt_binding`、`--capability native_tool_observation`。执行身份用当前真实会话/轮次 `codex:<thread_id>:<turn_id>`，不能填示例 ID。
+1. `task start` 带 `--supported-protocol generation.v1`，并逐项声明工作单的实际 required_capabilities，包括新请求的 content_requirements_v1。Desktop 执行身份用当前真实会话/轮次 `codex:<thread_id>:<turn_id>`；受信 SDK controller 使用实际可追踪的执行 locator，不伪造不可得的 thread/turn 或平台调用 ID。
 2. 从工作单的 `generation_input` 保存准确 JSON。Page、design_context、template_ref、basis 必须保留任务的真实基准；prompt 保留准确文本，references 写固定文件 Ref 与角色，parameters 只写将实际请求的参数。缺 model/seed 不从配置倒填；不保存密钥。准备内容不代表已经提交。
 3. `requests freeze --project … --task-id … --input request.json --base-revision … --operation-id …` 返回 request_id、input_hash 及核心保存的 input。不要自行归一化空白/Unicode 或重新构造历史请求。
 4. `task call begin` 加 `--request-id …`，保存回包 attempt_id，再执行一次真实工具调用。网络传输重放使用相同 ID；实际重试需新额度和新 Attempt。unknown 先核实，不自动释放或重发。
@@ -41,5 +41,23 @@ generatedImage(result);
 7. 实际看图后，按原信封提交文件，并增加 `generation_result` 的 request_id 与 attempt_id。task accept 核对原图字节与真实观察；输入差异拒绝采用，已发生用量保留。用 `requests show`、`attempts show` 和 `view --page-id … --lineage` 反查固定关系。
 
 观察层级由核心确定。Host JSON 即使填写 `provider_receipt`、provider 或 signature，也只作为 Host 申报。这个采集器基于当前用户的 Codex 本地运行时记录，不是供应商签名验证。
+
+## RC3 受信 SDK 原生图像观察
+
+当前宿主的真实 `image_gen__imagegen` 事件若没有 Desktop session 文件，不能造 JSONL 或把输出复制成 Desktop 完成事件。受信 Host controller 可在 Python SDK 启动时配置 `NativeImageRegistry` 和 `NativeImageRuntime`，通过 protected_transport 的 provider 验证真实工具参数、原始 PNG 与完成观察。公开 JSON 只选择 `{source:"native_host_image.v1",provider_id,event_id}`，不能自报信任。
+
+先按工作单实际 required_capabilities 领取、冻结并 begin。新 preparation 的 parameters 显式为 `{"transparent_background":false}`；只冻结本次工具可实际接收的参数。controller 绑定 `image_binding` 的 exact Task/Request/Attempt/allowance、prompt、参数、ordered refs、control 和真实 execution/install identity 与 settlement reader identity。provider 完成记录同时绑定原始 PNG hash、真实开始/完成时间和有效期；未知 platform invocation/model/seed/费用保持 null/unknown/not_reported。SDK 发行的 opaque image context 仅在同一 Runtime 内作为 `tasks.call_settle(..., adapter_context=context)` 参数，不能从 JSON 反序列化。
+
+该保证是实际 controller 观察的 host_attested，没有不存在的供应商签名，也不防共同权限的恶意 Host。SDK 记录原始观察、proof 和 output；普通 Host JSON 保持 host_reported。缺失、过期、外来或控制变化后的 proof 会被拒绝赋级与接纳，但 consumed/unknown 已发调用仍结算，预算不恢复。受信观察不是恢复执行或采用权限。Desktop 原采集版本和历史记录保持原样；所有候选仍需显式采用与当前资格检查。
+
+control 仅绑定该 Task 的真实视觉输入/目标和当前控制；仅 notes 或无关页变更由共享 registered freshness 判断，不能因此重建旧 Request 或丢失未变视觉输出的来源。正文、角色、箭头、目标及暂停/撤权等实际变化仍阻止旧输出接纳。classic 原协议继续原工作单，不因一个新技术 writer floor 自动消费新 requirements 或省略能力声明。
+
+数量判断缺必要数据时返回内容阶段补依据并保留固定文案/限定，不生成装饰数量图或“示意数据”兜底。只有固定稿件明确需要、且不制造量化印象的定性机制或教学示意可保留；不能把空白依据变成推测值。
+
+native SVG/readback 的正式 Page 原子绑定同时检查表格行列归属和节点责任实际几何。合法整体平移/缩放保留关系；同文字换归属或反箭头不能仅凭文字集合通过。工程编译检查与真实非作者模型阅图、人类验收分别记录。
+
+## 已采用蓝图的重建交接
+
+reconstruct、repair 和 page_visual 工作单逐页读取 `page_design_contexts` 的完整配置：其中的 recipe_parameters、recipe_overrides、content_requirements 和 content_basis 来自该已采用蓝图的实际不可变 Request 与生产 Task，不能以项目 default 或 latest recipe 替换。Page atoms 仍是准确正文来源，原 PNG 是视觉参考；历史 Page/Plan Ref 保留作来源，notes 或未消费字段变化由当前视觉切片判断。新工作单用既有 changes.v1 声明实际 required_capabilities 后领取，包含适用的 content_requirements_v1、style_recipe、style_recipe_v3；直接 Host 重建没有 change plan 时不虚构 change_plan 能力或绑定。历史工作单保留原协议。缺失或冲突的新来源必须修复交接，不能自行回 default；读取已关闭的真实调用不重新认证其旧执行安装。
 
 可运行两阶段样例：`examples/workbench/w02_host_roundtrip.py`。prepare 只建立隔离合成项目并返回真实 ID；Host 在两阶段间执行真实 ImageGen；complete 采集、结算、采用并核对唯一调用账。它不替代 SVG/PPT、内容专业或用户验收。

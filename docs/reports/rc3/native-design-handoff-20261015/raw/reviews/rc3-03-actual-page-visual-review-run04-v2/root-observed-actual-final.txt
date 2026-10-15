@@ -1,0 +1,19 @@
+本轮复评已冻结：**blueprint_content PASS、blueprint_fidelity PASS、readability FAIL**。
+
+真实 SDK 已接受三项结果，Task `405175566aaf` 为 `completed`，revision：
+`cca1f3148aa24ab69ba282331e375177`
+
+F07 为开放 must_fix：实际约120dpi、1601×900 PPT 渲染中，表头墨迹底 y481、边线 y491/492，净空约9–10px；三行正文墨迹底 y602/724、边线 y613/614及735/736，净空约10–11px，低于固定12px。对应 SVG 留白为13–14px。文字仍完整可读，失败针对明确留白下限；未推定一般 converter 缺陷。
+
+F05/F06 **仅对新 PPTX** `4c951dde9044506ad7cade8e06de13c50ed25e5173210265cd2b7c61d2c38ef6` 关闭：独立 XML 核对物理尺寸为12192000×6858000EMU；36段文字按两个明确标题 atom 分角色，全部达到正文18pt／标题30pt。17个原子、限定词、节点关系、表格归属及 notes 均保留。
+
+完整新证据：
+`/workspace/work/rc3/reviews/rc3-03-actual-page-visual-review-run04-v2/`
+
+包含原始 claim/accept、精确 subjects/deps、逐run检查、旧失败历史、F05/F06 closure、F07原生XML／坐标／6张原始像素crop，以及 assessment/report。
+
+- assessment SHA：`78f675ff556dd822bba941c1baae40c41bfa00b51b63acee8123c4119e1d80e7`
+- report SHA：`46714b217ac23866f6a41a8b97113cd06bda2d27d3972f893756583acd0c1a9e`
+- evidence manifest SHA：`6fb2a8a736aa264bb7d9bf90dfc56b2bd93a877e8b315ee7601deb88e25ed513`
+
+未修改产物、源码或旧证据。旧三项 PASS/F05 HOLD 与 run03 字号失败原件均保留。人类、Owner、受众、PowerPoint桌面、公平E2/E3、完整八页及整体RC3验收仍未关闭。本条 FINAL 之后，Root 可另存本轮实际完成观察并启动下一轮修复。

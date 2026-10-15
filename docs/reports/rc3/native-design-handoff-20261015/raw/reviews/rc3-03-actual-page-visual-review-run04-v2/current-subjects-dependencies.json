@@ -1,0 +1,183 @@
+{
+  "revision_id": "ba3e6b3a72d04c5fae5a3ed0472ff549",
+  "task": {
+    "call_allowances": [],
+    "collaboration_binding": {
+      "adoption_policy": "within_scope",
+      "authorization_ref": {
+        "path": ".deckmaster/objects/8d/8da9b8654a3cf1fd3e547e09c551d3dd31ddd31244a8fe1bc94ee5e76f9569ce.json",
+        "sha256": "8da9b8654a3cf1fd3e547e09c551d3dd31ddd31244a8fe1bc94ee5e76f9569ce"
+      },
+      "decision_refs": [],
+      "eligibility_basis": [
+        {
+          "identity": "narrative",
+          "kind": "artifact",
+          "projection": "content",
+          "ref": {
+            "path": ".deckmaster/objects/4e/4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca.json",
+            "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+          },
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        {
+          "identity": "content_plan",
+          "kind": "artifact",
+          "projection": "content",
+          "ref": {
+            "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+            "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+          },
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        }
+      ],
+      "eligibility_digest": "7690fa8864636be9c11e1e05bb0f6fda0c612e28bad54c65e051d96ec7dcd46e",
+      "executor_type": "host",
+      "phase": "review",
+      "request_id": "req-dca94ef15c98",
+      "write_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "review"
+        ],
+        "page_ids": [
+          "p04"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "review",
+        "subject": "deck"
+      }
+    },
+    "cost_class": "host_reasoning",
+    "created_at": "2026-10-15T02:30:34Z",
+    "dependencies": [
+      {
+        "identity": "p04",
+        "kind": "content",
+        "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+      }
+    ],
+    "dispatch_revision": "79477d405ae14ae18f521845c551473c",
+    "error": null,
+    "execution_ref": "/root/rc3_03_actual_page_visual_review",
+    "execution_started_at": "2026-10-15T02:31:43Z",
+    "host_protocol": {
+      "capabilities": [
+        "content_requirements_v1",
+        "style_recipe",
+        "style_recipe_v3"
+      ],
+      "supported_protocols": [
+        "changes.v1"
+      ]
+    },
+    "inputs": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      },
+      {
+        "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+        "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+      },
+      {
+        "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+        "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+      },
+      {
+        "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+        "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+      }
+    ],
+    "instruction": "Independent non-author native page_visual re-review after first autonomous SVG typography/layout repair. Inspect original real PNG, new actual1600x900 SVG preview and correctly physical13.333333333333334x7.5in nativePPT render; verify all17fixed atoms/cellownership/arrows/qualifiers/readingorder/readability and F01-F04, plus actual per-run18ptbody/30ptheading/EMU and F05physical/F06typography closure only for new artifact. Preserve first localPASS and physical/typography failure history; no fullfairE2E3/desktop/human/whole8page or overallRC3 PASS. Submit three realpagevisual review kinds on exact newsubjects/deps.",
+    "kind": "review",
+    "method_release": {
+      "methods_sha256": "a84b739d5ec57e4f305a25908441d600e69eeb867c8c3fbad1ea2efbc204b4e9",
+      "release_id": "5dbdf72089d6-94f6f31fcadf"
+    },
+    "operation_id": "review-ce4a9a178d7f",
+    "produced_against": "b5b2769e8f55a43eb0cbae3311af403b714b97baea1cf624b574900192f755aa",
+    "protocol_version": "changes.v1",
+    "required_capabilities": [
+      "content_requirements_v1",
+      "style_recipe",
+      "style_recipe_v3"
+    ],
+    "result_refs": [],
+    "review_stage": "page_visual",
+    "schema_version": "deck_task.v1",
+    "scope_pages": [
+      "p04"
+    ],
+    "status": "running",
+    "task_id": "405175566aaf",
+    "updated_at": "2026-10-15T02:31:43Z",
+    "usage": {
+      "external_calls": null,
+      "source": "not_reported"
+    }
+  },
+  "subjects": [
+    {
+      "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    },
+    {
+      "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+      "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+    },
+    {
+      "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+      "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+    },
+    {
+      "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+      "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+    }
+  ],
+  "dependencies": [
+    {
+      "kind": "content",
+      "identity": "page:p04",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    },
+    {
+      "kind": "blueprint",
+      "identity": "p04",
+      "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c"
+    },
+    {
+      "kind": "artifact",
+      "identity": "svg:p04",
+      "sha256": "82d3430688b9c4ff2fb89cedb99cabfd643fbb39cb03d274b65a60a2de245ded"
+    },
+    {
+      "kind": "style",
+      "identity": "p04",
+      "sha256": "aea8ea4b43ab242f7f75a4bef462309c4e6df9795a535dd663ed208f76b74068"
+    }
+  ],
+  "entry": {
+    "blueprint": {
+      "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+      "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+    },
+    "page": {
+      "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    },
+    "page_id": "p04",
+    "ppt_preview": null,
+    "svg": {
+      "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+      "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+    },
+    "svg_preview": {
+      "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+      "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+    }
+  },
+  "allowed_asset_ids": []
+}

@@ -1,0 +1,8 @@
+{
+  "kind": "review",
+  "page_ids": [
+    "p04"
+  ],
+  "instruction": "Independent non-author page_visual re-review of actualv3 after secondautonomous layoutrepair+onepreservedmechanical leadingadjustment. Verify F07>=12px paintedtablecellclearance on BOTH actualSVG andcorrectphysicalPPT render, plus fullfixed17atoms/arrows/cellownership/qualifiers/readingorder/nooverlap/readability, actual18/30pt andEMU. Preserve earlierfailures/localPASS andonlyclose findingsfornewexactartifact; nohuman/desktop/fullfairE2E3/whole8page/RC3globalPASS. Use exactnewsubjects/deps for3reviewkinds, targetedF07/changedlayout withfull-page regression; no needduplicate unrelated oldmeasurements.",
+  "review_stage": "page_visual"
+}

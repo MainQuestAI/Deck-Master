@@ -1,0 +1,36 @@
+{
+  "ref": {
+    "path": ".deckmaster/objects/75/752aa116cf15babcaae31396ce19111a23387a71577160c42b8d929f70c789ad.json",
+    "sha256": "752aa116cf15babcaae31396ce19111a23387a71577160c42b8d929f70c789ad"
+  },
+  "artifact": {
+    "artifact_id": "svg_preview-3e4329274c8c",
+    "created_at": "2026-10-15T02:03:41Z",
+    "dependencies": [
+      {
+        "identity": "p04",
+        "kind": "svg",
+        "sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3"
+      }
+    ],
+    "derived_from": [
+      {
+        "path": ".deckmaster/objects/b6/b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3.json",
+        "sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3"
+      }
+    ],
+    "file": {
+      "path": ".deckmaster/objects/65/654e94f95b34f61e2914da5ccf96d8442986751e2c6dec536c763c1f44af6cd6.png",
+      "sha256": "654e94f95b34f61e2914da5ccf96d8442986751e2c6dec536c763c1f44af6cd6"
+    },
+    "limitations": [],
+    "media_type": "image/png",
+    "page_id": "p04",
+    "provenance": {
+      "source_type": "tool_generated",
+      "tool": "deck_master.local"
+    },
+    "role": "svg_preview",
+    "schema_version": "deck_artifact.v1"
+  }
+}

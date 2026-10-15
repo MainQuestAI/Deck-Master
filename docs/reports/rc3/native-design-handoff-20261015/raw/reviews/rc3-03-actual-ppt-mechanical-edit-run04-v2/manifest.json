@@ -1,0 +1,165 @@
+{
+  "actual_original_pptx_sha256": "4c951dde9044506ad7cade8e06de13c50ed25e5173210265cd2b7c61d2c38ef6",
+  "evidence_scope": "actual_correct_physical_size_v2_headless_native_edit_and_relation_pairs_not_desktop_quality_or_fair_E3",
+  "files": {
+    "A-edit-observation.json": {
+      "bytes": 637,
+      "sha256": "a339cb76433c8511ebb56f8083d22586cd5ff149c8906a22d61a67ff3a4ea713"
+    },
+    "A-python-object-text-edited.pptx": {
+      "bytes": 37807,
+      "sha256": "a9c20fbb7e2d15967058ce5c9ff8501e5475371eed194390f0c818dcc5456318"
+    },
+    "A-readback-against-unchanged-page.json": {
+      "bytes": 1720,
+      "sha256": "d8e334cb483db219f90804bfa8ab50d4094df0af14d34efb24347868c7765bb0"
+    },
+    "B-actual-readback.json": {
+      "bytes": 2541,
+      "sha256": "e9449f99007bf45430b48ae05ce6e38d12bb0bbae34132788436a1af7459b998"
+    },
+    "B-native-cell-row-ownership-swapped.pptx": {
+      "bytes": 37799,
+      "sha256": "9aadc8cc0a7308b5bd4de394f211acdee4590c5fe202d5c7d2d3526ed87df038"
+    },
+    "B-ownership-observation.json": {
+      "bytes": 5097,
+      "sha256": "78048aacfa2f81b43578a540f2d7f7bc99dd8a0d8b51c6b38c452c7dc8392484"
+    },
+    "C-actual-readback.json": {
+      "bytes": 1674,
+      "sha256": "361312808b79fcc21931edb92a40056c65d3929bda0efde49a0f3b737d4b75b6"
+    },
+    "C-direction-observation.json": {
+      "bytes": 1310,
+      "sha256": "3e49fec7b6454db6644a73cc2447ba87f5d9a4bec8d1db7828a40b1725aae02f"
+    },
+    "C-native-edge-and-visible-arrow-reversed.pptx": {
+      "bytes": 37809,
+      "sha256": "1a7416c54e8eaa3723962ad9ab3d44abd119242da39eaadfa7f9bab8b3f44bd8"
+    },
+    "D-actual-physical-typography.json": {
+      "bytes": 9105,
+      "sha256": "da9ce3cecd0e7db2b43259dc328a86c2978cfe8fa4ad46521bb441bb6ec5cbfc"
+    },
+    "D-actual-readback.json": {
+      "bytes": 1476,
+      "sha256": "3402f7c2f6f8b51130993b809750191cb31ebc45ed4159d83c976017c36811e6"
+    },
+    "D-actual-transformed-svg-ir.json": {
+      "bytes": 79869,
+      "sha256": "7a05d44c9c9e7765b22db550b6f09839e2fd2cd3bbedd963fd39bdc462c2f638"
+    },
+    "D-layout-positive-observation.json": {
+      "bytes": 1326,
+      "sha256": "1efcdb8f4af770035e3eba5c95634faa70213c8f6962e9d6a4d1c9853e4cf9b8"
+    },
+    "D-real-recompile/compile-input.json": {
+      "bytes": 96241,
+      "sha256": "c0ebba0fe752dd1db0534b47cd7e035a09d876b5ce97ae685d664ea4266764a2"
+    },
+    "D-real-recompile/deck.pptx": {
+      "bytes": 37790,
+      "sha256": "a9ddee785e8152632ece58838a021fafc6323ca0f740529740277055c4978c4a"
+    },
+    "D-real-svg-main-chain-moved-2px.svg": {
+      "bytes": 9874,
+      "sha256": "9f6a3f8d442efa948c1d8e51b4fc6b3d9ed3cd77f9929d18d18e41ddccefc079"
+    },
+    "baseline-independent-actual-readback.json": {
+      "bytes": 1476,
+      "sha256": "3402f7c2f6f8b51130993b809750191cb31ebc45ed4159d83c976017c36811e6"
+    },
+    "baseline-independent-physical-typography.json": {
+      "bytes": 9105,
+      "sha256": "da9ce3cecd0e7db2b43259dc328a86c2978cfe8fa4ad46521bb441bb6ec5cbfc"
+    },
+    "command-and-scope.json": {
+      "bytes": 621,
+      "sha256": "69505857be5c58627d9198d42504b8f66c076c3d20339b6a4f11f934ebdd73ae"
+    },
+    "commands.txt": {
+      "bytes": 1021,
+      "sha256": "ec4e27f651e2297ea49603ebd3f283f8fd5ca2759c81eecd98c7071eb71087f6"
+    },
+    "execution.log": {
+      "bytes": 807,
+      "sha256": "2637de577c6999321af96f7c5cebc40d93c72fd8563d96569a1ea80b22bdd58e"
+    },
+    "geometry-verification.log": {
+      "bytes": 1242,
+      "sha256": "31451ed9094d630b42c25f1af3439304ace88f1625bc92bee26cba489bbad255"
+    },
+    "inputs/actual-effective-design.json": {
+      "bytes": 7128,
+      "sha256": "35fc9cdb6ae5690aad1d5ab8f452a04d208ee4a0b427dc7519de66ce1b28c29f"
+    },
+    "inputs/actual-svg-ir.json": {
+      "bytes": 79616,
+      "sha256": "4cb377edf088ae41c104544f4f032a6918376ac2c2118ab6cae73cfb9cd72043"
+    },
+    "inputs/fixed-page.json": {
+      "bytes": 22320,
+      "sha256": "b788cd56870a8dd65df3e4eaa73d281ad4ea377dcac024562f2d9be76ebfebbf"
+    },
+    "inputs/original-render.png": {
+      "bytes": 319644,
+      "sha256": "35358c312eed62a02cf2bc25fe6cb83fb5aaa965ec5973bf3e8cd9a0e1d4a840"
+    },
+    "inputs/original.pptx": {
+      "bytes": 37794,
+      "sha256": "4c951dde9044506ad7cade8e06de13c50ed25e5173210265cd2b7c61d2c38ef6"
+    },
+    "inputs/original.svg": {
+      "bytes": 9785,
+      "sha256": "82d3430688b9c4ff2fb89cedb99cabfd643fbb39cb03d274b65a60a2de245ded"
+    },
+    "inputs/resolved-fonts-source.json": {
+      "bytes": 365,
+      "sha256": "1507ca72ebe0928e1ae91f5a98f35de82dc270ba8c9b93aebb7eecc21f18a706"
+    },
+    "installed-admission-after.json": {
+      "bytes": 28673,
+      "sha256": "de688b0cf3d69ef8d6a324bd1b95b7a3fbe32c565e89b88a4cf30e38f7c3fb39"
+    },
+    "installed-admission-before.json": {
+      "bytes": 28673,
+      "sha256": "de688b0cf3d69ef8d6a324bd1b95b7a3fbe32c565e89b88a4cf30e38f7c3fb39"
+    },
+    "native-geometry-and-zip-delta-verification.json": {
+      "bytes": 13720,
+      "sha256": "2a97839b2925a14e7a01c1b351e5c2683d89258c6530d2250753667588560184"
+    },
+    "native-package-measurements.json": {
+      "bytes": 1090,
+      "sha256": "8115140ba4cf8efdca609187b82b897f1290ff738d7dcf7ee41d2116215e2886"
+    },
+    "original-input-inventory-after.json": {
+      "bytes": 1727,
+      "sha256": "e406628c081bd3df86b8c26c0c8f88a3abc4096b5168fcc85d68106cda82966d"
+    },
+    "original-input-inventory-before.json": {
+      "bytes": 1727,
+      "sha256": "e406628c081bd3df86b8c26c0c8f88a3abc4096b5168fcc85d68106cda82966d"
+    },
+    "report.md": {
+      "bytes": 8020,
+      "sha256": "3520078f828782c01da80566ebef9ffc33620666d5bdda7f4550afee9a4b8cad"
+    },
+    "run_mechanical_checks.py": {
+      "bytes": 16846,
+      "sha256": "19f071c4d30dbbc371ac55ed348d96c1cd2bf2e7a35825de8f69c2c1b00bc5f8"
+    },
+    "summary.json": {
+      "bytes": 807,
+      "sha256": "2637de577c6999321af96f7c5cebc40d93c72fd8563d96569a1ea80b22bdd58e"
+    },
+    "verify_native_geometry.py": {
+      "bytes": 4397,
+      "sha256": "2d4528715c53246101d6acdef753620915853a190847922a84f12d9427963ca2"
+    }
+  },
+  "prior_report_unchanged_sha256": "a6ae66e38f574ba42c612b72de41bd71b118cafa1ce13b5c9cdf06276ea339fc",
+  "reader_source_sha": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+  "schema": "actual_ppt_mechanical_evidence_manifest.v1"
+}

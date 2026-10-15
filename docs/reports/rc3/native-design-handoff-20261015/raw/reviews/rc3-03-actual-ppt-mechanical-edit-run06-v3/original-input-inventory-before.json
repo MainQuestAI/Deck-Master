@@ -1,0 +1,37 @@
+{
+  "actual-effective-design.json": {
+    "bytes": 7128,
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-ppt-v3-correct-physical/actual-effective-design.json",
+    "sha256": "35fc9cdb6ae5690aad1d5ab8f452a04d208ee4a0b427dc7519de66ce1b28c29f"
+  },
+  "actual-svg-ir.json": {
+    "bytes": 79616,
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-ppt-v3-correct-physical/actual-svg-ir.json",
+    "sha256": "a3bda7f4458de719be3d2f145467f257a8e0ff16100310bfbac979499634dc42"
+  },
+  "fixed-page.json": {
+    "bytes": 22320,
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-ppt-v3-correct-physical/fixed-page.json",
+    "sha256": "b788cd56870a8dd65df3e4eaa73d281ad4ea377dcac024562f2d9be76ebfebbf"
+  },
+  "original-render.png": {
+    "bytes": 319599,
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-ppt-v3-correct-physical/rendered/page-1.png",
+    "sha256": "ca645a40136d48b072fd87b674cc6cb56d441715e10a102a449182bbb441cbc1"
+  },
+  "original.pptx": {
+    "bytes": 37789,
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-ppt-v3-correct-physical/native/deck.pptx",
+    "sha256": "0c145ff3f055c5c7926f97ee9ec5bdbd641bb4fbc1bcbbae732b7fd828d057c8"
+  },
+  "original.svg": {
+    "bytes": 9889,
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/p04-native-v3-spacing-adjusted.svg",
+    "sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1"
+  },
+  "resolved-fonts-source.json": {
+    "bytes": 365,
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-ppt-v3-correct-physical/resolved-fonts.json",
+    "sha256": "1507ca72ebe0928e1ae91f5a98f35de82dc270ba8c9b93aebb7eecc21f18a706"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "blueprint": {
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/original-blueprint.png",
+    "local_sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+    "artifact_ref": {
+      "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+      "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+    },
+    "file_ref": {
+      "path": ".deckmaster/objects/8c/8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c.png",
+      "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c"
+    },
+    "same_bytes": true
+  },
+  "svg": {
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/p04-native-v3-spacing-adjusted.svg",
+    "local_sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1",
+    "artifact_ref": {
+      "path": ".deckmaster/objects/8c/8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d.json",
+      "sha256": "8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d"
+    },
+    "file_ref": {
+      "path": ".deckmaster/objects/fb/fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1.svg",
+      "sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1"
+    },
+    "same_bytes": true
+  },
+  "svg_preview": {
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-svg-v3-preview/actual-p04-preview.png",
+    "local_sha256": "9e4622078a84e81e207667f99269c9cc0d8a4bf306a47b1cd5ecdc99a0b7b7da",
+    "artifact_ref": {
+      "path": ".deckmaster/objects/ef/ef90a65288d7aa174fffaa78edd7951dee1b9095e4eaa7f5cc409a3b80d82be6.json",
+      "sha256": "ef90a65288d7aa174fffaa78edd7951dee1b9095e4eaa7f5cc409a3b80d82be6"
+    },
+    "file_ref": {
+      "path": ".deckmaster/objects/9e/9e4622078a84e81e207667f99269c9cc0d8a4bf306a47b1cd5ecdc99a0b7b7da.png",
+      "sha256": "9e4622078a84e81e207667f99269c9cc0d8a4bf306a47b1cd5ecdc99a0b7b7da"
+    },
+    "same_bytes": true
+  }
+}

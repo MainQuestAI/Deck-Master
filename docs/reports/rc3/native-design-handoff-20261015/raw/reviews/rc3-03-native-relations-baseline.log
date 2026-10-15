@@ -1,0 +1,169 @@
+FFF.FF...                                                                [100%]
+=================================== FAILURES ===================================
+_ test_legal_full_page_has_native_editable_atoms_units_notes_and_reading_order _
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline/test_legal_full_page_has_nativ0')
+
+    def test_legal_full_page_has_native_editable_atoms_units_notes_and_reading_order(tmp_path):
+        page = _page()
+        _, compiled, parsed, report = _compile(tmp_path, page)
+        assert report["status"] == "pass", report
+        assert report["visual_review"] == report["desktop_editing"] == "not_evaluated"
+        slide, texts = _native_texts(compiled.pptx_path)
+        assert texts == [shape["text"] for shape in parsed["shapes"] if shape["kind"] == "text"]
+        assert Counter(texts) == Counter(atom["text"] for atom in visible_atoms(page))
+        assert report["notes"][0]["page_id"] == PAGE_ID
+        assert report["notes"][0]["notes"] == page["speaker_notes"]
+        assert "每次等待 10 ms" in texts
+        assert "工程示例；10 ms 是测试参数，不是服务承诺。" in texts
+        assert not slide.findall(".//p:pic", NS)
+        native_atoms = {shape.find("p:nvSpPr/p:cNvPr", NS).get("name"): shape
+                        for shape in slide.findall(".//p:sp", NS) if shape.find("p:txBody", NS) is not None}
+>       assert set(native_atoms) == {atom["atom_id"] for atom in visible_atoms(page)}
+E       AssertionError: assert {'arrowhead-h...ty:text', ...} == {'atom:synthe...ay_text', ...}
+E         
+E         Extra items in the left set:
+E         'edge-submit-to-archive'
+E         'rect'
+E         'arrowhead-human-to-submit'
+E         'node-human'
+E         'table-row-0'...
+E         
+E         ...Full output truncated (10 lines hidden), use '-vv' to show
+
+tests/rebuild/test_rc3_design_native.py:202: AssertionError
+________ test_identical_table_text_at_wrong_row_is_located_at_cell_atom ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline/test_identical_table_text_at_w0')
+
+    def test_identical_table_text_at_wrong_row_is_located_at_cell_atom(tmp_path):
+        page = _page()
+        _, good, _, good_report = _compile(tmp_path, page, name="table-good")
+        _, bad, _, report = _compile(tmp_path, page, name="table-swapped", swap_cells=True)
+        assert good_report["status"] == "pass", good_report
+        assert _native_texts(good.pptx_path)[1] == _native_texts(bad.pptx_path)[1]
+>       findings = _located_atom(report, _atom("cell", "exceptions:human:action", "display_text"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:221: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+report = {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。\n10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+atom_id = 'atom:synthetic-rc3-relations:cell:exceptions:human:action:display_text'
+
+    def _located_atom(report, atom_id):
+        findings = [finding for finding in report["findings"] if finding.get("atom_id") == atom_id]
+>       assert report["status"] == "fail", report
+E       AssertionError: {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。
+E         10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+E       assert 'pass' == 'fail'
+E         
+E         - fail
+E         + pass
+
+tests/rebuild/test_rc3_design_native.py:181: AssertionError
+______ test_identical_table_text_at_wrong_column_is_located_at_cell_atom _______
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline/test_identical_table_text_at_w1')
+
+    def test_identical_table_text_at_wrong_column_is_located_at_cell_atom(tmp_path):
+        page = _page()
+        svg = ET.fromstring(_svg(page))
+        atom_id = _atom("cell", "exceptions:human:action", "display_text")
+        next(element for element in svg.iter() if element.get("data-atom-id") == atom_id).set("x", "802")
+        path = tmp_path / "wrong-column.svg"
+        path.write_bytes(ET.tostring(svg))
+        compiled = compile_deck([SvgInput(PAGE_ID, path, page["speaker_notes"])],
+                                CompileOptions(fonts=host_fonts()), tmp_path / "wrong-column-native")
+        report = readback(compiled.pptx_path, [parse_svg(path.read_bytes(), page_id=PAGE_ID)], [page])
+>       findings = _located_atom(report, atom_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+report = {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。\n10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+atom_id = 'atom:synthetic-rc3-relations:cell:exceptions:human:action:display_text'
+
+    def _located_atom(report, atom_id):
+        findings = [finding for finding in report["findings"] if finding.get("atom_id") == atom_id]
+>       assert report["status"] == "fail", report
+E       AssertionError: {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。
+E         10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+E       assert 'pass' == 'fail'
+E         
+E         - fail
+E         + pass
+
+tests/rebuild/test_rc3_design_native.py:181: AssertionError
+________ test_same_text_wrong_responsibility_owner_is_located[options0] ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline/test_same_text_wrong_responsib0')
+options = {'wrong_responsibility': True}
+
+    @pytest.mark.parametrize("options", [{"wrong_responsibility": True}, {"wrong_responsibility_geometry": True}])
+    def test_same_text_wrong_responsibility_owner_is_located(tmp_path, options):
+        page = _page()
+        _, good, _, good_report = _compile(tmp_path, page, name="responsibility-good")
+        _, bad, _, report = _compile(tmp_path, page, name="responsibility-wrong", **options)
+        assert good_report["status"] == "pass", good_report
+        assert _native_texts(good.pptx_path)[1] == _native_texts(bad.pptx_path)[1]
+>       findings = _located_atom(report, _atom("block", "human-duty"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:260: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+report = {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。\n10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+atom_id = 'atom:synthetic-rc3-relations:block:human-duty:text'
+
+    def _located_atom(report, atom_id):
+        findings = [finding for finding in report["findings"] if finding.get("atom_id") == atom_id]
+>       assert report["status"] == "fail", report
+E       AssertionError: {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。
+E         10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+E       assert 'pass' == 'fail'
+E         
+E         - fail
+E         + pass
+
+tests/rebuild/test_rc3_design_native.py:181: AssertionError
+________ test_same_text_wrong_responsibility_owner_is_located[options1] ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline/test_same_text_wrong_responsib1')
+options = {'wrong_responsibility_geometry': True}
+
+    @pytest.mark.parametrize("options", [{"wrong_responsibility": True}, {"wrong_responsibility_geometry": True}])
+    def test_same_text_wrong_responsibility_owner_is_located(tmp_path, options):
+        page = _page()
+        _, good, _, good_report = _compile(tmp_path, page, name="responsibility-good")
+        _, bad, _, report = _compile(tmp_path, page, name="responsibility-wrong", **options)
+        assert good_report["status"] == "pass", good_report
+        assert _native_texts(good.pptx_path)[1] == _native_texts(bad.pptx_path)[1]
+>       findings = _located_atom(report, _atom("block", "human-duty"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:260: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+report = {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。\n10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+atom_id = 'atom:synthetic-rc3-relations:block:human-duty:text'
+
+    def _located_atom(report, atom_id):
+        findings = [finding for finding in report["findings"] if finding.get("atom_id") == atom_id]
+>       assert report["status"] == "fail", report
+E       AssertionError: {'status': 'pass', 'findings': [], 'pages': [{'page_id': 'synthetic-rc3-relations', 'text_runs': 19, 'native_shapes': ...按责任主体逐行阅读。
+E         10 ms 只用于工程验证。', 'notes_sha256': '0f40d736610f5c294dc3bc289d295c0db637e9b064c124688a7f36a2f6d278e3'}], ...}
+E       assert 'pass' == 'fail'
+E         
+E         - fail
+E         + pass
+
+tests/rebuild/test_rc3_design_native.py:181: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_rc3_design_native.py::test_legal_full_page_has_native_editable_atoms_units_notes_and_reading_order
+FAILED tests/rebuild/test_rc3_design_native.py::test_identical_table_text_at_wrong_row_is_located_at_cell_atom
+FAILED tests/rebuild/test_rc3_design_native.py::test_identical_table_text_at_wrong_column_is_located_at_cell_atom
+FAILED tests/rebuild/test_rc3_design_native.py::test_same_text_wrong_responsibility_owner_is_located[options0]
+FAILED tests/rebuild/test_rc3_design_native.py::test_same_text_wrong_responsibility_owner_is_located[options1]
+5 failed, 4 passed in 2.55s

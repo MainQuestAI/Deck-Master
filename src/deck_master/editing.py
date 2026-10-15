@@ -16,7 +16,7 @@ from .tasks import _project_transaction
 def _current_artifact_digests(store, doc, extra_subjects=()):
     """Current dependency digests for review freshness (content/page/style/svg/pptx)."""
     from .models import canonical_json_bytes
-    from .production import resolve_design
+    from .production import resolve_page_rendering_design
     design = doc.get('design_context') or {}
     artifacts = {}
     subject_info = {}
@@ -205,13 +205,16 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
             artifacts[f'content:page_notes:{page_id}'] = sha256_bytes(notes.encode('utf-8'))
         if page:
             from .production import style_font_fingerprint
-            _, style = resolve_design(page, design, design.get('assets') or [])
+            effective = resolve_page_rendering_design(store, doc, entry)
+            style = effective['styles'][0]
             assets_by_id = {a['asset_id']: a for a in design.get('assets') or []}
             font_fp = style_font_fingerprint(
-                design, style,
+                effective, style,
                 lambda aid: (assets_by_id.get(aid) or {}).get('artifact', {}).get('sha256'))
             artifacts[f'style:{page_id}'] = sha256_bytes(
-                canonical_json_bytes({'style': style, 'fonts': font_fp}))
+                canonical_json_bytes({'style': style, 'fonts': font_fp,
+                    **({'recipe_parameters': effective['recipe_parameters']}
+                       if 'recipe_parameters' in effective else {})}))
         for slot, kind, identity in (('blueprint', 'blueprint', f'blueprint:{page_id}'),
                                      ('svg', 'artifact', f'svg:{page_id}'),
                                      ('svg_preview', 'artifact', f'svg_preview:{page_id}'),
@@ -304,10 +307,8 @@ def review_status(store, doc):
 
 def page_visual_summary(store, doc, entry):
     from .review import evaluate_page_visual
-    from .production import resolve_design
-    page = store.read_object_json(entry['page'])
-    effective, _ = resolve_design(page, doc['design_context'],
-                                  doc['design_context'].get('assets') or [])
+    from .production import resolve_page_rendering_design
+    effective = resolve_page_rendering_design(store, doc, entry)
     reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
     return evaluate_page_visual(entry, reviews, _current_artifact_digests(store, doc),
                                 effective.get('allowed_asset_ids') or [])

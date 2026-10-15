@@ -1,0 +1,509 @@
+{
+  "scope": "Actual same-page second autonomous layout repair for F07, engineering acceptance only",
+  "task_id": "53be66431623",
+  "operation_id": "reconstruct-983708281cc1",
+  "produced_against": "b5b2769e8f55a43eb0cbae3311af403b714b97baea1cf624b574900192f755aa",
+  "execution_ref": "/root/rc3_03_actual_svg_writer",
+  "repair_round": 2,
+  "mechanical_spacing_adjustments": 1,
+  "additional_effect_rewrites": 0,
+  "first_effect_or_fairness_E2_E3_claimed": false,
+  "sdk_accept_status": "accepted",
+  "accepted_revision": "ce601a8dd04543d5b15f7d968eb85ca2",
+  "artifact_ref": {
+    "path": ".deckmaster/objects/8c/8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d.json",
+    "sha256": "8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d"
+  },
+  "original_model_svg": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/p04-native-v3.svg",
+    "bytes": 9834,
+    "sha256": "97df8d71e641c778e644bbddbb9e98a68be9a1b08a2ef56068cd2e9ed7cce005"
+  },
+  "actual_submission_svg": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/p04-native-v3-spacing-adjusted.svg",
+    "bytes": 9889,
+    "sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1"
+  },
+  "staging_svg": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/staging/reconstruct-983708281cc1/p04-native-v3-spacing-adjusted.svg",
+    "bytes": 9889,
+    "sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1"
+  },
+  "accepted_blob": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/fb/fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1.svg",
+    "bytes": 9889,
+    "sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1"
+  },
+  "submission_equals_staging_equals_accepted": true,
+  "model_original_and_first_failed_check_preserved": true,
+  "initial_local_findings_preserved": [
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "gaps": [
+        -1.0,
+        0.0
+      ]
+    },
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "gaps": [
+        -1.0,
+        0.0
+      ]
+    },
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:label:collect:text",
+      "gaps": [
+        1.0,
+        -1.0
+      ]
+    },
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "gaps": [
+        1.0,
+        -1.0
+      ]
+    },
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "gaps": [
+        -1.0,
+        1.0
+      ]
+    }
+  ],
+  "final_local_findings": [],
+  "sdk_errors": [],
+  "final_checks": {
+    "sdk_parse": {
+      "status": "parsed",
+      "shape_count": 60,
+      "canvas": [
+        1600.0,
+        900.0
+      ]
+    },
+    "atoms_exact": 17,
+    "atoms_total": 17,
+    "heading50px_runs": 2,
+    "body30px_runs": 34,
+    "font_roles_correct": true,
+    "font_resolution": {
+      "regular": {
+        "family": "Noto Sans CJK SC",
+        "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "index": 2
+      },
+      "bold": {
+        "family": "Noto Sans CJK SC",
+        "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+        "index": 2
+      }
+    },
+    "minimum_interline_font_ink_gap": 1.0,
+    "table_clearance": {
+      "unknown:trigger": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 86.0,
+          "top": 13.0,
+          "bottom": 49.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 85.5,
+          "top": 12.5,
+          "bottom": 48.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 85.5,
+          "top": 15.5,
+          "bottom": 45.5
+        }
+      },
+      "unknown:action": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 40.0,
+          "top": 13.0,
+          "bottom": 16.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 39.5,
+          "top": 12.5,
+          "bottom": 15.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 39.5,
+          "top": 15.5,
+          "bottom": 12.5
+        }
+      },
+      "unknown:handoff": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 60.0,
+          "top": 13.0,
+          "bottom": 16.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 59.5,
+          "top": 12.5,
+          "bottom": 15.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 59.5,
+          "top": 15.5,
+          "bottom": 12.5
+        }
+      },
+      "unsuitable:trigger": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 26.0,
+          "top": 13.0,
+          "bottom": 16.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 25.5,
+          "top": 12.5,
+          "bottom": 15.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 25.5,
+          "top": 15.5,
+          "bottom": 12.5
+        }
+      },
+      "unsuitable:action": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 100.0,
+          "top": 13.0,
+          "bottom": 16.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 99.5,
+          "top": 12.5,
+          "bottom": 15.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 99.5,
+          "top": 15.5,
+          "bottom": 12.5
+        }
+      },
+      "unsuitable:handoff": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 150.0,
+          "top": 13.0,
+          "bottom": 16.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 149.5,
+          "top": 12.5,
+          "bottom": 15.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 149.5,
+          "top": 15.5,
+          "bottom": 12.5
+        }
+      }
+    },
+    "header_clearance": {
+      "trigger": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 206.0,
+          "top": 13.0,
+          "bottom": 16.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 205.5,
+          "top": 12.5,
+          "bottom": 15.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 205.5,
+          "top": 15.5,
+          "bottom": 12.5
+        }
+      },
+      "action": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 310.0,
+          "top": 13.0,
+          "bottom": 16.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 309.5,
+          "top": 12.5,
+          "bottom": 15.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 309.5,
+          "top": 15.5,
+          "bottom": 12.5
+        }
+      },
+      "handoff": {
+        "nominal_font_ink_inset": {
+          "left": 18.0,
+          "right": 420.0,
+          "top": 13.0,
+          "bottom": 16.0
+        },
+        "font_ink_to_border_paint_clearance": {
+          "left": 17.5,
+          "right": 419.5,
+          "top": 12.5,
+          "bottom": 15.5
+        },
+        "projection_at_native_plus3px_only_not_actualPPT": {
+          "left": 17.5,
+          "right": 419.5,
+          "top": 15.5,
+          "bottom": 12.5
+        }
+      }
+    },
+    "boundary_clearance": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 518.0,
+        "top": 13.0,
+        "bottom": 16.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.25,
+        "right": 517.25,
+        "top": 12.25,
+        "bottom": 15.25
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.25,
+        "right": 517.25,
+        "top": 15.25,
+        "bottom": 12.25
+      }
+    },
+    "module_spacing": {
+      "chain_frame_bottom_including_stroke": 328.75,
+      "section_heading_font_ink_top": 354.0,
+      "table_bottom_including_stroke": 733.5,
+      "boundary_top_including_stroke": 758.25,
+      "table_to_boundary_net_gap": 24.75,
+      "chain_to_section_ink_gap": 25.25
+    },
+    "margins": {
+      "geometry_left": 49.25,
+      "geometry_right": 49.25,
+      "geometry_bottom": 49.25,
+      "text_ink_top": 50.0,
+      "text_ink_right": 110.0,
+      "text_ink_bottom": 66.0
+    },
+    "empirical_projection_only": {
+      "not_a_new_measurement": true,
+      "method": "Changed adjustedv3 baselines/borders applied to exact measured v2 bottom-ink pixels, no v3render generated",
+      "header": {
+        "v2_actual_bottom": 481,
+        "baseline_delta": -13,
+        "projected_bottom": 468,
+        "projected_first_border_pixel": 482,
+        "projected_empty_rows": 13
+      },
+      "unknown_lastline": {
+        "v2_actual_bottom": 602,
+        "baseline_delta": -10,
+        "projected_bottom": 592,
+        "projected_first_border_pixel": 607,
+        "projected_empty_rows": 14
+      },
+      "unsuitable_lastline": {
+        "v2_actual_bottom": 724,
+        "baseline_delta": -7,
+        "projected_bottom": 717,
+        "projected_first_border_pixel": 732,
+        "projected_empty_rows": 14
+      }
+    }
+  },
+  "scope_delta": {
+    "before_revision": "88f0366a12c24d96ba8598e0468ca70c",
+    "after_revision": "ce601a8dd04543d5b15f7d968eb85ca2",
+    "page_order_unchanged": true,
+    "page_deltas": {
+      "p01": {},
+      "p02": {},
+      "p03": {},
+      "p04": {
+        "svg": {
+          "before": {
+            "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+            "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+          },
+          "after": {
+            "path": ".deckmaster/objects/8c/8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d.json",
+            "sha256": "8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d"
+          }
+        },
+        "svg_preview": {
+          "before": {
+            "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+            "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+          },
+          "after": null
+        }
+      },
+      "p05": {},
+      "p06": {},
+      "p07": {},
+      "p08": {}
+    },
+    "all_page_content_refs_unchanged": true,
+    "other_seven_page_entries_unchanged": true,
+    "document_outputs_unchanged": true,
+    "narrative_unchanged": true,
+    "content_plan_unchanged": true,
+    "review_field_unchanged": true,
+    "historical_ref_files_unchanged": true,
+    "historical_ref_count": 16,
+    "v1_v2_evidence_files_unchanged": true,
+    "v1_v2_evidence_count": 36,
+    "all_packet_review_crop_png_inputs_unchanged": true,
+    "changed_top_level_fields": [
+      "change",
+      "committed_at",
+      "pages",
+      "parent_revision_id",
+      "revision_id",
+      "tasks"
+    ],
+    "review_boundary": "NewSVG is a newsubject; oldreviewobjects remain immutable history and are not acceptance of newSVG."
+  },
+  "service_module_after": {
+    "path": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/service.py",
+    "bytes": 110077,
+    "sha256": "8a2af96d0d36c9b5f08ee657bec194b416a7091de6e4b300f1c496d1b3a00385"
+  },
+  "sys_executable": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/bin/python",
+  "limitations": [
+    "Initialmodelv3 localcheck found1px bounds overlap at31pxleading; originalSVG/intent/failure are retained. One mechanical adjustment to33pxleading and container allocation fixes local bounds; no further effect variants.",
+    "No completepreview/compile/readback/render was called by thisauthor. No actualnewPPT/raster measurement exists in thisauthor evidence.",
+    "F07native clearance13/14/14empty-row estimates and+3pxfontbuffer are projections, not actualmeasurements; Root must generate correctphysicalPPT/render and obtain newindependentreview before closure.",
+    "No newimage/OCR, source change, manuscript edit, targetcanvas change, page expansion, or oldreview overwrite.",
+    "No visual/desktop/human/full-card/globalREADY or formalcomplete/fairE2E3PASS claim."
+  ],
+  "primary_files": [
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/p04-native-v3.svg",
+      "bytes": 9834,
+      "sha256": "97df8d71e641c778e644bbddbb9e98a68be9a1b08a2ef56068cd2e9ed7cce005"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/creation-intent-v3.json",
+      "bytes": 4619,
+      "sha256": "627256f110629dd75a9a0bd7f7413f8f98acade23a390e38dc49d483817e18e4"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/engineering-check-v3.json",
+      "bytes": 41382,
+      "sha256": "38dbee27f6b5dd357d1fb6bd572539f4c915b7107bc5bd70d7bb88b96c45927c"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/mechanical-spacing-adjustment-01.json",
+      "bytes": 9145,
+      "sha256": "4a8b08152bf579a2c454db129fa1640bf30e21febc3733ed853a5915bfb5f392"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/p04-native-v3-spacing-adjusted.svg",
+      "bytes": 9889,
+      "sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/engineering-check-v3-adjusted.json",
+      "bytes": 40582,
+      "sha256": "0dba90c2a6f0b50b8d32a5567db6e08f46287525eaeadd4c05bad13b764f6c85"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/claim-input.json",
+      "bytes": 309,
+      "sha256": "e4f22a97a2e83c097f6b8b85367014df9394aa27e3482fcb287c7ed097b2a2b6"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/claim-result.json",
+      "bytes": 31129,
+      "sha256": "58308560a0d7bdaeb680ec258c8185834fb80a2485fb6fa3fa4c15bcfb53a10c"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/accept-envelope.json",
+      "bytes": 3406,
+      "sha256": "a5dda9a5bdf6c81b4267a8bb44e99ad076776012bd2c64c08bf63cc501fcc24d"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/accept-input.json",
+      "bytes": 3784,
+      "sha256": "12c0d88080153a5d9c17adf53edfb799fcdb2e5c4b6b13ce9b8d6a4104684923"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/accept-result.json",
+      "bytes": 1150,
+      "sha256": "11411638fa35cfcf61b7a07b4fae2ddf0534e6db8aba179a3942cbf6027ee99a"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/sdk-identity.json",
+      "bytes": 10724,
+      "sha256": "6954ff6c6c0b97836f300fff60cc00b3e300498564f2ae58f23c3656dd0d3192"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/scope-delta.json",
+      "bytes": 1757,
+      "sha256": "9a4a8d644b0b2ab5d29533a663fc8f8edc09ef123413fa2e09a0aa4566847cdd"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/historical-ref-files-before.json",
+      "bytes": 5269,
+      "sha256": "5b7342a806aa1bdf7b93a85edefcb587c31f678b1d9940f837d62738a21d900b"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/historical-ref-files-after.json",
+      "bytes": 10327,
+      "sha256": "65334278b28bd828c37c370d8052ca689765eaca43450a58420ca80d011c1f92"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/v1-v2-evidence-preservation.json",
+      "bytes": 13257,
+      "sha256": "9a55c5f4378fd66deb64692c2c39e272edf303799fe2f363c0fbe07034a4d38c"
+    },
+    {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/accepted-artifact.json",
+      "bytes": 2883,
+      "sha256": "a8c8d90e5411e04f166babdfff6d1027a82cfe51ef4894ad7c8300f1cff3d127"
+    }
+  ]
+}

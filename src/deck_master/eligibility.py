@@ -191,6 +191,10 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
           production=False, role="user", card="style.palette"),
     _spec("style.propose", "change", "pages", layers=("design",), authority="either",
           production=True, role="user", card="style.density"),
+    _spec("design.propose", "change", "pages", layers=("design",), authority="either",
+          production=False, role="user", card="style.density"),
+    _spec("design.feasibility", "change", "pages", layers=("design",), authority="either",
+          production=False, role="user", card="style.density"),
     _spec("style.trial", "change", "pages", authority="either", production=True,
           external=True, role="user", card="style.density"),
     _spec("style.expand", "change", "pages", authority="either", production=True,
@@ -806,7 +810,14 @@ def _slot_covered_by_binding(spec: ActionSpec, bound_ref, ref, actions) -> bool:
 def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
                           targets: dict, task: dict | None = None) -> list[dict]:
     candidates = []
-    accepted_names = DELIVERY_ENTRY_ACTIONS if spec.delivery else (spec.name,)
+    # Only pure proposal permissions share these names. They never cover a
+    # trial, dispatch, change commit, allowance, or candidate adoption.
+    planning_names = {
+        "design.feasibility": ("design.feasibility", "design.propose", "style.propose"),
+        "design.propose": ("design.propose", "style.propose"),
+        "style.propose": ("style.propose", "design.propose"),
+    }
+    accepted_names = DELIVERY_ENTRY_ACTIONS if spec.delivery else planning_names.get(spec.name, (spec.name,))
     bound_ref = binding_of(task).get("authorization_ref") if task is not None else None
     for ref, record in _authorization_heads(store, document):
         actions = record.get("actions") or []

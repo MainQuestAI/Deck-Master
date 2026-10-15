@@ -1,0 +1,98 @@
+{
+  "new_svg_sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1",
+  "new_pptx_sha256": "0c145ff3f055c5c7926f97ee9ec5bdbd641bb4fbc1bcbbae732b7fd828d057c8",
+  "new_render_sha256": "ca645a40136d48b072fd87b674cc6cb56d441715e10a102a449182bbb441cbc1",
+  "F05": {
+    "finding_id": "F05",
+    "kind": "conversion",
+    "impact": "must_fix",
+    "page_id": "p04",
+    "element_refs": [
+      "ppt/presentation.xml:p:sldSz"
+    ],
+    "message": "仅对本轮精确新PPT保持物理尺寸修复。",
+    "expected": "12192000×6858000EMU，13⅓×7.5in。",
+    "actual": "新PPTX SHA0c145ff3f055c5c7926f97ee9ec5bdbd641bb4fbc1bcbbae732b7fd828d057c8的cx/cy精确匹配；type仍screen4x3，保留A02。",
+    "evidence": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      },
+      {
+        "path": ".deckmaster/objects/8c/8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d.json",
+        "sha256": "8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d"
+      },
+      {
+        "path": ".deckmaster/objects/ef/ef90a65288d7aa174fffaa78edd7951dee1b9095e4eaa7f5cc409a3b80d82be6.json",
+        "sha256": "ef90a65288d7aa174fffaa78edd7951dee1b9095e4eaa7f5cc409a3b80d82be6"
+      }
+    ],
+    "resolution": "fixed",
+    "resolution_reason": "本人重新读取新PPTX XML；旧物理尺寸失败记录不回写。"
+  },
+  "F06": {
+    "finding_id": "F06",
+    "kind": "conversion",
+    "impact": "must_fix",
+    "page_id": "p04",
+    "element_refs": [
+      "ppt/slides/slide1.xml:a:rPr@sz"
+    ],
+    "message": "仅对本轮精确新PPT保持逐run字号修复。",
+    "expected": "两个明确heading atom30pt，其余body18pt。",
+    "actual": "本轮36个run：明确title及exceptions-heading共2段30pt，其余34段18pt；不用字号或加粗反推角色。",
+    "evidence": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      },
+      {
+        "path": ".deckmaster/objects/8c/8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d.json",
+        "sha256": "8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d"
+      },
+      {
+        "path": ".deckmaster/objects/ef/ef90a65288d7aa174fffaa78edd7951dee1b9095e4eaa7f5cc409a3b80d82be6.json",
+        "sha256": "ef90a65288d7aa174fffaa78edd7951dee1b9095e4eaa7f5cc409a3b80d82be6"
+      }
+    ],
+    "resolution": "fixed",
+    "resolution_reason": "新XML独立核验，旧14.4/24pt失败历史不改写。"
+  },
+  "F07": {
+    "finding_id": "F07",
+    "kind": "readability",
+    "impact": "must_fix",
+    "page_id": "p04",
+    "element_refs": [
+      "exceptions-table",
+      "table-header-bottom",
+      "table-row-divider",
+      "atom:p04:cell:exceptions:unknown:action:display_text",
+      "atom:p04:cell:exceptions:unsuitable:handoff:display_text"
+    ],
+    "message": "仅对本轮新SVG/PPT关闭全部单元格painted净空问题。",
+    "expected": "三列表头与两行三列数据共9格，两层四边painted净空均≥12逻辑/约120dpi像素，行墨迹不重叠。",
+    "actual": "逐格四边实测：SVG最小12px，PPT最小13px；SVG表头底16px、三行数据底16px，PPT相应均13px。包括全部淡抗锯齿墨迹的B<255交叉检查同样通过。每格行墨迹band数与实际行数一致，无合并/重叠。",
+    "evidence": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      },
+      {
+        "path": ".deckmaster/objects/8c/8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d.json",
+        "sha256": "8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d"
+      },
+      {
+        "path": ".deckmaster/objects/ef/ef90a65288d7aa174fffaa78edd7951dee1b9095e4eaa7f5cc409a3b80d82be6.json",
+        "sha256": "ef90a65288d7aa174fffaa78edd7951dee1b9095e4eaa7f5cc409a3b80d82be6"
+      }
+    ],
+    "resolution": "fixed",
+    "resolution_reason": "本轮精确SVG SHAfb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1、PPT SHA0c145ff3f055c5c7926f97ee9ec5bdbd641bb4fbc1bcbbae732b7fd828d057c8、render SHAca645a40136d48b072fd87b674cc6cb56d441715e10a102a449182bbb441cbc1实测。保留v2正式FAIL和原始F07，不反写过去通过。"
+  },
+  "prior_F07_failed_review_ref": {
+    "path": ".deckmaster/objects/ed/eda62a8962c5ad9fae874835b899112fbe072ea152770fdce4d616a02efade04.json",
+    "sha256": "eda62a8962c5ad9fae874835b899112fbe072ea152770fdce4d616a02efade04"
+  },
+  "scope": "new exact artifacts only; old FAIL immutable"
+}

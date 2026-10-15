@@ -1,0 +1,1299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "style_recipe.v3",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "style_recipe.v3"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "style_input.v3"
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "enum": [
+            "initial_design",
+            "restyle",
+            "feasibility"
+          ]
+        },
+        "target_page_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "instruction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference_refs": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "page_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "artifact_ref": {
+                    "type": "object",
+                    "required": [
+                      "path",
+                      "sha256"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    }
+                  },
+                  "role": {
+                    "const": "reference"
+                  }
+                },
+                "required": [
+                  "page_id",
+                  "revision_id",
+                  "artifact_ref",
+                  "role"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "external"
+                  },
+                  "reference_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "artifact_ref": {
+                    "type": "object",
+                    "required": [
+                      "path",
+                      "sha256"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    }
+                  },
+                  "role": {
+                    "const": "reference"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "reference_id",
+                  "artifact_ref",
+                  "role"
+                ]
+              }
+            ]
+          }
+        },
+        "recipe_draft": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "palette": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              }
+            },
+            "typography": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "body_font_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                },
+                "heading_font_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                },
+                "body_size_pt": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "heading_size_pt": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "auxiliary_size_pt": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "body_font_id",
+                "heading_font_id",
+                "body_size_pt",
+                "heading_size_pt",
+                "auxiliary_size_pt"
+              ]
+            },
+            "density": {
+              "type": "string",
+              "minLength": 1
+            },
+            "composition": {
+              "type": "string",
+              "minLength": 1
+            },
+            "spacing": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lines": {
+              "type": "string",
+              "minLength": 1
+            },
+            "icons": {
+              "type": "string",
+              "minLength": 1
+            },
+            "allowed_overrides": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "palette",
+                  "typography",
+                  "density",
+                  "composition",
+                  "spacing",
+                  "lines",
+                  "icons"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "page_rules": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "palette": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "propertyNames": {
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                  },
+                  "typography": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "body_font_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      "heading_font_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      "body_size_pt": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "heading_size_pt": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "auxiliary_size_pt": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    },
+                    "required": [
+                      "body_font_id",
+                      "heading_font_id",
+                      "body_size_pt",
+                      "heading_size_pt",
+                      "auxiliary_size_pt"
+                    ]
+                  },
+                  "density": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "composition": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "spacing": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "lines": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "icons": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": []
+              }
+            }
+          },
+          "required": [
+            "palette",
+            "typography",
+            "density",
+            "composition",
+            "spacing",
+            "lines",
+            "icons",
+            "allowed_overrides"
+          ]
+        },
+        "page_profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "page_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "profile": {
+                "type": "string",
+                "minLength": 1
+              },
+              "density": {
+                "type": "string",
+                "minLength": 1
+              },
+              "diagram": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "task": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "page_id",
+              "profile",
+              "density",
+              "diagram",
+              "task"
+            ]
+          }
+        },
+        "layout_rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sample_targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "page_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "coverage_risks": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "page_id",
+              "coverage_risks"
+            ]
+          }
+        },
+        "uncovered_cases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "tradeoffs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "parent_recipe_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "project_id",
+        "base_revision",
+        "intent",
+        "target_page_ids",
+        "instruction",
+        "reference_refs",
+        "recipe_draft",
+        "page_profiles",
+        "layout_rationale",
+        "sample_targets",
+        "uncovered_cases",
+        "tradeoffs"
+      ]
+    },
+    "intent": {
+      "enum": [
+        "initial_design",
+        "restyle",
+        "feasibility"
+      ]
+    },
+    "basis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "DependencySlice (CONTRACTS §7): a registered semantic projection with its canonical digest.",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "identity",
+          "projection",
+          "ref",
+          "sha256"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "task_fact",
+              "artifact",
+              "source",
+              "decision",
+              "authorization",
+              "policy"
+            ]
+          },
+          "identity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "projection": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*([.][a-z][a-z0-9_]*)*$"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "page_ref": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "blueprint_ref": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "page_id",
+          "page_ref",
+          "blueprint_ref",
+          "content"
+        ]
+      }
+    },
+    "reference_refs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "page_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifact_ref": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "role": {
+                "const": "reference"
+              }
+            },
+            "required": [
+              "page_id",
+              "revision_id",
+              "artifact_ref",
+              "role"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "external"
+              },
+              "reference_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifact_ref": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "role": {
+                "const": "reference"
+              }
+            },
+            "required": [
+              "kind",
+              "reference_id",
+              "artifact_ref",
+              "role"
+            ]
+          }
+        ]
+      }
+    },
+    "recipe_draft": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "palette": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        },
+        "typography": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "body_font_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "heading_font_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "body_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "heading_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "auxiliary_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "body_font_id",
+            "heading_font_id",
+            "body_size_pt",
+            "heading_size_pt",
+            "auxiliary_size_pt"
+          ]
+        },
+        "density": {
+          "type": "string",
+          "minLength": 1
+        },
+        "composition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spacing": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lines": {
+          "type": "string",
+          "minLength": 1
+        },
+        "icons": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_overrides": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "palette",
+              "typography",
+              "density",
+              "composition",
+              "spacing",
+              "lines",
+              "icons"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "page_rules": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "palette": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                }
+              },
+              "typography": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "body_font_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                  },
+                  "heading_font_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                  },
+                  "body_size_pt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "heading_size_pt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "auxiliary_size_pt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "body_font_id",
+                  "heading_font_id",
+                  "body_size_pt",
+                  "heading_size_pt",
+                  "auxiliary_size_pt"
+                ]
+              },
+              "density": {
+                "type": "string",
+                "minLength": 1
+              },
+              "composition": {
+                "type": "string",
+                "minLength": 1
+              },
+              "spacing": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lines": {
+                "type": "string",
+                "minLength": 1
+              },
+              "icons": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": []
+          }
+        }
+      },
+      "required": [
+        "palette",
+        "typography",
+        "density",
+        "composition",
+        "spacing",
+        "lines",
+        "icons",
+        "allowed_overrides"
+      ]
+    },
+    "parent_recipe_ref": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "page_profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profile": {
+            "type": "string",
+            "minLength": 1
+          },
+          "density": {
+            "type": "string",
+            "minLength": 1
+          },
+          "diagram": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "page_id",
+          "profile",
+          "density",
+          "diagram",
+          "task"
+        ]
+      }
+    },
+    "layout_rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sample_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coverage_risks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "page_id",
+          "coverage_risks"
+        ]
+      }
+    },
+    "uncovered_cases": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "tradeoffs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "palette": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        },
+        "typography": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "body_font_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "heading_font_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "body_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "heading_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "auxiliary_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "body_font_id",
+            "heading_font_id",
+            "body_size_pt",
+            "heading_size_pt",
+            "auxiliary_size_pt"
+          ]
+        },
+        "density": {
+          "type": "string",
+          "minLength": 1
+        },
+        "composition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spacing": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lines": {
+          "type": "string",
+          "minLength": 1
+        },
+        "icons": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "palette",
+        "typography",
+        "density",
+        "composition",
+        "spacing",
+        "lines",
+        "icons"
+      ]
+    },
+    "preserve_dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "maxItems": 0
+    },
+    "diff": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1
+          },
+          "before": {},
+          "after": {}
+        },
+        "required": [
+          "field",
+          "before",
+          "after"
+        ]
+      }
+    },
+    "preserve_target_content": {
+      "const": true
+    },
+    "suggestion_state": {
+      "const": "none"
+    },
+    "recipe_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "proposal_ref": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "layers": {
+          "const": [
+            "design"
+          ]
+        }
+      },
+      "required": [
+        "page_ids",
+        "layers"
+      ]
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "palette": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        },
+        "typography": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "body_font_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "heading_font_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "body_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "heading_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "auxiliary_size_pt": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "body_font_id",
+            "heading_font_id",
+            "body_size_pt",
+            "heading_size_pt",
+            "auxiliary_size_pt"
+          ]
+        },
+        "density": {
+          "type": "string",
+          "minLength": 1
+        },
+        "composition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spacing": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lines": {
+          "type": "string",
+          "minLength": 1
+        },
+        "icons": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_overrides": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "palette",
+              "typography",
+              "density",
+              "composition",
+              "spacing",
+              "lines",
+              "icons"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "page_rules": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "palette": {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                }
+              },
+              "typography": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "body_font_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                  },
+                  "heading_font_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                  },
+                  "body_size_pt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "heading_size_pt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "auxiliary_size_pt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "body_font_id",
+                  "heading_font_id",
+                  "body_size_pt",
+                  "heading_size_pt",
+                  "auxiliary_size_pt"
+                ]
+              },
+              "density": {
+                "type": "string",
+                "minLength": 1
+              },
+              "composition": {
+                "type": "string",
+                "minLength": 1
+              },
+              "spacing": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lines": {
+                "type": "string",
+                "minLength": 1
+              },
+              "icons": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": []
+          }
+        }
+      },
+      "required": [
+        "palette",
+        "typography",
+        "density",
+        "composition",
+        "spacing",
+        "lines",
+        "icons",
+        "allowed_overrides"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "base_revision",
+    "input",
+    "intent",
+    "basis",
+    "targets",
+    "reference_refs",
+    "recipe_draft",
+    "parent_recipe_ref",
+    "page_profiles",
+    "layout_rationale",
+    "sample_targets",
+    "uncovered_cases",
+    "tradeoffs",
+    "dimensions",
+    "preserve_dimensions",
+    "conflicts",
+    "diff",
+    "preserve_target_content",
+    "suggestion_state",
+    "recipe_id",
+    "version",
+    "proposal_ref",
+    "scope",
+    "parameters"
+  ]
+}

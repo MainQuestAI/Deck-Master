@@ -1,0 +1,20 @@
+{
+  "snapshot": {
+    "root": "/workspace/work/rc3/reviews/rc3-03-code-snapshot-5dbdf72",
+    "before_sha256": "5c48a30277b1467b4e5b711c5a6d20a762a2d17b0ca8136e11b8308809c53c53",
+    "after_sha256": "5c48a30277b1467b4e5b711c5a6d20a762a2d17b0ca8136e11b8308809c53c53",
+    "changed": [],
+    "removed": [],
+    "files": 3203,
+    "status": "PASS"
+  },
+  "installed_package": {
+    "root": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master",
+    "before_sha256": "7da60e938e563d6dd3939b4f66ff15c74bc49425dd91eb4ed2c9355b79d28185",
+    "after_sha256": "7da60e938e563d6dd3939b4f66ff15c74bc49425dd91eb4ed2c9355b79d28185",
+    "changed": [],
+    "removed": [],
+    "files": 340,
+    "status": "PASS"
+  }
+}

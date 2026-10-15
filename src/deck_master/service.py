@@ -13,6 +13,7 @@ lock, so a stale submission is refused with current unchanged (exit 5).
 
 from __future__ import annotations
 
+import copy
 import json
 import re
 import uuid
@@ -560,9 +561,26 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         summary['reference_images'] = []
         summary['page_design_contexts'] = {}
         for entry in summary['page_entries']:
-            page=store.read_object_json(entry['page'])
-            effective,_=resolve_design(page,document['design_context'],document['design_context'].get('assets',[]))
+            from .production import adopted_blueprint_design, resolve_page_design
+            if task.get('review_stage') == 'preproduction':
+                # Requalify the current manuscript before regenerating an old
+                # image; content review does not consume its visual recipe.
+                page = store.read_object_json(entry['page'])
+                effective, _ = resolve_design(page, document['design_context'],
+                                              document['design_context'].get('assets') or [])
+            else:
+                original_entry = next(e for e in dispatched['pages'] if e['page_id'] == entry['page_id'])
+                original_design = adopted_blueprint_design(store, dispatched, original_entry)
+                if (original_design is not None and (entry['blueprint'] != original_entry['blueprint']
+                        or original_entry['blueprint'] not in task.get('inputs', []))):
+                    raise ServiceError('task/inputs', 'adopted blueprint is outside the actual consumer Task inputs')
+                effective=resolve_page_design(store,document,entry,require_current=True)
+                if (('content_requirements' in effective or 'content_requirements_v1' in task.get('required_capabilities', []))
+                        and entry['blueprint'] not in task.get('inputs', [])):
+                    raise ServiceError('task/inputs', 'adopted blueprint is outside the actual consumer Task inputs')
             summary['page_design_contexts'][entry['page_id']]=effective
+            if len(summary['page_entries']) == 1 and 'content_requirements' in effective:
+                summary['resolved_design_context'] = copy.deepcopy(effective)
             if entry['blueprint']:
                 from PIL import Image
                 import io
@@ -578,9 +596,7 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
             summary['page_visual_requirements'] = []
             summary['prior_page_visual_findings'] = []
             for entry in summary['page_entries']:
-                page = store.read_object_json(entry['page'])
-                effective, _ = resolve_design(page, document['design_context'],
-                                              document['design_context'].get('assets') or [])
+                effective = summary['page_design_contexts'][entry['page_id']]
                 keys = [f"content:page:{entry['page_id']}", f"blueprint:{entry['page_id']}",
                         f"artifact:svg:{entry['page_id']}", f"style:{entry['page_id']}"]
                 keys += [f'asset:{aid}' for aid in effective.get('allowed_asset_ids') or []]
@@ -618,16 +634,15 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
                         'usage': 'prior observation only; final checks still follow review_plan.units',
                     })
     if task.get("kind") == "blueprint":
-        for ref in task.get("inputs") or []:
-            try:
-                candidate = store.read_object_json(ref)
-            except (StoreError, UnicodeDecodeError, json.JSONDecodeError):
-                continue
-            if candidate.get("schema_version") == "deck_blueprint_request.v1":
-                summary["production_request"] = candidate
+        from .production import stored_blueprint_request
+        candidate, _ = stored_blueprint_request(store, task)
+        if candidate is not None:
+            summary["production_request"] = candidate
+            if candidate.get("resolved_design_context") is not None:
+                summary["resolved_design_context"] = copy.deepcopy(candidate["resolved_design_context"])
+            else:
                 page = store.read_object_json(next(p["page"] for p in document["pages"] if p["page_id"] == candidate["page_id"]))
                 summary["resolved_design_context"], _ = resolve_design(page, document["design_context"], document["design_context"].get("assets") or [])
-                break
         if task.get("protocol_version"):
             from .generation import prepared_input
             summary["generation_input"] = prepared_input(store, document, task)
@@ -652,7 +667,9 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
             return existing
     page_ref = page_entry["page"]
     page = store.read_object_json(page_ref)
-    design = document.get("design_context") or {}
+    from .production import resolve_generation_design
+    modern = store.workbench_protocol_required(document)
+    design = resolve_generation_design(store, document, page_entry) if modern else document["design_context"]
     request = project_prompt(page, design, design.get("assets") or [])
     request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
@@ -698,6 +715,9 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
         },
     )
     bumped["tasks"] = list(document.get("tasks") or []) + [task_ref]
+    from .models import require_writer
+    if modern:
+        require_writer(bumped, "rc3.v1")
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"],
         document=bumped,
@@ -1139,11 +1159,13 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
                    "review": ["review"]}[kind]
     eligibility.guard(store, document, "dispatch.host_task",
                       context={"targets": {"page_ids": list(page_ids), "layers": host_layers}})
+    entries = [e for e in document['pages'] if e['page_id'] in page_ids]
+    from .production import design_handoff_protocol_fields
+    protocol = design_handoff_protocol_fields(store, document, entries) if review_stage != 'preproduction' else {}
     for ref in document['tasks']:
         task = store.read_object_json(ref)
-        if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running'):
+        if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running') and all(task.get(key) == value for key, value in protocol.items()):
             return task
-    entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]
     inputs += [ref for ref in extra_inputs if ref]
@@ -1153,6 +1175,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
         dispatch_revision=document['revision_id'],produced_against=content_identity(document),
         review_stage=review_stage,review_units=review_units)
+    task.update(protocol)
     from . import collaboration_binding
     collaboration_binding.stamp_task(
         store, document, task,
@@ -1161,6 +1184,9 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         adoption_policy="within_scope", action="dispatch.host_task",
         action_targets={"page_ids": list(page_ids), "layers": host_layers})
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
+    if protocol:
+        from .models import require_writer
+        require_writer(updated, 'rc3.v1')
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])
     return task
@@ -1747,17 +1773,18 @@ def _svg_referenced_asset_ids(store, svg_ref):
         return None
 
 
-def _rendering_state(store, page, design, svg_ref=None):
+def _rendering_state(store, document, entry):
     """The design slice a page's SVG/previews actually depend on (spec 08.8).
 
     Only assets the page's own SVG embeds count; being merely permitted by the
     page's allowance does not make an asset a rendering dependency.
     """
     from .models import canonical_json_bytes
-    from .production import resolve_design, style_font_fingerprint
-    effective, style = resolve_design(page, design, design.get('assets') or [])
-    assets_by_id = {a['asset_id']: a for a in design.get('assets') or []}
-    referenced = _svg_referenced_asset_ids(store, svg_ref)
+    from .production import resolve_page_rendering_design, style_font_fingerprint
+    effective = resolve_page_rendering_design(store, document, entry)
+    style = effective['styles'][0]
+    assets_by_id = {a['asset_id']: a for a in document['design_context'].get('assets') or []}
+    referenced = _svg_referenced_asset_ids(store, entry.get('svg'))
     if referenced is None:
         used = effective.get('allowed_asset_ids') or []
     else:
@@ -1765,9 +1792,11 @@ def _rendering_state(store, page, design, svg_ref=None):
     assets = sorted((aid, (assets_by_id.get(aid) or {}).get('artifact', {}).get('sha256'))
                     for aid in used)
     fonts = style_font_fingerprint(
-        design, style,
+        effective, style,
         lambda aid: (assets_by_id.get(aid) or {}).get('artifact', {}).get('sha256'))
-    return canonical_json_bytes({'style': style, 'assets': assets, 'fonts': fonts})
+    return canonical_json_bytes({'style': style, 'assets': assets, 'fonts': fonts,
+                                 **({'recipe_parameters': effective['recipe_parameters']}
+                                    if 'recipe_parameters' in effective else {})})
 
 
 def _apply_rendering_invalidation(store, new_document, old_document, old_design, new_design):
@@ -1779,11 +1808,10 @@ def _apply_rendering_invalidation(store, new_document, old_document, old_design,
     old_entries = {e['page_id']: e for e in (old_document.get('pages') or [])}
     invalidated = []
     for index, entry in enumerate(new_document['pages']):
-        page = store.read_object_json(entry['page'])
         old_entry = old_entries.get(entry['page_id']) or {}
         if canvas_changed or \
-                _rendering_state(store, page, old_design, old_entry.get('svg')) != \
-                _rendering_state(store, page, new_design, entry.get('svg')):
+                _rendering_state(store, old_document, old_entry) != \
+                _rendering_state(store, new_document, entry):
             invalidated.append(index)
     for index in invalidated:
         slot_entry = new_document['pages'][index]
@@ -1793,9 +1821,9 @@ def _apply_rendering_invalidation(store, new_document, old_document, old_design,
     affected = {new_document['pages'][index]['page_id'] for index in invalidated}
     review_affected = set(affected)
     for entry in new_document['pages']:
-        page = store.read_object_json(entry['page'])
-        before, _ = resolve_design(page, old_design, old_design.get('assets') or [])
-        after, _ = resolve_design(page, new_design, new_design.get('assets') or [])
+        from .production import resolve_page_rendering_design
+        before = resolve_page_rendering_design(store, old_document, old_entries[entry['page_id']])
+        after = resolve_page_rendering_design(store, new_document, entry)
         if before.get('allowed_asset_ids') != after.get('allowed_asset_ids'):
             review_affected.add(entry['page_id'])
     for index, ref in enumerate(new_document.get('tasks') or []):
@@ -1957,6 +1985,10 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
         raise tasks_mod.StaleInputContext('(task)', 'visual analysis inputs changed; create a new analysis before claiming')
     if task.get('stage_request', {}).get('target_reference_ref') and not tasks_mod.task_inputs_current(store, document, task):
         raise tasks_mod.StaleInputContext('(task)', 'target original image changed; preview a new style trial before claiming')
+    if (task.get('kind') in ('reconstruct', 'repair', 'review')
+            and 'content_requirements_v1' in (task.get('required_capabilities') or [])
+            and not tasks_mod.task_inputs_current(store, document, task)):
+        raise tasks_mod.StaleInputContext('(task)', 'adopted visual inputs changed before claim')
     if task.get("status") == "running" and task.get("execution_ref") != execution_ref:
         raise tasks_mod.TaskConflict(
             f"(task {task_id})", "another execution already claimed this task"

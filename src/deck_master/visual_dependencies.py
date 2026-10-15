@@ -40,19 +40,11 @@ def plan_visual_projection(store, document, page_ids):
     validate_schema("content_plan", plan)
     if plan.get("schema_version") != "content_plan.v2":
         return {"legacy_plan": ref}
-    value = plan["input"]
-    roles = value["page_roles"]
-    if len({role["page_id"] for role in roles}) != len(roles):
-        raise ValueError("duplicate Plan page roles")
-    selected = [role for role in roles if role["page_id"] in page_ids]
-    if {role["page_id"] for role in selected} != set(page_ids):
-        raise ValueError("missing consumed Plan page role")
-    return {"schema_version": plan["schema_version"], "mode": plan["mode"],
-            "narrative_ref": plan.get("narrative_ref"),
-            "imported_manuscript": plan.get("imported_manuscript"),
-            "chapters": value["chapters"], "page_order": value["page_order"],
-            "page_budget": value["page_budget"],
-            "page_roles": sorted(selected, key=lambda role: role["page_id"])}
+    from .design_requirements import plan_global_projection, plan_page_projection
+    if not set(page_ids) <= set(plan["input"]["page_order"]):
+        raise ValueError("consumed Page is outside Plan")
+    return {"global": plan_global_projection(plan),
+            "page_roles": [plan_page_projection(plan, pid) for pid in sorted(page_ids)]}
 
 
 def is_visual_task(task):
@@ -65,16 +57,36 @@ def is_visual_task(task):
 
 def visual_task_inputs_current(store, document, task):
     """Actual dispatched visual inputs; no task.preparation/cache inference."""
-    from .production import resolve_design, stored_blueprint_request
+    from .production import (consumed_design, resolve_page_design,
+                             resolve_page_rendering_design, stored_blueprint_request)
     from .snapshots import load_snapshot
     try:
         if not is_visual_task(task) or not task.get("scope_pages"):
             return False
         if task.get("kind") == "blueprint":
-            stored_blueprint_request(store, task)
+            prepared, _ = stored_blueprint_request(store, task)
+        else:
+            prepared = None
         target = task.get("stage_request", {}).get("target_reference_ref")
         if target is not None and any(entry.get("blueprint") != target for entry in document["pages"] if entry["page_id"] in task["scope_pages"]):
             return False
+        if prepared and prepared.get("resolved_design_context"):
+            from .production import resolve_generation_design
+            recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
+            for entry in document["pages"]:
+                if entry["page_id"] in task["scope_pages"]:
+                    # Collaboration Decisions can change without changing the
+                    # manuscript identity. Check their actual consumed slice
+                    # before that fast path, including rejection/withdrawal.
+                    if consumed_design(prepared["resolved_design_context"], store=store) != consumed_design(
+                            resolve_generation_design(store, document, entry, recipe_ref=recipe_ref), store=store):
+                        return False
+        if task.get("kind") != "blueprint":
+            for entry in document["pages"]:
+                if entry["page_id"] in task["scope_pages"]:
+                    # Validate the actual adopted lineage even on the identity
+                    # fast path; an already-stale image cannot seed new work.
+                    resolve_page_design(store, document, entry, require_current=True)
         if content_identity(document) == task.get("produced_against"):
             return True
         dispatched = load_snapshot(store, task["dispatch_revision"])
@@ -89,8 +101,9 @@ def visual_task_inputs_current(store, document, task):
             old, current = before[page_id], after[page_id]
             if not page_visual_equivalent(store, old["page"], current["page"], page_id):
                 return False
-            old_page, new_page = store.read_object_json(old["page"]), store.read_object_json(current["page"])
-            if resolve_design(old_page, dispatched["design_context"], dispatched["design_context"].get("assets") or []) != resolve_design(new_page, document["design_context"], document["design_context"].get("assets") or []):
+            if not (prepared and prepared.get("resolved_design_context")) and consumed_design(
+                    resolve_page_rendering_design(store, dispatched, old), store=store) != consumed_design(
+                    resolve_page_rendering_design(store, document, current), store=store):
                 return False
             slots = ("blueprint", "svg", "svg_preview") if task.get("review_stage") == "page_visual" else (("blueprint", "svg") if task.get("kind") in ("reconstruct", "repair", "review") else ())
             if task.get("stage_request", {}).get("mode") == "trial":

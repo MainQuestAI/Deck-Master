@@ -63,6 +63,9 @@ def _proposal(store, document, value):
         raise StyleConflict('base_revision', 'read current state and propose again', [])
     if not value['instruction'].strip():
         fail('instruction', 'provide a short concrete style requirement')
+    if value['schema_version'] == 'style_input.v3':
+        from .design_recipe import build_proposal
+        return build_proposal(store, document, value)
     external = value['schema_version'] == 'style_input.v2'
     if external:
         from .visual_styles import owned_spec, recipe_references
@@ -150,9 +153,15 @@ def _proposal_pages(input) -> list[str]:
 def propose(project, *, input):
     store = Store(project_path(project)); document = load_snapshot(store)
     from . import eligibility
-    eligibility.guard(store, document, "style.propose",
-                      context={"targets": {"page_ids": _proposal_pages(input),
-                                           "layers": ["design"]}})
+    action = "style.propose"
+    targets = {"page_ids": _proposal_pages(input), "layers": ["design"]}
+    if isinstance(input, dict) and input.get("schema_version") == "style_input.v3":
+        action = "design.feasibility" if input.get("intent") == "feasibility" else "design.propose"
+        if action == "design.feasibility":
+            # A named planned Page still consumes its explicit planning scope.
+            # Only an unnamed global discussion uses deck scope, never '*'.
+            targets["subject"] = "pages" if targets["page_ids"] else "deck"
+    eligibility.guard(store, document, action, context={"targets": targets})
     proposal = _proposal(store, document, input); validate_schema('style_proposal', proposal)
     ref = store.put_json_object(proposal)
     return {'status': 'suggestion', 'proposal_id': 'style-proposal-' + ref['sha256'],
@@ -204,10 +213,14 @@ def confirm(project, *, proposal_id, base_revision, operation_id):
                   'recipe_id': 'recipe-' + uuid.uuid4().hex, 'version': parent['version'] + 1 if parent else 1,
                   'parent_ref': parent_ref, 'proposal_ref': proposal_ref,
                   'suggestion_state': 'confirmed' if proposal['input'].get('host_suggestion') else 'none'}
+        if proposal['schema_version'] == 'style_proposal.v3':
+            from .design_recipe import confirmed_recipe
+            recipe = confirmed_recipe(proposal, proposal_ref, recipe_id=recipe['recipe_id'],
+                                      parent_ref=parent_ref, parent=parent)
         validate_schema('style_recipe', recipe); ref = store.put_json_object(recipe)
         updated = bump_revision(copy.deepcopy(document), {'operation_id': operation_id, 'kind': 'task_update',
                                       'description': 'Confirmed immutable style recipe; no dispatch', 'read_set': []})
-        require_writer(updated, 'style-recipes.v1'); updated['style_recipes'] = [*document.get('style_recipes', []), ref]
+        require_writer(updated, 'rc3.v1' if recipe['schema_version'] == 'style_recipe.v3' else 'style-recipes.v1'); updated['style_recipes'] = [*document.get('style_recipes', []), ref]
         result = {'status': 'confirmed', 'revision_id': updated['revision_id'], 'recipe_id': recipe['recipe_id'],
                   'recipe_ref': ref, 'model_calls': 0}
         return operations.commit_locked(store, document=updated, base_revision=base_revision, operation_id=operation_id,
@@ -242,6 +255,12 @@ def effective_spec(recipe):
 
 
 def instruction(recipe, page_id):
+    if recipe['schema_version'] == 'style_recipe.v3':
+        return ('设计试作，完整保留目标页正文、单位、限定、表格归属与关系。\n'
+                '只有结构化 recipe_parameters 执行；规划文字不覆盖参数。\n'
+                '意图：' + recipe['intent'] + '\n' + recipe['input']['instruction'] +
+                ('\n图片顺序：第1张是目标页当前原图 target_original；其余是独立风格参考。保留目标页业务关系，按 recipe_parameters 使用视觉规则，不复制参考页正文。'
+                 if recipe['intent'] == 'restyle' else ''))
     value = recipe['input']; dimensions = recipe['dimensions']
     lines = ['跨页风格试作。只借用明确选定的视觉维度，不复制参考页的标题、事实、数字、论点或其它正文。',
              '目标页结构化正文必须完整保留；未选维度沿用目标页。构图仅在单独选择 composition 时借用。',
@@ -277,7 +296,9 @@ def validate_change(store, document, value):
     if value.get('references') != recipe_references(store, document, recipe) or value['instruction'] != instruction(recipe, '*'):
         fail('style_recipe_ref', 'plan must preserve the exact recipe requirement and reference')
     adopted = value.get('style_adopted_candidate_id')
-    if not adopted and len(ids) != 1:
+    if recipe['schema_version'] == 'style_recipe.v3' and recipe['intent'] == 'feasibility':
+        fail('intent', 'feasibility is zero-call planning; confirm a production recipe before dispatch')
+    if not adopted and (len(ids) not in (1, 2) if recipe['schema_version'] == 'style_recipe.v3' else len(ids) != 1):
         fail('targets', 'first try exactly one page; expand only after explicit adoption')
     if adopted:
         from .candidates import show as candidate_show
@@ -299,10 +320,16 @@ def validate_change(store, document, value):
         try:
             prior = load_snapshot(store, recipe['base_revision'])
             role_current = plan_visual_projection(store, prior, [pid]) == plan_visual_projection(store, document, [pid])
-            from .production import resolve_design
+            from .production import resolve_design, resolve_generation_design, consumed_design
             design_current = bool(entry and resolve_design(
                 store.read_object_json(anchor['page_ref']), prior['design_context'], prior['design_context'].get('assets') or []) == resolve_design(
                     store.read_object_json(entry['page']), document['design_context'], document['design_context'].get('assets') or []))
+            if recipe['schema_version'] == 'style_recipe.v3' and entry:
+                old_entry = next(item for item in prior['pages'] if item['page_id'] == pid)
+                # The recipe did not yet exist at its proposal revision. Add
+                # this exact immutable Ref only to the read-only resolver view.
+                prior = {**prior, 'style_recipes': [*prior.get('style_recipes', []), ref]}
+                design_current = consumed_design(resolve_generation_design(store, prior, old_entry, recipe_ref=ref), store=store) == consumed_design(resolve_generation_design(store, document, entry, recipe_ref=ref), store=store)
         except (StoreError, OSError, ValueError, KeyError, TypeError):
             role_current = design_current = False
         if not entry or not equivalent or not role_current or not design_current or entry.get('blueprint') != anchor['blueprint_ref']:
@@ -346,6 +373,9 @@ def apply_request(store, document, value, request, page_id):
 
 
 def recipe_references(store, document, recipe):
+    if recipe['schema_version'] == 'style_recipe.v3':
+        from .design_recipe import recipe_references as v3_references
+        return v3_references(recipe)
     if recipe['schema_version'] == 'style_recipe.v2':
         from .visual_styles import recipe_references as external_references
         return external_references(store, document, recipe['input'])

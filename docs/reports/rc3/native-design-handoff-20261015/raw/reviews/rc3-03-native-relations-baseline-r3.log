@@ -1,0 +1,603 @@
+FFFFFFFFFFFFF                                                            [100%]
+=================================== FAILURES ===================================
+_ test_legal_full_page_has_native_editable_atoms_units_notes_and_reading_order _
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_legal_full_page_has_nativ0')
+
+    def test_legal_full_page_has_native_editable_atoms_units_notes_and_reading_order(tmp_path):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+________ test_identical_table_text_at_wrong_row_is_located_at_cell_atom ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_identical_table_text_at_w0')
+
+    def test_identical_table_text_at_wrong_row_is_located_at_cell_atom(tmp_path):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:216: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+______ test_identical_table_text_at_wrong_column_is_located_at_cell_atom _______
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_identical_table_text_at_w1')
+
+    def test_identical_table_text_at_wrong_column_is_located_at_cell_atom(tmp_path):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:228: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_____________ test_native_only_cell_geometry_corruption_is_located _____________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_native_only_cell_geometry0')
+
+    def test_native_only_cell_geometry_corruption_is_located(tmp_path):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:242: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+______________ test_same_text_reversed_business_arrow_is_located _______________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_same_text_reversed_busine0')
+
+    def test_same_text_reversed_business_arrow_is_located(tmp_path):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:259: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+________ test_same_text_wrong_responsibility_owner_is_located[options0] ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_same_text_wrong_responsib0')
+options = {'wrong_responsibility': True}
+
+    @pytest.mark.parametrize("options", [{"wrong_responsibility": True}, {"wrong_responsibility_geometry": True}])
+    def test_same_text_wrong_responsibility_owner_is_located(tmp_path, options):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:272: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+________ test_same_text_wrong_responsibility_owner_is_located[options1] ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_same_text_wrong_responsib1')
+options = {'wrong_responsibility_geometry': True}
+
+    @pytest.mark.parametrize("options", [{"wrong_responsibility": True}, {"wrong_responsibility_geometry": True}])
+    def test_same_text_wrong_responsibility_owner_is_located(tmp_path, options):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:272: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_ test_same_page_relations_with_only_real_svg_transform_pass[translate(24 30)] _
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_same_page_relations_with_0')
+transform = 'translate(24 30)'
+
+    @pytest.mark.parametrize("transform", ["translate(24 30)", "translate(30 0) scale(0.92)"])
+    def test_same_page_relations_with_only_real_svg_transform_pass(tmp_path, transform):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:283: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_ test_same_page_relations_with_only_real_svg_transform_pass[translate(30 0) scale(0.92)] _
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_same_page_relations_with_1')
+transform = 'translate(30 0) scale(0.92)'
+
+    @pytest.mark.parametrize("transform", ["translate(24 30)", "translate(30 0) scale(0.92)"])
+    def test_same_page_relations_with_only_real_svg_transform_pass(tmp_path, transform):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:283: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_______ test_actual_svg_and_native_renders_retain_the_sample_and_hashes ________
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_actual_svg_and_native_ren0')
+
+    def test_actual_svg_and_native_renders_retain_the_sample_and_hashes(tmp_path):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:301: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_ test_negative_source_and_native_renders_are_retained_with_located_readback[options0-table_cell_ownership_mismatch] _
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_negative_source_and_nativ0')
+options = {'swap_cells': True}, expected_code = 'table_cell_ownership_mismatch'
+
+    @pytest.mark.parametrize("options, expected_code", [
+        ({"swap_cells": True}, "table_cell_ownership_mismatch"),
+        ({"reverse_edge": True}, "reversed_arrow"),
+        ({"wrong_responsibility_geometry": True}, "node_atom_ownership_mismatch"),
+    ])
+    def test_negative_source_and_native_renders_are_retained_with_located_readback(tmp_path, options, expected_code):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:327: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_ test_negative_source_and_native_renders_are_retained_with_located_readback[options1-reversed_arrow] _
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_negative_source_and_nativ1')
+options = {'reverse_edge': True}, expected_code = 'reversed_arrow'
+
+    @pytest.mark.parametrize("options, expected_code", [
+        ({"swap_cells": True}, "table_cell_ownership_mismatch"),
+        ({"reverse_edge": True}, "reversed_arrow"),
+        ({"wrong_responsibility_geometry": True}, "node_atom_ownership_mismatch"),
+    ])
+    def test_negative_source_and_native_renders_are_retained_with_located_readback(tmp_path, options, expected_code):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:327: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+_ test_negative_source_and_native_renders_are_retained_with_located_readback[options2-node_atom_ownership_mismatch] _
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/native-relations-baseline-r3/test_negative_source_and_nativ2')
+options = {'wrong_responsibility_geometry': True}
+expected_code = 'node_atom_ownership_mismatch'
+
+    @pytest.mark.parametrize("options, expected_code", [
+        ({"swap_cells": True}, "table_cell_ownership_mismatch"),
+        ({"reverse_edge": True}, "reversed_arrow"),
+        ({"wrong_responsibility_geometry": True}, "node_atom_ownership_mismatch"),
+    ])
+    def test_negative_source_and_native_renders_are_retained_with_located_readback(tmp_path, options, expected_code):
+>       page = _page()
+               ^^^^^^^
+
+tests/rebuild/test_rc3_design_native.py:327: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_rc3_design_native.py:93: in _page
+    validate_page_semantics(page)
+src/deck_master/models.py:275: in validate_page_semantics
+    validate_schema("page", page)
+src/deck_master/models.py:182: in validate_schema
+    errors = sorted(_validator(kind).iter_errors(obj), key=lambda e: list(e.absolute_path))
+                    ^^^^^^^^^^^^^^^^
+src/deck_master/models.py:161: in _validator
+    return Draft202012Validator(load_schema(kind), registry=_contract_registry())
+                                                            ^^^^^^^^^^^^^^^^^^^^
+src/deck_master/models.py:153: in _contract_registry
+    resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/work/rc3/cards/rc3-03/src/deck_master/resources/contracts/native-image-receipt.v1.schema.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_rc3_design_native.py::test_legal_full_page_has_native_editable_atoms_units_notes_and_reading_order
+FAILED tests/rebuild/test_rc3_design_native.py::test_identical_table_text_at_wrong_row_is_located_at_cell_atom
+FAILED tests/rebuild/test_rc3_design_native.py::test_identical_table_text_at_wrong_column_is_located_at_cell_atom
+FAILED tests/rebuild/test_rc3_design_native.py::test_native_only_cell_geometry_corruption_is_located
+FAILED tests/rebuild/test_rc3_design_native.py::test_same_text_reversed_business_arrow_is_located
+FAILED tests/rebuild/test_rc3_design_native.py::test_same_text_wrong_responsibility_owner_is_located[options0]
+FAILED tests/rebuild/test_rc3_design_native.py::test_same_text_wrong_responsibility_owner_is_located[options1]
+FAILED tests/rebuild/test_rc3_design_native.py::test_same_page_relations_with_only_real_svg_transform_pass[translate(24 30)]
+FAILED tests/rebuild/test_rc3_design_native.py::test_same_page_relations_with_only_real_svg_transform_pass[translate(30 0) scale(0.92)]
+FAILED tests/rebuild/test_rc3_design_native.py::test_actual_svg_and_native_renders_retain_the_sample_and_hashes
+FAILED tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options0-table_cell_ownership_mismatch]
+FAILED tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options1-reversed_arrow]
+FAILED tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options2-node_atom_ownership_mismatch]
+13 failed in 0.88s

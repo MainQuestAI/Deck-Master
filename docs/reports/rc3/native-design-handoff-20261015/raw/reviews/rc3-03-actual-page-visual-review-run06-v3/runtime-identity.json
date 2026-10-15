@@ -1,0 +1,6 @@
+{
+  "python": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/bin/python",
+  "module": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/service.py",
+  "manifest_sha256": "bcb668040f2c5e7cd0613b792517f6ec055f1d5925b5e5a582c076e67dfdbb10",
+  "execution_ref": "/root/rc3_03_actual_page_visual_review"
+}

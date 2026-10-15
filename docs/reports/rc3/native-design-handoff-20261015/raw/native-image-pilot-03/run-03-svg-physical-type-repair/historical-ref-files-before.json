@@ -1,0 +1,106 @@
+[
+  {
+    "ref": {
+      "path": ".deckmaster/objects/52/5245f33ccd96612020506f7efd0f796f5da4e1e7e42b7ed76fb38ca7141d1b14.json",
+      "sha256": "5245f33ccd96612020506f7efd0f796f5da4e1e7e42b7ed76fb38ca7141d1b14"
+    },
+    "actual_sha256": "5245f33ccd96612020506f7efd0f796f5da4e1e7e42b7ed76fb38ca7141d1b14",
+    "bytes": 5695
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/64/6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343.json",
+      "sha256": "6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343"
+    },
+    "actual_sha256": "6441b5ef42a7036d7064cd3e35f703038377e8957a4f761ab03b6455eade9343",
+    "bytes": 8597
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/75/752aa116cf15babcaae31396ce19111a23387a71577160c42b8d929f70c789ad.json",
+      "sha256": "752aa116cf15babcaae31396ce19111a23387a71577160c42b8d929f70c789ad"
+    },
+    "actual_sha256": "752aa116cf15babcaae31396ce19111a23387a71577160c42b8d929f70c789ad",
+    "bytes": 774
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/79/7972345f7e10716ec7b03ed848091fe05455cfd5a2bc8ef018d6151e249fbf9f.json",
+      "sha256": "7972345f7e10716ec7b03ed848091fe05455cfd5a2bc8ef018d6151e249fbf9f"
+    },
+    "actual_sha256": "7972345f7e10716ec7b03ed848091fe05455cfd5a2bc8ef018d6151e249fbf9f",
+    "bytes": 12082
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/a0/a0fbc202c0c8ca5cbad2f8a991c9066f78cfddbe169792b4e1b463cccf242a0f.json",
+      "sha256": "a0fbc202c0c8ca5cbad2f8a991c9066f78cfddbe169792b4e1b463cccf242a0f"
+    },
+    "actual_sha256": "a0fbc202c0c8ca5cbad2f8a991c9066f78cfddbe169792b4e1b463cccf242a0f",
+    "bytes": 6221
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/ae/ae00dbb469005532bcad62fc461045d12b4ce1bf6d1aa0586720e726e51cbe2f.json",
+      "sha256": "ae00dbb469005532bcad62fc461045d12b4ce1bf6d1aa0586720e726e51cbe2f"
+    },
+    "actual_sha256": "ae00dbb469005532bcad62fc461045d12b4ce1bf6d1aa0586720e726e51cbe2f",
+    "bytes": 6350
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/b6/b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3.json",
+      "sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3"
+    },
+    "actual_sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3",
+    "bytes": 1917
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/c8/c8ef206fa2dc1791ab4ed48404393f6dc2788c902d6b5f804e0eee3d7711fefd.json",
+      "sha256": "c8ef206fa2dc1791ab4ed48404393f6dc2788c902d6b5f804e0eee3d7711fefd"
+    },
+    "actual_sha256": "c8ef206fa2dc1791ab4ed48404393f6dc2788c902d6b5f804e0eee3d7711fefd",
+    "bytes": 6726
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/cc/ccd09b61f56846e3ecc01268938e8216dfc6e23a0bacebb0d78c8cb6db98bfa1.json",
+      "sha256": "ccd09b61f56846e3ecc01268938e8216dfc6e23a0bacebb0d78c8cb6db98bfa1"
+    },
+    "actual_sha256": "ccd09b61f56846e3ecc01268938e8216dfc6e23a0bacebb0d78c8cb6db98bfa1",
+    "bytes": 7217
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/e2/e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339.json",
+      "sha256": "e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339"
+    },
+    "actual_sha256": "e2cf2c323cbdbb89532c93f3dc1b6ca6d17fbeaccbd9b9d8680a78e522f10339",
+    "bytes": 6407
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/ec/ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501.json",
+      "sha256": "ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501"
+    },
+    "actual_sha256": "ec4e0eca1c8d0635b8a0548580b77055e1a58dfd2338930f3446b6d53683f501",
+    "bytes": 5893
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/f6/f679302bf829d9c9d61ecc820a3b668399596c12eee3c42ffd4c26a542a75ff5.json",
+      "sha256": "f679302bf829d9c9d61ecc820a3b668399596c12eee3c42ffd4c26a542a75ff5"
+    },
+    "actual_sha256": "f679302bf829d9c9d61ecc820a3b668399596c12eee3c42ffd4c26a542a75ff5",
+    "bytes": 9050
+  },
+  {
+    "ref": {
+      "path": ".deckmaster/objects/ff/ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d.json",
+      "sha256": "ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d"
+    },
+    "actual_sha256": "ff83878312ba5c6ac2907bcc5f593754231339fae62cb8f90f451071126c8d4d",
+    "bytes": 6585
+  }
+]

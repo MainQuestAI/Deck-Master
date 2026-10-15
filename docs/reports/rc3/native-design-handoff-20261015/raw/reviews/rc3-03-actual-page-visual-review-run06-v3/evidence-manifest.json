@@ -1,0 +1,186 @@
+{
+  "frozen_selected_revision": "a8f7556fca0644ebb232c12949d00736",
+  "scope": "owned run06-v3 evidence only",
+  "entries": [
+    {
+      "name": "F05-F06-F07-exact-new-artifact-closure.json",
+      "bytes": 4903,
+      "sha256": "849b680a9897333c027cd58320fcf08056e495ea7481f7f346991fdbe6124001"
+    },
+    {
+      "name": "F07-all-antialiased-ink-crosscheck.json",
+      "bytes": 13400,
+      "sha256": "b45a53e8221c9e2f9c59488b8244858d391123094aa103a2f4e12f608310d08e"
+    },
+    {
+      "name": "F07-all-nine-cells-both-layers.json",
+      "bytes": 18541,
+      "sha256": "f7afed5e5cd677799e5a18be1b53ae4bb5394a27f958b9eabb250a54e3f3eb28"
+    },
+    {
+      "name": "actual-17-atom-checks.json",
+      "bytes": 8866,
+      "sha256": "03fdd2d308e7ee06f66b624304756e545415047253281ac5620abc8bf82e4ceb"
+    },
+    {
+      "name": "actual-accepted-review-and-scope-readback.json",
+      "bytes": 38059,
+      "sha256": "d9c3c77a24d5949b663f1df1c8fb4639dbbf3836f539c8c90e8aea1f35de010f"
+    },
+    {
+      "name": "actual-capabilities.json",
+      "bytes": 3660,
+      "sha256": "71e01f3ba01ae8ba0dec670b05ccdc13fb99e1177502fff353fefc12f1ed8ad7"
+    },
+    {
+      "name": "actual-image-view-and-reuse-record.json",
+      "bytes": 1634,
+      "sha256": "8f110e357a257701389be2f411d74dc18ef3c8606c025d8fed77602b3ca75e0c"
+    },
+    {
+      "name": "actual-presentation-xml-as-read.xml",
+      "bytes": 3253,
+      "sha256": "9d3408c6a2536d311147a4cbb8d3b7fb79d904b1803f93e4568df4e77cb6ca3e"
+    },
+    {
+      "name": "actual-slide-xml-as-read.xml",
+      "bytes": 72344,
+      "sha256": "03a96ab43770ce72076f893146321ec4c12638d6dce9b65c7eb86f6dcb3bdbb8"
+    },
+    {
+      "name": "actual-task-methods.json",
+      "bytes": 78435,
+      "sha256": "59b7eafa18032bd6e287189cc98f21c28f8c6e08349761cf8954c846e0e12a8a"
+    },
+    {
+      "name": "assessment-before-accept.json",
+      "bytes": 34549,
+      "sha256": "14b0def7a8b4bc5e610566a79dc4046c0ddb3e312a5094db7dbcf7149bded4de"
+    },
+    {
+      "name": "assessment.json",
+      "bytes": 35653,
+      "sha256": "bc94a17150511949cd2a79125841d16105aba629a551ac674be7746d35a4408f"
+    },
+    {
+      "name": "build_review.py",
+      "bytes": 15518,
+      "sha256": "ac037ea05c0e8553d4bfff38211b7d3ff3f793459555d68bd4d1dcfa67b87e9b"
+    },
+    {
+      "name": "current-subjects-dependencies.json",
+      "bytes": 7338,
+      "sha256": "d7f9e32727bd4fe9aff563fbd1115c3627db95fc46606bfc9d51290b3375f754"
+    },
+    {
+      "name": "current-workorder-before-submit.json",
+      "bytes": 68994,
+      "sha256": "057f36581197479497c54861f602c7eafb4e02110efa1b48ec06534f6c127d7f"
+    },
+    {
+      "name": "independent-native-inspection.json",
+      "bytes": 12524,
+      "sha256": "8e30a76d20f1ece61aff37729761727d047e5f78d9ef05dc8cd954501df4cb5c"
+    },
+    {
+      "name": "inspected-current-byte-binding.json",
+      "bytes": 2061,
+      "sha256": "bfb70bcc32f6cd48823861c8e666296f5211ca8d538d8dfeb9baa8cd8a789225"
+    },
+    {
+      "name": "ppt-v3-header_trigger-raw-crop.png",
+      "bytes": 4574,
+      "sha256": "e684e261bf9b53d839d4ebae57db3c034a12b612583a73ef8d3dfc58609e7d06"
+    },
+    {
+      "name": "ppt-v3-unknown_action-raw-crop.png",
+      "bytes": 25255,
+      "sha256": "8a2bd6988131c73dd455efb75d4901808039d901c5030d224ef4ca092f79f549"
+    },
+    {
+      "name": "ppt-v3-unsuitable_handoff-raw-crop.png",
+      "bytes": 33563,
+      "sha256": "9e66e75ca4ec70182760e738e87e6cfb6b9410a7ebff3805f1d8a45dcf167824"
+    },
+    {
+      "name": "pretechnical-visual-judgment.json",
+      "bytes": 1186,
+      "sha256": "dd62c43aa408d07dbb44406785617bcad059f6ac75b9b0b64b7d850c43140419"
+    },
+    {
+      "name": "raw-accept-payload.json",
+      "bytes": 31524,
+      "sha256": "5b9e1e6784869341e5129e37c97a357ef645315f440cb15b09afa822f6a64750"
+    },
+    {
+      "name": "raw-accept-request.json",
+      "bytes": 32989,
+      "sha256": "a37e4af57f7b537fe0f205e6e6f013b2e37c91bcc1a861efae326297f6796efe"
+    },
+    {
+      "name": "raw-accept-response.json",
+      "bytes": 1990,
+      "sha256": "063aa221bfacbb722afd95712be14bfd3e547a353db3dcd565f8d9ae02f9e24f"
+    },
+    {
+      "name": "raw-check-script-error.json",
+      "bytes": 575,
+      "sha256": "c08867e1504122ac3065006d5c877306b089ed27be907b5a89e76ad7eca1222f"
+    },
+    {
+      "name": "raw-claim-request.json",
+      "bytes": 240,
+      "sha256": "6a44eb3f93a81e4cf8e14d41993c5196d9c848252dc1bbb5496e0a2f7e2a95ca"
+    },
+    {
+      "name": "raw-claim-response.json",
+      "bytes": 74676,
+      "sha256": "a662021c9e605a7b75275ed548f968aec1a48c21754d9ec2b0ea3485daf00842"
+    },
+    {
+      "name": "read-input-hashes.json",
+      "bytes": 2426,
+      "sha256": "3f441cc81fb9ab7ffa120a8735455768cb5c6a0afce1b40c646c3ca6b670546f"
+    },
+    {
+      "name": "report.md",
+      "bytes": 7124,
+      "sha256": "002fe5cd28172fcfb29de125284fad4e2ac92b4029c98d98b26c0c8139da5865"
+    },
+    {
+      "name": "reuse-and-history-references.json",
+      "bytes": 1311,
+      "sha256": "19c2e6d28ce87b0783a787191300c730b21508a1e9c55a4acd5d53771341ee42"
+    },
+    {
+      "name": "runtime-identity.json",
+      "bytes": 448,
+      "sha256": "e2f8c5c4c26468225cd53dd722bb4b99d415b50841ef95670c0a330e03172ad5"
+    },
+    {
+      "name": "svg-v3-header_trigger-raw-crop.png",
+      "bytes": 4589,
+      "sha256": "0300009a4f4e5194d8be7eb5c8db17788a56421ef7a8c714b113ebc4708fdabb"
+    },
+    {
+      "name": "svg-v3-unknown_action-raw-crop.png",
+      "bytes": 24992,
+      "sha256": "95f1f20a47978c047a656c2f93722cbf9c1cfe6345c958334d4d5d09e8b0dd85"
+    },
+    {
+      "name": "svg-v3-unsuitable_handoff-raw-crop.png",
+      "bytes": 33313,
+      "sha256": "d9d4a245048331a3037795ce75bc78eabff7941e27dcfcead1a28d5a88a89288"
+    },
+    {
+      "name": "targeted-module-gap-check.json",
+      "bytes": 275,
+      "sha256": "da2ea2212366c74df8158d9a91b65b6c4aabbade08c30725281fa08353816f25"
+    },
+    {
+      "name": "targeted-raw-crop-manifest.json",
+      "bytes": 3796,
+      "sha256": "60ec92b47c97bad9856ee93058014362c504b32e8825b4e237bedb8b1082ed61"
+    }
+  ]
+}

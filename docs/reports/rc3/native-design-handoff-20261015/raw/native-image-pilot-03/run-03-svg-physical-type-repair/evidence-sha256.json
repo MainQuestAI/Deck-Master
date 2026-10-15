@@ -1,0 +1,102 @@
+[
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/accept-envelope.json",
+    "bytes": 3269,
+    "sha256": "217bcd55fc379ac06fd995a78a2eddeddeb7817ee56d67b8f1fb6aabaa83ca1d"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/accept-input.json",
+    "bytes": 3647,
+    "sha256": "f4c403d4223833fe21a8376120ff9817cb1ee64bf3774bfe3de3bb8f10c5847c"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/accept-result.json",
+    "bytes": 1150,
+    "sha256": "d2030197cf8868ac034e705b13acf8c44d80360604cdc21287f3ec3e7d9e57e6"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/accepted-artifact.json",
+    "bytes": 2784,
+    "sha256": "78e1eb0c9f0059a41799ca3f04593a6d5cc32e9f0253f1067bb298a9a5fd82ff"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/after-accept-document.json",
+    "bytes": 18363,
+    "sha256": "d9d6eb9d8f8a85d07c9c9d197cf38417849502c8fd419e1e54803517120604dc"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/author-delivery.json",
+    "bytes": 11894,
+    "sha256": "53f868db3d8c7181f70ed70bbbc0cd80363b9f7b0e2fab41fd922f5e2191042d"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/before-accept-document.json",
+    "bytes": 17287,
+    "sha256": "bd3a5abf87236d385ffeed4b210678cf2639452357d24479bb7baba84c3c4e7c"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/before-claim-document.json",
+    "bytes": 18125,
+    "sha256": "2b600c191c123de4b079bfea615276e584210537fe02e4e71c5172ce13ca2e65"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/claim-input.json",
+    "bytes": 309,
+    "sha256": "01d74a44ec8f9d7f035b54514bfbe89ec0f9afe18301f6ccb3e7afec0aa2dc22"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/claim-result.json",
+    "bytes": 31217,
+    "sha256": "f756e48ad69c781e980eb2d3eebcb07e4df1f6fb174e5580ddccbc21adffa2b9"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/creation-intent-v2.json",
+    "bytes": 3541,
+    "sha256": "86cddc84dd6a7c766e699051b9c9c2c1b1420743daeb157702790d10c4abf7ea"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/engineering-check-v2.json",
+    "bytes": 34900,
+    "sha256": "534557e3aeef8df56f7eaa536d4303b7fc6cbb809c3dcb18f0c2bcdfd38d8721"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/historical-ref-files-after.json",
+    "bytes": 8388,
+    "sha256": "629327fde5d22413f7d633653ab4f3b0b51f28948ae8a18bfe3fdf6807b04372"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/historical-ref-files-before.json",
+    "bytes": 4280,
+    "sha256": "3d7594e61613fb35bcb49253fca22b595751b95c787a8f073243580e2cd53006"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/input-inventory.json",
+    "bytes": 1991,
+    "sha256": "0cafaae54aa365ff9d46e43f38e093e1b6d27a38ba55390aa482b0bb564a89f1"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/input-preservation.json",
+    "bytes": 2876,
+    "sha256": "077a0b9d9fffb6099a416f698e51aea9272b2c50dd1ad97aba70e38ecba8408d"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/p04-native-v2.svg",
+    "bytes": 9785,
+    "sha256": "82d3430688b9c4ff2fb89cedb99cabfd643fbb39cb03d274b65a60a2de245ded"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/scope-delta.json",
+    "bytes": 2087,
+    "sha256": "382c4c7c450fcd1dd8a308f34e015d9798eced098ebc94ddd820c22e87670e46"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/sdk-identity.json",
+    "bytes": 10717,
+    "sha256": "32e7579581339c58566775a1e4e2b041e7df41ca8e21e0e0486d8a442033a192"
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/v1-evidence-preservation.json",
+    "bytes": 4939,
+    "sha256": "bd1264341744ea0480607e2bee0ffd5e4ced3aa6b71d7dd52a70efd73fd939c6"
+  }
+]

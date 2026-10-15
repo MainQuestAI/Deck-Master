@@ -714,9 +714,20 @@
       "evidence_layers": [],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-03-HANDOFF.md",
+        "docs/reports/rc3/native-design-handoff-20261015/README.md",
+        "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
+        "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
+      "findings": [
+        "RC3-03 software evidence: cf61 fixed delta/independent scope and regression PASS; 5db full unit2111/render71 remains version-specific. Actual 805 native1call/retry0 creates p04 candidate without oldblueprint under explicit1/1scope; 8935character prompt includes realPage/Plan/recipe requirements/basis.",
+        "Actual p04 explicitly adopted as visual_reference_only; native SVG/PPT chain preserves failures. Currentv3 dimensions/18-30pt/readback plus actualpagevisual24962551ff10 threePASS and current5db headlessA-D complete; exactselected a8f7556fca0644ebb232c12949d00736 only; no overallAC PASS.",
+        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+      ],
       "limitations": [],
       "signed_by": null
     },
@@ -734,9 +745,20 @@
       "evidence_layers": [],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-03-HANDOFF.md",
+        "docs/reports/rc3/native-design-handoff-20261015/README.md",
+        "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
+        "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
+      "findings": [
+        "Formal synthetic L1 SDK covers dimension-bound recipe/initial1or2/restyle/zero-call feasibility/candidate-only and separate adopt/expand. Actual p04 samepage adopt uses distinct explicit bounded scope; no automatic other7page production.",
+        "No actual single-color-only decision/full coverage extension/user acceptance is invented; professional AC remains NOT_RUN.",
+        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+      ],
       "limitations": [],
       "signed_by": null
     },
@@ -754,9 +776,20 @@
       "evidence_layers": [],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-03-HANDOFF.md",
+        "docs/reports/rc3/native-design-handoff-20261015/README.md",
+        "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
+        "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+      ],
       "historical_reuse_basis": null,
-      "findings": [],
+      "findings": [
+        "Formal semantic/geometry paired invalidation preserves notes/unrelatedPage/unusedPlan/Decision audit versions; realvalue/scope/role/arrow/target/control changes reject oldresults and retain consumed/unknown facts.",
+        "Actual p04 mechanism+exceptions is one engineering risk sample. Data/architecture/densest page risk/fairE2E3/full8pages are not closed. v2 formal readabilityFAIL F07 preserved; v3 currentactualvisual/mechanical scopedPASS; no whole-risk/professional signoff.",
+        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+      ],
       "limitations": [],
       "signed_by": null
     },
@@ -1163,8 +1196,19 @@
       "capability_owner": "T05",
       "execution_card": "RC3-03",
       "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-03-HANDOFF.md",
+        "docs/reports/rc3/native-design-handoff-20261015/README.md",
+        "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
+        "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+      ],
+      "findings": [
+        "Actual805 frozen prompt/request full projection and immutableauditbasis retained; cf61 Decision current-head/effective-semantic fix has true old5dbcandidate exactdigest cross-version independent verification. Fidelity imported mapping/nullNarr remains honest.",
+        "This is engineering consumption evidence; all applicable original professional Given/When/Then are not automatically closed.",
+        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+      ]
     },
     {
       "cq_id": "CQ-04",
@@ -1172,8 +1216,19 @@
       "capability_owner": "T05",
       "execution_card": "RC3-03",
       "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-03-HANDOFF.md",
+        "docs/reports/rc3/native-design-handoff-20261015/README.md",
+        "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
+        "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+      ],
+      "findings": [
+        "Formal SDK paired body/role/ownership/arrow/target/control negatives and same-relation geometry/notes/P2/Plan/unconsumedDecision positives. Native proof rejection never rolls back actual consumed/unknown fees.",
+        "5db actualold andv2 mechanical controls retain identicaltext wrong-row/reversed-arrow negatives and layout-only positive, scoped to each precise file; currentv3 independent correct-size headlessmechanicalA-D expectedoutcomes met.",
+        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+      ]
     },
     {
       "cq_id": "CQ-05",
@@ -1181,8 +1236,19 @@
       "capability_owner": "T05",
       "execution_card": "RC3-03",
       "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "evidence_refs": [
+        "docs/reports/rc3/RC3-03-HANDOFF.md",
+        "docs/reports/rc3/native-design-handoff-20261015/README.md",
+        "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
+        "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
+        "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+      ],
+      "findings": [
+        "Actual originalPNG, nativeSVG/PPT/render and nonauthor review show complete17atoms/relations. Preserve c931 physicalFAIL,8aff typographyFAIL,v2 readabilityFAIL F07 and exactRootattribution; v3 authororiginal31leadingFAIL plus one33leadingmechanical adjustment retained.",
+        "Currentv3 actualPPT correctphysical/36runs18-30pt/60native0pic/readbackPASS; F07 fixed only exactfb9SVG/0c145PPT/current249625reviews; all9cells4edges bothlayers includingAA pass(SVGmin12/PPTmin13); nativeheadlessA-D scopedPASS. Not full fairE2E3, densityrisk coverage, human/desktop or full8page approval.",
+        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+      ]
     },
     {
       "cq_id": "CQ-06",

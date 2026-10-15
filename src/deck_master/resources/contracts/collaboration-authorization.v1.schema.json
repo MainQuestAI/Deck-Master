@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "collaboration_authorization.v1",
-  "description": "Authorization object (content collaboration v1.2 CONTRACTS \u00a73.2). All execution grants carry an integer call ceiling (0 when not yet materialised); the existing allowance ledger stays the single cost record.",
+  "description": "Authorization object (content collaboration v1.2 CONTRACTS §3.2). All execution grants carry an integer call ceiling (0 when not yet materialised); the existing allowance ledger stays the single cost record.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -59,7 +59,8 @@
       "items": {
         "type": "string",
         "pattern": "^[a-z][a-z0-9_.-]*$"
-      }
+      },
+      "description": "Exact registered actions. design.feasibility/design.propose authorize zero-call design planning only; they never authorize image trials, dispatch, calls or adoption."
     },
     "scope": {
       "$ref": "collaboration.v1.schema.json#/$defs/scope"
@@ -86,7 +87,7 @@
     },
     "constraints": {
       "type": "object",
-      "description": "Explicit boundaries (page count, style, density, delivery). future_pages is the \u00a73.4 delegate selector.",
+      "description": "Explicit boundaries (page count, style, density, delivery). future_pages is the §3.4 delegate selector.",
       "properties": {
         "future_pages": {
           "type": "object",

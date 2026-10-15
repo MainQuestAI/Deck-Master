@@ -1,0 +1,3680 @@
+{
+  "height": 900.0,
+  "page_id": "p04",
+  "shapes": [
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#FFFFFF",
+      "fill_opacity": 1.0,
+      "height": 900.0,
+      "id": "canvas",
+      "kind": "rect",
+      "node_ref": null,
+      "opacity": 1.0,
+      "rx": 0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "width": 1600.0,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:title",
+      "bold": true,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 50.0,
+      "id": "page-title:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "建议流程保留两条分支：条件可核对／条件未知",
+      "x": 50.0,
+      "y": 94.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:subtitle",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "page-subtitle:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+      "x": 50.0,
+      "y": 136.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 62.0,
+            "y": 154.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1538.0,
+            "y": 154.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1540.418413671875,
+            "y": 154.243798046875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1542.6709343750001,
+            "y": 154.943021875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1544.709306640625,
+            "y": 156.049416015625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1546.485275,
+            "y": 157.514725
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1547.950583984375,
+            "y": 159.290693359375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1549.0569781250001,
+            "y": 161.329065625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1549.7562019531251,
+            "y": 163.581586328125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1550.0,
+            "y": 166.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1550.0,
+            "y": 332.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1549.7562019531251,
+            "y": 334.41841367187504
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1549.0569781250001,
+            "y": 336.670934375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1547.950583984375,
+            "y": 338.7093066406251
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1546.485275,
+            "y": 340.485275
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1544.709306640625,
+            "y": 341.95058398437504
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1542.6709343750001,
+            "y": 343.056978125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1540.418413671875,
+            "y": 343.756201953125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1538.0,
+            "y": 344.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 62.0,
+            "y": 344.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 59.581586328125,
+            "y": 343.756201953125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 57.329065625,
+            "y": 343.056978125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 55.290693359375,
+            "y": 341.95058398437504
+          }
+        },
+        {
+          "lineTo": {
+            "x": 53.514725,
+            "y": 340.485275
+          }
+        },
+        {
+          "lineTo": {
+            "x": 52.049416015625,
+            "y": 338.7093066406251
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.943021875,
+            "y": 336.670934375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.243798046875,
+            "y": 334.41841367187504
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.0,
+            "y": 332.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.0,
+            "y": 166.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.243798046875,
+            "y": 163.581586328125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.943021875,
+            "y": 161.329065625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 52.049416015625,
+            "y": 159.290693359375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 53.514725,
+            "y": 157.514725
+          }
+        },
+        {
+          "lineTo": {
+            "x": 55.290693359375,
+            "y": 156.049416015625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 57.329065625,
+            "y": 154.943021875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 59.581586328125,
+            "y": 154.243798046875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 62.0,
+            "y": 154.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#FFFFFF",
+      "fill_opacity": 1.0,
+      "id": "main-chain-frame",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 0.4,
+      "stroke_width": 1.5
+    },
+    {
+      "anchor": "start",
+      "atom_id": null,
+      "bold": true,
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "main-chain-frozen-qualification:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "主链只适用于条件可核对情形。",
+      "x": 68.0,
+      "y": 186.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 236.0,
+            "y": 267.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 612.0,
+            "y": 267.0
+          }
+        }
+      ],
+      "edge_ref": "collect-retrieve",
+      "fill": "none",
+      "fill_opacity": 1.0,
+      "id": "edge-collect-retrieve",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 5.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 612.0,
+            "y": 267.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 988.0,
+            "y": 267.0
+          }
+        }
+      ],
+      "edge_ref": "retrieve-review",
+      "fill": "none",
+      "fill_opacity": 1.0,
+      "id": "edge-retrieve-review",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 5.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 988.0,
+            "y": 267.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1364.0,
+            "y": 267.0
+          }
+        }
+      ],
+      "edge_ref": "review-submit",
+      "fill": "none",
+      "fill_opacity": 1.0,
+      "id": "edge-review-submit",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 5.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 1.0,
+      "id": "arrowhead-collect-retrieve",
+      "kind": "polygon",
+      "node_ref": null,
+      "opacity": 1.0,
+      "points": [
+        [
+          428.0,
+          258.0
+        ],
+        [
+          440.0,
+          267.0
+        ],
+        [
+          428.0,
+          276.0
+        ]
+      ],
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 1.0,
+      "id": "arrowhead-retrieve-review",
+      "kind": "polygon",
+      "node_ref": null,
+      "opacity": 1.0,
+      "points": [
+        [
+          804.0,
+          258.0
+        ],
+        [
+          816.0,
+          267.0
+        ],
+        [
+          804.0,
+          276.0
+        ]
+      ],
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 1.0,
+      "id": "arrowhead-review-submit",
+      "kind": "polygon",
+      "node_ref": null,
+      "opacity": 1.0,
+      "points": [
+        [
+          1180.0,
+          258.0
+        ],
+        [
+          1192.0,
+          267.0
+        ],
+        [
+          1180.0,
+          276.0
+        ]
+      ],
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 76.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 396.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 398.01533515625,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 399.89243125,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 401.59107421875,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 403.07105,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 404.29214453124996,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 405.21414374999995,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 405.79683359374997,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 406.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 406.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 405.79683359374997,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 405.21414374999995,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 404.29214453124996,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 403.07105,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 401.59107421875,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 399.89243125,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 398.01533515625,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 396.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 76.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 73.98466484375,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 72.10756874999998,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 70.40892578124999,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 68.92894999999999,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 67.70785546875,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.78585625,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.20316640625,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.20316640625,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.78585625,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 67.70785546875,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 68.92894999999999,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 70.40892578124999,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 72.10756874999998,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 73.98466484375,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 76.0,
+            "y": 206.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#FFFFFF",
+      "fill_opacity": 1.0,
+      "id": "collect-container",
+      "kind": "path",
+      "node_ref": "collect",
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.5
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 76.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 396.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 398.01533515625,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 399.89243125,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 401.59107421875,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 403.07105,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 404.29214453124996,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 405.21414374999995,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 405.79683359374997,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 406.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 406.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 405.79683359374997,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 405.21414374999995,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 404.29214453124996,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 403.07105,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 401.59107421875,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 399.89243125,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 398.01533515625,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 396.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 76.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 73.98466484375,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 72.10756874999998,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 70.40892578124999,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 68.92894999999999,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 67.70785546875,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.78585625,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.20316640625,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.20316640625,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 66.78585625,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 67.70785546875,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 68.92894999999999,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 70.40892578124999,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 72.10756874999998,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 73.98466484375,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 76.0,
+            "y": 206.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 0.06,
+      "id": "collect-tint",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:collect:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "collect-label:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "collect",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "现场人员提供型号、",
+      "x": 82.0,
+      "y": 246.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:collect:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "collect-label:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "collect",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "版本与现象；接单人员",
+      "x": 82.0,
+      "y": 278.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:collect:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "collect-label:2",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "collect",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "核对可核查条件。",
+      "x": 82.0,
+      "y": 310.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 452.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 772.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 774.01533515625,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 775.89243125,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 777.5910742187499,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 779.07105,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 780.29214453125,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 781.21414375,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 781.79683359375,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 782.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 782.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 781.79683359375,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 781.21414375,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 780.29214453125,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 779.07105,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 777.5910742187499,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 775.89243125,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 774.01533515625,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 772.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 452.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 449.98466484375,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 448.10756875,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 446.40892578125,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 444.92895,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 443.70785546875004,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.78585625000005,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.20316640625003,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.20316640625003,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.78585625000005,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 443.70785546875004,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 444.92895,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 446.40892578125,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 448.10756875,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 449.98466484375,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 452.0,
+            "y": 206.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#FFFFFF",
+      "fill_opacity": 1.0,
+      "id": "retrieve-container",
+      "kind": "path",
+      "node_ref": "retrieve",
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.5
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 452.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 772.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 774.01533515625,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 775.89243125,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 777.5910742187499,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 779.07105,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 780.29214453125,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 781.21414375,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 781.79683359375,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 782.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 782.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 781.79683359375,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 781.21414375,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 780.29214453125,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 779.07105,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 777.5910742187499,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 775.89243125,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 774.01533515625,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 772.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 452.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 449.98466484375,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 448.10756875,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 446.40892578125,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 444.92895,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 443.70785546875004,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.78585625000005,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.20316640625003,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.20316640625003,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 442.78585625000005,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 443.70785546875004,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 444.92895,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 446.40892578125,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 448.10756875,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 449.98466484375,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 452.0,
+            "y": 206.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 0.06,
+      "id": "retrieve-tint",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:retrieve:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "retrieve-label:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "retrieve",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "只读助手返回许可资料",
+      "x": 458.0,
+      "y": 260.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:retrieve:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "retrieve-label:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "retrieve",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "片段及来源。",
+      "x": 458.0,
+      "y": 294.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 828.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1148.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1150.0153351562499,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1151.8924312499998,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1153.59107421875,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1155.07105,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1156.29214453125,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1157.21414375,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1157.79683359375,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1158.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1158.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1157.79683359375,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1157.21414375,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1156.29214453125,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1155.07105,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1153.59107421875,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1151.8924312499998,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1150.0153351562499,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1148.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 828.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 825.98466484375,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 824.10756875,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 822.4089257812501,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 820.92895,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 819.70785546875,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.78585625,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.20316640625,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.20316640625,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.78585625,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 819.70785546875,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 820.92895,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 822.4089257812501,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 824.10756875,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 825.98466484375,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 828.0,
+            "y": 206.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#FFFFFF",
+      "fill_opacity": 1.0,
+      "id": "review-container",
+      "kind": "path",
+      "node_ref": "review",
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.5
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 828.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1148.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1150.0153351562499,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1151.8924312499998,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1153.59107421875,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1155.07105,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1156.29214453125,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1157.21414375,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1157.79683359375,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1158.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1158.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1157.79683359375,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1157.21414375,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1156.29214453125,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1155.07105,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1153.59107421875,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1151.8924312499998,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1150.0153351562499,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1148.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 828.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 825.98466484375,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 824.10756875,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 822.4089257812501,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 820.92895,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 819.70785546875,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.78585625,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.20316640625,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.20316640625,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 818.78585625,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 819.70785546875,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 820.92895,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 822.4089257812501,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 824.10756875,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 825.98466484375,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 828.0,
+            "y": 206.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 0.06,
+      "id": "review-tint",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:review:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "review-label:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "review",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "指定人员核查引用",
+      "x": 834.0,
+      "y": 246.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:review:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "review-label:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "review",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "适用性，记录采用／",
+      "x": 834.0,
+      "y": 278.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:review:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "review-label:2",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "review",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "未采用及原因。",
+      "x": 834.0,
+      "y": 310.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 1204.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1524.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1526.0153351562499,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1527.8924312499998,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1529.59107421875,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1531.07105,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1532.29214453125,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1533.21414375,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1533.79683359375,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1534.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1534.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1533.79683359375,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1533.21414375,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1532.29214453125,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1531.07105,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1529.59107421875,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1527.8924312499998,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1526.0153351562499,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1524.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1204.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1201.9846648437501,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1200.1075687500002,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1198.40892578125,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1196.92895,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1195.70785546875,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.78585625,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.20316640625,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.20316640625,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.78585625,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1195.70785546875,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1196.92895,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1198.40892578125,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1200.1075687500002,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1201.9846648437501,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1204.0,
+            "y": 206.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#FFFFFF",
+      "fill_opacity": 1.0,
+      "id": "submit-container",
+      "kind": "path",
+      "node_ref": "submit",
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.5
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 1204.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1524.0,
+            "y": 206.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1526.0153351562499,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1527.8924312499998,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1529.59107421875,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1531.07105,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1532.29214453125,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1533.21414375,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1533.79683359375,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1534.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1534.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1533.79683359375,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1533.21414375,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1532.29214453125,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1531.07105,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1529.59107421875,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1527.8924312499998,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1526.0153351562499,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1524.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1204.0,
+            "y": 328.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1201.9846648437501,
+            "y": 327.79683359374997
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1200.1075687500002,
+            "y": 327.21414374999995
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1198.40892578125,
+            "y": 326.29214453124996
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1196.92895,
+            "y": 325.07105
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1195.70785546875,
+            "y": 323.59107421875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.78585625,
+            "y": 321.89243125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.20316640625,
+            "y": 320.01533515625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.0,
+            "y": 318.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.0,
+            "y": 216.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.20316640625,
+            "y": 213.98466484375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1194.78585625,
+            "y": 212.10756875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1195.70785546875,
+            "y": 210.40892578125002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1196.92895,
+            "y": 208.92895000000001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1198.40892578125,
+            "y": 207.70785546875004
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1200.1075687500002,
+            "y": 206.78585625000002
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1201.9846648437501,
+            "y": 206.20316640625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1204.0,
+            "y": 206.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 0.06,
+      "id": "submit-tint",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:submit:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "submit-label:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "submit",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "人员在现有系统",
+      "x": 1210.0,
+      "y": 260.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:label:submit:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "submit-label:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": "submit",
+      "opacity": 1.0,
+      "rotation": 0.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "完成正式提交。",
+      "x": 1210.0,
+      "y": 294.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:block:exceptions-heading:text",
+      "bold": true,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 50.0,
+      "id": "exceptions-heading:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "未知与不适用信息仍随请求交接",
+      "x": 50.0,
+      "y": 412.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#FFFFFF",
+      "fill_opacity": 1.0,
+      "height": 298.0,
+      "id": "table-background",
+      "kind": "rect",
+      "node_ref": null,
+      "opacity": 1.0,
+      "rx": 0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "width": 1500.0,
+      "x": 50.0,
+      "y": 438.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 0.1,
+      "height": 54.0,
+      "id": "table-header-tint",
+      "kind": "rect",
+      "node_ref": null,
+      "opacity": 1.0,
+      "rx": 0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "width": 1500.0,
+      "x": 50.0,
+      "y": 438.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "none",
+      "fill_opacity": 1.0,
+      "height": 298.0,
+      "id": "table-border",
+      "kind": "rect",
+      "node_ref": null,
+      "opacity": 1.0,
+      "rx": 0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 0.45,
+      "stroke_width": 1.0,
+      "width": 1500.0,
+      "x": 50.0,
+      "y": 438.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "id": "table-column-trigger-action",
+      "kind": "line",
+      "node_ref": null,
+      "opacity": 1.0,
+      "points": [
+        [
+          394.0,
+          438.0
+        ],
+        [
+          394.0,
+          736.0
+        ]
+      ],
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 0.35,
+      "stroke_width": 1.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "id": "table-column-action-handoff",
+      "kind": "line",
+      "node_ref": null,
+      "opacity": 1.0,
+      "points": [
+        [
+          902.0,
+          438.0
+        ],
+        [
+          902.0,
+          736.0
+        ]
+      ],
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 0.35,
+      "stroke_width": 1.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "id": "table-header-bottom",
+      "kind": "line",
+      "node_ref": null,
+      "opacity": 1.0,
+      "points": [
+        [
+          50.0,
+          492.0
+        ],
+        [
+          1550.0,
+          492.0
+        ]
+      ],
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 0.45,
+      "stroke_width": 1.0
+    },
+    {
+      "atom_id": null,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "id": "table-row-divider",
+      "kind": "line",
+      "node_ref": null,
+      "opacity": 1.0,
+      "points": [
+        [
+          50.0,
+          614.0
+        ],
+        [
+          1550.0,
+          614.0
+        ]
+      ],
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 0.45,
+      "stroke_width": 1.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:column:exceptions:trigger:label",
+      "bold": true,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "column-trigger:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "触发条件",
+      "x": 68.0,
+      "y": 476.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:column:exceptions:action:label",
+      "bold": true,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "column-action:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "接单人员动作",
+      "x": 412.0,
+      "y": 476.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:column:exceptions:handoff:label",
+      "bold": true,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "column-handoff:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "交接及继续条件",
+      "x": 920.0,
+      "y": 476.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unknown-trigger:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "型号或版本待补／",
+      "x": 68.0,
+      "y": 530.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unknown-trigger:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "确实不可得",
+      "x": 68.0,
+      "y": 564.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unknown-action:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "保留已知条件、未知字段及原因；",
+      "x": 412.0,
+      "y": 530.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unknown-action:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "能补则请求可核对信息，",
+      "x": 412.0,
+      "y": 564.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unknown-action:2",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "不能强制填入猜测。",
+      "x": 412.0,
+      "y": 598.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unknown-handoff:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "不能补出时交指定业务核查人判断下一步；",
+      "x": 920.0,
+      "y": 530.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unknown-handoff:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "取得可核查条件后按主链继续。",
+      "x": 920.0,
+      "y": 564.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unknown-handoff:2",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "具体责任人与恢复规则须在启动前明确。",
+      "x": 920.0,
+      "y": 598.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-trigger:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "引用适用性无法确认、",
+      "x": 68.0,
+      "y": 652.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-trigger:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "引用冲突／不适用，",
+      "x": 68.0,
+      "y": 686.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-trigger:2",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "或问题仍不确定",
+      "x": 68.0,
+      "y": 720.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-action:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "保留设备条件、来源位置",
+      "x": 412.0,
+      "y": 652.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-action:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "和未决点；候选引用不能标成",
+      "x": 412.0,
+      "y": 686.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-action:2",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "可直接采用的结论。",
+      "x": 412.0,
+      "y": 720.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-handoff:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "交核查人确认资料适用性和下一步；",
+      "x": 920.0,
+      "y": 652.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-handoff:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "无法确认则继续标明未决，",
+      "x": 920.0,
+      "y": 686.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "unsuitable-handoff:2",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "不把找到资料记为故障已解决。",
+      "x": 920.0,
+      "y": 720.0
+    },
+    {
+      "atom_id": null,
+      "commands": [
+        {
+          "moveTo": {
+            "x": 62.0,
+            "y": 762.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1538.0,
+            "y": 762.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1540.418413671875,
+            "y": 762.2437980468751
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1542.6709343750001,
+            "y": 762.9430218750001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1544.709306640625,
+            "y": 764.0494160156251
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1546.485275,
+            "y": 765.514725
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1547.950583984375,
+            "y": 767.2906933593749
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1549.0569781250001,
+            "y": 769.329065625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1549.7562019531251,
+            "y": 771.581586328125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1550.0,
+            "y": 774.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1550.0,
+            "y": 838.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1549.7562019531251,
+            "y": 840.418413671875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1549.0569781250001,
+            "y": 842.670934375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1547.950583984375,
+            "y": 844.7093066406251
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1546.485275,
+            "y": 846.485275
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1544.709306640625,
+            "y": 847.9505839843749
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1542.6709343750001,
+            "y": 849.0569781249999
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1540.418413671875,
+            "y": 849.7562019531249
+          }
+        },
+        {
+          "lineTo": {
+            "x": 1538.0,
+            "y": 850.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 62.0,
+            "y": 850.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 59.581586328125,
+            "y": 849.7562019531249
+          }
+        },
+        {
+          "lineTo": {
+            "x": 57.329065625,
+            "y": 849.0569781249999
+          }
+        },
+        {
+          "lineTo": {
+            "x": 55.290693359375,
+            "y": 847.9505839843749
+          }
+        },
+        {
+          "lineTo": {
+            "x": 53.514725,
+            "y": 846.485275
+          }
+        },
+        {
+          "lineTo": {
+            "x": 52.049416015625,
+            "y": 844.7093066406251
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.943021875,
+            "y": 842.670934375
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.243798046875,
+            "y": 840.418413671875
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.0,
+            "y": 838.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.0,
+            "y": 774.0
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.243798046875,
+            "y": 771.581586328125
+          }
+        },
+        {
+          "lineTo": {
+            "x": 50.943021875,
+            "y": 769.329065625
+          }
+        },
+        {
+          "lineTo": {
+            "x": 52.049416015625,
+            "y": 767.2906933593749
+          }
+        },
+        {
+          "lineTo": {
+            "x": 53.514725,
+            "y": 765.514725
+          }
+        },
+        {
+          "lineTo": {
+            "x": 55.290693359375,
+            "y": 764.0494160156251
+          }
+        },
+        {
+          "lineTo": {
+            "x": 57.329065625,
+            "y": 762.9430218750001
+          }
+        },
+        {
+          "lineTo": {
+            "x": 59.581586328125,
+            "y": 762.2437980468751
+          }
+        },
+        {
+          "lineTo": {
+            "x": 62.0,
+            "y": 762.0
+          }
+        },
+        {
+          "close": {}
+        }
+      ],
+      "edge_ref": null,
+      "fill": "#1478FF",
+      "fill_opacity": 0.06,
+      "id": "boundary-background",
+      "kind": "path",
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "#1478FF",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.5
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:callout:boundary:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "boundary-text:0",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。",
+      "x": 68.0,
+      "y": 800.0
+    },
+    {
+      "anchor": "start",
+      "atom_id": "atom:p04:callout:boundary:text",
+      "bold": false,
+      "edge_ref": null,
+      "fill": "#14213D",
+      "fill_opacity": 1.0,
+      "font_family": "Noto Sans CJK SC",
+      "font_size": 30.0,
+      "id": "boundary-text:1",
+      "kind": "text",
+      "letter_spacing": 0.0,
+      "node_ref": null,
+      "opacity": 1.0,
+      "stroke": "none",
+      "stroke_linecap": "butt",
+      "stroke_linejoin": "miter",
+      "stroke_miterlimit": 4.0,
+      "stroke_opacity": 1.0,
+      "stroke_width": 1.0,
+      "text": "能力边界：引用问答不等于诊断正确或操作获批。",
+      "x": 68.0,
+      "y": 834.0
+    }
+  ],
+  "width": 1600.0
+}

@@ -1232,6 +1232,15 @@ def _accept_result_locked(
                                      "record_only": _record_only(envelope, task)})
     if adoption["enforcement"] == "active" and not adoption["allowed"]:
         raise eligibility.EligibilityBlocked(adoption)
+    if (task.get("protocol_version") == "changes.v1"
+            and "content_requirements_v1" in (task.get("required_capabilities") or [])):
+        # Direct visual consumers have no change_binding. Their first adoption
+        # still needs the declared Host contract and a real named claim. Exact
+        # terminal replay returned above; call facts already settled separately.
+        from .generation import check_host
+        if task.get("status") != "running" or not task.get("execution_ref"):
+            raise TaskConflict(f"(task {task_id})/execution_ref", "claim the design consumer before returning its result")
+        check_host(task)
     if task["kind"] == "style_analyze":
         from .generation import check_host
         check_host(task)
@@ -1304,9 +1313,8 @@ def _accept_result_locked(
         entry = next(e for e in document['pages'] if e['page_id'] == task['scope_pages'][0])
         subjects = {(ref['path'], ref['sha256']) for ref in (entry['page'], entry['blueprint'], entry['svg'], entry['svg_preview'])}
         from .editing import _current_artifact_digests
-        from .production import resolve_design
-        page = store.read_object_json(entry['page'])
-        effective, _ = resolve_design(page, document['design_context'], document['design_context'].get('assets') or [])
+        from .production import resolve_page_design
+        effective = resolve_page_design(store, document, entry, require_current=True)
         digests = _current_artifact_digests(store, document)
         required_deps = {f"content:page:{entry['page_id']}", f"blueprint:{entry['page_id']}",
                          f"artifact:svg:{entry['page_id']}", f"style:{entry['page_id']}"}
@@ -1716,6 +1724,9 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
         },
     )
     new_document = _replace_task_ref(new_document, task, task_ref, store)
+    if is_new(task):
+        from .models import require_writer
+        require_writer(new_document, "rc3.v1")
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=new_document, operation_id=begin_operation_id
     )
@@ -1795,6 +1806,7 @@ def call_settle(
     report_ext: str = "json",
     invocation_ref: str | None = None,
     attempt_id: str | None = None,
+    adapter_context=None,
 ) -> dict:
     """Record a real call observation; the report is not a permanent sixth object."""
     if outcome not in CALL_OUTCOMES:
@@ -1820,8 +1832,17 @@ def call_settle(
     updated_task = task
     if is_new(task):
         updated_task, settled, ref = settle_attempt(store, document, task, target, attempt_id=attempt_id,
-                                                   outcome=outcome, report_bytes=report_bytes, invocation_ref=invocation_ref)
+                                                   outcome=outcome, report_bytes=report_bytes, invocation_ref=invocation_ref,
+                                                   adapter_context=adapter_context)
         extra = {"attempt_id": attempt_id, "attempt_ref": ref}
+        report = json.loads(report_bytes) if report_bytes else {}
+        if isinstance(report, dict) and report.get("source") == "native_host_image.v1":
+            observed_attempt = store.read_object_json(ref)
+            observation = store.read_object_json(observed_attempt["observations"][-1])
+            extra["native_observation_status"] = ("accepted" if observation["observer"] == "tool_observed" else "rejected")
+            rejection = (observation.get("reported") or {}).get("native_observation_rejected")
+            if rejection:
+                extra["observation_rejection"] = rejection
     else:
         if attempt_id is not None:
             raise EnvelopeError("attempt_id", "old tasks cannot bind generation attempts")
@@ -1848,6 +1869,9 @@ def call_settle(
         },
     )
     new_document = _replace_task_ref(new_document, task, task_ref, store)
+    if extra.get("native_observation_status") is not None:
+        from .models import require_writer
+        require_writer(new_document, "rc3.v1")
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"], document=new_document, operation_id=settle_operation_id
     )

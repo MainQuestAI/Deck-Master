@@ -1,0 +1,13 @@
+{
+  "project_dir": "/workspace/work/rc3/native-image-pilot-03/run-02-project",
+  "task_id": "a68c58884f9a",
+  "execution_ref": "/root/rc3_03_actual_svg_writer",
+  "supported_protocols": [
+    "changes.v1"
+  ],
+  "capabilities": [
+    "content_requirements_v1",
+    "style_recipe",
+    "style_recipe_v3"
+  ]
+}

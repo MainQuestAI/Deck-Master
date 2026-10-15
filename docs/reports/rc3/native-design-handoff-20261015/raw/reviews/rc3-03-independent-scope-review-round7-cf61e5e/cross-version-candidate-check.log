@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "evidence_kind": "cross-interpreter fixed actual old/new installed SDK; synthetic candidate content/controller/authority only",
+  "old_source_sha": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+  "new_source_sha": "cf61e5e717fc852263b5a5baf4d97a07e126362b",
+  "old_module": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "new_module": "/workspace/work/rc3/candidate-03-cf61e5e/prefix/.deck-master/releases/cf61e5e717fc-a8d812c66ca3/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "cases": [
+    {
+      "case": "real_old5db_candidate_same_semantics",
+      "status": "PASS",
+      "old_exact_design_digest": "79d931ae95e29e1f55c8bc2b2cd19046838250e8d115f1253635f9595f4b7715",
+      "cf_resolved_design_digest": "79d931ae95e29e1f55c8bc2b2cd19046838250e8d115f1253635f9595f4b7715",
+      "normalized_alternate_digest": "41d1543d158e4f4b8d2b0951380dadd33234e6ac72ab8b60d13b0f6bbbef4052",
+      "candidate_unchanged": true,
+      "request_and_original_objects_unchanged": true,
+      "explicit_adopt_success": true,
+      "new_calls": 0
+    },
+    {
+      "case": "value",
+      "rejected": true,
+      "rejection": {
+        "type": "AdoptionConflict",
+        "code": "candidate_basis_changed",
+        "message": "candidate_ids: no candidates were adopted; inspect conflicts and explicitly preview a new selection"
+      },
+      "original_immutable_refs_unchanged": true,
+      "no_adoption_or_fee_change": true
+    },
+    {
+      "case": "normalized_alternate_digest",
+      "rejected": true,
+      "rejection": {
+        "type": "AdoptionConflict",
+        "code": "candidate_basis_changed",
+        "message": "candidate_ids: no candidates were adopted; inspect conflicts and explicitly preview a new selection"
+      },
+      "original_immutable_refs_unchanged": true,
+      "no_adoption_or_fee_change": true
+    },
+    {
+      "case": "foreign_request",
+      "rejected": true,
+      "rejection": {
+        "type": "OperationError",
+        "code": "candidate_invalid",
+        "message": "request_ref: candidate request and attempt do not belong to its task"
+      },
+      "original_immutable_refs_unchanged": true,
+      "no_adoption_or_fee_change": true
+    }
+  ],
+  "real_image_calls": 0,
+  "real_project_writes": 0
+}

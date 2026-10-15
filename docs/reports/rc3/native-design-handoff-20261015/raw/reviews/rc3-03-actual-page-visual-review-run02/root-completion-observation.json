@@ -1,0 +1,15 @@
+{
+  "observation_author": "/root",
+  "assurance": "host_attested",
+  "agent": "/root/rc3_03_actual_page_visual_review",
+  "task_id": "89aefcb92514",
+  "actual_spawn_observed": true,
+  "actual_final_answer_observed": true,
+  "actual_final_text_file": "/workspace/work/rc3/reviews/rc3-03-actual-page-visual-review-run02/root-observed-actual-final.txt",
+  "actual_final_text_sha256": "b1484f85ea54e878799a459d23270ff5a73cda021ce65582e0c5563cef7dd89e",
+  "completed_status_observed_by_root_list_agents": true,
+  "observed_at_utc": "2026-10-15T02:18:19.964220+00:00",
+  "platform_signature": null,
+  "human_review": null,
+  "verdict_scope": "3 page_visual localPASS, supplementalF05physicalcanvasHOLD preserved"
+}

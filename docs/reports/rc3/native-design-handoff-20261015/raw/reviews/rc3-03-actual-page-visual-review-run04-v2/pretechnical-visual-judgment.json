@@ -1,0 +1,14 @@
+{
+  "created_at": "2026-10-15T02:32:36.287858+00:00",
+  "basis": "Independent actual original-detail viewing of all three actual images in this run, before reading v2 SVG or root typography/readback JSON. No new conclusion copied from previous PASS.",
+  "original": "Four ordered numbered cards joined by three right arrows; full exceptions table and boundary remain visually present. Conditional scope is weakly bound in original; close outer/bottom spacing remains as original evidence.",
+  "v2_visual_observations": [
+    "Title and exceptions heading visibly larger than v1; current two-line boundary text and main-chain qualification are larger too. The larger text makes the table denser, but the longest handoff cells still have complete readable sentences.",
+    "All17 fixed visible text atoms and substantive qualifiers read correctly in new SVG preview and new PPT render. Unknown/unsuitable rows and trigger/action/handoff columns retain clear ownership.",
+    "Explicit frozen qualification above four cards in common frame clearly binds main chain. Four cards retain collect→retrieve→review→submit order and three right arrowheads; no automated submission relationship appears.",
+    "No visible truncation, overlap, reversal or loss of information was observed from SVG to actual physical PPT render. New SVG and PPT show same line wraps and hierarchy, with small rasterization/baseline differences.",
+    "Outside margins, module separation and cell padding appear adequate. This awaits exact geometry cross-check, not an assumption from file existence."
+  ],
+  "current_provisional_verdict": "PASS for the three requested visual dimensions, pending physical/text/current-subject checks.",
+  "residual_caveat": "Exception handling still requires reading lower table. Human audience comprehension, projection conditions, desktop behavior and full deck are not evaluated."
+}

@@ -1,0 +1,35 @@
+{
+  "status": "accepted",
+  "project_id": "actual-q2",
+  "revision_id": "75e1394ebe854691b94b4e93f8c6793c",
+  "requested_action": "task accept",
+  "result_refs": [
+    {
+      "path": ".deckmaster/objects/b6/b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3.json",
+      "sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3"
+    }
+  ],
+  "pending_tasks": [],
+  "findings": [],
+  "next_action": "continue_production",
+  "input_alignment": "current",
+  "review_url": null,
+  "view_status": "view_arrives_with_workbench",
+  "evidence_level": "engineering",
+  "current_revision_id": "75e1394ebe854691b94b4e93f8c6793c",
+  "new_page_hashes": {},
+  "work_complete": true,
+  "operation_result": {
+    "status": "accepted",
+    "revision_id": "75e1394ebe854691b94b4e93f8c6793c",
+    "new_page_hashes": {},
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/b6/b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3.json",
+        "sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3"
+      }
+    ],
+    "work_complete": true,
+    "next_action": "continue_production"
+  }
+}

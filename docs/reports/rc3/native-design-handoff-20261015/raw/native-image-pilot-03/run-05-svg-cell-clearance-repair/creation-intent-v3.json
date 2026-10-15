@@ -1,0 +1,112 @@
+{
+  "schema": "native_svg_original_creation.v3",
+  "created_at_utc": "2026-10-15T02:48:43.218058+00:00",
+  "task_id": "53be66431623",
+  "execution_ref": "/root/rc3_03_actual_svg_writer",
+  "repair_round": 2,
+  "history": "Second autonomous same-page layout repair. Retain original v1/v2 artifacts, raw accept results, failures and independent reviews. Not first-effect or fair E2/E3 evidence.",
+  "source": "Complete newTask/workorder/fixedPage/preparedMethod bytes consumed; immutable Page/context/method bytes equal the fully read prior frozen inputs. Actual run04-v2 report and F07 precise/header/body/crop manifest read, all6SVG/PPT crops viewed. Page atoms, never OCR, provide exact text. OriginalPNG is only the previously directly viewed immutable visual reference.",
+  "F07_basis": "v2 actualPPT header painted clearance9-10px, body10-11px; sourceSVG13-14px, approximately+3pxnative text shift. No global converter defect inferred or converter change requested.",
+  "authoring_method": "Native model directly authored v3 editable SVG; no fixture, imagegen, newdependencies, sourceedit, completepreview/compile/render or newPPTmeasurement.",
+  "canvas": {
+    "svg": [
+      1600,
+      900
+    ],
+    "physical_inches": [
+      13.333333333333334,
+      7.5
+    ],
+    "compile_pixels_at96ppi": [
+      1280,
+      720
+    ],
+    "scale": 0.8,
+    "unchanged": true
+  },
+  "type_roles": {
+    "heading_atoms": [
+      "atom:p04:title",
+      "atom:p04:block:exceptions-heading:text"
+    ],
+    "heading_px": 50,
+    "all_other_visible_text_px": 30,
+    "all_other_text_role": "body, including bold qualifier and table headers; no auxiliary small text",
+    "family": "Noto Sans CJK SC",
+    "physical_point_values": "Calculated expectation remains18/30pt at0.8scale; no newPPT result claimed."
+  },
+  "model_layout_decision": "Reallocate vertical layout jointly: mainframe up10px, subtitle up5px, heading/table up10px. Node containers gain2px and3-line node leading becomes31px. Header height grows54→60px. Body rows become123px/122px; three-line body leading becomes34→31px with first baselines40px from row top. Table ends733 rather than736; bottom callout starts759 rather than762 and grows88→91px, with32px line leading. No text removed or swapped.",
+  "planned_geometry": {
+    "main_frame": [
+      50,
+      142,
+      1500,
+      190
+    ],
+    "node_top_height": [
+      194,
+      124
+    ],
+    "node_three_line_baselines": [
+      234,
+      265,
+      296
+    ],
+    "section_heading_baseline": 402,
+    "table": [
+      50,
+      428,
+      1500,
+      305
+    ],
+    "column_edges": [
+      50,
+      394,
+      902,
+      1550
+    ],
+    "row_edges": [
+      428,
+      488,
+      611,
+      733
+    ],
+    "header_baseline": 468,
+    "unknown_baselines": [
+      528,
+      559,
+      590
+    ],
+    "unsuitable_baselines": [
+      651,
+      682,
+      713
+    ],
+    "boundary": [
+      50,
+      759,
+      1500,
+      91
+    ],
+    "boundary_baselines": [
+      798,
+      830
+    ],
+    "main_to_section_net_gap_expected": 25.25,
+    "table_to_boundary_net_gap": 24.75,
+    "external_geometry_margin_min": 49.25
+  },
+  "buffer_design": "Do not move an entire body block up3px. Preserve measuredSVG top clearance by keeping at least14px nominal top ink inset in table/header, while compressed nonfrozen leading and enlarged header allocate16–17px nominal bottom ink inset. Plan for+3pxnative shift plus border paint; validate actualPPT separately.",
+  "empirical_projection_not_measurement": {
+    "method": "Apply changed baselines/borders to exact F07 v2 raster coordinates; retain same font/physicalcanvas. These are design projections only.",
+    "projected_native_empty_rows_header": 13,
+    "projected_native_empty_rows_unknown_last_line": 15,
+    "projected_native_empty_rows_unsuitable_last_line": 14,
+    "projected_sourceSVG_header_top_empty_rows": 13,
+    "projected_sourceSVG_body_top_empty_rows": 13
+  },
+  "line_spacing": "30px font with31px body/node leading and32px boundary leading, planned positive inter-ink separation. Realfont bounds check follows raw save; downstream visual/PPT check remains required.",
+  "qualifiers": "Frozen主链只适用于条件可核对情形。 stays in mainframe; allfixed17atoms/qualifiers/ownership/4nodes3edges preserved.",
+  "checks_at_save": "Original v3 and this intent saved before any v3SDK parsing, atom coverage, fontbounds or spacing check.",
+  "limits": "Local checks cannot close F07 or sign visual/PPT/desktop/fullcard acceptance. Root must generate actual newphysicalPPT/render and obtain fresh independent review."
+}

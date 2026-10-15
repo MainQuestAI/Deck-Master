@@ -1,0 +1,53 @@
+{
+  "before_revision": "88f0366a12c24d96ba8598e0468ca70c",
+  "after_revision": "ce601a8dd04543d5b15f7d968eb85ca2",
+  "page_order_unchanged": true,
+  "page_deltas": {
+    "p01": {},
+    "p02": {},
+    "p03": {},
+    "p04": {
+      "svg": {
+        "before": {
+          "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+          "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+        },
+        "after": {
+          "path": ".deckmaster/objects/8c/8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d.json",
+          "sha256": "8c197386cb7168d3df1a6391559b29bcd9f5f7f08a69469fb89c27a53b17814d"
+        }
+      },
+      "svg_preview": {
+        "before": {
+          "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+          "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+        },
+        "after": null
+      }
+    },
+    "p05": {},
+    "p06": {},
+    "p07": {},
+    "p08": {}
+  },
+  "all_page_content_refs_unchanged": true,
+  "other_seven_page_entries_unchanged": true,
+  "document_outputs_unchanged": true,
+  "narrative_unchanged": true,
+  "content_plan_unchanged": true,
+  "review_field_unchanged": true,
+  "historical_ref_files_unchanged": true,
+  "historical_ref_count": 16,
+  "v1_v2_evidence_files_unchanged": true,
+  "v1_v2_evidence_count": 36,
+  "all_packet_review_crop_png_inputs_unchanged": true,
+  "changed_top_level_fields": [
+    "change",
+    "committed_at",
+    "pages",
+    "parent_revision_id",
+    "revision_id",
+    "tasks"
+  ],
+  "review_boundary": "NewSVG is a newsubject; oldreviewobjects remain immutable history and are not acceptance of newSVG."
+}

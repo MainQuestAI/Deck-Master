@@ -1,0 +1,320 @@
+{
+  "actual_emu": [
+    12192000,
+    6858000
+  ],
+  "actual_inches": [
+    13.333333333333334,
+    7.5
+  ],
+  "actual_point_sizes": [
+    18.0,
+    30.0
+  ],
+  "all_runs_match_role": true,
+  "expected_emu": [
+    12192000,
+    6858000
+  ],
+  "frozen_canvas": {
+    "fit": "contain",
+    "height_px": 900,
+    "slide_height_in": 7.5,
+    "slide_width_in": 13.333333333333334,
+    "width_px": 1600
+  },
+  "individual_run_checks": [
+    {
+      "actual_pt": 30.0,
+      "required_minimum_pt": 30,
+      "role": "heading",
+      "shape_name": "atom:p04:title",
+      "status": "pass",
+      "text": "机械编辑验证：建议流程保留两条分支：条件可核对／条件未知"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:subtitle",
+      "status": "pass",
+      "text": "首次人员提交前做条件提示；能否减少后续补问仍待验证"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "main-chain-frozen-qualification:0",
+      "status": "pass",
+      "text": "主链只适用于条件可核对情形。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:collect:text",
+      "status": "pass",
+      "text": "现场人员提供型号、"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:collect:text",
+      "status": "pass",
+      "text": "版本与现象；接单人员"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:collect:text",
+      "status": "pass",
+      "text": "核对可核查条件。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:retrieve:text",
+      "status": "pass",
+      "text": "只读助手返回许可资料"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:retrieve:text",
+      "status": "pass",
+      "text": "片段及来源。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:review:text",
+      "status": "pass",
+      "text": "指定人员核查引用"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:review:text",
+      "status": "pass",
+      "text": "适用性，记录采用／"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:review:text",
+      "status": "pass",
+      "text": "未采用及原因。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:submit:text",
+      "status": "pass",
+      "text": "人员在现有系统"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:label:submit:text",
+      "status": "pass",
+      "text": "完成正式提交。"
+    },
+    {
+      "actual_pt": 30.0,
+      "required_minimum_pt": 30,
+      "role": "heading",
+      "shape_name": "atom:p04:block:exceptions-heading:text",
+      "status": "pass",
+      "text": "未知与不适用信息仍随请求交接"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:column:exceptions:trigger:label",
+      "status": "pass",
+      "text": "触发条件"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:column:exceptions:action:label",
+      "status": "pass",
+      "text": "接单人员动作"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:column:exceptions:handoff:label",
+      "status": "pass",
+      "text": "交接及继续条件"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "status": "pass",
+      "text": "型号或版本待补／"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "status": "pass",
+      "text": "确实不可得"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "status": "pass",
+      "text": "保留已知条件、未知字段及原因；"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "status": "pass",
+      "text": "能补则请求可核对信息，"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "status": "pass",
+      "text": "不能强制填入猜测。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "status": "pass",
+      "text": "不能补出时交指定业务核查人判断下一步；"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "status": "pass",
+      "text": "取得可核查条件后按主链继续。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "status": "pass",
+      "text": "具体责任人与恢复规则须在启动前明确。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "status": "pass",
+      "text": "引用适用性无法确认、"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "status": "pass",
+      "text": "引用冲突／不适用，"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "status": "pass",
+      "text": "或问题仍不确定"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "status": "pass",
+      "text": "保留设备条件、来源位置"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "status": "pass",
+      "text": "和未决点；候选引用不能标成"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "status": "pass",
+      "text": "可直接采用的结论。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "status": "pass",
+      "text": "交核查人确认资料适用性和下一步；"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "status": "pass",
+      "text": "无法确认则继续标明未决，"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "status": "pass",
+      "text": "不把找到资料记为故障已解决。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:callout:boundary:text",
+      "status": "pass",
+      "text": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。"
+    },
+    {
+      "actual_pt": 18.0,
+      "required_minimum_pt": 18,
+      "role": "body",
+      "shape_name": "atom:p04:callout:boundary:text",
+      "status": "pass",
+      "text": "能力边界：引用问答不等于诊断正确或操作获批。"
+    }
+  ],
+  "physical_size_matches": true,
+  "role_basis": "explicit frozen-p04 layout title and exceptions-heading; no role inference from size or bold",
+  "template_type_label_not_size_verdict": "screen4x3",
+  "visible_run_count": 36
+}

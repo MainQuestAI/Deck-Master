@@ -1,0 +1,687 @@
+{
+  "scope": "Author engineering checks only, not independent visual/desktop/PPT/global acceptance",
+  "svg_sha256": "1223a9d6c9c89bb998434395e58dfee8c77c3d95d918fca7b8a613c54739a00b",
+  "checks": {
+    "sdk_parse": {
+      "status": "parsed",
+      "shape_count": 59,
+      "canvas": [
+        1600.0,
+        900.0
+      ]
+    },
+    "atoms": {
+      "count": 17,
+      "exact_matches": 17,
+      "results": [
+        {
+          "atom_id": "atom:p04:title",
+          "match_exact": true,
+          "expected": "建议流程保留两条分支：条件可核对／条件未知",
+          "actual": "建议流程保留两条分支：条件可核对／条件未知",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:subtitle",
+          "match_exact": true,
+          "expected": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+          "actual": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:block:exceptions-heading:text",
+          "match_exact": true,
+          "expected": "未知与不适用信息仍随请求交接",
+          "actual": "未知与不适用信息仍随请求交接",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:column:exceptions:trigger:label",
+          "match_exact": true,
+          "expected": "触发条件",
+          "actual": "触发条件",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:column:exceptions:action:label",
+          "match_exact": true,
+          "expected": "接单人员动作",
+          "actual": "接单人员动作",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:column:exceptions:handoff:label",
+          "match_exact": true,
+          "expected": "交接及继续条件",
+          "actual": "交接及继续条件",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+          "match_exact": true,
+          "expected": "型号或版本待补／确实不可得",
+          "actual": "型号或版本待补／确实不可得",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+          "match_exact": true,
+          "expected": "保留已知条件、未知字段及原因；能补则请求可核对信息，不能强制填入猜测。",
+          "actual": "保留已知条件、未知字段及原因；能补则请求可核对信息，不能强制填入猜测。",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+          "match_exact": true,
+          "expected": "不能补出时交指定业务核查人判断下一步；取得可核查条件后按主链继续。具体责任人与恢复规则须在启动前明确。",
+          "actual": "不能补出时交指定业务核查人判断下一步；取得可核查条件后按主链继续。具体责任人与恢复规则须在启动前明确。",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+          "match_exact": true,
+          "expected": "引用适用性无法确认、引用冲突／不适用，或问题仍不确定",
+          "actual": "引用适用性无法确认、引用冲突／不适用，或问题仍不确定",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+          "match_exact": true,
+          "expected": "保留设备条件、来源位置和未决点；候选引用不能标成可直接采用的结论。",
+          "actual": "保留设备条件、来源位置和未决点；候选引用不能标成可直接采用的结论。",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+          "match_exact": true,
+          "expected": "交核查人确认资料适用性和下一步；无法确认则继续标明未决，不把找到资料记为故障已解决。",
+          "actual": "交核查人确认资料适用性和下一步；无法确认则继续标明未决，不把找到资料记为故障已解决。",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:label:collect:text",
+          "match_exact": true,
+          "expected": "现场人员提供型号、版本与现象；接单人员核对可核查条件。",
+          "actual": "现场人员提供型号、版本与现象；接单人员核对可核查条件。",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:label:retrieve:text",
+          "match_exact": true,
+          "expected": "只读助手返回许可资料片段及来源。",
+          "actual": "只读助手返回许可资料片段及来源。",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:label:review:text",
+          "match_exact": true,
+          "expected": "指定人员核查引用适用性，记录采用／未采用及原因。",
+          "actual": "指定人员核查引用适用性，记录采用／未采用及原因。",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:label:submit:text",
+          "match_exact": true,
+          "expected": "人员在现有系统完成正式提交。",
+          "actual": "人员在现有系统完成正式提交。",
+          "carrier_count": 1
+        },
+        {
+          "atom_id": "atom:p04:callout:boundary:text",
+          "match_exact": true,
+          "expected": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。能力边界：引用问答不等于诊断正确或操作获批。",
+          "actual": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。能力边界：引用问答不等于诊断正确或操作获批。",
+          "carrier_count": 1
+        }
+      ]
+    },
+    "qualification": {
+      "frozen": "主链只适用于条件可核对情形。",
+      "actual": "主链只适用于条件可核对情形。",
+      "group": "main-chain",
+      "source": "content_requirements.required_qualifications[0]"
+    },
+    "node_geometry": [
+      {
+        "id": "collect-container",
+        "node_ref": "collect",
+        "kind": "path"
+      },
+      {
+        "id": "retrieve-container",
+        "node_ref": "retrieve",
+        "kind": "path"
+      },
+      {
+        "id": "review-container",
+        "node_ref": "review",
+        "kind": "path"
+      },
+      {
+        "id": "submit-container",
+        "node_ref": "submit",
+        "kind": "path"
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-collect-retrieve",
+        "edge_ref": "collect-retrieve",
+        "commands": [
+          {
+            "moveTo": {
+              "x": 230.0,
+              "y": 272.0
+            }
+          },
+          {
+            "lineTo": {
+              "x": 610.0,
+              "y": 272.0
+            }
+          }
+        ],
+        "points": null
+      },
+      {
+        "id": "edge-retrieve-review",
+        "edge_ref": "retrieve-review",
+        "commands": [
+          {
+            "moveTo": {
+              "x": 610.0,
+              "y": 272.0
+            }
+          },
+          {
+            "lineTo": {
+              "x": 990.0,
+              "y": 272.0
+            }
+          }
+        ],
+        "points": null
+      },
+      {
+        "id": "edge-review-submit",
+        "edge_ref": "review-submit",
+        "commands": [
+          {
+            "moveTo": {
+              "x": 990.0,
+              "y": 272.0
+            }
+          },
+          {
+            "lineTo": {
+              "x": 1370.0,
+              "y": 272.0
+            }
+          }
+        ],
+        "points": null
+      }
+    ],
+    "text_properties": {
+      "font_families": [
+        "Noto Sans CJK SC"
+      ],
+      "font_sizes_px": [
+        24.0,
+        40.0
+      ],
+      "raster_images": 0
+    },
+    "font_resolution": {
+      "regular": {
+        "family": "Noto Sans CJK SC",
+        "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "index": 2
+      },
+      "bold": {
+        "family": "Noto Sans CJK SC",
+        "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+        "index": 2
+      }
+    },
+    "font_ink_bounds": [
+      {
+        "element": "page-title:0",
+        "atom_id": "atom:p04:title",
+        "text": "建议流程保留两条分支：条件可核对／条件未知",
+        "bounds": [
+          50.0,
+          51.0,
+          890.0,
+          91.0
+        ]
+      },
+      {
+        "element": "page-subtitle:0",
+        "atom_id": "atom:p04:subtitle",
+        "text": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+        "bounds": [
+          50.0,
+          107.0,
+          650.0,
+          133.0
+        ]
+      },
+      {
+        "element": "main-chain-frozen-qualification:0",
+        "atom_id": null,
+        "text": "主链只适用于条件可核对情形。",
+        "bounds": [
+          68.0,
+          169.0,
+          404.0,
+          193.0
+        ]
+      },
+      {
+        "element": "collect-label:0",
+        "atom_id": "atom:p04:label:collect:text",
+        "text": "现场人员提供型号、",
+        "bounds": [
+          82.0,
+          229.0,
+          298.0,
+          253.0
+        ]
+      },
+      {
+        "element": "collect-label:1",
+        "atom_id": "atom:p04:label:collect:text",
+        "text": "版本与现象；接单人员",
+        "bounds": [
+          82.0,
+          259.0,
+          322.0,
+          285.0
+        ]
+      },
+      {
+        "element": "collect-label:2",
+        "atom_id": "atom:p04:label:collect:text",
+        "text": "核对可核查条件。",
+        "bounds": [
+          82.0,
+          289.0,
+          274.0,
+          313.0
+        ]
+      },
+      {
+        "element": "retrieve-label:0",
+        "atom_id": "atom:p04:label:retrieve:text",
+        "text": "只读助手返回许可资料",
+        "bounds": [
+          462.0,
+          243.0,
+          702.0,
+          267.0
+        ]
+      },
+      {
+        "element": "retrieve-label:1",
+        "atom_id": "atom:p04:label:retrieve:text",
+        "text": "片段及来源。",
+        "bounds": [
+          462.0,
+          273.0,
+          606.0,
+          297.0
+        ]
+      },
+      {
+        "element": "review-label:0",
+        "atom_id": "atom:p04:label:review:text",
+        "text": "指定人员核查引用适用性，",
+        "bounds": [
+          842.0,
+          229.0,
+          1130.0,
+          254.0
+        ]
+      },
+      {
+        "element": "review-label:1",
+        "atom_id": "atom:p04:label:review:text",
+        "text": "记录采用／未采用",
+        "bounds": [
+          842.0,
+          259.0,
+          1034.0,
+          283.0
+        ]
+      },
+      {
+        "element": "review-label:2",
+        "atom_id": "atom:p04:label:review:text",
+        "text": "及原因。",
+        "bounds": [
+          842.0,
+          290.0,
+          938.0,
+          313.0
+        ]
+      },
+      {
+        "element": "submit-label:0",
+        "atom_id": "atom:p04:label:submit:text",
+        "text": "人员在现有系统",
+        "bounds": [
+          1222.0,
+          243.0,
+          1390.0,
+          267.0
+        ]
+      },
+      {
+        "element": "submit-label:1",
+        "atom_id": "atom:p04:label:submit:text",
+        "text": "完成正式提交。",
+        "bounds": [
+          1222.0,
+          273.0,
+          1390.0,
+          297.0
+        ]
+      },
+      {
+        "element": "exceptions-heading:0",
+        "atom_id": "atom:p04:block:exceptions-heading:text",
+        "text": "未知与不适用信息仍随请求交接",
+        "bounds": [
+          50.0,
+          377.0,
+          610.0,
+          417.0
+        ]
+      },
+      {
+        "element": "column-trigger:0",
+        "atom_id": "atom:p04:column:exceptions:trigger:label",
+        "text": "触发条件",
+        "bounds": [
+          68.0,
+          451.0,
+          164.0,
+          475.0
+        ]
+      },
+      {
+        "element": "column-action:0",
+        "atom_id": "atom:p04:column:exceptions:action:label",
+        "text": "接单人员动作",
+        "bounds": [
+          390.0,
+          451.0,
+          534.0,
+          475.0
+        ]
+      },
+      {
+        "element": "column-handoff:0",
+        "atom_id": "atom:p04:column:exceptions:handoff:label",
+        "text": "交接及继续条件",
+        "bounds": [
+          916.0,
+          450.0,
+          1084.0,
+          475.0
+        ]
+      },
+      {
+        "element": "unknown-trigger:0",
+        "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+        "text": "型号或版本待补／",
+        "bounds": [
+          68.0,
+          509.0,
+          260.0,
+          533.0
+        ]
+      },
+      {
+        "element": "unknown-trigger:1",
+        "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+        "text": "确实不可得",
+        "bounds": [
+          68.0,
+          539.0,
+          188.0,
+          563.0
+        ]
+      },
+      {
+        "element": "unknown-action:0",
+        "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+        "text": "保留已知条件、未知字段及原因；",
+        "bounds": [
+          390.0,
+          509.0,
+          750.0,
+          535.0
+        ]
+      },
+      {
+        "element": "unknown-action:1",
+        "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+        "text": "能补则请求可核对信息，",
+        "bounds": [
+          390.0,
+          539.0,
+          654.0,
+          564.0
+        ]
+      },
+      {
+        "element": "unknown-action:2",
+        "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+        "text": "不能强制填入猜测。",
+        "bounds": [
+          390.0,
+          569.0,
+          606.0,
+          593.0
+        ]
+      },
+      {
+        "element": "unknown-handoff:0",
+        "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+        "text": "不能补出时交指定业务核查人判断下一步；",
+        "bounds": [
+          916.0,
+          509.0,
+          1372.0,
+          535.0
+        ]
+      },
+      {
+        "element": "unknown-handoff:1",
+        "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+        "text": "取得可核查条件后按主链继续。",
+        "bounds": [
+          916.0,
+          539.0,
+          1252.0,
+          563.0
+        ]
+      },
+      {
+        "element": "unknown-handoff:2",
+        "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+        "text": "具体责任人与恢复规则须在启动前明确。",
+        "bounds": [
+          916.0,
+          569.0,
+          1348.0,
+          593.0
+        ]
+      },
+      {
+        "element": "unsuitable-trigger:0",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+        "text": "引用适用性无法确认、",
+        "bounds": [
+          68.0,
+          635.0,
+          308.0,
+          659.0
+        ]
+      },
+      {
+        "element": "unsuitable-trigger:1",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+        "text": "引用冲突／不适用，",
+        "bounds": [
+          68.0,
+          665.0,
+          284.0,
+          690.0
+        ]
+      },
+      {
+        "element": "unsuitable-trigger:2",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+        "text": "或问题仍不确定",
+        "bounds": [
+          68.0,
+          695.0,
+          236.0,
+          719.0
+        ]
+      },
+      {
+        "element": "unsuitable-action:0",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+        "text": "保留设备条件、来源位置和未决点；",
+        "bounds": [
+          390.0,
+          635.0,
+          774.0,
+          661.0
+        ]
+      },
+      {
+        "element": "unsuitable-action:1",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+        "text": "候选引用不能标成可直接采用的结论。",
+        "bounds": [
+          390.0,
+          665.0,
+          798.0,
+          689.0
+        ]
+      },
+      {
+        "element": "unsuitable-handoff:0",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+        "text": "交核查人确认资料适用性和下一步；",
+        "bounds": [
+          916.0,
+          635.0,
+          1300.0,
+          661.0
+        ]
+      },
+      {
+        "element": "unsuitable-handoff:1",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+        "text": "无法确认则继续标明未决，",
+        "bounds": [
+          916.0,
+          665.0,
+          1204.0,
+          690.0
+        ]
+      },
+      {
+        "element": "unsuitable-handoff:2",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+        "text": "不把找到资料记为故障已解决。",
+        "bounds": [
+          916.0,
+          695.0,
+          1252.0,
+          719.0
+        ]
+      },
+      {
+        "element": "boundary-text:0",
+        "atom_id": "atom:p04:callout:boundary:text",
+        "text": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。",
+        "bounds": [
+          68.0,
+          775.0,
+          839.0,
+          800.0
+        ]
+      },
+      {
+        "element": "boundary-text:1",
+        "atom_id": "atom:p04:callout:boundary:text",
+        "text": "能力边界：引用问答不等于诊断正确或操作获批。",
+        "bounds": [
+          68.0,
+          807.0,
+          596.0,
+          831.0
+        ]
+      }
+    ],
+    "text_canvas_bounds": [
+      50.0,
+      51.0,
+      1390.0,
+      831.0
+    ],
+    "module_spacing": {
+      "main_chain_frame_bottom": 350.75,
+      "exceptions_heading_ink_top": 377.0,
+      "table_bottom": 734.5,
+      "callout_top": 761.25,
+      "table_callout_gap": 26.75
+    },
+    "table_cell_padding": {
+      "unknown:trigger": {
+        "left": 18.0,
+        "right": 112.0,
+        "top": 17.0,
+        "bottom": 55.0
+      },
+      "unknown:action": {
+        "left": 18.0,
+        "right": 148.0,
+        "top": 17.0,
+        "bottom": 25.0
+      },
+      "unknown:handoff": {
+        "left": 18.0,
+        "right": 178.0,
+        "top": 17.0,
+        "bottom": 25.0
+      },
+      "unsuitable:trigger": {
+        "left": 18.0,
+        "right": 64.0,
+        "top": 17.0,
+        "bottom": 15.0
+      },
+      "unsuitable:action": {
+        "left": 18.0,
+        "right": 100.0,
+        "top": 17.0,
+        "bottom": 45.0
+      },
+      "unsuitable:handoff": {
+        "left": 18.0,
+        "right": 250.0,
+        "top": 17.0,
+        "bottom": 15.0
+      }
+    }
+  },
+  "errors": []
+}
