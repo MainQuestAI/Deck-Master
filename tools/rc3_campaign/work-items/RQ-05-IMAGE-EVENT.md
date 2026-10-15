@@ -36,3 +36,11 @@ historical and unknown charges retained; no silent resend after partial writes;
 legacy M02 regressions unchanged. Record synthetic seams and zero external
 calls honestly. Freeze a clean exact commit, independent review, repair genuine
 findings, then re-review before final candidate/campaign admission.
+
+RQ-IE-R1-01: independent R1 reproduced a load-before-lock frontier race in the
+first implementation. Recheck the actual frontier inside the existing bf lock
+at every advancing entry, without a second lock or weaker Runtime check. Keep
+the original failure. A real parent/child lock schedule must reject an old
+append made while the new dispatcher waits, publish no typed charge/marker,
+and still permit the same unchanged-frontier positive schedule. This engineering
+fix supplies no additional model/image invocation or effect credit.

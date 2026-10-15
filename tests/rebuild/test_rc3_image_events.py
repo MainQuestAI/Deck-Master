@@ -7,7 +7,11 @@ separate; ordinary JSON and synthetic MACs never become benchmark results.
 from copy import deepcopy
 import importlib.util
 import io
+import json
 from pathlib import Path
+import subprocess
+import sys
+import time
 
 import pytest
 from PIL import Image
@@ -211,6 +215,60 @@ def test_reserved_global_charge_survives_missing_local_mark(flow, tmp_path, monk
     (e._call_dir(ledger, "scope-one-p1") / "dispatch-mark.json").unlink()
     assert e.inspect_accounting(ledger)["total_charged"] == 1
     with pytest.raises(e.ImageEventError): e.mark_dispatch(ledger, "scope-one-p1", boot["path"])
+
+
+@pytest.mark.parametrize("legacy_append", [True, False])
+def test_real_shared_lock_rechecks_frontier_after_wait(flow, tmp_path, monkeypatch, legacy_append):
+    """A scheduling-only child wrapper still acquires the unchanged bf lock.
+
+    Installation identity is the same explicit synthetic seam as this module's
+    other tests; real Store/currentness/rights checks and OS locks are retained.
+    """
+    ledger, _, boot, *_ = ready(tmp_path, monkeypatch, flow)
+    ready_path = tmp_path / "child-waiting-for-actual-lock"
+    child_source = '''
+from contextlib import contextmanager
+import importlib.util,json,sys
+from pathlib import Path
+tool,root,bootstrap,ready,sdk_init=sys.argv[1:]
+sdk_spec=importlib.util.spec_from_file_location("deck_master",sdk_init,submodule_search_locations=[str(Path(sdk_init).parent)])
+sdk=importlib.util.module_from_spec(sdk_spec);sys.modules["deck_master"]=sdk;sdk_spec.loader.exec_module(sdk)
+spec=importlib.util.spec_from_file_location("lock_frontier_regression",tool)
+e=importlib.util.module_from_spec(spec);spec.loader.exec_module(e)
+e.c.installation=lambda *_args,**_kwargs:{"SYNTHETIC_INSTALLATION_SEAM":True}
+original=e.b.locked
+@contextmanager
+def schedule_only(path):
+    Path(ready).write_text("about to acquire original bf lock")
+    with original(path):yield
+e.b.locked=schedule_only
+print(json.dumps(e.mark_dispatch(root,"scope-one-p1",bootstrap)))
+'''
+    import deck_master
+    command = [sys.executable, "-I", "-B", "-c", child_source, str(SCRIPT), str(ledger), boot["path"], str(ready_path), deck_master.__file__]
+    with e.b.locked(ledger):
+        child = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            deadline = time.monotonic() + 10
+            while not ready_path.exists():
+                if child.poll() is not None or time.monotonic() >= deadline:
+                    raise AssertionError("child did not reach the unchanged shared lock")
+                time.sleep(.01)
+            if legacy_append:
+                e.save(ledger / "dispatches/unexpected-legacy.json", {"evidence_kind": e.ENGINEERING,
+                    "scenario": "Synthetic unexpected old writer under same lock; no actual tool call", "outcome": "unknown"})
+        except BaseException:
+            child.kill(); child.communicate(timeout=5); raise
+    stdout, stderr = child.communicate(timeout=15)
+    if legacy_append:
+        assert child.returncode != 0 and b"legacy writer appended/changed" in stderr
+        assert not list((ledger / "event-dispatches").glob("*.json"))
+        assert not (e._call_dir(ledger, "scope-one-p1") / "dispatch-mark.json").exists()
+        assert not stdout
+    else:
+        assert child.returncode == 0, stderr.decode()
+        assert json.loads(stdout)["cost"] == "CHARGED_PENDING_ROOT_TOOL_OBSERVATION"
+        assert e.inspect_accounting(ledger)["total_charged"] == 1
 
 
 def test_legacy_unknown_charge_is_not_reset_and_frontier_tamper_is_refused(tmp_path, monkeypatch):

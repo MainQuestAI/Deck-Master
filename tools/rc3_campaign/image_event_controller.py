@@ -310,8 +310,7 @@ def guard_call_begin(config, binding, page_id, arguments):
     Global dispatch is charged separately immediately before Root's real tool.
     """
     facts = validate_scope_binding(config, binding, before_begin=True)
-    root, actual_config, policy, frontier = load(facts["policy"]["ledger_root"])
-    require(actual_config == config, "begin must use the exact active event registration")
+    root = b.canonical_root(facts["policy"]["ledger_root"])
     c.installation(config, binding["arm"])
     from deck_master import eligibility, tasks
     from deck_master.store import Store
@@ -331,8 +330,11 @@ def guard_call_begin(config, binding, page_id, arguments):
     eligibility.guard(store, doc, "call.begin", context={"task": task, "allowance_id": binding["allowance_id"], "targets": {"page_ids": [page_id]}})
     leaves = [v for v in facts["scope"]["leaves"] if v.get("page_id") == page_id or v.get("page_id") is None and v["leaf_id"] == binding.get("leaf_id")]
     require(len(leaves) == 1, "bind one preregistered actual Page leaf before begin")
-    rows = _records(root, frontier)
-    require(len(rows) < policy["total_call_cap"] and sum(r["parent_id"] == facts["parent"]["parent_id"] for r in rows) < facts["parent"]["max_calls"] and sum(r["scope_slot"] == binding["scope_slot"] for r in rows) < facts["scope"]["max_calls"] and all(r["leaf_id"] != leaves[0]["leaf_id"] for r in rows), "campaign global/parent/scope/Page budget exhausted before begin")
+    with b.locked(root):
+        root, actual_config, policy, frontier = load(root)
+        require(actual_config == config, "begin must use the exact active event registration")
+        rows = _records(root, frontier)
+        require(len(rows) < policy["total_call_cap"] and sum(r["parent_id"] == facts["parent"]["parent_id"] for r in rows) < facts["parent"]["max_calls"] and sum(r["scope_slot"] == binding["scope_slot"] for r in rows) < facts["scope"]["max_calls"] and all(r["leaf_id"] != leaves[0]["leaf_id"] for r in rows), "campaign global/parent/scope/Page budget exhausted before begin")
     return {"status": "OWN_RESERVED_RIGHTS_CHECKED_NOT_BEGUN", "leaf_id": leaves[0]["leaf_id"], "project_id": doc["project_id"], "attempt_id": None, "no_permission_minted": True}
 
 
@@ -341,8 +343,9 @@ def _call_dir(root, leaf_id):
 
 
 def prepare_page_call(root, binding, leaf_id, attempt_id):
-    root, config, policy, frontier = load(root)
+    root = b.canonical_root(str(root))
     with b.locked(root):
+        root, config, policy, frontier = load(root)
         spec = validate_scope_binding(config, binding)
         leaf = next((v for v in spec["scope"]["leaves"] if v["leaf_id"] == leaf_id), None)
         require(leaf, "leaf does not belong to this real scope")
@@ -392,8 +395,9 @@ def _preparation(root, config, leaf_id):
 
 
 def mark_dispatch(root, leaf_id, bootstrap_path):
-    root, config, policy, frontier = load(root)
+    root = b.canonical_root(str(root))
     with b.locked(root):
+        root, config, policy, frontier = load(root)
         dest, p = _preparation(root, config, leaf_id)
         require(not (dest / "dispatch-mark.json").exists(), "already marked; never resend an uncertain tool call")
         boot = b.bootstrap({**config, "sdk_controller": config["sdk_controller"]}, bootstrap_path)
@@ -411,8 +415,10 @@ def mark_dispatch(root, leaf_id, bootstrap_path):
 
 
 def inspect_accounting(root):
-    root, config, policy, frontier = load(root)
-    rows = _records(root, frontier); _caps(policy, rows)
+    root = b.canonical_root(str(root))
+    with b.locked(root):
+        root, config, policy, frontier = load(root)
+        rows = _records(root, frontier); _caps(policy, rows)
     return {"status": "ACCOUNTING_ONLY_NOT_QUALIFICATION", "evidence_kind": config["status"], "ledger_root": str(root), "total_charged": len(rows), "total_cap": policy["total_call_cap"], "legacy_charged": len(frontier["charged_rows"]), "by_parent": {p["parent_id"]: sum(r["parent_id"] == p["parent_id"] for r in rows) for p in policy["parents"]}, "by_scope": {s["scope_slot"]: sum(r["scope_slot"] == s["scope_slot"] for r in rows) for s in policy["scopes"]}, "all_rows": rows, "unknown_refunds": False}
 
 
@@ -439,8 +445,9 @@ def _authenticated(root, config, leaf_id):
 
 
 def seal_observation(root, leaf_id, callback_path, bootstrap_path):
-    root, config, _, _ = load(root)
+    root = b.canonical_root(str(root))
     with b.locked(root):
+        root, config, _, _ = load(root)
         dest, p = _preparation(root, config, leaf_id)
         marker = read(dest / "dispatch-mark.json")
         require(not (dest / "sealed-observation.json").exists(), "first observation is immutable, including error/unknown")
@@ -507,8 +514,9 @@ class RootEventProvider:
 
 
 def settle(root, leaf_id):
-    root, config, _, _ = load(root)
+    root = b.canonical_root(str(root))
     with b.locked(root):
+        root, config, _, _ = load(root)
         dest, p, record = _authenticated(root, config, leaf_id)
         require(not (dest / "settlement.json").exists(), "settlement already recorded; inspect actual state instead of replay")
         from deck_master import tasks
@@ -547,8 +555,9 @@ def settle(root, leaf_id):
 
 
 def reconcile_settlement(root, leaf_id, observations_path):
-    root, config, _, _ = load(root)
+    root = b.canonical_root(str(root))
     with b.locked(root):
+        root, config, _, _ = load(root)
         dest, p, _ = _authenticated(root, config, leaf_id)
         from deck_master import generation
         c.installation(config, p["scope_binding"]["arm"])

@@ -138,6 +138,14 @@ It appends a global hash-linked reservation before its local mark. A crash
 between those writes retains the charge. Unknown, rejected, unusable, late or
 partially settled calls never free it, and no command resends it.
 
+Every preparation/dispatch/seal/settlement/reconciliation write loads and
+validates the current legacy frontier **after acquiring the same original bf
+lock**. Accounting inspection and the begin guard's campaign-budget snapshot
+use that lock as well. A successful check made before waiting for the lock is
+insufficient: an old writer could append while the new caller waits. Such a
+change now refuses before a typed charge or dispatch marker is published.
+Initial epoch registration already captures legacy files inside this same lock.
+
 Root now calls the real image tool once with the saved
 `literal-tool-arguments.json` **unchanged**, then records the complete original
 tool response and original PNG bytes using the bf callback shape:
