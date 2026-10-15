@@ -10,7 +10,7 @@ from deck_master.pipeline import artifact
 from deck_master.production import project_prompt
 from deck_master.text_sources import prompt_sections
 from deck_master.web import WorkbenchServer
-from test_workbench_reads import make_project, mixed_project, commit
+from test_workbench_reads import make_project, mixed_project, commit, allow_blueprint_preparation
 from test_workbench_services import http, auth
 from test_generation_protocol import flow, start, freeze, begin, settle, accept
 
@@ -118,8 +118,9 @@ def test_new_generation_request_exact_text_can_be_selected_and_drafted(tmp_path)
     service.create(project, brief='synthetic', draft={'pages': [{'schema_version': 'deck_page_package.v2', 'page_id': 'p1',
                    'customer_visible': {'title': 'synthetic', 'body_blocks': []},
                    'visual_spec': {'intent': 'test', 'reference_mode': 'new_design'}}]}, project_format='workbench.v3')
+    allow_blueprint_preparation(project, ['p1'])
     task = service.continue_project(project)['pending_tasks'][0]
-    service.task_start(project, task_id=task['task_id'], execution_ref='test:synthetic', supported_protocols=[generation.PROTOCOL], capabilities=generation.CAPABILITIES)
+    service.task_start(project, task_id=task['task_id'], execution_ref='test:synthetic', supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
     store = Store(project)
     generation.freeze(project, task_id=task['task_id'], input=task['generation_input'], base_revision=store.current_revision_id(), operation_id='freeze')
     lineage = workbench.page_lineage(project, 'p1')
@@ -210,6 +211,7 @@ def test_submitted_prompt_selection_preserves_original_bytes(tmp_path):
 
 def test_old_prepared_text_has_its_own_recorded_locator(tmp_path):
     project, store = make_project(tmp_path, 1)
+    allow_blueprint_preparation(project, ['p01'])
     task = service.continue_project(project)['pending_tasks'][0]
     assert task['kind'] == 'blueprint'
     lineage = workbench.page_lineage(project, 'p01')

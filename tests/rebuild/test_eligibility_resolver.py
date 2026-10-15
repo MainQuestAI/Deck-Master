@@ -428,7 +428,8 @@ def test_page_manifest_fixes_the_authorized_page_set(tmp_path):
             "basis": {"revision_id": "plan-basis-1", "input_digest": "0" * 64},
             "previous_ref": None, "mode": "planned", "narrative_ref": None,
             "imported_manuscript": None,
-            "input": {"schema_version": "content_plan_input.v2", "chapters": [],
+            "input": {"schema_version": "content_plan_input.v2", "chapters": [
+                          {"chapter_id": "c1", "title": "L1 fixed page manifest", "page_ids": ["p1", "p2"]}],
                       "page_order": ["p1", "p2"], "page_roles": [
                           {"page_id": "p1", "role": "opening", "audience_question": "q",
                            "intended_takeaway": "t", "narrative_node_ids": [],

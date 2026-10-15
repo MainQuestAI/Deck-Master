@@ -49,7 +49,11 @@ def _narrative():
                 "observable_success": "能解释人工确认", "use_mode": "live", "primary_use": "live"},
             "central_node_id": "n1", "nodes": [{"node_id": "n1", "role": "claim",
                 "statement": "人工承担确认责任", "authority": "instruction", "source_links": [],
-                "qualification_node_ids": [], "unresolved_issue_ids": []}],
+                "qualification_node_ids": ["q1"], "unresolved_issue_ids": []}] + [
+                {"node_id": identity, "role": "qualification", "statement": text,
+                 "authority": "instruction", "source_links": [], "qualification_node_ids": [], "unresolved_issue_ids": []}
+                for identity, text in (("q1", "仅比较指定记录，不外推节约率。"),
+                                       ("q-new", "新的适用限制"), ("q-other", "另一页限定"))],
             "edges": [], "issues": [], "alternatives": [], "previous_ref": None}
 
 
@@ -98,7 +102,7 @@ def _snapshot(tmp_path, *, imported=False, legacy=False):
     models.require_writer(doc, "rc3.v1")
     roles = [{"page_id": pid, "role": "明确人工责任", "audience_question": "谁确认？原值",
               "intended_takeaway": "人工确认后才提交；不省略", "narrative_node_ids": [] if imported else ["n1"],
-              "source_links": [], "required_qualifications": ["仅比较指定记录，不外推节约率。"],
+              "source_links": [], "required_qualifications": ["仅比较指定记录，不外推节约率。"] if imported else ["q1"],
               "content_profile": "mixed", "density_rationale": "必须同时保留两主体、成本单位及人工确认链；这是原文。",
               "timing_seconds": 45, "transition_to_next": "转入例外条件"} for pid in ("p1", "p2")]
     plan = {"schema_version": "content_plan.v2", "plan_id": "plan-1", "version": 1,

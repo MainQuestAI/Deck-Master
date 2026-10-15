@@ -26,20 +26,13 @@ def _get_json(url: str) -> dict:
 
 
 def _prepared_project(tmp_path: Path) -> tuple[Path, str]:
-    material = tmp_path / "material.txt"
-    material.write_text("正文材料\n(尾部约束)合成数据不可回写。", encoding="utf-8")
-    project = tmp_path / "proj"
-    service.create(project, brief="设备运维汇报", sources=[material])
-    response = service.continue_project(project)
-    task = response["pending_tasks"][0]
+    # The reader consumes the actual fixed manuscript through public intake;
+    # it never submits an old full-manuscript envelope to a framing proposal.
+    material = tmp_path / 'material.txt'
+    material.write_text('正文材料\n(尾部约束)合成数据不可回写。', encoding='utf-8')
+    project = tmp_path / 'proj'
     envelope = json.loads((ENVELOPES / "compose.json").read_text())
-    service.accept_result(
-        project,
-        task_id=task["task_id"],
-        operation_id=task["operation_id"],
-        produced_against=task["produced_against"],
-        result_payload=envelope,
-    )
+    service.create(project, brief='设备运维汇报', sources=[material], draft={'pages':envelope['pages']})
     return project, "p09"
 
 
@@ -261,6 +254,12 @@ def test_feedback_stays_awaiting_host_until_real_execution(tmp_path: Path) -> No
     from deck_master.store import Store
     project, _ = _prepared_project(tmp_path)
     store = Store(project)
+    from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
+    settle_fidelity_review(project, page_ids=['p09'], execution_ref='L1-feedback-fidelity', scenario='Fixed T05 manuscript before repair')
+    scope={**store.load_document()['collaboration']['request']['scope'],'page_ids':['p09'],'layers':['page_copy','svg']}
+    authorize_scope(project, actions=['dispatch.host_task'], scope=scope, max_external_calls=0,
+        max_candidate_count=0, adoption_policy='within_scope', evidence=evidence_for(project,
+            text='L1: one exact page repair workorder, no external image call.', locator='L1:T05-feedback'))
     server = WorkbenchServer(project)
     url = server.start().rstrip("/")
     try:
@@ -273,7 +272,9 @@ def test_feedback_stays_awaiting_host_until_real_execution(tmp_path: Path) -> No
         pending = [t for t in view["pending_tasks"] if t["task_id"] == result["task_id"]]
         assert pending and pending[0]["status"] == "awaiting_host", "no fake running"
         # Real execution claim moves the task to running in the same view.
-        service.task_start(project, task_id=result["task_id"], execution_ref="exec-e2e")
+        task_record=next(store.read_object_json(ref) for ref in store.load_document()['tasks'] if store.read_object_json(ref)['task_id']==result['task_id'])
+        service.task_start(project, task_id=result["task_id"], execution_ref="exec-e2e",
+            supported_protocols=[task_record['protocol_version']], capabilities=task_record['required_capabilities'])
         running_view = _get_json3(f"{url}/api/view")
         running = [t for t in running_view["pending_tasks"] if t["task_id"] == result["task_id"]]
         assert running and running[0]["status"] == "running"
@@ -284,6 +285,11 @@ def test_feedback_stays_awaiting_host_until_real_execution(tmp_path: Path) -> No
         import copy
         changed = copy.deepcopy(page)
         changed["customer_visible"]["footnotes"] = [{"id": "fn-1", "text": "辅助说明。"}]
+        from deck_master.content import atom_ids
+        changed['content_mapping']['visible_links']=[link for link in changed['content_mapping']['visible_links']
+            if link['element_ref'] in atom_ids(changed)]
+        changed['content_mapping']['visible_links'].append({'element_ref':'atom:p09:footnote:fn-1:text',
+            'narrative_node_ids':[], 'source_links':[]})
         service.accept_result(project, task_id=result["task_id"],
                               operation_id=next(t["operation_id"] for t in [store.read_object_json(r) for r in task["tasks"]] if t["task_id"] == result["task_id"]),
                               produced_against=next(t["produced_against"] for t in [store.read_object_json(r) for r in task["tasks"]] if t["task_id"] == result["task_id"]),

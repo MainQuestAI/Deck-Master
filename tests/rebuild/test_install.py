@@ -309,6 +309,87 @@ import venv as _venv
 ENVELOPES = REPO / "docs" / "specs" / "deck-master-rebuild-v1" / "examples" / "roundtrips" / "result-envelope"
 
 
+def _confirmed_draft_file(work, *, remove_relations=False):
+    draft = {'pages': _json.loads((ENVELOPES / 'compose.json').read_text())['pages']}
+    if remove_relations:
+        for page in draft['pages']:
+            page.get('visual_spec', {}).pop('nodes', None)
+            page.get('visual_spec', {}).pop('edges', None)
+    path = work / 'confirmed-manuscript.json'
+    path.write_text(_json.dumps(draft, ensure_ascii=False))
+    return path
+
+
+def _iso_fixture(venv, home, work, project, action, **values):
+    """Auditable L1 driver: test helpers copied as text, only installed SDK runs."""
+    import inspect
+    import textwrap
+    import uuid
+    from rc3_fixtures import (evidence_for, authorize_scope, claim_fixture_task,
+        submit_host_fixture, settle_fidelity_review, accept_synthetic_blueprint, call_facts)
+    from test_service_flow import _prepare_production, _authorize_replacement_image
+    from page_visual_helpers import make_page_reviews
+    functions = [evidence_for, authorize_scope, claim_fixture_task, submit_host_fixture,
+        settle_fidelity_review, accept_synthetic_blueprint, call_facts,
+        _prepare_production, _authorize_replacement_image, make_page_reviews]
+    header = 'import json, sys, uuid\nfrom pathlib import Path\nfrom deck_master import collaboration, service, generation, tasks\nfrom deck_master.store import Store\n'
+    main = textwrap.dedent('''
+        request = json.loads(Path(sys.argv[1]).read_text())
+        project = Path(request['project'])
+        action = request['action']
+        if action == 'prepare':
+            result = _prepare_production(project,
+                actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+                max_external_calls=request['max_external_calls'],
+                scenario='L1 installed confirmed-manuscript production with explicitly bounded image calls')
+        elif action == 'generation_result':
+            result = accept_synthetic_blueprint(project, task=request['task'],
+                result_payload=request['result_payload'], execution_ref='L1-installed-blueprint',
+                scenario='L1 protected synthetic completion; not real native/model quality or fee evidence', adopt=False)
+        elif action == 'page_reviews':
+            result = {'kind': 'review', 'reviews': make_page_reviews(request['task'])}
+        elif action == 'renew_image':
+            _authorize_replacement_image(project, page_id=request['page_id'],
+                scenario='Explicit one-image synchronization after the isolated title edit')
+            result = settle_fidelity_review(project,
+                page_ids=[e['page_id'] for e in Store(project).load_document()['pages']],
+                execution_ref='L1-installed-revised-fidelity', scenario='Actual revised confirmed manuscript before its new approved image')
+        elif action == 'freeze':
+            store = Store(project)
+            task = tasks._lookup_task(store.load_document(), request['task']['task_id'], store)
+            prepared = generation.prepared_input(store, store.load_document(), task)
+            prepared['parameters'] = {'transparent_background': False}
+            result = generation.freeze(project, task_id=task['task_id'], input=prepared,
+                base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+        elif action == 'facts':
+            store = Store(project)
+            doc = store.load_document()
+            result = {'calls': call_facts(project), 'pages': doc['pages'], 'outputs': doc['outputs'],
+                'output_file': store.read_object_json(doc['outputs']['pptx'])['file'] if doc['outputs']['pptx'] else None}
+        else:
+            raise AssertionError(action)
+        origins = {name: str(Path(module.__file__).resolve()) for name, module in sys.modules.items()
+            if name.startswith('deck_master') and getattr(module, '__file__', None)}
+        assert origins and all(Path(path).is_relative_to(Path(sys.prefix).resolve()) for path in origins.values())
+        print(json.dumps({'result': result, 'module_origins': origins, 'interpreter': sys.executable,
+            'evidence_level': 'L1_SYNTHETIC', 'professional_acceptance': 'not_evaluated'}, ensure_ascii=False))
+    ''')
+    script = work / 'l1-installed-fixture.py'
+    script.write_text(header + '\n\n'.join(inspect.getsource(fn) for fn in functions) + '\n' + main)
+    invocation = action + '-' + uuid.uuid4().hex
+    request = work / ('l1-' + invocation + '-input.json')
+    request.write_text(_json.dumps({'project': str(project), 'action': action, **values}, ensure_ascii=False))
+    response = subprocess.run([str(venv / 'bin/python'), '-I', str(script), str(request)],
+        capture_output=True, text=True, timeout=120, env=_isolated_env(venv, home), cwd=str(work))
+    assert response.returncode == 0, response.stderr
+    payload = _json.loads(response.stdout)
+    assert all(Path(path).is_relative_to(venv) and not Path(path).is_relative_to(REPO)
+               for path in payload['module_origins'].values())
+    payload['driver_sha256'] = hashlib.sha256(script.read_bytes()).hexdigest()
+    (work / ('l1-' + invocation + '-evidence.json')).write_text(_json.dumps(payload, ensure_ascii=False, indent=2))
+    return payload['result']
+
+
 @pytest.fixture(scope="module")
 def dist_artifacts(tmp_path_factory):
     _ensure_pip()
@@ -394,6 +475,9 @@ def _iso_run(venv: Path, args, home: Path, cwd: Path):
             payload = _json.loads(result.stdout)
         except _json.JSONDecodeError:
             payload = {"raw": result.stdout}
+    with (cwd / 'isolated-cli.jsonl').open('a') as evidence:
+        evidence.write(_json.dumps({'interpreter': str(venv / 'bin/python'), 'args': list(args),
+            'returncode': result.returncode, 'payload': payload, 'stderr': result.stderr}, ensure_ascii=False) + '\n')
     return result.returncode, payload, result.stderr
 
 
@@ -494,6 +578,19 @@ def _adopt(venv, home, work, project, kind, envelope, staged=None):
         staging.mkdir(parents=True, exist_ok=True)
         for name, data in staged.items():
             (staging / name).write_bytes(data)
+    if kind == 'blueprint':
+        prepared = _iso_fixture(venv, home, work, project, 'generation_result',
+            task=task, result_payload=envelope)
+        assert prepared['status'] == 'prepared_for_cli_adoption'
+        envelope = prepared['result_payload']
+    else:
+        claim = ['task', 'start', '--project', str(project), '--task-id', task['task_id'],
+                 '--execution-ref', 'synthetic-l1-page-review' if kind == 'review' else 'synthetic-l1-host',
+                 '--supported-protocol', task['protocol_version']]
+        for capability in task['required_capabilities']:
+            claim += ['--capability', capability]
+        code, claimed, err = _iso_run(venv, claim, home, work)
+        assert code == 0, (claimed, err)
     envelope_path = work / f"envelope-{kind}.json"
     envelope_path.write_text(_json.dumps(envelope, ensure_ascii=False))
     code, payload, err = _iso_run(venv, ["task", "accept", "--project", str(project),
@@ -502,6 +599,15 @@ def _adopt(venv, home, work, project, kind, envelope, staged=None):
                                          "--result", str(envelope_path)], home, work)
     assert code == 0, (payload, err)
     return payload
+
+
+def _review_current_page(venv, home, work, project):
+    code, pending, err = _iso_run(venv, ['continue', '--project', str(project)], home, work)
+    assert code == 3, (pending, err)
+    task = pending['pending_tasks'][0]
+    assert task['review_stage'] == 'page_visual'
+    envelope = _iso_fixture(venv, home, work, project, 'page_reviews', task=task)
+    return _adopt(venv, home, work, project, 'review', envelope)
 
 
 @pytest.mark.render
@@ -515,13 +621,10 @@ def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
     material = _write_material(work)
 
     code, payload, _ = _iso_run(wheel_venv, ["create", "--brief", "隔离全链", "--source", str(material),
-                                             "--out", str(project)], home, work)
+                                             "--out", str(project), '--draft',
+                                             str(_confirmed_draft_file(work, remove_relations=True))], home, work)
     assert code == 0, payload
-    compose = _json.loads((ENVELOPES / "compose.json").read_text())
-    for page in compose["pages"]:
-        page.get("visual_spec", {}).pop("nodes", None)
-        page.get("visual_spec", {}).pop("edges", None)
-    _adopt(wheel_venv, home, work, project, "compose", compose)
+    _iso_fixture(wheel_venv, home, work, project, 'prepare', max_external_calls=1)
 
     png = work / "reference.png"
     _Image.new("RGB", (64, 36), (245, 246, 250)).save(png)
@@ -632,6 +735,7 @@ def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
                                 "provenance": {"source_type": "unknown", "tool": "host-reconstruct",
                                                "invocation_ref": None}}]},
            staged={"page.svg": _svg_for_page(view, blueprint_sha)})
+    _review_current_page(wheel_venv, home, work, project)
 
     code, report, err = _iso_run(wheel_venv, ["build", "--project", str(project)], home, work)
     assert code == 0, (report, err)
@@ -640,6 +744,9 @@ def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
                                              "--out", str(work / "review-out"), "--purpose", "review"], home, work)
     assert code == 0, outcome
     assert (work / "review-out" / "deck.pptx").is_file()
+    original = _iso_fixture(wheel_venv, home, work, project, 'facts')
+    original_ppt_bytes = (project / original['output_file']['path']).read_bytes()
+    original_blueprint_bytes = (project / original['pages'][0]['blueprint']['path']).read_bytes()
 
     # T20.03: single-page edit, host re-delivers SVG, re-assemble.
     code, view, _ = _iso_run(wheel_venv, ["next-step", "--project", str(project)], home, work)
@@ -657,6 +764,15 @@ def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
                                               "--page-hash", entry["slots"]["content"]["sha256"],
                                               "--operation-id", "iso-edit-1"], home, work)
     assert code == 0, (edited, err)
+    code, blocked, _ = _iso_run(wheel_venv, ['continue', '--project', str(project)], home, work)
+    assert blocked['status'] == 'needs_input' and not blocked['pending_tasks']
+    blocked_facts = _iso_fixture(wheel_venv, home, work, project, 'facts')
+    assert blocked_facts['calls']['tasks'] == original['calls']['tasks']
+    assert (project / original['output_file']['path']).read_bytes() == original_ppt_bytes
+    assert (project / original['pages'][0]['blueprint']['path']).read_bytes() == original_blueprint_bytes
+    _iso_fixture(wheel_venv, home, work, project, 'renew_image', page_id='p09')
+    _adopt(wheel_venv, home, work, project, 'blueprint', blueprint_envelope,
+           staged={'reference.png': png.read_bytes()})
     code, view, _ = _iso_run(wheel_venv, ["next-step", "--project", str(project)], home, work)
     _adopt(wheel_venv, home, work, project, "reconstruct",
            {"kind": "reconstruct",
@@ -665,6 +781,7 @@ def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
                                 "provenance": {"source_type": "unknown", "tool": "host-reconstruct",
                                                "invocation_ref": None}}]},
            staged={"page.svg": _svg_for_page(view, blueprint_sha)})
+    _review_current_page(wheel_venv, home, work, project)
     code, report, _ = _iso_run(wheel_venv, ["build", "--project", str(project)], home, work)
     assert code == 0 and report["status"] == "pass", report
 
@@ -689,10 +806,9 @@ def test_isolated_non_default_canvas_font_logo_and_relocation(sdist_venv, tmp_pa
     design_file.write_text(_json.dumps(design, ensure_ascii=False))
     project = work / "canvas-proj"
     code, payload, _ = _iso_run(sdist_venv, ["create", "--brief", "画布验收", "--source", str(_write_material(work)),
-                                             "--out", str(project), "--design", str(design_file)], home, work)
+                                             "--out", str(project), "--design", str(design_file),
+                                             '--draft', str(_confirmed_draft_file(work))], home, work)
     assert code == 0, payload
-    compose = _json.loads((ENVELOPES / "compose.json").read_text())
-    _adopt(sdist_venv, home, work, project, "compose", compose)
 
     moved = tmp_path / "relocated" / "canvas-proj"
     moved.parent.mkdir()
@@ -722,44 +838,49 @@ def test_isolated_call_budget_and_cancel_via_cli(wheel_venv, tmp_path):
     work.mkdir()
     project = work / "budget-proj"
     code, payload, _ = _iso_run(wheel_venv, ["create", "--brief", "额度验收", "--source", str(_write_material(work)),
-                                             "--out", str(project)], home, work)
+                                             "--out", str(project), '--draft',
+                                             str(_confirmed_draft_file(work))], home, work)
     assert code == 0, payload
-    compose_envelope = work / "compose-env.json"
-    compose_envelope.write_text((ENVELOPES / "compose.json").read_text())
-    code, created_task, _ = _iso_run(wheel_venv, ["continue", "--project", str(project)], home, work)
-    code, _, err = _iso_run(wheel_venv, ["task", "accept", "--project", str(project),
-                                         "--task-id", created_task["pending_tasks"][0]["task_id"],
-                                         "--operation-id", created_task["pending_tasks"][0]["operation_id"],
-                                         "--produced-against", created_task["pending_tasks"][0]["produced_against"],
-                                         "--result", str(compose_envelope)], home, work)
-    assert code == 0, err
+    # Keep one authorized call unused so cancellation itself must prevent a
+    # repeat, independently of the earlier call's consumption.
+    _iso_fixture(wheel_venv, home, work, project, 'prepare', max_external_calls=2)
     code, pending, _ = _iso_run(wheel_venv, ["continue", "--project", str(project)], home, work)
     task = pending["pending_tasks"][0]
     assert task["kind"] == "blueprint"
     # Allowance repair happens on the next continue (dispatch and repair are separate passes).
     _iso_run(wheel_venv, ["continue", "--project", str(project)], home, work)
-    code, _, _ = _iso_run(wheel_venv, ["task", "start", "--project", str(project),
-                                       "--task-id", task["task_id"], "--execution-ref", "iso-exec-1"], home, work)
+    claim = ['task', 'start', '--project', str(project), '--task-id', task['task_id'],
+             '--execution-ref', 'iso-exec-1', '--supported-protocol', task['protocol_version']]
+    for capability in task['required_capabilities']:
+        claim += ['--capability', capability]
+    code, _, _ = _iso_run(wheel_venv, claim, home, work)
     assert code == 0
+    frozen = _iso_fixture(wheel_venv, home, work, project, 'freeze', task=task)
     code, begun, begin_err = _iso_run(wheel_venv, ["task", "call", "begin", "--project", str(project),
                                                    "--task-id", task["task_id"], "--allowance-id", "call-1",
-                                                   "--execution-ref", "iso-exec-1"], home, work)
+                                                   "--execution-ref", "iso-exec-1", '--request-id', frozen['request_id']], home, work)
     assert code == 0 and begun["status"] == "started", (begun, begin_err[:300])
     code, refused, _ = _iso_run(wheel_venv, ["task", "call", "settle", "--project", str(project), "--task-id", task["task_id"],
-                                             "--allowance-id", "call-1", "--outcome", "consumed"], home, work)
+                                             "--allowance-id", "call-1", "--outcome", "consumed",
+                                             '--attempt-id', begun['attempt_id']], home, work)
     assert code == 2, "consumed requires a real execution report"
     report = work / "tool-report.json"
-    report.write_text(_json.dumps({"tool": "image-gen", "calls": 1}))
+    report.write_text(_json.dumps({'evidence_level': 'L1_SYNTHETIC',
+        'observation': 'Host reports one synthetic fixture call consumed; no native completion or fee receipt.'}))
     code, settled, _ = _iso_run(wheel_venv, ["task", "call", "settle", "--project", str(project), "--task-id", task["task_id"],
                                              "--allowance-id", "call-1", "--outcome", "consumed",
-                                             "--report", str(report), "--invocation-ref", "iso-inv-1"], home, work)
+                                             "--report", str(report), "--invocation-ref", "iso-inv-1",
+                                             '--attempt-id', begun['attempt_id']], home, work)
     assert code == 0 and settled["status"] == "settled", settled
     code, _, _ = _iso_run(wheel_venv, ["task", "cancel", "--project", str(project),
                                        "--task-id", task["task_id"], "--reason", "iso stop"], home, work)
     assert code == 0
+    cancelled = _iso_fixture(wheel_venv, home, work, project, 'facts')
     code, conflict, _ = _iso_run(wheel_venv, ["task", "call", "begin", "--project", str(project), "--task-id", task["task_id"],
-                                              "--allowance-id", "call-1", "--execution-ref", "iso-exec-1"], home, work)
+                                              "--allowance-id", "call-1", "--execution-ref", "iso-exec-1",
+                                              '--request-id', frozen['request_id']], home, work)
     assert code == 5, "cancelled task cannot reacquire calls"
+    assert _iso_fixture(wheel_venv, home, work, project, 'facts')['calls'] == cancelled['calls']
 
 
 # ---------------------------------------------------------------------------

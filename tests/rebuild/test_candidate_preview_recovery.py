@@ -13,9 +13,9 @@ from test_icon_quality import icon_store, confirm, input_for, dispatch, start, a
 
 
 @pytest.fixture
-def context(created_store, monkeypatch):
+def context(icon_store, monkeypatch):
     identity = {"candidate_ref": {"sha256": "candidate"}}
-    value = (created_store, {}, {}, {}, {}, {}, b"", {}, {}, identity, "a" * 64)
+    value = (icon_store, {}, {}, {}, {}, {}, b"", {}, {}, identity, "a" * 64)
     monkeypatch.setattr(preview, "_context", lambda *args: value)
     return value
 

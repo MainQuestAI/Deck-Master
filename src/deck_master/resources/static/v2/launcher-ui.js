@@ -164,7 +164,13 @@ export async function launcher(root, health) {
         if (!result.registered) throw new Error('项目已完整建立，但未能登记；请重新登记并打开这个位置，不要重复创建。');
         await open(result.project.entry_id);
       } catch (failure) {
-        error.textContent = readableError(failure);
+        // Translate only the known hard-limit failure and its safe integer.
+        // Arbitrary exception prose may contain private paths or identities.
+        const hardLimit=(failure.path||failure.field)==='draft/page_order'&&
+          /^actual manuscript exceeds the provided hard maximum page_limit=(\d+)$/.exec(failure.message);
+        error.textContent=hardLimit&&Number.isSafeInteger(Number(hardLimit[1]))&&Number(hardLimit[1])>0?
+          `确认稿有 ${manuscript.pages.length} 页，超过本次明确页数上限 ${hardLimit[1]} 页。原文件与输入保留。请调整完整稿件或页数上限后重试。`:
+          readableError(failure);
         const lost = !created && (!failure.status || failure.status >= 500 || failure.code === 'invalid_response');
         if (created) error.append(' ', recovery(created));
         else if (lost) {

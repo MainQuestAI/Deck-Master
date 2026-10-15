@@ -216,11 +216,15 @@ def route_request(text: str) -> dict:
         r'^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我)\s*)*(?:只审|只读|审查|审稿|审阅|复核|审核)', normalized)
         or re.search(r'^(?:(?:please|only|just|can you|could you)\s+)*'
             r'(?:review|audit|critique|inspect)\b', normalized))
+    coordination_command = bool(re.search(
+        r'^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我)\s*)*(?:协调|统筹|编排|衔接)', normalized)
+        or re.search(r'^(?:(?:please|only|just|can you|could you)\s+)*'
+            r'(?:coordinate|orchestrate)\b', normalized))
     if explicit:
         skill = explicit[0] if len(set(explicit)) == 1 else "deck-master"
     elif review_command:
         skill = "deck-review"
-    elif recovery or any(word in normalized for word in ("完整ppt", "整套ppt", "完整作品", "full deck", "complete deck")):
+    elif recovery or coordination_command or any(word in normalized for word in ("完整ppt", "整套ppt", "完整作品", "full deck", "complete deck")):
         skill = "deck-master"
     elif any(word in normalized for word in ("样页", "设计方案", "视觉方案", "版式", "sample page", "design", "layout")):
         skill = "deck-design"

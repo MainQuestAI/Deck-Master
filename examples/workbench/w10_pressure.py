@@ -43,7 +43,7 @@ def prepare_usability_fixture(project, *, history_count=45):
         base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))['operation_result']
     task = tasks._lookup_task(store.load_document(), analysis['task_id'], store)
     service.task_start(project, task_id=task['task_id'], execution_ref='synthetic-pressure-analysis',
-        supported_protocols=['changes.v1'], capabilities=['visual_reference'])
+        supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
     result = {'kind':'style_analyze', 'style_analysis':{
         'dimensions':{key:{'summary':'SYNTHETIC read-pressure '+key,
             'evidence':[{'reference_id':imported['reference_id'], 'region':[0,0,1,1],

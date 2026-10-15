@@ -15,6 +15,8 @@ from deck_master.editing import review_status
 from deck_master.models import content_identity
 from deck_master import tasks as tasks_mod
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task
+from test_export import _authorize_delivery
 
 
 def ref(seed, ext='json'):
@@ -157,27 +159,23 @@ def _project_with_passing_reviews(tmp_path):
     bumped['pages'][0]['svg'] = adopt_artifact(store, svg, 'svg', page_id='p1')
     bumped['pages'][0]['ppt_preview'] = adopt_artifact(store, svg, 'ppt_preview', page_id='p1')
     store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id='attach-pptx')
+    _authorize_delivery(store)
     for kind in review_mod.REQUIRED_KINDS:
-        task = tasks_mod.new_task(
-            task_id=f'review-{kind}', operation_id=f'op-{kind}', kind='review', scope_pages=['p1'],
-            instruction='review', inputs=[store.load_document()['pages'][0]['page']],
-            dependencies=[], dispatch_revision=store.load_document()['revision_id'],
-            produced_against=content_identity(store.load_document()))
-        task_ref = store.put_json_object(task)
-        doc = store.load_document()
-        bumped = tasks_mod.bump_revision(doc, {'operation_id': f'dispatch-{kind}', 'kind': 'task_update',
-                                               'description': 'open', 'read_set': []})
-        bumped['tasks'] = list(bumped.get('tasks') or []) + [task_ref]
-        store.commit_change(base_revision=doc['revision_id'], document=bumped, operation_id=f'dispatch-{kind}')
+        task = service.open_host_task(store, kind='review', page_ids=['p1'],
+            instruction='L1 synthetic final review interpretation unit: ' + kind,
+            review_stage='final', extra_inputs=[store.load_document()['outputs']['pptx']])
+        assert task['collaboration_binding']['phase'] == 'review'
+        assert {'collaboration.v1', 'rc3-entry.v1'} <= set(task['required_capabilities'])
+        claim_fixture_task(project, task, execution_ref='L1-review-unity')
         doc = store.load_document()
         subjects = [doc['outputs']['pptx'], doc['pages'][0]['page']]
         envelope = {'kind': 'review', 'files': [], 'reviews': [{
             'schema_version': 'deck_review.v1', 'review_id': f'rv-{kind}', 'kind': kind, 'status': 'pass',
             'subjects': subjects,
             'dependencies': [{'kind': 'content', 'identity': 'page:p1', 'sha256': doc['pages'][0]['page']['sha256']}],
-            'reviewer': {'type': 'host_self', 'id': 'host-1', 'execution_ref': None,
+            'reviewer': {'type': 'host_self', 'id': 'L1-synthetic-review-host', 'execution_ref': 'L1-review-unity',
                          'independence_confirmed': False},
-            'observations': ['实际检查'], 'findings': [], 'created_at': '2026-09-20T00:00:00Z',
+            'observations': ['L1 synthetic interpretation unit; no independent/human/native review claimed'], 'findings': [], 'created_at': '2026-09-20T00:00:00Z',
             'replaces': None}]}
         service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
                               produced_against=task['produced_against'], result_payload=envelope)

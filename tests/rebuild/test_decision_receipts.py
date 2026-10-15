@@ -18,6 +18,8 @@ import pytest
 from deck_master import candidates, operations, samples
 from deck_master.models import canonical_json_bytes, sha256_bytes
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task
+from test_service_flow import _prepare_production
 
 V2 = Path(__file__).resolve().parents[2] / 'src/deck_master/resources/static/v2'
 
@@ -50,6 +52,9 @@ def test_legacy_decision_pending_recovers_with_reekind_digest(tmp_path):
     与服务端规范 kind 的 digest 匹配 → 收据核对不再静默跳过。"""
     project = tmp_path / 'legacy-pending'
     samples.create_sample(project, page_count=1, readonly=False)
+    _prepare_production(project, actions=['change.commit', 'candidate.decide'],
+        max_external_calls=0, max_candidate_count=1,
+        scenario='L1 receipt digest/terminal protocol: one local SVG candidate, no image or human evidence')
     store = Store(project)
     doc = store.load_document()
     # 服务端：先产生一个真实 keep 决定（规范 kind 的 digest 可从提交信封取得）
@@ -63,8 +68,7 @@ def test_legacy_decision_pending_recovers_with_reekind_digest(tmp_path):
     plan = changes.plan(project, input=intent)
     result = changes.commit(project, plan_id=plan['plan_id'], base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
     task = tasks._lookup_task(store.load_document(), result['operation_result']['task_ids'][0], store)
-    service.task_start(project, task_id=task['task_id'], execution_ref='legacy-test',
-                       supported_protocols=['changes.v1'], capabilities=['change_plan', 'candidate_result'])
+    claim_fixture_task(project, task, execution_ref='legacy-test')
     doc = store.load_document()
     task = tasks._lookup_task(doc, task['task_id'], store)
     staging = store.staging_dir / task['operation_id']
@@ -119,6 +123,9 @@ def test_unchanged_response_is_terminal_for_client(tmp_path):
     """P1：unchanged 终态信封通过前端判定（身份+摘要一致），不再进待核实。"""
     project = tmp_path / 'unchanged-terminal'
     samples.create_sample(project, page_count=1, readonly=False)
+    _prepare_production(project, actions=['change.commit', 'candidate.decide'],
+        max_external_calls=0, max_candidate_count=1,
+        scenario='L1 receipt digest/terminal protocol: one local SVG candidate, no image or human evidence')
     store = Store(project)
     doc = store.load_document()
     op = str(uuid.uuid4())
@@ -137,8 +144,7 @@ def test_unchanged_response_is_terminal_for_client(tmp_path):
     plan = changes.plan(project, input=intent)
     result = changes.commit(project, plan_id=plan['plan_id'], base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
     task = tasks._lookup_task(store.load_document(), result['operation_result']['task_ids'][0], store)
-    service.task_start(project, task_id=task['task_id'], execution_ref='unchanged-test',
-                       supported_protocols=['changes.v1'], capabilities=['change_plan', 'candidate_result'])
+    claim_fixture_task(project, task, execution_ref='unchanged-test')
     doc = store.load_document()
     task = tasks._lookup_task(doc, task['task_id'], store)
     staging = store.staging_dir / task['operation_id']

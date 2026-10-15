@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import re
 from collections import Counter
 from datetime import datetime, timezone
 from functools import wraps
@@ -72,6 +73,26 @@ def task_instruction_summary(task):
                     '结果保存为候选，采用前不改动当前正文、页序或产物。')
     input_id = task.get('input_revision_id')
     prefix = f'输入已更新（operation {input_id}）：'
+    if task.get('protocol_version') == 'compose.v2' and task.get('intent') == 'input_revision' and input_id and text.startswith(prefix):
+        trial = text.endswith(trial_suffix)
+        body = text[:-len(trial_suffix)] if trial else text
+        modern_suffix = ('。读取新输入与 diff，提交 compose.v2 input_revision：changed_layers、'
+                         '每个变化层的 proposal Ref 与 diff。')
+        reason, marker, impact = body[len(prefix):].rpartition(modern_suffix)
+        # Only the literal core template plus its known impact-summary grammar
+        # is a wrapper. Additional user prose must remain complete, never be
+        # discarded by a loose prefix/substring sanitizer.
+        identity = r'[A-Za-z0-9][A-Za-z0-9_.-]*'
+        identities = identity + r'(?:, ' + identity + r')*'
+        task_field = r'(?:title|brief|audience|scenario|presentation_mode|presentation_mode_source|page_limit|existing_decisions)'
+        fields = task_field + r'(?:, ' + task_field + r')*'
+        part = (r'(?:(?:新增来源|移除来源|来源版本变化) [1-9][0-9]*'
+                r'|任务事实变化：' + fields + r'|受影响 claim：' + identities +
+                r'|受影响页面：' + identities + r'|没有页面直接引用变化的来源)')
+        known_impact = re.fullmatch(r' 影响分析：(本次没有材料或任务事实变化|' + part + r'(?:；' + part + r')*)。', impact)
+        if marker and (not impact or known_impact):
+            return (reason + ' · 核对新材料与全稿正文，只更新受影响内容。' + impact
+                    + (' 先返回候选，采用前保持当前稿。' if trial else ''))
     suffixes = {
         'input_revision': ('。读取新输入、变化说明与全稿概览，检查相关正文和跨页结论；提交 content_update，'
                            '只包含真正变化的完整 Page v2、新增/删除页 ID 和最终页序；无影响时给出具体 unchanged_reason。'),
@@ -89,8 +110,16 @@ def task_instruction_summary(task):
                         '未选页正文及目标不得改变。提交完整 content_plan 和 content_update，包含具体影响依据；不生成图片。')
     candidate_suffix = '当前为 trial：结果保存为候选，采用前不改动当前正文或页序。'
     if task.get('content_operation_ref'):
-        trial = text.endswith(candidate_suffix)
-        body = text[:-len(candidate_suffix)] if trial else text
+        body = text
+        if task.get('protocol_version') == 'compose.v2':
+            modern_operation = ('\n正式返回 compose_result.v2 variant=input_revision；changed_layers仅page_copy/plan；'
+                '每个变化页提交完整含映射的Page Ref，plan提交完整content_plan_input.v2 Ref；'
+                'diff列input_digest、真实changed_page_ids、removed_page_ids与完整page_order。未选页不得改变。')
+            if not body.endswith(modern_operation):
+                return text
+            body = body[:-len(modern_operation)]
+        trial = body.endswith(candidate_suffix)
+        body = body[:-len(candidate_suffix)] if trial else body
         for action, label in (('rewrite', '改写所选正文'), ('merge', '合并所选页'), ('split', '拆分所选页')):
             prefix = f'明确的内容操作 {action}：'
             if body.startswith(prefix) and body.endswith(operation_suffix):

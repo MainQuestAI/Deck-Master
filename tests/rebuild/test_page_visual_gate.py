@@ -32,7 +32,7 @@ def _accept(project, task, envelope, *, file_name=None, data=None):
                                  result_payload=envelope)
 
 
-def _start(project, page_id):
+def _start(project, page_id, *, svg_builder=_svg_for):
     store = Store(project)
     if not store.load_document()['collaboration']['authorizations']:
         _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
@@ -48,7 +48,7 @@ def _start(project, page_id):
     entry = next(e for e in store.load_document()['pages'] if e['page_id'] == page_id)
     blueprint_sha = store.read_object_json(entry['blueprint'])['file']['sha256']
     page = store.read_object_json(entry['page'])
-    svg = _svg_for(page).replace(b'<svg ', f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
+    svg = svg_builder(page).replace(b'<svg ', f'<svg data-blueprint-sha256="{blueprint_sha}" '.encode(), 1)
     return task, svg
 
 

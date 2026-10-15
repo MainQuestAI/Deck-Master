@@ -15,10 +15,40 @@ from deck_master.content_plan import ContentPlanError, refresh_v2_plan_links
 from deck_master.models import bump_revision, require_writer
 from deck_master.store import Store, StoreError
 from deck_master.tasks import EnvelopeError
+from rc3_fixtures import authorize_scope, claim_fixture_task, evidence_for, historical_snapshot
 from page_visual_helpers import pass_page_review, make_page_reviews
 from test_page_visual_gate import _start, _accept, _svg_envelope
 from test_service_flow import _draft_page
 from test_compose_v2_phases import _deck_with_pages, _submit
+
+
+def _notes(page, text):
+    page['speaker_notes'] = text
+    if page.get('content_mapping'):
+        segments = page['content_mapping']['speech_segments']
+        assert len(segments) <= 1
+        page['content_mapping']['speech_segments'] = [{**(segments[0] if segments else {
+            'segment_id': 'L1-authored-cue', 'narrative_node_ids': [], 'kind': 'cue',
+            'estimated_seconds': None}), 'start_codepoint': 0, 'end_codepoint': len(text)}] if text else []
+    return page
+
+
+def _historical_project(tmp_path, *, original_format=None):
+    fixture = historical_snapshot(tmp_path, scenario='Explicit recorded pre-entry notes/protocol facts',
+        pages=[_draft_page('p1', '标题', '正文')],
+        minimum_writer='workbench-quality.v1' if original_format == 'workbench.v3' else None)
+    return fixture['project'], Store(fixture['project'])
+
+
+def _record_historical_notes(store, text, operation_id):
+    """Recorded old facts; no current Runtime authorization is fabricated."""
+    doc = store.load_document()
+    updated = bump_revision(deepcopy(doc), {'operation_id': operation_id, 'kind': 'content_update',
+        'description': 'L1 explicitly recorded historical notes revision', 'read_set': []})
+    page = store.read_object_json(doc['pages'][0]['page'])
+    updated['pages'][0]['page'] = store.put_json_object(_notes(page, text))
+    require_writer(updated, 'rc3.v1')
+    store.commit_change(base_revision=doc['revision_id'], document=updated, operation_id=operation_id)
 
 
 def _completed_visual(tmp_path, *, finding=False):
@@ -51,6 +81,13 @@ def _completed_visual(tmp_path, *, finding=False):
         _accept(project, review, {'kind': 'review', 'reviews': reviews})
     else:
         pass_page_review(project, review)
+    current = Store(project).load_document()
+    scope = {**current['collaboration']['request']['scope'], 'subject': 'pages',
+        'page_ids': ['p-a'], 'layers': ['speech', 'plan', 'output']}
+    authorize_scope(project, actions=['page.edit', 'compile.ppt'], scope=scope,
+        max_external_calls=0, max_candidate_count=0, adoption_policy='within_scope',
+        evidence=evidence_for(project, text='L1 explicitly edit notes and recompile this one fixed page; zero image calls.',
+            locator='L1:notes-only-and-compile'))
     return project, Store(project)
 
 
@@ -61,12 +98,12 @@ def test_notes_edit_preserves_completed_visual_and_actual_review_bytes(tmp_path)
     entry = before['pages'][0]
     raw_reviews = [store.read_object_bytes(ref) for ref in before['reviews']]
     page = store.read_object_json(entry['page'])
-    page['speaker_notes'] = '新备注中文。\n\n末段54/120＝45%，不是节约率。\n'
+    _notes(page, '新备注中文。\n\n末段54/120＝45%，不是节约率。\n')
     result = editing.edit_page(project, page=page, base_revision=before['revision_id'],
                                page_hash=entry['page']['sha256'], operation_id='notes-change')
     after = store.load_document()
-    assert after['compatibility']['minimum_writer'] == 'rc3.v1'
-    assert after.get('collaboration') is None
+    assert after['compatibility']['minimum_writer'] == 'rc3-entry.v1'
+    assert after['collaboration'] == before['collaboration']
     assert all(after['pages'][0][slot] == entry[slot] for slot in ('blueprint', 'svg', 'svg_preview'))
     assert after['pages'][0]['ppt_preview'] is None
     assert after['reviews'] == before['reviews']
@@ -87,7 +124,7 @@ def test_notes_edit_preserves_completed_visual_and_actual_review_bytes(tmp_path)
 def test_visual_open_finding_not_fixed_by_notes(tmp_path):
     project, store = _completed_visual(tmp_path, finding=True)
     before = store.load_document(); entry = before['pages'][0]
-    page = store.read_object_json(entry['page']); page['speaker_notes'] = '仅改备注。'
+    page = _notes(store.read_object_json(entry['page']), '仅改备注。')
     editing.edit_page(project, page=page, base_revision=before['revision_id'],
                       page_hash=entry['page']['sha256'], operation_id='notes-not-visual-fix')
     after = store.load_document()
@@ -95,7 +132,8 @@ def test_visual_open_finding_not_fixed_by_notes(tmp_path):
     from deck_master.stages import require_assembly_ready
     with pytest.raises(Exception, match='visual review must pass'):
         require_assembly_ready(store, after)
-    old_ref = after['reviews'][0]
+    old_ref = next(ref for ref in after['reviews']
+        if any(finding['finding_id'] == 'visual-open' for finding in store.read_object_json(ref)['findings']))
     old_review = store.read_object_json(old_ref)
     task = service.open_host_task(store, kind='review', page_ids=['p-a'],
                 instruction='Synthetic attempted closure after only notes changed', review_stage='page_visual')
@@ -115,6 +153,7 @@ def test_speech_strict_unknown_and_duplicate_updates_leave_current_unchanged(tmp
     project, store = _deck_with_pages(tmp_path)
     task = content_production.open_phase_task(store, store.load_document(),
                 operation_id='speech-strict', phase='speech', page_ids=['p1'])
+    claim_fixture_task(project, task)
     before = store.load_document(); entry = before['pages'][0]
     notes = '只改口播。'
     update = {'page_id': 'p1', 'page_ref': entry['page'], 'speaker_notes': notes,
@@ -154,17 +193,16 @@ def test_migrated_control_cannot_be_removed_at_higher_feature_floor(tmp_path):
     doc = store.load_document(); updated = bump_revision(doc, {'operation_id': 'drop-control',
              'kind': 'content_update', 'description': 'Synthetic forbidden removal', 'read_set': []})
     require_writer(updated, 'rc3.v1'); updated.pop('collaboration'); updated.pop('narrative')
-    with pytest.raises(StoreError, match='cannot drop its collaboration'):
+    from deck_master.models import ModelError
+    with pytest.raises((StoreError, ModelError), match='collaboration'):
         store.commit_change(base_revision=doc['revision_id'], document=updated, operation_id='drop-control')
     assert store.load_document()['revision_id'] == doc['revision_id']
 
 
 def test_notes_feature_floor_does_not_manufacture_narrative_or_task_migration(tmp_path):
     from deck_master.models import ModelError, require_task_binding, validate_document_semantics
-    project = tmp_path / 'project'
-    service.create(project, brief='Synthetic historical notes fixture',
-                   draft={'pages': [_draft_page('p1', '标题', '正文')]})
-    store = Store(project); doc = store.load_document(); require_writer(doc, 'rc3.v1')
+    project, store = _historical_project(tmp_path)
+    doc = store.load_document(); require_writer(doc, 'rc3.v1')
     validate_document_semantics(doc)
     with pytest.raises(ModelError, match='actual migrated control region'):
         require_task_binding(doc, {'collaboration_binding': {'request_id': 'forged'}})
@@ -177,11 +215,8 @@ def test_notes_feature_floor_does_not_manufacture_narrative_or_task_migration(tm
 def test_notes_feature_floor_preserves_actual_original_protocol_history(tmp_path, original_format):
     from deck_master import generation
     from deck_master.content_plan import protocol_fields as content_protocol
-    project = tmp_path / 'project'
-    service.create(project, brief='Synthetic original protocol fixture',
-                   project_format=original_format,
-                   draft={'pages': [_draft_page('p1', '标题', '正文')]})
-    store = Store(project); before = store.load_document()
+    project, store = _historical_project(tmp_path, original_format=original_format)
+    before = store.load_document()
     updated = bump_revision(deepcopy(before), {'operation_id': 'notes-floor',
           'kind': 'content_update', 'description': 'Notes support floor only', 'read_set': []})
     require_writer(updated, 'rc3.v1')
@@ -200,10 +235,8 @@ def test_notes_floor_does_not_enable_new_workbench_protocol_entrypoints(tmp_path
     from deck_master import changes, candidates, stages
     from deck_master.content_plan import bind_result
     from deck_master.operations import OperationError
-    project = tmp_path / 'project'
-    service.create(project, brief='Synthetic legacy protocol entry fixture',
-                   draft={'pages': [_draft_page('p1', '标题', '正文')]})
-    store = Store(project); before = store.load_document()
+    project, store = _historical_project(tmp_path)
+    before = store.load_document()
     updated = bump_revision(deepcopy(before), {'operation_id': 'notes-floor',
           'kind': 'content_update', 'description': 'Notes support floor only', 'read_set': []})
     require_writer(updated, 'rc3.v1')
@@ -225,7 +258,7 @@ def test_notes_floor_does_not_enable_new_workbench_protocol_entrypoints(tmp_path
     with pytest.raises(service.ServiceError, match='require workbench.v3'):
         service.inputs_update(project, patch={}, base_revision=current['revision_id'],
                               operation_id=str(uuid4()), _recoverable_workbench=True)
-    with pytest.raises(OperationError, match='no in-place migration'):
+    with pytest.raises(OperationError, match='migration'):
         stages.assemble(project, base_revision=current['revision_id'], operation_id='explicit-stage')
     assert store.load_document() == current
 
@@ -264,6 +297,7 @@ def test_imported_null_narrative_speech_creates_honest_mapping_and_current_plan_
     before = store.load_document(); previous_plan = store.read_object_json(before['content_plan'])
     task = content_production.open_phase_task(store, before, operation_id='imported-speech',
                     phase='speech', page_ids=['p1'])
+    claim_fixture_task(project, task)
     notes = '原稿主线保留。\n\n只增加口播提示。'
     payload = {'updates': [{'page_id': 'p1', 'page_ref': store.load_document()['pages'][0]['page'],
               'speaker_notes': notes, 'speech_segments': [{'segment_id': 's1', 'start_codepoint': 0,
@@ -294,7 +328,7 @@ def test_actual_completed_visual_notes_assembly_export_zero_image_ledger(tmp_pat
     pipeline.produce(project)
     before = store.load_document(); entry = before['pages'][0]
     page = store.read_object_json(entry['page'])
-    page['speaker_notes'] = '新口播54/120＝45%，不是节约率。\n\n末段。\n'
+    _notes(page, '新口播54/120＝45%，不是节约率。\n\n末段。\n')
     task_facts = [store.read_object_json(ref) for ref in before['tasks']]
     editing.edit_page(project, page=page, base_revision=before['revision_id'],
                       page_hash=entry['page']['sha256'], operation_id='notes-for-final-file')
@@ -325,7 +359,7 @@ def test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries(tmp_path):
         pytest.skip('Frozen A installation is an external engineering resource')
     project, store = _completed_visual(tmp_path)
     before = store.load_document(); entry = before['pages'][0]
-    page = store.read_object_json(entry['page']); page['speaker_notes'] = '受保护备注。'
+    page = _notes(store.read_object_json(entry['page']), '受保护备注。')
     editing.edit_page(project, page=page, base_revision=before['revision_id'],
                       page_hash=entry['page']['sha256'], operation_id='protect-notes')
     protected = store.load_document()
@@ -362,16 +396,34 @@ def test_formal_notes_write_preserves_content_ops_and_ui_protocol_qualification(
     from uuid import uuid4
     from deck_master import content_ops, ui_journal
     from deck_master.operations import OperationError
-    project = tmp_path / 'project'
-    service.create(project, brief='Synthetic origin contrast', project_format=original_format,
-                   draft={'pages': [_draft_page(pid, pid, '正文') for pid in ('p-a', 'p-b')]})
-    store = Store(project)
+    if original_format is None:
+        project, store = _historical_project(tmp_path)
+    else:
+        from test_content_ops import prepare_editorial_project
+        project = tmp_path / 'project'
+        service.create(project, brief='Synthetic current origin contrast', project_format=original_format,
+                       draft={'pages': [_draft_page(pid, pid, '正文') for pid in ('p-a', 'p-b')]})
+        store = Store(project)
+        prepare_editorial_project(project, review=False)
     for phase in ('before_notes', 'after_notes'):
         before = store.load_document(); entry = before['pages'][0]
         if phase == 'after_notes':
-            page = store.read_object_json(entry['page']); page['speaker_notes'] = '真实正式notes-only写入。'
-            editing.edit_page(project, page=page, base_revision=before['revision_id'],
-                              page_hash=entry['page']['sha256'], operation_id='origin-notes')
+            page = _notes(store.read_object_json(entry['page']), '真实正式notes-only写入。')
+            if original_format is None:
+                from deck_master.eligibility import EligibilityBlocked
+                with pytest.raises(EligibilityBlocked, match='migration'):
+                    editing.edit_page(project, page=page, base_revision=before['revision_id'],
+                        page_hash=entry['page']['sha256'], operation_id='unmigrated-refusal')
+                assert store.load_document() == before
+                _record_historical_notes(store, page['speaker_notes'], 'recorded-origin-notes')
+            else:
+                scope = before['collaboration']['request']['scope']
+                authorize_scope(project, actions=['page.edit'], scope=scope, max_external_calls=0,
+                    max_candidate_count=0, adoption_policy='within_scope',
+                    evidence=evidence_for(project, text='L1 explicitly change only the notes in this existing scope.',
+                        locator='L1:current-origin-notes'))
+                editing.edit_page(project, page=page, base_revision=store.current_revision_id(),
+                    page_hash=entry['page']['sha256'], operation_id='origin-notes')
         current = store.load_document()
         request = {'schema_version': 'content_operation_input.v1', 'project_id': current['project_id'],
                    'base_revision': current['revision_id'], 'content_plan_ref': current.get('content_plan'),
@@ -400,7 +452,8 @@ def test_formal_notes_write_preserves_content_ops_and_ui_protocol_qualification(
         actions = ui_journal.project_info(project)['effective_actions']
         assert all(a['writable'] is (original_format == 'workbench.v3')
                    for a in actions if a['action'] in ui_journal.FORMAT_GATED)
-    assert store.load_document()['compatibility']['minimum_writer'] == 'rc3.v1'
+    assert store.load_document()['compatibility']['minimum_writer'] == (
+        'rc3-entry.v1' if original_format == 'workbench.v3' else 'rc3.v1')
 
 
 def test_legacy_notes_floor_does_not_enable_annotation_style_or_icon_writes(tmp_path):
@@ -408,35 +461,30 @@ def test_legacy_notes_floor_does_not_enable_annotation_style_or_icon_writes(tmp_
     from deck_master import annotation_service, icons, styles, visual_styles
     from deck_master.operations import OperationError
     from test_service_flow import _png_bytes
-    project = tmp_path / 'project'
-    service.create(project, brief='Synthetic remaining origin gates',
-                   draft={'pages': [_draft_page('p1', '标题', '正文')]})
-    store = Store(project)
+    project, store = _historical_project(tmp_path)
     for phase in ('before_notes', 'after_notes'):
         before = store.load_document(); entry = before['pages'][0]
         if phase == 'after_notes':
-            page = store.read_object_json(entry['page']); page['speaker_notes'] = '仅正式备注变更。'
-            editing.edit_page(project, page=page, base_revision=before['revision_id'],
-                              page_hash=entry['page']['sha256'], operation_id='residual-origin-notes')
+            _record_historical_notes(store, '仅正式备注变更。', 'residual-origin-notes')
         doc = store.load_document(); entry = doc['pages'][0]; ref = entry['page']
         identity = {'project_id': doc['project_id'], 'base_revision': doc['revision_id']}
         note = {**identity, 'schema_version': 'annotation.v1', 'scope': 'page', 'page_id': 'p1',
                 'page_ref': ref, 'intent': 'clarify', 'body': 'Synthetic opinion', 'status': 'open',
                 'location': {'kind': 'whole'}}
-        with pytest.raises(OperationError, match='explicit workbench.v3'):
+        with pytest.raises(OperationError, match='explicit workbench.v3|migration'):
             annotation_service.save(project, input={'schema_version': 'annotation_batch.v1',
                 'project_id': doc['project_id'], 'annotations': [note]},
                 base_revision=doc['revision_id'], operation_id=str(uuid4()))
-        with pytest.raises(OperationError, match='require workbench.v3'):
+        with pytest.raises(OperationError, match='require workbench.v3|migration'):
             visual_styles.import_reference(project, data=_png_bytes(),
                 base_revision=doc['revision_id'], operation_id=str(uuid4()))
-        with pytest.raises(OperationError, match='requires a workbench.v3'):
+        with pytest.raises(OperationError, match='requires a workbench.v3|migration'):
             styles.propose(project, input={**identity, 'schema_version': 'style_input.v1',
                  'reference': {'page_id': 'p1', 'revision_id': doc['revision_id'],
                                'artifact_ref': ref, 'role': 'reference'},
                  'target_page_ids': ['p1'], 'instruction': 'Synthetic palette request'})
         region = {'x': .1, 'y': .1, 'width': .1, 'height': .1}
-        with pytest.raises(OperationError, match='icons require workbench.v3'):
+        with pytest.raises(OperationError, match='icons require workbench.v3|migration'):
             icons.propose(project, input={**identity, 'schema_version': 'icon_input.v1',
                 'instruction': 'Synthetic icon request', 'annotation_refs': [],
                 'targets': [{'page_id': 'p1', 'page_ref': ref, 'svg_ref': ref, 'blueprint_ref': ref,

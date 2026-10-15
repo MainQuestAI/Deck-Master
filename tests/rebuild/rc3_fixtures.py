@@ -166,13 +166,15 @@ def claimed_phase_task(store, document, **kwargs):
     return claim_fixture_task(store.project_root, task)
 
 
-def accept_synthetic_blueprint(project, *, task, result_payload, execution_ref, scenario):
+def accept_synthetic_blueprint(project, *, task, result_payload, execution_ref, scenario, adopt=True):
     """Actual generation lifecycle with a registered, explicitly L1 provider.
 
     Original caller-authored PNG/artifact specs are retained. This is protocol
     evidence only; the synthetic provider never establishes real tool/fee facts.
     The returned synthetic_execution records the exact enriched envelope for
     terminal replay rather than opening another call on a helper retry.
+    adopt=False leaves the actual first adoption to a separate installed CLI
+    process; it still records the same explicitly synthetic call facts.
     """
     from copy import deepcopy
     import time
@@ -239,7 +241,11 @@ def accept_synthetic_blueprint(project, *, task, result_payload, execution_ref, 
             report_bytes=canonical_json_bytes({'source': 'native_host_image.v1', **selector}), adapter_context=context)
     payload = deepcopy(result_payload)
     payload['generation_result'] = {'request_id': frozen['request_id'], 'attempt_id': attempt['attempt_id']}
+    execution = {'scenario': scenario, 'evidence_level': 'L1_SYNTHETIC',
+        'frozen': frozen, 'attempt': attempt, 'settlement': settlement, 'result_payload': payload}
+    if not adopt:
+        return {'status': 'prepared_for_cli_adoption', 'result_payload': payload,
+            'synthetic_execution': execution}
     response = service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
         produced_against=task['produced_against'], result_payload=payload)
-    return {**response, 'synthetic_execution': {'scenario': scenario, 'evidence_level': 'L1_SYNTHETIC',
-        'frozen': frozen, 'attempt': attempt, 'settlement': settlement, 'result_payload': payload}}
+    return {**response, 'synthetic_execution': execution}

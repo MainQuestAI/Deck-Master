@@ -54,6 +54,31 @@ def test_content_intents_route_without_becoming_authority(text, intent):
     assert route['authority'] == 'routing_suggestion_only'
 
 
+@pytest.mark.parametrize('text', [
+    '请协调这次档案值班培训的策划与后续职责，先把真实范围和下一责任说明白，不制作整套PPT。',
+    '请统筹内容策划、设计与下一责任，暂时不要制作。',
+    'Please coordinate content planning and the next responsibilities; do not build a complete deck.',
+])
+def test_master_coordination_command_can_mention_subordinate_content_planning(tmp_path, text):
+    project = tmp_path / 'coordination'
+    service.create(project, brief='L1 actual coordination context; no production grant')
+    before = source_snapshot(project)
+    routed = method_resources.route_request(text)
+    assert routed['skill'] == 'deck-master' and routed['content_intent'] is None
+    assert routed['authority'] == 'routing_suggestion_only'
+    result = method_resources.read_skill_methods('deck-master', entry_mode='natural',
+        project=project, text=text)
+    assert result['skill'] == 'deck-master'
+    assert source_snapshot(project) == before
+
+
+@pytest.mark.parametrize('text', ['请给协调流程这一页写正文，不做设计。',
+    'Write the manuscript about coordination procedures; do not design it.'])
+def test_business_coordination_noun_does_not_steal_a_content_action(text):
+    routed = method_resources.route_request(text)
+    assert routed['skill'] == 'deck-content' and routed['content_intent'] == 'write_only'
+
+
 @pytest.mark.parametrize(('text', 'skill'), [
     ('请给固定p2新损伤处置页出视觉方案，清楚保留停阅→保持原状→通知保管员以及保管员确认恢复；不要生图，不改正文。', 'deck-design'),
     ('请为灾后恢复流程设计样页，不要制作整套文件。', 'deck-design'),

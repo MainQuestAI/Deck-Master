@@ -118,6 +118,35 @@ def test_completed_content_returns_readable_outputs_without_new_production(rc3_b
     assert store.load_document() == before
 
 
+@pytest.mark.parametrize("rc3_browser", ["write_only"], indirect=True)
+def test_completed_overview_returns_content_without_prioritizing_unrequested_artwork(rc3_browser, tmp_path):
+    page, context, store, _, goto, _ = rc3_browser
+    before = store.load_document()
+    link = goto(surface="overview")
+    panel = page.locator('.overview-todos')
+    expect(panel).to_contain_text("本次上屏稿已完成")
+    expect(panel).not_to_contain_text("产物待补齐")
+    expect(panel.get_by_role('button', name='阅读本次内容', exact=True)).to_be_enabled()
+    assert store.load_document() == before
+    page.screenshot(path=str(tmp_path / 'completed-content-overview.png'), full_page=True)
+    # The old completed content must not conceal a later active request.
+    b = context.new_page(); b.goto(link)
+    open_control_action(b, "开始新的明确请求")
+    request = b.get_by_role('dialog', name='开始本次请求')
+    request.get_by_label('内容产物', exact=True).select_option('speech_only')
+    request.get_by_role('checkbox', name='第 1 页 · 先核对实际稿件', exact=True).check()
+    request.get_by_role('checkbox', name='论证主线', exact=True).uncheck()
+    request.get_by_role('checkbox', name='页面大纲', exact=True).uncheck()
+    request.get_by_role('checkbox', name='口播稿', exact=True).check()
+    request.get_by_label('本次明确要求（必填）').fill('另起只写第一页口播的明确请求；保留原上屏稿。')
+    request.get_by_role('button', name='确认开始本次请求', exact=True).click()
+    expect(request).to_contain_text('请求已记录')
+    page.reload()  # Explicitly reread current control; no focus/poll timing claim.
+    expect(page.get_by_label('本次工作状态')).not_to_contain_text('本次内容已完成')
+    expect(panel).not_to_contain_text('本次上屏稿已完成')
+    assert store.load_document()['pages'] == before['pages']
+
+
 def test_pause_resume_keeps_pages_and_requires_explicit_instruction(rc3_browser):
     page, _, store, _, goto, _ = rc3_browser
     goto()

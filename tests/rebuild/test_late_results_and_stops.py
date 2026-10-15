@@ -10,26 +10,26 @@ project stop policy is its own fact.
 import pytest
 
 from test_eligibility_enforcement import (  # noqa: E402  (shared fixtures)
-    _allowance, _binding, _commit_task, _declared, _grant, _page, _project, _scope,
+    _declared, _grant, _page, _project, _scope,
     _start, _strip_binding, _task)
 from deck_master import collaboration, dependency_slices, eligibility, service
 from deck_master.models import bump_revision, canonical_json_bytes, sha256_bytes
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task
 
 
-def _running_call(store, project, *, budget_key=None, task_id="task-1", grant=None):
-    """A claimed task with one begun (in-flight) call."""
-    document = store.load_document()
-    binding = _binding(document, authorization_ref=(grant or {}).get("authorization_ref"),
-                       budget_key=budget_key)
-    task = _task(document, task_id=task_id, kind="compose", status="running",
-                 scope_pages=("p1",), allowances=[_allowance("call-1")], binding=binding)
-    _commit_task(store, task, operation_id=f"commit-{task_id}")
-    service.task_start(project, task_id=task_id, execution_ref="host-1")
+def _running_call(store, project, *, grant, begin=True):
+    """Public current L1 workorder and ledger; no provider/native event claimed."""
+    task = service.open_host_task(store, kind='repair', page_ids=['p1'],
+        instruction='L1 controlled call ledger for current withdrawal/late-result boundary')
+    assert task['collaboration_binding']['authorization_ref'] == grant['authorization_ref']
+    assert {'collaboration.v1', 'rc3-entry.v1'} <= set(task['required_capabilities'])
+    claim_fixture_task(project, task, execution_ref='host-1')
     from deck_master import tasks as tasks_mod
-    tasks_mod.call_begin(Store(project), task_id=task_id, allowance_id="call-1",
-                         execution_ref="host-1")
-    return task
+    tasks_mod.allocate_call_allowances(store, task_id=task['task_id'], count=1)
+    if begin:
+        tasks_mod.call_begin(store, task_id=task['task_id'], allowance_id='call-1', execution_ref='host-1')
+    return tasks_mod._lookup_task(store.load_document(), task['task_id'], store)
 
 
 def _submit(project, store, task, *, outcome="consumed"):
@@ -55,7 +55,7 @@ def _page_text(store, page_id="p1"):
     return store.read_object_json(entry["page"])["customer_visible"]["body_blocks"][0]["text"]
 
 
-def _allowance_state(store, task_id="task-1", allowance_id="call-1"):
+def _allowance_state(store, task_id, allowance_id="call-1"):
     task = next(store.read_object_json(ref) for ref in store.load_document()["tasks"]
                 if store.read_object_json(ref).get("task_id") == task_id)
     return next(entry["state"] for entry in task["call_allowances"]
@@ -69,26 +69,21 @@ def _allowance_state(store, task_id="task-1", allowance_id="call-1"):
 def test_withdrawal_before_start_refuses_the_new_call(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
-    grant = _grant(project, store, actions=("call.begin", "allowance.allocate"),
+    grant = _grant(project, store, actions=("dispatch.host_task", "call.begin", "allowance.allocate"),
                    scope=_scope(page_ids=["p1"]), max_external_calls=1)
-    document = store.load_document()
-    task = _task(document, kind="compose", status="running", scope_pages=("p1",),
-                 allowances=[_allowance("call-1")],
-                 binding=_binding(document, authorization_ref=grant["authorization_ref"]))
-    _commit_task(store, task)
-    service.task_start(project, task_id="task-1", execution_ref="host-1")
+    task = _running_call(store, project, grant=grant, begin=False)
     collaboration.revoke_authorization(project, authorization_id=grant["authorization_id"],
                                        reason="范围撤回", base_revision=store.load_document()["revision_id"],
                                        operation_id="op-revoke")
     from deck_master import tasks as tasks_mod
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
-        tasks_mod.call_begin(Store(project), task_id="task-1", allowance_id="call-1",
+        tasks_mod.call_begin(Store(project), task_id=task["task_id"], allowance_id="call-1",
                              execution_ref="host-1")
     assert "authorization_revoked" in excinfo.value.payload()["error"]["reason_codes"]
     # Nothing was spent: the slot stays reserved (releasing an unused
     # reservation is the existing ledger's concern, not a new budget rule) and
     # no consumed cost exists.
-    assert _allowance_state(store) == "reserved"
+    assert _allowance_state(store, task["task_id"]) == "reserved"
     assert all(entry["state"] == "reserved"
                for ref in store.load_document()["tasks"]
                for entry in (store.read_object_json(ref).get("call_allowances") or []))
@@ -97,10 +92,10 @@ def test_withdrawal_before_start_refuses_the_new_call(tmp_path):
 def test_withdrawal_during_the_call_settles_the_fact_and_refuses_adoption(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
-    grant = _grant(project, store, actions=("call.begin", "allowance.allocate"),
+    grant = _grant(project, store, actions=("dispatch.host_task", "call.begin", "allowance.allocate"),
                    scope=_scope(page_ids=["p1"]), max_external_calls=1)
     task = _running_call(store, project, grant=grant)
-    assert _allowance_state(store) == "in_flight"
+    assert _allowance_state(store, task["task_id"]) == "in_flight"
     collaboration.revoke_authorization(project, authorization_id=grant["authorization_id"],
                                        reason="调用中撤回", base_revision=store.load_document()["revision_id"],
                                        operation_id="op-revoke")
@@ -111,19 +106,19 @@ def test_withdrawal_during_the_call_settles_the_fact_and_refuses_adoption(tmp_pa
     assert "authorization_revoked" in error["reason_codes"]
     assert error["next_action"]
     assert _page_text(store) == before == "第一页。"
-    assert _allowance_state(store) == "consumed"       # the in-flight call is real cost
+    assert _allowance_state(store, task["task_id"]) == "consumed"       # observed L1 ledger cost is retained; no real provider fee claimed
 
 
 def test_withdrawal_before_accept_keeps_the_cost(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
-    grant = _grant(project, store, actions=("call.begin", "allowance.allocate"),
+    grant = _grant(project, store, actions=("dispatch.host_task", "call.begin", "allowance.allocate"),
                    scope=_scope(page_ids=["p1"]), max_external_calls=1)
     task = _running_call(store, project, grant=grant)
     from deck_master import tasks as tasks_mod
-    tasks_mod.call_settle(store, task_id="task-1", allowance_id="call-1",
+    tasks_mod.call_settle(store, task_id=task["task_id"], allowance_id="call-1",
                           outcome="consumed", report_bytes=b'{"call": "consumed"}')
-    assert _allowance_state(store) == "consumed"
+    assert _allowance_state(store, task["task_id"]) == "consumed"
     collaboration.revoke_authorization(project, authorization_id=grant["authorization_id"],
                                        reason="接纳前撤回", base_revision=store.load_document()["revision_id"],
                                        operation_id="op-revoke")
@@ -132,14 +127,14 @@ def test_withdrawal_before_accept_keeps_the_cost(tmp_path):
         _submit(project, store, task, outcome=None)
     assert "authorization_revoked" in excinfo.value.payload()["error"]["reason_codes"]
     assert _page_text(store) == before
-    assert _allowance_state(store) == "consumed"       # settled cost survives the refusal
+    assert _allowance_state(store, task["task_id"]) == "consumed"       # settled L1 ledger cost survives the refusal
 
 
 def test_a_revoked_result_is_never_adopted_later(tmp_path):
     """A second attempt (after re-reading) also fails: withdrawal is not a wait."""
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
-    grant = _grant(project, store, actions=("call.begin", "allowance.allocate"),
+    grant = _grant(project, store, actions=("dispatch.host_task", "call.begin", "allowance.allocate"),
                    scope=_scope(page_ids=["p1"]), max_external_calls=1)
     task = _running_call(store, project, grant=grant)
     collaboration.revoke_authorization(project, authorization_id=grant["authorization_id"],
@@ -328,7 +323,7 @@ def test_continue_neither_widens_nor_revives(tmp_path):
 def test_pause_stops_new_calls_but_not_settlement(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
-    grant = _grant(project, store, actions=("call.begin", "allowance.allocate"),
+    grant = _grant(project, store, actions=("dispatch.host_task", "call.begin", "allowance.allocate"),
                    scope=_scope(page_ids=["p1"]), max_external_calls=1)
     task = _running_call(store, project, grant=grant)
     collaboration.pause_request(project, reason="先停一下",
@@ -339,14 +334,14 @@ def test_pause_stops_new_calls_but_not_settlement(tmp_path):
     document = store.load_document()
     document["tasks"]  # keep the read explicit for the assertion below
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
-        tasks_mod.call_begin(Store(project), task_id="task-1", allowance_id="call-2",
+        tasks_mod.call_begin(Store(project), task_id=task["task_id"], allowance_id="call-2",
                              execution_ref="host-1")
     assert "request_paused" in excinfo.value.payload()["error"]["reason_codes"]
     settle = eligibility.evaluate(store, document, document, "call.settle", {"task": task})
     assert settle["allowed"] is True and settle["facts_only"] is True
-    tasks_mod.call_settle(store, task_id="task-1", allowance_id="call-1", outcome="consumed",
+    tasks_mod.call_settle(store, task_id=task["task_id"], allowance_id="call-1", outcome="consumed",
                           report_bytes=b'{"call": "consumed"}')
-    assert _allowance_state(store) == "consumed"
+    assert _allowance_state(store, task["task_id"]) == "consumed"
 
 
 def test_user_stop_is_its_own_stop_fact(tmp_path):
@@ -403,7 +398,7 @@ def test_restore_does_not_revive_a_withdrawal(tmp_path):
     restore(project, revision_id=active_revision,
             base_revision=store.load_document()["revision_id"], operation_id="op-restore")
     after = store.load_document()
-    assert after["compatibility"]["minimum_writer"] == "collaboration.v1"
+    assert after["compatibility"]["minimum_writer"] == "rc3-entry.v1"
     state = dependency_slices.authorization_effectiveness(store, after, grant["authorization_ref"])
     assert state["effective"] is False
     assert set(state["reasons"]) & {"authorization_revoked", "not_in_current_control"}

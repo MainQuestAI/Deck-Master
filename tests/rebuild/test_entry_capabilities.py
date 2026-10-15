@@ -19,6 +19,7 @@ from deck_master.samples import create_sample
 from deck_master.store import SUPPORTED_WRITERS, Store
 from deck_master.web import UI_CAPABILITIES, WorkbenchServer, stop_service
 from test_workbench_services import auth, http
+from rc3_fixtures import historical_snapshot
 
 SKILL = Path(__file__).resolve().parents[2] / "skills" / "deck-master" / "SKILL.md"
 
@@ -43,9 +44,8 @@ def readonly_sample(tmp_path):
 
 @pytest.fixture
 def v1_project(tmp_path):
-    path = tmp_path / "v1-project"
-    service.create(path, brief="Synthetic v1 format audit", draft={"pages": [V1_PAGE]})
-    return path
+    return historical_snapshot(tmp_path, scenario='Explicit historical v1-format read/draft/write gate audit',
+        pages=[V1_PAGE])['project']
 
 
 def actions_by_name(info):
@@ -60,7 +60,7 @@ def get(url):
 def test_effective_actions_modern_project(modern):
     info = ui_journal.project_info(modern, server_capabilities=UI_CAPABILITIES)
     assert info["project_format"] == "workbench.v3"
-    assert info["minimum_writer"] == 'workbench-quality.v1'
+    assert info["minimum_writer"] == 'rc3-entry.v1'
     assert info["core_writers"] == list(SUPPORTED_WRITERS)
     actions = actions_by_name(info)
     assert set(actions) == {"drafts", "annotations", "changes", "candidates", "content", "inputs",
@@ -77,8 +77,14 @@ def test_v1_format_disables_only_real_gates_and_stays_truthful(v1_project):
     # paths really accept v1 projects today, and the projection must not
     # over-disable with a false reason. run_desk keeps a known granularity
     # limit: the family mixes v1-capable /api/feedback with v3-only assemble.
-    for name in ("drafts", "inputs", "run_desk", "exports", "restoration"):
+    for name in ("drafts", "run_desk", "exports", "restoration"):
         assert actions[name]["writable"] is True and actions[name]["reason_code"] is None
+    assert actions['inputs']['writable'] is False
+    assert actions['inputs']['reason_code'] == 'migration_required'
+    with pytest.raises(Exception, match='migration apply'):
+        service.inputs_update(v1_project, patch={'reason': 'Historical input audit',
+            'task_patch': {'audience': 'Changed audience'}},
+            base_revision=info['revision_id'], operation_id='L1-v1-input-refused')
     # these mirror a real workbench.v3 gate at the service layer (B07/G54
     # moved candidates into the gated set together with its endpoint gate)
     for name in ("annotations", "changes", "content", "styles", "candidates", "icons"):
@@ -230,7 +236,10 @@ def test_view_ui_requires_open_and_validates_choice(modern, capsys):
 
 def test_skill_and_cli_expose_the_entry_contract():
     skill = SKILL.read_text("utf-8")
-    assert "view --open --ui v2" in skill and "默认入口已切换为新工作台" in skill
+    method = SKILL.parent / 'references/collaboration-routing.md'
+    assert 'references/collaboration-routing.md' in skill
+    assert 'view --open --ui v2' in method.read_text('utf-8')
+    assert '实际 Studio' in skill
     parser = cli.build_parser()
     assert parser.parse_args(["workbench"]).ui == "studio"
     for ui in ("v2", "studio"):

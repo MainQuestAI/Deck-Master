@@ -29,6 +29,7 @@ from test_content_preproduction_review import (  # noqa: E402  (review fixtures)
 from deck_master import (changes, collaboration, collaboration_binding, content_production,
                           content_review, eligibility, service)
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task
 
 
 def test_one_binding_digest_shared_by_dispatch_and_gate():
@@ -59,10 +60,12 @@ def test_change_dispatch_on_an_enforced_project_is_bound_and_accepted(tmp_path):
     """The edit flow (AC-R03) stays usable in a managed project: commit
     dispatches a bound task, and the result is adopted under the same gate."""
     project, store = _project(tmp_path)
-    _start(project, store, intent="edit",
-           scope=_scope(page_ids=["p1"], layers=["page_copy"]))
-    _grant(project, store, actions=("change.commit",), scope=_scope(page_ids=["p1"]))
+    # Qualify the whole fixed manuscript under its actual initial scope before
+    # the separate one-page edit request; never smuggle review into copy scope.
     _settle_preproduction(store, seed="change-flow")
+    _start(project, store, intent="edit",
+           scope=_scope(page_ids=["p1"], layers=["page_copy", "svg"]))
+    _grant(project, store, actions=("change.commit", "dispatch.host_task"), scope=_scope(page_ids=["p1"]))
     document = store.load_document()
     entry = next(e for e in document["pages"] if e["page_id"] == "p1")
     value = {"schema_version": "change_intent.v1", "project_id": document["project_id"],
@@ -84,10 +87,7 @@ def test_change_dispatch_on_an_enforced_project_is_bound_and_accepted(tmp_path):
     assert eligibility.task_binding_state(store, store.load_document(), task)["status"] == "valid"
     # The host claims the task with the declared protocol, then answers; the
     # gate recomputes the same judgement and adopts.
-    service.task_start(store.project_root, task_id=task_id, execution_ref="joint-host",
-                       supported_protocols=["changes.v1", "generation.v1"],
-                       capabilities=["change_plan", "generation_request_freeze",
-                                     "attempt_binding", "native_tool_observation"])
+    claim_fixture_task(project, task, execution_ref="joint-host")
     page = store.read_object_json(entry["page"])
     page["customer_visible"]["title"] = "Clear title"
     accept_with_synthetic_provider(store.project_root, task_id=task_id, operation_id=task["operation_id"],
@@ -142,6 +142,7 @@ def test_phased_result_is_accepted_under_the_gate(tmp_path):
                 "produced_against": task["produced_against"],
                 "eligibility_digest": task["collaboration_binding"]["eligibility_digest"],
                 "payload": payload, "usage_events": []}
+    claim_fixture_task(project, task, execution_ref='L1-joint-speech')
     out = accept_with_synthetic_provider(project, task_id=task["task_id"],
                                 operation_id=task["operation_id"],
                                 produced_against=task["produced_against"],
@@ -191,7 +192,7 @@ def test_revoking_the_bound_grant_refuses_the_late_result(tmp_path):
                                   instruction="repair p1 under the grant")
     assert task["collaboration_binding"]["authorization_ref"] is not None
     before = _page_text(store)
-    service.task_start(project, task_id=task["task_id"], execution_ref="late-host")
+    claim_fixture_task(project, task, execution_ref="late-host")
     collaboration.revoke_authorization(
         project, authorization_id=grant["authorization_id"], reason="撤销范围",
         base_revision=store.load_document()["revision_id"], operation_id=str(uuid.uuid4()))
@@ -378,7 +379,7 @@ def _two_page_deck(tmp_path):
                                         _request as _phase_request,
                                         _submit as _phase_submit)
     project, store = _phase_project(tmp_path)
-    _phase_request(project, store)
+    _phase_request(project, store, intent="full_deck", content_intent=None)
     _, out = _accept_argument(project, store)
     _adopt_direction(project, store, out["result_refs"][0])
     task = _phase_dispatch(store, phase="page_copy")
@@ -403,6 +404,7 @@ def test_a_scoped_page_copy_result_never_deletes_unselected_pages(tmp_path):
     task = content_production.open_phase_task(
         store, store.load_document(), operation_id="scoped-p1", phase="page_copy",
         page_ids=["p1"])
+    claim_fixture_task(project, task, execution_ref='L1-scoped-page-copy')
     page = _phase_page(store, store.load_document(), "p1", notes="重写后的口播。")
     with pytest.raises(tasks_mod.EnvelopeError) as excinfo:
         _phase_submit(project, task,
@@ -500,16 +502,17 @@ def test_the_input_revision_task_stays_claimable_during_reconciliation(tmp_path)
     assert "input_reconciliation_pending" in still_blocked["reason_codes"]
     # ...while the reconciliation task itself is claimable (the deadlock under
     # review refused exactly this claim).
-    service.task_start(project, task_id=task_id, execution_ref="reconcile-host",
-                       supported_protocols=["compose.v2"],
-                       capabilities=["compose.v2", "collaboration.v1"])
+    claim_fixture_task(project, summary, execution_ref="reconcile-host")
     claimed = next(t for t in (store.read_object_json(ref)
                                for ref in store.load_document()["tasks"])
                    if t["task_id"] == task_id)
     assert claimed["status"] == "running"
     # The revision lands through the normal acceptance path.
     document = store.load_document()
-    updated = _phase_page(store, document, "p1", notes="现场主管版本的口播。")
+    updated = store.read_object_json(document['pages'][0]['page'])
+    updated['customer_visible']['title'] = '现场主管：记录未知版本并核对下一责任'
+    # This instruction changes copy only; retain the exact existing notes and
+    # speech mapping rather than silently smuggling a second changed layer.
     out = _phase_submit(project, claimed,
                         {"changed_layers": ["page_copy"],
                          "proposals": [{"layer": "page_copy",
@@ -551,14 +554,14 @@ def _pending_phase(tmp_path, phase):
     else:
         project, store = _deck_with_pages(tmp_path)
     document = store.load_document()
-    # A pre-existing pending task (the legacy initial compose) would be reused
-    # by continue before any phase progression; retire it through the real
-    # cancel path so the scenario pauses exactly at the phase dispatch point.
+    # Explicitly cancel any prior pending work through its public fact channel
+    # so this fixture pauses exactly before a fresh phase dispatch. Completed
+    # artifacts and old Task/call facts remain in history; no Task is deleted.
     for ref in document["tasks"]:
         task = store.read_object_json(ref)
-        if task.get("status") == "awaiting_host" and not task.get("collaboration_binding"):
+        if task.get("status") in ("awaiting_host", "running"):
             service.task_cancel(project, task_id=task["task_id"],
-                                reason="由相位流程接手")
+                                reason="L1 explicitly isolate the next phase dispatch; retain prior Task and call facts")
     document = store.load_document()
     collaboration.pause_request(project, reason="暂停审视",
                                 base_revision=document["revision_id"],
@@ -575,7 +578,11 @@ def test_a_paused_request_gains_no_phase_tasks_through_continue(tmp_path):
     from test_compose_v2_phases import _instruction as _phase_instruction
     for phase in ("framing", "page_copy", "speech"):
         project, store = _pending_phase(tmp_path / phase, phase)
-        tasks_before = len(store.load_document()["tasks"])
+        before_document = store.load_document()
+        tasks_before = len(before_document["tasks"])
+        preexisting = [store.read_object_json(ref) for ref in before_document["tasks"]
+            if store.read_object_json(ref)['status'] in ('awaiting_host', 'running')
+            and (store.read_object_json(ref).get('collaboration_binding') or {}).get('phase') == phase]
         outcome = service.continue_project(project)
         document = store.load_document()
         # The pinned fact: a paused request gains no task. (Reusing a task that
@@ -602,5 +609,13 @@ def test_a_paused_request_gains_no_phase_tasks_through_continue(tmp_path):
                        for f in resumed.get("findings", [])), resumed.get("findings")
         else:
             assert resumed["status"] == "awaiting_host", (phase, resumed)
-            assert len(dispatched) == 1, (phase, [t["task_id"] for t in dispatched])
-            assert dispatched[0]["collaboration_binding"]["phase"] == phase
+            if preexisting:
+                assert not dispatched
+                assert [t['task_id'] for t in resumed['pending_tasks']] == [t['task_id'] for t in preexisting]
+            else:
+                assert len(dispatched) == 1, (phase, [t["task_id"] for t in dispatched])
+                assert dispatched[0]["collaboration_binding"]["phase"] == phase
+            stable = store.load_document()
+            again = service.continue_project(project)
+            assert store.load_document() == stable
+            assert [t['task_id'] for t in again['pending_tasks']] == [t['task_id'] for t in resumed['pending_tasks']]

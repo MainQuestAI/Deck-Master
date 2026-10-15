@@ -153,9 +153,9 @@ def test_review_only_never_borrows_an_old_full_deck_grant(tmp_path):
 
 def test_execute_grant_binds_pages_and_layers(tmp_path):
     project, store = _project(tmp_path)
+    _settle_preproduction(store, seed="grant-binding")
     _start(project, store, scope=_scope(page_ids=["p1", "p2"],
                                         layers=["plan", "blueprint", "page_copy"]))
-    _settle_preproduction(store, seed="grant-binding")
     _grant(project, store, actions=("dispatch.blueprint",),
            scope=_scope(page_ids=["p1"], layers=["plan", "blueprint"]))
     document = store.load_document()

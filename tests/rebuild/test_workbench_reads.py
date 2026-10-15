@@ -17,6 +17,20 @@ from deck_master.pipeline import artifact
 from deck_master.store import Store
 from deck_master.view import project_view
 from deck_master.web import WorkbenchServer
+from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
+
+
+def allow_blueprint_preparation(project, page_ids):
+    """Explicit L1 preparation scope; never a default grant for read tests."""
+    settle_fidelity_review(project, page_ids=[entry['page_id'] for entry in Store(project).load_document()['pages']], execution_ref='L1-reader-fidelity',
+        scenario='Fixed manuscript for the named prepared-prompt reader fixture')
+    scope = {'subject': 'pages', 'page_ids': list(page_ids), 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['blueprint'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+    authorize_scope(project, actions=['dispatch.blueprint', 'allowance.allocate'], scope=scope,
+        max_external_calls=1, max_candidate_count=1, adoption_policy='within_scope',
+        evidence=evidence_for(project, text='L1: prepare exactly one named Page image request; no call is executed.',
+            locator='L1:workbench-reader:prepare'))
 
 
 def make_project(root, count=24):
@@ -197,6 +211,7 @@ def test_corrupt_quality_with_ppt_does_not_crash_or_pass(live, tmp_path):
 
 def test_stored_prompts_not_recomputed_or_guessed_as_same_invocation(tmp_path, monkeypatch):
     project, store = make_project(tmp_path, 1)
+    allow_blueprint_preparation(project, ['p01'])
     doc = store.load_document()
     task = service.open_blueprint_task(store, doc, doc["pages"][0])
     doc = copy.deepcopy(store.load_document())
@@ -307,6 +322,7 @@ def test_project_missing_is_typed_and_projection_cannot_mutate_cache(tmp_path):
         workbench.workbench_summary(tmp_path / "missing")
     assert error.value.error_code == "project_unavailable"
     project, store = make_project(tmp_path, 1)
+    allow_blueprint_preparation(project, ['p01'])
     doc = store.load_document()
     service.open_blueprint_task(store, doc, doc["pages"][0])
     expected = workbench.page_lineage(project, "p01")

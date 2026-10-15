@@ -7,17 +7,33 @@ import urllib.request
 
 import pytest
 
-from deck_master import changes, cli, generation, run_desk, service, tasks
+from deck_master import changes, cli, collaboration, generation, run_desk, service, tasks
 from deck_master.models import bump_revision, require_writer
 from deck_master.samples import create_sample
 from deck_master.store import Store, StoreError
 from deck_master.web import WorkbenchServer
 from test_candidates import accept, adopt, dispatch, plan, start
+from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
 
 
 @pytest.fixture
 def store(tmp_path):
     project = tmp_path / 'run-project'; create_sample(project, page_count=3, readonly=False)
+    settle_fidelity_review(project, page_ids=['p01','p02','p03'], execution_ref='L1-run-desk-fidelity',
+        scenario='The original complete manuscript before the explicit narrow edit request')
+    doc = Store(project).load_document()
+    scope = {'subject': 'pages', 'page_ids': ['p01', 'p02'], 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['blueprint', 'svg'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+    collaboration.start_request(project, input={'intent': 'edit', 'content_intent': None,
+        'scope': scope, 'replace_request_id': doc['collaboration']['request']['request_id'],
+        'instruction_evidence': evidence_for(project, text='L1 run-desk: bounded production trials only on p01/p02; retain the separately reviewed manuscript.',
+            locator='L1:run-desk:request')}, base_revision=doc['revision_id'], operation_id='L1-run-desk-request')
+    authorize_scope(project, actions=['change.commit', 'candidate.adopt', 'dispatch.blueprint',
+        'allowance.allocate', 'call.begin'], scope={**scope,'page_ids':['p01','p02'],'layers':['blueprint','svg']}, max_external_calls=2,
+        max_candidate_count=4, adoption_policy='within_scope', evidence=evidence_for(project,
+            text='L1: at most two image calls and four trials on these two pages for run-desk protocol tests.',
+            locator='L1:run-desk:bounded-grant'))
     return Store(project)
 
 
@@ -35,7 +51,7 @@ def test_real_claim_time_survives_same_executor_and_unknown_call(store, monkeypa
     start(store, task)
     claimed = run_desk.detail(store.project_root, task_id=task['task_id'])
     assert claimed['task']['execution_started_at'] == '2026-09-30T00:00:00Z'
-    assert store.read_current()['minimum_writer'] == 'rc3.v1'
+    assert store.read_current()['minimum_writer'] == 'rc3-entry.v1'
     pointer = store.read_current()
     monkeypatch.setattr(service, '_utc_now_iso', lambda: '2026-09-30T00:20:00Z')
     start(store, task)
@@ -107,21 +123,37 @@ def test_group_links_and_handoff_claim_time_share_core_facts(store):
     assert run_desk.listing(store.project_root, status='cancelled')['tasks'] == []
 
 
-def test_writer_boundary_survives_candidate_adoption_content_and_operation(store):
+def test_writer_boundary_survives_candidate_adoption_content_and_operation(store, tmp_path):
     task = dispatch(store); start(store, task); result = accept(store, task)
     adopt(store, plan(store, result['candidate_ids']))
-    assert store.read_current()['minimum_writer'] == 'workbench-quality.v1'
+    assert store.read_current()['minimum_writer'] == 'rc3-entry.v1'
     from deck_master.content_plan import attach
-    doc = store.load_document(); attach(doc, doc['content_plan']); assert doc['compatibility']['minimum_writer'] == 'workbench-quality.v1'
+    doc = store.load_document(); attach(doc, doc['content_plan']); assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     for minimum in ('generation.v1', 'content-plan.v1', 'changes.v1', 'candidates.v1'):
-        require_writer(doc, minimum); assert doc['compatibility']['minimum_writer'] == 'workbench-quality.v1'
-    lower = bump_revision(copy.deepcopy(doc), {'operation_id': 'bad-downgrade', 'kind': 'task_update', 'description': 'fault injection', 'read_set': []})
+        require_writer(doc, minimum); assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'
+    attempted=bump_revision(copy.deepcopy(doc),{'operation_id':'modern-floor-pin','kind':'task_update',
+        'description':'Synthetic older writer hint, with all actual modern control retained','read_set':[]})
+    attempted['compatibility']['minimum_writer']='icon-quality.v1'
+    store.commit_change(base_revision=doc['revision_id'],document=attempted,operation_id='modern-floor-pin')
+    pinned=store.load_document()
+    assert pinned['compatibility']['minimum_writer']=='rc3-entry.v1'
+    assert pinned['collaboration']==doc['collaboration'] and pinned['pages']==doc['pages']
+    # RC3 collaboration commits pin their current floor automatically. Keep
+    # the original strict downgrade-refusal case on an explicit older writer,
+    # without deleting modern control facts or downgrading a live fixture.
+    from rc3_fixtures import historical_snapshot
+    old_store=Store(historical_snapshot(tmp_path,scenario='Historical writer downgrade refusal',
+        minimum_writer='workbench-quality.v1')['project'])
+    old_doc=old_store.load_document()
+    lower = bump_revision(copy.deepcopy(old_doc), {'operation_id': 'bad-downgrade', 'kind': 'task_update', 'description': 'fault injection', 'read_set': []})
     # Remove the new fact so this is structurally valid for an older writer;
     # the store must still prevent lowering the current boundary.
     lower.pop('committed_at', None)
     lower['compatibility']['minimum_writer'] = 'icon-quality.v1'
     with pytest.raises(StoreError, match='downgraded'):
-        store.commit_change(base_revision=doc['revision_id'], document=lower, operation_id='bad-downgrade')
+        old_store.commit_change(base_revision=old_doc['revision_id'], document=lower, operation_id='bad-downgrade')
+    assert old_store.load_document()==old_doc
+    assert store.read_current()['minimum_writer']=='rc3-entry.v1'
 
 
 def test_http_cli_identical_readonly_errors_and_legacy_tasks_shape(store, capsys):

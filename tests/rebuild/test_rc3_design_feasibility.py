@@ -13,7 +13,6 @@ from deck_master.operations import OperationError
 from deck_master.store import Store
 from test_rc3_design_recipes import input_value, page
 from test_rc3_design_requirements import _narrative
-from test_rc3_notes_visual_inputs import _seed_imported_plan
 
 
 def scope(page_ids, *, layers=None, manifest=None):
@@ -55,7 +54,7 @@ def initial(tmp_path, kind):
         plan = {"schema_version": "content_plan.v2", "plan_id": "planned-layout", "version": 1, "project_id": doc["project_id"],
                 "task_id": None, "origin": "host_composed", "basis": {"revision_id": doc["revision_id"], "input_digest": models.compute_input_digest(doc)},
                 "previous_ref": None, "mode": "planned", "narrative_ref": None, "imported_manuscript": None,
-                "input": {"schema_version": "content_plan_input.v2", "chapters": [], "page_order": ["p1", "p2"], "page_roles": roles,
+                "input": {"schema_version": "content_plan_input.v2", "chapters": [{"chapter_id": "mechanism", "title": "Synthetic mechanism", "page_ids": ["p1", "p2"]}], "page_order": ["p1", "p2"], "page_roles": roles,
                           "page_budget": {"exact": None, "target": 2, "max": None},
                           "time_budget": {"total_seconds": None, "speaking_seconds": None, "interaction_seconds": None, "constraint": "unspecified"},
                           "speech_policy": {"mode": "none", "source": "default", "output": "none"}, "issues": [], "tradeoff_issue_ids": []},
@@ -70,8 +69,16 @@ def initial(tmp_path, kind):
 
 
 def authorized(tmp_path, kind="page", *, actions=("design.feasibility", "design.propose"), request_scope=None,
-               grant_scope=None, request_manifest_ids=None):
-    project, store = initial(tmp_path, kind)
+               grant_scope=None, request_manifest_ids=None, current_manuscript=False):
+    if current_manuscript:
+        project = tmp_path / "design-only"
+        # Establish the real manuscript before restricting authority to design.
+        service.create(project, brief="Synthetic mechanism layout feasibility",
+                       draft={"pages": [page(pid) for pid in ("p1", "p2")]},
+                       project_format="workbench.v3")
+        store = Store(project)
+    else:
+        project, store = initial(tmp_path, kind)
     doc = store.load_document()
     selected = [] if kind == "narrative" else ["p1", "p2"]
     current_scope = request_scope or scope(selected, manifest=doc.get("content_plan"))
@@ -83,10 +90,13 @@ def authorized(tmp_path, kind="page", *, actions=("design.feasibility", "design.
         manifest["input"]["page_order"] = list(request_manifest_ids)
         manifest["input"]["page_roles"] = [role for role in manifest["input"]["page_roles"] if role["page_id"] in request_manifest_ids]
         manifest["input"]["page_budget"]["target"] = len(request_manifest_ids)
+        for chapter in manifest["input"]["chapters"]:
+            chapter["page_ids"] = [pid for pid in chapter["page_ids"] if pid in request_manifest_ids]
         models.validate_content_plan_semantics(manifest)
         current_scope = scope([], manifest=store.put_json_object(manifest))
     collaboration.start_request(project, input={"intent": "design_trial", "content_intent": None,
-        "instruction_evidence": evidence(store), "scope": current_scope, "replace_request_id": None},
+        "instruction_evidence": evidence(store), "scope": current_scope,
+        "replace_request_id": ((doc.get("collaboration") or {}).get("request") or {}).get("request_id")},
         base_revision=store.current_revision_id(), operation_id="feasibility-start")
     grant = collaboration.grant(project, input={"mode": "execute", "actions": list(actions),
         "scope": grant_scope or current_scope, "decision_refs": [], "delegated_topics": [],
@@ -187,8 +197,7 @@ def test_feasibility_recipe_refuses_public_sample_plan_and_pure_production_compi
 
 
 def test_zero_call_planning_authorization_cannot_dispatch_initial_sample_or_blueprint(tmp_path):
-    project, store, _ = authorized(tmp_path, actions=("design.propose",))
-    _seed_imported_plan(store)
+    project, store, _ = authorized(tmp_path, actions=("design.propose",), current_manuscript=True)
     proposed = styles.propose(project, input=value(store, intent="initial_design"))
     confirmed = styles.confirm(project, proposal_id=proposed["proposal_id"], base_revision=store.current_revision_id(),
                                operation_id=str(uuid.uuid4()))["operation_result"]

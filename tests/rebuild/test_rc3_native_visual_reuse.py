@@ -27,7 +27,7 @@ def _fidelity_review(path, store):
     assert outcome["requirement"] == "fidelity_only" and outcome["status"] == "review_dispatched"
     task = outcome["task"]
     service.task_start(path, task_id=task["task_id"], execution_ref="synthetic-fidelity-self-review",
-                       capabilities=task.get("required_capabilities"))
+                       supported_protocols=[task["protocol_version"]], capabilities=task.get("required_capabilities"))
     document = store.load_document()
     subjects = [document["content_plan"], *[entry["page"] for entry in document["pages"]]]
     deps = [{"kind": "content", "identity": "content_plan", "sha256": document["content_plan"]["sha256"]}]

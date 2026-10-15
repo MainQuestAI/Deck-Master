@@ -15,6 +15,8 @@ from pathlib import Path
 import pytest
 
 from deck_master.models import new_document
+from rc3_fixtures import claim_fixture_task
+from test_service_flow import _prepare_production
 from deck_master.store import (
     ConflictError,
     OperationCancelled,
@@ -295,6 +297,8 @@ def _page(page_id, title):
 def _two_page_project(tmp_path):
     project = tmp_path / "proj"
     service.create(project, brief="局部修改", draft={"pages": [_page("p1", "标题一"), _page("p2", "标题二")]})
+    _prepare_production(project, actions=['dispatch.host_task', 'page.edit', 'restore'],
+        max_external_calls=0, scenario='L1 store invalidation scope, no image calls')
     return project
 
 
@@ -341,7 +345,7 @@ def test_task_management_changes_do_not_invalidate_untouched_pages(tmp_path):
     store = Store(project)
     document = _attach_slots(store, store.load_document())
     task = service.open_host_task(store, kind="repair", page_ids=["p1"], instruction="notes only")
-    service.task_start(project, task_id=task["task_id"], execution_ref="run-1")
+    claim_fixture_task(project, task, execution_ref="run-1")
     service.task_cancel(project, task_id=task["task_id"], reason="budget hold")
     after = store.load_document()
     assert after["revision_id"] != document["revision_id"]
@@ -423,10 +427,17 @@ def test_restore_keeps_call_facts_and_old_snapshot(tmp_path):
     # task fact and the old snapshot stay exactly as committed.
     project = tmp_path / "proj"
     service.create(project, brief="恢复", draft={"pages": [_page("p1", "原标题")]})
+    _prepare_production(project, actions=['dispatch.host_task', 'allowance.allocate', 'call.begin', 'page.edit', 'restore'],
+        max_external_calls=1, scenario='L1 restore retains cancelled Task and unknown software call fact, no provider event')
     store = Store(project)
     original = store.load_document()
-    response = service.continue_project(project)
-    task = response["pending_tasks"][0]
+    task = service.open_host_task(store, kind='repair', page_ids=['p1'],
+        instruction='L1 current scoped restore ledger test')
+    claim_fixture_task(project, task, execution_ref='L1-store-restore')
+    from deck_master import tasks as tasks_mod
+    tasks_mod.allocate_call_allowances(store, task_id=task['task_id'], count=1)
+    tasks_mod.call_begin(store, task_id=task['task_id'], allowance_id='call-1', execution_ref='L1-store-restore')
+    tasks_mod.call_settle(store, task_id=task['task_id'], allowance_id='call-1', outcome='unknown', report_bytes=None)
     cancelled = service.task_cancel(project, task_id=task["task_id"], reason="user stop")
     assert cancelled["status"] == "cancelled"
     edited_page = deepcopy(store.read_object_json(original["pages"][0]["page"]))
@@ -443,6 +454,8 @@ def test_restore_keeps_call_facts_and_old_snapshot(tmp_path):
     # Operation facts survive: the cancelled task is still cancelled...
     statuses = {store.read_object_json(t)["status"] for t in restored["tasks"]}
     assert "cancelled" in statuses
+    restored_task = tasks_mod._lookup_task(restored, task['task_id'], store)
+    assert restored_task['call_allowances'][0]['state'] == 'unknown'
     # ...and the old snapshot itself is untouched and loadable.
     snapshot = store.load_document(current["revision_id"])
     assert snapshot["revision_id"] == current["revision_id"]

@@ -257,3 +257,39 @@ def test_narrow_intake_full_scope_and_keyboard_remain_readable(rc3_browser, tmp_
     expect(page.get_by_role("dialog")).to_have_count(0)
     assert store.load_document() == before
     assert json.loads(source.read_text()) == manuscript
+
+
+def test_launcher_hard_limit_refusal_shows_safe_actual_limit(launcher_service, tmp_path):
+    _, _, state = launcher_service
+    source = tmp_path / 'three-pages.json'
+    manuscript = {'pages': [manuscript_page('source-'+str(n), '确认稿第'+str(n)+'页') for n in range(1,4)]}
+    source.write_text(json.dumps(manuscript, ensure_ascii=False), encoding='utf-8')
+    original = source.read_bytes(); target = tmp_path / 'rejected-limit'
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox'])
+        page = browser.new_page(viewport={'width': 1280, 'height': 800})
+        try:
+            page.goto(state['url'])
+            page.get_by_role('button', name='新建项目', exact=True).click()
+            dialog = page.get_by_role('dialog', name='新建项目')
+            dialog.get_by_label('确认稿 JSON 文件（可选）').set_input_files(source)
+            dialog.get_by_label('项目名称（必填）').fill('保留超限输入')
+            dialog.get_by_label('用途（必填）').fill('明确上限两页，不能以导入绕过。')
+            dialog.get_by_label('受众（必填）').fill('L1验证者')
+            dialog.get_by_label('保存到哪个文件夹（必填）').fill(str(tmp_path))
+            dialog.get_by_label('新项目文件夹名（必填）').fill(target.name)
+            dialog.get_by_label('页数目标（可选）').fill('2')
+            with page.expect_response('**/api/projects/create') as response:
+                dialog.get_by_role('button', name='创建项目', exact=True).click()
+            retain_http(response.value, tmp_path / 'hard-limit-http.json')
+            assert response.value.status == 422
+            expect(dialog).to_contain_text('确认稿有 3 页，超过本次明确页数上限 2 页')
+            expect(dialog).to_contain_text('原文件与输入保留')
+            error = dialog.locator('.field-error').last
+            expect(error).not_to_contain_text('draft/page_order')
+            expect(error).not_to_contain_text('page_limit')
+            expect(dialog.get_by_label('项目名称（必填）')).to_have_value('保留超限输入')
+            assert not target.exists() and source.read_bytes() == original
+            page.screenshot(path=str(tmp_path / 'hard-limit-safe-recovery.png'), full_page=True)
+        finally:
+            browser.close()
