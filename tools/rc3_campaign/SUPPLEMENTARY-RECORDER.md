@@ -122,6 +122,15 @@ alias/symlink or extra required source refuses the packet. Final whole-file
 review cannot be relabeled a P5 task. Project paths and opaque refs are metadata,
 not a directory access grant; this is a Host boundary, **not an OS sandbox**.
 
+The bounded semantic-object guard uses the actual public schema families
+`narrative.v1` and `content_plan.v2`. It rejects complete objects inline, nested
+inside JSON, or reached through required-read Refs, including JSON stored with
+another suffix. JSON is checked before an author copy is written, so a rejected
+wrapper cannot already contain the whole Narrative/Plan in the author files.
+Opaque `narrative_ref`/`page_manifest_ref` identities stay unexpanded. This guard
+applies only to the bounded view; full/nonblind Q1/E2/public source profiles keep
+their existing permissions. It does not change any Runtime Task or Page contract.
+
 The real neutral route diagnosis is separate evidence: public legacy import
 then replacing a full Source with a P5 Source succeeds as an input operation but
 creates a global input-revision Task; a P5-only Request cannot claim it. This

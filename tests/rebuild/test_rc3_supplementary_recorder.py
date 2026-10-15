@@ -128,6 +128,57 @@ def test_opaque_whole_output_ref_not_required_read_and_expansion_refused(tmp_pat
         closure.visit(ref, "/required_full_file")
 
 
+@pytest.fixture(params=["narrative", "plan"])
+def full_semantic_object(tmp_path, request):
+    """Actual schema-valid objects; structural seam, not a claimed Host Task."""
+    from deck_master import models
+    if request.param == "narrative":
+        project = tmp_path / "project"; project.mkdir()
+        target = page("p5")
+        value = {"schema_version": "narrative.v1", "narrative_id": "synthetic-whole-narrative", "version": 1,
+            "project_id": "synthetic-project", "origin": "host_composed", "maturity": "framing", "input_basis": [],
+            "communication_job": {"mode": "explain", "audience_fact_key": "audience", "audience_question": "How does the neutral sequence fit?",
+                "desired_outcome": "Understand the neutral sequence.", "observable_success": "Explain the sequence.", "use_mode": "read_alone", "primary_use": "read_alone"},
+            "central_node_id": None, "nodes": [], "edges": [], "issues": [], "alternatives": [], "previous_ref": None}
+        models.validate_narrative_semantics(value)
+    else:
+        from rc3_fixtures import public_project
+        from deck_master.store import Store
+        project = public_project(tmp_path, create_input={"brief": "Synthetic bounded closure schema check"}, manuscript={"pages": [page("p5")]})["project"]
+        store = Store(project); doc = store.load_document(); value = store.read_object_json(doc["content_plan"])
+        target = store.read_object_json(doc["pages"][0]["page"])
+        models.validate_content_plan_semantics(value)
+        assert value["schema_version"] == "content_plan.v2" and value["input"]["page_order"] == ["p5"]
+    return project, value, target
+
+
+@pytest.mark.parametrize("layout", ["inline", "nested-inline", "ref", "nested-ref", "inline-in-ref", "alternate-extension"])
+def test_bounded_closure_rejects_real_full_semantic_schemas(full_semantic_object, tmp_path, layout):
+    project, value, target = full_semantic_object
+    path = project / ("full.txt" if layout == "alternate-extension" else "full.json")
+    saved = c.save(path, {"wrapper": [value]} if layout == "inline-in-ref" else value)
+    ref = {"path": path.name, "sha256": saved["sha256"]}
+    payload = value if layout == "inline" else {"required": [value]} if layout == "nested-inline" else {"required": [ref]} if layout == "nested-ref" else ref
+    destination = tmp_path / "bounded-author"
+    closure = m.Closure(str(project), target, destination, bounded=True)
+    with pytest.raises(m.Error, match="full Narrative/Plan"):
+        closure.visit(payload, "/required/inputs/extra")
+    assert not closure.items and not list(destination.rglob("*"))
+
+
+def test_real_semantic_refs_stay_opaque_and_nonbounded_reading_unchanged(full_semantic_object, tmp_path):
+    project, value, target = full_semantic_object
+    saved = c.save(project / "full.json", value); ref = {"path": "full.json", "sha256": saved["sha256"]}
+    key = "narrative_ref" if value["schema_version"] == "narrative.v1" else "page_manifest_ref"
+    bounded = m.Closure(str(project), target, tmp_path / "bounded", bounded=True)
+    bounded.visit({key: ref}, "/target/content_mapping")
+    assert not bounded.items and bounded.opaque[0]["read_permission"] is False
+    # Explicit full/nonblind profile; no new limit on Q1/E2 public source files.
+    full = m.Closure(str(project), None, tmp_path / "full-profile", bounded=False)
+    full.visit(ref, "/required")
+    assert c.read(full.items[0]["author_copy"]["path"]) == value
+
+
 @pytest.mark.parametrize("fault", ["other-page", "plan", "foreign", "dotdot", "symlink", "hash", "uri"])
 def test_required_read_graph_negative_controls(tmp_path, fault):
     project = tmp_path / "project"; project.mkdir()

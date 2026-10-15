@@ -503,22 +503,41 @@ class Closure:
         require(c.digest(path.read_bytes()) == value["sha256"], "opaque identity hash mismatch")
         self.opaque.append({"pointer": pointer, "ref": value, "classification": "opaque_binding_only", "read_permission": False})
 
+    def reject_full_semantics(self, value):
+        """Check inline JSON before any bounded author copy, without Ref expansion."""
+        if isinstance(value, dict):
+            schema = value.get("schema_version")
+            require(not (isinstance(schema, str) and schema.startswith(("narrative.", "content_plan.", "deck_narrative.", "deck_content_plan."))), "full Narrative/Plan cannot become P5 author reading")
+            for item in value.values():
+                self.reject_full_semantics(item)
+        elif isinstance(value, list):
+            for item in value:
+                self.reject_full_semantics(item)
+
     def visit(self, value, pointer):
         if self.is_ref(value):
             key = (str(self.path(value["path"])), value["sha256"])
             if key in self.seen:
                 return
+            if self.bounded:
+                raw = self.path(value["path"]).read_bytes()
+                require(c.digest(raw) == value["sha256"], "required-read hash mismatch")
+                try:
+                    decoded = json.loads(raw)
+                except (ValueError, UnicodeDecodeError):
+                    decoded = None
+                self.reject_full_semantics(decoded)
             raw = self.add(value["path"], value["sha256"], pointer)
             if Path(value["path"]).suffix == ".json":
                 self.visit(json.loads(raw), pointer + "/@object")
         elif isinstance(value, dict):
             if self.bounded:
+                self.reject_full_semantics(value)
                 if value.get("schema_version", "").startswith("deck_page_package."):
                     require(value == self.target, "required Page is not the complete exact current target including notes")
                 if "page_id" in value:
                     require(value["page_id"] in {None, self.target["page_id"]}, "required-read closure expands another Page")
                 require(not value.get("page_order") or value["page_order"] == [self.target["page_id"]], "required-read closure expands full Plan order")
-                require(not (value.get("schema_version", "").startswith(("deck_narrative.", "deck_content_plan."))), "full Narrative/Plan cannot become P5 author reading")
             for key, item in value.items():
                 # Page content mapping binds its existing Narrative identity; it
                 # is not permission to read the complete Narrative.
