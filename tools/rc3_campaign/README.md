@@ -77,6 +77,24 @@ controller's installation check as their admission.
    changed-input Tasks count as separate actual Writer executions. Continue only
    through actual public operations and returned pending Tasks.
 
+For `input_revision`, the formal contract requires stored proposal Refs. Before
+any SDK storage, the Writer writes the complete formal envelope and its own JSON
+proposal-object files inside the allowed stage. It computes each ordinary Ref
+from its own Runtime's public `canonical_json_bytes`: UTF-8 JSON, Unicode kept,
+keys sorted, separators `,`/`:`, non-finite numbers refused; SHA-256 gives
+`.deckmaster/objects/<first-two-hex>/<sha256>.json`. This is pure calculation,
+not a Store write. Root's full native completion binds every sidecar's
+`{path,sha256,declared_ref}` in `native_object_files`. `observe` first freezes
+all originals outside the project. `materialize-native-objects --run ...
+--stage ... --ordinal ...` validates the complete file/Ref/proposal collection,
+own installed schema types and existing own-project references before its first
+Store write, then stores those exact objects without moving current. It changes
+no envelope field or semantic content. `accept` then consumes the unchanged
+Writer envelope. Validation failure writes no proposal object; a real storage
+interruption may retain immutable orphan bytes and requires reconciliation.
+This technical sequence must be shared, frozen and independently reviewed for
+both arms before a Writer runs. It does not loosen the product's envelope schema.
+
 An invocation observation contains `observation_kind`, `assurance:"host_attested"`,
 `observed_at_utc`, actual `project_id`/`task_id`, and `spawn` with `tool`, actual
 `canonical_task_name`/`returned_task_name`, `fork_turns`, `inherited_identities`.

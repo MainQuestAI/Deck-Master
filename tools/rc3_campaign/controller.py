@@ -28,6 +28,7 @@ OBSERVER_KIND = "root_controller_transcription_of_actual_native_tool_response"
 CHANNEL = "independent_review_receipts"
 PROVIDER_ID = "rc3-final-native-root-controller"
 ROLES = {"initial_writer", "repair_writer", "feedback", "verification", "production", "production_review", "post_comparison_writer", "extra_writer"}
+WRITER_ROLES = {"initial_writer", "repair_writer", "production", "post_comparison_writer", "extra_writer"}
 SNAPSHOTS = {"original_complete", "first_sdk_complete", "equal_budget_evaluated",
              "qualified_for_owner", "owner_later", "extra_work"}
 PUBLIC_OPERATIONS = {
@@ -240,14 +241,15 @@ def installation(config, arm, *, enforce_isolation=True):
                 or Path(manifest["installed_module_path"]).resolve() != root / "__init__.py"):
             raise CampaignError("original A0 package/wheel/manifest differs")
         observed = {"module_path": str(root / "__init__.py"), "python_executable": sys.executable,
-                    "install": {"source_sha": manifest["source_sha"], "wheel_sha256": manifest["wheel_sha256"]},
+                    "install": {"source_sha": manifest["source_sha"], "source_tree": manifest["source_tree"], "wheel_sha256": manifest["wheel_sha256"]},
                     "adapter_profile": "A0-public-legacy", "identity_source": "actual original wheel and pinned package inventory"}
     else:
         from deck_master import capabilities
         observed = capabilities.installation_identity()
     identity = observed.get("install") or {}
-    if identity.get("source_sha") != spec["source_sha"] or identity.get("wheel_sha256") != spec["wheel_sha256"]:
-        raise CampaignError("installed source/wheel metadata differs from admitted arm")
+    if (identity.get("source_sha") != spec["source_sha"] or identity.get("source_tree") != spec["source_tree"]
+            or identity.get("wheel_sha256") != spec["wheel_sha256"]):
+        raise CampaignError("installed source/tree/wheel metadata differs from admitted arm")
     for name, module in tuple(sys.modules.items()):
         if (name == "deck_master" or name.startswith("deck_master.")) and getattr(module, "__file__", None):
             if not Path(module.__file__).resolve().is_relative_to(root):
@@ -264,7 +266,9 @@ def load_run(path):
     validate_registration(config)
     installation(config, state["arm"])
     journal = Journal(root)
-    journal.events()
+    events = journal.events()
+    if not events or events[0]["kind"] != "workflow_initialized" or events[0]["data"] != state:
+        raise CampaignError("workflow manifest differs from its immutable initialized identity")
     return journal, state, config
 
 
@@ -423,7 +427,7 @@ def prepare(journal, state, config, stage, task_id, role):
     if role == "production_review" and task.get("review_stage") == "preproduction":
         raise CampaignError("preproduction review cannot bypass the independent feedback/verification accounting")
     if role == "post_comparison_writer":
-        if not (journal.root / "snapshots" / "equal_budget_evaluated.json").exists() or not any(
+        if state["case"] != "Q2" or not (journal.root / "snapshots" / "equal_budget_evaluated.json").exists() or not any(
                 e["kind"] == "scripted_event" and e["data"]["event_id"] == "Q2-change-5min" for e in journal.events()):
             raise CampaignError("post-comparison work needs frozen E1 timepoint and its actual scripted input change")
     if role == "extra_writer" and not any(e["kind"] == "extra_work_begun" for e in journal.events()):
@@ -517,7 +521,7 @@ def begin_native(journal, state, config, stage, observation_path):
     role = dispatch["role"]
     if role in {"feedback", "verification", "production_review"}:
         authors = {e["data"]["executor"] for e in previous
-                   if e["data"]["role"] in {"initial_writer", "repair_writer", "production"}}
+                   if e["data"]["role"] in WRITER_ROLES}
         if executor in authors:
             raise CampaignError("review execution is a manuscript author")
     used = sum(e["data"]["role"] == role for e in previous)
@@ -596,12 +600,24 @@ def observe(journal, state, stage, ordinal, result_path, result_sha256, observat
         task = task_for(store, dispatch["task_id"])
         if task["status"] != "running" or task.get("execution_ref") != executor:
             raise CampaignError("actual native execution did not claim this current Task")
+        objects = []
+        for item in observation.get("native_object_files", []):
+            original = Path(item["path"]).resolve(strict=True)
+            if not original.is_relative_to(target.parent.parent.resolve()) or original.suffix != ".json":
+                raise CampaignError("native proposal originals must be JSON files inside this allowed stage packet")
+            original_raw = original.read_bytes()
+            frozen = write_once(target / "native-objects" / (digest(original_raw) + ".json"), original_raw)
+            objects.append({"original": reference(original), "frozen": frozen, "declared_ref": item["declared_ref"]})
+            if digest(original_raw) != item["sha256"]:
+                raise CampaignError("Root observed different native proposal-object bytes")
+        if objects:
+            journal.append("native_objects_frozen", {"ordinal": ordinal, "objects": objects})
         # Parse only after raw immutable storage. No controller metadata/semantic repair.
         result = json.loads(raw)
         if not isinstance(result, dict):
             raise CampaignError("native result must be a complete object")
         save(target / "observed.json", {"raw": raw_ref, "observation": obs_ref, "executor": executor,
-                                      "ordinal": ordinal, "within_budget": invocation["within_budget"]})
+                                      "ordinal": ordinal, "within_budget": invocation["within_budget"], "native_objects": objects})
     except Exception as exc:
         journal.append("native_observation_refused", {"ordinal": ordinal, "error_type": type(exc).__name__, "error": str(exc)})
         raise
@@ -648,6 +664,78 @@ def accept(journal, state, stage, ordinal):
     journal.append("result_accepted", {"ordinal": ordinal, "role": invocation["role"], "task_id": task["task_id"],
                                       "executor": invocation["executor"], "raw": proof["raw"], "outcome": outcome})
     return outcome
+
+
+def materialize_native_objects(journal, state, stage, ordinal):
+    """Store only exact Writer-authored, pre-frozen objects; change no envelope.
+
+    The Writer computes ordinary content-addressed Refs using the arm's public
+    canonical JSON encoding. Root freezes its full response and object files
+    first. This function never fills changed layers, diff, prose or a Ref.
+    """
+    from deck_master import models
+    from deck_master.content import check_page
+    from deck_master.models import canonical_json_bytes
+    invocation, target, envelope, proof = observed_result(journal, stage, ordinal)
+    objects = proof.get("native_objects") or []
+    if envelope.get("variant") != "input_revision" or not objects:
+        raise CampaignError("only an actual input_revision with frozen native proposal objects uses this step")
+    proposals = envelope.get("payload", {}).get("proposals", [])
+    declared = [proposal.get("ref") for proposal in proposals]
+    if any(not isinstance(ref, dict) or set(ref) != {"path", "sha256"} for ref in declared):
+        raise CampaignError("each native proposal declares its complete canonical Ref")
+    if len({(ref["path"], ref["sha256"]) for ref in declared}) != len(declared):
+        raise CampaignError("duplicate native proposal Refs are ambiguous")
+    pending, seen = [], set()
+    for item in objects:
+        check_ref(item["frozen"])
+        obj = read(item["frozen"]["path"])
+        hashed = digest(canonical_json_bytes(obj))
+        expected = {"path": f".deckmaster/objects/{hashed[:2]}/{hashed}.json", "sha256": hashed}
+        if expected != item["declared_ref"] or expected not in declared or hashed in seen:
+            raise CampaignError("native object, own canonical Ref and unchanged formal proposal Ref disagree")
+        seen.add(hashed)
+        pending.append((obj, expected, item["frozen"]))
+    store = store_for(state)
+    revision = store.current_revision_id()
+    prepared = {ref["sha256"]: obj for obj, ref, _ in pending}
+    for proposal in proposals:
+        ref = proposal["ref"]
+        try:
+            obj = prepared[ref["sha256"]] if ref["sha256"] in prepared else store.read_object_json(ref)
+        except Exception as exc:
+            raise CampaignError("missing native sidecar or proposal Ref outside this actual Store") from exc
+        layer = proposal.get("layer")
+        canonical = digest(canonical_json_bytes(obj))
+        if ref != {"path": f".deckmaster/objects/{canonical[:2]}/{canonical}.json", "sha256": canonical}:
+            raise CampaignError("formal proposal has a noncanonical or foreign object Ref")
+        if layer == "narrative":
+            models.validate_narrative_semantics(obj)
+            if obj["project_id"] != store.load_document()["project_id"]:
+                raise CampaignError("native Narrative belongs to another project")
+        elif layer == "plan":
+            if obj.get("schema_version") == "content_plan.v2":
+                models.validate_content_plan_semantics(obj)
+                if obj["project_id"] != store.load_document()["project_id"]:
+                    raise CampaignError("native Plan belongs to another project")
+            else:
+                models.validate_schema("content_plan_input", obj)
+        elif layer in {"page_copy", "speech"}:
+            check_page(obj)
+        else:
+            raise CampaignError("unknown native proposal layer")
+    # Every byte/ref/set/type check above finishes before the first Store put.
+    # An I/O interruption can leave immutable orphan objects, never a current
+    # manuscript adoption; its unresolved intent requires real reconciliation.
+    results = []
+    for obj, expected, frozen in pending:
+        actual = record_sdk(journal, "Store.put_json_object.exact_frozen_native_proposal", {"ordinal": ordinal,
+                           "raw_object": frozen, "native_declared_ref": expected}, lambda: store.put_json_object(obj))
+        if actual != expected or store.current_revision_id() != revision:
+            raise CampaignError("proposal materialization changed canonical identity or current Document")
+        results.append(actual)
+    journal.append("native_objects_materialized", {"ordinal": ordinal, "refs": results, "semantic_wrapping": False})
+    return {"status": "exact_native_objects_stored", "refs": results, "current_revision_unchanged": True}
 
 
 def bootstrap(path):
@@ -740,7 +828,7 @@ def review_accept(journal, state, stage, ordinal, bootstrap_path):
     task = task_for(store, dispatch["task_id"])
     binding = review_evidence.review_binding(store, store.load_document(), task, envelope)
     authors = {e["data"]["executor"] for e in journal.events() if e["kind"] == "native_begun"
-               and e["data"]["role"] in {"initial_writer", "repair_writer", "production"}}
+               and e["data"]["role"] in WRITER_ROLES}
     if invocation["executor"] in authors or not set(binding["author_execution_refs"]) <= authors:
         raise CampaignError("actual authors must be observed; reviewer must be independent of all authors")
     issued = datetime.now(timezone.utc)
@@ -951,12 +1039,12 @@ def main():
     for key in ("campaign", "out", "arm", "case", "project"):
         init.add_argument("--" + key, required=True)
     init.add_argument("--repetition", type=int, default=1)
-    for command in ("public-operation", "prepare", "begin-native", "claim-read", "observe", "accept",
+    for command in ("public-operation", "prepare", "begin-native", "claim-read", "observe", "accept", "materialize-native-objects",
                     "review-prepare", "review-accept", "deliver-feedback", "repair-begin", "scripted-event", "materialize-instruction", "snapshot", "reconcile", "declare-extra", "status"):
         p = sub.add_parser(command); p.add_argument("--run", required=True)
-        if command in {"prepare", "begin-native", "claim-read", "observe", "accept", "review-prepare", "review-accept", "deliver-feedback"}:
+        if command in {"prepare", "begin-native", "claim-read", "observe", "accept", "materialize-native-objects", "review-prepare", "review-accept", "deliver-feedback"}:
             p.add_argument("--stage", required=True)
-        if command in {"claim-read", "observe", "accept", "review-accept", "deliver-feedback"}:
+        if command in {"claim-read", "observe", "accept", "materialize-native-objects", "review-accept", "deliver-feedback"}:
             p.add_argument("--ordinal", type=int, required=True)
         if command == "public-operation":
             p.add_argument("--operation", required=True); p.add_argument("--arguments", required=True)
@@ -999,6 +1087,7 @@ def main():
                 result = observe(journal, state, args.stage, args.ordinal, args.result, args.result_sha256,
                                  args.observation, args.observation_sha256)
             elif args.command == "accept": result = accept(journal, state, args.stage, args.ordinal)
+            elif args.command == "materialize-native-objects": result = materialize_native_objects(journal, state, args.stage, args.ordinal)
             elif args.command == "review-prepare": result = review_prepare(journal, state, config, args.stage, args.role, args.bootstrap)
             elif args.command == "review-accept": result = review_accept(journal, state, args.stage, args.ordinal, args.bootstrap)
             elif args.command == "deliver-feedback": result = deliver_feedback(journal, args.stage, args.ordinal)

@@ -232,3 +232,81 @@ def test_actual_sdk_consumes_exact_frozen_synthetic_framing_without_adopting_it(
     assert (target / "raw-native-output").read_bytes() == raw.read_bytes()
     assert c.task_for(store, task["task_id"])["status"] == "completed"
     assert not journal.unfinished()
+
+
+@pytest.mark.parametrize("wrong_ref", [False, True, "missing", "duplicate", "extra", "corrupted", "foreign", "invalid"])
+def test_input_revision_objects_are_frozen_before_sdk_storage_and_never_rewritten(tmp_path, wrong_ref):
+    from deck_master.models import canonical_json_bytes, ModelError
+    from deck_master.store import StoreError
+    journal, state, config, store, initial = fixture(tmp_path)
+    c.sdk_operation(journal, state, "service.inputs_update", {"patch": {"reason": "Neutral change",
+        "task_patch": {"audience": "Engineering reader"}}, "base_revision": store.current_revision_id(), "operation_id": "objects-update"})
+    task = next(store.read_object_json(ref) for ref in store.load_document()["tasks"]
+                if store.read_object_json(ref).get("intent") == "input_revision")
+    dispatch = c.prepare(journal, state, config, "reconcile", task["task_id"], "initial_writer")
+    ordinal = c.begin_native(journal, state, config, "reconcile", fake_invocation(tmp_path, dispatch))["ordinal"]
+    c.claim_read(journal, state, "reconcile", ordinal, "/root/unit_writer")
+    invocation, target = c.execution(journal, "reconcile", ordinal)
+    narrative = {"schema_version": "narrative.v1", "narrative_id": "neutral-reconciled", "version": 1,
+        "project_id": dispatch["project_id"], "origin": "host_composed", "maturity": "framing", "input_basis": [],
+        "communication_job": {"mode": "explain", "audience_fact_key": "task.audience", "audience_question": "Which fields are missing?",
+            "desired_outcome": "Record unknowns honestly", "observable_success": "Identify missing information",
+            "use_mode": "read_alone", "primary_use": "read_alone"}, "central_node_id": None,
+        "nodes": [], "edges": [], "issues": [], "alternatives": [], "previous_ref": None}
+    if wrong_ref == "invalid":
+        narrative.pop("input_basis")
+    hashed = c.digest(canonical_json_bytes(narrative))
+    expected = {"path": f".deckmaster/objects/{hashed[:2]}/{hashed}.json", "sha256": hashed}
+    obj = target.parent.parent / "native-narrative.json"
+    c.save(obj, narrative)
+    envelope = c.read(target.parent.parent / "envelope-metadata.json")
+    envelope["payload"] = {"changed_layers": ["narrative"], "proposals": [{"layer": "narrative", "ref": expected}],
+        "diff": {"input_digest": task["input_digest"], "summary": "The audience is now the engineering reader; framing is reconciled.",
+                 "changed_page_ids": [], "page_order": []}}
+    if wrong_ref == "missing":
+        envelope["payload"]["proposals"].append({"layer": "plan", "ref": {"path": ".deckmaster/objects/00/" + "0" * 64 + ".json", "sha256": "0" * 64}})
+    if wrong_ref == "duplicate":
+        envelope["payload"]["proposals"].append({"layer": "narrative", "ref": expected})
+    if wrong_ref == "foreign":
+        envelope["payload"]["proposals"][0]["ref"] = {**expected, "path": ".deckmaster/objects/ff/" + hashed + ".json"}
+    result = target.parent.parent / "native-envelope.json"
+    c.save(result, envelope)
+    observation = tmp_path / "observed-objects.json"
+    sidecars = [{**c.reference(obj), "declared_ref": {**expected, "sha256": "0" * 64} if wrong_ref is True else expected}]
+    if wrong_ref == "extra":
+        extra = target.parent.parent / "extra-unrelated-object.json"
+        c.save(extra, {"unrelated": "not a formal proposal"})
+        extra_hash = c.digest(canonical_json_bytes(c.read(extra)))
+        sidecars.append({**c.reference(extra), "declared_ref": {"path": f".deckmaster/objects/{extra_hash[:2]}/{extra_hash}.json", "sha256": extra_hash}})
+    c.save(observation, {"observation_kind": c.OBSERVER_KIND, "assurance": "host_attested", "observed_at_utc": c.now(),
+        "project_id": dispatch["project_id"], "task_id": task["task_id"], "model_output_bytes_sha256": c.reference(result)["sha256"],
+        "method_release": dispatch["method_release"], "all_method_bytes_read": True,
+        "method_read_record_sha256": c.reference(target / "method-read-record.json")["sha256"],
+        "native_object_files": sidecars,
+        "completion": {"sender": invocation["executor"], "message_type": "FINAL_ANSWER", "raw_final_message": "SYNTHETIC UNIT ONLY",
+            "status_observation_tool": "collaboration.list_agents", "observed_status": "completed",
+            "observed_completed_agents": [invocation["executor"]]}})
+    revision = store.current_revision_id()
+    with pytest.raises(StoreError):
+        store.read_object_bytes(expected)
+    c.observe(journal, state, "reconcile", ordinal, result, c.reference(result)["sha256"], observation, c.reference(observation)["sha256"])
+    if wrong_ref == "corrupted":
+        # An isolated test corruption, never a change to an actual preserved run.
+        frozen = Path(c.read(target / "observed.json")["native_objects"][0]["frozen"]["path"])
+        frozen.write_bytes(frozen.read_bytes() + b" ")
+    with pytest.raises(StoreError):
+        store.read_object_bytes(expected)  # observation freezes externally, not in the SDK Store
+    if wrong_ref:
+        with pytest.raises((c.CampaignError, ModelError)):
+            c.materialize_native_objects(journal, state, "reconcile", ordinal)
+        with pytest.raises(StoreError):
+            store.read_object_bytes(expected)
+        assert store.current_revision_id() == revision
+    else:
+        materialized = c.materialize_native_objects(journal, state, "reconcile", ordinal)
+        assert materialized["refs"] == [expected] and store.current_revision_id() == revision
+        assert store.read_object_json(expected) == narrative
+        outcome = c.accept(journal, state, "reconcile", ordinal)
+        assert outcome["status"] == "accepted" and outcome["variant"] == "input_revision"
+        assert (target / "raw-native-output").read_bytes() == result.read_bytes()
+        assert not journal.unfinished()
