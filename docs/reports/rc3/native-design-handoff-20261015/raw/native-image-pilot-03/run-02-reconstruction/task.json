@@ -1,0 +1,108 @@
+{
+  "schema_version": "deck_task.v1",
+  "task_id": "6626b919b45f",
+  "operation_id": "reconstruct-98b09c002e4e",
+  "kind": "reconstruct",
+  "status": "awaiting_host",
+  "scope_pages": [
+    "p04"
+  ],
+  "instruction": "Native model reconstruct actual adopted p04 image as editable1600x900 SVG; preserve fixed Page atoms and exact row/column ownership, four nodes and three directed edges; execute complete frozen recipe parameters, correct all actual candidate findings F01–F04 using only already frozen qualifiers/relationships and geometry, no manuscript edits/no further image call. Read actual original PNG, complete workorder, methods, frozen generation input and assessment.",
+  "inputs": [
+    {
+      "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+      "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+    },
+    {
+      "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    }
+  ],
+  "dependencies": [
+    {
+      "kind": "content",
+      "identity": "p04",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    }
+  ],
+  "dispatch_revision": "ea488e0f754547848fa408df7428e6b8",
+  "produced_against": "bd648eaac7c3915ffe6ebe417cf1ad2f3894149234ade03d595607a8d227b044",
+  "result_refs": [],
+  "error": null,
+  "execution_ref": null,
+  "created_at": "2026-10-15T01:08:00Z",
+  "updated_at": "2026-10-15T01:08:00Z",
+  "cost_class": "host_reasoning",
+  "usage": {
+    "source": "not_reported",
+    "external_calls": null
+  },
+  "call_allowances": [],
+  "method_release": {
+    "release_id": "8057905162f2-dacfcf0ca168",
+    "methods_sha256": "51b228c889424db9edfc8276d1f4e2495c6f1248fc24e6d5884e80d3eeeecc74"
+  },
+  "collaboration_binding": {
+    "request_id": "req-dca94ef15c98",
+    "phase": "production",
+    "executor_type": "host",
+    "authorization_ref": {
+      "path": ".deckmaster/objects/8d/8da9b8654a3cf1fd3e547e09c551d3dd31ddd31244a8fe1bc94ee5e76f9569ce.json",
+      "sha256": "8da9b8654a3cf1fd3e547e09c551d3dd31ddd31244a8fe1bc94ee5e76f9569ce"
+    },
+    "decision_refs": [],
+    "write_scope": {
+      "subject": "deck",
+      "page_ids": [
+        "p04"
+      ],
+      "page_manifest_ref": {
+        "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+        "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+      },
+      "external_artifact_ref": null,
+      "layers": [
+        "blueprint",
+        "output",
+        "svg"
+      ],
+      "allow_page_membership_change": false,
+      "allow_page_order_change": false,
+      "purpose": "working"
+    },
+    "adoption_policy": "within_scope",
+    "eligibility_basis": [
+      {
+        "kind": "artifact",
+        "identity": "narrative",
+        "projection": "content",
+        "ref": {
+          "path": ".deckmaster/objects/4e/4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca.json",
+          "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+        },
+        "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+      },
+      {
+        "kind": "artifact",
+        "identity": "page:p04",
+        "projection": "visual_input",
+        "ref": {
+          "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        "sha256": "8323ab66e64330ca270046cb6a067a1970fe650a172a8b12374eb081401dd5ac"
+      },
+      {
+        "kind": "artifact",
+        "identity": "plan:p04",
+        "projection": "visual_role",
+        "ref": {
+          "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        "sha256": "1eef471f976c5c5dba2797c1597ad5d08aff540619a046720c7ee9ffc6072bf0"
+      }
+    ],
+    "eligibility_digest": "e5d1314820d604ac935fd1292485829097f85e1ffef451541478e8d3ef518d9b"
+  }
+}

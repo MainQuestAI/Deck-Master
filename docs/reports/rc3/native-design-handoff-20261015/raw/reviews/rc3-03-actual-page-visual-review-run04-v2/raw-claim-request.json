@@ -1,0 +1,12 @@
+{
+  "task_id": "405175566aaf",
+  "execution_ref": "/root/rc3_03_actual_page_visual_review",
+  "supported_protocols": [
+    "changes.v1"
+  ],
+  "capabilities": [
+    "content_requirements_v1",
+    "style_recipe",
+    "style_recipe_v3"
+  ]
+}

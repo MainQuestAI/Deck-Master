@@ -1,0 +1,23 @@
+{
+  "original_inspection": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/original-blueprint.png",
+    "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "viewed_this_run": false,
+    "actual_prior_view": "run04-v2 original-detail view; unchanged byte hash verified this run",
+    "prior_report_path": "/workspace/work/rc3/reviews/rc3-03-actual-page-visual-review-run04-v2/report.md",
+    "prior_report_sha256": "46714b217ac23866f6a41a8b97113cd06bda2d27d3972f893756583acd0c1a9e"
+  },
+  "prior_v2_failed_review": {
+    "path": ".deckmaster/objects/ed/eda62a8962c5ad9fae874835b899112fbe072ea152770fdce4d616a02efade04.json",
+    "sha256": "eda62a8962c5ad9fae874835b899112fbe072ea152770fdce4d616a02efade04"
+  },
+  "prior_v2_report_path": "/workspace/work/rc3/reviews/rc3-03-actual-page-visual-review-run04-v2/report.md",
+  "prior_v2_report_sha256": "46714b217ac23866f6a41a8b97113cd06bda2d27d3972f893756583acd0c1a9e",
+  "old405_inputs_current": false,
+  "old_records_modified": false,
+  "method_and_frozen_context": "unchanged immutable identities; prior full relevant source/context readings reused, this run new task/constraints/full visible content+notes/actual SVG/new physical artifacts read and checked"
+}

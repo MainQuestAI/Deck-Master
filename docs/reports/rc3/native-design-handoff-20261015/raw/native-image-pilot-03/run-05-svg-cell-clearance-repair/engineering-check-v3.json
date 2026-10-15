@@ -1,0 +1,1473 @@
+{
+  "scope": "Author local engineering/font-bounds checks only; no newpreview/compile/render or actualPPTmeasurement",
+  "repair_round": 2,
+  "svg_sha256": "97df8d71e641c778e644bbddbb9e98a68be9a1b08a2ef56068cd2e9ed7cce005",
+  "errors": [],
+  "findings": [
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "gaps": [
+        -1.0,
+        0.0
+      ]
+    },
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "gaps": [
+        -1.0,
+        0.0
+      ]
+    },
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:label:collect:text",
+      "gaps": [
+        1.0,
+        -1.0
+      ]
+    },
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "gaps": [
+        1.0,
+        -1.0
+      ]
+    },
+    {
+      "type": "line_ink_overlap",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "gaps": [
+        -1.0,
+        1.0
+      ]
+    }
+  ],
+  "sdk_parse": {
+    "status": "parsed",
+    "shape_count": 60,
+    "canvas": [
+      1600.0,
+      900.0
+    ]
+  },
+  "atom_coverage": {
+    "count": 17,
+    "exact": 17,
+    "results": [
+      {
+        "atom_id": "atom:p04:title",
+        "exact": true,
+        "expected": "建议流程保留两条分支：条件可核对／条件未知",
+        "actual": "建议流程保留两条分支：条件可核对／条件未知",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:subtitle",
+        "exact": true,
+        "expected": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+        "actual": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:block:exceptions-heading:text",
+        "exact": true,
+        "expected": "未知与不适用信息仍随请求交接",
+        "actual": "未知与不适用信息仍随请求交接",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:column:exceptions:trigger:label",
+        "exact": true,
+        "expected": "触发条件",
+        "actual": "触发条件",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:column:exceptions:action:label",
+        "exact": true,
+        "expected": "接单人员动作",
+        "actual": "接单人员动作",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:column:exceptions:handoff:label",
+        "exact": true,
+        "expected": "交接及继续条件",
+        "actual": "交接及继续条件",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+        "exact": true,
+        "expected": "型号或版本待补／确实不可得",
+        "actual": "型号或版本待补／确实不可得",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+        "exact": true,
+        "expected": "保留已知条件、未知字段及原因；能补则请求可核对信息，不能强制填入猜测。",
+        "actual": "保留已知条件、未知字段及原因；能补则请求可核对信息，不能强制填入猜测。",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+        "exact": true,
+        "expected": "不能补出时交指定业务核查人判断下一步；取得可核查条件后按主链继续。具体责任人与恢复规则须在启动前明确。",
+        "actual": "不能补出时交指定业务核查人判断下一步；取得可核查条件后按主链继续。具体责任人与恢复规则须在启动前明确。",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+        "exact": true,
+        "expected": "引用适用性无法确认、引用冲突／不适用，或问题仍不确定",
+        "actual": "引用适用性无法确认、引用冲突／不适用，或问题仍不确定",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+        "exact": true,
+        "expected": "保留设备条件、来源位置和未决点；候选引用不能标成可直接采用的结论。",
+        "actual": "保留设备条件、来源位置和未决点；候选引用不能标成可直接采用的结论。",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+        "exact": true,
+        "expected": "交核查人确认资料适用性和下一步；无法确认则继续标明未决，不把找到资料记为故障已解决。",
+        "actual": "交核查人确认资料适用性和下一步；无法确认则继续标明未决，不把找到资料记为故障已解决。",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:label:collect:text",
+        "exact": true,
+        "expected": "现场人员提供型号、版本与现象；接单人员核对可核查条件。",
+        "actual": "现场人员提供型号、版本与现象；接单人员核对可核查条件。",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:label:retrieve:text",
+        "exact": true,
+        "expected": "只读助手返回许可资料片段及来源。",
+        "actual": "只读助手返回许可资料片段及来源。",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:label:review:text",
+        "exact": true,
+        "expected": "指定人员核查引用适用性，记录采用／未采用及原因。",
+        "actual": "指定人员核查引用适用性，记录采用／未采用及原因。",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:label:submit:text",
+        "exact": true,
+        "expected": "人员在现有系统完成正式提交。",
+        "actual": "人员在现有系统完成正式提交。",
+        "carriers": 1
+      },
+      {
+        "atom_id": "atom:p04:callout:boundary:text",
+        "exact": true,
+        "expected": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。能力边界：引用问答不等于诊断正确或操作获批。",
+        "actual": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。能力边界：引用问答不等于诊断正确或操作获批。",
+        "carriers": 1
+      }
+    ]
+  },
+  "font_resolution": {
+    "regular": {
+      "family": "Noto Sans CJK SC",
+      "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+      "index": 2
+    },
+    "bold": {
+      "family": "Noto Sans CJK SC",
+      "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+      "index": 2
+    }
+  },
+  "typography": {
+    "run_count": 36,
+    "heading_runs": 2,
+    "body_runs": 34,
+    "all_roles_correct": true,
+    "font_families": [
+      "Noto Sans CJK SC"
+    ],
+    "runs": [
+      {
+        "element": "page-title:0",
+        "atom_id": "atom:p04:title",
+        "text": "建议流程保留两条分支：条件可核对／条件未知",
+        "role": "heading",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 50.0,
+        "required_svg_px": 50,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 30.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "page-subtitle:0",
+        "atom_id": "atom:p04:subtitle",
+        "text": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "main-chain-frozen-qualification:0",
+        "atom_id": null,
+        "text": "主链只适用于条件可核对情形。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "collect-label:0",
+        "atom_id": "atom:p04:label:collect:text",
+        "text": "现场人员提供型号、",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "collect-label:1",
+        "atom_id": "atom:p04:label:collect:text",
+        "text": "版本与现象；接单人员",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "collect-label:2",
+        "atom_id": "atom:p04:label:collect:text",
+        "text": "核对可核查条件。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "retrieve-label:0",
+        "atom_id": "atom:p04:label:retrieve:text",
+        "text": "只读助手返回许可资料",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "retrieve-label:1",
+        "atom_id": "atom:p04:label:retrieve:text",
+        "text": "片段及来源。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "review-label:0",
+        "atom_id": "atom:p04:label:review:text",
+        "text": "指定人员核查引用",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "review-label:1",
+        "atom_id": "atom:p04:label:review:text",
+        "text": "适用性，记录采用／",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "review-label:2",
+        "atom_id": "atom:p04:label:review:text",
+        "text": "未采用及原因。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "submit-label:0",
+        "atom_id": "atom:p04:label:submit:text",
+        "text": "人员在现有系统",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "submit-label:1",
+        "atom_id": "atom:p04:label:submit:text",
+        "text": "完成正式提交。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "exceptions-heading:0",
+        "atom_id": "atom:p04:block:exceptions-heading:text",
+        "text": "未知与不适用信息仍随请求交接",
+        "role": "heading",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 50.0,
+        "required_svg_px": 50,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 30.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "column-trigger:0",
+        "atom_id": "atom:p04:column:exceptions:trigger:label",
+        "text": "触发条件",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "column-action:0",
+        "atom_id": "atom:p04:column:exceptions:action:label",
+        "text": "接单人员动作",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "column-handoff:0",
+        "atom_id": "atom:p04:column:exceptions:handoff:label",
+        "text": "交接及继续条件",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unknown-trigger:0",
+        "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+        "text": "型号或版本待补／",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unknown-trigger:1",
+        "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+        "text": "确实不可得",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unknown-action:0",
+        "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+        "text": "保留已知条件、未知字段及原因；",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unknown-action:1",
+        "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+        "text": "能补则请求可核对信息，",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unknown-action:2",
+        "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+        "text": "不能强制填入猜测。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unknown-handoff:0",
+        "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+        "text": "不能补出时交指定业务核查人判断下一步；",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unknown-handoff:1",
+        "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+        "text": "取得可核查条件后按主链继续。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unknown-handoff:2",
+        "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+        "text": "具体责任人与恢复规则须在启动前明确。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-trigger:0",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+        "text": "引用适用性无法确认、",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-trigger:1",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+        "text": "引用冲突／不适用，",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-trigger:2",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+        "text": "或问题仍不确定",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-action:0",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+        "text": "保留设备条件、来源位置",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-action:1",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+        "text": "和未决点；候选引用不能标成",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-action:2",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+        "text": "可直接采用的结论。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-handoff:0",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+        "text": "交核查人确认资料适用性和下一步；",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-handoff:1",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+        "text": "无法确认则继续标明未决，",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "unsuitable-handoff:2",
+        "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+        "text": "不把找到资料记为故障已解决。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "boundary-text:0",
+        "atom_id": "atom:p04:callout:boundary:text",
+        "text": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      },
+      {
+        "element": "boundary-text:1",
+        "atom_id": "atom:p04:callout:boundary:text",
+        "text": "能力边界：引用问答不等于诊断正确或操作获批。",
+        "role": "body",
+        "role_basis": "explicit fixed-p04 pilot role mapping, not size/bold inference",
+        "svg_px": 30.0,
+        "required_svg_px": 30,
+        "correct": true,
+        "calculated_pt_at_scale0_8": 18.0,
+        "actual_newPPT_measured": false
+      }
+    ]
+  },
+  "font_ink_bounds": [
+    {
+      "element": "page-title:0",
+      "atom_id": "atom:p04:title",
+      "node_ref": null,
+      "bounds": [
+        50.0,
+        50.0,
+        1100.0,
+        100.0
+      ]
+    },
+    {
+      "element": "page-subtitle:0",
+      "atom_id": "atom:p04:subtitle",
+      "node_ref": null,
+      "bounds": [
+        50.0,
+        105.0,
+        800.0,
+        137.0
+      ]
+    },
+    {
+      "element": "main-chain-frozen-qualification:0",
+      "atom_id": null,
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        148.0,
+        488.0,
+        178.0
+      ]
+    },
+    {
+      "element": "collect-label:0",
+      "atom_id": "atom:p04:label:collect:text",
+      "node_ref": "collect",
+      "bounds": [
+        82.0,
+        208.0,
+        352.0,
+        238.0
+      ]
+    },
+    {
+      "element": "collect-label:1",
+      "atom_id": "atom:p04:label:collect:text",
+      "node_ref": "collect",
+      "bounds": [
+        82.0,
+        239.0,
+        382.0,
+        271.0
+      ]
+    },
+    {
+      "element": "collect-label:2",
+      "atom_id": "atom:p04:label:collect:text",
+      "node_ref": "collect",
+      "bounds": [
+        82.0,
+        270.0,
+        322.0,
+        300.0
+      ]
+    },
+    {
+      "element": "retrieve-label:0",
+      "atom_id": "atom:p04:label:retrieve:text",
+      "node_ref": "retrieve",
+      "bounds": [
+        458.0,
+        222.0,
+        758.0,
+        252.0
+      ]
+    },
+    {
+      "element": "retrieve-label:1",
+      "atom_id": "atom:p04:label:retrieve:text",
+      "node_ref": "retrieve",
+      "bounds": [
+        458.0,
+        256.0,
+        638.0,
+        286.0
+      ]
+    },
+    {
+      "element": "review-label:0",
+      "atom_id": "atom:p04:label:review:text",
+      "node_ref": "review",
+      "bounds": [
+        834.0,
+        208.0,
+        1074.0,
+        238.0
+      ]
+    },
+    {
+      "element": "review-label:1",
+      "atom_id": "atom:p04:label:review:text",
+      "node_ref": "review",
+      "bounds": [
+        834.0,
+        239.0,
+        1104.0,
+        270.0
+      ]
+    },
+    {
+      "element": "review-label:2",
+      "atom_id": "atom:p04:label:review:text",
+      "node_ref": "review",
+      "bounds": [
+        834.0,
+        270.0,
+        1044.0,
+        300.0
+      ]
+    },
+    {
+      "element": "submit-label:0",
+      "atom_id": "atom:p04:label:submit:text",
+      "node_ref": "submit",
+      "bounds": [
+        1210.0,
+        222.0,
+        1420.0,
+        252.0
+      ]
+    },
+    {
+      "element": "submit-label:1",
+      "atom_id": "atom:p04:label:submit:text",
+      "node_ref": "submit",
+      "bounds": [
+        1210.0,
+        256.0,
+        1420.0,
+        286.0
+      ]
+    },
+    {
+      "element": "exceptions-heading:0",
+      "atom_id": "atom:p04:block:exceptions-heading:text",
+      "node_ref": null,
+      "bounds": [
+        50.0,
+        358.0,
+        750.0,
+        408.0
+      ]
+    },
+    {
+      "element": "column-trigger:0",
+      "atom_id": "atom:p04:column:exceptions:trigger:label",
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        442.0,
+        188.0,
+        472.0
+      ]
+    },
+    {
+      "element": "column-action:0",
+      "atom_id": "atom:p04:column:exceptions:action:label",
+      "node_ref": null,
+      "bounds": [
+        412.0,
+        442.0,
+        592.0,
+        472.0
+      ]
+    },
+    {
+      "element": "column-handoff:0",
+      "atom_id": "atom:p04:column:exceptions:handoff:label",
+      "node_ref": null,
+      "bounds": [
+        920.0,
+        442.0,
+        1130.0,
+        472.0
+      ]
+    },
+    {
+      "element": "unknown-trigger:0",
+      "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        502.0,
+        308.0,
+        532.0
+      ]
+    },
+    {
+      "element": "unknown-trigger:1",
+      "atom_id": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        533.0,
+        218.0,
+        563.0
+      ]
+    },
+    {
+      "element": "unknown-action:0",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "node_ref": null,
+      "bounds": [
+        412.0,
+        502.0,
+        862.0,
+        534.0
+      ]
+    },
+    {
+      "element": "unknown-action:1",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "node_ref": null,
+      "bounds": [
+        412.0,
+        533.0,
+        742.0,
+        564.0
+      ]
+    },
+    {
+      "element": "unknown-action:2",
+      "atom_id": "atom:p04:cell:exceptions:unknown:action:display_text",
+      "node_ref": null,
+      "bounds": [
+        412.0,
+        564.0,
+        682.0,
+        594.0
+      ]
+    },
+    {
+      "element": "unknown-handoff:0",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "node_ref": null,
+      "bounds": [
+        920.0,
+        502.0,
+        1490.0,
+        534.0
+      ]
+    },
+    {
+      "element": "unknown-handoff:1",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "node_ref": null,
+      "bounds": [
+        920.0,
+        533.0,
+        1340.0,
+        563.0
+      ]
+    },
+    {
+      "element": "unknown-handoff:2",
+      "atom_id": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "node_ref": null,
+      "bounds": [
+        920.0,
+        564.0,
+        1460.0,
+        594.0
+      ]
+    },
+    {
+      "element": "unsuitable-trigger:0",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        625.0,
+        368.0,
+        655.0
+      ]
+    },
+    {
+      "element": "unsuitable-trigger:1",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        656.0,
+        338.0,
+        687.0
+      ]
+    },
+    {
+      "element": "unsuitable-trigger:2",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        687.0,
+        278.0,
+        717.0
+      ]
+    },
+    {
+      "element": "unsuitable-action:0",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "node_ref": null,
+      "bounds": [
+        412.0,
+        625.0,
+        742.0,
+        655.0
+      ]
+    },
+    {
+      "element": "unsuitable-action:1",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "node_ref": null,
+      "bounds": [
+        412.0,
+        656.0,
+        802.0,
+        688.0
+      ]
+    },
+    {
+      "element": "unsuitable-action:2",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "node_ref": null,
+      "bounds": [
+        412.0,
+        687.0,
+        682.0,
+        717.0
+      ]
+    },
+    {
+      "element": "unsuitable-handoff:0",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "node_ref": null,
+      "bounds": [
+        920.0,
+        625.0,
+        1400.0,
+        657.0
+      ]
+    },
+    {
+      "element": "unsuitable-handoff:1",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "node_ref": null,
+      "bounds": [
+        920.0,
+        656.0,
+        1280.0,
+        687.0
+      ]
+    },
+    {
+      "element": "unsuitable-handoff:2",
+      "atom_id": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+      "node_ref": null,
+      "bounds": [
+        920.0,
+        687.0,
+        1340.0,
+        717.0
+      ]
+    },
+    {
+      "element": "boundary-text:0",
+      "atom_id": "atom:p04:callout:boundary:text",
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        772.0,
+        1032.0,
+        803.0
+      ]
+    },
+    {
+      "element": "boundary-text:1",
+      "atom_id": "atom:p04:callout:boundary:text",
+      "node_ref": null,
+      "bounds": [
+        68.0,
+        804.0,
+        728.0,
+        834.0
+      ]
+    }
+  ],
+  "table_cell_clearance": {
+    "unknown:trigger": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 86.0,
+        "top": 14.0,
+        "bottom": 48.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 85.5,
+        "top": 13.5,
+        "bottom": 47.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 85.5,
+        "top": 16.5,
+        "bottom": 44.5
+      }
+    },
+    "unknown:action": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 40.0,
+        "top": 14.0,
+        "bottom": 17.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 39.5,
+        "top": 13.5,
+        "bottom": 16.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 39.5,
+        "top": 16.5,
+        "bottom": 13.5
+      }
+    },
+    "unknown:handoff": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 60.0,
+        "top": 14.0,
+        "bottom": 17.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 59.5,
+        "top": 13.5,
+        "bottom": 16.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 59.5,
+        "top": 16.5,
+        "bottom": 13.5
+      }
+    },
+    "unsuitable:trigger": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 26.0,
+        "top": 14.0,
+        "bottom": 16.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 25.5,
+        "top": 13.5,
+        "bottom": 15.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 25.5,
+        "top": 16.5,
+        "bottom": 12.5
+      }
+    },
+    "unsuitable:action": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 100.0,
+        "top": 14.0,
+        "bottom": 16.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 99.5,
+        "top": 13.5,
+        "bottom": 15.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 99.5,
+        "top": 16.5,
+        "bottom": 12.5
+      }
+    },
+    "unsuitable:handoff": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 150.0,
+        "top": 14.0,
+        "bottom": 16.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 149.5,
+        "top": 13.5,
+        "bottom": 15.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 149.5,
+        "top": 16.5,
+        "bottom": 12.5
+      }
+    }
+  },
+  "header_cell_clearance": {
+    "trigger": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 206.0,
+        "top": 14.0,
+        "bottom": 16.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 205.5,
+        "top": 13.5,
+        "bottom": 15.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 205.5,
+        "top": 16.5,
+        "bottom": 12.5
+      }
+    },
+    "action": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 310.0,
+        "top": 14.0,
+        "bottom": 16.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 309.5,
+        "top": 13.5,
+        "bottom": 15.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 309.5,
+        "top": 16.5,
+        "bottom": 12.5
+      }
+    },
+    "handoff": {
+      "nominal_font_ink_inset": {
+        "left": 18.0,
+        "right": 420.0,
+        "top": 14.0,
+        "bottom": 16.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 17.5,
+        "right": 419.5,
+        "top": 13.5,
+        "bottom": 15.5
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 17.5,
+        "right": 419.5,
+        "top": 16.5,
+        "bottom": 12.5
+      }
+    }
+  },
+  "boundary_clearance": {
+    "nominal_font_ink_inset": {
+      "left": 18.0,
+      "right": 518.0,
+      "top": 13.0,
+      "bottom": 16.0
+    },
+    "font_ink_to_border_paint_clearance": {
+      "left": 17.25,
+      "right": 517.25,
+      "top": 12.25,
+      "bottom": 15.25
+    },
+    "projection_at_native_plus3px_only_not_actualPPT": {
+      "left": 17.25,
+      "right": 517.25,
+      "top": 15.25,
+      "bottom": 12.25
+    }
+  },
+  "node_clearance": {
+    "collect": {
+      "nominal_font_ink_inset": {
+        "left": 16.0,
+        "right": 24.0,
+        "top": 14.0,
+        "bottom": 18.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 15.25,
+        "right": 23.25,
+        "top": 13.25,
+        "bottom": 17.25
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 15.25,
+        "right": 23.25,
+        "top": 16.25,
+        "bottom": 14.25
+      }
+    },
+    "retrieve": {
+      "nominal_font_ink_inset": {
+        "left": 16.0,
+        "right": 24.0,
+        "top": 28.0,
+        "bottom": 32.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 15.25,
+        "right": 23.25,
+        "top": 27.25,
+        "bottom": 31.25
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 15.25,
+        "right": 23.25,
+        "top": 30.25,
+        "bottom": 28.25
+      }
+    },
+    "review": {
+      "nominal_font_ink_inset": {
+        "left": 16.0,
+        "right": 54.0,
+        "top": 14.0,
+        "bottom": 18.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 15.25,
+        "right": 53.25,
+        "top": 13.25,
+        "bottom": 17.25
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 15.25,
+        "right": 53.25,
+        "top": 16.25,
+        "bottom": 14.25
+      }
+    },
+    "submit": {
+      "nominal_font_ink_inset": {
+        "left": 16.0,
+        "right": 114.0,
+        "top": 28.0,
+        "bottom": 32.0
+      },
+      "font_ink_to_border_paint_clearance": {
+        "left": 15.25,
+        "right": 113.25,
+        "top": 27.25,
+        "bottom": 31.25
+      },
+      "projection_at_native_plus3px_only_not_actualPPT": {
+        "left": 15.25,
+        "right": 113.25,
+        "top": 30.25,
+        "bottom": 28.25
+      }
+    }
+  },
+  "line_ink_gaps": {
+    "atom:p04:label:review:text": [
+      1.0,
+      0.0
+    ],
+    "atom:p04:cell:exceptions:unknown:trigger:display_text": [
+      1.0
+    ],
+    "atom:p04:label:retrieve:text": [
+      4.0
+    ],
+    "atom:p04:cell:exceptions:unsuitable:handoff:display_text": [
+      -1.0,
+      0.0
+    ],
+    "atom:p04:cell:exceptions:unknown:action:display_text": [
+      -1.0,
+      0.0
+    ],
+    "atom:p04:cell:exceptions:unsuitable:trigger:display_text": [
+      1.0,
+      0.0
+    ],
+    "atom:p04:label:collect:text": [
+      1.0,
+      -1.0
+    ],
+    "atom:p04:label:submit:text": [
+      4.0
+    ],
+    "atom:p04:callout:boundary:text": [
+      1.0
+    ],
+    "atom:p04:cell:exceptions:unsuitable:action:display_text": [
+      1.0,
+      -1.0
+    ],
+    "atom:p04:cell:exceptions:unknown:handoff:display_text": [
+      -1.0,
+      1.0
+    ]
+  },
+  "minimum_line_ink_gap": -1.0,
+  "module_spacing": {
+    "chain_frame_bottom_including_stroke": 332.75,
+    "section_heading_font_ink_top": 358.0,
+    "table_bottom_including_stroke": 733.5,
+    "boundary_top_including_stroke": 758.25,
+    "table_to_boundary_net_gap": 24.75,
+    "chain_to_section_ink_gap": 25.25
+  },
+  "text_canvas_bounds": [
+    50.0,
+    50.0,
+    1490.0,
+    834.0
+  ],
+  "margins": {
+    "geometry_left": 49.25,
+    "geometry_right": 49.25,
+    "geometry_bottom": 49.25,
+    "text_ink_top": 50.0,
+    "text_ink_right": 110.0,
+    "text_ink_bottom": 66.0
+  },
+  "semantics": {
+    "node_containers": [
+      "collect",
+      "retrieve",
+      "review",
+      "submit"
+    ],
+    "edges": [
+      {
+        "edge_ref": "collect-retrieve",
+        "commands": [
+          {
+            "moveTo": {
+              "x": 236.0,
+              "y": 256.0
+            }
+          },
+          {
+            "lineTo": {
+              "x": 612.0,
+              "y": 256.0
+            }
+          }
+        ]
+      },
+      {
+        "edge_ref": "retrieve-review",
+        "commands": [
+          {
+            "moveTo": {
+              "x": 612.0,
+              "y": 256.0
+            }
+          },
+          {
+            "lineTo": {
+              "x": 988.0,
+              "y": 256.0
+            }
+          }
+        ]
+      },
+      {
+        "edge_ref": "review-submit",
+        "commands": [
+          {
+            "moveTo": {
+              "x": 988.0,
+              "y": 256.0
+            }
+          },
+          {
+            "lineTo": {
+              "x": 1364.0,
+              "y": 256.0
+            }
+          }
+        ]
+      }
+    ],
+    "raster_images": 0,
+    "frozen_qualification": "主链只适用于条件可核对情形。"
+  },
+  "empirical_F07_projection_only": {
+    "not_a_new_measurement": true,
+    "method": "Changed v3 baselines/borders applied to exact measured v2 bottom-ink pixels, no v3render generated",
+    "header": {
+      "v2_actual_bottom": 481,
+      "baseline_delta": -8,
+      "projected_bottom": 473,
+      "projected_first_border_pixel": 487,
+      "projected_empty_rows": 13
+    },
+    "unknown_lastline": {
+      "v2_actual_bottom": 602,
+      "baseline_delta": -8,
+      "projected_bottom": 594,
+      "projected_first_border_pixel": 610,
+      "projected_empty_rows": 15
+    },
+    "unsuitable_lastline": {
+      "v2_actual_bottom": 724,
+      "baseline_delta": -7,
+      "projected_bottom": 717,
+      "projected_first_border_pixel": 732,
+      "projected_empty_rows": 14
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "native_shape_count": 60,
+  "moved_group_shape_count": 26,
+  "unchanged_non_group_shape_count": 34,
+  "D_external_margins_svg_logical_px": {
+    "left": 49.24999999999999,
+    "right": 49.250000000000114,
+    "top": 153.25,
+    "bottom": 555.25
+  },
+  "all_copy_physical_size_and_font_fields": {
+    "original": {
+      "actual_emu": [
+        12192000,
+        6858000
+      ],
+      "actual_point_sizes": [
+        18.0,
+        30.0
+      ],
+      "explicit_point_run_count": 36
+    },
+    "A": {
+      "actual_emu": [
+        12192000,
+        6858000
+      ],
+      "actual_point_sizes": [
+        18.0,
+        30.0
+      ],
+      "explicit_point_run_count": 36
+    },
+    "B": {
+      "actual_emu": [
+        12192000,
+        6858000
+      ],
+      "actual_point_sizes": [
+        18.0,
+        30.0
+      ],
+      "explicit_point_run_count": 36
+    },
+    "C": {
+      "actual_emu": [
+        12192000,
+        6858000
+      ],
+      "actual_point_sizes": [
+        18.0,
+        30.0
+      ],
+      "explicit_point_run_count": 36
+    },
+    "D": {
+      "actual_emu": [
+        12192000,
+        6858000
+      ],
+      "actual_point_sizes": [
+        18.0,
+        30.0
+      ],
+      "explicit_point_run_count": 36
+    }
+  }
+}

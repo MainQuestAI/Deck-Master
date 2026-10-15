@@ -1,0 +1,92 @@
+[
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-page-visual-review-v2/task.json",
+    "sha256": "d8ea07eb926ef9c0ca05206976c872a6dbb02f2aeb74c3f26ef4b6d622f22a05",
+    "bytes": 4326
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-page-visual-review-v2/workorder.json",
+    "sha256": "88d9b01cf7a428c27a1751451b4b04279ecc795767e69ce21dab6fa7475b5ba5",
+    "bytes": 46364
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-page-visual-review-v2/fixed-page.json",
+    "sha256": "b788cd56870a8dd65df3e4eaa73d281ad4ea377dcac024562f2d9be76ebfebbf",
+    "bytes": 22320
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-page-visual-review-v2/prepared-method-bytes.json",
+    "sha256": "ca45aedbd476b51ed51c7b1842a3ff6b02a6043e76180ffd3b2a8a95976472e7",
+    "bytes": 6292
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-page-visual-review-v2/current-p04-entry.json",
+    "sha256": "d5011dd179481149ebe6f1d290ef19a9020e11cad533c57ae0f7313724d438c1",
+    "bytes": 881
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/p04-native-v2.svg",
+    "sha256": "82d3430688b9c4ff2fb89cedb99cabfd643fbb39cb03d274b65a60a2de245ded",
+    "bytes": 9785
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-native-ppt-v2-correct-physical/native/deck.pptx",
+    "sha256": "4c951dde9044506ad7cade8e06de13c50ed25e5173210265cd2b7c61d2c38ef6",
+    "bytes": 37794
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-native-ppt-v2-correct-physical/actual-physical-canvas-and-typography.json",
+    "sha256": "2cff35cfb302f680827ea71083127be3d7e753bd23e19a9f8bd778511e5f60e2",
+    "bytes": 12414
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/root-physical-unit-instruction-correction.json",
+    "sha256": "3319dd39cb73501370f2793dab415a4704ed22da3cb857c905ad1d486c789e9b",
+    "bytes": 1759
+  },
+  {
+    "path": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/pipeline.py",
+    "sha256": "b04b6db1f15124f4ff22429fdb932cfda7d1b7fff63a48de3c2a5b130aaa603e",
+    "bytes": 26194
+  },
+  {
+    "path": "/workspace/work/rc3/candidate-03-5dbdf72/manifest.json",
+    "sha256": "bcb668040f2c5e7cd0613b792517f6ec055f1d5925b5e5a582c076e67dfdbb10",
+    "bytes": 8755
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/original-blueprint.png",
+    "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+    "bytes": 1595347
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-native-svg-v2-preview/actual-p04-preview.png",
+    "sha256": "989e796fef7d9e7240786fc6a0b1ff53b7761b8da88f94f6819229a8ca9a99b1",
+    "bytes": 324685
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-native-ppt-v2-correct-physical/rendered/page-1.png",
+    "sha256": "35358c312eed62a02cf2bc25fe6cb83fb5aaa965ec5973bf3e8cd9a0e1d4a840",
+    "bytes": 319644
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+    "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b",
+    "bytes": 15340
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+    "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526",
+    "bytes": 1556
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+    "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2",
+    "bytes": 2512
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+    "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611",
+    "bytes": 774
+  }
+]

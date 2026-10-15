@@ -1,0 +1,18 @@
+[
+  {
+    "operation": "rg for sdk* path",
+    "exit_code": 2,
+    "error": "rg: .../site-packages/deck_master/sdk*: No such file or directory (os error 2)",
+    "effect": "continued by reading installed service.py signatures; no SDK call failed"
+  },
+  {
+    "operation": "ls package schemas directory",
+    "exit_code": 2,
+    "error": "ls: cannot access .../site-packages/deck_master/schemas: No such file or directory",
+    "effect": "located actual resources/contracts schemas with rg --files; no SDK call failed"
+  },
+  {
+    "operation": "packet/method combined cat output",
+    "effect": "tool output truncation; reread full workorder, fixed-page and method text individually; no review based on omitted text"
+  }
+]

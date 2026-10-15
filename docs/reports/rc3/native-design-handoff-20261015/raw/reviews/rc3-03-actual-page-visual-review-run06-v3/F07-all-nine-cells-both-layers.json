@@ -1,0 +1,788 @@
+{
+  "measured_at": "2026-10-15T02:59:25.772895+00:00",
+  "units": "1600x900 SVG logical pixels and actual≈120dpi PNG pixels. PPT PNG1601x900 has horizontal1px export rounding; measured actual border/ink indices directly, without rescaling. Vertical1px=7620EMU. Not the1280x720 physical96ppi compiler grid.",
+  "method": "Conservative text ink threshold RGB<210/210/220; blue borders B>240,R<220,G<245,B-R>10. Measure empty pixels between painted border and painted text on all4 sides, not nominal point-index distance. Exact raw pixel crops support findings. No originals changed.",
+  "results": {
+    "svg": {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-svg-v3-preview/actual-p04-preview.png",
+      "sha256": "9e4622078a84e81e207667f99269c9cc0d8a4bf306a47b1cd5ecdc99a0b7b7da",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "cells": [
+        {
+          "cell": "header_trigger",
+          "logical_cell_bounds": [
+            50,
+            424,
+            394,
+            483
+          ],
+          "painted_text_bbox_actual_px": [
+            69,
+            437,
+            186,
+            465
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 50,
+            "top": 424,
+            "right": 393,
+            "bottom": 482
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 12,
+            "right": 206,
+            "bottom": 16
+          },
+          "minimum_clearance": 12,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              437,
+              465
+            ]
+          ],
+          "expected_lines": 1,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "header_action",
+          "logical_cell_bounds": [
+            394,
+            424,
+            902,
+            483
+          ],
+          "painted_text_bbox_actual_px": [
+            412,
+            437,
+            590,
+            465
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 394,
+            "top": 424,
+            "right": 901,
+            "bottom": 482
+          },
+          "clear_empty_pixel_counts": {
+            "left": 17,
+            "top": 12,
+            "right": 310,
+            "bottom": 16
+          },
+          "minimum_clearance": 12,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              437,
+              465
+            ]
+          ],
+          "expected_lines": 1,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "header_handoff",
+          "logical_cell_bounds": [
+            902,
+            424,
+            1550,
+            483
+          ],
+          "painted_text_bbox_actual_px": [
+            921,
+            437,
+            1128,
+            465
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 902,
+            "top": 424,
+            "right": 1549,
+            "bottom": 482
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 12,
+            "right": 420,
+            "bottom": 16
+          },
+          "minimum_clearance": 12,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              437,
+              465
+            ]
+          ],
+          "expected_lines": 1,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unknown_trigger",
+          "logical_cell_bounds": [
+            50,
+            483,
+            394,
+            608
+          ],
+          "painted_text_bbox_actual_px": [
+            69,
+            496,
+            306,
+            557
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 50,
+            "top": 483,
+            "right": 393,
+            "bottom": 607
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 12,
+            "right": 86,
+            "bottom": 49
+          },
+          "minimum_clearance": 12,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              496,
+              524
+            ],
+            [
+              529,
+              557
+            ]
+          ],
+          "expected_lines": 2,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unknown_action",
+          "logical_cell_bounds": [
+            394,
+            483,
+            902,
+            608
+          ],
+          "painted_text_bbox_actual_px": [
+            413,
+            496,
+            842,
+            590
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 394,
+            "top": 483,
+            "right": 901,
+            "bottom": 607
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 12,
+            "right": 58,
+            "bottom": 16
+          },
+          "minimum_clearance": 12,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              496,
+              526
+            ],
+            [
+              529,
+              557
+            ],
+            [
+              563,
+              590
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unknown_handoff",
+          "logical_cell_bounds": [
+            902,
+            483,
+            1550,
+            608
+          ],
+          "painted_text_bbox_actual_px": [
+            921,
+            496,
+            1470,
+            590
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 902,
+            "top": 483,
+            "right": 1549,
+            "bottom": 607
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 12,
+            "right": 78,
+            "bottom": 16
+          },
+          "minimum_clearance": 12,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              496,
+              526
+            ],
+            [
+              529,
+              557
+            ],
+            [
+              563,
+              590
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unsuitable_trigger",
+          "logical_cell_bounds": [
+            50,
+            608,
+            394,
+            733
+          ],
+          "painted_text_bbox_actual_px": [
+            70,
+            622,
+            347,
+            715
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 50,
+            "top": 608,
+            "right": 393,
+            "bottom": 732
+          },
+          "clear_empty_pixel_counts": {
+            "left": 19,
+            "top": 13,
+            "right": 45,
+            "bottom": 16
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              622,
+              649
+            ],
+            [
+              654,
+              682
+            ],
+            [
+              687,
+              715
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unsuitable_action",
+          "logical_cell_bounds": [
+            394,
+            608,
+            902,
+            733
+          ],
+          "painted_text_bbox_actual_px": [
+            413,
+            621,
+            800,
+            715
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 394,
+            "top": 608,
+            "right": 901,
+            "bottom": 732
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 12,
+            "right": 100,
+            "bottom": 16
+          },
+          "minimum_clearance": 12,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              621,
+              649
+            ],
+            [
+              655,
+              684
+            ],
+            [
+              687,
+              715
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unsuitable_handoff",
+          "logical_cell_bounds": [
+            902,
+            608,
+            1550,
+            733
+          ],
+          "painted_text_bbox_actual_px": [
+            921,
+            621,
+            1380,
+            715
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 902,
+            "top": 608,
+            "right": 1549,
+            "bottom": 732
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 12,
+            "right": 168,
+            "bottom": 16
+          },
+          "minimum_clearance": 12,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              621,
+              651
+            ],
+            [
+              655,
+              682
+            ],
+            [
+              688,
+              715
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        }
+      ],
+      "all_9_cells_all_sides_at_least12": true,
+      "all_line_bands_separate": true,
+      "minimum_all_cells": 12
+    },
+    "ppt": {
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-ppt-v3-correct-physical/rendered/page-1.png",
+      "sha256": "ca645a40136d48b072fd87b674cc6cb56d441715e10a102a449182bbb441cbc1",
+      "dimensions": [
+        1601,
+        900
+      ],
+      "cells": [
+        {
+          "cell": "header_trigger",
+          "logical_cell_bounds": [
+            50,
+            424,
+            394,
+            483
+          ],
+          "painted_text_bbox_actual_px": [
+            68,
+            440,
+            185,
+            468
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 50,
+            "top": 424,
+            "right": 393,
+            "bottom": 482
+          },
+          "clear_empty_pixel_counts": {
+            "left": 17,
+            "top": 15,
+            "right": 207,
+            "bottom": 13
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              440,
+              468
+            ]
+          ],
+          "expected_lines": 1,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "header_action",
+          "logical_cell_bounds": [
+            394,
+            424,
+            902,
+            483
+          ],
+          "painted_text_bbox_actual_px": [
+            412,
+            440,
+            590,
+            468
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 394,
+            "top": 424,
+            "right": 901,
+            "bottom": 482
+          },
+          "clear_empty_pixel_counts": {
+            "left": 17,
+            "top": 15,
+            "right": 310,
+            "bottom": 13
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              440,
+              468
+            ]
+          ],
+          "expected_lines": 1,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "header_handoff",
+          "logical_cell_bounds": [
+            902,
+            424,
+            1550,
+            483
+          ],
+          "painted_text_bbox_actual_px": [
+            920,
+            440,
+            1127,
+            468
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 902,
+            "top": 424,
+            "right": 1549,
+            "bottom": 482
+          },
+          "clear_empty_pixel_counts": {
+            "left": 17,
+            "top": 15,
+            "right": 421,
+            "bottom": 13
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              440,
+              468
+            ]
+          ],
+          "expected_lines": 1,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unknown_trigger",
+          "logical_cell_bounds": [
+            50,
+            483,
+            394,
+            608
+          ],
+          "painted_text_bbox_actual_px": [
+            68,
+            499,
+            305,
+            560
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 50,
+            "top": 483,
+            "right": 393,
+            "bottom": 607
+          },
+          "clear_empty_pixel_counts": {
+            "left": 17,
+            "top": 15,
+            "right": 87,
+            "bottom": 46
+          },
+          "minimum_clearance": 15,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              499,
+              527
+            ],
+            [
+              532,
+              560
+            ]
+          ],
+          "expected_lines": 2,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unknown_action",
+          "logical_cell_bounds": [
+            394,
+            483,
+            902,
+            608
+          ],
+          "painted_text_bbox_actual_px": [
+            412,
+            499,
+            841,
+            593
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 393,
+            "top": 483,
+            "right": 901,
+            "bottom": 607
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 15,
+            "right": 59,
+            "bottom": 13
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              499,
+              529
+            ],
+            [
+              532,
+              560
+            ],
+            [
+              566,
+              593
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unknown_handoff",
+          "logical_cell_bounds": [
+            902,
+            483,
+            1550,
+            608
+          ],
+          "painted_text_bbox_actual_px": [
+            920,
+            499,
+            1469,
+            593
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 901,
+            "top": 483,
+            "right": 1549,
+            "bottom": 607
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 15,
+            "right": 79,
+            "bottom": 13
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              499,
+              529
+            ],
+            [
+              532,
+              560
+            ],
+            [
+              566,
+              593
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unsuitable_trigger",
+          "logical_cell_bounds": [
+            50,
+            608,
+            394,
+            733
+          ],
+          "painted_text_bbox_actual_px": [
+            69,
+            625,
+            346,
+            718
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 50,
+            "top": 608,
+            "right": 393,
+            "bottom": 732
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 16,
+            "right": 46,
+            "bottom": 13
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              625,
+              652
+            ],
+            [
+              657,
+              685
+            ],
+            [
+              690,
+              718
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unsuitable_action",
+          "logical_cell_bounds": [
+            394,
+            608,
+            902,
+            733
+          ],
+          "painted_text_bbox_actual_px": [
+            412,
+            624,
+            799,
+            718
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 393,
+            "top": 608,
+            "right": 901,
+            "bottom": 732
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 15,
+            "right": 101,
+            "bottom": 13
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              624,
+              652
+            ],
+            [
+              658,
+              687
+            ],
+            [
+              690,
+              718
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        },
+        {
+          "cell": "unsuitable_handoff",
+          "logical_cell_bounds": [
+            902,
+            608,
+            1550,
+            733
+          ],
+          "painted_text_bbox_actual_px": [
+            920,
+            624,
+            1379,
+            718
+          ],
+          "painted_border_inner_edges_actual_px": {
+            "left": 901,
+            "top": 608,
+            "right": 1549,
+            "bottom": 732
+          },
+          "clear_empty_pixel_counts": {
+            "left": 18,
+            "top": 15,
+            "right": 169,
+            "bottom": 13
+          },
+          "minimum_clearance": 13,
+          "meets_12": true,
+          "dark_ink_line_bands_y": [
+            [
+              624,
+              654
+            ],
+            [
+              658,
+              685
+            ],
+            [
+              691,
+              718
+            ]
+          ],
+          "expected_lines": 3,
+          "separate_line_count_matches": true
+        }
+      ],
+      "all_9_cells_all_sides_at_least12": true,
+      "all_line_bands_separate": true,
+      "minimum_all_cells": 13
+    }
+  },
+  "overall_F07_pass": true
+}

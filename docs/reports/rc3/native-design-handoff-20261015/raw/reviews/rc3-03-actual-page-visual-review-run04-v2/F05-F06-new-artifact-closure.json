@@ -1,0 +1,624 @@
+{
+  "scope": "new precise artifact only; old evidence immutable",
+  "new_svg_sha256": "82d3430688b9c4ff2fb89cedb99cabfd643fbb39cb03d274b65a60a2de245ded",
+  "new_pptx_sha256": "4c951dde9044506ad7cade8e06de13c50ed25e5173210265cd2b7c61d2c38ef6",
+  "new_render_sha256": "35358c312eed62a02cf2bc25fe6cb83fb5aaa965ec5973bf3e8cd9a0e1d4a840",
+  "F05": {
+    "finding_id": "F05",
+    "kind": "conversion",
+    "impact": "must_fix",
+    "page_id": "p04",
+    "element_refs": [
+      "ppt/presentation.xml:p:sldSz"
+    ],
+    "message": "仅对本轮精确新PPTX关闭物理尺寸问题。",
+    "expected": "13.333333333333334×7.5in，即12192000×6858000EMU。",
+    "actual": "本人直接读新PPTX4c951dde9044506ad7cade8e06de13c50ed25e5173210265cd2b7c61d2c38ef6：cx12192000/cy6858000，精确匹配；type仍为screen4x3，单列A02保留。",
+    "evidence": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      },
+      {
+        "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+        "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+      },
+      {
+        "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+        "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+      }
+    ],
+    "resolution": "fixed",
+    "resolution_reason": "独立XML与新实际渲染共同核对。run02旧PPTX仍为15240000×8572500，其失败不回写；Root工程调用/单位指令修正与正式pipeline in*96实现证据另存。"
+  },
+  "F06": {
+    "finding_id": "F06",
+    "kind": "conversion",
+    "impact": "must_fix",
+    "page_id": "p04",
+    "element_refs": [
+      "ppt/slides/slide1.xml:a:rPr@sz"
+    ],
+    "message": "仅对本轮精确新PPTX关闭逐run字号问题。",
+    "expected": "固定两个heading atom至少30pt，其余可见run至少18pt；不根据实际字号或加粗反推角色。",
+    "actual": "本人直接读取新PPTX36个可见run：exact heading atom白名单2段均30pt，其余34段均18pt。SVG对应标题50px、正文30px，目标物理转换正确。",
+    "evidence": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      },
+      {
+        "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+        "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+      },
+      {
+        "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+        "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+      }
+    ],
+    "resolution": "fixed",
+    "resolution_reason": "run03旧正确物理尺寸PPTX8affb8957e63919b73ea8be326786b5a322b1bd94418b0bba53a6c092c66ca1e的35段14.4/24pt不足历史另读确认且保留；本项通过不抵消F07。"
+  },
+  "new_open_F07": {
+    "finding_id": "F07",
+    "kind": "readability",
+    "impact": "must_fix",
+    "page_id": "p04",
+    "element_refs": [
+      "atom:p04:column:exceptions:trigger:label",
+      "atom:p04:column:exceptions:action:label",
+      "atom:p04:column:exceptions:handoff:label",
+      "atom:p04:cell:exceptions:unknown:action:display_text",
+      "atom:p04:cell:exceptions:unknown:handoff:display_text",
+      "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+      "atom:p04:cell:exceptions:unsuitable:action:display_text",
+      "atom:p04:cell:exceptions:unsuitable:handoff:display_text"
+    ],
+    "message": "当前实际PPT渲染的表头及三行单元格底部净空未达到固定12px。文字完整可读，但显式留白下限不满足。",
+    "expected": "recipe.spacing：单元格内距至少12px。保持全文、实际18pt正文/30pt标题及其他安全间隔。",
+    "actual": "120dpi、1601×900实际PNG中表头墨迹底y481，表头边线像素y491/492，净空约9–10px；unknown三行正文墨迹底y602/边线613/614，unsuitable墨迹底y724/边线735/736，净空约10–11px。对应SVG表头净空13px、三行正文14px；实际native墨迹约下移3px。原生XML行边几何仍492/614/736逻辑px。",
+    "evidence": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      },
+      {
+        "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+        "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+      },
+      {
+        "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+        "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+      }
+    ],
+    "resolution": "open",
+    "resolution_reason": "需作者只调整本页表格垂直排布/基线，保持固定文本与实际字号，重新渲染物理目标PPT并核对≥12px。没有观察到裁字、内容失真或关系丢失；此FAIL针对明确工程下限，不夸大为不可读或广泛compiler缺陷。"
+  },
+  "independent_native_check": "independent-native-pptx-physical-and-text-inspection.json",
+  "independent_failure_history": [
+    {
+      "label": "run02_original_physical_failure",
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native-ppt/native/deck.pptx",
+      "sha256": "c93179007f6e478a3ac8736d712e18a709519ddc7a027550228745619274a4ae",
+      "sldSz": {
+        "cx": "15240000",
+        "cy": "8572500",
+        "type": "screen4x3"
+      },
+      "actual_sizes_pt": [
+        18.0,
+        30.0
+      ],
+      "runs_below_floor": 0,
+      "runs": [
+        {
+          "shape_name": "atom:p04:title",
+          "role": "heading",
+          "required_floor_pt": 30,
+          "actual_pt": 30.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:subtitle",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "main-chain-frozen-qualification:0",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:collect:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:collect:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:collect:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:retrieve:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:retrieve:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:review:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:review:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:review:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:submit:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:label:submit:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:block:exceptions-heading:text",
+          "role": "heading",
+          "required_floor_pt": 30,
+          "actual_pt": 30.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:column:exceptions:trigger:label",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:column:exceptions:action:label",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:column:exceptions:handoff:label",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:callout:boundary:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        },
+        {
+          "shape_name": "atom:p04:callout:boundary:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 18.0,
+          "below_floor": false
+        }
+      ]
+    },
+    {
+      "label": "run03_correct_physical_typography_failure",
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-03-native-ppt-correct-physical/native/deck.pptx",
+      "sha256": "8affb8957e63919b73ea8be326786b5a322b1bd94418b0bba53a6c092c66ca1e",
+      "sldSz": {
+        "cx": "12192000",
+        "cy": "6858000",
+        "type": "screen4x3"
+      },
+      "actual_sizes_pt": [
+        14.4,
+        24.0
+      ],
+      "runs_below_floor": 35,
+      "runs": [
+        {
+          "shape_name": "atom:p04:title",
+          "role": "heading",
+          "required_floor_pt": 30,
+          "actual_pt": 24.0,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:subtitle",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "main-chain-frozen-qualification:0",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:collect:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:collect:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:collect:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:retrieve:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:retrieve:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:review:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:review:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:review:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:submit:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:label:submit:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:block:exceptions-heading:text",
+          "role": "heading",
+          "required_floor_pt": 30,
+          "actual_pt": 24.0,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:column:exceptions:trigger:label",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:column:exceptions:action:label",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:column:exceptions:handoff:label",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unknown:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:action:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:callout:boundary:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        },
+        {
+          "shape_name": "atom:p04:callout:boundary:text",
+          "role": "body",
+          "required_floor_pt": 18,
+          "actual_pt": 14.4,
+          "below_floor": true
+        }
+      ]
+    }
+  ]
+}

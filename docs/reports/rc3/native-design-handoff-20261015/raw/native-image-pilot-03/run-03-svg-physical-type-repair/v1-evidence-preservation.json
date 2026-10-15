@@ -1,0 +1,98 @@
+[
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/accept-envelope.json",
+    "old_sha256": "446a1ee7856dd9547c7819ad0e02260418f55c74e5807acf5ecffbbc212c5145",
+    "after_sha256": "446a1ee7856dd9547c7819ad0e02260418f55c74e5807acf5ecffbbc212c5145",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/accept-input.json",
+    "old_sha256": "0b7a1a17be75e9d9e6eab50571733ba95e2f29cafc3be50e8c9a736909413190",
+    "after_sha256": "0b7a1a17be75e9d9e6eab50571733ba95e2f29cafc3be50e8c9a736909413190",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/accept-result.json",
+    "old_sha256": "c627a2de01363c180e0b9666a5c585c7a58244f4c35ef06f375cecd0e33eddfa",
+    "after_sha256": "c627a2de01363c180e0b9666a5c585c7a58244f4c35ef06f375cecd0e33eddfa",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/accepted-artifact.json",
+    "old_sha256": "dfedffba275cceb8e3bcab854150d8d0710243d73787b9e73ddafaa50c6eafda",
+    "after_sha256": "dfedffba275cceb8e3bcab854150d8d0710243d73787b9e73ddafaa50c6eafda",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/after-accept-document.json",
+    "old_sha256": "6429f505632336f76da76032de7563d9b90a84de687cc33a43060bb154b33990",
+    "after_sha256": "6429f505632336f76da76032de7563d9b90a84de687cc33a43060bb154b33990",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/author-delivery.json",
+    "old_sha256": "2d21f2e5e28331a7567bfae7c21927a073ae02a7a6896aad761e73c74f62b5e5",
+    "after_sha256": "2d21f2e5e28331a7567bfae7c21927a073ae02a7a6896aad761e73c74f62b5e5",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/before-accept-document.json",
+    "old_sha256": "27643c98004116ce5bd74079ebec3676ca8248e4b946050df499c62367418fc1",
+    "after_sha256": "27643c98004116ce5bd74079ebec3676ca8248e4b946050df499c62367418fc1",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/claim-input.json",
+    "old_sha256": "3899ea65fc3efa44e13455394963c39f37a1178a766b9864c656a890e80b3e75",
+    "after_sha256": "3899ea65fc3efa44e13455394963c39f37a1178a766b9864c656a890e80b3e75",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/claim-result.json",
+    "old_sha256": "35e25dda796f81f9d87de29382b05539f6678a2dbd5a98695a4fb836232ba3fe",
+    "after_sha256": "35e25dda796f81f9d87de29382b05539f6678a2dbd5a98695a4fb836232ba3fe",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/creation-intent-v1.json",
+    "old_sha256": "ca9a28d357926c3f87fe2c0525c5915eca7ec05da9d9fc0c49a8d8df87a9137c",
+    "after_sha256": "ca9a28d357926c3f87fe2c0525c5915eca7ec05da9d9fc0c49a8d8df87a9137c",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/engineering-check-v1.json",
+    "old_sha256": "0ac04fb03d74f9483e07eebbc5674ebfdf5c48521abdd72793a7db9e2be45817",
+    "after_sha256": "0ac04fb03d74f9483e07eebbc5674ebfdf5c48521abdd72793a7db9e2be45817",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/input-inventory.json",
+    "old_sha256": "b104527e310c3f045233c3b793841d91725866930fd05e9dd871efe024173dc2",
+    "after_sha256": "b104527e310c3f045233c3b793841d91725866930fd05e9dd871efe024173dc2",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/p04-native-v1.svg",
+    "old_sha256": "1223a9d6c9c89bb998434395e58dfee8c77c3d95d918fca7b8a613c54739a00b",
+    "after_sha256": "1223a9d6c9c89bb998434395e58dfee8c77c3d95d918fca7b8a613c54739a00b",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/root-spawn-observation.json",
+    "old_sha256": "ab3e9c9b1c7d47552c919d8ff38feb9b289cea639b61ec395e69c4722608ce53",
+    "after_sha256": "ab3e9c9b1c7d47552c919d8ff38feb9b289cea639b61ec395e69c4722608ce53",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/scope-delta.json",
+    "old_sha256": "a9241275b400de3455a15cd41d3a3975805ff126311571bb590e17bee31d80d9",
+    "after_sha256": "a9241275b400de3455a15cd41d3a3975805ff126311571bb590e17bee31d80d9",
+    "unchanged": true
+  },
+  {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/sdk-identity.json",
+    "old_sha256": "7f78255bfecd6fc872213a59256945d3ab143b3636a2ad7ca572ee041cd8c05f",
+    "after_sha256": "7f78255bfecd6fc872213a59256945d3ab143b3636a2ad7ca572ee041cd8c05f",
+    "unchanged": true
+  }
+]

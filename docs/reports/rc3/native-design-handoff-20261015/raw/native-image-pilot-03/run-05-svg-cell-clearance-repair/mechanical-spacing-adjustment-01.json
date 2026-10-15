@@ -1,0 +1,413 @@
+{
+  "schema": "native_svg_mechanical_spacing_adjustment.v1",
+  "timestamp_utc": "2026-10-15T02:52:37.456546+00:00",
+  "repair_round": 2,
+  "mechanical_adjustment_number": 1,
+  "reason": "First local real-font bbox check found up to1px interline overlap with31px leading. Retain that original and failure report. This single adjustment corrects spacing without altering text, font, Page, canvas, or creating another effect variant.",
+  "source": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/p04-native-v3.svg",
+    "sha256": "97df8d71e641c778e644bbddbb9e98a68be9a1b08a2ef56068cd2e9ed7cce005"
+  },
+  "original_failure_report": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/engineering-check-v3.json",
+    "sha256": "38dbee27f6b5dd357d1fb6bd572539f4c915b7107bc5bd70d7bb88b96c45927c"
+  },
+  "adjusted": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-05-svg-cell-clearance-repair/p04-native-v3-spacing-adjusted.svg",
+    "sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1"
+  },
+  "changes": [
+    {
+      "element": "main-chain-frame",
+      "attribute": "height",
+      "before": "190",
+      "after": "186"
+    },
+    {
+      "element": "collect-container",
+      "attribute": "height",
+      "before": "124",
+      "after": "128"
+    },
+    {
+      "element": "collect-tint",
+      "attribute": "height",
+      "before": "124",
+      "after": "128"
+    },
+    {
+      "element": "retrieve-container",
+      "attribute": "height",
+      "before": "124",
+      "after": "128"
+    },
+    {
+      "element": "retrieve-tint",
+      "attribute": "height",
+      "before": "124",
+      "after": "128"
+    },
+    {
+      "element": "review-container",
+      "attribute": "height",
+      "before": "124",
+      "after": "128"
+    },
+    {
+      "element": "review-tint",
+      "attribute": "height",
+      "before": "124",
+      "after": "128"
+    },
+    {
+      "element": "submit-container",
+      "attribute": "height",
+      "before": "124",
+      "after": "128"
+    },
+    {
+      "element": "submit-tint",
+      "attribute": "height",
+      "before": "124",
+      "after": "128"
+    },
+    {
+      "element": "edge-collect-retrieve",
+      "attribute": "d",
+      "before": "M236 256 L612 256",
+      "after": "M236 258 L612 258"
+    },
+    {
+      "element": "edge-retrieve-review",
+      "attribute": "d",
+      "before": "M612 256 L988 256",
+      "after": "M612 258 L988 258"
+    },
+    {
+      "element": "edge-review-submit",
+      "attribute": "d",
+      "before": "M988 256 L1364 256",
+      "after": "M988 258 L1364 258"
+    },
+    {
+      "element": "arrowhead-collect-retrieve",
+      "attribute": "points",
+      "before": "428,247 440,256 428,265",
+      "after": "428,249 440,258 428,267"
+    },
+    {
+      "element": "arrowhead-retrieve-review",
+      "attribute": "points",
+      "before": "804,247 816,256 804,265",
+      "after": "804,249 816,258 804,267"
+    },
+    {
+      "element": "arrowhead-review-submit",
+      "attribute": "points",
+      "before": "1180,247 1192,256 1180,265",
+      "after": "1180,249 1192,258 1180,267"
+    },
+    {
+      "element": "collect-label",
+      "tspan_before_y": "234",
+      "tspan_after_y": "234"
+    },
+    {
+      "element": "collect-label",
+      "tspan_before_y": "265",
+      "tspan_after_y": "267"
+    },
+    {
+      "element": "collect-label",
+      "tspan_before_y": "296",
+      "tspan_after_y": "300"
+    },
+    {
+      "element": "review-label",
+      "tspan_before_y": "234",
+      "tspan_after_y": "234"
+    },
+    {
+      "element": "review-label",
+      "tspan_before_y": "265",
+      "tspan_after_y": "267"
+    },
+    {
+      "element": "review-label",
+      "tspan_before_y": "296",
+      "tspan_after_y": "300"
+    },
+    {
+      "element": "exceptions-heading",
+      "attribute": "y",
+      "before": "402",
+      "after": "398"
+    },
+    {
+      "element": "table-background",
+      "attribute": "y",
+      "before": "428",
+      "after": "424"
+    },
+    {
+      "element": "table-background",
+      "attribute": "height",
+      "before": "305",
+      "after": "309"
+    },
+    {
+      "element": "table-border",
+      "attribute": "y",
+      "before": "428",
+      "after": "424"
+    },
+    {
+      "element": "table-border",
+      "attribute": "height",
+      "before": "305",
+      "after": "309"
+    },
+    {
+      "element": "table-header-tint",
+      "attribute": "y",
+      "before": "428",
+      "after": "424"
+    },
+    {
+      "element": "table-header-tint",
+      "attribute": "height",
+      "before": "60",
+      "after": "59"
+    },
+    {
+      "element": "table-column-trigger-action",
+      "attribute": "y1",
+      "before": "428",
+      "after": "424"
+    },
+    {
+      "element": "table-column-action-handoff",
+      "attribute": "y1",
+      "before": "428",
+      "after": "424"
+    },
+    {
+      "element": "table-header-bottom",
+      "attribute": "y1",
+      "before": "488",
+      "after": "483"
+    },
+    {
+      "element": "table-header-bottom",
+      "attribute": "y2",
+      "before": "488",
+      "after": "483"
+    },
+    {
+      "element": "table-row-divider",
+      "attribute": "y1",
+      "before": "611",
+      "after": "608"
+    },
+    {
+      "element": "table-row-divider",
+      "attribute": "y2",
+      "before": "611",
+      "after": "608"
+    },
+    {
+      "element": "column-trigger",
+      "attribute": "y",
+      "before": "468",
+      "after": "463"
+    },
+    {
+      "element": "column-action",
+      "attribute": "y",
+      "before": "468",
+      "after": "463"
+    },
+    {
+      "element": "column-handoff",
+      "attribute": "y",
+      "before": "468",
+      "after": "463"
+    },
+    {
+      "element": "unknown-trigger",
+      "attribute": "y",
+      "before": "528",
+      "after": "522"
+    },
+    {
+      "element": "unknown-trigger",
+      "tspan_before_y": "528",
+      "tspan_after_y": "522"
+    },
+    {
+      "element": "unknown-trigger",
+      "tspan_before_y": "559",
+      "tspan_after_y": "555"
+    },
+    {
+      "element": "unknown-action",
+      "attribute": "y",
+      "before": "528",
+      "after": "522"
+    },
+    {
+      "element": "unknown-action",
+      "tspan_before_y": "528",
+      "tspan_after_y": "522"
+    },
+    {
+      "element": "unknown-action",
+      "tspan_before_y": "559",
+      "tspan_after_y": "555"
+    },
+    {
+      "element": "unknown-action",
+      "tspan_before_y": "590",
+      "tspan_after_y": "588"
+    },
+    {
+      "element": "unknown-handoff",
+      "attribute": "y",
+      "before": "528",
+      "after": "522"
+    },
+    {
+      "element": "unknown-handoff",
+      "tspan_before_y": "528",
+      "tspan_after_y": "522"
+    },
+    {
+      "element": "unknown-handoff",
+      "tspan_before_y": "559",
+      "tspan_after_y": "555"
+    },
+    {
+      "element": "unknown-handoff",
+      "tspan_before_y": "590",
+      "tspan_after_y": "588"
+    },
+    {
+      "element": "unsuitable-trigger",
+      "attribute": "y",
+      "before": "651",
+      "after": "647"
+    },
+    {
+      "element": "unsuitable-trigger",
+      "tspan_before_y": "651",
+      "tspan_after_y": "647"
+    },
+    {
+      "element": "unsuitable-trigger",
+      "tspan_before_y": "682",
+      "tspan_after_y": "680"
+    },
+    {
+      "element": "unsuitable-trigger",
+      "tspan_before_y": "713",
+      "tspan_after_y": "713"
+    },
+    {
+      "element": "unsuitable-action",
+      "attribute": "y",
+      "before": "651",
+      "after": "647"
+    },
+    {
+      "element": "unsuitable-action",
+      "tspan_before_y": "651",
+      "tspan_after_y": "647"
+    },
+    {
+      "element": "unsuitable-action",
+      "tspan_before_y": "682",
+      "tspan_after_y": "680"
+    },
+    {
+      "element": "unsuitable-action",
+      "tspan_before_y": "713",
+      "tspan_after_y": "713"
+    },
+    {
+      "element": "unsuitable-handoff",
+      "attribute": "y",
+      "before": "651",
+      "after": "647"
+    },
+    {
+      "element": "unsuitable-handoff",
+      "tspan_before_y": "651",
+      "tspan_after_y": "647"
+    },
+    {
+      "element": "unsuitable-handoff",
+      "tspan_before_y": "682",
+      "tspan_after_y": "680"
+    },
+    {
+      "element": "unsuitable-handoff",
+      "tspan_before_y": "713",
+      "tspan_after_y": "713"
+    }
+  ],
+  "final_layout": {
+    "main_frame": [
+      50,
+      142,
+      1500,
+      186
+    ],
+    "node_top_height": [
+      194,
+      128
+    ],
+    "node_three_line_baselines": [
+      234,
+      267,
+      300
+    ],
+    "node_edge_center_y": 258,
+    "section_heading_baseline": 398,
+    "table": [
+      50,
+      424,
+      1500,
+      309
+    ],
+    "row_edges": [
+      424,
+      483,
+      608,
+      733
+    ],
+    "header_baseline": 463,
+    "unknown_baselines": [
+      522,
+      555,
+      588
+    ],
+    "unsuitable_baselines": [
+      647,
+      680,
+      713
+    ],
+    "data_row_leading": 33,
+    "boundary": [
+      50,
+      759,
+      1500,
+      91
+    ],
+    "boundary_baselines": [
+      798,
+      830
+    ]
+  },
+  "actual_newPPT_measured": false,
+  "quality_acceptance_claimed": false
+}

@@ -1,0 +1,49 @@
+{
+  "author": "/root",
+  "observed_at_utc": "2026-10-15T02:24:45.768845+00:00",
+  "source": "actual initial Root SVG author task and helper invocation",
+  "original_incorrect_root_instruction_excerpt": "冻结字体Noto Sans CJK SC，body18pt=24px、heading30pt=40px，实际蓝图1672x941保留，仅当视觉参考，SVG用1600x900。",
+  "original_incorrect_helper_parameters": {
+    "width_px": 1600,
+    "height_px": 900
+  },
+  "frozen_actual_canvas": {
+    "width_px": 1600,
+    "height_px": 900,
+    "slide_width_in": 13.333333333333334,
+    "slide_height_in": 7.5
+  },
+  "formal_pipeline_parameters_at96ppi": {
+    "width_px": 1280,
+    "height_px": 720
+  },
+  "cause": "Root omitted actual0.8 compilercontain scale when translating targetphysical pt toSVG pixels; formal pipeline alreadyusesphysical canvas",
+  "actual_corrected_compile_observation": {
+    "dir": "/workspace/work/rc3/native-image-pilot-03/run-03-native-ppt-correct-physical",
+    "pptx_sha256": "8affb8957e63919b73ea8be326786b5a322b1bd94418b0bba53a6c092c66ca1e",
+    "physical_canvas_matches": true,
+    "actual_emu": [
+      12192000,
+      6858000
+    ],
+    "actual_point_sizes": [
+      14.4,
+      24.0
+    ],
+    "required_body_pt": 18,
+    "required_heading_pt": 30,
+    "individual_runs_below_floor": 35,
+    "readback": "PASS_CONTENT_ONLY",
+    "overall_mechanical_check": "FAIL_TYPOGRAPHY",
+    "measurement_sha256": "ae9d8039e06629b014936b8cc22f2f19f2402328cac81faeb66227f0ad453187"
+  },
+  "correct_svg_font_mapping": {
+    "body_px": 30,
+    "heading_px": 50,
+    "physical_target_body_pt": 18,
+    "physical_target_heading_pt": 30
+  },
+  "new_real_task": "955ec4bc6827",
+  "source_product_defect_claimed": false,
+  "all_original_failures_and_reviews_preserved": true
+}

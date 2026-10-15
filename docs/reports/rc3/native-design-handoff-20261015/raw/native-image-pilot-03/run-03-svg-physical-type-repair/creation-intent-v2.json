@@ -1,0 +1,87 @@
+{
+  "schema": "native_svg_original_creation.v2",
+  "created_at_utc": "2026-10-15T02:27:10.217411+00:00",
+  "execution_ref": "/root/rc3_03_actual_svg_writer",
+  "task_id": "955ec4bc6827",
+  "autonomous_repair_round": 1,
+  "prior_attempt": "Original v1 and its accept/independent reviews are retained. v1 failed actual physical font checks after correcting the conversion canvas; this is not first-draft one-shot success.",
+  "real_feedback_sha256": "ae9d8039e06629b014936b8cc22f2f19f2402328cac81faeb66227f0ad453187",
+  "authoring_method": "Native model authored new v2 markup and reflow directly; no fixture SVG, imagegen, OCR, new dependencies, product edits, or preview/compile call.",
+  "source": "All17 visible atoms and relationships from the complete fixed Page; complete actual Task/workorder/method bytes and conversion feedback were read. Frozen11-field design context equals the already fully read adopted context. Exact originalPNG viewed again as a visual reference only.",
+  "canvas": {
+    "svg": [
+      1600,
+      900
+    ],
+    "physical_inches": [
+      13.333333333333334,
+      7.5
+    ],
+    "compile_pixels_at96ppi": [
+      1280,
+      720
+    ],
+    "conversion_scale": 0.8,
+    "canvas_changed": false
+  },
+  "type_roles": {
+    "heading_atom_ids": [
+      "atom:p04:title",
+      "atom:p04:block:exceptions-heading:text"
+    ],
+    "all_other_visible_text": "body, including bold main-chain qualification and table headers; no auxiliary small text",
+    "heading_px": 50,
+    "body_px": 30,
+    "family": "Noto Sans CJK SC",
+    "expected_point_conversion": "px *0.8 *0.75 -> heading30pt and body18pt. This is a calculated design expectation, not a new actual PPT measurement."
+  },
+  "layout": "Retain title, subtitle, four-node left-to-right chain with its frozen qualification in a shared frame, section heading, two-row three-column exceptions table, and two-line boundary callout. Reallocate columns to344/508/648px; each data row122px; reflow unsuitable-action into3lines and review label into3shorter lines. Main nodes widen340px and gaps36px. No new business text, step numbers, icons, or branches.",
+  "planned_geometry": {
+    "content_x": [
+      50,
+      1550
+    ],
+    "main_frame": [
+      50,
+      152,
+      1500,
+      190
+    ],
+    "nodes_top_height": [
+      204,
+      122
+    ],
+    "section_heading_baseline": 412,
+    "table_bounds": [
+      50,
+      438,
+      1500,
+      298
+    ],
+    "table_column_edges": [
+      50,
+      394,
+      902,
+      1550
+    ],
+    "row_edges": [
+      438,
+      492,
+      614,
+      736
+    ],
+    "boundary": [
+      50,
+      762,
+      1500,
+      88
+    ],
+    "table_to_boundary_net_gap": 24.75,
+    "safe_geometry_margin_min": 49.25
+  },
+  "F01_retained": "主链只适用于条件可核对情形。 remains body30px bold inside the common main-chain frame immediately above the four nodes/arrows.",
+  "F02_F03": "All visible nonbackground geometry planned within48px safe margins; minimum24px net module separation; table cell content inset at least12px. No body shrinking.",
+  "F04": "OriginalPNG remains1672x941 with SHA2568cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c, never embedded or reencoded.",
+  "checks_at_save": "Original v2 is saved before any v2 SVG parsing, atom coverage, or actual font-bound measurement.",
+  "review_boundary": "Root must independently compile and measure actualPPT font/physical canvas, render and re-review newsubjects. No existing review is overwritten or reused as acceptance of v2."
+}

@@ -1,0 +1,76 @@
+{
+  "status": "PASS",
+  "cases": [
+    {
+      "change": "value",
+      "outcome": "consumed",
+      "native_observation": "rejected",
+      "call_state": "consumed",
+      "used": 1,
+      "remaining": 1,
+      "budget_state": "available",
+      "late_result_rejected": true,
+      "new_allowances": 0,
+      "frozen_request_unchanged": true,
+      "current_pages_unchanged": true,
+      "actual_image_calls": 0
+    },
+    {
+      "change": "value",
+      "outcome": "unknown",
+      "native_observation": "rejected",
+      "call_state": "unknown",
+      "used": 1,
+      "remaining": 1,
+      "budget_state": "unknown",
+      "late_result_rejected": true,
+      "new_allowances": 0,
+      "frozen_request_unchanged": true,
+      "current_pages_unchanged": true,
+      "actual_image_calls": 0
+    },
+    {
+      "change": "scope",
+      "outcome": "consumed",
+      "native_observation": "rejected",
+      "call_state": "consumed",
+      "used": 1,
+      "remaining": 1,
+      "budget_state": "available",
+      "late_result_rejected": true,
+      "new_allowances": 0,
+      "frozen_request_unchanged": true,
+      "current_pages_unchanged": true,
+      "actual_image_calls": 0
+    },
+    {
+      "change": "scope",
+      "outcome": "unknown",
+      "native_observation": "rejected",
+      "call_state": "unknown",
+      "used": 1,
+      "remaining": 1,
+      "budget_state": "unknown",
+      "late_result_rejected": true,
+      "new_allowances": 0,
+      "frozen_request_unchanged": true,
+      "current_pages_unchanged": true,
+      "actual_image_calls": 0
+    },
+    {
+      "change": "same",
+      "outcome": "consumed",
+      "native_observation": "accepted",
+      "call_state": "consumed",
+      "used": 1,
+      "remaining": 1,
+      "budget_state": "available",
+      "late_result_rejected": false,
+      "new_allowances": 0,
+      "frozen_request_unchanged": true,
+      "current_pages_unchanged": true,
+      "actual_image_calls": 0
+    }
+  ],
+  "evidence_kind": "synthetic native/authority fixtures, actual installed begin/settle/accept and ledger; no real image"
+}

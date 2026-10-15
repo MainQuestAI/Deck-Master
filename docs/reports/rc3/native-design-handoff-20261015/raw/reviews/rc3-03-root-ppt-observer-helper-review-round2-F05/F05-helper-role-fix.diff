@@ -1,0 +1,54 @@
+--- initial-F05-0a148342
++++ role-fixed-7fe47e10
+@@ -105,13 +105,36 @@
+                 actual_emu = [int(size.get('cx')), int(size.get('cy'))]
+                 expected_emu = [round(canvas['slide_width_in'] * 914400),
+                                 round(canvas['slide_height_in'] * 914400)]
+-                point_sizes = sorted({int(p.get('sz')) / 100 for p in root.findall('.//a:rPr', ns)
+-                                      if p.get('sz') is not None})
+                 typography = effective['styles'][0]['typography']
+-                # This fixed p04 uses body and heading text only, no auxiliary text.
+-                typography_matches_pilot = bool(point_sizes and
+-                    min(point_sizes) >= typography['body_size_pt'] and
+-                    max(point_sizes) >= typography['heading_size_pt'])
++                # Explicit visual roles for this fixed pilot, declared before checking
++                # output. The paragraph's use as a section heading is a local layout
++                # choice, not a change to Page text or a role inferred from font size.
++                heading_atoms = {'atom:p04:title', 'atom:p04:block:exceptions-heading:text'}
++                text_names = {s.get('atom_id') or s['id'] for s in parsed['shapes'] if s['kind'] == 'text'}
++                run_checks = []
++                seen_headings = set()
++                for shape in root.findall('.//p:sp', ns):
++                    named = shape.find('p:nvSpPr/p:cNvPr', ns)
++                    name = named.get('name') if named is not None else None
++                    role = 'heading' if name in heading_atoms else 'body'
++                    required_pt = typography['heading_size_pt' if role == 'heading' else 'body_size_pt']
++                    for run in shape.findall('.//a:r', ns):
++                        text = ''.join(t.text or '' for t in run.findall('a:t', ns))
++                        if not text:
++                            continue
++                        props = run.find('a:rPr', ns)
++                        size_value = props.get('sz') if props is not None else None
++                        actual_pt = int(size_value) / 100 if size_value is not None else None
++                        passed = name in text_names and actual_pt is not None and actual_pt >= required_pt
++                        run_checks.append({'shape_name': name, 'text': text, 'role': role,
++                            'role_basis': 'explicit fixed-p04 pilot mapping; not inferred from size or bold',
++                            'actual_pt': actual_pt, 'required_minimum_pt': required_pt,
++                            'status': 'pass' if passed else 'fail_or_unverifiable'})
++                        if name in heading_atoms:
++                            seen_headings.add(name)
++                point_sizes = sorted({r['actual_pt'] for r in run_checks if r['actual_pt'] is not None})
++                typography_matches_pilot = bool(run_checks and seen_headings == heading_atoms and
++                    all(r['status'] == 'pass' for r in run_checks))
+                 physical_canvas_matches = actual_emu == expected_emu
+                 save(out / 'actual-physical-canvas-and-typography.json', {
+                     'frozen_canvas': canvas, 'compile_width_px_at_96ppi': width_px,
+@@ -120,6 +143,8 @@
+                     'template_type_attribute': size.get('type'), 'actual_point_sizes': point_sizes,
+                     'frozen_body_size_pt': typography['body_size_pt'],
+                     'frozen_heading_size_pt': typography['heading_size_pt'],
++                    'explicit_pilot_heading_atoms': sorted(heading_atoms),
++                    'individual_visible_run_checks': run_checks,
+                     'typography_matches_fixed_pilot': typography_matches_pilot,
+                     'assumption': 'actual fixed pilot has body and heading only, no auxiliary text',
+                 })

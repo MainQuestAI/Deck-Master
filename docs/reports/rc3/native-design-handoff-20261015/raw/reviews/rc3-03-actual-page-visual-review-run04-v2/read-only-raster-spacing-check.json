@@ -1,0 +1,218 @@
+{
+  "svg_preview": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-native-svg-v2-preview/actual-p04-preview.png",
+    "image_dimensions": [
+      1600,
+      900
+    ],
+    "method": "Read-only dark text pixel bounding boxes; color thresholds exclude pale blue table borders and fills; no output image/edit/crop. Approximate raster evidence, not a typography engine proof.",
+    "regions": {
+      "unknown_trigger": {
+        "dark_text_bbox_in_actual_pixels": [
+          69,
+          505,
+          306,
+          565
+        ],
+        "approx_svg_unit_insets": {
+          "left": 19.0,
+          "top": 13.0,
+          "right": 87.0,
+          "bottom": 48.0
+        }
+      },
+      "unknown_action": {
+        "dark_text_bbox_in_actual_pixels": [
+          413,
+          505,
+          841,
+          599
+        ],
+        "approx_svg_unit_insets": {
+          "left": 19.0,
+          "top": 13.0,
+          "right": 60.0,
+          "bottom": 14.0
+        }
+      },
+      "unknown_handoff": {
+        "dark_text_bbox_in_actual_pixels": [
+          921,
+          505,
+          1469,
+          599
+        ],
+        "approx_svg_unit_insets": {
+          "left": 19.0,
+          "top": 13.0,
+          "right": 80.0,
+          "bottom": 14.0
+        }
+      },
+      "unsuitable_trigger": {
+        "dark_text_bbox_in_actual_pixels": [
+          70,
+          627,
+          347,
+          721
+        ],
+        "approx_svg_unit_insets": {
+          "left": 20.0,
+          "top": 13.0,
+          "right": 46.0,
+          "bottom": 14.0
+        }
+      },
+      "unsuitable_action": {
+        "dark_text_bbox_in_actual_pixels": [
+          413,
+          627,
+          800,
+          721
+        ],
+        "approx_svg_unit_insets": {
+          "left": 19.0,
+          "top": 13.0,
+          "right": 101.0,
+          "bottom": 14.0
+        }
+      },
+      "unsuitable_handoff": {
+        "dark_text_bbox_in_actual_pixels": [
+          922,
+          627,
+          1379,
+          721
+        ],
+        "approx_svg_unit_insets": {
+          "left": 20.0,
+          "top": 13.0,
+          "right": 170.0,
+          "bottom": 14.0
+        }
+      },
+      "boundary": {
+        "dark_text_bbox_in_actual_pixels": [
+          69,
+          775,
+          1011,
+          835
+        ],
+        "approx_svg_unit_insets": {
+          "left": 19.0,
+          "top": 13.0,
+          "right": 538.0,
+          "bottom": 14.0
+        }
+      }
+    }
+  },
+  "ppt_render": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-04-native-ppt-v2-correct-physical/rendered/page-1.png",
+    "image_dimensions": [
+      1601,
+      900
+    ],
+    "method": "Read-only dark text pixel bounding boxes; color thresholds exclude pale blue table borders and fills; no output image/edit/crop. Approximate raster evidence, not a typography engine proof.",
+    "regions": {
+      "unknown_trigger": {
+        "dark_text_bbox_in_actual_pixels": [
+          68,
+          508,
+          305,
+          568
+        ],
+        "approx_svg_unit_insets": {
+          "left": 17.957526545908806,
+          "top": 16.0,
+          "right": 88.1911305434104,
+          "bottom": 45.0
+        }
+      },
+      "unknown_action": {
+        "dark_text_bbox_in_actual_pixels": [
+          412,
+          508,
+          840,
+          602
+        ],
+        "approx_svg_unit_insets": {
+          "left": 17.742660836976825,
+          "top": 16.0,
+          "right": 61.52529668956913,
+          "bottom": 11.0
+        }
+      },
+      "unknown_handoff": {
+        "dark_text_bbox_in_actual_pixels": [
+          920,
+          508,
+          1468,
+          602
+        ],
+        "approx_svg_unit_insets": {
+          "left": 17.42535915053088,
+          "top": 16.0,
+          "right": 81.91755153029362,
+          "bottom": 11.0
+        }
+      },
+      "unsuitable_trigger": {
+        "dark_text_bbox_in_actual_pixels": [
+          69,
+          630,
+          346,
+          724
+        ],
+        "approx_svg_unit_insets": {
+          "left": 18.95690193628981,
+          "top": 16.0,
+          "right": 47.2167395377889,
+          "bottom": 11.0
+        }
+      },
+      "unsuitable_action": {
+        "dark_text_bbox_in_actual_pixels": [
+          412,
+          630,
+          799,
+          724
+        ],
+        "approx_svg_unit_insets": {
+          "left": 17.742660836976825,
+          "top": 16.0,
+          "right": 102.49968769519057,
+          "bottom": 11.0
+        }
+      },
+      "unsuitable_handoff": {
+        "dark_text_bbox_in_actual_pixels": [
+          921,
+          630,
+          1378,
+          724
+        ],
+        "approx_svg_unit_insets": {
+          "left": 18.4247345409118,
+          "top": 16.0,
+          "right": 171.86133666458477,
+          "bottom": 11.0
+        }
+      },
+      "boundary": {
+        "dark_text_bbox_in_actual_pixels": [
+          68,
+          778,
+          1025,
+          838
+        ],
+        "approx_svg_unit_insets": {
+          "left": 17.957526545908806,
+          "top": 16.0,
+          "right": 524.640849469082,
+          "bottom": 11.0
+        }
+      }
+    }
+  }
+}

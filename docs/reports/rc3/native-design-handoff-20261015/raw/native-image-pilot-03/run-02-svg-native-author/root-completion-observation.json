@@ -1,0 +1,14 @@
+{
+  "observation_author": "/root",
+  "assurance": "host_attested",
+  "actual_spawn_observed": true,
+  "actual_final_answer_observed": true,
+  "actual_final_text_file": "/workspace/work/rc3/native-image-pilot-03/run-02-svg-native-author/root-observed-actual-final.txt",
+  "actual_final_text_sha256": "d27d458a591871f180cb904a45a84136c16da947ba5f78e1178fde1bbf585200",
+  "completed_status_observed_by_root_list_agents": true,
+  "agent": "/root/rc3_03_actual_svg_writer",
+  "task_id": "a68c58884f9a",
+  "observed_at_utc": "2026-10-15T02:03:52.925784+00:00",
+  "platform_receipt": null,
+  "human_authorship_or_acceptance": null
+}

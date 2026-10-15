@@ -1,0 +1,11 @@
+{
+  "created_at": "2026-10-15T02:58:25.836519+00:00",
+  "sequence": "after actual two new full image views and SVG full text, before independent native physical/font/paint measurement",
+  "independent_observation": [
+    "All17 fixed visible atoms and their substantive qualifiers appear complete and legible. Table trigger/action/handoff columns retain unknown/unsuitable rows. Four ordered nodes and three right arrows remain, explicit frozen condition binds common main-chain frame.",
+    "Compared to v2, table title/table and main-chain moved upward, table header and rows redistribute space; table baselines show more bottom clearance in both new actual images. No line ink overlap or clipping is visually apparent, including three-line cells.",
+    "Current large text remains dense but separable, ordered and readable. Outer margin and table-to-boundary gap appear preserved. Final F07 closure requires all nine cell paint measurements on both SVG/PPT."
+  ],
+  "provisional_verdict": "No blocking defect observed; decide after targeted painted-padding and per-role physical-font checks.",
+  "scope": "new exact p04 artifacts only; no reuse of prior FAIL/PASS to new subjects"
+}

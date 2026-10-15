@@ -1,0 +1,44 @@
+{
+  "schema": "rc3_native_pilot_source_navigation.v1",
+  "status": "PLANNED_NOT_RUN",
+  "prepared_at": "2026-10-14T23:52:03.835937+00:00",
+  "original_project": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/actual-q2",
+  "original_project_id": "actual-q2",
+  "original_revision": "b98eec51f9424d71be35efa904f7e24e",
+  "original_document_sha256": "1549adeb869a6d891d77ff2958799b58ad9afc9a3be8c47f1026cbb0dceb23b2",
+  "owner_draft": "/workspace/work/rc3/cards/rc3-02/docs/reports/rc3/native-content-handoff-20261014/actual-Q2-B-run-v1/verification/final-content-verification/owner-draft.json",
+  "owner_draft_sha256": "a896400e76584478c6f45e6230ec72066bc8c935e1f398f97efc08320eb8bff9",
+  "page_id": "p04",
+  "page_ref": {
+    "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+    "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+  },
+  "narrative_ref": {
+    "path": ".deckmaster/objects/4e/4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca.json",
+    "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+  },
+  "plan_ref": {
+    "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+    "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+  },
+  "scope_planned": {
+    "pages": [
+      "p04"
+    ],
+    "actual_image_calls_max": 1,
+    "candidates_max": 1,
+    "initial_design": true,
+    "adoption_policy": "candidate_only",
+    "automatic_adoption": false,
+    "automatic_expansion": false
+  },
+  "candidate_source_head": null,
+  "candidate_wheel_sha256": null,
+  "candidate_installation": null,
+  "actual_request_id": null,
+  "actual_attempt_id": null,
+  "image_execution": "NOT_RUN",
+  "native_svg_execution": "NOT_RUN",
+  "human_acceptance": "NOT_RUN; explicitly deferred",
+  "identity_note": "Old content-only authorization does not grant visual scope; register genuine new controlled software/effect scope on an isolated copy using actual frozen03 interfaces. Never write this original project."
+}

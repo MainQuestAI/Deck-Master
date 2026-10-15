@@ -1,0 +1,41 @@
+{
+  "blueprint": {
+    "artifact_ref": {
+      "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+      "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+    },
+    "file_ref": {
+      "path": ".deckmaster/objects/8c/8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c.png",
+      "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c"
+    },
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/original-blueprint.png",
+    "local_sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+    "same_bytes_as_current": true
+  },
+  "svg": {
+    "artifact_ref": {
+      "path": ".deckmaster/objects/b8/b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2.json",
+      "sha256": "b8179a2a1342e1cdfb165dc41020349705383ce90caf6b7e09a6a2a20f0968f2"
+    },
+    "file_ref": {
+      "path": ".deckmaster/objects/82/82d3430688b9c4ff2fb89cedb99cabfd643fbb39cb03d274b65a60a2de245ded.svg",
+      "sha256": "82d3430688b9c4ff2fb89cedb99cabfd643fbb39cb03d274b65a60a2de245ded"
+    },
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-03-svg-physical-type-repair/p04-native-v2.svg",
+    "local_sha256": "82d3430688b9c4ff2fb89cedb99cabfd643fbb39cb03d274b65a60a2de245ded",
+    "same_bytes_as_current": true
+  },
+  "svg_preview": {
+    "artifact_ref": {
+      "path": ".deckmaster/objects/05/05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611.json",
+      "sha256": "05c36c91d4feffd1acbe35811012eb3ae5e6fff826cfc88d8c8cfe08b7350611"
+    },
+    "file_ref": {
+      "path": ".deckmaster/objects/98/989e796fef7d9e7240786fc6a0b1ff53b7761b8da88f94f6819229a8ca9a99b1.png",
+      "sha256": "989e796fef7d9e7240786fc6a0b1ff53b7761b8da88f94f6819229a8ca9a99b1"
+    },
+    "local_path": "/workspace/work/rc3/native-image-pilot-03/run-04-native-svg-v2-preview/actual-p04-preview.png",
+    "local_sha256": "989e796fef7d9e7240786fc6a0b1ff53b7761b8da88f94f6819229a8ca9a99b1",
+    "same_bytes_as_current": true
+  }
+}

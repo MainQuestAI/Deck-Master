@@ -1,0 +1,51 @@
+{
+  "status": "committed",
+  "operation_id": "a93733a8-663b-479f-b454-9ab7d0bdaa7c",
+  "committed_revision_id": "5218d0c3d0554f4ab7ee76647ca48873",
+  "current_revision_id": "5218d0c3d0554f4ab7ee76647ca48873",
+  "request_digest": "2d1878632e8b2875456c79a0ee9352291b5d568b117bf9ac31e61c7cdb7a175f",
+  "result_ref": {
+    "path": ".deckmaster/objects/a5/a5858a2b811772ca421e2a99cd416d65cbe4209866e822061f39bc1ac6427ee4.json",
+    "sha256": "a5858a2b811772ca421e2a99cd416d65cbe4209866e822061f39bc1ac6427ee4"
+  },
+  "operation_result": {
+    "icon_checks": {},
+    "status": "adopted",
+    "revision_id": "5218d0c3d0554f4ab7ee76647ca48873",
+    "candidate_ids": [
+      "candidate-a36cb3e3313141bc983e8e288b087c44"
+    ],
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      }
+    ],
+    "impact": [
+      {
+        "candidate_id": "candidate-a36cb3e3313141bc983e8e288b087c44",
+        "candidate_ref": {
+          "path": ".deckmaster/objects/be/be744b2b9b41ad63c2555986a7f2404e0a0d8dcd23236ed162aeea65345533f4.json",
+          "sha256": "be744b2b9b41ad63c2555986a7f2404e0a0d8dcd23236ed162aeea65345533f4"
+        },
+        "result_kind": "artifact",
+        "page_id": "p04",
+        "stage": "blueprint",
+        "target_ref": null,
+        "result_ref": {
+          "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+          "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+        },
+        "basis_digest": "113dd04bd3c614ca4ba673d52e64594f32570b8c5cb3101e0d4d91a1f9347467",
+        "downstream": [
+          "svg",
+          "svg_preview",
+          "ppt_preview",
+          "deck_outputs",
+          "quality_applicability"
+        ]
+      }
+    ],
+    "max_calls": 0
+  }
+}

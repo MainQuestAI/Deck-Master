@@ -1,0 +1,32 @@
+--- initial-a37e861d
++++ reviewed-3a3162ac
+@@ -6,6 +6,7 @@
+ from pathlib import Path
+ import sys
+ import traceback
++import runpy
+ import zipfile
+ import xml.etree.ElementTree as ET
+ 
+@@ -38,6 +39,11 @@
+         assert manifest['source_sha'] == EXPECTED
+         assert digest(manifest_bytes) == 'bcb668040f2c5e7cd0613b792517f6ec055f1d5925b5e5a582c076e67dfdbb10'
+         assert str(INSTALL / 'prefix/.deck-master/releases' / manifest['release_id']) in service.__file__
++        admission_helper = BASE / 'prepare-pilot.py'
++        assert digest(admission_helper.read_bytes()) == '4f51363e867cdc367416a4b665a7537db5f2d1fa1c343b73cab848187790e782'
++        admit = runpy.run_path(str(admission_helper))['installation']
++        installed_before = admit(INSTALL / 'manifest.json', EXPECTED)
++        save(out / 'full-installed-admission-before.json', installed_before)
+         save(out / 'reader-identity.json', {
+             'source_sha': EXPECTED, 'manifest_sha256': digest(manifest_bytes),
+             'release_id': manifest['release_id'], 'python': sys.executable,
+@@ -111,6 +117,9 @@
+             k: v for k, v in entry.items() if k != 'svg_preview'}
+         if action == 'compile':
+             assert after == before
++        installed_after = admit(INSTALL / 'manifest.json', EXPECTED)
++        save(out / 'full-installed-admission-after.json', installed_after)
++        assert installed_after == installed_before
+         save(out / 'root-observation.json', {'action': action, 'completed': True,
+             'mechanical_check_status': check_status,
+             'quality_or_desktop_pass': None,

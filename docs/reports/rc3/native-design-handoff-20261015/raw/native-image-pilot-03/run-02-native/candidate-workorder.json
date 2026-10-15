@@ -1,0 +1,1064 @@
+{
+  "task_id": "task-2372aeef0d424576a511bd86fbfe4544",
+  "operation_id": "4aceaeea-5259-48fb-8756-701e992ef56f",
+  "kind": "blueprint",
+  "intent": null,
+  "method_release": {
+    "methods_sha256": "51b228c889424db9edfc8276d1f4e2495c6f1248fc24e6d5884e80d3eeeecc74",
+    "release_id": "8057905162f2-dacfcf0ca168"
+  },
+  "current_method_release": {
+    "release_id": "8057905162f2-dacfcf0ca168",
+    "methods_sha256": "51b228c889424db9edfc8276d1f4e2495c6f1248fc24e6d5884e80d3eeeecc74"
+  },
+  "method_basis_status": "current",
+  "review_stage": "final",
+  "status": "running",
+  "scope_pages": [
+    "p04"
+  ],
+  "instruction": "设计试作，完整保留目标页正文、单位、限定、表格归属与关系。\n只有结构化 recipe_parameters 执行；规划文字不覆盖参数。\n意图：initial_design\n工程样页只覆盖 p04。完整保留原稿正文、限定、责任、表格行列与箭头方向；不改稿、不缩字逃避密度、不制造测量数据。仅调整视觉表达。",
+  "inputs": [
+    {
+      "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    },
+    {
+      "path": ".deckmaster/objects/7f/7f1d26497fb961ae5f7f2c71f65f9e0a137d0359f05f3670e67912d7d1b41895.json",
+      "sha256": "7f1d26497fb961ae5f7f2c71f65f9e0a137d0359f05f3670e67912d7d1b41895"
+    },
+    {
+      "path": ".deckmaster/objects/ae/aec9bafdb192209e88800c3d416246b7d40eb913c8f830f9d6f1c8c95491c113.json",
+      "sha256": "aec9bafdb192209e88800c3d416246b7d40eb913c8f830f9d6f1c8c95491c113"
+    },
+    {
+      "path": ".deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+      "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e"
+    }
+  ],
+  "dispatch_revision": "a4a49894a3b249a8be88626de1c9828b",
+  "produced_against": "f02c7740a38d4142b67a816e6f4138c3fa8c100b8ee37ca623b8224d25b43658",
+  "call_allowances": [
+    {
+      "allowance_id": "call-1",
+      "evidence": [
+        {
+          "path": ".deckmaster/objects/2a/2a563673acdfe91ac7560ccd65067c758ca05bd5da10fa54b29d132b4fc0e36e.json",
+          "sha256": "2a563673acdfe91ac7560ccd65067c758ca05bd5da10fa54b29d132b4fc0e36e"
+        }
+      ],
+      "evidence_level": "tool_observed",
+      "execution_ref": "root-actual-rc3-03-p04-engineering-pilot",
+      "invocation_ref": "native-host:root_actual_native_image:controller_02a4530addfcfb0febde47267af4dcc1",
+      "state": "consumed"
+    }
+  ],
+  "sources": [
+    {
+      "external_use": "unspecified",
+      "extract": {
+        "path": ".deckmaster/objects/4e/4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8.json",
+        "sha256": "4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8"
+      },
+      "format": "txt",
+      "locator_scheme": "line",
+      "name": "S1-facts.txt",
+      "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+      "original_uri": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/original-sources/S1-facts.txt",
+      "restriction": "",
+      "source_id": "src-794c0db1"
+    },
+    {
+      "external_use": "unspecified",
+      "extract": {
+        "path": ".deckmaster/objects/fa/fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d.json",
+        "sha256": "fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d"
+      },
+      "format": "txt",
+      "locator_scheme": "line",
+      "name": "S2-scope.txt",
+      "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+      "original_uri": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/original-sources/S2-scope.txt",
+      "restriction": "",
+      "source_id": "src-8a07b1b1"
+    },
+    {
+      "external_use": "unspecified",
+      "extract": {
+        "path": ".deckmaster/objects/3b/3b49d77997990d97efb406a079d34d8b113675928fb7c9bb5425c0658de9a93e.json",
+        "sha256": "3b49d77997990d97efb406a079d34d8b113675928fb7c9bb5425c0658de9a93e"
+      },
+      "format": "txt",
+      "locator_scheme": "line",
+      "name": "S3-capabilities.txt",
+      "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+      "original_uri": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/original-sources/S3-capabilities.txt",
+      "restriction": "",
+      "source_id": "src-bfef7fd7"
+    }
+  ],
+  "resolved_design_context": {
+    "allowed_asset_ids": [],
+    "assets": [],
+    "canvas": {
+      "fit": "contain",
+      "height_px": 900,
+      "slide_height_in": 7.5,
+      "slide_width_in": 13.333333333333334,
+      "width_px": 1600
+    },
+    "content_basis": {
+      "consumed": {
+        "decision_slices": [],
+        "page_semantics_sha256": "57cc1dbdab9094b88bb05f426ad20bf5c1c0e895caad042824976a82ce652dec",
+        "plan_global_sha256": "6571cf95f59f2296387e20930797c5e7715afc405a82f85691e47628fe334dd8",
+        "plan_page_sha256": "8bf2737a9e944f8e87763ab2679c186a4aaa18c7c33d1a219a70e579f1c79f8a",
+        "recipe_parameters_sha256": "728f29d6c16572592a02d4a8346fd847296e427348e1cb52fc535bf0442771ed"
+      },
+      "decision_refs": [],
+      "page_ref": {
+        "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+        "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+      },
+      "plan_ref": {
+        "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+        "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+      },
+      "recipe_ref": {
+        "path": ".deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+        "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e"
+      },
+      "schema_version": "content_basis.v1"
+    },
+    "content_requirements": {
+      "content_profile": "mechanism",
+      "density_rationale": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。",
+      "layout_hint": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。",
+      "mode": "planned",
+      "page_id": "p04",
+      "page_role": {
+        "audience_question": "提示与引用如何进入人员流程，缺版本时怎么办？",
+        "intended_takeaway": "已知条件走只读检索和人工核查；未知或不适用信息保留条件、来源与未决点交指定核查人。",
+        "role": "解释建议主链与未知、冲突分支的责任交接",
+        "transition_to_next": "哪些能力已有，哪些工作与责任须启动前落实？"
+      },
+      "required_qualifications": [
+        "主链只适用于条件可核对情形。",
+        "未知及原因不得猜填或被强制必填掩盖。",
+        "AI不自动提交、修改或关闭正式工单；引用不等于诊断或批准。"
+      ],
+      "schema_version": "content_requirements.v1",
+      "structure_refs": {
+        "atom_ids": [
+          "atom:p04:block:exceptions-heading:text",
+          "atom:p04:callout:boundary:text",
+          "atom:p04:cell:exceptions:unknown:action:display_text",
+          "atom:p04:cell:exceptions:unknown:handoff:display_text",
+          "atom:p04:cell:exceptions:unknown:trigger:display_text",
+          "atom:p04:cell:exceptions:unsuitable:action:display_text",
+          "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+          "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+          "atom:p04:column:exceptions:action:label",
+          "atom:p04:column:exceptions:handoff:label",
+          "atom:p04:column:exceptions:trigger:label",
+          "atom:p04:label:collect:text",
+          "atom:p04:label:retrieve:text",
+          "atom:p04:label:review:text",
+          "atom:p04:label:submit:text",
+          "atom:p04:subtitle",
+          "atom:p04:title"
+        ],
+        "edge_ids": [
+          "collect-retrieve",
+          "retrieve-review",
+          "review-submit"
+        ],
+        "node_ids": [
+          "collect",
+          "retrieve",
+          "review",
+          "submit"
+        ]
+      },
+      "visual_intent": "明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。"
+    },
+    "default_style_id": "default",
+    "fonts": [
+      {
+        "asset_id": null,
+        "face": "Regular",
+        "fallback_font_ids": [],
+        "family": "Noto Sans CJK SC",
+        "font_id": "body",
+        "weight": 400
+      },
+      {
+        "asset_id": null,
+        "face": "Bold",
+        "fallback_font_ids": [],
+        "family": "Noto Sans CJK SC",
+        "font_id": "heading",
+        "weight": 700
+      }
+    ],
+    "language": "zh-CN",
+    "recipe_overrides": [],
+    "recipe_parameters": {
+      "composition": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。",
+      "density": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。",
+      "icons": "不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+      "lines": "四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。",
+      "palette": {
+        "accent": "#1478FF",
+        "background": "#FFFFFF",
+        "text": "#14213D"
+      },
+      "spacing": "1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。",
+      "typography": {
+        "auxiliary_size_pt": 12,
+        "body_font_id": "body",
+        "body_size_pt": 18,
+        "heading_font_id": "heading",
+        "heading_size_pt": 30
+      }
+    },
+    "styles": [
+      {
+        "colors": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "layout_notes": "density: 四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\ncomposition: 上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\nspacing: 1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\nlines: 四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\nicons: 不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+        "style_id": "default",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      }
+    ]
+  },
+  "method_resources": [
+    {
+      "id": "blueprint-svg",
+      "relative_path": "references/blueprint-svg.md",
+      "path": "/workspace/work/rc3/candidate-03-8057905/prefix/.deck-master/releases/8057905162f2-dacfcf0ca168/venv/lib/python3.12/site-packages/deck_master/resources/skill/references/blueprint-svg.md",
+      "sha256": "4d19ee8950035ba158c5013e4c6f0a50b0131370f0c0af195fccfd584f20602d"
+    }
+  ],
+  "project_context": {
+    "task": {
+      "audience": "售后运营与 IT 负责人",
+      "brief": "向售后运营与 IT 负责人提出 10 分钟立项讨论，是否开展 4 周小范围试点。页数上限 8，现场使用，口播默认 cues。",
+      "existing_decisions": [],
+      "page_limit": 8,
+      "presentation_mode": "live",
+      "presentation_mode_source": "provided",
+      "scenario": "10 分钟立项讨论，是否开展 4 周小范围试点",
+      "title": "Deck task"
+    },
+    "input_digest": "0d58e634c2d8b4e5c9e65ee854024cd58fd6afc4eba6b7ad8abcf1463849b20c",
+    "dispatch_revision": "a4a49894a3b249a8be88626de1c9828b",
+    "current_revision": "c9dfd311469c490981fb473db6429e79",
+    "context_status": "current",
+    "input_alignment": "current"
+  },
+  "staging_dir": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/staging/4aceaeea-5259-48fb-8756-701e992ef56f",
+  "stage_request": {
+    "mode": "trial",
+    "references": [],
+    "stage": "blueprint",
+    "style_recipe_ref": {
+      "path": ".deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+      "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e"
+    }
+  },
+  "execution_ref": "root-actual-rc3-03-p04-engineering-pilot",
+  "execution_started_at": "2026-10-15T00:59:49Z",
+  "change_binding": {
+    "action_id": "action-1",
+    "change_ref": {
+      "path": ".deckmaster/objects/7f/7f1d26497fb961ae5f7f2c71f65f9e0a137d0359f05f3670e67912d7d1b41895.json",
+      "sha256": "7f1d26497fb961ae5f7f2c71f65f9e0a137d0359f05f3670e67912d7d1b41895"
+    }
+  },
+  "change_action": {
+    "action_id": "action-1",
+    "downstream": [
+      "svg",
+      "svg_preview",
+      "ppt_preview",
+      "deck_outputs",
+      "quality_applicability"
+    ],
+    "kind": "blueprint",
+    "layer": "original_image",
+    "max_calls": 1,
+    "mode": "trial",
+    "page_id": "p04",
+    "page_ref": {
+      "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    },
+    "stage": "blueprint",
+    "target_ref": null,
+    "write_slots": [
+      "blueprint"
+    ]
+  },
+  "protocol_version": "generation.v1",
+  "required_capabilities": [
+    "generation_request_freeze",
+    "attempt_binding",
+    "native_tool_observation",
+    "content_requirements_v1",
+    "change_plan",
+    "style_recipe",
+    "style_recipe_v3",
+    "candidate_result"
+  ],
+  "host_protocol": {
+    "capabilities": [
+      "generation_request_freeze",
+      "attempt_binding",
+      "native_tool_observation",
+      "content_requirements_v1",
+      "change_plan",
+      "style_recipe",
+      "style_recipe_v3",
+      "candidate_result"
+    ],
+    "supported_protocols": [
+      "generation.v1"
+    ]
+  },
+  "generation_requests": [
+    {
+      "path": ".deckmaster/objects/85/85815c301b12ddf8d4f3e1c706ba5d8086674377e6217b70ce525b54596b83a7.json",
+      "sha256": "85815c301b12ddf8d4f3e1c706ba5d8086674377e6217b70ce525b54596b83a7"
+    }
+  ],
+  "generation_attempts": [
+    {
+      "path": ".deckmaster/objects/10/10b205c8f4de3e0db02efd1a106dd40899579664d632a6e227c89f8c36bfb4bc.json",
+      "sha256": "10b205c8f4de3e0db02efd1a106dd40899579664d632a6e227c89f8c36bfb4bc"
+    }
+  ],
+  "source_reading": [
+    {
+      "source_id": "src-794c0db1",
+      "detail": "",
+      "format": "txt",
+      "format_kind": "text",
+      "image_pages": [],
+      "locators": [
+        {
+          "kind": "line",
+          "locator": "L1",
+          "text": "合成抽样120条售后请求，54条首次提交缺少设备型号或版本。"
+        },
+        {
+          "kind": "line",
+          "locator": "L2",
+          "text": "当前人员访谈称设备条件缺失可能带来接单后的补问，但没有统计补问轮次、处理时长或其相对其他成本的占比。"
+        },
+        {
+          "kind": "line",
+          "locator": "L3",
+          "text": "未测量任何新方案实施后的时间、成本、解决率或收益。"
+        }
+      ],
+      "original_file": {
+        "path": ".deckmaster/objects/7a/7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4.txt",
+        "sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4"
+      },
+      "original_sha256": "7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4",
+      "original_uri": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/original-sources/S1-facts.txt",
+      "status": "read",
+      "tables": [],
+      "text": "合成抽样120条售后请求，54条首次提交缺少设备型号或版本。\n当前人员访谈称设备条件缺失可能带来接单后的补问，但没有统计补问轮次、处理时长或其相对其他成本的占比。\n未测量任何新方案实施后的时间、成本、解决率或收益。\n",
+      "extract_path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/4e/4e9f516105de7192a0ec3c8b1c629bd53826f2dd1089d5a4b91d26ae913621f8.json",
+      "original_path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/7a/7aeafd2ea7e551105dd7ab959375d24e9451f2112fa3d1be7a1c0aaf263ed4e4.txt"
+    },
+    {
+      "source_id": "src-8a07b1b1",
+      "detail": "",
+      "format": "txt",
+      "format_kind": "text",
+      "image_pages": [],
+      "locators": [
+        {
+          "kind": "line",
+          "locator": "L1",
+          "text": "本合成一期范围只读，不允许AI自动提交、修改或关闭正式工单。"
+        },
+        {
+          "kind": "line",
+          "locator": "L2",
+          "text": "可读取经许可的手册、历史工单，并展示来源引用；人员在现有系统完成正式提交。"
+        },
+        {
+          "kind": "line",
+          "locator": "L3",
+          "text": "一线有时无法取得版本；试点必须允许注明未知及原因，不能靠强制填写制造虚假完整性。"
+        }
+      ],
+      "original_file": {
+        "path": ".deckmaster/objects/35/356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49.txt",
+        "sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49"
+      },
+      "original_sha256": "356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49",
+      "original_uri": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/original-sources/S2-scope.txt",
+      "status": "read",
+      "tables": [],
+      "text": "本合成一期范围只读，不允许AI自动提交、修改或关闭正式工单。\n可读取经许可的手册、历史工单，并展示来源引用；人员在现有系统完成正式提交。\n一线有时无法取得版本；试点必须允许注明未知及原因，不能靠强制填写制造虚假完整性。\n",
+      "extract_path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/fa/fadb4c321e271b3421e9fb9c23b099b232391f014aa6f1ae3840def66f39450d.json",
+      "original_path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/35/356db3503432931d74c19d8174b5e2a50a167d1c991c7132898128866f2a8c49.txt"
+    },
+    {
+      "source_id": "src-bfef7fd7",
+      "detail": "",
+      "format": "txt",
+      "format_kind": "text",
+      "image_pages": [],
+      "locators": [
+        {
+          "kind": "line",
+          "locator": "L1",
+          "text": "合成已知能力：许可资料接入、引用问答、门户只读嵌入。"
+        },
+        {
+          "kind": "line",
+          "locator": "L2",
+          "text": "不含已验证的设备诊断能力、自动写入接口、成本节省证据或生产可靠性结论。"
+        }
+      ],
+      "original_file": {
+        "path": ".deckmaster/objects/1d/1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8.txt",
+        "sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8"
+      },
+      "original_sha256": "1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8",
+      "original_uri": "/workspace/work/rc3/actual-content-runner/actual-Q2-B-run-v1/original-sources/S3-capabilities.txt",
+      "status": "read",
+      "tables": [],
+      "text": "合成已知能力：许可资料接入、引用问答、门户只读嵌入。\n不含已验证的设备诊断能力、自动写入接口、成本节省证据或生产可靠性结论。\n",
+      "extract_path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/3b/3b49d77997990d97efb406a079d34d8b113675928fb7c9bb5425c0658de9a93e.json",
+      "original_path": "/workspace/work/rc3/native-image-pilot-03/run-02-project/.deckmaster/objects/1d/1dd31cc8e2a3a7c319e8ae36ea2e708dda8ab0865040ea1dde7e69aaf42cc6d8.txt"
+    }
+  ],
+  "production_request": {
+    "host": "codex_imagegen",
+    "page_id": "p04",
+    "permitted_asset_files": [],
+    "projection": {
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "content_requirements": {
+        "content_profile": "mechanism",
+        "density_rationale": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。",
+        "layout_hint": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。",
+        "mode": "planned",
+        "page_id": "p04",
+        "page_role": {
+          "audience_question": "提示与引用如何进入人员流程，缺版本时怎么办？",
+          "intended_takeaway": "已知条件走只读检索和人工核查；未知或不适用信息保留条件、来源与未决点交指定核查人。",
+          "role": "解释建议主链与未知、冲突分支的责任交接",
+          "transition_to_next": "哪些能力已有，哪些工作与责任须启动前落实？"
+        },
+        "required_qualifications": [
+          "主链只适用于条件可核对情形。",
+          "未知及原因不得猜填或被强制必填掩盖。",
+          "AI不自动提交、修改或关闭正式工单；引用不等于诊断或批准。"
+        ],
+        "schema_version": "content_requirements.v1",
+        "structure_refs": {
+          "atom_ids": [
+            "atom:p04:block:exceptions-heading:text",
+            "atom:p04:callout:boundary:text",
+            "atom:p04:cell:exceptions:unknown:action:display_text",
+            "atom:p04:cell:exceptions:unknown:handoff:display_text",
+            "atom:p04:cell:exceptions:unknown:trigger:display_text",
+            "atom:p04:cell:exceptions:unsuitable:action:display_text",
+            "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+            "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+            "atom:p04:column:exceptions:action:label",
+            "atom:p04:column:exceptions:handoff:label",
+            "atom:p04:column:exceptions:trigger:label",
+            "atom:p04:label:collect:text",
+            "atom:p04:label:retrieve:text",
+            "atom:p04:label:review:text",
+            "atom:p04:label:submit:text",
+            "atom:p04:subtitle",
+            "atom:p04:title"
+          ],
+          "edge_ids": [
+            "collect-retrieve",
+            "retrieve-review",
+            "review-submit"
+          ],
+          "node_ids": [
+            "collect",
+            "retrieve",
+            "review",
+            "submit"
+          ]
+        },
+        "visual_intent": "明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。"
+      },
+      "customer_visible": {
+        "body_blocks": [
+          {
+            "id": "exceptions-heading",
+            "text": "未知与不适用信息仍随请求交接",
+            "type": "paragraph"
+          },
+          {
+            "columns": [
+              {
+                "id": "trigger",
+                "label": "触发条件"
+              },
+              {
+                "id": "action",
+                "label": "接单人员动作"
+              },
+              {
+                "id": "handoff",
+                "label": "交接及继续条件"
+              }
+            ],
+            "id": "exceptions",
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "column_id": "trigger",
+                    "display_text": "型号或版本待补／确实不可得"
+                  },
+                  {
+                    "column_id": "action",
+                    "display_text": "保留已知条件、未知字段及原因；能补则请求可核对信息，不能强制填入猜测。"
+                  },
+                  {
+                    "column_id": "handoff",
+                    "display_text": "不能补出时交指定业务核查人判断下一步；取得可核查条件后按主链继续。具体责任人与恢复规则须在启动前明确。"
+                  }
+                ],
+                "id": "unknown"
+              },
+              {
+                "cells": [
+                  {
+                    "column_id": "trigger",
+                    "display_text": "引用适用性无法确认、引用冲突／不适用，或问题仍不确定"
+                  },
+                  {
+                    "column_id": "action",
+                    "display_text": "保留设备条件、来源位置和未决点；候选引用不能标成可直接采用的结论。"
+                  },
+                  {
+                    "column_id": "handoff",
+                    "display_text": "交核查人确认资料适用性和下一步；无法确认则继续标明未决，不把找到资料记为故障已解决。"
+                  }
+                ],
+                "id": "unsuitable"
+              }
+            ],
+            "type": "table"
+          }
+        ],
+        "callouts": [
+          {
+            "id": "boundary",
+            "text": "原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。能力边界：引用问答不等于诊断正确或操作获批。"
+          }
+        ],
+        "footnotes": [],
+        "labels": [
+          {
+            "id": "collect",
+            "text": "现场人员提供型号、版本与现象；接单人员核对可核查条件。"
+          },
+          {
+            "id": "retrieve",
+            "text": "只读助手返回许可资料片段及来源。"
+          },
+          {
+            "id": "review",
+            "text": "指定人员核查引用适用性，记录采用／未采用及原因。"
+          },
+          {
+            "id": "submit",
+            "text": "人员在现有系统完成正式提交。"
+          }
+        ],
+        "subtitle": "首次人员提交前做条件提示；能否减少后续补问仍待验证",
+        "title": "建议流程保留两条分支：条件可核对／条件未知"
+      },
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "page_id": "p04",
+      "permitted_assets": [],
+      "recipe_overrides": [],
+      "recipe_parameters": {
+        "composition": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。",
+        "density": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。",
+        "icons": "不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+        "lines": "四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。",
+        "palette": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "spacing": "1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      },
+      "style": {
+        "colors": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "layout_notes": "density: 四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\ncomposition: 上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\nspacing: 1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\nlines: 四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\nicons: 不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+        "style_id": "default",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      },
+      "visual_spec": {
+        "edges": [
+          {
+            "direction": "forward",
+            "edge_id": "collect-retrieve",
+            "from": "collect",
+            "relationship": "条件可核对后进行只读检索",
+            "to": "retrieve"
+          },
+          {
+            "direction": "forward",
+            "edge_id": "retrieve-review",
+            "from": "retrieve",
+            "relationship": "资料片段与来源交人员核查",
+            "to": "review"
+          },
+          {
+            "direction": "forward",
+            "edge_id": "review-submit",
+            "from": "review",
+            "relationship": "人工核查后仍由人员执行既有正式提交动作",
+            "to": "submit"
+          }
+        ],
+        "intent": "明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。",
+        "layout_hint": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。",
+        "nodes": [
+          {
+            "label_ref": "atom:p04:label:collect:text",
+            "node_id": "collect",
+            "status": "proposed"
+          },
+          {
+            "label_ref": "atom:p04:label:retrieve:text",
+            "node_id": "retrieve",
+            "status": "proposed"
+          },
+          {
+            "label_ref": "atom:p04:label:review:text",
+            "node_id": "review",
+            "status": "proposed"
+          },
+          {
+            "label_ref": "atom:p04:label:submit:text",
+            "node_id": "submit",
+            "status": "proposed"
+          }
+        ],
+        "reference_mode": "new_design",
+        "style_ref": "default"
+      }
+    },
+    "projection_sha256": "d95fa0fd720497e73cb1fdd2535ffdcd2acb6c7633dbfb51d994499608da62bc",
+    "prompt": "设计试作，完整保留目标页正文、单位、限定、表格归属与关系。\n只有结构化 recipe_parameters 执行；规划文字不覆盖参数。\n意图：initial_design\n工程样页只覆盖 p04。完整保留原稿正文、限定、责任、表格行列与箭头方向；不改稿、不缩字逃避密度、不制造测量数据。仅调整视觉表达。\n\nUse case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a quantitative judgment requires data absent from the input, return that gap to the content stage for the necessary evidence; preserve the fixed copy and qualifications. Do not substitute a decorative quantity chart or invent schematic data. Preserve qualitative mechanisms or teaching illustrations only when the fixed manuscript explicitly requests them and they create no quantitative impression. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"content_requirements\": {\n    \"content_profile\": \"mechanism\",\n    \"density_rationale\": \"四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。\",\n    \"layout_hint\": \"上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。\",\n    \"mode\": \"planned\",\n    \"page_id\": \"p04\",\n    \"page_role\": {\n      \"audience_question\": \"提示与引用如何进入人员流程，缺版本时怎么办？\",\n      \"intended_takeaway\": \"已知条件走只读检索和人工核查；未知或不适用信息保留条件、来源与未决点交指定核查人。\",\n      \"role\": \"解释建议主链与未知、冲突分支的责任交接\",\n      \"transition_to_next\": \"哪些能力已有，哪些工作与责任须启动前落实？\"\n    },\n    \"required_qualifications\": [\n      \"主链只适用于条件可核对情形。\",\n      \"未知及原因不得猜填或被强制必填掩盖。\",\n      \"AI不自动提交、修改或关闭正式工单；引用不等于诊断或批准。\"\n    ],\n    \"schema_version\": \"content_requirements.v1\",\n    \"structure_refs\": {\n      \"atom_ids\": [\n        \"atom:p04:block:exceptions-heading:text\",\n        \"atom:p04:callout:boundary:text\",\n        \"atom:p04:cell:exceptions:unknown:action:display_text\",\n        \"atom:p04:cell:exceptions:unknown:handoff:display_text\",\n        \"atom:p04:cell:exceptions:unknown:trigger:display_text\",\n        \"atom:p04:cell:exceptions:unsuitable:action:display_text\",\n        \"atom:p04:cell:exceptions:unsuitable:handoff:display_text\",\n        \"atom:p04:cell:exceptions:unsuitable:trigger:display_text\",\n        \"atom:p04:column:exceptions:action:label\",\n        \"atom:p04:column:exceptions:handoff:label\",\n        \"atom:p04:column:exceptions:trigger:label\",\n        \"atom:p04:label:collect:text\",\n        \"atom:p04:label:retrieve:text\",\n        \"atom:p04:label:review:text\",\n        \"atom:p04:label:submit:text\",\n        \"atom:p04:subtitle\",\n        \"atom:p04:title\"\n      ],\n      \"edge_ids\": [\n        \"collect-retrieve\",\n        \"retrieve-review\",\n        \"review-submit\"\n      ],\n      \"node_ids\": [\n        \"collect\",\n        \"retrieve\",\n        \"review\",\n        \"submit\"\n      ]\n    },\n    \"visual_intent\": \"明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。\"\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"id\": \"exceptions-heading\",\n        \"text\": \"未知与不适用信息仍随请求交接\",\n        \"type\": \"paragraph\"\n      },\n      {\n        \"columns\": [\n          {\n            \"id\": \"trigger\",\n            \"label\": \"触发条件\"\n          },\n          {\n            \"id\": \"action\",\n            \"label\": \"接单人员动作\"\n          },\n          {\n            \"id\": \"handoff\",\n            \"label\": \"交接及继续条件\"\n          }\n        ],\n        \"id\": \"exceptions\",\n        \"rows\": [\n          {\n            \"cells\": [\n              {\n                \"column_id\": \"trigger\",\n                \"display_text\": \"型号或版本待补／确实不可得\"\n              },\n              {\n                \"column_id\": \"action\",\n                \"display_text\": \"保留已知条件、未知字段及原因；能补则请求可核对信息，不能强制填入猜测。\"\n              },\n              {\n                \"column_id\": \"handoff\",\n                \"display_text\": \"不能补出时交指定业务核查人判断下一步；取得可核查条件后按主链继续。具体责任人与恢复规则须在启动前明确。\"\n              }\n            ],\n            \"id\": \"unknown\"\n          },\n          {\n            \"cells\": [\n              {\n                \"column_id\": \"trigger\",\n                \"display_text\": \"引用适用性无法确认、引用冲突／不适用，或问题仍不确定\"\n              },\n              {\n                \"column_id\": \"action\",\n                \"display_text\": \"保留设备条件、来源位置和未决点；候选引用不能标成可直接采用的结论。\"\n              },\n              {\n                \"column_id\": \"handoff\",\n                \"display_text\": \"交核查人确认资料适用性和下一步；无法确认则继续标明未决，不把找到资料记为故障已解决。\"\n              }\n            ],\n            \"id\": \"unsuitable\"\n          }\n        ],\n        \"type\": \"table\"\n      }\n    ],\n    \"callouts\": [\n      {\n        \"id\": \"boundary\",\n        \"text\": \"原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。能力边界：引用问答不等于诊断正确或操作获批。\"\n      }\n    ],\n    \"footnotes\": [],\n    \"labels\": [\n      {\n        \"id\": \"collect\",\n        \"text\": \"现场人员提供型号、版本与现象；接单人员核对可核查条件。\"\n      },\n      {\n        \"id\": \"retrieve\",\n        \"text\": \"只读助手返回许可资料片段及来源。\"\n      },\n      {\n        \"id\": \"review\",\n        \"text\": \"指定人员核查引用适用性，记录采用／未采用及原因。\"\n      },\n      {\n        \"id\": \"submit\",\n        \"text\": \"人员在现有系统完成正式提交。\"\n      }\n    ],\n    \"subtitle\": \"首次人员提交前做条件提示；能否减少后续补问仍待验证\",\n    \"title\": \"建议流程保留两条分支：条件可核对／条件未知\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"p04\",\n  \"permitted_assets\": [],\n  \"recipe_overrides\": [],\n  \"recipe_parameters\": {\n    \"composition\": \"上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\",\n    \"density\": \"四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\",\n    \"icons\": \"不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。\",\n    \"lines\": \"四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\",\n    \"palette\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"spacing\": \"1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"density: 四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\\ncomposition: 上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\\nspacing: 1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\\nlines: 四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\\nicons: 不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [\n      {\n        \"direction\": \"forward\",\n        \"edge_id\": \"collect-retrieve\",\n        \"from\": \"collect\",\n        \"relationship\": \"条件可核对后进行只读检索\",\n        \"to\": \"retrieve\"\n      },\n      {\n        \"direction\": \"forward\",\n        \"edge_id\": \"retrieve-review\",\n        \"from\": \"retrieve\",\n        \"relationship\": \"资料片段与来源交人员核查\",\n        \"to\": \"review\"\n      },\n      {\n        \"direction\": \"forward\",\n        \"edge_id\": \"review-submit\",\n        \"from\": \"review\",\n        \"relationship\": \"人工核查后仍由人员执行既有正式提交动作\",\n        \"to\": \"submit\"\n      }\n    ],\n    \"intent\": \"明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。\",\n    \"layout_hint\": \"上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。\",\n    \"nodes\": [\n      {\n        \"label_ref\": \"atom:p04:label:collect:text\",\n        \"node_id\": \"collect\",\n        \"status\": \"proposed\"\n      },\n      {\n        \"label_ref\": \"atom:p04:label:retrieve:text\",\n        \"node_id\": \"retrieve\",\n        \"status\": \"proposed\"\n      },\n      {\n        \"label_ref\": \"atom:p04:label:review:text\",\n        \"node_id\": \"review\",\n        \"status\": \"proposed\"\n      },\n      {\n        \"label_ref\": \"atom:p04:label:submit:text\",\n        \"node_id\": \"submit\",\n        \"status\": \"proposed\"\n      }\n    ],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+    "prompt_sha256": "10bffd60ca6e1b6dcf2aadc52d8548bde3cc93334d45ffc9bd9fa64bebea4931",
+    "requires": [
+      "image_generation",
+      "image_inspection",
+      "local_file_access"
+    ],
+    "resolved_design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "content_basis": {
+        "consumed": {
+          "decision_slices": [],
+          "page_semantics_sha256": "57cc1dbdab9094b88bb05f426ad20bf5c1c0e895caad042824976a82ce652dec",
+          "plan_global_sha256": "6571cf95f59f2296387e20930797c5e7715afc405a82f85691e47628fe334dd8",
+          "plan_page_sha256": "8bf2737a9e944f8e87763ab2679c186a4aaa18c7c33d1a219a70e579f1c79f8a",
+          "recipe_parameters_sha256": "728f29d6c16572592a02d4a8346fd847296e427348e1cb52fc535bf0442771ed"
+        },
+        "decision_refs": [],
+        "page_ref": {
+          "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        "plan_ref": {
+          "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        "recipe_ref": {
+          "path": ".deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+          "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e"
+        },
+        "schema_version": "content_basis.v1"
+      },
+      "content_requirements": {
+        "content_profile": "mechanism",
+        "density_rationale": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。",
+        "layout_hint": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。",
+        "mode": "planned",
+        "page_id": "p04",
+        "page_role": {
+          "audience_question": "提示与引用如何进入人员流程，缺版本时怎么办？",
+          "intended_takeaway": "已知条件走只读检索和人工核查；未知或不适用信息保留条件、来源与未决点交指定核查人。",
+          "role": "解释建议主链与未知、冲突分支的责任交接",
+          "transition_to_next": "哪些能力已有，哪些工作与责任须启动前落实？"
+        },
+        "required_qualifications": [
+          "主链只适用于条件可核对情形。",
+          "未知及原因不得猜填或被强制必填掩盖。",
+          "AI不自动提交、修改或关闭正式工单；引用不等于诊断或批准。"
+        ],
+        "schema_version": "content_requirements.v1",
+        "structure_refs": {
+          "atom_ids": [
+            "atom:p04:block:exceptions-heading:text",
+            "atom:p04:callout:boundary:text",
+            "atom:p04:cell:exceptions:unknown:action:display_text",
+            "atom:p04:cell:exceptions:unknown:handoff:display_text",
+            "atom:p04:cell:exceptions:unknown:trigger:display_text",
+            "atom:p04:cell:exceptions:unsuitable:action:display_text",
+            "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+            "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+            "atom:p04:column:exceptions:action:label",
+            "atom:p04:column:exceptions:handoff:label",
+            "atom:p04:column:exceptions:trigger:label",
+            "atom:p04:label:collect:text",
+            "atom:p04:label:retrieve:text",
+            "atom:p04:label:review:text",
+            "atom:p04:label:submit:text",
+            "atom:p04:subtitle",
+            "atom:p04:title"
+          ],
+          "edge_ids": [
+            "collect-retrieve",
+            "retrieve-review",
+            "review-submit"
+          ],
+          "node_ids": [
+            "collect",
+            "retrieve",
+            "review",
+            "submit"
+          ]
+        },
+        "visual_intent": "明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。"
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "recipe_overrides": [],
+      "recipe_parameters": {
+        "composition": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。",
+        "density": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。",
+        "icons": "不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+        "lines": "四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。",
+        "palette": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "spacing": "1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      },
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "density: 四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\ncomposition: 上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\nspacing: 1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\nlines: 四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\nicons: 不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "schema_version": "deck_blueprint_request.v1"
+  },
+  "generation_input": {
+    "schema_version": "generation_input.v1",
+    "prompt": "设计试作，完整保留目标页正文、单位、限定、表格归属与关系。\n只有结构化 recipe_parameters 执行；规划文字不覆盖参数。\n意图：initial_design\n工程样页只覆盖 p04。完整保留原稿正文、限定、责任、表格行列与箭头方向；不改稿、不缩字逃避密度、不制造测量数据。仅调整视觉表达。\n\nUse case: productivity-visual\nAsset type: editable-presentation blueprint reference, one complete slide\nCanvas: 1600x900 px; physical size 13.333333333333334x7.5 in; contain fit\nPrimary request: Create a polished business slide blueprint from the exact structured input below. Preserve every visible fact, number, unit, label, footnote, node and directed relationship.\nStyle/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\nComposition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\nText: render the supplied customer-visible text verbatim and legibly\nConstraints: do not add claims or invent numeric values, dates, customer data, or outcomes. If a quantitative judgment requires data absent from the input, return that gap to the content stage for the necessary evidence; preserve the fixed copy and qualifications. Do not substitute a decorative quantity chart or invent schematic data. Preserve qualitative mechanisms or teaching illustrations only when the fixed manuscript explicitly requests them and they create no quantitative impression. Do not omit modules; connect arrows to their actual nodes; use only permitted assets; no watermark; no internal notes\nStructured input:\n{\n  \"canvas\": {\n    \"fit\": \"contain\",\n    \"height_px\": 900,\n    \"slide_height_in\": 7.5,\n    \"slide_width_in\": 13.333333333333334,\n    \"width_px\": 1600\n  },\n  \"content_requirements\": {\n    \"content_profile\": \"mechanism\",\n    \"density_rationale\": \"四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。\",\n    \"layout_hint\": \"上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。\",\n    \"mode\": \"planned\",\n    \"page_id\": \"p04\",\n    \"page_role\": {\n      \"audience_question\": \"提示与引用如何进入人员流程，缺版本时怎么办？\",\n      \"intended_takeaway\": \"已知条件走只读检索和人工核查；未知或不适用信息保留条件、来源与未决点交指定核查人。\",\n      \"role\": \"解释建议主链与未知、冲突分支的责任交接\",\n      \"transition_to_next\": \"哪些能力已有，哪些工作与责任须启动前落实？\"\n    },\n    \"required_qualifications\": [\n      \"主链只适用于条件可核对情形。\",\n      \"未知及原因不得猜填或被强制必填掩盖。\",\n      \"AI不自动提交、修改或关闭正式工单；引用不等于诊断或批准。\"\n    ],\n    \"schema_version\": \"content_requirements.v1\",\n    \"structure_refs\": {\n      \"atom_ids\": [\n        \"atom:p04:block:exceptions-heading:text\",\n        \"atom:p04:callout:boundary:text\",\n        \"atom:p04:cell:exceptions:unknown:action:display_text\",\n        \"atom:p04:cell:exceptions:unknown:handoff:display_text\",\n        \"atom:p04:cell:exceptions:unknown:trigger:display_text\",\n        \"atom:p04:cell:exceptions:unsuitable:action:display_text\",\n        \"atom:p04:cell:exceptions:unsuitable:handoff:display_text\",\n        \"atom:p04:cell:exceptions:unsuitable:trigger:display_text\",\n        \"atom:p04:column:exceptions:action:label\",\n        \"atom:p04:column:exceptions:handoff:label\",\n        \"atom:p04:column:exceptions:trigger:label\",\n        \"atom:p04:label:collect:text\",\n        \"atom:p04:label:retrieve:text\",\n        \"atom:p04:label:review:text\",\n        \"atom:p04:label:submit:text\",\n        \"atom:p04:subtitle\",\n        \"atom:p04:title\"\n      ],\n      \"edge_ids\": [\n        \"collect-retrieve\",\n        \"retrieve-review\",\n        \"review-submit\"\n      ],\n      \"node_ids\": [\n        \"collect\",\n        \"retrieve\",\n        \"review\",\n        \"submit\"\n      ]\n    },\n    \"visual_intent\": \"明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。\"\n  },\n  \"customer_visible\": {\n    \"body_blocks\": [\n      {\n        \"id\": \"exceptions-heading\",\n        \"text\": \"未知与不适用信息仍随请求交接\",\n        \"type\": \"paragraph\"\n      },\n      {\n        \"columns\": [\n          {\n            \"id\": \"trigger\",\n            \"label\": \"触发条件\"\n          },\n          {\n            \"id\": \"action\",\n            \"label\": \"接单人员动作\"\n          },\n          {\n            \"id\": \"handoff\",\n            \"label\": \"交接及继续条件\"\n          }\n        ],\n        \"id\": \"exceptions\",\n        \"rows\": [\n          {\n            \"cells\": [\n              {\n                \"column_id\": \"trigger\",\n                \"display_text\": \"型号或版本待补／确实不可得\"\n              },\n              {\n                \"column_id\": \"action\",\n                \"display_text\": \"保留已知条件、未知字段及原因；能补则请求可核对信息，不能强制填入猜测。\"\n              },\n              {\n                \"column_id\": \"handoff\",\n                \"display_text\": \"不能补出时交指定业务核查人判断下一步；取得可核查条件后按主链继续。具体责任人与恢复规则须在启动前明确。\"\n              }\n            ],\n            \"id\": \"unknown\"\n          },\n          {\n            \"cells\": [\n              {\n                \"column_id\": \"trigger\",\n                \"display_text\": \"引用适用性无法确认、引用冲突／不适用，或问题仍不确定\"\n              },\n              {\n                \"column_id\": \"action\",\n                \"display_text\": \"保留设备条件、来源位置和未决点；候选引用不能标成可直接采用的结论。\"\n              },\n              {\n                \"column_id\": \"handoff\",\n                \"display_text\": \"交核查人确认资料适用性和下一步；无法确认则继续标明未决，不把找到资料记为故障已解决。\"\n              }\n            ],\n            \"id\": \"unsuitable\"\n          }\n        ],\n        \"type\": \"table\"\n      }\n    ],\n    \"callouts\": [\n      {\n        \"id\": \"boundary\",\n        \"text\": \"原始范围：AI 不自动提交、修改或关闭正式工单，未知及原因必须保留。能力边界：引用问答不等于诊断正确或操作获批。\"\n      }\n    ],\n    \"footnotes\": [],\n    \"labels\": [\n      {\n        \"id\": \"collect\",\n        \"text\": \"现场人员提供型号、版本与现象；接单人员核对可核查条件。\"\n      },\n      {\n        \"id\": \"retrieve\",\n        \"text\": \"只读助手返回许可资料片段及来源。\"\n      },\n      {\n        \"id\": \"review\",\n        \"text\": \"指定人员核查引用适用性，记录采用／未采用及原因。\"\n      },\n      {\n        \"id\": \"submit\",\n        \"text\": \"人员在现有系统完成正式提交。\"\n      }\n    ],\n    \"subtitle\": \"首次人员提交前做条件提示；能否减少后续补问仍待验证\",\n    \"title\": \"建议流程保留两条分支：条件可核对／条件未知\"\n  },\n  \"fonts\": [\n    {\n      \"asset_id\": null,\n      \"face\": \"Regular\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"body\",\n      \"weight\": 400\n    },\n    {\n      \"asset_id\": null,\n      \"face\": \"Bold\",\n      \"fallback_font_ids\": [],\n      \"family\": \"Noto Sans CJK SC\",\n      \"font_id\": \"heading\",\n      \"weight\": 700\n    }\n  ],\n  \"language\": \"zh-CN\",\n  \"page_id\": \"p04\",\n  \"permitted_assets\": [],\n  \"recipe_overrides\": [],\n  \"recipe_parameters\": {\n    \"composition\": \"上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\",\n    \"density\": \"四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\",\n    \"icons\": \"不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。\",\n    \"lines\": \"四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\",\n    \"palette\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"spacing\": \"1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"style\": {\n    \"colors\": {\n      \"accent\": \"#1478FF\",\n      \"background\": \"#FFFFFF\",\n      \"text\": \"#14213D\"\n    },\n    \"layout_notes\": \"density: 四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\\ncomposition: 上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\\nspacing: 1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\\nlines: 四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\\nicons: 不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。\",\n    \"style_id\": \"default\",\n    \"typography\": {\n      \"auxiliary_size_pt\": 12,\n      \"body_font_id\": \"body\",\n      \"body_size_pt\": 18,\n      \"heading_font_id\": \"heading\",\n      \"heading_size_pt\": 30\n    }\n  },\n  \"visual_spec\": {\n    \"edges\": [\n      {\n        \"direction\": \"forward\",\n        \"edge_id\": \"collect-retrieve\",\n        \"from\": \"collect\",\n        \"relationship\": \"条件可核对后进行只读检索\",\n        \"to\": \"retrieve\"\n      },\n      {\n        \"direction\": \"forward\",\n        \"edge_id\": \"retrieve-review\",\n        \"from\": \"retrieve\",\n        \"relationship\": \"资料片段与来源交人员核查\",\n        \"to\": \"review\"\n      },\n      {\n        \"direction\": \"forward\",\n        \"edge_id\": \"review-submit\",\n        \"from\": \"review\",\n        \"relationship\": \"人工核查后仍由人员执行既有正式提交动作\",\n        \"to\": \"submit\"\n      }\n    ],\n    \"intent\": \"明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。\",\n    \"layout_hint\": \"上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。\",\n    \"nodes\": [\n      {\n        \"label_ref\": \"atom:p04:label:collect:text\",\n        \"node_id\": \"collect\",\n        \"status\": \"proposed\"\n      },\n      {\n        \"label_ref\": \"atom:p04:label:retrieve:text\",\n        \"node_id\": \"retrieve\",\n        \"status\": \"proposed\"\n      },\n      {\n        \"label_ref\": \"atom:p04:label:review:text\",\n        \"node_id\": \"review\",\n        \"status\": \"proposed\"\n      },\n      {\n        \"label_ref\": \"atom:p04:label:submit:text\",\n        \"node_id\": \"submit\",\n        \"status\": \"proposed\"\n      }\n    ],\n    \"reference_mode\": \"new_design\",\n    \"style_ref\": \"default\"\n  }\n}",
+    "page": {
+      "page_id": "p04",
+      "page_ref": {
+        "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+        "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+      }
+    },
+    "design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "content_basis": {
+        "consumed": {
+          "decision_slices": [],
+          "page_semantics_sha256": "57cc1dbdab9094b88bb05f426ad20bf5c1c0e895caad042824976a82ce652dec",
+          "plan_global_sha256": "6571cf95f59f2296387e20930797c5e7715afc405a82f85691e47628fe334dd8",
+          "plan_page_sha256": "8bf2737a9e944f8e87763ab2679c186a4aaa18c7c33d1a219a70e579f1c79f8a",
+          "recipe_parameters_sha256": "728f29d6c16572592a02d4a8346fd847296e427348e1cb52fc535bf0442771ed"
+        },
+        "decision_refs": [],
+        "page_ref": {
+          "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+          "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+        },
+        "plan_ref": {
+          "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+          "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+        },
+        "recipe_ref": {
+          "path": ".deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+          "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e"
+        },
+        "schema_version": "content_basis.v1"
+      },
+      "content_requirements": {
+        "content_profile": "mechanism",
+        "density_rationale": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。",
+        "layout_hint": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。",
+        "mode": "planned",
+        "page_id": "p04",
+        "page_role": {
+          "audience_question": "提示与引用如何进入人员流程，缺版本时怎么办？",
+          "intended_takeaway": "已知条件走只读检索和人工核查；未知或不适用信息保留条件、来源与未决点交指定核查人。",
+          "role": "解释建议主链与未知、冲突分支的责任交接",
+          "transition_to_next": "哪些能力已有，哪些工作与责任须启动前落实？"
+        },
+        "required_qualifications": [
+          "主链只适用于条件可核对情形。",
+          "未知及原因不得猜填或被强制必填掩盖。",
+          "AI不自动提交、修改或关闭正式工单；引用不等于诊断或批准。"
+        ],
+        "schema_version": "content_requirements.v1",
+        "structure_refs": {
+          "atom_ids": [
+            "atom:p04:block:exceptions-heading:text",
+            "atom:p04:callout:boundary:text",
+            "atom:p04:cell:exceptions:unknown:action:display_text",
+            "atom:p04:cell:exceptions:unknown:handoff:display_text",
+            "atom:p04:cell:exceptions:unknown:trigger:display_text",
+            "atom:p04:cell:exceptions:unsuitable:action:display_text",
+            "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+            "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+            "atom:p04:column:exceptions:action:label",
+            "atom:p04:column:exceptions:handoff:label",
+            "atom:p04:column:exceptions:trigger:label",
+            "atom:p04:label:collect:text",
+            "atom:p04:label:retrieve:text",
+            "atom:p04:label:review:text",
+            "atom:p04:label:submit:text",
+            "atom:p04:subtitle",
+            "atom:p04:title"
+          ],
+          "edge_ids": [
+            "collect-retrieve",
+            "retrieve-review",
+            "review-submit"
+          ],
+          "node_ids": [
+            "collect",
+            "retrieve",
+            "review",
+            "submit"
+          ]
+        },
+        "visual_intent": "明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。"
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "recipe_overrides": [],
+      "recipe_parameters": {
+        "composition": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。",
+        "density": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。",
+        "icons": "不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+        "lines": "四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。",
+        "palette": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "spacing": "1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      },
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "density: 四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\ncomposition: 上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\nspacing: 1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\nlines: 四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\nicons: 不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "template_ref": null,
+    "references": [],
+    "parameters": {
+      "transparent_background": false
+    },
+    "constraints": {
+      "preserve_target_content": true,
+      "style_recipe_ref": {
+        "path": ".deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+        "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e"
+      },
+      "recipe_parameters": {
+        "composition": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。",
+        "density": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。",
+        "icons": "不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+        "lines": "四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。",
+        "palette": {
+          "accent": "#1478FF",
+          "background": "#FFFFFF",
+          "text": "#14213D"
+        },
+        "spacing": "1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。",
+        "typography": {
+          "auxiliary_size_pt": 12,
+          "body_font_id": "body",
+          "body_size_pt": 18,
+          "heading_font_id": "heading",
+          "heading_size_pt": 30
+        }
+      }
+    },
+    "basis": {
+      "project_id": "actual-q2",
+      "revision_id": "a4a49894a3b249a8be88626de1c9828b",
+      "produced_against": "f02c7740a38d4142b67a816e6f4138c3fa8c100b8ee37ca623b8224d25b43658"
+    },
+    "style_recipe_ref": {
+      "path": ".deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+      "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e"
+    }
+  }
+}

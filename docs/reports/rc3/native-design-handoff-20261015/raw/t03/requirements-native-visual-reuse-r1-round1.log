@@ -1,0 +1,204 @@
+FFFF....F.FF..F.FF..F.FF..F.FF..                                         [100%]
+=================================== FAILURES ===================================
+_ test_notes_only_edit_keeps_sealed_native_completion_and_candidate[before_context-initial_design] _
+tests/rebuild/test_rc3_native_visual_reuse.py:175: in test_notes_only_edit_keeps_sealed_native_completion_and_candidate
+    _successful_reuse(tmp_path, "notes", phase, intent=intent)
+tests/rebuild/test_rc3_native_visual_reuse.py:157: in _successful_reuse
+    accepted = accept(path, store, task, sent)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/rebuild/test_rc3_restyle_workflows.py:80: in accept
+    return service.accept_result(path, result_payload=payload(store, task, sent),
+src/deck_master/service.py:1644: in accept_result
+    outcome = tasks_mod.accept_result(
+src/deck_master/tasks.py:1069: in accept_result
+    return _accept_result_locked(store, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/tasks.py:1253: in _accept_result_locked
+    validate_result(store, document, task, envelope)
+src/deck_master/changes.py:327: in validate_result
+    fail('adoption_target', 'planned target slot changed; late result cannot overwrite it', conflict=True)
+src/deck_master/changes.py:25: in fail
+    raise operations.OperationError('conflict' if conflict else 'change_invalid', field, message,
+E   deck_master.operations.OperationError: adoption_target: planned target slot changed; late result cannot overwrite it
+_ test_notes_only_edit_keeps_sealed_native_completion_and_candidate[before_context-restyle] _
+tests/rebuild/test_rc3_native_visual_reuse.py:175: in test_notes_only_edit_keeps_sealed_native_completion_and_candidate
+    _successful_reuse(tmp_path, "notes", phase, intent=intent)
+tests/rebuild/test_rc3_native_visual_reuse.py:157: in _successful_reuse
+    accepted = accept(path, store, task, sent)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/rebuild/test_rc3_restyle_workflows.py:80: in accept
+    return service.accept_result(path, result_payload=payload(store, task, sent),
+src/deck_master/service.py:1644: in accept_result
+    outcome = tasks_mod.accept_result(
+src/deck_master/tasks.py:1069: in accept_result
+    return _accept_result_locked(store, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/tasks.py:1253: in _accept_result_locked
+    validate_result(store, document, task, envelope)
+src/deck_master/changes.py:327: in validate_result
+    fail('adoption_target', 'planned target slot changed; late result cannot overwrite it', conflict=True)
+src/deck_master/changes.py:25: in fail
+    raise operations.OperationError('conflict' if conflict else 'change_invalid', field, message,
+E   deck_master.operations.OperationError: adoption_target: planned target slot changed; late result cannot overwrite it
+_ test_notes_only_edit_keeps_sealed_native_completion_and_candidate[after_context-initial_design] _
+tests/rebuild/test_rc3_native_visual_reuse.py:175: in test_notes_only_edit_keeps_sealed_native_completion_and_candidate
+    _successful_reuse(tmp_path, "notes", phase, intent=intent)
+tests/rebuild/test_rc3_native_visual_reuse.py:157: in _successful_reuse
+    accepted = accept(path, store, task, sent)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/rebuild/test_rc3_restyle_workflows.py:80: in accept
+    return service.accept_result(path, result_payload=payload(store, task, sent),
+src/deck_master/service.py:1644: in accept_result
+    outcome = tasks_mod.accept_result(
+src/deck_master/tasks.py:1069: in accept_result
+    return _accept_result_locked(store, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/tasks.py:1253: in _accept_result_locked
+    validate_result(store, document, task, envelope)
+src/deck_master/changes.py:327: in validate_result
+    fail('adoption_target', 'planned target slot changed; late result cannot overwrite it', conflict=True)
+src/deck_master/changes.py:25: in fail
+    raise operations.OperationError('conflict' if conflict else 'change_invalid', field, message,
+E   deck_master.operations.OperationError: adoption_target: planned target slot changed; late result cannot overwrite it
+_ test_notes_only_edit_keeps_sealed_native_completion_and_candidate[after_context-restyle] _
+tests/rebuild/test_rc3_native_visual_reuse.py:175: in test_notes_only_edit_keeps_sealed_native_completion_and_candidate
+    _successful_reuse(tmp_path, "notes", phase, intent=intent)
+tests/rebuild/test_rc3_native_visual_reuse.py:157: in _successful_reuse
+    accepted = accept(path, store, task, sent)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/rebuild/test_rc3_restyle_workflows.py:80: in accept
+    return service.accept_result(path, result_payload=payload(store, task, sent),
+src/deck_master/service.py:1644: in accept_result
+    outcome = tasks_mod.accept_result(
+src/deck_master/tasks.py:1069: in accept_result
+    return _accept_result_locked(store, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/tasks.py:1253: in _accept_result_locked
+    validate_result(store, document, task, envelope)
+src/deck_master/changes.py:327: in validate_result
+    fail('adoption_target', 'planned target slot changed; late result cannot overwrite it', conflict=True)
+src/deck_master/changes.py:25: in fail
+    raise operations.OperationError('conflict' if conflict else 'change_invalid', field, message,
+E   deck_master.operations.OperationError: adoption_target: planned target slot changed; late result cannot overwrite it
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-before_context-body] _
+tests/rebuild/test_rc3_native_visual_reuse.py:253: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert store.read_current() == before_reject
+E   AssertionError: assert {'format': 'd...52e351bcc055'} == {'format': 'd...1e87d067f92d'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'revision_id': '3d2bebeb725b41e6a54452e351bcc055'} != {'revision_id': '02a8e63ea7ee499b9f081e87d067f92d'}
+E     Use -v to get more diff
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-before_context-arrow] _
+tests/rebuild/test_rc3_native_visual_reuse.py:253: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert store.read_current() == before_reject
+E   AssertionError: assert {'format': 'd...abf993c89b58'} == {'format': 'd...46127b2c4713'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'revision_id': 'f5f4e9a4f0a640068288abf993c89b58'} != {'revision_id': 'aa1f3183c72d41cb82c846127b2c4713'}
+E     Use -v to get more diff
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-before_context-target] _
+tests/rebuild/test_rc3_native_visual_reuse.py:256: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert candidates.listing(path)["candidates"] == original_candidates
+E   AssertionError: assert [{'candidate'...7ff7e'}, ...}] == [{'candidate'...7ff7e'}, ...}]
+E     
+E     At index 0 diff: {'candidate': {'attempt_ref': {'path': '.deckmaster/objects/71/71e3cd6f0bddc4b77b03372c4bbe8cf27d117b2afb8e0d486048766e67afd0a2.json', 'sha256': '71e3cd6f0bddc4b77b03372c4bbe8cf27d117b2afb8e0d486048766e67afd0a2'}, 'base_revision': '0e3c5d5d6bef4ff189b61171a5f9f2f4', 'candidate_id': 'candidate-991126bcc47247adaf9896baa506a304', 'created_at': '2026-10-15T00:34:12Z', 'generation_basis': {'blueprint_ref': None, 'design_digest': '2009941b9e1dac2da83985880ab2402c06e688b26dfb6dee0f3109c1dbf0fdb0', 'input_digest': 'd087dc14bd4a3dbc5a8664afb8e135669fb41b374201b6...
+E     
+E     ...Full output truncated (2 lines hidden), use '-vv' to show
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-after_context-body] _
+tests/rebuild/test_rc3_native_visual_reuse.py:253: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert store.read_current() == before_reject
+E   AssertionError: assert {'format': 'd...b6b375b2783b'} == {'format': 'd...fcc76e495d52'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'revision_id': '55bfc53c727a4cd7807fb6b375b2783b'} != {'revision_id': '628b5d18d95949e99fedfcc76e495d52'}
+E     Use -v to get more diff
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-after_context-arrow] _
+tests/rebuild/test_rc3_native_visual_reuse.py:253: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert store.read_current() == before_reject
+E   AssertionError: assert {'format': 'd...5ff245f50996'} == {'format': 'd...f61f0e2f08ea'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'revision_id': '5ba62b882d544493981c5ff245f50996'} != {'revision_id': 'a609c3d30d614d45ac97f61f0e2f08ea'}
+E     Use -v to get more diff
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-after_context-target] _
+tests/rebuild/test_rc3_native_visual_reuse.py:256: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert candidates.listing(path)["candidates"] == original_candidates
+E   AssertionError: assert [{'candidate'...9d895'}, ...}] == [{'candidate'...9d895'}, ...}]
+E     
+E     At index 0 diff: {'candidate': {'attempt_ref': {'path': '.deckmaster/objects/ab/ab087b943bbd667e6070fd2491b2911cc2277c68a651404854f47e0f5cdd7007.json', 'sha256': 'ab087b943bbd667e6070fd2491b2911cc2277c68a651404854f47e0f5cdd7007'}, 'base_revision': '7667834e9ffa4fb6bb9e99f606e06705', 'candidate_id': 'candidate-407ad0b17e1b4aacaef1f95bd0b007bb', 'created_at': '2026-10-15T00:34:15Z', 'generation_basis': {'blueprint_ref': None, 'design_digest': '2009941b9e1dac2da83985880ab2402c06e688b26dfb6dee0f3109c1dbf0fdb0', 'input_digest': 'd087dc14bd4a3dbc5a8664afb8e135669fb41b374201b6...
+E     
+E     ...Full output truncated (2 lines hidden), use '-vv' to show
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-before_context-body] _
+tests/rebuild/test_rc3_native_visual_reuse.py:253: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert store.read_current() == before_reject
+E   AssertionError: assert {'format': 'd...f55465a3deb7'} == {'format': 'd...1884c80dd0a0'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'revision_id': '4302dc5dbded4d729cdcf55465a3deb7'} != {'revision_id': 'f9e1ce6b800842f4b0751884c80dd0a0'}
+E     Use -v to get more diff
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-before_context-arrow] _
+tests/rebuild/test_rc3_native_visual_reuse.py:253: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert store.read_current() == before_reject
+E   AssertionError: assert {'format': 'd...a9143abaa278'} == {'format': 'd...27b66093676b'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'revision_id': '62c7e92034494d018232a9143abaa278'} != {'revision_id': '39240f78ed5f45c9969427b66093676b'}
+E     Use -v to get more diff
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-before_context-target] _
+tests/rebuild/test_rc3_native_visual_reuse.py:256: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert candidates.listing(path)["candidates"] == original_candidates
+E   AssertionError: assert [{'candidate'...977b1'}, ...}] == [{'candidate'...977b1'}, ...}]
+E     
+E     At index 0 diff: {'candidate': {'attempt_ref': {'path': '.deckmaster/objects/d2/d274cb2c78b30cabe98dad83cf524d47243ce731b6e71e6f447d75c376d75f25.json', 'sha256': 'd274cb2c78b30cabe98dad83cf524d47243ce731b6e71e6f447d75c376d75f25'}, 'base_revision': '91d4086e88d647a7b5acfd45cbfbedc8', 'candidate_id': 'candidate-f6919559255a4dfea82a79730875f1dd', 'created_at': '2026-10-15T00:34:17Z', 'generation_basis': {'blueprint_ref': None, 'design_digest': '2009941b9e1dac2da83985880ab2402c06e688b26dfb6dee0f3109c1dbf0fdb0', 'input_digest': 'd087dc14bd4a3dbc5a8664afb8e135669fb41b374201b6...
+E     
+E     ...Full output truncated (2 lines hidden), use '-vv' to show
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-after_context-body] _
+tests/rebuild/test_rc3_native_visual_reuse.py:253: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert store.read_current() == before_reject
+E   AssertionError: assert {'format': 'd...e2271aa75ad0'} == {'format': 'd...130fdaefc28f'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'revision_id': 'e9bb3adf50e94abcb6b4e2271aa75ad0'} != {'revision_id': 'a7cad1ef676b489fbd14130fdaefc28f'}
+E     Use -v to get more diff
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-after_context-arrow] _
+tests/rebuild/test_rc3_native_visual_reuse.py:253: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert store.read_current() == before_reject
+E   AssertionError: assert {'format': 'd...17e00bfe2b91'} == {'format': 'd...f97784bbf202'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'revision_id': '6982b799ab8b47a4b9b117e00bfe2b91'} != {'revision_id': '816cf2f4882c4d1da5d2f97784bbf202'}
+E     Use -v to get more diff
+_ test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-after_context-target] _
+tests/rebuild/test_rc3_native_visual_reuse.py:256: in test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call
+    assert candidates.listing(path)["candidates"] == original_candidates
+E   AssertionError: assert [{'candidate'...8f6e8'}, ...}] == [{'candidate'...8f6e8'}, ...}]
+E     
+E     At index 0 diff: {'candidate': {'attempt_ref': {'path': '.deckmaster/objects/4e/4eb38f70ef1028c5305e529d829f247167eff483e3d880fe3e602927025b2d56.json', 'sha256': '4eb38f70ef1028c5305e529d829f247167eff483e3d880fe3e602927025b2d56'}, 'base_revision': 'c19f68a265e24bfb860f1d7ff3b6e876', 'candidate_id': 'candidate-5ec296b666b5482f8a5f369defc9b218', 'created_at': '2026-10-15T00:34:20Z', 'generation_basis': {'blueprint_ref': None, 'design_digest': '2009941b9e1dac2da83985880ab2402c06e688b26dfb6dee0f3109c1dbf0fdb0', 'input_digest': 'd087dc14bd4a3dbc5a8664afb8e135669fb41b374201b6...
+E     
+E     ...Full output truncated (2 lines hidden), use '-vv' to show
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_notes_only_edit_keeps_sealed_native_completion_and_candidate[before_context-initial_design]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_notes_only_edit_keeps_sealed_native_completion_and_candidate[before_context-restyle]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_notes_only_edit_keeps_sealed_native_completion_and_candidate[after_context-initial_design]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_notes_only_edit_keeps_sealed_native_completion_and_candidate[after_context-restyle]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-before_context-body]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-before_context-arrow]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-before_context-target]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-after_context-body]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-after_context-arrow]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[consumed-after_context-target]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-before_context-body]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-before_context-arrow]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-before_context-target]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-after_context-body]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-after_context-arrow]
+FAILED tests/rebuild/test_rc3_native_visual_reuse.py::test_changed_selected_semantics_or_control_rejects_late_result_without_erasing_call[unknown-after_context-target]
+16 failed, 16 passed in 16.46s

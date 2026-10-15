@@ -1,0 +1,71 @@
+{
+  "character_count": 428,
+  "character_multiset_unchanged": true,
+  "edge_id": "collect-retrieve",
+  "exact_text_sequence_unchanged": true,
+  "finding_codes": [
+    "reversed_arrow"
+  ],
+  "located_direction_findings": [
+    {
+      "code": "reversed_arrow",
+      "edge_id": "collect-retrieve",
+      "element": "edge-collect-retrieve",
+      "from": "collect",
+      "page_id": "p04",
+      "to": "retrieve"
+    }
+  ],
+  "mutation": "reverse actual native edge path endpoint order and mirror its real separate visible arrowhead; no text/Page/IR changes",
+  "path_after": [
+    {
+      "x": "3619500",
+      "y": "0"
+    },
+    {
+      "x": "0",
+      "y": "0"
+    }
+  ],
+  "path_before": [
+    {
+      "x": "0",
+      "y": "0"
+    },
+    {
+      "x": "3619500",
+      "y": "0"
+    }
+  ],
+  "pptx_sha256": "44e878e730384362e70a89b872ff9dcc845f6fa77d98efa2af3c86fcbfb17ee2",
+  "readback_status": "fail",
+  "status": "PASS_negative_detected",
+  "visible_arrowhead_after": [
+    {
+      "x": "133350",
+      "y": "0"
+    },
+    {
+      "x": "0",
+      "y": "85725"
+    },
+    {
+      "x": "133350",
+      "y": "171450"
+    }
+  ],
+  "visible_arrowhead_before": [
+    {
+      "x": "0",
+      "y": "0"
+    },
+    {
+      "x": "133350",
+      "y": "85725"
+    },
+    {
+      "x": "0",
+      "y": "171450"
+    }
+  ]
+}

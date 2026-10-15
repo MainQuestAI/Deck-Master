@@ -1,0 +1,9 @@
+{
+  "schema": "root_actual_native_agent_observation_correction.v1",
+  "corrects": "actual-reviewer-observation.json",
+  "correction": "The earlier actual_final_answer field was a shortened Root transcription and must be treated as a summary, not verbatim. Preserve that original record. This record preserves the exact actual FINAL observed by Root; grant/adoption used the unchanged complete assessment.json, not the earlier summary.",
+  "agent_name": "/root/rc3_03_actual_candidate_review",
+  "actual_final_answer_verbatim": "建议：`adopt_visual_reference_only`。\n\n17项正文未见缺字改词；四节点、三向右箭头、两行三列表格归属正确。必须修正主链适用条件的视觉绑定、边缘安全留白及表格与底部提示间距。原图实际1672×941，须保留原件，后续正文仍从固定 Page atoms 恢复。\n\n已写入指定目录的 `assessment.json`、`report.md`。不代表 SVG/PPT、全套、公平 E2/E3 或人类桌面通过。\n\n原图 SHA256：`8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c`",
+  "completed_status_observed": true,
+  "assurance": "host_attested Root actual observation; not platform/human/verified-user"
+}

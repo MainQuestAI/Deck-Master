@@ -1,0 +1,58 @@
+[
+  {
+    "name": "public_same_identity_replacement_keeps_one_real_head",
+    "status": "PASS",
+    "old_ref": {
+      "path": ".deckmaster/objects/9a/9a9a31d00360ffe083949069ffbfa4ed4f87068a1c9b8d49376e5b58d035b6a9.json",
+      "sha256": "9a9a31d00360ffe083949069ffbfa4ed4f87068a1c9b8d49376e5b58d035b6a9"
+    },
+    "new_ref": {
+      "path": ".deckmaster/objects/b8/b8e80d0caf29155f8eba97168719df1b8b5f7a3b0906b606b136bc3ec05ad8cf.json",
+      "sha256": "b8e80d0caf29155f8eba97168719df1b8b5f7a3b0906b606b136bc3ec05ad8cf"
+    },
+    "manuscript_identity_unchanged": true,
+    "full_consumed_design_equal": true
+  },
+  {
+    "name": "audit_replacement_then_explicit_candidate_plan_and_adopt",
+    "status": "PASS",
+    "third_ref": {
+      "path": ".deckmaster/objects/ca/ca05d71cf71f884948f3ae57ac83f566814e4b2f9f932e9b168ffbd1086a7d92.json",
+      "sha256": "ca05d71cf71f884948f3ae57ac83f566814e4b2f9f932e9b168ffbd1086a7d92"
+    },
+    "exact_original_design_digest": "ec0501d0e5547d52bdb15f6db1a57c168d8e8be003554ccfcce2e8d9ef29e817",
+    "candidate_bytes_unchanged": true,
+    "old_frozen_request_bytes_unchanged": true,
+    "external_tools_called": 0
+  },
+  {
+    "name": "real_value_change_rejected_despite_same_manuscript_identity",
+    "status": "PASS",
+    "new_ref": {
+      "path": ".deckmaster/objects/fa/fa385595949f979964954b12221e116fdf05f6f7297eccf6eb2e8ee7066726fa.json",
+      "sha256": "fa385595949f979964954b12221e116fdf05f6f7297eccf6eb2e8ee7066726fa"
+    },
+    "same_manuscript_identity": true,
+    "stale_reconstruct": true,
+    "refusal": {
+      "type": "ModelError",
+      "message": "blueprint/content_basis: adopted blueprint's consumed Page/Plan/design inputs changed"
+    }
+  },
+  {
+    "name": "candidate_digest_compatibility_requires_full_semantic_equality",
+    "status": "PASS",
+    "altered_full_context_cannot_reuse_old_encoding": true,
+    "arbitrary_second_digest_not_accepted": true,
+    "boundary": "Read-only isolated helper contrast; no fabricated candidate or production permission."
+  },
+  {
+    "name": "current_body_requalification_not_blocked_by_old_image",
+    "status": "PASS",
+    "honest_host_self_fidelity_requalified": true,
+    "old_visual_task_still_stale": true,
+    "original_consumed_allowance_preserved": true,
+    "total_allowances": 1,
+    "actual_image_tools_called": 0
+  }
+]

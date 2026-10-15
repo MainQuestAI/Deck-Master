@@ -1,0 +1,37 @@
+{
+  "schema": "native_svg_original_creation.v1",
+  "created_at_utc": "2026-10-15T02:00:52.025287+00:00",
+  "execution_ref": "/root/rc3_03_actual_svg_writer",
+  "authoring_method": "Native model authored SVG markup directly in this task; no fixture SVG, image generation, OCR, external service, or source modification.",
+  "frozen_inputs": "Complete task/workorder/fixed-page/prepared-method-bytes/packet-admission plus reconstruction-instruction, actual candidate assessment/report, and exact original PNG viewed with view_image(original).",
+  "text_source": "fixed-page.json customer_visible atoms, not original PNG transcription",
+  "original_png": {
+    "width": 1672,
+    "height": 941,
+    "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+    "modified": false
+  },
+  "target_canvas": [
+    1600,
+    900
+  ],
+  "visual_reference_contain": {
+    "scale": 0.9564293304994687,
+    "note": "Original raster used only as contain-fit visual reference. Native geometry is reflowed for the frozen recipe; no raster is embedded."
+  },
+  "composition": "Retain title/subtitle, grouped four-node left-to-right main chain, section heading, two-row three-column exceptions table, and bottom boundary callout. No step numbers or new icons.",
+  "F01": "Display frozen qualifier 主链只适用于条件可核对情形。 inside the same outlined main-chain group, directly above its four nodes/arrows.",
+  "F02": "All nonbackground geometry is planned within x=49.25..1550.75 and y>=48; bottom callout ends at850.75, leaving at least49.25px.",
+  "F03": "Main-chain group ends350.75; next heading glyphs are planned below378. Table ends734.5; callout begins761.25, leaving26.75px. Body font is not reduced.",
+  "F04": "Original PNG remains1672x941 with unchanged bytes; SVG is separately authored1600x900.",
+  "typography": {
+    "font_family": "Noto Sans CJK SC",
+    "body_px": 24,
+    "heading_px": 40,
+    "body_weight": 400,
+    "heading_weight": 700
+  },
+  "semantic_geometry": "Each label has its fixed atom and node binding. Three rightward edge paths join corresponding node centres, drawn behind opaque node containers; the exposed gap contains the visible line and rightward arrowhead. Table cells and column labels retain exact row/column bindings.",
+  "checks_at_save": "No SVG parsing or atom coverage check has run before saving this v1.",
+  "review_boundary": "Original authoring only; no SVG quality PASS, PPT PASS, desktop/human or global readiness conclusion."
+}

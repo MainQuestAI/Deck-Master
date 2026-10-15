@@ -1,0 +1,144 @@
+{
+  "allowed_asset_ids": [],
+  "assets": [],
+  "canvas": {
+    "fit": "contain",
+    "height_px": 900,
+    "slide_height_in": 7.5,
+    "slide_width_in": 13.333333333333334,
+    "width_px": 1600
+  },
+  "content_basis": {
+    "consumed": {
+      "decision_slices": [],
+      "page_semantics_sha256": "57cc1dbdab9094b88bb05f426ad20bf5c1c0e895caad042824976a82ce652dec",
+      "plan_global_sha256": "6571cf95f59f2296387e20930797c5e7715afc405a82f85691e47628fe334dd8",
+      "plan_page_sha256": "8bf2737a9e944f8e87763ab2679c186a4aaa18c7c33d1a219a70e579f1c79f8a",
+      "recipe_parameters_sha256": "728f29d6c16572592a02d4a8346fd847296e427348e1cb52fc535bf0442771ed"
+    },
+    "decision_refs": [],
+    "page_ref": {
+      "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    },
+    "plan_ref": {
+      "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+      "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+    },
+    "recipe_ref": {
+      "path": ".deckmaster/objects/64/643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e.json",
+      "sha256": "643b13240695d7cee3f053fa668d2f6fffd5a0bf965eb1c187de9282495b790e"
+    },
+    "schema_version": "content_basis.v1"
+  },
+  "content_requirements": {
+    "content_profile": "mechanism",
+    "density_rationale": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。",
+    "layout_hint": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。",
+    "mode": "planned",
+    "page_id": "p04",
+    "page_role": {
+      "audience_question": "提示与引用如何进入人员流程，缺版本时怎么办？",
+      "intended_takeaway": "已知条件走只读检索和人工核查；未知或不适用信息保留条件、来源与未决点交指定核查人。",
+      "role": "解释建议主链与未知、冲突分支的责任交接",
+      "transition_to_next": "哪些能力已有，哪些工作与责任须启动前落实？"
+    },
+    "required_qualifications": [
+      "主链只适用于条件可核对情形。",
+      "未知及原因不得猜填或被强制必填掩盖。",
+      "AI不自动提交、修改或关闭正式工单；引用不等于诊断或批准。"
+    ],
+    "schema_version": "content_requirements.v1",
+    "structure_refs": {
+      "atom_ids": [
+        "atom:p04:block:exceptions-heading:text",
+        "atom:p04:callout:boundary:text",
+        "atom:p04:cell:exceptions:unknown:action:display_text",
+        "atom:p04:cell:exceptions:unknown:handoff:display_text",
+        "atom:p04:cell:exceptions:unknown:trigger:display_text",
+        "atom:p04:cell:exceptions:unsuitable:action:display_text",
+        "atom:p04:cell:exceptions:unsuitable:handoff:display_text",
+        "atom:p04:cell:exceptions:unsuitable:trigger:display_text",
+        "atom:p04:column:exceptions:action:label",
+        "atom:p04:column:exceptions:handoff:label",
+        "atom:p04:column:exceptions:trigger:label",
+        "atom:p04:label:collect:text",
+        "atom:p04:label:retrieve:text",
+        "atom:p04:label:review:text",
+        "atom:p04:label:submit:text",
+        "atom:p04:subtitle",
+        "atom:p04:title"
+      ],
+      "edge_ids": [
+        "collect-retrieve",
+        "retrieve-review",
+        "review-submit"
+      ],
+      "node_ids": [
+        "collect",
+        "retrieve",
+        "review",
+        "submit"
+      ]
+    },
+    "visual_intent": "明确主流程的责任交接，展开版本不可得与引用无法采用时的处理。"
+  },
+  "default_style_id": "default",
+  "fonts": [
+    {
+      "asset_id": null,
+      "face": "Regular",
+      "fallback_font_ids": [],
+      "family": "Noto Sans CJK SC",
+      "font_id": "body",
+      "weight": 400
+    },
+    {
+      "asset_id": null,
+      "face": "Bold",
+      "fallback_font_ids": [],
+      "family": "Noto Sans CJK SC",
+      "font_id": "heading",
+      "weight": 700
+    }
+  ],
+  "language": "zh-CN",
+  "recipe_overrides": [],
+  "recipe_parameters": {
+    "composition": "上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。",
+    "density": "四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。",
+    "icons": "不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+    "lines": "四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。",
+    "palette": {
+      "accent": "#1478FF",
+      "background": "#FFFFFF",
+      "text": "#14213D"
+    },
+    "spacing": "1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。",
+    "typography": {
+      "auxiliary_size_pt": 12,
+      "body_font_id": "body",
+      "body_size_pt": 18,
+      "heading_font_id": "heading",
+      "heading_size_pt": 30
+    }
+  },
+  "styles": [
+    {
+      "colors": {
+        "accent": "#1478FF",
+        "background": "#FFFFFF",
+        "text": "#14213D"
+      },
+      "layout_notes": "density: 四个主链标签和两行异常表分别承担顺序与例外，不将AI接到自动提交。删除此页会失去推荐机制和异常恢复条件。估计70秒按主链与分支讲述。 保留每个单元格全文、对应行列及所有限定；现有字号不足以容纳时报告不可行，不能自动删改正文。\ncomposition: 上方按 labels 的四个节点画主链，仅适用于条件可核对分支；下方两行异常表写触发、责任、交接和恢复。 顶部标题、副标题；中上部四节点顺序主链；下部保持两行三列表格及边界提示。\nspacing: 1600×900 画布，四周至少48px；主链、表格与边界提示之间保留24px；单元格内距至少12px，按完整原文换行。\nlines: 四节点以单向实线箭头连接；逐条保留原始 from/to、方向和关系含义；例外只按原稿条件描述，不虚构自动提交支路。\nicons: 不用额外图标，依靠节点标签、箭头、表格和文字表达责任，避免增添未授权语义。",
+      "style_id": "default",
+      "typography": {
+        "auxiliary_size_pt": 12,
+        "body_font_id": "body",
+        "body_size_pt": 18,
+        "heading_font_id": "heading",
+        "heading_size_pt": 30
+      }
+    }
+  ]
+}

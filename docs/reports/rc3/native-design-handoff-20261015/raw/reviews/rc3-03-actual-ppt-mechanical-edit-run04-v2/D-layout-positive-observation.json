@@ -1,0 +1,46 @@
+{
+  "actual_emu": [
+    12192000,
+    6858000
+  ],
+  "actual_point_sizes": [
+    18.0,
+    30.0
+  ],
+  "atom_node_edge_bindings_and_text_unchanged": true,
+  "compile_physical_canvas_px": [
+    1280.0,
+    720.0
+  ],
+  "compiler_diagnostics": [],
+  "complete_Page_unchanged": true,
+  "desktop_editing": "NOT_RUN",
+  "findings": [],
+  "font_files": {
+    "Noto Sans CJK SC": {
+      "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+      "sha256": "b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a"
+    },
+    "Noto Sans CJK SC:bold": {
+      "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+      "sha256": "faa5f3656a78b2e2d450d27fe8382c778bc2b6bb5ea29c986664a6a435056ceb"
+    }
+  },
+  "mutation": "actual original SVG main-chain group translated 2px down, then real installed parse and native compilation",
+  "notes_unchanged": true,
+  "pptx_sha256": "a9ddee785e8152632ece58838a021fafc6323ca0f740529740277055c4978c4a",
+  "readback_status": "pass",
+  "source_svg_canvas": [
+    1600,
+    900
+  ],
+  "source_svg_external_margin_px_at_least": 48,
+  "status": "PASS_layout_only_positive",
+  "svg_sha256": "9f6a3f8d442efa948c1d8e51b4fc6b3d9ed3cd77f9929d18d18e41ddccefc079",
+  "translation_svg_px": [
+    0,
+    2
+  ],
+  "visible_run_count": 36,
+  "visual_quality": "NOT_EVALUATED"
+}

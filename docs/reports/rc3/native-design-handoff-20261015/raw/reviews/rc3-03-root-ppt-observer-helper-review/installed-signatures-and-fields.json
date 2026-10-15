@@ -1,0 +1,65 @@
+{
+  "actual_canvas": {
+    "fit": "contain",
+    "height_px": 900,
+    "slide_height_in": 7.5,
+    "slide_width_in": 13.333333333333334,
+    "width_px": 1600
+  },
+  "actual_p04_slots": {
+    "blueprint": {
+      "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+      "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+    },
+    "page": {
+      "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+      "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+    },
+    "page_id": "p04",
+    "ppt_preview": null,
+    "svg": null,
+    "svg_preview": null
+  },
+  "document_fields_used_by_helper": {
+    "content_plan": {
+      "path": ".deckmaster/objects/30/30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef.json",
+      "sha256": "30e2c94b81273eee0a4205203dc0ed63c05fdcd9dd9e5c302e73a4f0bb31b6ef"
+    },
+    "narrative": {
+      "path": ".deckmaster/objects/4e/4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca.json",
+      "sha256": "4e10cd4eaa968e545f807c8b831c0397a8b0ecb8ce9161e8f1ede56c08d6a3ca"
+    },
+    "outputs": {
+      "pptx": null,
+      "render_report": null,
+      "trace": null
+    }
+  },
+  "document_revision": "ec703618323f49f78e7ef081ca8e6efd",
+  "manifest_sha256": "bcb668040f2c5e7cd0613b792517f6ec055f1d5925b5e5a582c076e67dfdbb10",
+  "observation_kind": "installed_API_signatures_and_fields_read_only_no_helper_execution",
+  "origins": {
+    "compile_deck": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/compiler/api.py",
+    "parse_svg": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/compiler/svg.py",
+    "pipeline": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/pipeline.py",
+    "service": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/service.py"
+  },
+  "package": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+  "page_count": 8,
+  "python": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/bin/python",
+  "signatures": {
+    "CompileOptions": "(node_executable: str | None = None, artifact_module: str | None = None, width_px: float = 1280, height_px: float = 720, fonts: dict[str, str] = <factory>, assets: dict[str, dict[str, str]] = <factory>, timeout_seconds: int = 120) -> None",
+    "SvgInput": "(page_id: str, path: pathlib.Path, speaker_notes: str = '') -> None",
+    "compile_deck": "(inputs: list[deck_master.compiler.api.SvgInput], options: deck_master.compiler.api.CompileOptions, output_dir: pathlib.Path) -> deck_master.compiler.api.CompileResult",
+    "parse_svg": "(data: 'bytes', *, page_id: 'str', assets: 'dict[str, str] | None' = None) -> 'dict'",
+    "preview_svg_page": "(project_dir, page_id)",
+    "readback": "(pptx_path, pages, expected_pages)",
+    "render_deck": "(pptx_path, output_dir, *, fonts)",
+    "resolve_fonts": "(pages)"
+  },
+  "source_sha": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+  "source_tree": "1b69a05050c63d0a2fbc4aaac86350611ad9f504",
+  "speaker_notes_present": true,
+  "wheel_sha256": "94f6f31fcadf4e5a493b77b7dcefd7cebe43edc033f9268266fdba07eeb9ffb2",
+  "writes_or_compile_or_tool_calls": 0
+}

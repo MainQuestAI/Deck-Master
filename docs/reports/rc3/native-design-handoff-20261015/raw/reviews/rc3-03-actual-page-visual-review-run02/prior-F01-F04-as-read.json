@@ -1,0 +1,46 @@
+{
+  "source": "/workspace/work/rc3/reviews/rc3-03-actual-candidate-review-run02/assessment.json",
+  "sha256": "92d19d78d6d0fdfc79ccba2f5a3be49232961ea649045817e4243affba233312",
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "medium",
+      "category": "conditional_scope_visibility",
+      "location": "上方四节点主链，尤其 collect→retrieve 的第一条蓝色箭头（约 x413–490 / y255–290，坐标为原图像素估读）",
+      "original": "content_requirements.required_qualifications：主链只适用于条件可核对情形。visual_spec.collect-retrieve：条件可核对后进行只读检索。",
+      "actual": "四节点以三条无标注实线箭头连续向右连接。标题同时提到条件可核对／条件未知，但主链自身没有就近的适用条件标识。未知行第三列确实保留了取得可核查条件后按主链继续，因此不是条件全文遗失；问题是条件与上方箭头的视觉绑定偏弱。",
+      "impact": "只扫上方流程时，可能把这条链理解成所有请求一律直接进入只读检索；需要读完整表格才消除歧义。",
+      "required_fix": "下游保持固定 Page atoms 全文不变，用主链分组和已有冻结的条件限定/关系表达，明确绑定此链仅适用于条件可核对情形；未知／不适用仍由表格所载人工核查和继续条件支配。若显示条件文字，只能使用冻结 requirements 或 relationship 原文，不从图像补写，也不增造支路。"
+    },
+    {
+      "id": "F02",
+      "severity": "low",
+      "category": "safe_margin",
+      "location": "整体外框，尤以下方边界提示（约 x42–1632 / y844–916）及左右表格边缘",
+      "original": "recipe_parameters.spacing：1600×900 画布，四周至少48px。",
+      "actual": "在实际1672×941原图中，左右外框距离画布边缘约40–42px；底部边界提示外框至底边约25px。均未达到48px；无实际裁字。",
+      "impact": "现场显示或后续转制时安全余量不足，底部边界提示显得贴底。",
+      "required_fix": "仅在下游1600×900版式中恢复四周至少48px安全边距，并保持全部正文和可读字号；禁止裁剪、重编码或覆盖原始PNG来掩盖差异。"
+    },
+    {
+      "id": "F03",
+      "severity": "low",
+      "category": "module_spacing",
+      "location": "异常表末行底边与底部边界提示之间（约 y827–844）",
+      "original": "recipe_parameters.spacing：主链、表格与边界提示之间保留24px。",
+      "actual": "异常表至边界提示仅约17px，低于24px；底部两个模块视觉上偏挤。",
+      "impact": "密集表格和范围限制之间的层次不够清楚，虽仍可读。",
+      "required_fix": "下游给表格与边界提示至少24px净空；通过版式重新分配空间，不删改正文、不缩字逃避密度。"
+    },
+    {
+      "id": "F04",
+      "severity": "low",
+      "category": "requested_vs_observed_canvas",
+      "location": "原始PNG文件元数据",
+      "original": "production_request / prepared input canvas：1600×900；contain fit。",
+      "actual": "原始PNG实际为1672×941、RGB、1595347 bytes；SHA256为8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c。",
+      "impact": "不能把此原件登记成已经满足1600×900。尺寸差异不等同于内容缺失，也不单独构成拒绝视觉参考的理由。",
+      "required_fix": "原件保持1672×941及现有SHA不变，不重编码。下游另建所要求的1600×900可编辑画布并按contain处理视觉参考，记录原始尺寸与目标尺寸。"
+    }
+  ]
+}

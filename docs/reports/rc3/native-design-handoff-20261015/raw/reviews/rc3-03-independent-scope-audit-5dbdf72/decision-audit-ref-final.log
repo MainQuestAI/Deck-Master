@@ -1,0 +1,32 @@
+{
+  "status": "CONFIRMED_PRODUCT_GAP",
+  "evidence_kind": "synthetic authority fixture, actual installed public SDK; zero external calls",
+  "project": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/decision-audit-ref-probe-e8d023c4/proj",
+  "task_id": "task-07dc03c49e594dc2b00d5645569e5a4c",
+  "source_sha": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+  "old_decision_ref": {
+    "path": ".deckmaster/objects/24/2402756804e5ee4bb71d3e657f5e217d790b0838aa947dd21e6d21696da96f99.json",
+    "sha256": "2402756804e5ee4bb71d3e657f5e217d790b0838aa947dd21e6d21696da96f99"
+  },
+  "new_decision_ref": {
+    "path": ".deckmaster/objects/a7/a76dff478cc89d4b38ebc8c39ba79c51e8fde82231ce636db6b7c6d55894effc.json",
+    "sha256": "a76dff478cc89d4b38ebc8c39ba79c51e8fde82231ce636db6b7c6d55894effc"
+  },
+  "same_effective_decision_slice_sha256": "1d3b6e9a4158626e3dbcb0dbb49d0601eb4b2b2901b44fd7909c77810134d598",
+  "same_page": true,
+  "same_content_requirements": true,
+  "same_actual_projected_design": true,
+  "public_generation_resolver_error": {
+    "type": "ModelError",
+    "message": "design_requirements/decision_refs/0: decision is not the current version in the selected snapshot"
+  },
+  "head_only_readonly_contrast_used_for_consumed_design": true,
+  "same_consumed_design": false,
+  "old_task_still_current": true,
+  "expected": "same consumed design and task current; exact Refs remain historical audit evidence",
+  "actual": "Public legal decision replacement leaves historical refs that block generation resolver. Separately, head-only read-only contrast still leaks decision_ref into consumed_design despite equal registered effective slice.",
+  "files": {
+    "before": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/decision-audit-ref-before.json",
+    "after": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/decision-audit-ref-after.json"
+  }
+}

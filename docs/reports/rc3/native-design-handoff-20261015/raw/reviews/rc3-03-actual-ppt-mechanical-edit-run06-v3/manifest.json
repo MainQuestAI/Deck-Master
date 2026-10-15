@@ -1,0 +1,189 @@
+{
+  "PowerPoint_desktop": null,
+  "actual_original_pptx_sha256": "0c145ff3f055c5c7926f97ee9ec5bdbd641bb4fbc1bcbbae732b7fd828d057c8",
+  "actual_source_svg_sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1",
+  "card_completion": null,
+  "evidence_scope": "final_actual_v3_headless_mechanical_edit_and_relation_pairs",
+  "fair_E3": null,
+  "files": {
+    "A-actual-physical-typography.json": {
+      "bytes": 9126,
+      "sha256": "76f1877305376e713a8d81b80f8587855fcdb99b5900ede8621f7b154effba4a"
+    },
+    "A-edit-observation.json": {
+      "bytes": 632,
+      "sha256": "f3a6a41762a8c49acce9407a83dae6a8429afcc3de511c65e48f698c42c0f097"
+    },
+    "A-python-object-text-edited.pptx": {
+      "bytes": 37803,
+      "sha256": "32f0d155354c32391d75c27b9063e81071ad5a831c0355d7f73e3bd280af4e29"
+    },
+    "A-readback-against-unchanged-page.json": {
+      "bytes": 1720,
+      "sha256": "d8e334cb483db219f90804bfa8ab50d4094df0af14d34efb24347868c7765bb0"
+    },
+    "B-actual-physical-typography.json": {
+      "bytes": 9105,
+      "sha256": "da9ce3cecd0e7db2b43259dc328a86c2978cfe8fa4ad46521bb441bb6ec5cbfc"
+    },
+    "B-actual-readback.json": {
+      "bytes": 2541,
+      "sha256": "8b9e4487cffa310db23c637e4d217a25a734b8c4259b094d48fd414e96fa12f2"
+    },
+    "B-native-cell-row-ownership-swapped.pptx": {
+      "bytes": 37792,
+      "sha256": "02824db978331d4e4c0c040db64721691de4f7968debb5bb6ab6577422a6726b"
+    },
+    "B-ownership-observation.json": {
+      "bytes": 5098,
+      "sha256": "cc7cf55bbb62dcf4e174319cfd537dd2b26f9a566234941fbfa527a58cdce059"
+    },
+    "C-actual-physical-typography.json": {
+      "bytes": 9105,
+      "sha256": "da9ce3cecd0e7db2b43259dc328a86c2978cfe8fa4ad46521bb441bb6ec5cbfc"
+    },
+    "C-actual-readback.json": {
+      "bytes": 1674,
+      "sha256": "361312808b79fcc21931edb92a40056c65d3929bda0efde49a0f3b737d4b75b6"
+    },
+    "C-direction-observation.json": {
+      "bytes": 1310,
+      "sha256": "063a7947017daf49ec7656f252dfdf7065b44f6d6137008944f1b065b1c539bd"
+    },
+    "C-native-edge-and-visible-arrow-reversed.pptx": {
+      "bytes": 37805,
+      "sha256": "3eeb5fd8d9c200461d2d61e84e639fa7edd65e9f62bf2803526154ef0ab8a1d1"
+    },
+    "D-actual-physical-typography.json": {
+      "bytes": 9105,
+      "sha256": "da9ce3cecd0e7db2b43259dc328a86c2978cfe8fa4ad46521bb441bb6ec5cbfc"
+    },
+    "D-actual-readback.json": {
+      "bytes": 1476,
+      "sha256": "3402f7c2f6f8b51130993b809750191cb31ebc45ed4159d83c976017c36811e6"
+    },
+    "D-actual-transformed-svg-ir.json": {
+      "bytes": 79869,
+      "sha256": "b30b4f4da5f9e303719167f77024c157e5cdc175135673f7af26ee0b181b138e"
+    },
+    "D-layout-positive-observation.json": {
+      "bytes": 1310,
+      "sha256": "c993720296821d02bcb17779120d0bb78e60754563fd095baa1077d74dc6b0f4"
+    },
+    "D-real-recompile/compile-input.json": {
+      "bytes": 96241,
+      "sha256": "8904782e3f84ab5334d7f1766625c0187a09168acf2fc1243d77a8d3a3badc32"
+    },
+    "D-real-recompile/deck.pptx": {
+      "bytes": 37792,
+      "sha256": "4efe5455a823f833a38bffdcc0912d9294c2962c42b1238d437527906038e32e"
+    },
+    "D-real-svg-main-chain-moved-2px.svg": {
+      "bytes": 9954,
+      "sha256": "6b34e5bfc3c8b2c3e92df848c394a7a53a6f184cedd7fe400a8a7e3a3f314729"
+    },
+    "baseline-independent-actual-readback.json": {
+      "bytes": 1476,
+      "sha256": "3402f7c2f6f8b51130993b809750191cb31ebc45ed4159d83c976017c36811e6"
+    },
+    "baseline-independent-physical-typography.json": {
+      "bytes": 9105,
+      "sha256": "da9ce3cecd0e7db2b43259dc328a86c2978cfe8fa4ad46521bb441bb6ec5cbfc"
+    },
+    "command-and-scope.json": {
+      "bytes": 621,
+      "sha256": "aa45b8f920bcc6878ea4ce93219ac550ed524960fbf61dd894c466ff9ddf8a76"
+    },
+    "commands.txt": {
+      "bytes": 1344,
+      "sha256": "4e7bc1813a91ce336579a25ec15e8e39c4f02bfdd732013a5f9adc3be0feee04"
+    },
+    "execution.log": {
+      "bytes": 904,
+      "sha256": "5d1771f38459e2261e32826a1c8cb6b5d73c0a7f40733b38ee039b647924a20e"
+    },
+    "geometry-verification.log": {
+      "bytes": 1253,
+      "sha256": "fc037d10a4d267c5be5c8b2e1662a6dd13868aa1f53324a4bf75f2af00e1aaa9"
+    },
+    "inputs/actual-effective-design.json": {
+      "bytes": 7128,
+      "sha256": "35fc9cdb6ae5690aad1d5ab8f452a04d208ee4a0b427dc7519de66ce1b28c29f"
+    },
+    "inputs/actual-svg-ir.json": {
+      "bytes": 79616,
+      "sha256": "a3bda7f4458de719be3d2f145467f257a8e0ff16100310bfbac979499634dc42"
+    },
+    "inputs/fixed-page.json": {
+      "bytes": 22320,
+      "sha256": "b788cd56870a8dd65df3e4eaa73d281ad4ea377dcac024562f2d9be76ebfebbf"
+    },
+    "inputs/original-render.png": {
+      "bytes": 319599,
+      "sha256": "ca645a40136d48b072fd87b674cc6cb56d441715e10a102a449182bbb441cbc1"
+    },
+    "inputs/original.pptx": {
+      "bytes": 37789,
+      "sha256": "0c145ff3f055c5c7926f97ee9ec5bdbd641bb4fbc1bcbbae732b7fd828d057c8"
+    },
+    "inputs/original.svg": {
+      "bytes": 9889,
+      "sha256": "fb9eb0ce88c0db3cc7d0c82255ac1fefeec11cb6491aaa82c199446faa81b5a1"
+    },
+    "inputs/resolved-fonts-source.json": {
+      "bytes": 365,
+      "sha256": "1507ca72ebe0928e1ae91f5a98f35de82dc270ba8c9b93aebb7eecc21f18a706"
+    },
+    "installed-admission-after.json": {
+      "bytes": 28673,
+      "sha256": "de688b0cf3d69ef8d6a324bd1b95b7a3fbe32c565e89b88a4cf30e38f7c3fb39"
+    },
+    "installed-admission-before.json": {
+      "bytes": 28673,
+      "sha256": "de688b0cf3d69ef8d6a324bd1b95b7a3fbe32c565e89b88a4cf30e38f7c3fb39"
+    },
+    "measure_packages.py": {
+      "bytes": 1439,
+      "sha256": "a47d3eb79cd9e967af7f4068f9fd1c01a127f2b06ca51de24fccda16177570ea"
+    },
+    "native-geometry-and-zip-delta-verification.json": {
+      "bytes": 13737,
+      "sha256": "ee9c9ab62584f90f70ba6bf583258cdbbb16f0520353ea57b9fbeb90ea14b7a0"
+    },
+    "native-package-measurements.json": {
+      "bytes": 1090,
+      "sha256": "f9683ffebdfd53afa892768aaa5a089031eda34076651a71a5bba139c63397af"
+    },
+    "original-input-inventory-after.json": {
+      "bytes": 1745,
+      "sha256": "895f38e65b67c4bc7ede8bb5de07342d3e0b98be2b585005d3b78de8dbf71b25"
+    },
+    "original-input-inventory-before.json": {
+      "bytes": 1745,
+      "sha256": "895f38e65b67c4bc7ede8bb5de07342d3e0b98be2b585005d3b78de8dbf71b25"
+    },
+    "package-measurements.log": {
+      "bytes": 1090,
+      "sha256": "f9683ffebdfd53afa892768aaa5a089031eda34076651a71a5bba139c63397af"
+    },
+    "report.md": {
+      "bytes": 3878,
+      "sha256": "480f00565cfe6eaab7f1f70464b6aa9de16b888e93d0299cedcb015c40382314"
+    },
+    "run_mechanical_checks.py": {
+      "bytes": 17582,
+      "sha256": "bfa74894a678d4a6d00ed8a23627f2ff5638ca428180dab67d2a4eb5e2938e53"
+    },
+    "summary.json": {
+      "bytes": 904,
+      "sha256": "5d1771f38459e2261e32826a1c8cb6b5d73c0a7f40733b38ee039b647924a20e"
+    },
+    "verify_native_geometry.py": {
+      "bytes": 4409,
+      "sha256": "653ad05c777f76831d4c55684702a2ee4241bbcd9b7448a8910cd42660458d7c"
+    }
+  },
+  "reader_source_sha": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+  "schema": "actual_ppt_mechanical_evidence_manifest.v1",
+  "visual_readability": null
+}

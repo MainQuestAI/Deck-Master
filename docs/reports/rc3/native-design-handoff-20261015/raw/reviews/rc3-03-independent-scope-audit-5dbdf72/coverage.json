@@ -1,0 +1,810 @@
+{
+  "schema": "independent_rc3_scope_audit.v1",
+  "verdict": "REQUEST_CHANGES",
+  "source_sha": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+  "source_tree": "1b69a05050c63d0a2fbc4aaac86350611ad9f504",
+  "scope": "RC3-03 original-card independent engineering coverage audit; not overall RC3 ready",
+  "snapshot": "/workspace/work/rc3/reviews/rc3-03-code-snapshot-5dbdf72",
+  "installed_release_id": "5dbdf72089d6-94f6f31fcadf",
+  "external_image_calls_by_auditor": 0,
+  "active_real_project_writes_by_auditor": 0,
+  "original_card_ac_final_status": "NOT_CLOSED",
+  "blocking_product_findings": [
+    {
+      "id": "F9-A",
+      "location": "production.py:149–158 + design_requirements.py:212–216",
+      "trigger": "Public same-ID style/tradeoff Decision replacement using replaces=oldRef",
+      "result": "Resolver collects historical ref as accepted after following the head, then rejects it as not current; new generation preparation blocked.",
+      "repro": "probe_decision_audit_ref.py",
+      "evidence": "decision-audit-ref-result.json"
+    },
+    {
+      "id": "F9-B",
+      "location": "production.py:165–169 + design_requirements.py:223,292–298",
+      "trigger": "Same effective Decision semantic hash, new audit Ref; isolate with read-only head-only view",
+      "result": "consumed_design differs because nested decision_ref survives in decision_slices; historical Ref shell enters semantic freshness.",
+      "limitation": "This repro does not show old task staleness; the content_identity fast path still reports current.",
+      "repro": "probe_decision_audit_ref.py",
+      "evidence": "decision-audit-ref-result.json"
+    }
+  ],
+  "source_documents": [
+    {
+      "path": "/workspace/work/rc3-planning/rc3-development-plan-20261014/docs/specs/deck-master-v1.0.0-rc3/task-cards/RC3-03.md",
+      "sha256": "2d4f9349308d529c7ec66eefac65b7a83a9bc53ff9aac3e9f0b2a33a4ef196ce"
+    },
+    {
+      "path": "/workspace/work/rc3-planning/rc3-development-plan-20261014/docs/specs/deck-master-v1.0.0-rc3/ACCEPTANCE.md",
+      "sha256": "029042b8dd986bfeee481e2e335fdb2f8db2716c03a2efa64c22a7b3af11ee64"
+    },
+    {
+      "path": "/workspace/work/rc3-planning/rc3-development-plan-20261014/docs/specs/deck-master-content-collaboration-v1.2/CONTRACTS.md",
+      "sha256": "488055f07f512a21721b0b198241808ea108675021a0c485d7c56a52d912deff"
+    },
+    {
+      "path": "/workspace/work/rc3-planning/rc3-development-plan-20261014/docs/specs/deck-master-content-collaboration-v1.2/ACCEPTANCE.md",
+      "sha256": "7a04df70ac4d90dc253f712a108587a25a69f7cc33526c10874d03b73f64e9d1"
+    },
+    {
+      "path": "/workspace/work/rc3-planning/rc3-development-plan-20261014/docs/specs/deck-master-content-collaboration-v1.2/TASKS.md",
+      "sha256": "5a589a2fa9857790625cc8d9964d6c22c941a5439725c50c3a08b0fcc1b018e1"
+    }
+  ],
+  "targeted_tests": {
+    "passed": 24,
+    "failures": 0,
+    "evidence_layer": "controlled engineering; no model/human inference",
+    "cases": [
+      {
+        "class": "tests.rebuild.test_rc3_design_requirements",
+        "name": "test_complete_raw_requirements_and_basis_are_readonly",
+        "seconds": "0.027"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_requirements",
+        "name": "test_legacy_no_plan_fidelity_has_honest_null_fields",
+        "seconds": "0.008"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_requirements",
+        "name": "test_imported_real_mapping_without_roles_returns_honest_nulls",
+        "seconds": "0.020"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_requirements",
+        "name": "test_unrelated_density_timing_and_audit_do_not_change_consumed_slices",
+        "seconds": "0.021"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_recipes",
+        "name": "test_parameters_execute_and_planning_prose_cannot_override_or_change_page",
+        "seconds": "0.007"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_feasibility",
+        "name": "test_feasibility_recipe_refuses_public_sample_plan_and_pure_production_compile",
+        "seconds": "0.051"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_workflows",
+        "name": "test_authorized_first_two_initial_pages_reverse_arrival_remain_candidates",
+        "seconds": "0.504"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_restyle_workflows",
+        "name": "test_restyle_uses_target_first_then_ordered_original_jpeg_and_png_through_freeze",
+        "seconds": "0.678"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_restyle_workflows",
+        "name": "test_consumed_font_and_page_parameters_alone_control_task_freshness[used_font]",
+        "seconds": "0.215"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_restyle_workflows",
+        "name": "test_consumed_font_and_page_parameters_alone_control_task_freshness[effective_parameter]",
+        "seconds": "0.217"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_restyle_workflows",
+        "name": "test_consumed_font_and_page_parameters_alone_control_task_freshness[unused_font]",
+        "seconds": "0.260"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_restyle_workflows",
+        "name": "test_consumed_font_and_page_parameters_alone_control_task_freshness[unrelated_density]",
+        "seconds": "0.248"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_restyle_workflows",
+        "name": "test_consumed_font_and_page_parameters_alone_control_task_freshness[sibling_recipe]",
+        "seconds": "0.294"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_adopted_design_handoff",
+        "name": "test_formal_adoption_hands_full_immutable_context_to_every_visual_consumer[reconstruct-None]",
+        "seconds": "0.548"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_adopted_design_handoff",
+        "name": "test_formal_adoption_hands_full_immutable_context_to_every_visual_consumer[repair-None]",
+        "seconds": "0.514"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_adopted_design_handoff",
+        "name": "test_formal_adoption_hands_full_immutable_context_to_every_visual_consumer[review-page_visual]",
+        "seconds": "0.543"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_native",
+        "name": "test_legal_full_page_has_native_editable_atoms_units_notes_and_reading_order",
+        "seconds": "0.111"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_native",
+        "name": "test_identical_table_text_at_wrong_row_is_located_at_cell_atom",
+        "seconds": "0.155"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_native",
+        "name": "test_same_text_reversed_business_arrow_is_located",
+        "seconds": "0.151"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_native",
+        "name": "test_same_page_relations_with_only_real_svg_transform_pass[translate(24 30)]",
+        "seconds": "0.154"
+      },
+      {
+        "class": "tests.rebuild.test_rc3_design_native",
+        "name": "test_same_page_relations_with_only_real_svg_transform_pass[translate(30 0) scale(0.92)]",
+        "seconds": "0.155"
+      },
+      {
+        "class": "tests.rebuild.test_production",
+        "name": "test_prompt_projects_all_visible_fields_and_excludes_internal_notes",
+        "seconds": "0.001"
+      },
+      {
+        "class": "tests.rebuild.test_production",
+        "name": "test_only_allowed_assets_enter_prompt",
+        "seconds": "0.001"
+      },
+      {
+        "class": "tests.rebuild.test_production",
+        "name": "test_blueprint_task_exposes_only_allowed_asset_bytes",
+        "seconds": "0.042"
+      }
+    ]
+  },
+  "rows": [
+    {
+      "id": "RC3-03.1",
+      "requirement": "完整content_requirements/content_basis投影；Page/Plan/recipe权威与fidelity诚实null",
+      "implementation": [
+        "design_requirements.py:25,47,66,198,227",
+        "production.py:116,165,329",
+        "generation.py:58,170"
+      ],
+      "public_entry": [
+        "continue/task summary",
+        "styles propose/confirm/plan + changes commit",
+        "requests freeze"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_requirements.py",
+        "test_rc3_design_workflows.py"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json",
+        "decision-audit-ref-result.json"
+      ],
+      "engineering_status": "FAIL_F9",
+      "actual_evidence_status": "ACTUAL_P04_PROJECTION_CONFIRMED",
+      "remaining": [
+        "F9-A：合法替换design Decision后解析历史Ref阻断；F9-B：语义消费混入decision Ref壳。需新候选修复复审，不能记作04/05接手产品缺陷。"
+      ]
+    },
+    {
+      "id": "RC3-03.2",
+      "requirement": "无旧blueprint初始设计；真实Page；零调用可行性和固定完整正文",
+      "implementation": [
+        "design_recipe.py:183,337",
+        "styles.py:153,181,290,344",
+        "changes.py:138,166"
+      ],
+      "public_entry": [
+        "styles propose intent=initial_design|feasibility",
+        "styles confirm/plan",
+        "changes commit"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_recipes.py",
+        "test_rc3_design_feasibility.py",
+        "test_rc3_design_workflows.py"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json"
+      ],
+      "engineering_status": "PASS_WITH_F9_CROSSCUT",
+      "actual_evidence_status": "ACTUAL_P04_NO_REFERENCE_IMAGE_CONFIRMED",
+      "remaining": [
+        "P04 image执行身份为8057905，5db只读重建消费保留旧身份；本轮新候选实际入口影响分析后绑定。"
+      ]
+    },
+    {
+      "id": "RC3-03.3",
+      "requirement": "风险驱动覆盖；1/2页候选不自动采用；维度接受、采用、扩范围分开",
+      "implementation": [
+        "design_recipe.py:114,183",
+        "styles.py:290,344",
+        "changes.py:166",
+        "candidates.py",
+        "collaboration.py:468"
+      ],
+      "public_entry": [
+        "styles propose with page_profiles/sample_targets/uncovered_cases",
+        "styles plan selected page_ids/max_calls",
+        "candidates plan/adopt",
+        "collaboration decision record"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_recipes.py",
+        "test_rc3_design_workflows.py",
+        "test_rc3_restyle_workflows.py",
+        "test_styles.py:108"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json"
+      ],
+      "engineering_status": "PASS_WITH_F9_CROSSCUT",
+      "actual_evidence_status": "ACTUAL_SINGLE_P04_CANDIDATE_ONLY_AT_SETTLEMENT",
+      "remaining": [
+        "完整矩阵/机制/数据/架构风险覆盖与模型选择仍需实际证据；公平试验及最终验收由RC3-05汇总；维度version更新须先修F9。"
+      ]
+    },
+    {
+      "id": "RC3-03.4",
+      "requirement": "Page→冻结prompt→原始PNG→SVG→PPTX→渲染；表格归属/箭头/单位/限定/阅读顺序/编辑性",
+      "implementation": [
+        "production.py:173,260,329",
+        "pipeline.py:44,68,164,342",
+        "readback_relations.py:29",
+        "readback_text.py",
+        "compiler/native.py"
+      ],
+      "public_entry": [
+        "task start/requests freeze/task call begin/settle/task accept",
+        "reconstruct workorder",
+        "preview/compile/readback"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_native.py",
+        "test_rc3_adopted_design_handoff.py"
+      ],
+      "evidence": [
+        "actual-chain-check.json",
+        "actual-native-file-check.json",
+        "actual-native-edit-proof-copy.pptx",
+        "targeted-tests.xml"
+      ],
+      "engineering_status": "PASS_FOR_RETAINED_ACTUAL_PAGE",
+      "actual_evidence_status": "ACTUAL_P04_CHAIN_AND_NATIVE_FILES_CONFIRMED",
+      "remaining": [
+        "Root正式page_visual review绑定仍待提交；不替代整个E3协议、整稿风险、人类桌面编辑。"
+      ]
+    },
+    {
+      "id": "RC3-03.5",
+      "requirement": "同文字错归属/反箭头语义负例，同关系几何移动正例，无关Plan页不扩大失效",
+      "implementation": [
+        "design_requirements.py:25,47,66",
+        "dependency_slices.py:142",
+        "visual_dependencies.py:30,58",
+        "pipeline.py:164",
+        "readback_relations.py:29"
+      ],
+      "public_entry": [
+        "editing + impact/freshness",
+        "requests freeze",
+        "task result acceptance",
+        "native readback"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_requirements.py:232,251,290,307",
+        "test_rc3_preproduction_semantics.py",
+        "test_rc3_design_native.py:228,271,372",
+        "test_rc3_restyle_workflows.py:208"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "independent-design-consumption.json",
+        "decision-audit-ref-result.json"
+      ],
+      "engineering_status": "PARTIAL_FAIL_F9_B",
+      "actual_evidence_status": "ACTUAL_CORRECT_P04_ONLY; SYNTHETIC_PAIRED_ENGINEERING",
+      "remaining": [
+        "关系/布局工程正负例通过；Decision审计版本不变更语义仍污染消费比较，须修F9-B。实际模型成品负例/完整E3留RC3-05。"
+      ]
+    },
+    {
+      "id": "RC3-03.6",
+      "requirement": "定位损失层后定向修复；不缩字/卡片化/虚构数量图；合理教学示意保留",
+      "implementation": [
+        "production.py:329 prompt constraints",
+        "pipeline.py:164 located findings",
+        "service.py:1057 readback repair/no-progress",
+        "skills/deck-master/references/blueprint-svg.md",
+        "skills/deck-master/references/review-and-repair.md"
+      ],
+      "public_entry": [
+        "continue repair_readback/repair_no_progress",
+        "review/repair workorders"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_native.py",
+        "test_production.py:49",
+        "test_rc3_adopted_design_handoff.py"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json",
+        "actual-native-file-check.json"
+      ],
+      "engineering_status": "PASS_FOR_OBSERVED_CONTROLS",
+      "actual_evidence_status": "P04_QUALIFIERS_RETAINED; NO_QUANTITY_CHART",
+      "remaining": [
+        "真实错误模型产物的定向修复效果不能由prompt规则或合成负例代替；后续RC3-05保留失败原件/同预算记录。"
+      ]
+    },
+    {
+      "id": "RC3-03.7",
+      "requirement": "固定正文E2与逐层E3；原始图片/失败保留；不借设计补写正文",
+      "implementation": [
+        "原卡工作项7；ACCEPTANCE §4.1；RC3-05工作项3",
+        "production.py:329 preserves Page projection"
+      ],
+      "public_entry": [
+        "固定已审Page/Plan/recipe + 正式freeze/attempt/adopt",
+        "只读逐层比对"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_native.py explicitly excludes E2/E3"
+      ],
+      "evidence": [
+        "actual-chain-check.json",
+        "actual-native-file-check.json"
+      ],
+      "engineering_status": "NOT_A_CODE_ONLY_PASS",
+      "actual_evidence_status": "FORMAL_E2_NOT_RUN; E3_SINGLE_PAGE_ENGINEERING_SUBSET",
+      "remaining": [
+        "RC3-05汇总正式公平E2/E3，本卡交付实际固定产物供复用。不得把本单页、synthetic或新旧执行安装混用称公平E2/E3完成。"
+      ]
+    },
+    {
+      "id": "AC-D01",
+      "requirement": "Q4无旧图、P05一次授权真实样页；正文/布局理由/未覆盖页型/调用与停止状态",
+      "implementation": [
+        "RC3-03.1–3 implementation"
+      ],
+      "public_entry": [
+        "styles propose/confirm/plan + changes commit"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_workflows.py",
+        "test_rc3_design_feasibility.py"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json"
+      ],
+      "engineering_status": "PARTIAL_FAIL_F9",
+      "actual_evidence_status": "ACTUAL_P04_ENGINEERING_VARIANT_ONLY",
+      "remaining": [
+        "不得以P04工程例直接关闭原Q4/P05及专业效果AC；本轮RC3-05按原判据接收适用证据。"
+      ]
+    },
+    {
+      "id": "AC-D02",
+      "requirement": "颜色接受仅对应维度；采用和整稿扩展独立；拒绝提案不自动复活",
+      "implementation": [
+        "styles.py:290",
+        "candidates.py",
+        "collaboration.py:468",
+        "eligibility.py",
+        "collaboration_budget.py"
+      ],
+      "public_entry": [
+        "collaboration decision record",
+        "candidates plan/adopt",
+        "styles plan + explicit scope/grant"
+      ],
+      "original_test_sources": [
+        "test_styles.py:108",
+        "test_rc3_design_workflows.py:60",
+        "test_rc3_restyle_workflows.py:192,251,266"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "decision-audit-ref-result.json"
+      ],
+      "engineering_status": "PARTIAL_FAIL_F9",
+      "actual_evidence_status": "ACTUAL_P04_NO_AUTO_ADOPTION_AT_SETTLEMENT",
+      "remaining": [
+        "实际颜色-only/拒绝/后续显式扩展交互尚无本审计完整证据；合法决定更新先修F9。"
+      ]
+    },
+    {
+      "id": "AC-D03",
+      "requirement": "已覆盖模板复用，新增密度/关系风险局部校准；信息和阅读顺序保留",
+      "implementation": [
+        "design_recipe.py:114,183,337",
+        "styles.py:290",
+        "visual_dependencies.py:58",
+        "pipeline.py:164"
+      ],
+      "public_entry": [
+        "styles propose/plan scoped targets",
+        "reconstruct/page_visual workorders"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_recipes.py",
+        "test_rc3_design_native.py",
+        "test_rc3_restyle_workflows.py",
+        "test_rc3_adopted_design_handoff.py"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-native-file-check.json",
+        "decision-audit-ref-result.json"
+      ],
+      "engineering_status": "PARTIAL_FAIL_F9",
+      "actual_evidence_status": "ACTUAL_P04_MIXED_MECHANISM_TABLE_ONLY",
+      "remaining": [
+        "未覆盖页型的真实模型/成品效果及密度冲突选择留RC3-05；不能用字符回读关闭AC。"
+      ]
+    },
+    {
+      "id": "CQ-03/I04",
+      "requirement": "CONTRACTS11.4.1完整投影、basis切片、fidelity无伪Narrative",
+      "implementation": [
+        "design_requirements.py:227",
+        "production.py:116,165,329",
+        "generation.py:58,170"
+      ],
+      "public_entry": [
+        "continue generation_input/production_request",
+        "requests freeze"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_requirements.py",
+        "test_rc3_design_workflows.py"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json",
+        "decision-audit-ref-result.json"
+      ],
+      "engineering_status": "PARTIAL_FAIL_F9",
+      "actual_evidence_status": "ACTUAL_FIXED_P04_PROMPT_IDENTICAL_TO_CALLBACK",
+      "remaining": [
+        "修F9 currenthead选择/消费Ref壳；其余所检字段与实际原值一致。"
+      ]
+    },
+    {
+      "id": "CQ-04/I04",
+      "requirement": "语义/布局区分，相关过期拒绝与无关页保留",
+      "implementation": [
+        "design_requirements.py:25,47,66",
+        "dependency_slices.py:142",
+        "visual_dependencies.py:58",
+        "production.py:165"
+      ],
+      "public_entry": [
+        "editing/impact/task inputs current/requests freeze/result acceptance"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_requirements.py",
+        "test_rc3_preproduction_semantics.py",
+        "test_rc3_native_visual_reuse.py",
+        "test_rc3_restyle_workflows.py"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "independent-design-consumption.json",
+        "decision-audit-ref-result.json"
+      ],
+      "engineering_status": "PARTIAL_FAIL_F9_B",
+      "actual_evidence_status": "PAIRED_ENGINEERING_ONLY",
+      "remaining": [
+        "F9-B已确认相同effective SHA的decision Ref壳污染消费等价；本审计不声称旧Task已stale（其identity快速通道仍current）。"
+      ]
+    },
+    {
+      "id": "CQ-05/I05",
+      "requirement": "同全文错表格/反业务箭头负例被识别，移动同关系正例不过判；实际原图/成品/主要编辑性",
+      "implementation": [
+        "pipeline.py:164",
+        "readback_relations.py:29",
+        "readback_text.py",
+        "compiler/native.py"
+      ],
+      "public_entry": [
+        "native compile/readback",
+        "review/repair"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_native.py:187,228,271,372,390,416"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-native-file-check.json"
+      ],
+      "engineering_status": "PASS_FOR_NATIVE_ENGINEERING",
+      "actual_evidence_status": "ACTUAL_P04_POSITIVE_PLUS_SYNTHETIC_PAIRED_NEGATIVES",
+      "remaining": [
+        "整体专业CQ仍不关闭；完整E3、实际model负例损失定位及人类桌面层由后续绑定。"
+      ]
+    },
+    {
+      "id": "GLOBAL-DESIGN-FONTS-ASSETS",
+      "requirement": "全局版式/实际字体资产/fallback消费；只失效实际消费页",
+      "implementation": [
+        "production.py:90,116,306,329",
+        "service.py:730",
+        "pipeline.py:44,68",
+        "editing.py:207"
+      ],
+      "public_entry": [
+        "create design",
+        "update_design",
+        "import_asset",
+        "continue workorder"
+      ],
+      "original_test_sources": [
+        "test_production.py:73,86",
+        "test_service_flow.py:781,812",
+        "test_rc3_restyle_workflows.py:208"
+      ],
+      "evidence": [
+        "independent-design-consumption.json",
+        "targeted-tests.xml",
+        "actual-native-file-check.json"
+      ],
+      "engineering_status": "PASS_FOR_CHECKED_CONSUMERS",
+      "actual_evidence_status": "ACTUAL_P04_RESOLVED_NOTO_FONT_FILES_HASHED",
+      "remaining": [
+        "不承诺模型逐像素使用字体；native文件实际字体/栅格已分开记录。"
+      ]
+    },
+    {
+      "id": "STYLE-RECIPE-PARAMETERS",
+      "requirement": "七项执行参数唯一来源；planning prose不覆盖事实；page_rules/override可追踪",
+      "implementation": [
+        "design_recipe.py:319,337",
+        "styles.py:369",
+        "production.py:116,329",
+        "generation.py:58"
+      ],
+      "public_entry": [
+        "styles propose/confirm/plan",
+        "requests freeze"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_recipes.py:99,211,227",
+        "test_rc3_restyle_workflows.py:135"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json"
+      ],
+      "engineering_status": "PASS_WITH_F9_CROSSCUT",
+      "actual_evidence_status": "ACTUAL_P04_TYPED_PARAMETERS_MATCH_PROMPT_AND_HANDOFF",
+      "remaining": [
+        "后续候选修复不能更改旧recipe/Request；需保留同参数身份影响分析。"
+      ]
+    },
+    {
+      "id": "INITIAL-RESTYLE-REFERENCES",
+      "requirement": "初始可无参考；restyle目标原图首位、独立原始JPEG/PNG随后；不可用preview偷换",
+      "implementation": [
+        "design_recipe.py:183,381",
+        "changes.py:29,166",
+        "generation.py:58,170",
+        "native_image_evidence.py:85,187"
+      ],
+      "public_entry": [
+        "styles references import",
+        "styles propose intent=restyle",
+        "changes commit",
+        "requests freeze"
+      ],
+      "original_test_sources": [
+        "test_rc3_restyle_workflows.py:135",
+        "test_rc3_design_recipes.py:175,195"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json"
+      ],
+      "engineering_status": "PASS_FOR_PROTOCOL",
+      "actual_evidence_status": "ACTUAL_INITIAL_NO_REFS; RESTYLE_SYNTHETIC_CONTROLLER_ONLY",
+      "remaining": [
+        "本审计无实际模型restyle调用，不把受控fixture附件验证冒称真实restyle效果。"
+      ]
+    },
+    {
+      "id": "ONE-TWO-CANDIDATES",
+      "requirement": "首批1/2页准确数量；反序结果仍候选；无自动采纳和扩页",
+      "implementation": [
+        "styles.py:290,344",
+        "changes.py:166",
+        "collaboration_budget.py",
+        "candidates.py"
+      ],
+      "public_entry": [
+        "styles plan page_ids/max_calls",
+        "changes commit",
+        "task accept",
+        "candidates adopt"
+      ],
+      "original_test_sources": [
+        "test_rc3_design_workflows.py:60",
+        "test_rc3_restyle_workflows.py:192"
+      ],
+      "evidence": [
+        "targeted-tests.xml",
+        "actual-chain-check.json"
+      ],
+      "engineering_status": "PASS_FOR_PROTOCOL",
+      "actual_evidence_status": "ACTUAL_P04_SETTLEMENT_NO_AUTO_ADOPTION_EXPANSION",
+      "remaining": [
+        "实际双模型结果顺序不在本审计原件范围；不能从一页推全范围。"
+      ]
+    },
+    {
+      "id": "G12-NATIVE-IMAGE-CHAIN",
+      "requirement": "真实调用绑定固定prompt/参数/refs/Request/Attempt/allowance/installation，未知model/seed/fee不填",
+      "implementation": [
+        "native_image_evidence.py:72,85,151,282",
+        "generation.py",
+        "tasks.py:1657,1799",
+        "observations.py"
+      ],
+      "public_entry": [
+        "task start/requests freeze/task call begin/settle/task accept"
+      ],
+      "original_test_sources": [
+        "test_rc3_native_image_bridge.py",
+        "test_rc3_native_visual_reuse.py"
+      ],
+      "evidence": [
+        "actual-chain-check.json"
+      ],
+      "engineering_status": "PASS_FOR_RETAINED_EXECUTION_IDENTITY",
+      "actual_evidence_status": "ACTUAL_805_IMAGE_5DB_READER_DISTINCT_AND_CORRECT",
+      "remaining": [
+        "原图1672x941而请求1600x900已据实保留；Host attestation不是平台签名/真实人类，不得重标调用为5db。"
+      ]
+    },
+    {
+      "id": "BUILD-INSTALL-METHODS",
+      "requirement": "构建包/合同/Skill真实安装接口一致；下游方法读取不借cwd",
+      "implementation": [
+        "setup.py",
+        "tools/build_hook.py",
+        "pyproject.toml",
+        "method_resources.py:58,82,101,149",
+        "cli.py:79,383"
+      ],
+      "public_entry": [
+        "python -I -B -m deck_master capabilities",
+        "methods --kind blueprint|reconstruct|review --read",
+        "methods --kind compose --phase design --read"
+      ],
+      "original_test_sources": [
+        "test_install.py",
+        "test_install_host_skill.py",
+        "test_rc3_adopted_design_handoff.py"
+      ],
+      "evidence": [
+        "installation-interface.json",
+        "targeted-import-identity.json"
+      ],
+      "engineering_status": "PASS_FOR_ISOLATED_INSTALL",
+      "actual_evidence_status": "ACTUAL_LOCAL_INSTALLED_BYTES_AND_PUBLIC_CLI",
+      "remaining": [
+        "RC3-04负责完整三入口/四Skill/导入迁移/只读恢复/最终安装集成；本审计未激活HOME、未重建wheel、未做04/05实现。"
+      ]
+    }
+  ],
+  "handoff_04": [
+    "完整三入口/四Skill/导入迁移/恢复只读/候选最终安装一致性；并非代修本次F9"
+  ],
+  "handoff_05": [
+    "正式公平E2/E3，完整风险矩阵与actual model成品覆盖，最终适用AC/CQ台账及效果比较"
+  ],
+  "explicit_human_later": [
+    "真实Owner/听众/计时/桌面PPT编辑及适用professional policy：NOT_RUN；用户明确延后软件与效果测试后"
+  ],
+  "pending_root_binding": [
+    "正式actual p04 page_visual任务/非作者review原始完成与结果绑定；本审计不靠其他report推结论"
+  ],
+  "evidence_manifest": [
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/installation-interface.json",
+      "sha256": "070eebb77bd446e8e05c7018716d73f180441f4c5704e4ab8f7986cb30cba018"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/targeted-tests.xml",
+      "sha256": "ff1bd5f617cb1b2819d949e785ffd823827abdffbb95ba6952c27a2df645c363"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/targeted-tests-rerun.log",
+      "sha256": "b0def7312c5d392d58621d0d6e5311308a74e12c226a51189c2c24a0a2440076"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/targeted-import-identity.json",
+      "sha256": "cd459d1d03d59203dc7332ee9ea6452f3b1b640fcb9aa756c70e1b19e5582653"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/independent-design-consumption.json",
+      "sha256": "9614cb63c6768a331bbd61f9e0a4f19a296152e5f4b4386e7b57dcaf064190d0"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/decision-audit-ref-result.json",
+      "sha256": "277b489b812e20c069d83f8da003c343cf58f0b08abf135420ef5f76cc31a5ef"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/decision-audit-ref-before.json",
+      "sha256": "6c3263decac6d149ca84d0ed952429fb05c3d93f48a4317b6298437578745f17"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/decision-audit-ref-after.json",
+      "sha256": "4ba3e00bc9a8cd278200d13fe418df46a2f8ccabc894310e0020329a982712a9"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/actual-chain-check.json",
+      "sha256": "e2ca69a708a6ad4747def46a9d43ebbc74741fedeb0d4ae1d17ae365fab972ab"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/actual-native-file-check.json",
+      "sha256": "e6bb53be3584e8b6806eadd81d1e050e9c0e7f92346c3554f7d6513354f4595d"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/actual-native-edit-proof-copy.pptx",
+      "sha256": "6b0519bb8ee72078ee61c77dfb71e141429403140e37455d6b48e49ed28f19fc"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/immutable-baseline.json",
+      "sha256": "e49eda6f508f3f7c2bf838479ef34430585ba013d025662c51befa410b4b27a5"
+    },
+    {
+      "path": "/workspace/work/rc3/reviews/rc3-03-independent-scope-audit-5dbdf72/immutable-after.json",
+      "sha256": "c1ec7370f62868616b54285aff08fd08d2d473fbf7ebf942bbb4da2401a50c27"
+    }
+  ],
+  "immutability": {
+    "snapshot": {
+      "root": "/workspace/work/rc3/reviews/rc3-03-code-snapshot-5dbdf72",
+      "before_sha256": "5c48a30277b1467b4e5b711c5a6d20a762a2d17b0ca8136e11b8308809c53c53",
+      "after_sha256": "5c48a30277b1467b4e5b711c5a6d20a762a2d17b0ca8136e11b8308809c53c53",
+      "changed": [],
+      "removed": [],
+      "files": 3203,
+      "status": "PASS"
+    },
+    "installed_package": {
+      "root": "/workspace/work/rc3/candidate-03-5dbdf72/prefix/.deck-master/releases/5dbdf72089d6-94f6f31fcadf/venv/lib/python3.12/site-packages/deck_master",
+      "before_sha256": "7da60e938e563d6dd3939b4f66ff15c74bc49425dd91eb4ed2c9355b79d28185",
+      "after_sha256": "7da60e938e563d6dd3939b4f66ff15c74bc49425dd91eb4ed2c9355b79d28185",
+      "changed": [],
+      "removed": [],
+      "files": 340,
+      "status": "PASS"
+    }
+  }
+}

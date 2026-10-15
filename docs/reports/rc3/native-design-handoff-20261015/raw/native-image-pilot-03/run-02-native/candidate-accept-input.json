@@ -1,0 +1,28 @@
+{
+  "kind": "blueprint",
+  "files": [
+    {
+      "file_id": "native_output",
+      "path": "actual-native-output.png",
+      "media_type": "image/png"
+    }
+  ],
+  "generation_result": {
+    "request_id": "req-52a64541f69e4cd39fec2161ee5c3f97",
+    "attempt_id": "attempt-d4f9d802f6394622a463be40ec3ba24e"
+  },
+  "artifact_specs": [
+    {
+      "role": "blueprint",
+      "page_id": "p04",
+      "file_id": "native_output",
+      "provenance": {
+        "source_type": "host_generated",
+        "tool": "image_gen"
+      },
+      "limitations": [
+        "Actual native output1672x941 for instructed1600x900; dimensions preserved; candidate awaiting independent visual evaluation; no human/desktop acceptance."
+      ]
+    }
+  ]
+}

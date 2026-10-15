@@ -1,0 +1,14 @@
+{
+  "observation_author": "/root",
+  "assurance": "host_attested",
+  "actual_spawn_observed": true,
+  "agent": "/root/rc3_03_actual_svg_writer",
+  "fork_turns": "none",
+  "task_id": "a68c58884f9a",
+  "source": "5dbdf72089d6625449a23a52ef3e23859c597b4e",
+  "spawn_instruction_record": "Actual root collaboration.spawn_agent call in conversation; full user authorized engineering, deferredhuman/desktop",
+  "observed_at_utc": "2026-10-15T01:56:26.697980+00:00",
+  "final_observed": false,
+  "completed_status_observed": false,
+  "platform_signature": null
+}

@@ -1,0 +1,349 @@
+.....................FFF                                                 [100%]
+=================================== FAILURES ===================================
+_ test_candidate_already_received_still_stales_on_real_decision_change[value] __
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/pytest-of-agent/pytest-62/test_candidate_already_receive0')
+change = 'value'
+
+    @pytest.mark.parametrize("change", ["value", "scope", "disposition"])
+    def test_candidate_already_received_still_stales_on_real_decision_change(tmp_path, change):
+        path, store, _, value, ref, _, task = _setup(tmp_path)
+        sent = begin(path, store, task)
+        with NativeImageRuntime(sent[3]).bound():
+            context = reuse._issue(store, task, sent)
+            assert reuse._settle(store, task, sent, context)["native_observation_status"] == "accepted"
+        candidate_id = reuse.accept(path, store, task, sent)["candidate_ids"][0]
+        candidate_before = candidates.show(path, candidate_id=candidate_id)
+        assert candidate_before["generation_basis"]["status"] == "current"
+        update = {**value, "replaces": ref}
+        if change == "value":
+            update["value"] = {"palette": "green"}
+        elif change == "scope":
+            update["scope"] = enf._scope(page_ids=["p2"])
+        else:
+            update["disposition"] = "rejected"
+        _record(path, store, update)
+        current = candidates.show(path, candidate_id=candidate_id)
+        assert current["generation_basis"]["status"] == "changed"
+        assert "design_digest" in current["generation_basis"]["changed_fields"]
+        assert current["candidate"] == candidate_before["candidate"]
+        doc = store.load_document()
+        with pytest.raises(tasks.TaskConflict, match="candidate"):
+>           candidates.plan(path, input={"schema_version": "candidate_selection.v1", "project_id": doc["project_id"],
+                "base_revision": doc["revision_id"], "candidate_ids": [candidate_id]})
+
+tests/rebuild/test_rc3_decision_visual_consumption.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/candidates.py:647: in plan
+    value = _plan(store, document, input['candidate_ids']); ref = store.put_json_object(value)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7febfdbb87d0>
+document = {'candidates': [{'path': '.deckmaster/objects/c8/c86b5571edfc269309b823093e382bd38b3d2dad349676f41ebc3b28f0086599.json...requirement': 'fidelity_only', 'override_decision_ref': None, 'requirement_origin': 'confirmed_manuscript'}, ...}, ...}
+candidate_ids = ['candidate-2e400575e0e0484a9afc1d832e75bb1e']
+
+    def _plan(store, document, candidate_ids):
+        records = _records(store, document)
+        if len(candidate_ids) != len(set(candidate_ids)):
+            raise operations.OperationError('candidate_invalid', 'candidate_ids', 'select each candidate once')
+        selected = [_lookup(records, cid) for cid in candidate_ids]
+        kinds = [result_kind(candidate) for candidate, _, _ in selected]
+        if kinds.count('content_update') > 1:
+            raise operations.OperationError('candidate_invalid', 'candidate_ids',
+                                            'one changeset per adoption; overlapping changesets cannot be mixed')
+        if 'content_update' in kinds and len(candidate_ids) > 1:
+            raise operations.OperationError('candidate_invalid', 'candidate_ids',
+                                            'a whole changeset is adopted atomically; it cannot be mixed with slot candidates')
+        selections = []; failures = []; pages = set()
+        for (candidate, ref, task), kind in zip(selected, kinds):
+            state = _state(store, document, candidate, task)
+            if kind == 'content_update':
+                if state['content_basis']['status'] != 'current':
+                    failures.append({'candidate_id': candidate['candidate_id'], 'cause': 'content_basis_changed',
+                                     'fields': state['content_basis']['changed_fields']})
+                    continue
+                projection = _changeset_projection(store, document, candidate, task)
+                affected = set(projection['upserts']) | set(projection['changeset'].get('remove_page_ids') or [])
+                selections.append({'candidate_id': candidate['candidate_id'], 'candidate_ref': ref,
+                                   'result_kind': 'content_update', 'stage': 'content',
+                                   'result_ref': candidate['result_ref'], 'plan_input_ref': candidate['plan_input_ref'],
+                                   'basis_digest': sha256_bytes(canonical_json_bytes(candidate['content_basis'])),
+                                   'mapping': projection['mapping'],
+                                   'page_order': list(projection['changeset']['page_order']),
+                                   'superseded_tasks': _superseded_tasks(store, document, affected),
+                                   'downstream': list(CONTENT_DOWNSTREAM)})
+                continue
+            if state['generation_basis']['status'] != 'current':
+                failures.append({'candidate_id': candidate['candidate_id'], 'page_id': candidate['page_id'],
+                                 'cause': 'generation_basis_changed', 'fields': state['generation_basis']['changed_fields']})
+                continue
+            if candidate['page_id'] in pages:
+                failures.append({'candidate_id': candidate['candidate_id'], 'page_id': candidate['page_id'],
+                                 'cause': 'one_candidate_per_page'})
+                continue
+            if task.get('stage_request', {}).get('icon_recipe_ref'):
+                from .candidate_preview import require_ready
+                require_ready(store.project_root, candidate['candidate_id'])
+                recipe_ref = task['stage_request']['icon_recipe_ref']
+                from .icons import _owned, _sample
+                recipe, _ = _owned(store, document, ref=recipe_ref)
+                anchor = next(t for t in recipe['input']['targets'] if t['page_id'] == candidate['page_id'])
+                for icon in anchor['icons']:
+                    if icon['method'] == 'reuse': _sample(store, document, icon)
+                if state['adoption_target']['current_ref'] != anchor['svg_ref']:
+                    failures.append({'candidate_id': candidate['candidate_id'], 'cause': 'icon_target_changed'})
+                    continue
+            pages.add(candidate['page_id'])
+            downstream = ['svg_preview', 'ppt_preview', 'deck_outputs', 'quality_applicability']
+            if candidate['stage'] == 'blueprint':
+                downstream.insert(0, 'svg')
+            elif candidate['stage'] == 'content':
+                downstream = list(CONTENT_DOWNSTREAM)
+            selections.append({'candidate_id': candidate['candidate_id'], 'candidate_ref': ref, 'result_kind': kind,
+                               'page_id': candidate['page_id'], 'stage': candidate['stage'],
+                               'target_ref': state['adoption_target']['current_ref'],
+                               'result_ref': candidate['result_ref'],
+                               'basis_digest': sha256_bytes(canonical_json_bytes(candidate['generation_basis'])),
+                               'downstream': downstream})
+        if failures:
+>           raise AdoptionConflict(failures)
+E           deck_master.candidates.AdoptionConflict: candidate_ids: no candidates were adopted; inspect conflicts and explicitly preview a new selection
+
+src/deck_master/candidates.py:633: AdoptionConflict
+_ test_candidate_already_received_still_stales_on_real_decision_change[scope] __
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/pytest-of-agent/pytest-62/test_candidate_already_receive1')
+change = 'scope'
+
+    @pytest.mark.parametrize("change", ["value", "scope", "disposition"])
+    def test_candidate_already_received_still_stales_on_real_decision_change(tmp_path, change):
+        path, store, _, value, ref, _, task = _setup(tmp_path)
+        sent = begin(path, store, task)
+        with NativeImageRuntime(sent[3]).bound():
+            context = reuse._issue(store, task, sent)
+            assert reuse._settle(store, task, sent, context)["native_observation_status"] == "accepted"
+        candidate_id = reuse.accept(path, store, task, sent)["candidate_ids"][0]
+        candidate_before = candidates.show(path, candidate_id=candidate_id)
+        assert candidate_before["generation_basis"]["status"] == "current"
+        update = {**value, "replaces": ref}
+        if change == "value":
+            update["value"] = {"palette": "green"}
+        elif change == "scope":
+            update["scope"] = enf._scope(page_ids=["p2"])
+        else:
+            update["disposition"] = "rejected"
+        _record(path, store, update)
+        current = candidates.show(path, candidate_id=candidate_id)
+        assert current["generation_basis"]["status"] == "changed"
+        assert "design_digest" in current["generation_basis"]["changed_fields"]
+        assert current["candidate"] == candidate_before["candidate"]
+        doc = store.load_document()
+        with pytest.raises(tasks.TaskConflict, match="candidate"):
+>           candidates.plan(path, input={"schema_version": "candidate_selection.v1", "project_id": doc["project_id"],
+                "base_revision": doc["revision_id"], "candidate_ids": [candidate_id]})
+
+tests/rebuild/test_rc3_decision_visual_consumption.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/candidates.py:647: in plan
+    value = _plan(store, document, input['candidate_ids']); ref = store.put_json_object(value)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7febfd84b320>
+document = {'candidates': [{'path': '.deckmaster/objects/bb/bb7297274686deb5bbf30b78c9d19226b8669b3d8bafb8db117abbdcf8df2db6.json...requirement': 'fidelity_only', 'override_decision_ref': None, 'requirement_origin': 'confirmed_manuscript'}, ...}, ...}
+candidate_ids = ['candidate-18d3224b557e47df9791eb9e061502f5']
+
+    def _plan(store, document, candidate_ids):
+        records = _records(store, document)
+        if len(candidate_ids) != len(set(candidate_ids)):
+            raise operations.OperationError('candidate_invalid', 'candidate_ids', 'select each candidate once')
+        selected = [_lookup(records, cid) for cid in candidate_ids]
+        kinds = [result_kind(candidate) for candidate, _, _ in selected]
+        if kinds.count('content_update') > 1:
+            raise operations.OperationError('candidate_invalid', 'candidate_ids',
+                                            'one changeset per adoption; overlapping changesets cannot be mixed')
+        if 'content_update' in kinds and len(candidate_ids) > 1:
+            raise operations.OperationError('candidate_invalid', 'candidate_ids',
+                                            'a whole changeset is adopted atomically; it cannot be mixed with slot candidates')
+        selections = []; failures = []; pages = set()
+        for (candidate, ref, task), kind in zip(selected, kinds):
+            state = _state(store, document, candidate, task)
+            if kind == 'content_update':
+                if state['content_basis']['status'] != 'current':
+                    failures.append({'candidate_id': candidate['candidate_id'], 'cause': 'content_basis_changed',
+                                     'fields': state['content_basis']['changed_fields']})
+                    continue
+                projection = _changeset_projection(store, document, candidate, task)
+                affected = set(projection['upserts']) | set(projection['changeset'].get('remove_page_ids') or [])
+                selections.append({'candidate_id': candidate['candidate_id'], 'candidate_ref': ref,
+                                   'result_kind': 'content_update', 'stage': 'content',
+                                   'result_ref': candidate['result_ref'], 'plan_input_ref': candidate['plan_input_ref'],
+                                   'basis_digest': sha256_bytes(canonical_json_bytes(candidate['content_basis'])),
+                                   'mapping': projection['mapping'],
+                                   'page_order': list(projection['changeset']['page_order']),
+                                   'superseded_tasks': _superseded_tasks(store, document, affected),
+                                   'downstream': list(CONTENT_DOWNSTREAM)})
+                continue
+            if state['generation_basis']['status'] != 'current':
+                failures.append({'candidate_id': candidate['candidate_id'], 'page_id': candidate['page_id'],
+                                 'cause': 'generation_basis_changed', 'fields': state['generation_basis']['changed_fields']})
+                continue
+            if candidate['page_id'] in pages:
+                failures.append({'candidate_id': candidate['candidate_id'], 'page_id': candidate['page_id'],
+                                 'cause': 'one_candidate_per_page'})
+                continue
+            if task.get('stage_request', {}).get('icon_recipe_ref'):
+                from .candidate_preview import require_ready
+                require_ready(store.project_root, candidate['candidate_id'])
+                recipe_ref = task['stage_request']['icon_recipe_ref']
+                from .icons import _owned, _sample
+                recipe, _ = _owned(store, document, ref=recipe_ref)
+                anchor = next(t for t in recipe['input']['targets'] if t['page_id'] == candidate['page_id'])
+                for icon in anchor['icons']:
+                    if icon['method'] == 'reuse': _sample(store, document, icon)
+                if state['adoption_target']['current_ref'] != anchor['svg_ref']:
+                    failures.append({'candidate_id': candidate['candidate_id'], 'cause': 'icon_target_changed'})
+                    continue
+            pages.add(candidate['page_id'])
+            downstream = ['svg_preview', 'ppt_preview', 'deck_outputs', 'quality_applicability']
+            if candidate['stage'] == 'blueprint':
+                downstream.insert(0, 'svg')
+            elif candidate['stage'] == 'content':
+                downstream = list(CONTENT_DOWNSTREAM)
+            selections.append({'candidate_id': candidate['candidate_id'], 'candidate_ref': ref, 'result_kind': kind,
+                               'page_id': candidate['page_id'], 'stage': candidate['stage'],
+                               'target_ref': state['adoption_target']['current_ref'],
+                               'result_ref': candidate['result_ref'],
+                               'basis_digest': sha256_bytes(canonical_json_bytes(candidate['generation_basis'])),
+                               'downstream': downstream})
+        if failures:
+>           raise AdoptionConflict(failures)
+E           deck_master.candidates.AdoptionConflict: candidate_ids: no candidates were adopted; inspect conflicts and explicitly preview a new selection
+
+src/deck_master/candidates.py:633: AdoptionConflict
+_ test_candidate_already_received_still_stales_on_real_decision_change[disposition] _
+
+tmp_path = PosixPath('/workspace/work/rc3/t03/pytest-of-agent/pytest-62/test_candidate_already_receive2')
+change = 'disposition'
+
+    @pytest.mark.parametrize("change", ["value", "scope", "disposition"])
+    def test_candidate_already_received_still_stales_on_real_decision_change(tmp_path, change):
+        path, store, _, value, ref, _, task = _setup(tmp_path)
+        sent = begin(path, store, task)
+        with NativeImageRuntime(sent[3]).bound():
+            context = reuse._issue(store, task, sent)
+            assert reuse._settle(store, task, sent, context)["native_observation_status"] == "accepted"
+        candidate_id = reuse.accept(path, store, task, sent)["candidate_ids"][0]
+        candidate_before = candidates.show(path, candidate_id=candidate_id)
+        assert candidate_before["generation_basis"]["status"] == "current"
+        update = {**value, "replaces": ref}
+        if change == "value":
+            update["value"] = {"palette": "green"}
+        elif change == "scope":
+            update["scope"] = enf._scope(page_ids=["p2"])
+        else:
+            update["disposition"] = "rejected"
+        _record(path, store, update)
+        current = candidates.show(path, candidate_id=candidate_id)
+        assert current["generation_basis"]["status"] == "changed"
+        assert "design_digest" in current["generation_basis"]["changed_fields"]
+        assert current["candidate"] == candidate_before["candidate"]
+        doc = store.load_document()
+        with pytest.raises(tasks.TaskConflict, match="candidate"):
+>           candidates.plan(path, input={"schema_version": "candidate_selection.v1", "project_id": doc["project_id"],
+                "base_revision": doc["revision_id"], "candidate_ids": [candidate_id]})
+
+tests/rebuild/test_rc3_decision_visual_consumption.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/operations.py:172: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/candidates.py:647: in plan
+    value = _plan(store, document, input['candidate_ids']); ref = store.put_json_object(value)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+store = <deck_master.store.Store object at 0x7febfd8a9850>
+document = {'candidates': [{'path': '.deckmaster/objects/d6/d60d2bd6731033734da9563b3fd30fabbdf70a0bd70d2f9fb5f0273cf8ba08d0.json...requirement': 'fidelity_only', 'override_decision_ref': None, 'requirement_origin': 'confirmed_manuscript'}, ...}, ...}
+candidate_ids = ['candidate-e49e9e72210948a5a6af955b01db70d9']
+
+    def _plan(store, document, candidate_ids):
+        records = _records(store, document)
+        if len(candidate_ids) != len(set(candidate_ids)):
+            raise operations.OperationError('candidate_invalid', 'candidate_ids', 'select each candidate once')
+        selected = [_lookup(records, cid) for cid in candidate_ids]
+        kinds = [result_kind(candidate) for candidate, _, _ in selected]
+        if kinds.count('content_update') > 1:
+            raise operations.OperationError('candidate_invalid', 'candidate_ids',
+                                            'one changeset per adoption; overlapping changesets cannot be mixed')
+        if 'content_update' in kinds and len(candidate_ids) > 1:
+            raise operations.OperationError('candidate_invalid', 'candidate_ids',
+                                            'a whole changeset is adopted atomically; it cannot be mixed with slot candidates')
+        selections = []; failures = []; pages = set()
+        for (candidate, ref, task), kind in zip(selected, kinds):
+            state = _state(store, document, candidate, task)
+            if kind == 'content_update':
+                if state['content_basis']['status'] != 'current':
+                    failures.append({'candidate_id': candidate['candidate_id'], 'cause': 'content_basis_changed',
+                                     'fields': state['content_basis']['changed_fields']})
+                    continue
+                projection = _changeset_projection(store, document, candidate, task)
+                affected = set(projection['upserts']) | set(projection['changeset'].get('remove_page_ids') or [])
+                selections.append({'candidate_id': candidate['candidate_id'], 'candidate_ref': ref,
+                                   'result_kind': 'content_update', 'stage': 'content',
+                                   'result_ref': candidate['result_ref'], 'plan_input_ref': candidate['plan_input_ref'],
+                                   'basis_digest': sha256_bytes(canonical_json_bytes(candidate['content_basis'])),
+                                   'mapping': projection['mapping'],
+                                   'page_order': list(projection['changeset']['page_order']),
+                                   'superseded_tasks': _superseded_tasks(store, document, affected),
+                                   'downstream': list(CONTENT_DOWNSTREAM)})
+                continue
+            if state['generation_basis']['status'] != 'current':
+                failures.append({'candidate_id': candidate['candidate_id'], 'page_id': candidate['page_id'],
+                                 'cause': 'generation_basis_changed', 'fields': state['generation_basis']['changed_fields']})
+                continue
+            if candidate['page_id'] in pages:
+                failures.append({'candidate_id': candidate['candidate_id'], 'page_id': candidate['page_id'],
+                                 'cause': 'one_candidate_per_page'})
+                continue
+            if task.get('stage_request', {}).get('icon_recipe_ref'):
+                from .candidate_preview import require_ready
+                require_ready(store.project_root, candidate['candidate_id'])
+                recipe_ref = task['stage_request']['icon_recipe_ref']
+                from .icons import _owned, _sample
+                recipe, _ = _owned(store, document, ref=recipe_ref)
+                anchor = next(t for t in recipe['input']['targets'] if t['page_id'] == candidate['page_id'])
+                for icon in anchor['icons']:
+                    if icon['method'] == 'reuse': _sample(store, document, icon)
+                if state['adoption_target']['current_ref'] != anchor['svg_ref']:
+                    failures.append({'candidate_id': candidate['candidate_id'], 'cause': 'icon_target_changed'})
+                    continue
+            pages.add(candidate['page_id'])
+            downstream = ['svg_preview', 'ppt_preview', 'deck_outputs', 'quality_applicability']
+            if candidate['stage'] == 'blueprint':
+                downstream.insert(0, 'svg')
+            elif candidate['stage'] == 'content':
+                downstream = list(CONTENT_DOWNSTREAM)
+            selections.append({'candidate_id': candidate['candidate_id'], 'candidate_ref': ref, 'result_kind': kind,
+                               'page_id': candidate['page_id'], 'stage': candidate['stage'],
+                               'target_ref': state['adoption_target']['current_ref'],
+                               'result_ref': candidate['result_ref'],
+                               'basis_digest': sha256_bytes(canonical_json_bytes(candidate['generation_basis'])),
+                               'downstream': downstream})
+        if failures:
+>           raise AdoptionConflict(failures)
+E           deck_master.candidates.AdoptionConflict: candidate_ids: no candidates were adopted; inspect conflicts and explicitly preview a new selection
+
+src/deck_master/candidates.py:633: AdoptionConflict
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_rc3_decision_visual_consumption.py::test_candidate_already_received_still_stales_on_real_decision_change[value]
+FAILED tests/rebuild/test_rc3_decision_visual_consumption.py::test_candidate_already_received_still_stales_on_real_decision_change[scope]
+FAILED tests/rebuild/test_rc3_decision_visual_consumption.py::test_candidate_already_received_still_stales_on_real_decision_change[disposition]
+3 failed, 21 passed in 12.92s

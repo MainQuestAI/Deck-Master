@@ -1,0 +1,44 @@
+{
+  "new_actual_views": [
+    {
+      "sequence": 1,
+      "role": "new_v3_svg_preview",
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-svg-v3-preview/actual-p04-preview.png",
+      "sha256": "9e4622078a84e81e207667f99269c9cc0d8a4bf306a47b1cd5ecdc99a0b7b7da",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "actual_tool": "functions.exec -> tools.view_image",
+      "requested_detail": "original",
+      "returned_detail": "original",
+      "visually_inspected_this_run": true
+    },
+    {
+      "sequence": 2,
+      "role": "new_v3_physical_ppt_render",
+      "path": "/workspace/work/rc3/native-image-pilot-03/run-06-native-ppt-v3-correct-physical/rendered/page-1.png",
+      "sha256": "ca645a40136d48b072fd87b674cc6cb56d441715e10a102a449182bbb441cbc1",
+      "dimensions": [
+        1601,
+        900
+      ],
+      "actual_tool": "functions.exec -> tools.view_image",
+      "requested_detail": "original",
+      "returned_detail": "original",
+      "visually_inspected_this_run": true
+    }
+  ],
+  "original_reused_inspection": {
+    "path": "/workspace/work/rc3/native-image-pilot-03/run-02-native/original-blueprint.png",
+    "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "viewed_this_run": false,
+    "actual_prior_view": "run04-v2 original-detail view; unchanged byte hash verified this run",
+    "prior_report_path": "/workspace/work/rc3/reviews/rc3-03-actual-page-visual-review-run04-v2/report.md",
+    "prior_report_sha256": "46714b217ac23866f6a41a8b97113cd06bda2d27d3972f893756583acd0c1a9e"
+  }
+}

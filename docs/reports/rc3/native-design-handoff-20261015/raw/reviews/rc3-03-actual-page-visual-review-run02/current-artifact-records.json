@@ -1,0 +1,118 @@
+{
+  "blueprint": {
+    "artifact_id": "blueprint-p04-8cf79c6a",
+    "created_at": "2026-10-15T01:02:45Z",
+    "dependencies": [],
+    "derived_from": [],
+    "file": {
+      "path": ".deckmaster/objects/8c/8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c.png",
+      "sha256": "8cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c"
+    },
+    "limitations": [
+      "Actual native output1672x941 for instructed1600x900; dimensions preserved; candidate awaiting independent visual evaluation; no human/desktop acceptance."
+    ],
+    "media_type": "image/png",
+    "page_id": "p04",
+    "provenance": {
+      "generated_from_page": {
+        "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+        "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+      },
+      "generation_attempt": {
+        "path": ".deckmaster/objects/10/10b205c8f4de3e0db02efd1a106dd40899579664d632a6e227c89f8c36bfb4bc.json",
+        "sha256": "10b205c8f4de3e0db02efd1a106dd40899579664d632a6e227c89f8c36bfb4bc"
+      },
+      "generation_request": {
+        "path": ".deckmaster/objects/85/85815c301b12ddf8d4f3e1c706ba5d8086674377e6217b70ce525b54596b83a7.json",
+        "sha256": "85815c301b12ddf8d4f3e1c706ba5d8086674377e6217b70ce525b54596b83a7"
+      },
+      "invocation_ref": "native-host:root_actual_native_image:controller_02a4530addfcfb0febde47267af4dcc1",
+      "source_type": "host_generated",
+      "submitted_prompt": {
+        "path": ".deckmaster/objects/10/10bffd60ca6e1b6dcf2aadc52d8548bde3cc93334d45ffc9bd9fa64bebea4931.txt",
+        "sha256": "10bffd60ca6e1b6dcf2aadc52d8548bde3cc93334d45ffc9bd9fa64bebea4931"
+      },
+      "tool": "image_gen"
+    },
+    "reference_regions": [],
+    "role": "blueprint",
+    "schema_version": "deck_artifact.v1"
+  },
+  "svg": {
+    "artifact_id": "svg-p04-1223a9d6",
+    "created_at": "2026-10-15T02:02:06Z",
+    "dependencies": [
+      {
+        "identity": "p04",
+        "kind": "content",
+        "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+      },
+      {
+        "identity": "p04",
+        "kind": "blueprint",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      }
+    ],
+    "derived_from": [
+      {
+        "path": ".deckmaster/objects/dc/dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526.json",
+        "sha256": "dc12785b9efa870484a4eb578eef8859880b6d3769c363fa928fe302ff577526"
+      }
+    ],
+    "file": {
+      "path": ".deckmaster/objects/12/1223a9d6c9c89bb998434395e58dfee8c77c3d95d918fca7b8a613c54739a00b.svg",
+      "sha256": "1223a9d6c9c89bb998434395e58dfee8c77c3d95d918fca7b8a613c54739a00b"
+    },
+    "limitations": [
+      "Original native model SVG v1. Fixed Page atoms provide exact text; adopted original PNG is only a visual reference. No raster is embedded.",
+      "Original PNG remains1672x941 with SHA2568cf79c6ada8476c72ebc13f822821a6e02d5ffa7215bfad1984c74fd52eb147c. This SVG is1600x900.",
+      "Author engineering checks: installed SDK parses SVG;17/17 visible atoms match exactly; body24px/heading40px;4 node containers and3 directed paths are bound. These are not independent visual acceptance.",
+      "Formal preview, independent page_visual review, single-page PPTX compile/readback/render and real human desktop acceptance are outside this author task and have not been run by this author.",
+      "No provider/model/platform/human signature or whole-card/global readiness is claimed."
+    ],
+    "media_type": "image/svg+xml",
+    "page_id": "p04",
+    "provenance": {
+      "generated_from_page": {
+        "path": ".deckmaster/objects/cd/cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b.json",
+        "sha256": "cdbdd15ec62121abac495025cbbf92855557c8d815ae3e843ae1b151fb583e8b"
+      },
+      "invocation_ref": "/root/rc3_03_actual_svg_writer",
+      "source_type": "host_generated",
+      "tool": "native model SVG authoring"
+    },
+    "reference_regions": [],
+    "role": "svg",
+    "schema_version": "deck_artifact.v1"
+  },
+  "svg_preview": {
+    "artifact_id": "svg_preview-3e4329274c8c",
+    "created_at": "2026-10-15T02:03:41Z",
+    "dependencies": [
+      {
+        "identity": "p04",
+        "kind": "svg",
+        "sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3"
+      }
+    ],
+    "derived_from": [
+      {
+        "path": ".deckmaster/objects/b6/b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3.json",
+        "sha256": "b65db8f40a6e6265813a9927e1ad287fe036e0f4d61df0f963269809a3b0fdd3"
+      }
+    ],
+    "file": {
+      "path": ".deckmaster/objects/65/654e94f95b34f61e2914da5ccf96d8442986751e2c6dec536c763c1f44af6cd6.png",
+      "sha256": "654e94f95b34f61e2914da5ccf96d8442986751e2c6dec536c763c1f44af6cd6"
+    },
+    "limitations": [],
+    "media_type": "image/png",
+    "page_id": "p04",
+    "provenance": {
+      "source_type": "tool_generated",
+      "tool": "deck_master.local"
+    },
+    "role": "svg_preview",
+    "schema_version": "deck_artifact.v1"
+  }
+}
