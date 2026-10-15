@@ -33,7 +33,11 @@ def test_single_file_raw_hash_readback_and_external_output(tmp_path, monkeypatch
     before = source_snapshot(source)
     monkeypatch.setattr(external_review.shutil, 'which', lambda _: None)
     output = tmp_path / 'reports' / 'packet.json'
-    result = external_review.evaluate(pptx, source_sha256=sha256_bytes(pptx.read_bytes()), scope=scope(), report_output=output)
+    response, http, code = invoke(None, 'review.evaluate', {'source': str(pptx),
+        'source_sha256': sha256_bytes(pptx.read_bytes()), 'scope': scope(), 'report_output': str(output)})
+    assert (http, code) == (409, 4)
+    assert response['error']['code'] == response['status'] == 'needs_tool'
+    result = response['result']
     assert result['status'] == 'needs_tool'
     report = result['external_report']['report']
     assert result['source_sha256'] == sha256_bytes(pptx.read_bytes())
@@ -127,7 +131,12 @@ def test_source_change_produces_nonimportable_readable_report(tmp_path, monkeypa
         source.write_text('after')
         return result
     monkeypatch.setattr(external_review, '_observe', change_after_read)
-    result = external_review.evaluate(source, scope=scope(), report_output=tmp_path / 'report.json')
+    response, http, code = invoke(None, 'review.evaluate', {'source': str(source),
+        'scope': scope(), 'report_output': str(tmp_path / 'report.json')})
+    assert (http, code) == (409, 5)
+    assert response['error']['code'] == response['status'] == 'source_changed'
+    assert response['error']['path'] == 'source'
+    result = response['result']
     report = result['external_report']['report']
     assert result['status'] == 'source_changed'
     assert report['source_unchanged'] is False
@@ -149,10 +158,13 @@ def test_invalid_hash_persistence_and_scope_do_not_write(tmp_path, extra, expect
 def test_cli_evaluate_and_json_context_refusal_share_envelope(tmp_path, capsys):
     source = tmp_path / 'copy.txt'
     source.write_text('Actual draft')
-    assert cli.main(['review', 'evaluate', str(source), '--persistence', 'none']) == 0
-    result = json.loads(capsys.readouterr().out)
+    assert cli.main(['review', 'evaluate', str(source), '--persistence', 'none']) == 4
+    captured = capsys.readouterr()
+    assert captured.out == ''
+    result = json.loads(captured.err)
     assert result['schema_version'] == 'collaboration_response.v1'
     assert result['status'] == 'needs_reviewer'
+    assert result['error']['code'] == 'needs_reviewer'
     assert result['result']['external_report']['report']['engineering_observations'][0]['text'] == 'Actual draft'
     response, http, code = invoke(None, 'review.evaluate', {'source': str(source), 'scope': scope(),
         'adapter_context': {'human_review_receipts': []}})

@@ -117,7 +117,129 @@ def claim_fixture_task(project, task, *, execution_ref="synthetic-l1-host"):
     return task
 
 
+def settle_fidelity_review(project, *, page_ids, execution_ref, scenario):
+    """Explicit L1 manuscript check via actual dispatch/claim/adoption.
+
+    This helper never changes the quality profile. Its host_self evidence is
+    usable only when the actual request already calls for fidelity_only.
+    """
+    from deck_master import content_review
+    store = Store(project)
+    dispatched = content_review.dispatch_preproduction_review(project, page_ids=list(page_ids),
+        instruction='L1 synthetic fidelity protocol fixture: ' + scenario)
+    assert dispatched['status'] == 'review_dispatched', dispatched
+    assert dispatched['requirement'] == 'fidelity_only', dispatched
+    task = dispatched['task']
+    doc = store.load_document()
+    pages = [entry for entry in doc['pages'] if entry['page_id'] in page_ids]
+    subjects = [ref for ref in (doc.get('narrative'), doc.get('content_plan')) if ref]
+    subjects += [entry['page'] for entry in pages]
+    deps = [{'kind': 'content', 'identity': key, 'sha256': ref['sha256']}
+            for key, ref in (('narrative', doc.get('narrative')), ('content_plan', doc.get('content_plan'))) if ref]
+    deps += [{'kind': 'content', 'identity': 'page:' + entry['page_id'], 'sha256': entry['page']['sha256']} for entry in pages]
+    deps += [{'kind': 'source', 'identity': source['source_id'], 'sha256': source['extract']['sha256']}
+             for source in doc.get('sources') or [] if source.get('extract')]
+    evidence = store.put_json_object({'evidence_level': 'L1_SYNTHETIC', 'scenario': scenario,
+        'subjects': subjects, 'human_or_native_evidence': False,
+        'observation': 'Explicit synthetic protocol fixture inspected exactly the named manuscript objects.'})
+    reviews = [{'schema_version': 'deck_review.v2', 'review_id': 'l1-fidelity-' + uuid.uuid4().hex,
+        'kind': kind, 'review_stage': 'preproduction', 'status': 'pass',
+        'subjects': subjects, 'dependencies': deps,
+        'reviewer': {'type': 'host_self', 'id': 'L1-synthetic-fidelity-host', 'execution_ref': execution_ref,
+            'independence_confirmed': False, 'identity_receipt': None, 'evidence_ref': evidence, 'assurance': 'host_attested'},
+        'observations': ['L1 synthetic fidelity check: ' + scenario], 'findings': [],
+        'created_at': '2026-10-15T00:00:00Z', 'replaces': None} for kind in dispatched['units']]
+    response = submit_host_fixture(project, task_id=task['task_id'], execution_ref=execution_ref,
+        host_declaration={'supported_protocols': [task['protocol_version']], 'capabilities': task['required_capabilities']},
+        result_payload={'kind': 'review', 'files': [], 'pages': [], 'page_order': [], 'artifact_specs': [],
+            'reviews': reviews, 'usage_events': [], 'notes': 'Explicit L1 synthetic fidelity, no independent/human/native claim.'})
+    assert response['status'] == 'accepted', response
+    current = store.load_document()
+    completed = next(store.read_object_json(ref) for ref in current['tasks']
+        if store.read_object_json(ref)['task_id'] == task['task_id'])
+    return {'task': task, 'response': response, 'review_refs': completed['result_refs'], 'evidence_level': 'L1_SYNTHETIC'}
+
+
 def claimed_phase_task(store, document, **kwargs):
     from deck_master import content_production
     task = content_production.open_phase_task(store, document, **kwargs)
     return claim_fixture_task(store.project_root, task)
+
+
+def accept_synthetic_blueprint(project, *, task, result_payload, execution_ref, scenario):
+    """Actual generation lifecycle with a registered, explicitly L1 provider.
+
+    Original caller-authored PNG/artifact specs are retained. This is protocol
+    evidence only; the synthetic provider never establishes real tool/fee facts.
+    The returned synthetic_execution records the exact enriched envelope for
+    terminal replay rather than opening another call on a helper retry.
+    """
+    from copy import deepcopy
+    import time
+    from deck_master import generation, tasks
+    from deck_master.models import canonical_json_bytes, sha256_bytes
+    from deck_master.native_image_evidence import (NativeImageCompletion, NativeImageRegistry,
+        NativeImageRuntime, image_binding)
+    store = Store(project)
+    current = tasks._lookup_task(store.load_document(), task['task_id'], store)
+    assert current['kind'] == 'blueprint' and generation.is_new(current)
+    if current['status'] == 'awaiting_host':
+        claim_fixture_task(project, current, execution_ref=execution_ref)
+    else:
+        assert current['status'] == 'running' and current['execution_ref'] == execution_ref
+    prepared = generation.prepared_input(store, store.load_document(), current)
+    prepared['parameters'] = {'transparent_background': False}
+    frozen = generation.freeze(project, task_id=task['task_id'], input=prepared,
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+    current = tasks._lookup_task(store.load_document(), task['task_id'], store)
+    if not current['call_allowances']:
+        tasks.allocate_call_allowances(store, task_id=task['task_id'], count=1)
+        current = tasks._lookup_task(store.load_document(), task['task_id'], store)
+    allowance = next(item for item in current['call_allowances'] if item['state'] == 'reserved')
+    attempt = tasks.call_begin(store, task_id=task['task_id'], allowance_id=allowance['allowance_id'],
+        execution_ref=execution_ref, request_id=frozen['request_id'])
+    binding, _, begun, _ = image_binding(store, store.load_document(), task['task_id'], attempt['attempt_id'])
+    spec = next(item for item in result_payload['artifact_specs'] if item['role'] == 'blueprint')
+    file = next(item for item in result_payload['files'] if item['file_id'] == spec['file_id'])
+    raw = (store.staging_dir / task['operation_id'] / file['path']).read_bytes()
+    now = time.time_ns() // 1_000_000
+    arguments = {'prompt': prepared['prompt'], 'transparent_background': False}
+    if prepared['references']:
+        arguments['referenced_image_paths'] = [str(store.project_root / ref['file']['path']) for ref in prepared['references']]
+    claims = {'provider_id': 'synthetic-l1-shared-fixture', 'event_id': uuid.uuid4().hex,
+        'binding': binding, 'tool_name': 'image_gen__imagegen', 'status': 'completed',
+        'issued_at_ms': now, 'expires_at_ms': now + 60000,
+        'started_at_ms': begun['started_at_ms'], 'completed_at_ms': now,
+        'arguments': arguments, 'output_sha256': sha256_bytes(raw), 'invocation_ref': None}
+
+    class SyntheticProvider:
+        provider_id = claims['provider_id']
+        adapter_version = 'synthetic-l1-shared.v1'
+        authentication = 'protected_transport'
+
+        def health(self):
+            return True
+
+        def fetch(self, event_id):
+            assert event_id == claims['event_id']
+            return canonical_json_bytes(claims)
+
+        def verify(self, event):
+            assert event == canonical_json_bytes(claims)
+            return NativeImageCompletion(deepcopy(claims), raw)
+
+    registry = NativeImageRegistry()
+    registry.register(SyntheticProvider())
+    selector = {'provider_id': claims['provider_id'], 'event_id': claims['event_id']}
+    with NativeImageRuntime(registry).bound():
+        context = registry.image_context(store, store.load_document(), task_id=task['task_id'],
+            attempt_id=attempt['attempt_id'], selector=selector)
+        settlement = tasks.call_settle(store, task_id=task['task_id'], allowance_id=allowance['allowance_id'],
+            attempt_id=attempt['attempt_id'], outcome='consumed',
+            report_bytes=canonical_json_bytes({'source': 'native_host_image.v1', **selector}), adapter_context=context)
+    payload = deepcopy(result_payload)
+    payload['generation_result'] = {'request_id': frozen['request_id'], 'attempt_id': attempt['attempt_id']}
+    response = service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+        produced_against=task['produced_against'], result_payload=payload)
+    return {**response, 'synthetic_execution': {'scenario': scenario, 'evidence_level': 'L1_SYNTHETIC',
+        'frozen': frozen, 'attempt': attempt, 'settlement': settlement, 'result_payload': payload}}

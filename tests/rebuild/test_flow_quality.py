@@ -1,4 +1,8 @@
-"""Flow Quality v1.1 acceptance tests (A-class evidence, spec v1.1).
+"""Flow Quality software regression coverage (spec v1.1, current RC3 entry).
+
+Host claims/reviews/provider events here are explicit L1 synthetic fixtures.
+Render cases execute the actual compiler/renderer; no human/native-image or
+professional acceptance is inferred from these unit diagnostics.
 
 Covers, one section per task:
 - T1  work-order task projection, per-kind method dispatch, method_release;
@@ -20,8 +24,14 @@ import pytest
 
 from deck_master import service
 from deck_master.method_resources import method_resources, methods_sha256, resolve_root
-from deck_master.models import bump_revision, compute_input_digest
+from deck_master.models import bump_revision, compute_input_digest, ModelError
+from deck_master.eligibility import EligibilityBlocked
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task, accept_synthetic_blueprint
+from test_content_ops import prepare_editorial_project, v2_revision_envelope
+from deck_master import tasks as tasks_mod
+from deck_master.content import atom_ids
+import copy
 from deck_master.tasks import TaskConflict
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "flow-quality"
@@ -134,9 +144,9 @@ def test_method_dispatch_mapping_by_kind_and_intent() -> None:
         "source-reading", "content-methods", "content-examples")
     assert method_ids_for("compose", intent="input_revision") == (
         "source-reading", "content-methods", "content-examples", "input-update")
-    assert method_ids_for("blueprint") == method_ids_for("reconstruct") == ("blueprint-svg",)
-    assert method_ids_for("review") == ("review-and-repair",)
-    assert method_ids_for("repair") == ("review-and-repair", "content-methods", "blueprint-svg")
+    assert method_ids_for("blueprint") == method_ids_for("reconstruct") == ("blueprint-svg", "physical-units")
+    assert method_ids_for("review") == ("review-and-repair", "physical-units")
+    assert method_ids_for("repair") == ("review-and-repair", "content-methods", "blueprint-svg", "physical-units")
     assert method_ids_for("compile") == ()
     # The dispatched entry list stays different between compose and review (AC-02).
     assert method_ids_for("compose") != method_ids_for("review")
@@ -441,6 +451,98 @@ def test_input_digest_fixtures_recompute(tmp_path: Path) -> None:
     assert compute_input_digest(noted) != before["input_digest"]
 
 
+def _original_copy_hash(page):
+    from deck_master.models import canonical_json_bytes, sha256_bytes
+    page = copy.deepcopy(page)
+    page.pop('content_mapping', None)
+    return sha256_bytes(canonical_json_bytes(page))
+
+
+def _framing_envelope(store, task):
+    from test_compose_v2_phases import _framing_narrative
+    return {'schema_version': 'compose_result.v2', 'kind': 'compose', 'variant': 'framing',
+        **{key: task[key] for key in ('task_id', 'operation_id', 'produced_against')},
+        'eligibility_digest': task['collaboration_binding']['eligibility_digest'],
+        'payload': {'narrative': _framing_narrative(store.load_document()['project_id'])}, 'usage_events': []}
+
+
+def _include_new_page_scope(project, page_ids):
+    """Explicitly name future Page identities before a membership transaction."""
+    from deck_master import collaboration
+    store = Store(project)
+    doc = store.load_document()
+    request = doc['collaboration']['request']
+    collaboration.start_request(project, input={'intent': 'full_deck', 'content_intent': None,
+        'scope': {**request['scope'], 'page_ids': page_ids},
+        'replace_request_id': request['request_id'], 'instruction_evidence': {
+            'kind': 'host_attested_instruction', 'text': 'L1 explicitly authorizes membership changes within these named Page identities: ' + ','.join(page_ids)}},
+        base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+    prepare_editorial_project(project, review=False)
+
+
+def _mapped_manuscript_page(value):
+    """Author explicit unknown mappings for this imported L1 manuscript."""
+    page = copy.deepcopy(value)
+    if 'content_mapping' not in page:
+        notes = page.get('speaker_notes') or ''
+        page['content_mapping'] = {'narrative_ref': None, 'plan_role_page_id': page['page_id'],
+            'visible_links': [{'element_ref': atom, 'narrative_node_ids': [], 'source_links': []}
+                              for atom in sorted(atom_ids(page))],
+            'speech_segments': ([{'segment_id': 'imported-notes', 'start_codepoint': 0,
+                'end_codepoint': len(notes), 'narrative_node_ids': [], 'kind': 'cue',
+                'estimated_seconds': None}] if notes else [])}
+    return page
+
+
+def _inputs_update(project, **kwargs):
+    """Public input transaction; claims are explicit and separate from its receipt."""
+    return service.inputs_update(project, **kwargs)
+
+
+def _accept_result(project, **kwargs):
+    store = Store(project)
+    task = tasks_mod._lookup_task(store.load_document(), kwargs['task_id'], store)
+    value = copy.deepcopy(kwargs['result_payload'])
+    if task.get('protocol_version') == 'compose.v2' and task.get('intent') == 'input_revision' and 'content_update' in value:
+        update = value['content_update']
+        update['upsert_pages'] = [_mapped_manuscript_page(page) for page in update.get('upsert_pages', [])]
+        outline = copy.deepcopy(store.read_object_json(store.load_document()['content_plan'])['input'])
+        order = update.get('page_order') or outline['page_order']
+        old_roles = {role['page_id']: role for role in outline['page_roles']}
+        roles = []
+        for pid in order:
+            if pid in old_roles:
+                roles.append(old_roles[pid])
+            else:
+                roles.append({'page_id': pid, 'role': 'Explicit synthetic imported page',
+                    'audience_question': 'Unknown in this manuscript', 'intended_takeaway': 'Unknown in this manuscript',
+                    'narrative_node_ids': [], 'source_links': [], 'required_qualifications': [],
+                    'content_profile': 'mixed', 'density_rationale': 'Unmeasured imported copy',
+                    'timing_seconds': None, 'transition_to_next': None})
+        outline['page_roles'] = roles
+        outline['page_order'] = order
+        if order != store.read_object_json(store.load_document()['content_plan'])['input']['page_order']:
+            for chapter in outline['chapters']:
+                chapter['page_ids'] = [pid for pid in order if pid in chapter['page_ids']]
+            fresh = [pid for pid in order if pid not in old_roles]
+            if outline['chapters']:
+                outline['chapters'][-1]['page_ids'].extend(fresh)
+        value.setdefault('content_plan', outline)
+        original = value
+        value = v2_revision_envelope(store, task, value)
+        if not update.get('upsert_pages') and not update.get('remove_page_ids') and not update.get('unchanged_reason'):
+            value['payload']['diff']['summary'] = ''
+        for forbidden in ('pages', 'page_order', 'artifact_specs', 'reviews'):
+            if original.get(forbidden):
+                value[forbidden] = original[forbidden]
+    if task.get('protocol_version') == 'generation.v1' and task['kind'] == 'blueprint' and task['status'] in ('awaiting_host', 'running') and tasks_mod.task_inputs_current(store, store.load_document(), task):
+        return accept_synthetic_blueprint(project, task=task, result_payload=value,
+            execution_ref=task.get('execution_ref') or 'L1-flow-image-host', scenario='Classic flow fixture; isolated synthetic Codex events')
+    if task['status'] == 'awaiting_host' and tasks_mod.task_inputs_current(store, store.load_document(), task):
+        claim_fixture_task(project, task, execution_ref='L1-flow-host')
+    return service.accept_result(project, **{**kwargs, 'result_payload': value})
+
+
 def _setup_project_with_pages(tmp_path: Path):
     """A project whose pages exist (draft-adopted fixtures) and whose inputs
     match the live fixtures."""
@@ -456,6 +558,7 @@ def _setup_project_with_pages(tmp_path: Path):
         existing_decisions=task["existing_decisions"],
         draft={"pages": pages["pages"], "page_order": pages["page_order"]},
     )
+    prepare_editorial_project(project)
     store = Store(project)
     document = store.load_document()
     # Map fixture source ids onto the real uuid ids by file name.
@@ -484,7 +587,7 @@ def test_inputs_update_supersedes_and_dispatches(tmp_path: Path) -> None:
     patch = _load_fixture("update-interface.json")
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
     operation_id = "input-update-1"
-    result = service.inputs_update(
+    result = _inputs_update(
         project, patch=patch, base_revision=before_revision,
         operation_id=operation_id, patch_dir=FIXTURES)
     assert result["status"] == "updated"
@@ -514,7 +617,7 @@ def test_inputs_update_supersedes_and_dispatches(tmp_path: Path) -> None:
     assert replaced["original_sha256"] == _load_fixture("input-context-after.json")["sources"][2]["original_sha256"]
 
     # Idempotent retry returns the original result without a new revision.
-    replay = service.inputs_update(
+    replay = _inputs_update(
         project, patch=patch, base_revision=result["revision_id"],
         operation_id=operation_id, patch_dir=FIXTURES)
     assert replay == result
@@ -529,14 +632,14 @@ def test_inputs_update_conflicts(tmp_path: Path) -> None:
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
 
     with pytest.raises(InputRevisionConflict):
-        service.inputs_update(project, patch=patch, base_revision="stale-revision",
+        _inputs_update(project, patch=patch, base_revision="stale-revision",
                               operation_id="op-conflict", patch_dir=FIXTURES)
     # Same operation id, different content.
     other = {**patch, "reason": "另一个不同的变化"}
-    service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+    _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                           operation_id="op-dual", patch_dir=FIXTURES)
     with pytest.raises(InputRevisionConflict):
-        service.inputs_update(project, patch=other, base_revision=store.load_document()["revision_id"],
+        _inputs_update(project, patch=other, base_revision=store.load_document()["revision_id"],
                               operation_id="op-dual", patch_dir=FIXTURES)
 
 
@@ -549,7 +652,7 @@ def test_inputs_update_failure_keeps_state(tmp_path: Path) -> None:
              "source_changes": {"add": [{"path": "materials/missing.md"}]},
              "reason": "补一份缺失的材料"}
     with pytest.raises(SourceUnreadable):
-        service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+        _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                               operation_id="op-fail", patch_dir=FIXTURES)
     after = store.load_document()
     assert after["revision_id"] == document["revision_id"]
@@ -566,7 +669,7 @@ def test_inputs_update_display_name_only_does_not_dispatch(tmp_path: Path) -> No
              "source_changes": {"metadata": [{"source_id": id_by_name["company.md"],
                                               "name": "公司简介.md"}]},
              "reason": "只改显示名"}
-    result = service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+    result = _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                                    operation_id="op-name", patch_dir=FIXTURES)
     assert result["status"] == "unchanged"
     assert result["revision_id"] != document["revision_id"], "display-name change still commits"
@@ -584,13 +687,13 @@ def test_rename_source_keeps_existing_compose_task_usable(tmp_path: Path) -> Non
     task = created['pending_tasks'][0]
     store = Store(project)
     doc = store.load_document()
-    service.inputs_update(project, patch={'reason': '修正显示名', 'source_changes': {'metadata': [
+    _inputs_update(project, patch={'reason': '修正显示名', 'source_changes': {'metadata': [
         {'source_id': doc['sources'][0]['source_id'], 'name': '显示名.md'}]}},
         base_revision=doc['revision_id'], operation_id='rename-during-compose')
     assert service.task_status(project, task_id=task['task_id'])['pending_tasks'][0]['project_context']['context_status'] == 'current'
-    result = service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+    result = _accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
                                    produced_against=task['produced_against'],
-                                   result_payload={'kind': 'compose', **_load_fixture('initial-pages.json')})
+                                   result_payload=_framing_envelope(store, task))
     assert result['status'] == 'accepted'
 
 
@@ -603,7 +706,7 @@ def test_input_update_preserves_restrictions_and_marks_provided_mode(tmp_path: P
     doc = store.load_document()
     replacement = tmp_path / 'v2.md'
     replacement.write_text('已确认的第二版')
-    service.inputs_update(project, patch={'reason': '独立阅读与材料升级',
+    _inputs_update(project, patch={'reason': '独立阅读与材料升级',
         'task_patch': {'presentation_mode': 'read_alone'}, 'source_changes': {'replace': [
             {'source_id': doc['sources'][0]['source_id'], 'path': str(replacement), 'usage_note': ''}]}},
         base_revision=doc['revision_id'], operation_id='replace-restricted')
@@ -624,10 +727,10 @@ def test_input_update_receipt_survives_failure_after_pointer_swap(tmp_path: Path
         raise OSError('process interrupted after pointer swap')
     monkeypatch.setattr(Store, '_commit_locked', interrupted)
     with pytest.raises(OSError):
-        service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='durable-input')
+        _inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='durable-input')
     monkeypatch.setattr(Store, '_commit_locked', original)
     after = store.load_document()
-    result = service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='durable-input')
+    result = _inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='durable-input')
     assert result['revision_id'] == after['revision_id']
     assert store.load_document() == after
 
@@ -641,10 +744,10 @@ def test_uncommitted_input_receipt_is_not_reported_as_success(tmp_path: Path, mo
         raise OSError('process interrupted before pointer swap')
     monkeypatch.setattr(Store, '_commit_locked', interrupted)
     with pytest.raises(OSError):
-        service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='retry-input')
+        _inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='retry-input')
     assert store.load_document() == before
     monkeypatch.setattr(Store, '_commit_locked', original)
-    result = service.inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='retry-input')
+    result = _inputs_update(project, patch=patch, base_revision=before['revision_id'], operation_id='retry-input')
     assert result['revision_id'] == store.load_document()['revision_id'] != before['revision_id']
 
 
@@ -652,9 +755,9 @@ def test_delivery_reconciliation_reason_before_first_pptx(tmp_path: Path) -> Non
     from deck_master.editing import export_project
     from deck_master.errors import InputReconciliationPending
     project, store, _ = _setup_project_with_pages(tmp_path)
-    service.inputs_update(project, patch={'reason': '更换受众', 'task_patch': {'audience': '财务团队'}},
+    _inputs_update(project, patch={'reason': '更换受众', 'task_patch': {'audience': '财务团队'}},
                           base_revision=store.load_document()['revision_id'], operation_id='before-first-pptx')
-    with pytest.raises(InputReconciliationPending):
+    with pytest.raises((InputReconciliationPending, EligibilityBlocked)):
         export_project(project, output_dir=tmp_path / 'delivery', purpose='delivery')
 
 
@@ -664,7 +767,7 @@ def test_irrelevant_material_update_still_awaits_host_judgment(tmp_path: Path) -
     patch = {"task_patch": {},
              "source_changes": {"add": [{"path": "materials/unrelated-catalog.md"}]},
              "reason": "补一份无关设备清单"}
-    result = service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+    result = _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                                    operation_id="op-noise", patch_dir=FIXTURES)
     assert result["status"] == "updated"
     assert result["input_alignment"] == "needs_reconciliation"
@@ -702,7 +805,7 @@ def _accept_blueprint_envelope(project: Path, task: dict, page_entry: dict, png:
                            "invocation_ref": None, "generated_from_page": page_entry["page"]},
         }],
     }
-    return service.accept_result(
+    return _accept_result(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"], result_payload=envelope)
 
@@ -727,26 +830,26 @@ def test_superseded_task_late_result_is_refused(tmp_path: Path) -> None:
     task = opened["pending_tasks"][0]
     document = store.load_document()
     page_entry = next(e for e in document["pages"] if e["page_id"] == task["scope_pages"][0])
-    service.inputs_update(project, patch={"task_patch": {"audience": "董事会"},
+    _inputs_update(project, patch={"task_patch": {"audience": "董事会"},
                                           "reason": "用户改为董事会汇报"},
                           base_revision=document["revision_id"], operation_id="supersede-input")
-    from deck_master.tasks import StaleInputContext
     for _ in range(2):
-        with pytest.raises(StaleInputContext):
+        with pytest.raises(TaskConflict):
             _accept_blueprint_envelope(project, task, page_entry, _png_bytes())
     assert store.load_document()["pages"] == document["pages"]
 
 
 def test_input_revision_cannot_bypass_partial_update_with_full_pages(tmp_path: Path) -> None:
     project, store, _ = _setup_project_with_pages(tmp_path)
-    updated = service.inputs_update(
+    updated = _inputs_update(
         project, patch={"task_patch": {"audience": "董事会"}, "reason": "调整受众"},
         base_revision=store.load_document()["revision_id"], operation_id="changed-audience")
     task = updated["pending_tasks"][0]
+    claim_fixture_task(project, task, execution_ref='L1-invalid-full-result')
     before = store.load_document()
     payload = {"kind": "compose", **_load_fixture("initial-pages.json")}
-    with pytest.raises(EnvelopeError, match="content_update"):
-        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+    with pytest.raises((EnvelopeError, ModelError), match="compose_result|content_update"):
+        _accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
                               produced_against=task["produced_against"], result_payload=payload)
     assert store.load_document() == before
 
@@ -757,19 +860,29 @@ def test_input_revision_cannot_bypass_partial_update_with_full_pages(tmp_path: P
 ])
 def test_content_update_bad_shapes_are_controlled_errors(tmp_path: Path, invalid: dict) -> None:
     project, store, _ = _setup_project_with_pages(tmp_path)
-    updated = service.inputs_update(
+    updated = _inputs_update(
         project, patch={"task_patch": {"audience": "董事会"}, "reason": "调整受众"},
         base_revision=store.load_document()["revision_id"], operation_id="bad-result-shape")
     task = updated["pending_tasks"][0]
+    claim_fixture_task(project, task, execution_ref='L1-invalid-input-protocol')
     before = store.load_document()
-    update = {"input_digest": updated["input_digest"], "upsert_pages": [],
-              "remove_page_ids": [], "page_order": [e["page_id"] for e in before["pages"]],
-              "impact_summary": "逐页核对后没有正文变化", "unchanged_reason": "现有正文适合新受众",
-              **invalid}
-    with pytest.raises(EnvelopeError):
-        service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                              produced_against=task["produced_against"],
-                              result_payload={"kind": "compose", "content_update": update})
+    raw = tasks_mod._lookup_task(before, task['task_id'], store)
+    authored = {'kind': 'compose', 'content_update': {'input_digest': updated['input_digest'],
+        'upsert_pages': [], 'remove_page_ids': [], 'page_order': [e['page_id'] for e in before['pages']],
+        'unchanged_reason': 'Explicit L1 no-copy impact'},
+        'content_plan': store.read_object_json(before['content_plan'])['input']}
+    payload = v2_revision_envelope(store, raw, authored)
+    if 'remove_page_ids' in invalid:
+        payload['payload']['diff']['removed_page_ids'] = invalid['remove_page_ids']
+    elif 'upsert_pages' in invalid:
+        payload['payload']['proposals'] = invalid['upsert_pages']
+    elif 'unknown' in invalid:
+        payload['unknown'] = invalid['unknown']
+    else:
+        payload['payload']['diff']['summary'] = next(iter(invalid.values()))
+    with pytest.raises((EnvelopeError, ModelError)):
+        service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+            produced_against=task['produced_against'], result_payload=payload)
     assert store.load_document() == before
 
 
@@ -796,18 +909,18 @@ def test_content_update_roundtrip_changes_only_target_page(tmp_path: Path) -> No
     document = store.load_document()
     before = {e["page_id"]: e for e in document["pages"]}
     expected = _load_fixture('expected-effects.json')
-    assert {pid: entry['page']['sha256'] for pid, entry in before.items()} == expected['before_page_hashes']
+    assert {pid: _original_copy_hash(store.read_object_json(entry['page'])) for pid, entry in before.items()} == expected['before_page_hashes']
 
     patch = _load_fixture("update-interface.json")
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
-    update = service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+    update = _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                                    operation_id="input-update-rt", patch_dir=FIXTURES)
     document = store.load_document()
     task = next(t for t in (store.read_object_json(r) for r in document["tasks"])
                 if t.get("intent") == "input_revision")
     payload = _load_fixture("result-input-revision.json")
     payload["content_update"]["input_digest"] = update["input_digest"]
-    outcome = service.accept_result(
+    outcome = _accept_result(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"], result_payload=payload)
     assert outcome["status"] == "accepted"
@@ -821,7 +934,7 @@ def test_content_update_roundtrip_changes_only_target_page(tmp_path: Path) -> No
             old_file = store.read_object_json(before[pid][slot])['file']
             new_file = store.read_object_json(after[pid][slot])['file']
             assert store.read_object_bytes(old_file) == store.read_object_bytes(new_file)
-    assert {pid: entry['page']['sha256'] for pid, entry in after.items()} == expected['after_page_hashes']
+    assert {pid: _original_copy_hash(store.read_object_json(entry['page'])) for pid, entry in after.items()} == expected['after_page_hashes']
     assert after["p03"]["page"]["sha256"] == outcome["new_page_hashes"]["p03"]
     assert after["p03"]["blueprint"] == before["p03"]["blueprint"], "original blueprint is kept"
     assert after_doc["outputs"] == dict.fromkeys(document["outputs"]), "changed content retires deck outputs"
@@ -854,7 +967,7 @@ def test_content_update_rejections(tmp_path: Path) -> None:
     document = store.load_document()
     patch = _load_fixture("update-interface.json")
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
-    update = service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+    update = _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                                    operation_id="input-update-rj", patch_dir=FIXTURES)
     document = store.load_document()
     task = next(t for t in (store.read_object_json(r) for r in document["tasks"])
@@ -863,7 +976,7 @@ def test_content_update_rejections(tmp_path: Path) -> None:
     base_payload["content_update"]["input_digest"] = update["input_digest"]
 
     def submit(payload):
-        return service.accept_result(
+        return _accept_result(
             project, task_id=task["task_id"], operation_id=task["operation_id"],
             produced_against=task["produced_against"], result_payload=payload)
 
@@ -890,6 +1003,7 @@ def test_content_update_rejections(tmp_path: Path) -> None:
     no_reason = json.loads(json.dumps(base_payload, ensure_ascii=False))
     no_reason["content_update"]["upsert_pages"] = []
     no_reason["content_update"].pop("unchanged_reason", None)
+    no_reason["content_update"]["impact_summary"] = ""
     with pytest.raises(EnvelopeError):
         submit(no_reason)
 
@@ -898,16 +1012,16 @@ def test_content_update_rejections(tmp_path: Path) -> None:
     with pytest.raises(EnvelopeError):
         submit(with_artifact)
 
-    # A plain (initial) compose task must not accept content_update.
-    initial = next(t for t in (store.read_object_json(r) for r in document["tasks"])
-                   if t["kind"] == "compose" and t.get("intent", "initial") == "initial"
-                   and t["status"] == "completed")
-    # Refused either as an envelope error (wrong task intent) or as a journal
-    # conflict (this operation already produced a different result).
-    with pytest.raises((EnvelopeError, TaskConflict)):
-        service.accept_result(
-            project, task_id=initial["task_id"], operation_id=initial["operation_id"],
-            produced_against=initial["produced_against"], result_payload=base_payload)
+    # A real initial framing Task cannot accept reconciliation instead.
+    other = project.parent / 'initial-protocol'
+    initial = service.create(other, brief='L1 initial request')['pending_tasks'][0]
+    claim_fixture_task(other, initial)
+    wrong = _framing_envelope(Store(other), initial)
+    wrong['variant'] = 'input_revision'
+    wrong['payload'] = {'changed_layers': ['plan'], 'proposals': [], 'diff': {'summary': 'Wrong phase'}}
+    with pytest.raises((EnvelopeError, ModelError, TaskConflict)):
+        service.accept_result(other, task_id=initial['task_id'], operation_id=initial['operation_id'],
+            produced_against=initial['produced_against'], result_payload=wrong)
 
 
 def test_needs_reconciliation_gates_delivery_and_handoff(tmp_path: Path) -> None:
@@ -919,14 +1033,21 @@ def test_needs_reconciliation_gates_delivery_and_handoff(tmp_path: Path) -> None
     document = store.load_document()
     patch = _load_fixture("update-interface.json")
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
-    service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+    _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                           operation_id="input-update-gate", patch_dir=FIXTURES)
 
     # Keep a valid PPTX so review export also exercises privacy sanitation.
     document = store.load_document()
     from pptx import Presentation
     from deck_master.pipeline import artifact
-    ppt_file=tmp_path/'valid.pptx';Presentation().save(ppt_file)
+    ppt_file=tmp_path/'valid.pptx'
+    presentation = Presentation()
+    for _ in document['pages']:
+        presentation.slides.add_slide(presentation.slide_layouts[6])
+    presentation.save(ppt_file)
+    from deck_master.compiler.native import attach_notes
+    ppt_file.write_bytes(attach_notes(ppt_file.read_bytes(), [{'page_id': entry['page_id'],
+        'notes': store.read_object_json(entry['page']).get('speaker_notes', '')} for entry in document['pages']]))
     pptx_ref=artifact(store,ppt_file,'pptx')
     from deck_master.models import bump_revision as _bump
     bumped = _bump(document, {"operation_id": "probe-output", "kind": "task_update",
@@ -934,7 +1055,7 @@ def test_needs_reconciliation_gates_delivery_and_handoff(tmp_path: Path) -> None
     bumped["outputs"]["pptx"] = pptx_ref
     store._commit_locked(base_revision=document["revision_id"], document=bumped, blobs=[])
 
-    with pytest.raises(InputReconciliationPending):
+    with pytest.raises((InputReconciliationPending, EligibilityBlocked)):
         export_project(project, output_dir=tmp_path / "delivery-out", purpose="delivery")
     fake_pptx = tmp_path / "candidate.pptx"
     fake_pptx.write_bytes(b"PK\x03\x04 not a real deck")
@@ -957,14 +1078,14 @@ def test_view_carries_reconciliation_banner_data(tmp_path: Path) -> None:
     document = store.load_document()
     patch = _load_fixture("update-interface.json")
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
-    service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+    _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                           operation_id="input-update-view", patch_dir=FIXTURES)
     view = project_view(project)
     assert view["input_alignment"] == "needs_reconciliation"
     assert view["reconciliation"]["notice"] == "待按新要求更新"
     assert view["reconciliation"]["reason"] == patch["reason"]
     # A later display-name-only commit must not hide the outstanding reason.
-    service.inputs_update(project, patch={"reason": "只改显示名", "source_changes": {"metadata": [
+    _inputs_update(project, patch={"reason": "只改显示名", "source_changes": {"metadata": [
         {"source_id": id_by_name["company.md"], "name": "公司简介.md"}]}},
         base_revision=store.load_document()["revision_id"], operation_id="rename-after-input-update")
     assert project_view(project)["reconciliation"]["reason"] == patch["reason"]
@@ -1030,19 +1151,26 @@ def _add_final_review(store, doc, kind, page_ids, status="pass") -> None:
     doc["reviews"] = list(doc.get("reviews") or []) + [store.put_json_object(review)]
 
 
-def _force_fake_output(store) -> None:
+def _force_fake_output(store):
+    """Attach an actual synthetic PPTX; no engineering/professional approval."""
+    from pptx import Presentation
+    from deck_master.pipeline import artifact
     document = store.load_document()
-    pptx_ref = store.put_json_object({"schema_version": "deck_artifact.v1",
-                                      "artifact_id": "probe-pptx", "page_id": None,
-                                      "role": "probe", "file": document["pages"][0]["page"],
-                                      "media_type": "application/json", "created_at": "1970",
-                                      "dependencies": [], "derived_from": [], "provenance": {},
-                                      "reference_regions": [], "limitations": [],
-                                      "editability": "probe"})
-    bumped = bump_revision(document, {"operation_id": "probe-output", "kind": "task_update",
-                                      "description": "probe output", "read_set": []})
-    bumped["outputs"]["pptx"] = pptx_ref
-    store._commit_locked(base_revision=document["revision_id"], document=bumped, blobs=[])
+    ppt = Presentation()
+    for entry in document['pages']:
+        slide = ppt.slides.add_slide(ppt.slide_layouts[6])
+        slide.shapes.add_textbox(0, 0, 100, 100).text = entry['page_id']
+    path = store.staging_dir / 'L1-flow-review.pptx'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    ppt.save(path)
+    from deck_master.compiler.native import attach_notes
+    path.write_bytes(attach_notes(path.read_bytes(), [{'page_id': entry['page_id'],
+        'notes': store.read_object_json(entry['page']).get('speaker_notes', '')} for entry in document['pages']]))
+    ref = artifact(store, path, 'pptx')
+    bumped = bump_revision(document, {'operation_id': 'probe-output', 'kind': 'task_update',
+        'description': 'Actual L1 synthetic PPTX, no production approval', 'read_set': []})
+    bumped['outputs']['pptx'] = ref
+    store._commit_locked(base_revision=document['revision_id'], document=bumped, blobs=[])
 
 
 def test_final_units_list_only_real_gaps(tmp_path: Path) -> None:
@@ -1089,7 +1217,7 @@ def test_units_relist_content_and_privacy_after_input_change(tmp_path: Path) -> 
                                                       "read_set": []}), blobs=[])
     patch = _load_fixture("update-interface.json")
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
-    service.inputs_update(project, patch=patch, base_revision=store.load_document()["revision_id"],
+    _inputs_update(project, patch=patch, base_revision=store.load_document()["revision_id"],
                           operation_id="input-update-units", patch_dir=FIXTURES)
     doc = store.load_document()
     summary = check_summary(store, doc)
@@ -1111,11 +1239,11 @@ def test_reconciliation_without_page_changes_still_requires_new_input_review(tmp
         _add_final_review(store, doc, kind, page_ids)
     _raw_commit(store, lambda current: current.update(reviews=doc["reviews"]))
     before = store.load_document()
-    update = service.inputs_update(
+    update = _inputs_update(
         project, patch={"task_patch": {"audience": "新评审团队"}, "reason": "更换受众"},
         base_revision=before["revision_id"], operation_id="update-after-review")
     task = update["pending_tasks"][0]
-    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
+    _accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
                           produced_against=task["produced_against"], result_payload={
                               "kind": "compose", "content_update": {
                                   "input_digest": update["input_digest"], "upsert_pages": [],
@@ -1169,10 +1297,10 @@ def test_skills_tree_reduced_to_deck_master_and_resolver() -> None:
     repo = Path(service.__file__).resolve().parents[2]
     skills = repo / "skills"
     entries = sorted(p.name for p in skills.iterdir())
-    assert entries == ["RESOLVER.md", "deck-master"]
+    assert entries == ["RESOLVER.md", "deck-content", "deck-design", "deck-master", "deck-review"]
     resolver = (skills / "RESOLVER.md").read_text(encoding="utf-8").strip()
-    assert "skills/deck-master/SKILL.md" in resolver
-    assert len(resolver.splitlines()) == 1
+    assert all(name in resolver for name in ("deck-master", "deck-content", "deck-design", "deck-review"))
+    assert all(name in resolver for name in ("deck-master", "deck-content", "deck-design", "deck-review"))
 
 
 def test_old_skill_names_gone_from_living_surfaces(monkeypatch) -> None:
@@ -1182,7 +1310,7 @@ def test_old_skill_names_gone_from_living_surfaces(monkeypatch) -> None:
 
     repo = Path(service.__file__).resolve().parents[2]
     pattern = ("deck-autopilot|deck-brief|deck-builder|deck-doctor|deck-init|deck-learn|"
-               "deck-planner|deck-producer|deck-quality|deck-review|deck-setup|"
+               "deck-planner|deck-producer|deck-quality|deck-setup|"
                "deck-sourcing|deck-upgrade|ppt-deck-pro-max|ppt-quality-gate|ppt-master")
     excluded = {'__pycache__', '.pytest_cache', '.venv', 'venv', 'node_modules',
                 'build', 'dist', 'skills-references'}
@@ -1216,27 +1344,15 @@ def test_delivery_gate_surfaces_exit_3_code_via_cli(tmp_path: Path, capsys) -> N
     document = store.load_document()
     patch = _load_fixture("update-interface.json")
     patch["source_changes"]["replace"][0]["source_id"] = id_by_name["interface-v1.md"]
-    service.inputs_update(project, patch=patch, base_revision=document["revision_id"],
+    _inputs_update(project, patch=patch, base_revision=document["revision_id"],
                           operation_id="input-update-cli", patch_dir=FIXTURES)
-    # Minimal current output so the delivery gate (not the missing-output
-    # check) is what refuses.
-    document = store.load_document()
-    pptx_ref = store.put_json_object({"schema_version": "deck_artifact.v1",
-                                      "artifact_id": "probe-pptx", "page_id": None,
-                                      "role": "probe", "file": document["pages"][0]["page"],
-                                      "media_type": "application/json", "created_at": "1970",
-                                      "dependencies": [], "derived_from": [], "provenance": {},
-                                      "reference_regions": [], "limitations": [],
-                                      "editability": "probe"})
-    bumped = bump_revision(document, {"operation_id": "probe-output-cli", "kind": "task_update",
-                                      "description": "probe output", "read_set": []})
-    bumped["outputs"]["pptx"] = pptx_ref
-    store._commit_locked(base_revision=document["revision_id"], document=bumped, blobs=[])
+    _force_fake_output(store)
     code = cli.main(["export", "--project", str(project), "--out", str(tmp_path / "gate-out"),
                      "--purpose", "delivery"])
     assert code == 3
     payload = json.loads(capsys.readouterr().err)
-    assert payload["error"]["code"] == "input_reconciliation_pending"
+    assert payload['error']['code'] in ('input_reconciliation_pending', 'eligibility_blocked')
+    assert 'input_reconciliation_pending' in json.dumps(payload)
     assert not (tmp_path / "gate-out").exists()
 
 
@@ -1259,8 +1375,10 @@ def test_revision_invalidates_changed_deck_outputs(tmp_path, mode):
     import copy
     project, store, _ = _setup_project_with_pages(tmp_path)
     _force_fake_output(store)
+    if mode == 'add':
+        _include_new_page_scope(project, ['p01', 'p02', 'p03', 'p04'])
     before = store.load_document()
-    update = service.inputs_update(project, patch={'reason': 'review regression', 'task_patch': {'audience': 'new audience'}},
+    update = _inputs_update(project, patch={'reason': 'review regression', 'task_patch': {'audience': 'new audience'}},
                                    base_revision=before['revision_id'], operation_id='rev-output')
     assert store.load_document()['outputs'] == before['outputs']
     order = [entry['page_id'] for entry in before['pages']]
@@ -1272,12 +1390,13 @@ def test_revision_invalidates_changed_deck_outputs(tmp_path, mode):
     elif mode in ('add', 'edit'):
         page = copy.deepcopy(store.read_object_json(before['pages'][0]['page']))
         if mode == 'add':
-            page['page_id'] = 'p04'
+            from test_content_ops import derived_page
+            page = derived_page(page, 'p04')
             order.append('p04')
         page['customer_visible']['title'] = 'Changed title'
         upserts = [page]
     task = update['pending_tasks'][0]
-    service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+    _accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
                           produced_against=task['produced_against'], result_payload={'kind': 'compose', 'content_update': {
                               'input_digest': update['input_digest'], 'upsert_pages': upserts,
                               'remove_page_ids': removes, 'page_order': order, 'unchanged_reason': 'Only ordering or no content change'}})
@@ -1295,12 +1414,12 @@ def test_restore_keeps_historical_content_basis(tmp_path, legacy, changed_input)
         _raw_commit(store, lambda doc: doc.pop('content_basis', None))
     past = store.load_document()
     if changed_input:
-        update = service.inputs_update(project, patch={'reason': 'reading mode', 'task_patch': {'presentation_mode': 'read_alone'}},
+        update = _inputs_update(project, patch={'reason': 'reading mode', 'task_patch': {'presentation_mode': 'read_alone'}},
                                        base_revision=past['revision_id'], operation_id='restore-input')
         task = update['pending_tasks'][0]
         page = store.read_object_json(past['pages'][0]['page'])
         page['customer_visible']['title'] = 'New reading copy'
-        service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+        _accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
                               produced_against=task['produced_against'], result_payload={'kind': 'compose', 'content_update': {
                                   'input_digest': update['input_digest'], 'upsert_pages': [page],
                                   'remove_page_ids': [], 'page_order': [e['page_id'] for e in past['pages']]}})
@@ -1317,10 +1436,10 @@ def test_cancelled_revision_recovers_once_and_refuses_late_result(tmp_path):
     from concurrent.futures import ThreadPoolExecutor
     project, store, _ = _setup_project_with_pages(tmp_path)
     patch = {'reason': 'new audience', 'task_patch': {'audience': 'new audience'}}
-    update = service.inputs_update(project, patch=patch, base_revision=store.load_document()['revision_id'], operation_id='cancel-input')
+    update = _inputs_update(project, patch=patch, base_revision=store.load_document()['revision_id'], operation_id='cancel-input')
     old = update['pending_tasks'][0]
     service.task_cancel(project, task_id=old['task_id'])
-    assert service.inputs_update(project, patch=patch, base_revision=store.load_document()['revision_id'], operation_id='same-patch')['status'] == 'unchanged'
+    assert _inputs_update(project, patch=patch, base_revision=store.load_document()['revision_id'], operation_id='same-patch')['status'] == 'unchanged'
     with ThreadPoolExecutor(max_workers=2) as pool:
         responses = list(pool.map(lambda _: service.continue_project(project), range(2)))
     pending = [r['pending_tasks'][0] for r in responses]
@@ -1331,7 +1450,7 @@ def test_cancelled_revision_recovers_once_and_refuses_late_result(tmp_path):
     assert new['task_id'] == pending[0]['task_id']
     assert service.task_status(project, task_id=old['task_id'])['status'] == 'cancelled'
     with pytest.raises(TaskConflict):
-        service.accept_result(project, task_id=old['task_id'], operation_id=old['operation_id'], produced_against=old['produced_against'],
+        _accept_result(project, task_id=old['task_id'], operation_id=old['operation_id'], produced_against=old['produced_against'],
                               result_payload={'kind': 'compose', 'content_update': {'input_digest': update['input_digest'],
                                   'upsert_pages': [], 'remove_page_ids': [], 'page_order': ['p01', 'p02', 'p03'], 'unchanged_reason': 'no change'}})
 
@@ -1342,7 +1461,9 @@ def test_restore_empty_removes_basis_and_preserves_stop_policy(tmp_path):
     service.create(project, brief='empty baseline')
     store = Store(project)
     empty = store.load_document()
-    service.import_draft(project, draft_payload=_load_fixture('initial-pages.json'))
+    _include_new_page_scope(project, ['p01', 'p02', 'p03'])
+    service.import_draft(project, draft_payload=_load_fixture('initial-pages.json'),
+        base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
     _raw_commit(store, lambda doc: doc.update(content_basis={'input_digest': compute_input_digest(doc)},
                                              policy={**doc['policy'], 'user_stop': True}))
     current = store.load_document()
@@ -1357,7 +1478,7 @@ def test_restore_reconciliation_dispatch_uses_restore_operation(tmp_path):
     from deck_master.editing import restore
     project, store, _ = _setup_project_with_pages(tmp_path)
     old = store.load_document()
-    service.inputs_update(project, patch={'reason': 'new audience', 'task_patch': {'audience': 'other'}},
+    _inputs_update(project, patch={'reason': 'new audience', 'task_patch': {'audience': 'other'}},
                           base_revision=old['revision_id'], operation_id='changed-audience')
     restore(project, revision_id=old['revision_id'], base_revision=store.load_document()['revision_id'], operation_id='restore-old')
     response = service.continue_project(project)
@@ -1391,6 +1512,9 @@ def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_fami
 
     project = tmp_path / 'real-deck'
     service.create(project, brief='Synthetic render regression', draft={'pages': [page('p01'), page('p02'), page('p03')]})
+    if mode == 'add':
+        _include_new_page_scope(project, ['p01', 'p02', 'p03', 'p04'])
+    prepare_editorial_project(project)
     store = Store(project)
     png = tmp_path / 'reference.png'
     Image.new('RGB', (960, 540), 'white').save(png)
@@ -1410,11 +1534,21 @@ def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_fami
             entry['svg'] = artifact(store, svg, 'svg', page_id=entry['page_id'])
 
     _raw_commit(store, attach_missing_svgs)
+    from test_tasks import qualify_render_fixture
+    qualify_render_fixture(project)
     assert produce(project)['status'] == 'pass'
     before = store.load_document()
     old_file = tmp_path / 'old.pptx'
     old_file.write_bytes(store.read_object_bytes(store.read_object_json(before['outputs']['pptx'])['file']))
-    update = service.inputs_update(project, patch={'reason': 'revised deck', 'task_patch': {'audience': 'new audience'}},
+    def assert_old_file_refused():
+        report = check_handoff(project, file_path=old_file, purpose='review')
+        assert report['status'] == 'blocked'
+        assert 'candidate_not_current_output' in report['gaps']
+        assert report['file_sha256'] == hashlib.sha256(old_file.read_bytes()).hexdigest()
+        with pytest.raises(StoreError):
+            check_handoff(project, file_path=old_file, purpose='delivery')
+
+    update = _inputs_update(project, patch={'reason': 'revised deck', 'task_patch': {'audience': 'new audience'}},
                                    base_revision=before['revision_id'], operation_id='render-update')
     order, remove, upserts = ['p01', 'p02', 'p03'], [], []
     if mode == 'reorder':
@@ -1429,14 +1563,17 @@ def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_fami
         changed['customer_visible']['title'] = 'Updated'
         upserts = [changed]
     task = update['pending_tasks'][0]
-    service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+    _accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
                           produced_against=task['produced_against'], result_payload={'kind': 'compose', 'content_update': {
                               'input_digest': update['input_digest'], 'upsert_pages': upserts, 'remove_page_ids': remove,
                               'page_order': order, 'unchanged_reason': 'Only ordering'}})
-    with pytest.raises(StoreError, match='no current PPT'):
+    assert store.load_document()['outputs']['pptx'] is None
+    with pytest.raises(StoreError):
         export_project(project, output_dir=tmp_path / 'delivery', purpose='delivery')
-    assert check_handoff(project, file_path=old_file, purpose='delivery')['status'] == 'blocked'
+    assert_old_file_refused()
+    prepare_editorial_project(project)
     _raw_commit(store, attach_missing_svgs)
+    qualify_render_fixture(project)
     for _ in range(6):
         response = service.continue_project(project)
         task = response['pending_tasks'][0]
@@ -1451,21 +1588,21 @@ def test_revised_deck_recompiles_real_slide_order(tmp_path, resolvable_font_fami
         slides = sorted(name for name in deck.namelist() if name.startswith('ppt/slides/slide') and name.endswith('.xml'))
         texts = [''.join(ET.fromstring(deck.read(name)).itertext()) for name in slides]
     assert texts == [('Updated' if mode == 'edit' and pid == 'p01' else pid) for pid in order]
-    assert check_handoff(project, file_path=old_file, purpose='delivery')['status'] == 'blocked'
+    assert_old_file_refused()
 
 
-def test_resume_retires_incompatible_tasks_and_keeps_change_reason(tmp_path):
+def test_resume_keeps_retired_task_history_and_original_change_reason(tmp_path):
     from deck_master.view import project_view
     project, store, ids = _setup_project_with_pages(tmp_path)
-    update = service.inputs_update(project, patch={'reason': 'Original requirement', 'task_patch': {'audience': 'new team'}},
+    repair = service.open_host_task(store, kind='repair', page_ids=['p01'], instruction='obsolete page repair')
+    update = _inputs_update(project, patch={'reason': 'Original requirement', 'task_patch': {'audience': 'new team'}},
                                    base_revision=store.load_document()['revision_id'], operation_id='original-input')
     old = update['pending_tasks'][0]
     service.task_cancel(project, task_id=old['task_id'])
-    service.inputs_update(project, patch={'reason': 'Only display name', 'source_changes': {'metadata': [
+    _inputs_update(project, patch={'reason': 'Only display name', 'source_changes': {'metadata': [
         {'source_id': ids['company.md'], 'name': 'Renamed.md'}]}},
         base_revision=store.load_document()['revision_id'], operation_id='rename')
     resumed = service.continue_project(project)['pending_tasks'][0]
-    repair = service.open_host_task(store, kind='repair', page_ids=['p01'], instruction='obsolete page repair')
     pending = service.continue_project(project)['pending_tasks']
     assert [t['task_id'] for t in pending] == [resumed['task_id']]
     assert service.task_status(project, task_id=repair['task_id'])['status'] == 'superseded'
@@ -1473,7 +1610,7 @@ def test_resume_retires_incompatible_tasks_and_keeps_change_reason(tmp_path):
     stored = next(store.read_object_json(ref) for ref in store.load_document()['tasks']
                   if store.read_object_json(ref)['task_id'] == resumed['task_id'])
     assert stored['input_revision_id'] == 'original-input'
-    result = service.accept_result(project, task_id=resumed['task_id'], operation_id=resumed['operation_id'],
+    result = _accept_result(project, task_id=resumed['task_id'], operation_id=resumed['operation_id'],
                                    produced_against=resumed['produced_against'], result_payload={'kind': 'compose', 'content_update': {
                                        'input_digest': stored['input_digest'], 'upsert_pages': [], 'remove_page_ids': [],
                                        'page_order': ['p01', 'p02', 'p03'], 'unchanged_reason': 'Checked current copy'}})

@@ -45,9 +45,16 @@ def _declaration_file(path, *, request=False):
     return value
 
 
-def _fail(exc: Exception) -> int:
+def _fail(exc: Exception, *, legacy_command=None) -> int:
     from .pipeline import NeedsTool
     from .workbench import ReadModelError
+    from .eligibility import EligibilityBlocked
+
+    if (isinstance(exc, EligibilityBlocked) and legacy_command in ('export', 'handoff-check')
+            and set(exc.decision['reason_codes']) == {'professional_review_required'}):
+        # CONTRACTS §12 preserves the older export/handoff waiting-for-review
+        # exit 3. New authority/migration gaps and collaboration API remain 4.
+        return _emit_and_exit(exc.payload(), 3)
 
     if isinstance(exc, ReadModelError):
         return _emit_and_exit(exc.payload(), exc.exit_code)
@@ -698,7 +705,7 @@ def main(argv: list[str] | None = None) -> int:
         if options.command == "task":
             return _dispatch_task(options)
     except (EnvelopeError, ModelError, ServiceError, TaskConflict, FileNotFoundError, StoreError) as exc:
-        return _fail(exc)
+        return _fail(exc, legacy_command=options.command)
     except json.JSONDecodeError as exc:
         return _emit_and_exit(_error("invalid_input", f"unreadable JSON input: {exc}", "fix the JSON file"), 2)
     except SvgError as exc:

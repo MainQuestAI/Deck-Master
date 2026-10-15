@@ -54,6 +54,36 @@ def test_content_intents_route_without_becoming_authority(text, intent):
     assert route['authority'] == 'routing_suggestion_only'
 
 
+@pytest.mark.parametrize(('text', 'skill'), [
+    ('请给固定p2新损伤处置页出视觉方案，清楚保留停阅→保持原状→通知保管员以及保管员确认恢复；不要生图，不改正文。', 'deck-design'),
+    ('请为灾后恢复流程设计样页，不要制作整套文件。', 'deck-design'),
+    ('Design a sample page explaining how to resume archive services; preserve the fixed copy.', 'deck-design'),
+    ('只写设备继续运行前的核验讲稿。', 'deck-content'),
+    ('请恢复之前的项目，接着完成现有工作。', 'deck-master'),
+    ('继续当前任务，沿已批准范围执行。', 'deck-master'),
+    ('Please resume the previous project using the saved request.', 'deck-master'),
+    ('Continue the complete deck within the existing request', 'deck-master'),
+    ('Please continue designing a sample page for the current bounded request.', 'deck-design'),
+    ('只写讲稿，不要审稿，也不要设计。', 'deck-content'),
+    ('请为审查流程这一页出视觉方案，不要改正文。', 'deck-design'),
+    ('请审查已有文件，指出实际缺口，不修改。', 'deck-review'),
+])
+def test_business_recovery_words_do_not_override_the_requested_responsibility(text, skill):
+    assert method_resources.route_skill(text) == skill
+    result = method_resources.read_skill_methods(skill, entry_mode='natural', text=text)
+    assert result['skill'] == skill and result['host_application'] == 'not_recorded'
+
+
+@pytest.mark.parametrize(('text', 'intent'), [
+    ('只写正文，不要讲稿。', 'write_only'),
+    ('只写讲稿，不要正文，不审稿。', 'speech_only'),
+    ('只做内容策划，不要写稿和讲稿。', 'plan_only'),
+])
+def test_negated_subintents_do_not_override_the_affirmative_content_request(text, intent):
+    route = method_resources.route_request(text)
+    assert route['skill'] == 'deck-content' and route['content_intent'] == intent
+
+
 def test_real_framing_workorder_and_responsibility_mismatch(tmp_path):
     project = tmp_path / 'project'
     response = service.create(project, brief='planning only, synthetic input')

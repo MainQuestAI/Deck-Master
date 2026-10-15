@@ -422,6 +422,8 @@ textarea{font-size:14px;line-height:1.7}
 .collaboration-record {border-top:1px solid var(--border,#e5e5e5);padding:12px 0;overflow-wrap:anywhere;}
 .delivery-judgement {border:1px solid var(--border,#e5e5e5);border-radius:12px;padding:16px;background:var(--surface-warm,#fafafa);overflow-wrap:anywhere;}
 .collaboration-admission {overflow-wrap:anywhere;}
+.draft-intake,.draft-import-impact {min-width:0;overflow-wrap:anywhere;}
+.draft-intake ol,.draft-import-impact ol {margin:0;padding-inline-start:24px;}
 .topbar .current-control-facts {min-width:0;flex:0 1 240px;margin-left:auto;}
 .collaboration-control {min-width:0;}
 .collaboration-control>button {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;min-height:44px;}

@@ -86,6 +86,7 @@ SERVICE_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
                       "(unchanged protocol, CONTRACTS §6.1 accept_result exception), then "
                       "adoption consumes the gate", None),
     "import_draft": ("import_draft", "service.import_draft → project_initialization.adopt_manuscript; private canonical create for new projects, scoped CAS import for existing projects", None),
+    "preview_draft_import": (None, "-", READ_REASONS['read_analysis']),
     "import_asset": ("asset.import", "service.import_asset: guard before the design commit", None),
     "update_design": ("design.update", "service.update_design: guard before the design commit", None),
     "task_start": ("task.start", "service.task_start: guard before the claim commit", None),
@@ -152,6 +153,7 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration_api.invoke[migration.apply]": ("migration.apply", "collaboration_migration.apply", None),
     "collaboration_api.invoke[review.import]": ("review.import", "review_import.import_report", None),
     "collaboration_api.invoke[draft.import]": ("import_draft", "service.import_draft", None),
+    "collaboration_api.invoke[draft.preview]": (None, "-", READ_REASONS['read_analysis']),
     "collaboration_api.invoke[continue]": ("continue_project", "service.continue_project; its actual dispatch helpers enforce production gates", None),
 }
 
@@ -394,6 +396,7 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "POST /api/projects/{project_id}/reviews/import": ("review.import", "collaboration_api.invoke → review_import.import_report", None),
     "POST /api/projects/{project_id}/reviews/bindings": (None, "-", READ_REASONS["read_model"]),
     "POST /api/projects/{project_id}/draft/import": ("import_draft", "collaboration_api.invoke → service.import_draft", None),
+    "POST /api/projects/{project_id}/draft/preview": (None, "-", READ_REASONS['read_analysis']),
     "POST /api/projects/{project_id}/continue": ("continue_project", "collaboration_api.invoke → service.continue_project; every real dispatch consumes the shared core gate", None),
     "GET /api/projects/{project_id}/delivery-eligibility": (None, "-", READ_REASONS["read_model"]),
     "POST /api/reviews/evaluate": (None, "-", READ_REASONS["external_report"]),

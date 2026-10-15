@@ -7,6 +7,7 @@ minimum basis, P1-5 delegation-chain effectiveness, and the P2 fixes
 import hashlib
 
 import pytest
+from rc3_fixtures import historical_snapshot
 
 from synthetic_review_provider import synthetic_user_context, synthetic_runtime_call
 
@@ -111,11 +112,11 @@ def test_natural_retry_with_same_base_revision_replays(tmp_path):
 
 
 def test_migration_apply_replays_before_cas(tmp_path):
-    project = tmp_path / "legacy"
-    service.create(project, brief="legacy", draft={"pages": [{
-        "schema_version": "deck_page_package.v2", "page_id": "p1",
-        "customer_visible": {"title": "t", "body_blocks": [{"id": "b1", "type": "paragraph", "text": "x"}]},
-        "visual_spec": {"intent": "i", "reference_mode": "new_design"}}]})
+    project = historical_snapshot(tmp_path, scenario="L1 legacy migration receipt replay",
+        pages=[{"schema_version": "deck_page_package.v2", "page_id": "p1",
+            "customer_visible": {"title": "t", "body_blocks": [
+                {"id": "b1", "type": "paragraph", "text": "x"}]},
+            "visual_spec": {"intent": "i", "reference_mode": "new_design"}}])["project"]
     store = Store(project)
     base = store.load_document()["revision_id"]
     description = collaboration_migration.describe(project)

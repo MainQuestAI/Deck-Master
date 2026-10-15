@@ -484,6 +484,10 @@ def validate_content_plan_semantics(plan: dict[str, Any], *, require_page_links=
         if unknown:
             raise ModelError(f"content_plan/input/chapters/{chapter.get('chapter_id')}",
                              f"chapter pages outside page_order: {unknown}")
+    chapter_pages = [pid for chapter in data.get('chapters') or [] for pid in chapter.get('page_ids') or []]
+    if (plan.get('mode') != 'imported_mapping' or chapter_pages) and (
+            set(chapter_pages) != set(page_order) or len(chapter_pages) != len(set(chapter_pages))):
+        raise ModelError('content_plan/input/chapters', 'chapters cover every planned page exactly once')
     issue_ids = [issue.get("issue_id") for issue in data.get("issues") or []]
     if len(issue_ids) != len(set(issue_ids)):
         raise ModelError("content_plan/input/issues", "duplicate issue_id")

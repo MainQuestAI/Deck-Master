@@ -3,15 +3,16 @@ and the dispatch gate (CONTRACTS §5, §6.3, §7).
 
 The binding is built by the Runtime: a Host never submits one, cannot omit a
 registered dependency, and cannot skip a required decision by claiming there is
-none. Projects below the collaboration.v1 writer keep their exact old dispatch.
+none. Historical readers remain inert; new formal dispatch requires explicit migration.
 """
 import hashlib
 
 import pytest
 
-from deck_master import collaboration, collaboration_binding, content_production, models, service
+from deck_master import collaboration, collaboration_binding, content_production, eligibility, models, service
 from deck_master.models import ModelError, bump_revision, require_writer
 from deck_master.store import Store
+from rc3_fixtures import historical_snapshot
 
 
 def _stored(store, seed: str) -> dict:
@@ -366,12 +367,15 @@ def test_host_and_blueprint_dispatch_receive_their_phase_binding(tmp_path):
     assert task["collaboration_binding"]["phase"] == "production"
 
 
-def test_gate_is_inert_below_the_collaboration_writer(tmp_path):
-    project = tmp_path / "legacy"
-    service.create(project, brief="legacy", sources=[], project_format="workbench.v3")
+def test_legacy_binding_reader_is_inert_but_formal_dispatch_requires_migration(tmp_path):
+    project = historical_snapshot(tmp_path, scenario="L1 historical binding reader")["project"]
     store = Store(project)
     document = store.load_document()
-    task = service.open_compose_task(store, document, operation_id="legacy-1")
-    assert "collaboration_binding" not in task
+    # Reading an old unbound record never fabricates a new binding. Current
+    # formal dispatch still enforces the forward migration boundary.
     assert collaboration_binding.stamp_task(
         store, document, {"task_id": "t"}, phase="framing") == {"task_id": "t"}
+    with pytest.raises(eligibility.EligibilityBlocked) as rejected:
+        service.open_compose_task(store, document, operation_id="legacy-1")
+    assert "migration_required" in rejected.value.payload()["error"]["reason_codes"]
+    assert store.load_document() == document

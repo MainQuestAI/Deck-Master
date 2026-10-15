@@ -196,13 +196,31 @@ def route_request(text: str) -> dict:
     """
     if not isinstance(text, str) or not text.strip():
         raise ValueError("natural routing requires the original non-empty instruction")
-    normalized = text.casefold()
+    original = text.casefold()
+    # Read role/sub-intent signals from affirmative clauses. The original text
+    # remains the input/evidence; exclusions such as "不要讲稿" never become a
+    # positive speech request merely because their noun appears in the text.
+    normalized = ' '.join(re.split(
+        r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修复)|\b(?:do\s+not|don't|without|no)\b",
+        clause, maxsplit=1)[0] for clause in re.split(r'[,，。；;!！?？\n]', original))
+    # Recovery is a command about this work session/project, not a substring
+    # found inside the user's subject matter (e.g. recovery procedures).
+    recovery = bool(re.search(
+        r'^(?:请|帮我|麻烦)?\s*(?:恢复|继续|续作)(?:(?:上次|之前|原来|现有|这个|此|当前|未完成)(?:的)?)?'
+        r'(?:项目|任务|会话|工作|制作|流程|ppt|演示文稿)', normalized)
+        or re.search(r'^(?:please\s+)?(?:resume|continue|recover)\s+'
+            r'(?:(?:the|this|our|existing|previous|current|last)\s+)*'
+            r'(?:project|session|task|work|workflow|deck|presentation)\b', normalized))
     explicit = re.findall(r"(?<![a-z0-9_-])deck-(?:master|content|design|review)(?![a-z0-9_-])", normalized)
+    review_command = bool(re.search(
+        r'^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我)\s*)*(?:只审|只读|审查|审稿|审阅|复核|审核)', normalized)
+        or re.search(r'^(?:(?:please|only|just|can you|could you)\s+)*'
+            r'(?:review|audit|critique|inspect)\b', normalized))
     if explicit:
         skill = explicit[0] if len(set(explicit)) == 1 else "deck-master"
-    elif any(word in normalized for word in ("只审", "只读", "审查", "审稿", "review", "audit", "critique")):
+    elif review_command:
         skill = "deck-review"
-    elif any(word in normalized for word in ("完整ppt", "整套ppt", "完整作品", "full deck", "complete deck", "恢复", "续作", "resume", "continue")):
+    elif recovery or any(word in normalized for word in ("完整ppt", "整套ppt", "完整作品", "full deck", "complete deck")):
         skill = "deck-master"
     elif any(word in normalized for word in ("样页", "设计方案", "视觉方案", "版式", "sample page", "design", "layout")):
         skill = "deck-design"

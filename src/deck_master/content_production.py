@@ -807,7 +807,7 @@ def _require_mapping_links_current(mapping, known_nodes, where) -> None:
 
 
 def _check_mapping_against(
-        store, document, narrative, narrative_ref, plan_input, page,
+        store, document, narrative, narrative_ref, plan_input, page, *, require_role_mapping=True,
 ):
     """Page content_mapping must point at the adopted Narrative and real atoms.
 
@@ -815,7 +815,7 @@ def _check_mapping_against(
     by the page validator) and the attached source locators must exist in the
     stored source version.
     """
-    from .content_plan import validate_source_links
+    from .content_plan import ContentPlanError, validate_source_links
     mapping = page.get("content_mapping")
     if mapping is None:
         raise tasks_mod.EnvelopeError(
@@ -827,9 +827,9 @@ def _check_mapping_against(
         raise tasks_mod.EnvelopeError(
             f"(result)/payload/pages/{page['page_id']}/content_mapping/narrative_ref",
             "page mapping must reference the adopted current Narrative; a page cannot switch semantics")
-    known_nodes = {node["node_id"] for node in narrative.get("nodes") or []}
+    known_nodes = {node["node_id"] for node in (narrative or {}).get("nodes") or []}
     roles = {role["page_id"]: role for role in plan_input.get("page_roles") or []}
-    if mapping.get("plan_role_page_id") != page["page_id"] or page["page_id"] not in roles:
+    if mapping.get("plan_role_page_id") != page["page_id"] or (require_role_mapping and page["page_id"] not in roles):
         raise tasks_mod.EnvelopeError(
             f"(result)/payload/pages/{page['page_id']}/content_mapping/plan_role_page_id",
             "the mapping must name this page's plan role")
@@ -849,7 +849,7 @@ def _check_mapping_against(
                 store, document, link.get("source_links"),
                 f"page/{page['page_id']}/content_mapping/visible_links[{index}]/source_links",
                 cache)
-        except (ModelError, StoreError) as exc:
+        except (ModelError, StoreError, ContentPlanError) as exc:
             raise tasks_mod.EnvelopeError(
                 f"(result)/payload/pages/{page['page_id']}/content_mapping/visible_links[{index}]",
                 str(exc)) from exc
@@ -1090,11 +1090,12 @@ def _accept_speech(store, *, document, task, envelope, payload, produced_against
             models.validate_content_plan_semantics(plan)
             role = next((role for role in plan['input']['page_roles']
                          if role['page_id'] == page_id), None)
-            if role is None:
-                raise tasks_mod.EnvelopeError(where, "imported page has no current role mapping")
+            link = next((link for link in plan.get('page_links') or [] if link['page_id'] == page_id), None)
+            if link is None or link['page_ref'] != entry['page']:
+                raise tasks_mod.EnvelopeError(where, 'imported Page has no exact current Plan link')
             mapping = {'narrative_ref': None, 'plan_role_page_id': page_id,
                        'visible_links': [{'element_ref': atom, 'narrative_node_ids': [],
-                                         'source_links': copy.deepcopy(role.get('source_links') or [])}
+                                         'source_links': copy.deepcopy((role or {}).get('source_links') or [])}
                                         for atom in sorted(atom_ids(current))],
                        'speech_segments': []}
         if mapping.get("narrative_ref") != narrative_ref:
@@ -1339,7 +1340,10 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             raise tasks_mod.EnvelopeError(f"(result)/payload/proposals[{index}]/ref",
                                           f"referenced object is not in the store: {exc}") from exc
         proposal_by_layer[layer].append(proposal)
-    silent = sorted(layer for layer, items in proposal_by_layer.items() if not items)
+    removals = diff.get('removed_page_ids')
+    removes_copy = isinstance(removals, list) and bool(removals) and all(isinstance(pid, str) and pid for pid in removals)
+    silent = sorted(layer for layer, items in proposal_by_layer.items()
+        if not items and not (layer == 'page_copy' and removes_copy))
     if silent:
         raise tasks_mod.EnvelopeError(
             "(result)/payload/proposals",
@@ -1359,6 +1363,13 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         narrative = single["narrative"]
         models.validate_narrative_semantics(narrative)
         _narrative_project_check(narrative, document)
+        from .content_plan import ContentPlanError, validate_source_links
+        for node in narrative.get('nodes') or []:
+            try:
+                validate_source_links(store, document, node.get('source_links'),
+                    '(result)/payload/proposals/narrative/nodes/' + node['node_id'] + '/source_links')
+            except ContentPlanError as exc:
+                raise tasks_mod.EnvelopeError('(result)/payload/proposals/narrative', str(exc)) from exc
         narrative_ref = proposal_by_layer["narrative"][0]["ref"]
         from .variant_requests import require_fixed_narrative
         require_fixed_narrative(store, document, narrative_ref)
@@ -1410,6 +1421,8 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
                 pages[pid] = copy.deepcopy(page)
             changed_pages.add(pid)
     removed = diff.get("removed_page_ids") or []
+    if not isinstance(removed, list) or any(not isinstance(pid, str) or not pid for pid in removed) or len(removed) != len(set(removed)):
+        raise tasks_mod.EnvelopeError('(result)/payload/diff/removed_page_ids', 'removed pages are unique non-empty page identities')
     if removed and "page_copy" not in changed_layers:
         raise tasks_mod.EnvelopeError("(result)/payload/diff", "only page_copy may remove pages")
     if set(removed) - set(entries):
@@ -1442,6 +1455,16 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
                 raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Plan references nodes outside the new Narrative")
     elif pages:
         raise tasks_mod.EnvelopeError("(result)/payload/proposals", "reconciled Pages need their complete Plan mapping")
+    imported_mapping = bool(old_plan and old_plan.get('mode') == 'imported_mapping' and narrative_ref is None)
+    if plan_input is not None:
+        from .content_plan import ContentPlanError, validate_plan_input_v2
+        try:
+            validate_plan_input_v2(store, document, plan_input,
+                mode='imported_mapping' if imported_mapping else 'planned',
+                imported_manuscript=old_plan.get('imported_manuscript') if imported_mapping else None,
+                narrative_ref=narrative_ref)
+        except ContentPlanError as exc:
+            raise tasks_mod.EnvelopeError('(result)/payload/proposals/plan', str(exc)) from exc
     for page in pages.values():
         mapping = page.get("content_mapping")
         if mapping is None:
@@ -1450,10 +1473,16 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             mapping["narrative_ref"] = narrative_ref
         if mapping.get("narrative_ref") != narrative_ref:
             raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Page mapping binds another Narrative")
-        _require_mapping_links_current(mapping, known_nodes, "(result)/payload/proposals")
         check_page(page)
+        _check_mapping_against(store, document, narrative, narrative_ref, plan_input, page,
+            require_role_mapping=not imported_mapping)
     virtual_update = {'input_digest': expected_digest, 'upsert_pages': [pages[pid] for pid in sorted(changed_pages)],
         'remove_page_ids': list(removed), 'page_order': order, 'impact_summary': summary.strip()}
+    violation = tasks_mod.page_limit_violation({**document, 'pages': [{'page_id': pid} for pid in order]})
+    if violation:
+        raise tasks_mod.EnvelopeError('(result)/payload/diff/page_order', violation)
+    if not changed_pages and not removed:
+        virtual_update['unchanged_reason'] = summary.strip()
     if set(changed_page_ids) != changed_pages | set(removed):
         raise tasks_mod.EnvelopeError("(result)/payload/diff/changed_page_ids", "diff must identify exactly the substantive Page proposals and removals")
     if task.get('content_operation_ref'):
@@ -1507,8 +1536,11 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             task=task, envelope=envelope, produced_against=produced_against, result_digest=result_digest,
             response={"status": "accepted", "revision_id": pending["revision_id"], "variant": "input_revision",
                 "adopted": False, "changed_layers": changed_layers, "proposal_refs": proposed,
+                'impact_summary': summary.strip(), 'new_page_hashes': {},
                 "result_refs": proposed, "next_action": "adopt_with_covering_decision"})
-    if any(entry["page"] != entries.get(entry["page_id"], {}).get("page") for entry in new_pages) or removed or "narrative" in changed_layers or "plan" in changed_layers:
+    actual_plan_change = plan_input != (old_plan or {}).get('input')
+    if (any(entry['page'] != entries.get(entry['page_id'], {}).get('page') for entry in new_pages)
+            or order != list(entries) or narrative_ref != document.get('narrative') or actual_plan_change):
         updated["outputs"] = dict.fromkeys(document["outputs"])
     if task.get('content_operation_ref'):
         from .content_ops import bind_derivation
@@ -1519,8 +1551,11 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         task=task, envelope=envelope, produced_against=produced_against, result_digest=result_digest,
         response={"status": "accepted", "revision_id": updated["revision_id"], "variant": "input_revision",
             "adopted": True, "changed_layers": changed_layers, "narrative_ref": narrative_ref,
+            'impact_summary': summary.strip(),
+            'new_page_hashes': {entry['page_id']: entry['page']['sha256'] for entry in new_pages if entry['page_id'] in changed_pages},
             "plan_ref": updated.get("content_plan"), "page_refs": [entry["page"] for entry in new_pages],
-            "result_refs": result_refs, "invalidated_outputs": list(document["outputs"].values()),
+            "result_refs": result_refs, "invalidated_outputs": [ref for key, ref in document['outputs'].items()
+                if ref and updated['outputs'].get(key) != ref],
             "effective_scope": scope, "next_action": "continue_within_request"})
 
 

@@ -1,12 +1,29 @@
 """Third review: whole-deck revision dependencies and activation compensation."""
 import os
+import uuid
 
 import pytest
 
 from deck_master import install, service, tasks
 from deck_master.errors import HostSkillConflict
 from test_install_host_skill import _make_release
-from test_flow_quality import _setup_project_with_pages, _raw_commit
+from test_flow_quality import _setup_project_with_pages, _raw_commit, _accept_result
+from test_service_flow import _import_current
+from rc3_fixtures import claim_fixture_task
+
+
+def _assert_only_late_task_facts_changed(store, before):
+    after = store.load_document()
+    metadata = {'revision_id', 'parent_revision_id', 'committed_at', 'change', 'tasks'}
+    assert {key: value for key, value in after.items() if key not in metadata} == {
+        key: value for key, value in before.items() if key not in metadata}
+    old = {task['task_id']: task for ref in before['tasks'] for task in [store.read_object_json(ref)]}
+    current = {task['task_id']: task for ref in after['tasks'] for task in [store.read_object_json(ref)]}
+    assert set(current) == set(old)
+    for task_id, task in current.items():
+        assert task.get('call_allowances', []) == old[task_id].get('call_allowances', [])
+        assert task.get('result_refs', []) == old[task_id].get('result_refs', [])
+        assert task['status'] == old[task_id]['status']
 
 
 @pytest.mark.parametrize('change', ['reverse', 'remove', 'add', 'edit'])
@@ -25,12 +42,25 @@ def test_revision_tracks_ordered_document(tmp_path, change):
             page = store.read_object_json(doc['pages'][0]['page'])
             page['customer_visible']['title'] = 'Changed body'
             if change == 'add':
-                page['page_id'] = 'p04'
+                from test_content_ops import derived_page
+                page = derived_page(page, 'p04')
                 doc['pages'].append({**doc['pages'][0], 'page_id': 'p04', 'page': store.put_json_object(page)})
             else:
                 doc['pages'][0]['page'] = store.put_json_object(page)
     _raw_commit(store, mutate)
     assert not tasks.task_inputs_current(store, store.load_document(), task)
+    if change == 'add':
+        from copy import deepcopy
+        from deck_master import collaboration
+        current = store.load_document()
+        scope = deepcopy(current['collaboration']['request']['scope'])
+        scope['page_ids'] = [entry['page_id'] for entry in current['pages']]
+        collaboration.start_request(project, input={'intent': 'full_deck', 'content_intent': None,
+            'scope': scope, 'replace_request_id': current['collaboration']['request']['request_id'],
+            'instruction_evidence': {'kind': 'host_attested_instruction',
+                'text': 'Reconcile these four explicitly selected current manuscript pages.',
+                'source_locator': 'L1:ordered-document:add'}},
+            base_revision=current['revision_id'], operation_id='L1-ordered-document-add')
     resumed = service.continue_project(project)['pending_tasks']
     assert len(resumed) == 1 and resumed[0]['intent'] == 'input_revision'
     assert resumed[0]['task_id'] != task['task_id']
@@ -91,14 +121,15 @@ def test_import_reorder_refuses_old_result_and_continue_retires_it(tmp_path):
                 if store.read_object_json(ref)['task_id'] == pending['task_id'])
     old = store.load_document()
     pages = [store.read_object_json(entry['page']) for entry in old['pages']]
-    service.import_draft(project, draft_payload={'pages': pages, 'page_order': ['p03', 'p02', 'p01']})
+    claim_fixture_task(project, task)
+    _import_current(project, draft_payload={'pages': pages, 'page_order': ['p03', 'p02', 'p01']})
     before = store.load_document()
     with pytest.raises(tasks.StaleInputContext):
-        service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+        _accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
                               produced_against=task['produced_against'], result_payload={'kind': 'compose', 'content_update': {
                                   'input_digest': task['input_digest'], 'upsert_pages': [], 'remove_page_ids': [],
                                   'page_order': ['p01', 'p02', 'p03'], 'unchanged_reason': 'unchanged'}})
-    assert store.load_document() == before
+    _assert_only_late_task_facts_changed(store, before)
     pending = service.continue_project(project)['pending_tasks']
     assert all(t['task_id'] != task['task_id'] for t in pending)
     assert service.task_status(project, task_id=task['task_id'])['status'] == 'superseded'
@@ -178,11 +209,11 @@ def test_valid_directory_symlink_and_optout_broken_host(tmp_path, monkeypatch):
 @pytest.mark.parametrize('timing', ['settlement', 'commit'])
 def test_accept_serializes_settlement_and_commit_against_other_writers(tmp_path, monkeypatch, timing):
     import fcntl
+    from test_content_ops import dispatch
     project, store, _ = _setup_project_with_pages(tmp_path)
-    task = service.inputs_update(project, patch={'reason': 'new audience', 'task_patch': {'audience': 'other'}},
-                                 base_revision=store.load_document()['revision_id'], operation_id='new-input')['pending_tasks'][0]
+    task = dispatch(project, store, 'rewrite', ['p01', 'p02', 'p03'])
+    claim_fixture_task(project, task, execution_ref='race')
     tasks.allocate_call_allowances(store, task_id=task['task_id'], count=1)
-    service.task_start(project, task_id=task['task_id'], execution_ref='race')
     tasks.call_begin(store, task_id=task['task_id'], allowance_id='call-1', execution_ref='race')
     stored = tasks._lookup_task(store.load_document(), task['task_id'], store)
     original = type(store)._commit_locked
@@ -199,7 +230,7 @@ def test_accept_serializes_settlement_and_commit_against_other_writers(tmp_path,
                     fcntl.flock(competing.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         return original(self, **kwargs)
     monkeypatch.setattr(type(store), '_commit_locked', guarded)
-    result = service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+    result = _accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
                               produced_against=task['produced_against'], result_payload={
                                   'kind': 'compose', 'usage_events': [{'allowance_id': 'call-1', 'outcome': 'unknown'}],
                                   'content_update': {'input_digest': stored['input_digest'], 'upsert_pages': [],
@@ -228,10 +259,16 @@ def test_cli_reorder_then_late_accept_is_exit_five(tmp_path, monkeypatch, capsys
                  '--base-revision', store.load_document()['revision_id'], '--operation-id', 'input-cli']) == 0
     task = next(store.read_object_json(ref) for ref in store.load_document()['tasks']
                 if store.read_object_json(ref).get('intent') == 'input_revision')
+    claim_fixture_task(project, task)
     reordered = json.loads(draft.read_text())
     reordered['page_order'].reverse()
     draft.write_text(json.dumps(reordered))
-    assert main(['import-draft', '--project', str(project), '--input', str(draft)]) == 0
+    evidence = tmp_path / 'import-evidence.json'
+    evidence.write_text(json.dumps({'kind': 'host_attested_instruction',
+        'text': 'Import this explicitly reordered manuscript.', 'source_locator': 'L1:late-result-reorder'}))
+    assert main(['import-draft', '--project', str(project), '--input', str(draft),
+        '--base-revision', store.current_revision_id(), '--operation-id', str(uuid.uuid4()),
+        '--instruction-evidence', str(evidence)]) == 0
     before = store.load_document()
     result = tmp_path / 'result.json'
     result.write_text(json.dumps({'kind': 'compose', 'content_update': {
@@ -241,7 +278,7 @@ def test_cli_reorder_then_late_accept_is_exit_five(tmp_path, monkeypatch, capsys
                  '--operation-id', task['operation_id'], '--produced-against', task['produced_against'],
                  '--result', str(result)]) == 5
     assert 'stale_input_context' in capsys.readouterr().err
-    assert store.load_document() == before
+    _assert_only_late_task_facts_changed(store, before)
 
 
 def test_cli_install_conflict_and_compensation_failure_codes(tmp_path, monkeypatch, capsys):

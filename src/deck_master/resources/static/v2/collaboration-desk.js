@@ -2,6 +2,7 @@ import {get, post, readableError, ApiError} from './api.js';
 import {el, button, modal, version, field, downloadJSON} from './dom.js';
 import {pageText} from './page-text.js';
 import {diffView} from './text-diff.js';
+import {draftIntake} from './draft-intake.js';
 
 const intents = {full_deck: '完整方案', content_only: '内容工作', design_trial: '设计试作', review_only: '只读审阅', edit: '局部修改'};
 const contentIntents = {plan_only: '论证与大纲', write_only: '上屏稿', speech_only: '口播稿', content_full: '完整内容'};
@@ -80,7 +81,7 @@ function instructionBuffer(app, action) {
   return buffer;
 }
 
-function controlForm(app, {title, action, path, body, explanation, build, initial = ''}) {
+function controlForm(app, {title, action, path, body, explanation, build, initial = '', baseRevision, onSuccess}) {
   if (document.querySelector('#modal')?.open) return;
   const base_revision = app.info.control_revision_id || app.info.revision_id;
   const instruction = instructionBuffer(app, action); instruction.input.value = initial;
@@ -111,7 +112,7 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
         const operation_id = crypto.randomUUID();
         const evidence = {kind: 'host_attested_instruction', text: instruction.input.value,
           source_locator: `studio:${action}:${operation_id}`};
-        pending = {project_id: app.info.project_id, base_revision,
+        pending = {project_id: app.info.project_id, base_revision:baseRevision?.()||base_revision,
           operation_id, ...build(evidence)};
       }
       if(!instruction.setPending({path:projectAPI(app)+path,payload:pending}))throw new ApiError('原请求副本尚未保存，本次没有发送。请保留文字与恢复文件，恢复本机保存后重试。','local_buffer_failed',400);
@@ -119,7 +120,8 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
       const result = resultOf(response);
       status.replaceChildren(el('p', {}, '请求已记录。当前阅读稿和比较保持固定，请重新读取当前状态。'), details('本次操作回执', response),
         button('重新读取当前状态', () => { dialog.close(); app.loadRoute({...app.route}); }));
-      if(action==='request.start')status.append(button('读取下一工作单',()=>{dialog.close();continueWork(app);}));
+      if(action==='request.start'&&!onSuccess)status.append(button('读取下一工作单',()=>{dialog.close();continueWork(app);}));
+      onSuccess?.(result,response,{dialog,status});
       submit.hidden = true;
       instruction.setPending(null);
       app.root.dispatchEvent(new CustomEvent('business-state-changed'));
@@ -139,6 +141,7 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
       }
     } finally { sending = false; submit.disabled = false; }
   });
+  return {dialog,submit,instruction,status};
 }
 
 export async function requestForm(app, {source = null, transition = null} = {}) {
@@ -223,7 +226,7 @@ export function collaborationBanner(app) {
   if(!app.info.collaboration)return null;
   const state=app.info.collaboration,request=state.request,completion=app.info.completion;
   const revoked=(state.authorizations||[]).some(auth=>auth.status==='revoked');
-  const label=!state.migrated?'需要升级控制记录':request?.paused?'本次请求已暂停':request?.closed?'本次请求已结束':completion?states[completion.state]||'本次内容状态待核实':request?'本次请求已记录':'尚无本次请求';
+  const label=!state.migrated?'需要升级控制记录':request?.paused?'本次请求已暂停':completion?.state==='completed'&&(!request?.closed||request.closed_reason==='completed')?'本次内容已完成':request?.closed?'本次请求已结束':completion?states[completion.state]||'本次内容状态待核实':request?'本次请求已记录':'尚无本次请求';
   return el('section',{class:'collaboration-control','aria-label':'本次工作状态'},
     button(label+(revoked?' · 存在已撤回授权':''),()=>stateDetails(app),false,{'aria-label':'查看本次工作与范围',title:'查看本次工作与范围 · '+label}));
 }
@@ -323,44 +326,81 @@ export function deliveryJudgementView(value) {
     details('实际文件、口播方式、支持依据与完整判断',value));
 }
 
-function draftImportForm(app) {
-  const file=field('确认稿 JSON 文件（必填）',el('input',{type:'file',accept:'.json,application/json',required:true}),
-    '读取文件中的完整逐页稿。预览与选择不会修改项目；确认后由服务端一次核对来源、范围与当前版本。');
-  const preserve=el('input',{type:'checkbox',checked:true});
+function draftImportForm(app, {payload=null, preserveMainline=true, initial=''}={}) {
+  const preserve=el('input',{type:'checkbox',checked:preserveMainline});
   const choice=field('比较导入页面',el('select',{'aria-label':'比较导入页面'}));
-  const preview=el('div',{class:'stack'}),notice=el('p',{role:'status'});
-  let payload=null,serial=0;
-  const currentRevision=app.info.control_revision_id||app.info.revision_id;
-  file.input.setCustomValidity('请选择完整的确认稿 JSON 文件。');
+  const preview=el('div',{class:'stack'}),impact=el('section',{class:'draft-import-impact stack','aria-label':'完整稿件导入影响'});
+  let plan=null,current=null,summary=null,serial=0,comparison=0,items=[];
+  const source=draftIntake({required:true,value:payload,onChange:()=>readImpact()});
+  const controls=controlForm(app,{title:'导入确认稿',action:'draft.import',path:'/draft/import',initial,
+    explanation:'这是完整稿件替换：所选文件漏掉的当前页面会删除，按完整页序采用。已有原件留在历史中；导入不会制造业务确认或授予制作权限。先核对全部增删、页序、内容层与实际文字。',
+    body:el('div',{class:'stack'},source.node,el('label',{class:'inline-control'},preserve,'保留确认稿主线，进入保真审阅'),impact,choice.node,preview),
+    baseRevision:()=>plan?.revision_id,
+    build:instruction_evidence=>({draft_payload:source.payload,preserve_mainline:preserve.checked,instruction_evidence})});
+  controls.submit.disabled=true;
   async function compare(){
-    const token=++serial,index=Number(choice.input.value),incoming=payload?.pages?.[index];
-    if(!incoming)return;
+    const token=++comparison,selected=items[Number(choice.input.value)],fixed=plan;
+    if(!selected||!fixed)return;
+    const incoming=source.pages.find(page=>page.page_id===selected.page_id);
     preview.replaceChildren(el('p',{},'正在读取对应的固定基准稿。'));
     try{
-      const summary=await get('/api/view/summary?'+new URLSearchParams({revision:currentRevision}));
-      const exists=summary.pages.some(page=>page.page_id===incoming.page_id);
-      const prior=exists?(await get('/api/pages/'+encodeURIComponent(incoming.page_id)+'/lineage?'+new URLSearchParams({revision:currentRevision}))).page:null;
+      const exists=summary.pages.some(page=>page.page_id===selected.page_id);
+      const prior=exists?(await get('/api/pages/'+encodeURIComponent(selected.page_id)+'/lineage?'+new URLSearchParams({revision:fixed.revision_id}))).page:null;
+      if(token!==comparison||fixed!==plan)return;
+      preview.replaceChildren(el('div',{class:'stack'},diffView(prior?pageText(prior):'（当前版本没有此页）',incoming?pageText(incoming):'（完整稿件漏掉此页，将删除）','当前固定稿','所选确认稿'),
+        (prior?.speaker_notes||incoming?.speaker_notes)&&diffView(prior?.speaker_notes||'',incoming?.speaker_notes||'','当前口播稿','所选口播稿')));
+    }catch(error){if(token===comparison)preview.replaceChildren(admissionView(app,error));}
+  }
+  async function readImpact(){
+    const token=++serial;comparison++;plan=null;current=null;items=[];preview.replaceChildren();choice.input.replaceChildren();controls.submit.disabled=true;
+    if(!source.payload){impact.replaceChildren();return;}
+    impact.replaceChildren(el('p',{},'正在只读核对完整稿件的实际写入范围；未写入项目。'));
+    try{
+      const planned=resultOf(await post(projectAPI(app)+'/draft/preview',{draft_payload:source.payload,preserve_mainline:preserve.checked}));
+      const [basis,control,admission]=await Promise.all([
+        get('/api/view/summary?'+new URLSearchParams({revision:planned.revision_id})),
+        get(projectAPI(app)+'/collaboration'),
+        post(projectAPI(app)+'/eligibility',{action:'import_draft',artifact_revision:planned.revision_id,targets:planned.required_scope})]);
       if(token!==serial)return;
-      preview.replaceChildren(el('div',{class:'stack'},diffView(prior?pageText(prior):'（当前版本没有此页）',pageText(incoming),'当前固定稿','所选确认稿'),
-        (prior?.speaker_notes||incoming.speaker_notes)&&diffView(prior?.speaker_notes||'',incoming.speaker_notes||'','当前口播稿','所选口播稿')));
-    }catch(error){if(token===serial)preview.replaceChildren(admissionView(app,error));}
+      const decision=resultOf(admission);
+      if(control.control_revision_id!==planned.revision_id||decision.control_revision_id!==planned.revision_id)
+        throw new ApiError('核对期间当前控制已变化；稿件保留，请重新读取导入影响。','conflict',409);
+      plan=planned;summary=basis;current=resultOf(control).request;
+      const effects=plan.write_set;
+      const ids=(title,values)=>el('div',{},el('h4',{},title),values.length?el('ol',{},values.map(id=>el('li',{},id))):el('p',{},'无'));
+      impact.replaceChildren(el('h3',{},'服务端核对的完整替换影响'),
+        el('p',{},`固定基准 ${version(plan.revision_id)}。源文件包含 ${source.pages.length} 页；漏页即删除。`),
+        ids('当前完整页序与 ID',basis.pages.map(page=>page.page_id)),ids('导入后完整页序与源页 ID',effects.page_order),
+        ids('新增页面',effects.added_page_ids),ids('删除页面',effects.removed_page_ids),ids('实际写入页面范围',effects.page_ids),
+        el('p',{},'实际写入内容层：'+effects.layers.map(layer=>layerLabels[layer]||layer).join('、')),
+        el('p',{},`${effects.allow_page_membership_change?'改变页面集合':'保持页面集合'} · ${effects.allow_page_order_change?'调整保留页面的页序':'保持保留页面的页序'}`),
+        el('p',{},`影响 ${effects.invalidated_refs.length} 项页面产物、${effects.invalidated_outputs.length} 项整稿文件；原件保留在历史。`),
+        details('精确范围与全部失效依据',plan),
+        el('p',{},decision.allowed?'当前请求覆盖这次导入。核对文字后仍须单独确认导入。':'当前请求尚不允许这次导入。稿件仍保留；可明确启动或替换为本次稿件所需的精确范围。'),
+        !decision.allowed&&details('当前导入缺口',decision));
+      controls.submit.disabled=!decision.allowed;
+      if(!decision.allowed)impact.append(button('按完整稿件明确新的请求范围',()=>{
+        const selected=source.payload,keep=preserve.checked,text=controls.instruction.input.value,frozen=plan,request=current;
+        controls.dialog.close();
+        controlForm(app,{title:'采用确认稿所需范围',action:'request.start',path:'/collaboration/requests',initial:text,
+          baseRevision:()=>frozen.revision_id,
+          explanation:'这一步只记录导入完整稿件所需的精确局改请求，不导入、不确认稿件、不授权制作。替换将停止原请求未完成的制作，原稿与已发生费用保留。下一步仍须重新核对并单独确认导入。',
+          body:el('div',{class:'stack'},scopeView(app,frozen.required_scope),details('完整源稿、增删、页序与精确范围',{draft_payload:selected,...frozen})),
+          build:instruction_evidence=>({request:{intent:'edit',content_intent:null,scope:frozen.required_scope,instruction_evidence,
+            ...(request&&!request.closed?{replace_request_id:request.request_id}:{})}}),
+          onSuccess:(_result,_response,{dialog,status})=>status.append(button('返回确认稿，重新核对导入',()=>{
+            dialog.close();draftImportForm(app,{payload:selected,preserveMainline:keep,initial:text});
+          },true))});
+      }));
+      items=[...source.pages,...effects.removed_page_ids.map(page_id=>({page_id,removed:true}))];
+      choice.input.replaceChildren(...items.map((page,index)=>el('option',{value:String(index)},page.removed?`将删除 · ${page.page_id}`:`第 ${index+1} 页 · ${page.customer_visible?.title||'未命名页面'}`)));
+      compare();
+    }catch(error){if(token===serial)impact.replaceChildren(admissionView(app,error));}
+    if(token===serial)impact.append(button('重新读取导入影响',readImpact));
   }
   choice.input.addEventListener('change',compare);
-  file.input.addEventListener('change',async()=>{
-    serial++;payload=null;preview.replaceChildren();file.input.setCustomValidity('正在读取或尚未选入有效稿件。');
-    const selected=file.input.files[0];if(!selected)return;
-    try{
-      if(selected.size>1_800_000)throw new Error('确认稿超过本次可接收大小，请减少文件内容后重试。');
-      const value=JSON.parse(await selected.text());
-      if(!Array.isArray(value.pages)||!value.pages.length)throw new Error('确认稿需要完整的非空 pages 数组。原文件保持。');
-      payload=value;choice.input.replaceChildren(...value.pages.map((page,index)=>el('option',{value:String(index)},`第 ${index+1} 页 · ${page.customer_visible?.title||'未命名页面'}`)));
-      file.input.setCustomValidity('');notice.textContent=`已读 ${value.pages.length} 页。请逐页比较，核对主线保留方式与影响；尚未写入项目。`;compare();
-    }catch(error){file.input.setCustomValidity(error.message);notice.textContent=error.message;}
-  });
-  controlForm(app,{title:'导入确认稿',action:'draft.import',path:'/draft/import',
-    explanation:'导入会采用所选完整稿件与页序，已有原件留在历史中。保持主线只进入保真审阅，不制造新论证或专业批准；改变主线需要新的论证与范围。',
-    body:el('div',{class:'stack'},file.node,el('label',{class:'inline-control'},preserve,'保留确认稿主线，进入保真审阅'),notice,choice.node,preview),
-    build:instruction_evidence=>({draft_payload:payload,preserve_mainline:preserve.checked,instruction_evidence})});
+  preserve.addEventListener('change',readImpact);
+  if(payload)readImpact();
 }
 
 export function externalReviewForm(app=null) {
@@ -376,6 +416,28 @@ export function externalReviewForm(app=null) {
     el('p',{},'只读检查源文件并生成可读报告，不修改来源、不制作或采用。没有实际审阅者时保留“待审阅”，工程读取不会成为专业通过。'),kind.node,path.node,revision.node,pages,status);
   const submit=button('读取并生成审阅报告',()=>form.requestSubmit(),true);
   const dialog=modal('只读审阅稿件',form,[submit],{protectDraft:true});
+  function showReport(result, error=null) {
+      const external=result?.external_report,report=external?.report;
+      const labels={needs_reviewer:'审阅报告已生成 · 仍需审阅者',needs_tool:'审阅报告已生成 · 渲染工具有缺口',source_changed:'来源在读取期间变化 · 不可导入'};
+      status.replaceChildren(...(error?[admissionView(app||{summary:{pages:[]}},error)]:[]));
+      if(!external)return;
+      status.append(el('section',{class:'stack','aria-label':'完整只读审阅报告'},el('h3',{},labels[result.status]||'审阅结果已返回'),
+        el('p',{},report?.source_unchanged?'来源前后完整性一致；没有修改源稿。':'来源完整性尚未确认，请保留报告并重新固定来源。'),
+        el('p',{},'此报告只证明实际读取的字段；专业质量、独立审阅和未覆盖维度继续保留缺口。'),
+        ...(report?.engineering_observations||[]).map((observation,index)=>el('article',{class:'collaboration-record'},el('h4',{},`来源 ${index+1}`),
+          observation.text&&el('pre',{class:'read-text'},observation.text),observation.slides&&details('逐页实际读取内容',observation.slides),details('读取范围与来源身份',observation))),
+        button('下载完整审阅报告',()=>downloadJSON(external,'deck-master-external-review.json')),details('报告范围、证据与缺口',result)));
+      if(app&&report?.source_unchanged&&result.status!=='source_changed')status.append(button('查看导入此报告的影响',async event=>{
+        const trigger=event.currentTarget;trigger.disabled=true;
+        try {
+          const bindings=resultOf(await post(projectAPI(app)+'/reviews/bindings',{external_report:external,artifact_revision:app.route.revision}));
+          dialog.close();
+          controlForm(app,{title:'导入报告记录',action:'review.import',path:'/reviews/import',explanation:'只把这份报告与已核对的实际来源绑定到当前项目。导入不提升审阅身份，不把工程读取当作专业批准。',
+            body:details('精确来源与目标绑定',bindings),build:evidence=>({external_report:external,source_bindings:bindings.source_bindings||bindings.bindings,
+              artifact_revision:app.route.revision,evidence})});
+        }catch(failure){status.append(admissionView(app,failure));}finally{trigger.disabled=false;}
+      }));
+  }
   form.addEventListener('submit',async event=>{
     event.preventDefault();submit.disabled=true;
     const source=kind.input.value==='fileset'?{kind:'fileset',files:path.input.value.split('\n').map(value=>value.trim()).filter(Boolean)}:
@@ -385,25 +447,8 @@ export function externalReviewForm(app=null) {
     status.replaceChildren(el('p',{},'正在读取固定来源。源稿不写入，已有输入保持。'));
     try {
       const result=resultOf(await post('/api/reviews/evaluate',{source,scope,persistence:'none'}));
-      const external=result.external_report,report=external?.report;
-      const labels={needs_reviewer:'审阅报告已生成 · 仍需审阅者',needs_tool:'审阅报告已生成 · 渲染工具有缺口',source_changed:'来源在读取期间变化 · 不可导入'};
-      status.replaceChildren(el('div',{class:'stack'},el('h3',{},labels[result.status]||'审阅结果已返回'),
-        el('p',{},report?.source_unchanged?'来源前后完整性一致；没有修改源稿。':'来源完整性尚未确认，请保留报告并重新固定来源。'),
-        el('p',{},'此报告只证明实际读取的字段；专业质量、独立审阅和未覆盖维度继续保留缺口。'),
-        ...(report?.engineering_observations||[]).map((observation,index)=>el('article',{class:'collaboration-record'},el('h4',{},`来源 ${index+1}`),
-          observation.text&&el('pre',{class:'read-text'},observation.text),observation.slides&&details('逐页实际读取内容',observation.slides),details('读取范围与来源身份',observation))),
-        external&&button('下载完整审阅报告',()=>downloadJSON(external,'deck-master-external-review.json')),details('报告范围、证据与缺口',result)));
-      if(app&&external&&report?.source_unchanged)status.append(button('查看导入此报告的影响',async event=>{
-        const trigger=event.currentTarget;trigger.disabled=true;
-        try {
-          const bindings=resultOf(await post(projectAPI(app)+'/reviews/bindings',{external_report:external,artifact_revision:app.route.revision}));
-          dialog.close();
-          controlForm(app,{title:'导入报告记录',action:'review.import',path:'/reviews/import',explanation:'只把这份报告与已核对的实际来源绑定到当前项目。导入不提升审阅身份，不把工程读取当作专业批准。',
-            body:details('精确来源与目标绑定',bindings),build:evidence=>({external_report:external,source_bindings:bindings.source_bindings||bindings.bindings,
-              artifact_revision:app.route.revision,evidence})});
-        }catch(error){status.append(admissionView(app,error));}finally{trigger.disabled=false;}
-      }));
-    }catch(error){status.replaceChildren(admissionView(app||{summary:{pages:[]}},error));}
+      showReport(result);
+    }catch(error){showReport(error.result,error);}
     finally{submit.disabled=false;}
   });
 }

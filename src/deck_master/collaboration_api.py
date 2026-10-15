@@ -10,7 +10,7 @@ from .operations import OperationError
 WRITE_ACTIONS = {name: name for name in (
     'request.start', 'request.replace', 'decision', 'grant', 'adopt-proposal',
     'pause', 'resume', 'revoke', 'migration.apply', 'review.import', 'draft.import')}
-READ_ACTIONS = ('show', 'migration.describe', 'eligibility', 'review.bindings', 'review.evaluate', 'delivery.describe')
+READ_ACTIONS = ('show', 'migration.describe', 'eligibility', 'review.bindings', 'review.evaluate', 'delivery.describe', 'draft.preview')
 MUTATING_ROUTES = ('continue',)
 _FORBIDDEN = {'adapter_context', 'verified_user_events', 'independent_review_receipts', 'human_review_receipts'}
 _REQUEST = {'intent', 'content_intent', 'scope', 'instruction_evidence', 'variant',
@@ -37,6 +37,7 @@ _FIELDS = {
     'review.bindings': {'external_report', 'artifact_revision'},
     'review.evaluate': {'source', 'source_sha256', 'scope', 'persistence', 'report_output'},
     'draft.import': {'draft_payload', 'instruction_evidence', 'preserve_mainline'},
+    'draft.preview': {'draft_payload', 'preserve_mainline'},
 }
 
 
@@ -156,6 +157,25 @@ def error_response(exc, *, document=None, operation_id=None):
                      operation_id=operation_id), http, exit_code
 
 
+def _external_report_response(result):
+    """Keep readable packets when evaluation reports a real admission gap."""
+    status = result['status']
+    exit_code = {'needs_reviewer': 4, 'needs_tool': 4, 'source_changed': 5}.get(status, 0)
+    error = None
+    if exit_code:
+        detail = next((item['detail'] for item in result.get('limitations') or []
+                       if item.get('code') == status), None)
+        error = {'code': status, 'path': 'source' if status == 'source_changed' else 'review.evaluate',
+                 'message': detail or ('The source changed during evaluation; repeat from a fixed source.'
+                                      if status == 'source_changed' else 'Review evaluation needs the named missing capability.'),
+                 'recoverable': True,
+                 'details': {'artifact_revision_id': result.get('artifact_revision_id'),
+                             'control_revision_id': result.get('control_revision_id'),
+                             'affected_scope': ((result.get('external_report') or {}).get('report') or {}).get('scope'),
+                             'decision': None}}
+    return _response(None, status=status, result=result, error=error), 409 if exit_code else 200, exit_code
+
+
 def invoke(project, action, payload=None, *, adapter_context=None, expected_project_id=None):
     """Return shared response, HTTP status and CLI exit. Context is transport-only."""
     document, data = None, {}
@@ -172,7 +192,7 @@ def invoke(project, action, payload=None, *, adapter_context=None, expected_proj
             from .external_review import evaluate
             _known(data, _FIELDS[action])
             result = evaluate(**data, adapter_context=adapter_context)
-            return _response(None, status=result['status'], result=result), 200, 0
+            return _external_report_response(result)
         store = Store(project)
         document = store.load_document()
         if expected_project_id is not None and expected_project_id != document['project_id']:
@@ -205,6 +225,9 @@ def invoke(project, action, payload=None, *, adapter_context=None, expected_proj
         elif action == 'review.bindings':
             from . import review_import
             result = review_import.describe_bindings(project, **body)
+        elif action == 'draft.preview':
+            from .service import preview_draft_import
+            result = preview_draft_import(project, **body)
         else:
             common = {key: data.get(key) for key in ('base_revision', 'operation_id')}
             for key, value in common.items():
@@ -261,6 +284,7 @@ HTTP_ROUTES = {
     ('POST', '/api/projects/{project_id}/reviews/import'): 'review.import',
     ('POST', '/api/projects/{project_id}/reviews/bindings'): 'review.bindings',
     ('POST', '/api/projects/{project_id}/draft/import'): 'draft.import',
+    ('POST', '/api/projects/{project_id}/draft/preview'): 'draft.preview',
     ('POST', '/api/projects/{project_id}/continue'): 'continue',
     ('GET', '/api/projects/{project_id}/delivery-eligibility'): 'delivery.describe',
 }

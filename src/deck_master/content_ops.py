@@ -20,6 +20,25 @@ def fail(field, message, *, conflict=False):
                                     exit_code=5 if conflict else 2)
 
 
+def _edited_page(store, doc, page_id, visible):
+    from .content import atom_ids
+    entry = next(entry for entry in doc['pages'] if entry['page_id'] == page_id)
+    page = copy.deepcopy(store.read_object_json(entry['page']))
+    mapping = page.pop('content_mapping', None)
+    page['customer_visible'] = copy.deepcopy(visible)
+    check_page(page)
+    if mapping is not None:
+        atoms = atom_ids(page)
+        old_links = {link['element_ref']: link for link in mapping['visible_links']}
+        missing = atoms - set(old_links)
+        if missing and doc.get('narrative') is not None:
+            fail('content_mapping', 'new visible atoms need explicit Narrative/source mappings; use a bounded host rewrite')
+        mapping['visible_links'] = [copy.deepcopy(old_links[atom]) if atom in old_links else
+            {'element_ref': atom, 'narrative_node_ids': [], 'source_links': []} for atom in sorted(atoms)]
+        page['content_mapping'] = mapping
+    return check_page(page)
+
+
 def _check(store, doc, value):
     validate_schema('content_operation_input', value)
     if not store.workbench_protocol_required(doc):
@@ -56,8 +75,7 @@ def _check(store, doc, value):
     if action == 'reorder' and set(value['page_order']) != set(entries):
         fail('page_order', 'list every existing page exactly once')
     if action == 'edit':
-        page = copy.deepcopy(store.read_object_json(entries[ids[0]]['page']))
-        page['customer_visible'] = copy.deepcopy(value['customer_visible']); check_page(page)
+        _edited_page(store, doc, ids[0], value['customer_visible'])
     if action == 'outline':
         if not doc.get('content_plan'):
             fail('content_plan', 'first obtain an explicit content plan from compose; derived titles are not a plan')
@@ -159,7 +177,8 @@ def _finish_v2_plan(store, doc, previous, plan_input, updated, operation_id):
         {'task_id': None, 'dispatch_revision': doc['revision_id'],
          'input_digest': previous['basis']['input_digest'], 'operation_id': operation_id},
         plan_input, updated['pages'], narrative_ref=updated.get('narrative'), mode=mode,
-        imported_manuscript=previous.get('imported_manuscript'), require_role_mapping=mode != 'imported_mapping')
+        imported_manuscript=previous.get('imported_manuscript'), require_role_mapping=mode != 'imported_mapping',
+        origin='user_edited')
 
 
 def _finish_plan_revision(store, doc, revised, updated, operation_id):
@@ -242,8 +261,8 @@ def commit(project, *, plan_id, base_revision, operation_id):
             updated['tasks'].append(store.put_json_object(task)); task_ids = [task['task_id']]
         else:
             if action == 'edit':
-                entry = next(e for e in updated['pages'] if e['page_id'] == ids[0]); page = copy.deepcopy(store.read_object_json(entry['page']))
-                page['customer_visible'] = copy.deepcopy(value['customer_visible']); page = check_page(page)
+                entry = next(e for e in updated['pages'] if e['page_id'] == ids[0])
+                page = _edited_page(store, doc, ids[0], value['customer_visible'])
                 ref = store.put_json_object(page)
                 if ref != entry['page']:
                     entry['page'] = ref; entry['svg'] = entry['svg_preview'] = entry['ppt_preview'] = None

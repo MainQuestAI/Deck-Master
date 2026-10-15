@@ -6,19 +6,19 @@ from pathlib import Path
 import pytest
 
 from deck_master import service, tasks, store as store_module
-from deck_master.models import ModelError, bump_revision, canonical_json_bytes, sha256_bytes
+from deck_master.models import ModelError, bump_revision, canonical_json_bytes, sha256_bytes, content_identity
 from deck_master.store import Store
+from rc3_fixtures import claim_fixture_task, historical_snapshot
+from test_tasks import _make_project, _compose_envelope
+from test_content_ops import v2_revision_envelope
 
 ENVELOPE = Path(__file__).resolve().parents[2] / "docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/compose.json"
 
 
 def pending(tmp_path):
-    project = tmp_path / "synthetic-project"
-    source = tmp_path / "synthetic.md"
-    source.write_text("Synthetic recovery fixture. Not customer material.")
-    service.create(project, brief="W02 recovery test", sources=[source])
-    task = service.continue_project(project)["pending_tasks"][0]
-    return project, Store(project), task, json.loads(ENVELOPE.read_text())
+    project, task = _make_project(tmp_path)
+    claim_fixture_task(project, task, execution_ref='L1-receipt-recovery-host')
+    return project, Store(project), task, _compose_envelope(task)
 
 
 def submit(project, task, payload, **overrides):
@@ -53,7 +53,7 @@ def test_lost_response_after_commit_recovers_across_later_commit(tmp_path, monke
     completed = next(store.read_object_json(r) for r in applied["tasks"]
                      if store.read_object_json(r)["task_id"] == task["task_id"])
     assert completed["status"] == "completed"
-    assert completed["result_refs"] == receipt["response"]["result_refs"] == [applied["pages"][0]["page"]]
+    assert completed["result_refs"] == receipt["response"]["result_refs"] == [applied["pages"][0]["page"], applied["content_plan"]]
     assert not journal_path(store, task).exists()
     later = advance(store)
     pointer = (store.deck_root / "current.json").read_bytes()
@@ -94,7 +94,7 @@ def test_committed_request_refuses_changed_payload_or_binding(tmp_path, differen
     before = store.current_revision_id()
     changed = copy.deepcopy(payload)
     if difference == "payload":
-        changed["notes"] = "A different logical result"
+        changed["payload"]["diff"]["summary"] = "A different logical result"
     overrides = {"produced_against": "a" * 64} if difference == "binding" else {}
     with pytest.raises(tasks.TaskConflict, match="different result"):
         submit(project, task, changed, **overrides)
@@ -125,16 +125,25 @@ def test_orphan_receipt_from_failed_pointer_swap_is_not_an_applied_operation(tmp
 
 
 def test_legacy_completed_task_without_digest_is_not_guessed(tmp_path):
-    project, store, task, payload = pending(tmp_path)
-    submit(project, task, payload)
-    legacy = store.load_document()
-    legacy["change"].pop("operation_receipt")
-    # An old-format synthetic fixture, not an in-place production migration.
-    (store.revisions_dir / (legacy["revision_id"] + ".json")).write_bytes(canonical_json_bytes(legacy))
-    journal_path(store, task).unlink()
-    assert store.operation_receipt(task["operation_id"]) is None
-    with pytest.raises(tasks.TaskConflict, match="already completed"):
+    payload = json.loads(ENVELOPE.read_text())
+    project = historical_snapshot(tmp_path, scenario='pre-receipt completed compose facts',
+        pages=payload['pages'])['project']
+    store = Store(project)
+    document = store.load_document()
+    task = tasks.new_task(task_id='old-completed', operation_id='old-adoption', kind='compose',
+        scope_pages=['p09'], instruction='Fixed historical completed Task without a receipt',
+        inputs=[], dependencies=[], dispatch_revision=document['revision_id'],
+        produced_against=content_identity(document), status='completed')
+    task['result_refs'] = [document['pages'][0]['page']]
+    old = bump_revision(document, {'operation_id': 'historical-completed-fact', 'kind': 'task_update',
+        'description': 'Explicit L1 pre-receipt historical Task, not an adoption through a legacy bypass', 'read_set': []})
+    old['tasks'] = [store.put_json_object(task)]
+    store.commit_change(base_revision=document['revision_id'], document=old, operation_id='historical-completed-fact')
+    before = store.read_current()
+    assert store.operation_receipt(task['operation_id']) is None
+    with pytest.raises(tasks.TaskConflict, match='already completed'):
         submit(project, task, payload)
+    assert store.read_current() == before
 
 
 @pytest.mark.parametrize("damaged", [b"not JSON", b'{"result_digest":"wrong"}'])
@@ -157,6 +166,9 @@ def test_input_revision_recovery_keeps_changed_page_refs_and_alignment(tmp_path,
     page["customer_visible"]["title"] = "New title for new inputs"
     result = {"kind": "compose", "content_update": {"input_digest": update["input_digest"], "upsert_pages": [page],
               "remove_page_ids": [], "page_order": [page["page_id"]], "impact_summary": "Changed the title"}}
+    result['content_plan'] = store.read_object_json(store.load_document()['content_plan'])['input']
+    result = v2_revision_envelope(store, task, result)
+    claim_fixture_task(project, task, execution_ref='L1-second-reconciliation')
     original = tasks.write_operation_journal
     monkeypatch.setattr(tasks, "write_operation_journal", lambda *a, **kw: (_ for _ in ()).throw(SystemExit()))
     with pytest.raises(SystemExit):
@@ -167,7 +179,7 @@ def test_input_revision_recovery_keeps_changed_page_refs_and_alignment(tmp_path,
     replay = submit(project, task, result)
     assert replay["revision_id"] == applied["revision_id"]
     assert replay["input_alignment"] == "current"
-    assert replay["result_refs"] == [applied["pages"][0]["page"]]
+    assert replay["result_refs"] == [applied["pages"][0]["page"], applied["content_plan"]]
     assert replay["operation_result"]["impact_summary"] == "Changed the title"
 
 
@@ -188,7 +200,7 @@ def test_parallel_adoption_dedupes_inside_project_lock(tmp_path, different):
     project, store, task, payload = pending(tmp_path)
     other = copy.deepcopy(payload)
     if different:
-        other['notes'] = 'A different request body'
+        other['payload']['diff']['summary'] = 'A different request body'
     def call(value):
         try:
             return submit(project, task, value)

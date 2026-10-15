@@ -1,5 +1,4 @@
 """Behavioral regressions for T06 dispatch, permissions and call accounting."""
-import copy
 import json
 import os
 from pathlib import Path
@@ -9,27 +8,55 @@ import uuid
 
 import pytest
 
-from deck_master import service, tasks
+from deck_master import collaboration, eligibility, generation, service, tasks
 from deck_master.models import ModelError, bump_revision, default_design_context
 from deck_master.production import project_prompt
 from deck_master.store import Store, StoreError
+from rc3_fixtures import authorize_scope, claim_fixture_task, evidence_for, settle_fidelity_review
 
 DRAFT = Path(__file__).resolve().parents[2] / 'docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/compose.json'
 
 
-def setup_project(tmp_path, limit=None):
+def setup_project(tmp_path, limit=None, *, draft=None, design=None):
+    """Current L1 fixture: real manuscript/request/grant/fidelity, no image call."""
     root = tmp_path / 'project'
-    service.create(root, brief='regression', draft=json.loads(DRAFT.read_text()))
+    manuscript = draft or {'pages': json.loads(DRAFT.read_text())['pages']}
+    ids = [p['page_id'] for p in manuscript['pages']]
+    scope = {'subject': 'deck', 'page_ids': ids, 'page_manifest_ref': None,
+        'external_artifact_ref': None,
+        'layers': ['page_copy', 'plan', 'speech', 'blueprint', 'svg', 'review', 'output', 'design'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+    service.create(root, brief='L1 synthetic dispatch/accounting regression', draft=manuscript,
+        design=design, request_input={'intent': 'full_deck', 'scope': scope})
     store = Store(root)
     policy(store, external_call_limit=limit)
+    authorize_scope(root, actions=['dispatch.blueprint', 'dispatch.host_task', 'allowance.allocate',
+        'allowance.repair', 'call.begin', 'generation.dispatch'], scope=scope,
+        max_external_calls=32, max_candidate_count=0, adoption_policy='within_scope',
+        evidence=evidence_for(root, text='L1 explicitly authorize scoped blueprint protocol and synthetic ledger events. No real provider, native output, fee, or human review is claimed.',
+            locator='synthetic-l1:t06-accounting'))
+    settle_fidelity_review(root, page_ids=ids, execution_ref='L1-t06-fidelity', scenario='Fixed manuscript dispatch accounting')
     return store
 
 
 def policy(store, **changes):
     doc = store.load_document()
-    new = bump_revision(doc, dict(operation_id=uuid.uuid4().hex, kind='policy_update', description='test policy', read_set=[]))
+    new = bump_revision(doc, dict(operation_id=uuid.uuid4().hex, kind='policy_update', description='L1 explicit test policy', read_set=[]))
     new['policy'] = {**doc['policy'], **changes}
     store.commit_change(base_revision=doc['revision_id'], document=new, operation_id=new['change']['operation_id'])
+    # Policy is a registered basis. A fresh explicit instruction updates this
+    # same authorization identity; it does not rewrite old workorders/credit.
+    for ref in store.load_document()['collaboration']['authorizations']:
+        record = store.read_object_json(ref)
+        if 'dispatch.blueprint' not in record['actions']:
+            continue
+        values = {key: record[key] for key in ('authorization_id', 'mode', 'actions', 'scope',
+            'max_external_calls', 'max_candidate_count', 'adoption_policy', 'budget_key', 'budget_parent_ref')}
+        collaboration.grant(store.project_root, input={**values, 'replaces': ref,
+            'instruction_evidence': evidence_for(store.project_root,
+                text='L1 explicit changed-policy instruction retains scoped authority and prior call facts.',
+                locator='synthetic-l1:t06-policy:' + store.current_revision_id())},
+            base_revision=store.current_revision_id(), operation_id=uuid.uuid4().hex)
 
 
 def dispatch(store):
@@ -37,14 +64,37 @@ def dispatch(store):
     return service.open_blueprint_task(store, doc, doc['pages'][0])
 
 
+def _current(store, task):
+    return tasks._lookup_task(store.load_document(), task['task_id'], store)
+
+
+def _request(store, task):
+    current = _current(store, task)
+    if current.get('generation_requests'):
+        return store.read_object_json(current['generation_requests'][-1])['request_id']
+    prepared = generation.prepared_input(store, store.load_document(), current)
+    return generation.freeze(store.project_root, task_id=task['task_id'], input=prepared,
+        base_revision=store.current_revision_id(), operation_id=uuid.uuid4().hex)['request_id']
+
+
+def _begin(store, task, allowance='call-1', execution='owner'):
+    return tasks.call_begin(store, task_id=task['task_id'], allowance_id=allowance,
+        execution_ref=execution, request_id=_request(store, task))
+
+
 def claim_begin(store, task):
-    service.task_start(store.project_root, task_id=task['task_id'], execution_ref='owner')
-    return tasks.call_begin(store, task_id=task['task_id'], allowance_id='call-1', execution_ref='owner')
+    claim_fixture_task(store.project_root, _current(store, task), execution_ref='owner')
+    return _begin(store, task)
 
 
-def settle(store, task, outcome, report=None, invocation=None):
-    return tasks.call_settle(store, task_id=task['task_id'], allowance_id='call-1', outcome=outcome,
-                             report_bytes=report, invocation_ref=invocation)
+def settle(store, task, outcome, report=None, invocation=None, allowance='call-1'):
+    current = _current(store, task)
+    attempts = [store.read_object_json(ref) for ref in current.get('generation_attempts', [])]
+    attempt = next((a for a in attempts if a['allowance_id'] == allowance), None)
+    # Deliberate L1 Host-reported observation: never native/tool-observed proof.
+    data = json.dumps({'evidence_level': 'L1_SYNTHETIC', 'reported': report.decode()}).encode() if report else None
+    return tasks.call_settle(store, task_id=task['task_id'], allowance_id=allowance, outcome=outcome,
+        report_bytes=data, invocation_ref=invocation, attempt_id=attempt['attempt_id'] if attempt else None)
 
 
 @pytest.mark.parametrize('state', ['cancelled', 'completed'])
@@ -59,11 +109,14 @@ def test_global_limit_keeps_terminal_consumption(tmp_path, state):
 
 
 def test_released_slot_reusable_and_unlimited(tmp_path):
-    s = setup_project(tmp_path, 1); t = dispatch(s)
+    s = setup_project(tmp_path, 1); t = dispatch(s); claim_begin(s, t)
     settle(s, t, 'not_sent')
     tasks.allocate_call_allowances(s, task_id=t['task_id'], count=1)
     policy(s, external_call_limit=None)
-    tasks.allocate_call_allowances(s, task_id=t['task_id'], count=5)
+    service.task_cancel(s.project_root, task_id=t['task_id'])
+    fresh = dispatch(s)
+    tasks.allocate_call_allowances(s, task_id=fresh['task_id'], count=4)
+    assert _current(s, t)['call_allowances'][0]['state'] == 'released'
 
 
 def test_zero_limit_no_task_and_retry(tmp_path):
@@ -85,10 +138,10 @@ def test_failed_commit_never_publishes_empty_task(tmp_path, monkeypatch):
     assert s.load_document() == before
 
 
-def test_legacy_empty_task_repaired_or_rejected_when_stale(tmp_path):
+def test_interrupted_bound_empty_task_repaired_or_rejected_when_stale(tmp_path):
     s = setup_project(tmp_path); t = dispatch(s)
     d = s.load_document()
-    service._commit_task_update(s, d, t, {**t, 'call_allowances': []}, 'simulate old dispatch')
+    service._commit_task_update(s, d, t, {**t, 'call_allowances': []}, 'L1 interrupted current dispatch after binding')
     r = service.continue_project(s.project_root)['pending_tasks'][0]
     assert r['task_id'] == t['task_id'] and len(r['call_allowances']) == 1
     d = s.load_document(); old = tasks._lookup_task(d, t['task_id'], s)
@@ -100,25 +153,33 @@ def test_legacy_empty_task_repaired_or_rejected_when_stale(tmp_path):
 
 def test_claim_stop_unknown_and_idempotence(tmp_path):
     s = setup_project(tmp_path); t = dispatch(s)
-    with pytest.raises(tasks.TaskConflict):
+    with pytest.raises(generation.GenerationError, match='requires generation.v1'):
         tasks.call_begin(s, task_id=t['task_id'], allowance_id='call-1', execution_ref='owner')
-    with pytest.raises(tasks.TaskConflict): settle(s, t, 'consumed', b'not begun')
-    service.task_start(s.project_root, task_id=t['task_id'], execution_ref='owner')
+    with pytest.raises(generation.GenerationError, match='begun attempt'):
+        settle(s, t, 'consumed', b'not begun')
+    claim_fixture_task(s.project_root, t, execution_ref='owner')
+    _request(s, t)
     for owner in ('wrong', '', None):
         with pytest.raises(tasks.TaskConflict):
-            tasks.call_begin(s, task_id=t['task_id'], allowance_id='call-1', execution_ref=owner)
-    policy(s, user_stop=True)
-    with pytest.raises(tasks.CallBlocked):
-        tasks.call_begin(s, task_id=t['task_id'], allowance_id='call-1', execution_ref='owner')
-    assert service.continue_project(s.project_root)['status'] == 'needs_input'
-    policy(s, user_stop=False)
+            _begin(s, t, execution=owner)
+    stopped = setup_project(tmp_path / 'stopped')
+    stop_task = dispatch(stopped)
+    claim_fixture_task(stopped.project_root, stop_task, execution_ref='owner')
+    _request(stopped, stop_task)
+    policy(stopped, user_stop=True)
+    with pytest.raises(eligibility.EligibilityBlocked) as blocked:
+        _begin(stopped, stop_task)
+    assert 'user_stop' in blocked.value.decision['reason_codes']
+    assert service.continue_project(stopped.project_root)['status'] == 'needs_input'
     claim_begin(s, t); before = s.current_revision_id()
-    assert tasks.call_begin(s, task_id=t['task_id'], allowance_id='call-1', execution_ref='owner')['status'] == 'already_started'
+    assert _begin(s, t)['status'] == 'already_started'
     assert before == s.current_revision_id()
     settle(s, t, 'unknown'); before = s.current_revision_id()
     assert settle(s, t, 'unknown')['status'] == 'already_settled'
     assert s.current_revision_id() == before
-    with pytest.raises(tasks.CallBlocked): tasks.allocate_call_allowances(s, task_id=t['task_id'], count=1)
+    with pytest.raises(eligibility.EligibilityBlocked) as blocked:
+        tasks.allocate_call_allowances(s, task_id=t['task_id'], count=1)
+    assert 'budget_unknown' in blocked.value.decision['reason_codes']
     assert service.continue_project(s.project_root)['status'] == 'needs_input'
     with pytest.raises(tasks.EnvelopeError): settle(s, t, 'consumed')
     settle(s, t, 'consumed', b'real report', 'inv-1')
@@ -148,12 +209,34 @@ def test_settlement_enriches_missing_invocation(tmp_path):
 @pytest.mark.parametrize('permission', ['restricted', 'unspecified'])
 def test_restricted_assets_never_dispatched(tmp_path, permission):
     logo = tmp_path/'logo.svg'; logo.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
-    root = tmp_path/'p'
-    service.create(root, brief='test', draft=json.loads(DRAFT.read_text()), design={
-        'assets':[dict(asset_id='logo',kind='logo',file=str(logo),external_use=permission)], 'allowed_asset_ids':['logo']})
-    s = Store(root); before = s.current_revision_id()
-    with pytest.raises(ModelError): service.continue_project(root)
-    assert before == s.current_revision_id()
+    s = setup_project(tmp_path, design={
+        'assets':[dict(asset_id='logo',kind='logo',file=str(logo),external_use='allowed')],
+        'allowed_asset_ids':['logo']})
+    before = s.load_document()
+    design = json.loads(json.dumps(before['design_context']))
+    design['assets'][0]['external_use'] = permission
+    # Current design writes validate every effective page before publishing;
+    # the forbidden asset cannot become a generation input or a new Task.
+    with pytest.raises(ModelError, match='not allowed for external use'):
+        service.update_design(s.project_root, design_context=design, base_revision=before['revision_id'])
+    assert s.load_document() == before
+    assert not [s.read_object_json(ref) for ref in before['tasks']
+        if s.read_object_json(ref)['kind'] == 'blueprint']
+    # The permission predicate itself also refuses the exact submitted view.
+    page = s.read_object_json(before['pages'][0]['page'])
+    with pytest.raises(ModelError, match='not allowed for external use'):
+        project_prompt(page, design, design['assets'])
+    # Explicit L1 fault injection also retains the dispatch defense for a
+    # previously persisted invalid design. No fake Task/authority is inserted.
+    injected = bump_revision(before, dict(operation_id=uuid.uuid4().hex,
+        kind='design_update', description='L1 persisted invalid asset-policy fixture', read_set=[]))
+    injected['design_context'] = design
+    s.commit_change(base_revision=before['revision_id'], document=injected,
+        operation_id=injected['change']['operation_id'])
+    before_dispatch = s.load_document()
+    with pytest.raises(ModelError, match='not allowed for external use'):
+        dispatch(s)
+    assert s.load_document() == before_dispatch
 
 
 def test_effective_overrides_and_canvas(tmp_path):
@@ -185,15 +268,17 @@ def test_cli_waiting_and_budget_exit_three(tmp_path):
 def test_two_processes_compete_for_last_slot(tmp_path):
     s = setup_project(tmp_path, 1)
     # Two independent active work orders; allocation itself must serialize.
-    d = s.load_document(); first = service.open_compose_task(s,d,operation_id='race-a')
-    second = service.open_compose_task(s,s.load_document(),operation_id='race-b')
+    ids = [s.load_document()['pages'][0]['page_id']]
+    first = service.open_host_task(s, kind='repair', page_ids=ids, instruction='L1 race workorder A')
+    second = service.open_host_task(s, kind='repair', page_ids=ids, instruction='L1 race workorder B')
     code = '''import sys,time
 from pathlib import Path
 from deck_master.tasks import allocate_call_allowances,CallBlocked
 from deck_master.store import Store
+from deck_master.eligibility import EligibilityBlocked
 while not Path(sys.argv[3]).exists(): time.sleep(.01)
 try: allocate_call_allowances(Store(sys.argv[1]),task_id=sys.argv[2],count=1)
-except CallBlocked: sys.exit(3)
+except (CallBlocked,EligibilityBlocked): sys.exit(3)
 '''
     env = {**os.environ,'PYTHONPATH':str(Path(__file__).resolve().parents[2]/'src')}
     barrier = tmp_path/'go'
@@ -230,19 +315,18 @@ def test_unknown_blocks_other_reserved_call_but_not_inflight_settlement(tmp_path
     s=setup_project(tmp_path); t=dispatch(s)
     tasks.allocate_call_allowances(s,task_id=t['task_id'],count=2)
     claim_begin(s,t)
-    tasks.call_begin(s,task_id=t['task_id'],allowance_id='call-2',execution_ref='owner')
+    _begin(s, t, 'call-2')
     settle(s,t,'unknown')
-    with pytest.raises(tasks.CallBlocked):
-        tasks.call_begin(s,task_id=t['task_id'],allowance_id='call-3',execution_ref='owner')
-    tasks.call_settle(s,task_id=t['task_id'],allowance_id='call-2',outcome='consumed',report_bytes=b'real return')
+    with pytest.raises(tasks.CallBlocked, match='resolve unknown calls'):
+        _begin(s, t, 'call-3')
+    settle(s, t, 'consumed', b'L1 returned report', allowance='call-2')
 
 
 def test_page_empty_permissions_remove_prompt_and_files(tmp_path):
     logo=tmp_path/'logo.svg';logo.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
-    draft=json.loads(DRAFT.read_text());draft['pages'][0]['visual_spec']['design_overrides']={'allowed_asset_ids':[]}
-    root=tmp_path/'p'
-    service.create(root,brief='page scope',draft=draft,design={'assets':[dict(asset_id='logo',kind='logo',file=str(logo),external_use='allowed')],'allowed_asset_ids':['logo']})
-    t=service.continue_project(root)['pending_tasks'][0]
+    draft={'pages': json.loads(DRAFT.read_text())['pages']};draft['pages'][0]['visual_spec']['design_overrides']={'allowed_asset_ids':[]}
+    s=setup_project(tmp_path,draft=draft,design={'assets':[dict(asset_id='logo',kind='logo',file=str(logo),external_use='allowed')],'allowed_asset_ids':['logo']})
+    t=service.continue_project(s.project_root)['pending_tasks'][0]
     assert t['production_request']['permitted_asset_files']==[]
     assert t['production_request']['projection']['permitted_assets']==[]
     assert t['resolved_design_context']['assets']==[]
@@ -255,18 +339,22 @@ def test_cli_storage_conflict_is_five(capsys):
     assert json.loads(capsys.readouterr().err)['error']['code']=='conflict'
 
 
-def test_orphan_recovers_after_authorized_budget_change(tmp_path):
-    s=setup_project(tmp_path,0);d=s.load_document();page=d['pages'][0]
-    from deck_master.models import content_identity
-    t=tasks.new_task(task_id='legacy-empty',operation_id='legacy-dispatch',kind='blueprint',scope_pages=[page['page_id']],instruction='old task',inputs=[page['page']],dependencies=[],dispatch_revision=d['revision_id'],produced_against=content_identity(d))
-    new=bump_revision(d,dict(operation_id='old-dispatch',kind='task_update',description='old empty task',read_set=[]))
-    new['tasks']=d['tasks']+[s.put_json_object(t)]
-    s.commit_change(base_revision=d['revision_id'],document=new,operation_id='old-dispatch')
-    assert service.continue_project(s.project_root)['status']=='needs_input'
-    policy(s,external_call_limit=1)
-    pending=service.continue_project(s.project_root)['pending_tasks'][0]
-    assert pending['task_id']=='legacy-empty' and len(pending['call_allowances'])==1
-    assert pending['produced_against']==content_identity(s.load_document())
+def test_interrupted_bound_task_is_not_rebound_by_a_budget_change(tmp_path):
+    s = setup_project(tmp_path, 1)
+    t = dispatch(s)
+    d = s.load_document()
+    service._commit_task_update(s, d, t, {**t, 'call_allowances': []}, 'L1 interrupted allocation fixture')
+    policy(s, external_call_limit=0)
+    assert service.continue_project(s.project_root)['status'] == 'needs_input'
+    policy(s, external_call_limit=1)
+    before = s.load_document()
+    with pytest.raises(eligibility.EligibilityBlocked):
+        tasks.allocate_call_allowances(s, task_id=t['task_id'], count=1)
+    assert s.load_document() == before and _current(s, t)['call_allowances'] == []
+    service.task_cancel(s.project_root, task_id=t['task_id'])
+    fresh = service.continue_project(s.project_root)['pending_tasks'][0]
+    assert fresh['task_id'] != t['task_id'] and len(fresh['call_allowances']) == 1
+    assert fresh['collaboration_binding'] and fresh['protocol_version'] == 'generation.v1'
 
 
 def test_pointer_failure_preserves_old_project(tmp_path,monkeypatch):

@@ -14,10 +14,11 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from deck_master import generation, observations, service, tasks, workbench
+from deck_master import eligibility, generation, observations, service, tasks, workbench
 from deck_master.models import canonical_json_bytes, sha256_bytes, validate_schema
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
+from rc3_fixtures import authorize_scope, evidence_for, public_project, settle_fidelity_review
 
 THREAD = "11111111-1111-7111-8111-111111111111"
 TURN = "22222222-2222-7222-8222-222222222222"
@@ -46,12 +47,26 @@ def test_freeze_rejects_legacy_or_missing_project_before_creating_layout(tmp_pat
 
 @pytest.fixture
 def flow(tmp_path, monkeypatch):
-    project = tmp_path / "synthetic-project"
     draft = {"pages": [{"schema_version": "deck_page_package.v2", "page_id": "p1",
              "customer_visible": {"title": "Synthetic generation", "body_blocks": []},
              "visual_spec": {"intent": "Test only", "reference_mode": "new_design"}}]}
-    service.create(project, brief="W02 protocol test", draft=draft, project_format="workbench.v3")
-    task = service.continue_project(project)["pending_tasks"][0]
+    scope = {'subject': 'deck', 'page_ids': ['p1'], 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['narrative', 'plan', 'page_copy', 'speech',
+            'design', 'blueprint', 'svg', 'review', 'output'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+    project = public_project(tmp_path, create_input={'brief': 'W02 L1 protocol test'},
+        manuscript=draft, request_input={'intent': 'full_deck', 'content_intent': None, 'scope': scope,
+            'instruction_evidence': {'kind': 'host_attested_instruction',
+                'text': 'L1 synthetic protocol test: render this fixed page and permit at most two calls.',
+                'source_locator': 'L1:generation-protocol'}})['project']
+    settle_fidelity_review(project, page_ids=['p1'], execution_ref='L1-fidelity-generation',
+        scenario='Fixed imported page fidelity before generation protocol tests')
+    authorize_scope(project, actions=['dispatch.blueprint', 'change.commit', 'candidate.adopt',
+        'allowance.allocate', 'call.begin'], scope=scope, max_external_calls=2,
+        max_candidate_count=2, adoption_policy='within_scope', evidence=evidence_for(project,
+            text='Authorize these bounded L1 protocol calls and explicit candidate adoption.',
+            locator='L1:generation-protocol:grant'))
+    task = service.continue_project(project)['pending_tasks'][0]
     store = Store(project)
     root = tmp_path / "synthetic-runtime"
     monkeypatch.setattr(observations, "_session_root", lambda: root / "sessions")
@@ -81,7 +96,7 @@ def flow(tmp_path, monkeypatch):
 def start(flow):
     project, store, task, _ = flow
     service.task_start(project, task_id=task["task_id"], execution_ref=EXECUTION,
-                       supported_protocols=[generation.PROTOCOL], capabilities=generation.CAPABILITIES)
+                       supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
 
 
 def freeze(flow, **updates):
@@ -173,6 +188,10 @@ def test_native_roundtrip_links_one_ledger_and_replays_without_new_attempt(flow)
     shown = generation.show(project, attempt_id=attempt["attempt_id"])
     assert shown["call"]["state"] == "consumed"
     assert shown["observations"][0]["output"]["sha256"] == artifact["file"]["sha256"]
+    terminal_revision = store.current_revision_id()
+    assert settle(flow, attempt)['status'] == 'already_settled'
+    assert store.current_revision_id() == terminal_revision
+    assert generation.show(project, attempt_id=attempt['attempt_id']) == shown
     assert generation.show(project, attempt_id=attempt["attempt_id"], revision=before)["call"]["state"] == "consumed"
     historical = generation.show(project, attempt_id=attempt["attempt_id"], revision=in_flight_revision)
     assert historical["call"]["state"] == "in_flight" and historical["observations"] == []
@@ -224,10 +243,15 @@ def test_unknown_is_not_resend_permission_and_new_allowance_gets_new_attempt(flo
     frozen = freeze(flow)
     first = begin(flow, frozen)
     settle(flow, first, outcome="unknown")
-    with pytest.raises(tasks.CallBlocked):
+    before = store.load_document()
+    with pytest.raises(eligibility.EligibilityBlocked) as blocked:
         tasks.allocate_call_allowances(store, task_id=task["task_id"], count=1)
-    with pytest.raises(tasks.TaskConflict):
+    assert 'budget_unknown' in blocked.value.decision['reason_codes']
+    assert store.load_document() == before
+    with pytest.raises(eligibility.EligibilityBlocked) as blocked:
         begin(flow, frozen)
+    assert 'budget_unknown' in blocked.value.decision['reason_codes']
+    assert store.load_document() == before
     report, _ = native()
     settle(flow, first, report)
     allocated = tasks.allocate_call_allowances(store, task_id=task["task_id"], count=1)

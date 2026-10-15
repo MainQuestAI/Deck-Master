@@ -3,17 +3,26 @@ import uuid
 
 import pytest
 
-from deck_master import changes, service, tasks
+from deck_master import changes, eligibility, service, tasks
 from deck_master.models import content_identity
 from deck_master.operations import OperationError
 from deck_master.samples import create_sample
 from deck_master.store import Store
+from rc3_fixtures import authorize_scope, claim_fixture_task, evidence_for, settle_fidelity_review
 
 
 @pytest.fixture
 def sample(tmp_path):
     project = tmp_path / "synthetic ' $(no-command)"; create_sample(project, page_count=2, readonly=False)
-    store = Store(project); doc = store.load_document()
+    store = Store(project)
+    scope = store.load_document()['collaboration']['request']['scope']
+    evidence = evidence_for(project, text='L1 explicit selected content/image change and its bounded call facts only',
+        locator='synthetic-l1:test_changes')
+    authorize_scope(project, actions=['change.commit', 'candidate.adopt', 'allowance.allocate', 'call.begin'],
+        scope=scope, max_external_calls=2, max_candidate_count=2, adoption_policy='within_scope', evidence=evidence)
+    settle_fidelity_review(project, page_ids=['p01', 'p02'], execution_ref='L1-synthetic-changes-fidelity',
+        scenario='current two-page change protocol')
+    doc = store.load_document()
     value = {'schema_version': 'change_intent.v1', 'project_id': doc['project_id'],
              'base_revision': doc['revision_id'], 'intent': 'clarify', 'instruction': 'Clarify the selected page.',
              'annotation_refs': [], 'max_calls': 0,
@@ -30,9 +39,8 @@ def commit(store, value, op=None):
 
 
 def start(store, task_id):
-    return service.task_start(store.project_root, task_id=task_id, execution_ref='synthetic-test-host',
-                              supported_protocols=['changes.v1', 'generation.v1'],
-                              capabilities=['change_plan', 'generation_request_freeze', 'attempt_binding', 'native_tool_observation'])
+    task = tasks._lookup_task(store.load_document(), task_id, store)
+    return claim_fixture_task(store.project_root, task, execution_ref='synthetic-test-host')
 
 
 def test_content_trial_records_the_protocol_stage_and_leaves_the_page_alone(sample):
@@ -93,8 +101,9 @@ def test_upper_bound_batch_reserves_once_and_cannot_allocate_more(sample):
     now = store.load_document()
     selected = [tasks._lookup_task(now, tid, store) for tid in result['operation_result']['task_ids']]
     assert [len(t['call_allowances']) for t in selected] == [1, 1]
-    with pytest.raises(tasks.CallBlocked, match='upper bound'):
+    with pytest.raises(eligibility.EligibilityBlocked) as blocked:
         tasks.allocate_call_allowances(store, task_id=selected[0]['task_id'], count=1)
+    assert 'budget_exhausted' in blocked.value.decision['reason_codes']
     assert store.current_revision_id() == now['revision_id']
 
 

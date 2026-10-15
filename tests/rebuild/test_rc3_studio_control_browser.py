@@ -35,10 +35,11 @@ def open_control_action(page, name):
 @pytest.fixture
 def rc3_browser(tmp_path, request):
     requested = getattr(request, "param", None)
+    empty = isinstance(requested, dict) and requested.get("empty")
     handle = public_project(tmp_path, create_input={"brief": "保留原稿主线，核对范围后再制作", "title": "请求与草稿验证"},
-                            request_input={"intent": "content_only", "content_intent": requested} if requested else None,
-                            manuscript={"pages": [manuscript_page("p01", "先核对实际稿件"),
-                                                   manuscript_page("p02", "再决定下一步")]})
+                            request_input={"intent": "content_only", "content_intent": requested} if requested and not empty else None,
+                            manuscript=None if empty else {"pages": [manuscript_page("p01", "先核对实际稿件"),
+                                                                    manuscript_page("p02", "再决定下一步")]})
     store = Store(handle["project"])
     (tmp_path / "scenario-manifest.json").write_text(json.dumps(handle["scenario_manifest"], indent=2))
     assert store.load_document()["collaboration"]["authorizations"] == []
@@ -227,12 +228,21 @@ def test_readonly_external_report_keeps_source_and_readable_packet(rc3_browser, 
     page.get_by_role("button", name="只读审阅稿件", exact=True).click()
     dialog = page.get_by_role("dialog", name="只读审阅稿件")
     dialog.get_by_label("源文件或项目位置（必填）").fill(str(source))
-    dialog.get_by_role("button", name="读取并生成审阅报告", exact=True).click()
+    with page.expect_response("**/api/reviews/evaluate") as response:
+        dialog.get_by_role("button", name="读取并生成审阅报告", exact=True).click()
+    assert response.value.status == 409
+    actual_report = response.value.json()["result"]["external_report"]
+    (tmp_path / "external-http-409.json").write_text(json.dumps(response.value.json(), ensure_ascii=False, indent=2), encoding="utf-8")
     expect(dialog).to_contain_text("仍需审阅者")
     expect(dialog).to_contain_text("外部原稿：明确比较两个方案")
     expect(dialog.get_by_role("button", name="下载完整审阅报告", exact=True)).to_be_enabled()
+    with page.expect_download() as download:
+        dialog.get_by_role("button", name="下载完整审阅报告", exact=True).click()
+    download.value.save_as(tmp_path / "downloaded-external-review.json")
+    assert json.loads((tmp_path / "downloaded-external-review.json").read_text()) == actual_report
     assert source_snapshot(source_root) == before
     assert store.load_document() == original
+    page.screenshot(path=str(tmp_path / "http-409-readable-external-report.png"), full_page=True)
 
 
 def test_new_speech_request_uses_explicit_one_page_scope(rc3_browser):

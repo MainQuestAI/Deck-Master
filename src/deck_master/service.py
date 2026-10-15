@@ -865,9 +865,10 @@ def _recover_input_revision(store):
         # consumes the same gate as every other phased dispatch, so a paused
         # request gains no reconciliation task through `continue` either
         # (independent re-review N1, F06's contract).
-        eligibility.guard(store, updated, "dispatch.compose")
         task = revision_compose_task(store, updated, operation_id=change.get('operation_id'),
                                    reason=change.get('description') or 'Resume reconciliation against current inputs')
+        eligibility.guard(store, updated, 'dispatch.compose', context={'task': task,
+            'targets': (task.get('collaboration_binding') or {}).get('write_scope')})
         updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'], document=updated,
                          operation_id=updated['change']['operation_id'], blobs=[])
@@ -965,6 +966,31 @@ def _continue_project(project_dir: Path | str) -> dict:
         report = store.read_object_json(document['outputs']['render_report'])
         existing_report_failed = json.loads(store.read_object_bytes(report['file'])).get('status') == 'fail'
     for entry in document.get("pages") or []:
+        if entry.get('page') and entry.get('blueprint'):
+            from .models import ModelError
+            from .production import adopted_blueprint_design, resolve_page_design
+            try:
+                resolve_page_design(store, document, entry, require_current=True)
+            except ModelError as exc:
+                if exc.path != 'blueprint/content_basis':
+                    raise
+                bound = adopted_blueprint_design(store, document, entry)
+                if bound and bound['recipe_ref'] is not None:
+                    return _response(status='needs_input', document=document, requested_action='continue',
+                        findings=[{'code': 'blueprint_basis_changed', 'page_id': entry['page_id'],
+                            'blueprint_ref': entry['blueprint'], 'recipe_ref': bound['recipe_ref'],
+                            'detail': 'The retained original image has a different consumed manuscript basis; preview a bounded new visual change with its fixed recipe.'}],
+                        next_action='preview_bounded_visual_change')
+                # A formal old bitmap remains immutable history, never fresh
+                # evidence for the edited Page. Any replacement still needs
+                # the real current image scope, pre-review and bounded credit;
+                # a copy-only instruction receives that named admission gap.
+                task = open_blueprint_task(store, document, entry)
+                current = store.load_document()
+                return _response(status='awaiting_host', document=current, requested_action='continue',
+                    pending_tasks=[task_summary(store, current, task)],
+                    findings=[{'code': 'blueprint_basis_changed', 'page_id': entry['page_id'],
+                        'retained_blueprint_ref': entry['blueprint']}], next_action='codex_generate_blueprint')
         if entry.get("page") and not entry.get("blueprint"):
             task = open_blueprint_task(store, document, entry)
             document = store.load_document()
@@ -1713,6 +1739,22 @@ def accept_result(
         if key in outcome:
             response[key] = outcome[key]
     return response
+
+
+def preview_draft_import(project_dir, *, draft_payload, preserve_mainline=True):
+    """Pure complete-manuscript write-set preview for an explicit UI request."""
+    _validate_draft(draft_payload)
+    from .project_initialization import _manuscript_write_set
+    store = Store(project_dir)
+    doc = store.load_document()
+    write_set = _manuscript_write_set(store, doc, draft_payload, preserve_mainline=preserve_mainline)
+    scope = {'subject': 'pages', 'page_ids': write_set['page_ids'], 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': write_set['layers'],
+        'allow_page_membership_change': write_set['allow_page_membership_change'],
+        'allow_page_order_change': write_set['allow_page_order_change'], 'purpose': 'working'}
+    return {'status': 'planned', 'project_id': doc['project_id'], 'revision_id': doc['revision_id'],
+        'write_set': write_set, 'required_scope': scope, 'persistence': 'none',
+        'creates_confirmation': False, 'authorizes_production': False}
 
 
 def import_draft(project_dir, *, draft_path=None, draft_payload=None, base_revision=None,

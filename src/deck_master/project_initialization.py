@@ -37,8 +37,12 @@ def request_defaults(store, document, *, supplied=None, page_ids=(), imported=Fa
     return value
 
 
-def imported_plan(store, document, pages, source_ref, evidence, *, preserve_mainline=True, outline=None):
+def _manuscript_plan_input(document, pages, outline):
     order = [entry["page_id"] for entry in pages]
+    hard_limit = document['task'].get('page_limit')
+    if hard_limit is not None and len(order) > hard_limit:
+        raise models.ModelError('draft/page_order',
+            f'actual manuscript exceeds the provided hard maximum page_limit={hard_limit}')
     plan_input = {"schema_version": "content_plan_input.v2", "chapters": [],
         "page_order": order, "page_roles": [],
         "page_budget": {"exact": None, "target": None, "max": document["task"].get("page_limit")},
@@ -72,6 +76,18 @@ def imported_plan(store, document, pages, source_ref, evidence, *, preserve_main
                 'timing_seconds': None, 'transition_to_next': None} for pid in order]
             unresolved.extend(outline.get('unresolved_facts') or [])
             unresolved.extend(f"{pid}: {item}" for pid in order for item in goals[pid].get('unresolved_facts', []))
+    if outline is None:
+        plan_input['page_roles'] = [{'page_id': pid, 'role': 'Imported page; rhetorical role unverified',
+            'audience_question': 'Not recorded in the imported manuscript',
+            'intended_takeaway': 'Not recorded in the imported manuscript',
+            'narrative_node_ids': [], 'source_links': [], 'required_qualifications': [],
+            'content_profile': 'mixed', 'density_rationale': 'Imported content retained; density has not been assessed',
+            'timing_seconds': None, 'transition_to_next': None} for pid in order]
+    return plan_input, unresolved
+
+
+def imported_plan(store, document, pages, source_ref, evidence, *, preserve_mainline=True, outline=None):
+    plan_input, unresolved = _manuscript_plan_input(document, pages, outline)
     return build_v2_plan(store, document, {"task_id": None, "intent": "import_draft",
         "dispatch_revision": document["revision_id"], "input_digest": models.compute_input_digest(document)},
         plan_input, pages, narrative_ref=None, mode="imported_mapping", require_role_mapping=False,
@@ -80,27 +96,13 @@ def imported_plan(store, document, pages, source_ref, evidence, *, preserve_main
             "unresolved_mapping_items": unresolved})
 
 
-def prepare_manuscript(store, doc, payload, *, evidence=None, preserve_mainline=True, adapter_context=None, digest=None):
-    """Normalize fixed input bytes; the owning transaction alone publishes them.
-
-    New-project initialization uses this before any public current pointer exists.
-    Existing-project import still requires its normal CAS/scope gate first.
-    """
+def _manuscript_pages(payload):
+    """Pure normalization, shared by admission and the actual stored write."""
     checked = [copy.deepcopy(content.check_page(page)) for page in payload["pages"]]
     ids = [page["page_id"] for page in checked]
     order = payload.get("page_order") or ids
     if len(ids) != len(set(ids)) or len(order) != len(ids) or set(order) != set(ids):
         raise models.ModelError("draft/page_order", "must name every unique Page exactly once")
-    digest = digest or collaboration.payload_digest("manuscript.import", {"draft": payload,
-        "instruction_evidence": evidence, "preserve_mainline": preserve_mainline})
-    source_ref = store.put_blob(models.canonical_json_bytes(payload), ext="json")
-    declared = evidence or {"kind": "approved_document", "source_ref": source_ref,
-        "source_locator": "import:actual-manuscript", "actor_id": None,
-        "transport_receipt_ref": None, "presentation_ref": None}
-    resolved = collaboration.resolve_evidence(declared, adapter_context, store=store,
-        where="draft/instruction_evidence", action_binding=digest,
-        project_id=doc["project_id"], request_id=((doc.get("collaboration") or {}).get("request") or {}).get("request_id"))
-    collaboration._require_stored_evidence_refs(store, resolved, "draft/evidence")
     by_id = {}
     for page in checked:
         notes = page.get("speaker_notes") or ""
@@ -115,9 +117,101 @@ def prepare_manuscript(store, doc, payload, *, evidence=None, preserve_mainline=
                 "end_codepoint": len(notes), "narrative_node_ids": [], "kind": "cue",
                 "estimated_seconds": None}] if notes else [])}
         content.check_page(page)
-        by_id[page["page_id"]] = {"page_id": page["page_id"], "page": store.put_json_object(page),
-            "blueprint": None, "svg": None, "svg_preview": None, "ppt_preview": None}
-    pages = [by_id[pid] for pid in order]
+        by_id[page['page_id']] = page
+    return [by_id[pid] for pid in order]
+
+
+def _manuscript_write_set(store, doc, payload, *, preserve_mainline):
+    """The complete replacement effect, before even immutable staging writes.
+
+    import_draft is a complete manuscript, not an implicit patch: omissions are
+    removals and its explicit order is the resulting order. Identical retained
+    Pages keep their original refs and visual slots.
+    """
+    after = {page['page_id']: page for page in _manuscript_pages(payload)}
+    before = {entry['page_id']: store.read_object_json(entry['page']) for entry in doc['pages']}
+    old_order, new_order = list(before), list(after)
+    changed = {pid for pid in set(before) | set(after) if before.get(pid) != after.get(pid)}
+    layers = {'plan'}
+    for pid in changed:
+        old, new = before.get(pid) or {}, after.get(pid) or {}
+        if (old.get('speaker_notes', ''), (old.get('content_mapping') or {}).get('speech_segments', [])) != (
+                new.get('speaker_notes', ''), (new.get('content_mapping') or {}).get('speech_segments', [])):
+            layers.add('speech')
+        copy_views = []
+        for page in (old, new):
+            view = copy.deepcopy(page)
+            view.pop('speaker_notes', None)
+            if view.get('content_mapping'):
+                view['content_mapping'].pop('speech_segments', None)
+            copy_views.append(view)
+        if copy_views[0] != copy_views[1]:
+            layers.add('page_copy')
+    targets = set(changed)
+    plan_input, _ = _manuscript_plan_input(doc, list(after.values()), payload.get('content_plan'))
+    previous = store.read_object_json(doc['content_plan']) if doc.get('content_plan') else None
+    old_input = (previous or {}).get('input') or {}
+    if old_input.get('schema_version') == 'content_plan_input.v2':
+        old_roles = {role['page_id']: role for role in old_input['page_roles']}
+        new_roles = {role['page_id']: role for role in plan_input['page_roles']}
+        targets.update(pid for pid in set(old_roles) | set(new_roles) if old_roles.get(pid) != new_roles.get(pid))
+        global_fields = set(old_input) | set(plan_input)
+        global_fields -= {'page_order', 'page_roles', 'chapters'}
+        if (any(old_input.get(key) != plan_input.get(key) for key in global_fields)
+                or old_input.get('chapters') != plan_input.get('chapters')):
+            targets.update(set(before) | set(after))
+    elif previous:
+        targets.update(set(before) | set(after))
+    if doc.get('narrative'):
+        layers.add('narrative')
+        targets.update(set(before) | set(after))
+    if any(doc['outputs'].values()):
+        layers.add('output')
+        targets.update(set(before) | set(after))
+    invalidated = []
+    for entry in doc['pages']:
+        if entry['page_id'] not in changed:
+            continue
+        for slot, layer in (('blueprint', 'blueprint'), ('svg', 'svg'), ('svg_preview', 'svg'), ('ppt_preview', 'output')):
+            if entry.get(slot):
+                layers.add(layer)
+                invalidated.append(entry[slot])
+    profile = (doc.get('collaboration') or {}).get('quality_profile')
+    if preserve_mainline and profile != collaboration_region(imported=True)['quality_profile']:
+        layers.add('review')
+        targets.update(set(before) | set(after))
+    if (doc.get('content_basis') or {}).get('input_digest') not in (None, models.compute_input_digest(doc)):
+        targets.update(set(before) | set(after))
+    retained = set(before) & set(after)
+    return {'page_ids': sorted(targets), 'layers': sorted(layers),
+        'allow_page_membership_change': set(before) != set(after),
+        'allow_page_order_change': [pid for pid in old_order if pid in retained] != [pid for pid in new_order if pid in retained],
+        'added_page_ids': sorted(set(after) - set(before)), 'removed_page_ids': sorted(set(before) - set(after)),
+        'page_order': new_order, 'changed_page_ids': sorted(changed),
+        'invalidated_refs': invalidated, 'invalidated_outputs': [ref for ref in doc['outputs'].values() if ref]}
+
+
+def prepare_manuscript(store, doc, payload, *, evidence=None, preserve_mainline=True, adapter_context=None, digest=None):
+    """Normalize fixed input bytes; the owning transaction alone publishes them."""
+    checked = _manuscript_pages(payload)
+    digest = digest or collaboration.payload_digest("manuscript.import", {"draft": payload,
+        "instruction_evidence": evidence, "preserve_mainline": preserve_mainline})
+    source_ref = store.put_blob(models.canonical_json_bytes(payload), ext="json")
+    declared = evidence or {"kind": "approved_document", "source_ref": source_ref,
+        "source_locator": "import:actual-manuscript", "actor_id": None,
+        "transport_receipt_ref": None, "presentation_ref": None}
+    resolved = collaboration.resolve_evidence(declared, adapter_context, store=store,
+        where="draft/instruction_evidence", action_binding=digest,
+        project_id=doc["project_id"], request_id=((doc.get("collaboration") or {}).get("request") or {}).get("request_id"))
+    collaboration._require_stored_evidence_refs(store, resolved, "draft/evidence")
+    previous_entries = {entry['page_id']: entry for entry in doc['pages']}
+    pages = []
+    for page in checked:
+        ref = store.put_json_object(page)
+        old = previous_entries.get(page['page_id'])
+        pages.append(copy.deepcopy(old) if old and old['page'] == ref else {
+            'page_id': page['page_id'], 'page': ref, 'blueprint': None,
+            'svg': None, 'svg_preview': None, 'ppt_preview': None})
     plan_ref = imported_plan(store, doc, pages, source_ref, resolved,
                              preserve_mainline=preserve_mainline, outline=payload.get('content_plan'))
     region = copy.deepcopy(doc["collaboration"])
@@ -134,11 +228,7 @@ def adopt_manuscript(store, payload, *, base_revision, operation_id, evidence=No
                      preserve_mainline=True, adapter_context=None):
     """One source-bound Page/Plan/current swap; no old compose Task is opened."""
     from . import eligibility
-    checked = [copy.deepcopy(content.check_page(page)) for page in payload["pages"]]
-    ids = [page["page_id"] for page in checked]
-    order = payload.get("page_order") or ids
-    if len(ids) != len(set(ids)) or len(order) != len(ids) or set(order) != set(ids):
-        raise models.ModelError("draft/page_order", "must name every unique Page exactly once")
+    _manuscript_pages(payload)
     digest = collaboration.payload_digest("manuscript.import", {"draft": payload,
         "instruction_evidence": evidence, "preserve_mainline": preserve_mainline})
     with store._locked():
@@ -148,15 +238,20 @@ def adopt_manuscript(store, payload, *, base_revision, operation_id, evidence=No
             return replay
         if base_revision != doc["revision_id"]:
             raise ConflictError("base_revision", "manuscript import requires the current base")
-        eligibility.guard(store, doc, "import_draft", context={"targets": {
-            "page_ids": ids, "layers": ["page_copy", "plan"]}})
+        write_set = _manuscript_write_set(store, doc, payload, preserve_mainline=preserve_mainline)
+        eligibility.guard(store, doc, 'import_draft', context={'targets': write_set,
+            'manuscript_import': {'input_digest': models.compute_input_digest(doc),
+                'covered_page_ids': write_set['page_ids'],
+                'source_sha256': models.sha256_bytes(models.canonical_json_bytes(payload))}})
         updated, normalized = prepare_manuscript(store, doc, payload, evidence=evidence,
             preserve_mainline=preserve_mainline, adapter_context=adapter_context, digest=digest)
         source_ref, plan_ref = normalized["source_ref"], normalized["plan_ref"]
         pages = updated["pages"]
         # Pending work belongs to the replaced draft, never to the imported one.
+        affected = set(write_set['page_ids'])
         updated["tasks"] = [store.put_json_object({**task, "status": "superseded"})
-            if task["status"] in ("running", "awaiting_host", "queued") else ref
+            if task["status"] in ("running", "awaiting_host", "queued")
+                and (task['kind'] == 'compose' or not task['scope_pages'] or affected.intersection(task['scope_pages'])) else ref
             for ref in doc["tasks"] for task in [store.read_object_json(ref)]]
         models.require_writer(updated, "rc3-entry.v1")
         return collaboration.commit_collaboration_change(store, doc, operation_id=operation_id,
@@ -164,4 +259,4 @@ def adopt_manuscript(store, payload, *, base_revision, operation_id, evidence=No
             updated=updated, response={"page_refs": [entry["page"] for entry in pages],
                 "plan_ref": plan_ref, "source_ref": source_ref, "result_refs": [plan_ref],
                 "narrative_ref": None, "creates_confirmation": False,
-                "authorizes_production": False, "assurance": normalized["assurance"]})
+                "authorizes_production": False, "assurance": normalized["assurance"], 'write_set': write_set})

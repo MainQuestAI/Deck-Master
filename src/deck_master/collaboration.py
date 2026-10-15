@@ -313,12 +313,46 @@ def _request_source_key(request: dict) -> str:
     source = evidence.get("source_ref") or {}
     variant = request.get("variant") or {}
     return sha256_bytes(canonical_json_bytes({
-        "locator": locator or source.get("sha256"),
+        "locator": locator,
+        "source_sha256": source.get("sha256"),
         "intent": request.get("intent"),
         "content_intent": request.get("content_intent"),
         "scope": request.get("scope"),
         "variant_id": variant.get("variant_id"),
+        "variant_group_id": variant.get("group_id"),
     }))
+
+
+def _matching_request_source(store, document, candidate):
+    """Read committed ancestry, not a disposable replay/source cache.
+
+    A match identifies the original request; its latest committed state and the
+    current control remain separate. Replaying a superseded source never
+    reopens that request, restores its grants or creates a new credit identity.
+    """
+    from .snapshots import committed_snapshots
+    histories = [document]
+    if store.current_revision_id() is not None:
+        histories.extend(committed_snapshots(store))
+    requests = [(snapshot, (snapshot.get('collaboration') or {}).get('request')) for snapshot in histories]
+    source_key = _request_source_key(candidate)
+    match = next(((snapshot, request) for snapshot, request in requests
+        if request and _request_source_key(request) == source_key), None)
+    if match is None:
+        return None
+    _, original = match
+    latest_snapshot, latest = next((snapshot, request) for snapshot, request in requests
+        if request and request['request_id'] == original['request_id'])
+    current = (document.get('collaboration') or {}).get('request')
+    current_id = (current or {}).get('request_id')
+    state = ('closed' if latest.get('closed') else 'superseded' if latest['request_id'] != current_id
+        else 'paused' if latest.get('paused') else 'open')
+    return {'status': 'already_started', 'request_id': latest['request_id'],
+        'request_source_key': source_key, 'request_state': state,
+        'request': copy.deepcopy(latest), 'effective_scope': copy.deepcopy(latest['scope']),
+        'request_revision_id': latest_snapshot['revision_id'],
+        'current_request_id': current_id, 'current_request': copy.deepcopy(current),
+        'revision_id': document['revision_id'], 'creates_request': False, 'refreshes_credit': False}
 
 
 # ---------------------------------------------------------------------------
@@ -400,10 +434,10 @@ def _stage_request(store, document, input, *, operation_id, digest, adapter_cont
     _require_scope_refs(store, candidate["scope"], "collaboration/request/scope")
     if input.get("request_source_key") is not None and input["request_source_key"] != _request_source_key(candidate):
         raise ModelError("collaboration/request/request_source_key", "does not match the Runtime-computed source key")
+    same_source = _matching_request_source(store, document, candidate)
+    if same_source:
+        return None, same_source
     if current is not None and not current.get("closed"):
-        if _request_source_key(current) == _request_source_key(candidate):
-            return None, {"status": "already_started", "request_id": current["request_id"],
-                    "revision_id": document["revision_id"]}
         if replace_request_id != current.get("request_id"):
             raise ModelError(
                 "collaboration/request",

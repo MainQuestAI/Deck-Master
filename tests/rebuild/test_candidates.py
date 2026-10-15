@@ -4,17 +4,35 @@ import uuid
 
 import pytest
 
-from deck_master import candidates, changes, generation, service, tasks
+from deck_master import candidates, changes, collaboration, generation, service, tasks
 from deck_master.models import bump_revision
 from deck_master.operations import OperationError
 from deck_master.samples import create_sample
 from deck_master.store import Store
+from rc3_fixtures import authorize_scope, evidence_for, historical_snapshot, settle_fidelity_review
 
 
 @pytest.fixture
 def store(tmp_path):
     project = tmp_path / 'candidate-project'
     create_sample(project, page_count=2, readonly=False)
+    current = Store(project).load_document()
+    scope = {'subject': 'deck', 'page_ids': ['p01', 'p02'], 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['narrative', 'plan', 'page_copy', 'speech',
+            'design', 'blueprint', 'svg', 'review', 'output'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
+    collaboration.start_request(project, input={'intent': 'full_deck', 'content_intent': None,
+        'scope': scope, 'replace_request_id': current['collaboration']['request']['request_id'],
+        'instruction_evidence': evidence_for(project,
+            text='L1 synthetic candidate tests: compare two fixed pages, retain originals and adopt explicit selections.',
+            locator='L1:candidates:request')}, base_revision=current['revision_id'], operation_id='L1-candidates-request')
+    settle_fidelity_review(project, page_ids=['p01', 'p02'], execution_ref='L1-fidelity-candidates',
+        scenario='Confirmed synthetic sample text before bounded candidate workflows')
+    authorize_scope(project, actions=['change.commit', 'candidate.adopt', 'dispatch.blueprint',
+        'allowance.allocate', 'call.begin'], scope=scope, max_external_calls=2, max_candidate_count=4,
+        adoption_policy='within_scope', evidence=evidence_for(project,
+            text='Authorize at most two L1 image calls and four bounded candidate trials for these pages.',
+            locator='L1:candidates:grant'))
     return Store(project)
 
 
@@ -77,7 +95,7 @@ def test_trial_no_current_writes_and_atomic_idempotent_adoption(store):
     after = store.load_document()
     assert result['status'] == 'candidate_ready' and result['current_artifacts_changed'] is False
     assert before['pages'] == after['pages'] and before['outputs'] == after['outputs']
-    assert after['compatibility']['minimum_writer'] == 'workbench-quality.v1'
+    assert after['compatibility']['minimum_writer'] == before['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     replay = accept(store, task)
     assert replay['status'] == 'already_applied' and replay['operation_result']['candidate_ids'] == [cid]
     assert len(candidates.listing(store.project_root)['candidates']) == 1
@@ -266,7 +284,7 @@ def test_blueprint_candidate_keeps_request_attempt_and_only_adoption_changes_ori
         references = [{'page_id': 'p1', 'revision_id': doc['revision_id'], 'artifact_ref': doc['pages'][0]['blueprint'], 'role': 'reference'}]
     task = dispatch(store, 'p1', layer='original_image', references=references)
     service.task_start(project, task_id=task['task_id'], execution_ref=EXECUTION,
-                       supported_protocols=['generation.v1'], capabilities=[*generation.CAPABILITIES, 'change_plan', 'candidate_result'])
+                       supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
     prepared = generation.prepared_input(store, store.load_document(), task)
     prepared['parameters'] = {'transparent_background': False}
     frozen = generation.freeze(project, task_id=task['task_id'], input=prepared,
@@ -313,8 +331,9 @@ def test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays(store,
     else:
         for pid in ('p01', 'p02'):
             task = service.open_host_task(store, kind='reconstruct', page_ids=[pid], instruction='Synthetic normal automatic SVG return')
+            start(store, task)
             accept(store, task)
-        assert store.load_document()['compatibility']['minimum_writer'] == 'workbench-quality.v1'
+        assert store.load_document()['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     for _ in range(2):
         pending = service.continue_project(store.project_root)['pending_tasks'][0]
         assert pending['kind'] == 'review' and pending['review_stage'] == 'page_visual'
@@ -327,7 +346,7 @@ def test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays(store,
     assert response['operation_result']['status'] == 'assembled'
     after = store.load_document()
     assert all(e['ppt_preview'] for e in after['pages']) and after['outputs']['pptx']
-    assert after['compatibility']['minimum_writer'] == 'rc3.v1'
+    assert after['compatibility']['minimum_writer'] == 'rc3-entry.v1'
     assert response['operation_result']['final_review'] == 'required'
     def unexpected(*args, **kwargs): raise AssertionError('replay must not compile again')
     monkeypatch.setattr(pipeline, 'compile_deck', unexpected)
@@ -346,9 +365,9 @@ def test_explicit_svg_stage_requires_original_hash(store):
 
 def test_explicit_assembly_does_not_migrate_legacy_project(tmp_path):
     from deck_master import stages
-    project = tmp_path / 'legacy-core'; service.create(project, brief='legacy core stays legacy')
+    project = historical_snapshot(tmp_path, scenario='Fixed pre-migration assembly refusal')['project']
     store = Store(project); before = store.read_current()
     with pytest.raises(OperationError) as error:
         stages.assemble(project, base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
-    assert error.value.error_code == 'stage_format_required'
+    assert error.value.error_code == 'migration_required'
     assert store.read_current() == before

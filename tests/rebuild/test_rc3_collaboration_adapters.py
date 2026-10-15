@@ -185,7 +185,9 @@ def test_real_http_binds_url_body_registry_and_fixed_project(tmp_path, launcher)
         source.write_text('HTTP external copy')
         external_scope = {**scope(), 'layers': ['review'], 'allow_page_membership_change': False}
         status, response = http(url, '/api/reviews/evaluate', {'source': str(source), 'scope': external_scope, 'persistence': 'none'})
-        assert status == 200 and response['status'] == 'needs_reviewer'
+        assert status == 409 and response['status'] == 'needs_reviewer'
+        assert response['error']['code'] == 'needs_reviewer'
+        assert response['result']['external_report']['report']['engineering_observations'][0]['text'] == 'HTTP external copy'
         assert source_snapshot(project) == before
 
 
@@ -561,10 +563,83 @@ def test_cli_explicit_fileset_descriptor_needs_no_unused_source_argument(tmp_pat
     b.write_text('Speech')
     descriptor = tmp_path / 'source.json'
     descriptor.write_text(json.dumps({'kind': 'fileset', 'files': [str(a), str(b)]}))
-    assert cli.main(['review', 'evaluate', '--source-input', str(descriptor)]) == 0
-    report = json.loads(capsys.readouterr().out)['result']['external_report']['report']
+    assert cli.main(['review', 'evaluate', '--source-input', str(descriptor)]) == 4
+    captured = capsys.readouterr()
+    assert captured.out == ''
+    response = json.loads(captured.err)
+    assert response['error']['code'] == 'needs_reviewer'
+    report = response['result']['external_report']['report']
     assert report['source_manifest']['source_kind'] == 'fileset'
     assert len(report['subjects']) == 2 and report['reviews'] == []
+
+
+def test_external_review_cli_gap_keeps_readable_report_and_bad_hash_writes_nothing(tmp_path, capsys):
+    source_root = tmp_path / 'external-source'
+    source_root.mkdir()
+    source = source_root / 'manuscript.txt'
+    source.write_text('A real local manuscript read without a Document or reviewer.')
+    before = source_snapshot(source_root)
+    report_path = tmp_path / 'reports' / 'cli-review.json'
+    assert cli.main(['review', 'evaluate', str(source), '--report-output', str(report_path)]) == 4
+    captured = capsys.readouterr()
+    assert captured.out == ''
+    response = json.loads(captured.err)
+    assert response['status'] == response['result']['status'] == response['error']['code'] == 'needs_reviewer'
+    assert response['error']['recoverable'] is True
+    assert response['next_action'] == response['result']['next_action'] == 'review_the_readable_packet'
+    packet = response['result']['external_report']
+    assert json.loads(report_path.read_text()) == packet
+    assert packet['report_sha256'] == models.sha256_bytes(models.canonical_json_bytes(packet['report']))
+    assert packet['report']['engineering_observations'][0]['text'] == source.read_text()
+    assert packet['report']['provenance']['reviewer_executed'] is False
+    assert packet['report']['reviews'] == []
+    rejected_output = tmp_path / 'reports' / 'invalid-hash.json'
+    assert cli.main(['review', 'evaluate', str(source), '--source-sha256', '0' * 64,
+        '--report-output', str(rejected_output)]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ''
+    rejected = json.loads(captured.err)
+    assert rejected['error']['code'] == 'invalid_input' and rejected['error']['path'] == 'source_sha256'
+    assert rejected['result'] is None
+    assert not rejected_output.exists()
+    assert source_snapshot(source_root) == before
+
+
+@pytest.mark.parametrize('launcher', [False, True])
+def test_external_review_real_http_gap_keeps_report_and_invalid_hash_is_separate(tmp_path, launcher):
+    project = new_project(tmp_path)
+    registry_file = tmp_path / 'projects.json' if launcher else None
+    before_project = source_snapshot(project)
+    source_root = tmp_path / 'external-source'
+    source_root.mkdir()
+    source = source_root / 'manuscript.txt'
+    source.write_text('Actual HTTP manuscript text, with no reviewer execution.')
+    before_source = source_snapshot(source_root)
+    report_path = tmp_path / 'reports' / 'http-review.json'
+    external_scope = {**scope(), 'subject': 'external_artifact', 'layers': ['review'],
+                      'allow_page_membership_change': False, 'purpose': 'review'}
+    payload = {'source': str(source), 'scope': external_scope, 'persistence': 'none',
+               'report_output': str(report_path)}
+    with http_server(project, registry_file=registry_file) as url:
+        status, response = http(url, '/api/reviews/evaluate', payload)
+        assert status == 409, response
+        assert response['status'] == response['result']['status'] == response['error']['code'] == 'needs_reviewer'
+        assert response['error']['recoverable'] is True
+        assert response['error']['details']['affected_scope'] == external_scope
+        assert response['project_id'] is None
+        packet = response['result']['external_report']
+        assert json.loads(report_path.read_text()) == packet
+        assert packet['report_sha256'] == models.sha256_bytes(models.canonical_json_bytes(packet['report']))
+        assert packet['report']['engineering_observations'][0]['text'] == source.read_text()
+        assert packet['report']['source_unchanged'] is True and packet['report']['reviews'] == []
+        assert response['next_action'] == 'review_the_readable_packet'
+        rejected_output = tmp_path / 'reports' / 'invalid-http-hash.json'
+        status, rejected = http(url, '/api/reviews/evaluate', {**payload,
+            'source_sha256': '0' * 64, 'report_output': str(rejected_output)})
+        assert status == 400 and rejected['error']['path'] == 'source_sha256'
+        assert rejected['result'] is None and not rejected_output.exists()
+    assert source_snapshot(source_root) == before_source
+    assert source_snapshot(project) == before_project
 
 
 def test_http_explicit_continue_returns_actual_work_order_without_duplicate_dispatch(tmp_path):

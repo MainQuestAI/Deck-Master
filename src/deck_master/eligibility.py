@@ -939,7 +939,7 @@ def _intent_allows(spec: ActionSpec, request: dict | None, targets=None) -> str 
     return None
 
 
-def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpec) -> bool:
+def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpec, context=None) -> bool:
     """Whether this action claims the compose.v2 input_revision task that
     answers for the pending reconciliation (external review F05).
 
@@ -948,7 +948,12 @@ def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpe
     the current inputs, and its binding must name the current request.
     Production that still depends on the old content stays blocked.
     """
-    if spec.name != "task.start" or task is None:
+    if spec.name == 'import_draft':
+        manuscript = (context or {}).get('manuscript_import') or {}
+        return (manuscript.get('input_digest') == models.compute_input_digest(control)
+            and set(manuscript.get('covered_page_ids') or []) >= {entry['page_id'] for entry in control['pages']}
+            and bool(manuscript.get('source_sha256')))
+    if spec.name not in ('task.start', 'dispatch.compose') or task is None:
         return False
     if task.get("intent") != "input_revision" \
             or task.get("protocol_version") != "compose.v2":
@@ -1288,7 +1293,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
 
     # -- input reconciliation ---------------------------------------------
     if enforced and spec.production and models.input_alignment(control) == "needs_reconciliation":
-        if not _reconciles_current_inputs(control, task, spec):
+        if not _reconciles_current_inputs(control, task, spec, context):
             block("input_reconciliation_pending",
                   "inputs changed; reconcile the content against the new inputs first")
 

@@ -11,7 +11,9 @@ from deck_master import service
 from deck_master.store import Store
 from deck_master.tasks import EnvelopeError, TaskConflict
 from page_visual_helpers import make_page_reviews, pass_page_review
-from test_service_flow import _blueprint_envelope, _draft_page, _png_bytes, _svg_for
+from test_service_flow import (_blueprint_envelope, _draft_page, _png_bytes, _svg_for,
+    _prepare_production, _authorize_replacement_image)
+from rc3_fixtures import accept_synthetic_blueprint, claim_fixture_task
 
 
 def _accept(project, task, envelope, *, file_name=None, data=None):
@@ -19,6 +21,11 @@ def _accept(project, task, envelope, *, file_name=None, data=None):
         staging = project / '.deckmaster' / 'staging' / task['operation_id']
         staging.mkdir(parents=True, exist_ok=True)
         (staging / file_name).write_bytes(data)
+    if task['kind'] == 'blueprint':
+        return accept_synthetic_blueprint(project, task=task, result_payload=envelope,
+            execution_ref='L1-page-visual-image', scenario='Synthetic image bytes for actual SVG/render gates')
+    claim_fixture_task(project, task,
+        execution_ref='synthetic-l1-page-review' if task['kind'] == 'review' else 'synthetic-l1-host')
     return service.accept_result(project, task_id=task['task_id'],
                                  operation_id=task['operation_id'],
                                  produced_against=task['produced_against'],
@@ -27,6 +34,9 @@ def _accept(project, task, envelope, *, file_name=None, data=None):
 
 def _start(project, page_id):
     store = Store(project)
+    if not store.load_document()['collaboration']['authorizations']:
+        _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+            max_external_calls=len(store.load_document()['pages']), scenario='Bounded single-page visual feedback before advancing')
     task = service.continue_project(project)['pending_tasks'][0]
     assert task['kind'] == 'blueprint'
     entry = next(e for e in store.load_document()['pages'] if e['page_id'] == page_id)
@@ -34,6 +44,7 @@ def _start(project, page_id):
             file_name='reference.png', data=_png_bytes())
     task = service.continue_project(project)['pending_tasks'][0]
     assert task['kind'] == 'reconstruct'
+    claim_fixture_task(project, task)
     entry = next(e for e in store.load_document()['pages'] if e['page_id'] == page_id)
     blueprint_sha = store.read_object_json(entry['blueprint'])['file']['sha256']
     page = store.read_object_json(entry['page'])
@@ -63,17 +74,12 @@ def test_unsupported_svg_is_rejected_on_current_page_before_adoption(tmp_path):
     assert _accept(project, task, _svg_envelope('p1'), file_name='page.svg', data=svg)['status'] == 'accepted'
 
 
-def test_compose_new_page_svg_uses_same_preflight_and_atomic_adoption(tmp_path):
+def test_imported_new_page_svg_uses_same_preflight_and_atomic_adoption(tmp_path):
     project = tmp_path / 'project'
-    service.create(project, brief='完整稿')
-    task = service.continue_project(project)['pending_tasks'][0]
     page = _draft_page('p1', '标题', '正文。')
-    svg = _svg_for(page)
-    envelope = {'kind': 'compose', 'pages': [page], 'page_order': ['p1'],
-                'files': [{'file_id': 's', 'path': 'page.svg', 'media_type': 'image/svg+xml'}],
-                'artifact_specs': [{'file_id': 's', 'role': 'svg', 'page_id': 'p1',
-                                    'provenance': {'source_type': 'unknown', 'tool': 'test-host',
-                                                   'invocation_ref': None}}]}
+    service.create(project, brief='完整稿', draft={'pages': [page]})
+    task, svg = _start(project, 'p1')
+    envelope = _svg_envelope('p1')
     bad = svg.replace(b'</svg>', b'<line id="bad" x1="1" y1="1" x2="9" y2="9" stroke="red" stroke-dasharray="4 2"/></svg>')
     before = Store(project).load_document()
     with pytest.raises(EnvelopeError, match='p1/bad.*stroke-dasharray'):
@@ -83,15 +89,18 @@ def test_compose_new_page_svg_uses_same_preflight_and_atomic_adoption(tmp_path):
     assert Store(project).load_document()['pages'][0]['svg'] is not None
 
 
-def test_compose_blueprint_and_svg_in_one_envelope_use_candidate_image(tmp_path):
+def test_blueprint_and_svg_in_one_production_envelope_use_generated_original(tmp_path):
+    from deck_master.generation import GenerationError
     project = tmp_path / 'project'
-    service.create(project, brief='完整蓝图与 SVG')
-    task = service.continue_project(project)['pending_tasks'][0]
     page = _draft_page('p1', '标题', '正文。')
+    service.create(project, brief='完整蓝图与 SVG', draft={'pages': [page]})
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=1, scenario='Composite original and SVG result binds the actual generated original')
+    task = service.continue_project(project)['pending_tasks'][0]
     image = _png_bytes()
     svg = _svg_for(page).replace(b'<svg ',
         f'<svg data-blueprint-sha256="{hashlib.sha256(image).hexdigest()}" '.encode(), 1)
-    envelope = {'kind': 'compose', 'pages': [page], 'page_order': ['p1'],
+    envelope = {'kind': 'blueprint',
                 'files': [{'file_id': 'b', 'path': 'reference.png', 'media_type': 'image/png'},
                           {'file_id': 's', 'path': 'page.svg', 'media_type': 'image/svg+xml'}],
                 'artifact_specs': [
@@ -103,8 +112,23 @@ def test_compose_blueprint_and_svg_in_one_envelope_use_candidate_image(tmp_path)
     staging.mkdir(parents=True, exist_ok=True)
     (staging / 'reference.png').write_bytes(image)
     (staging / 'page.svg').write_bytes(svg)
-    assert _accept(project, task, envelope)['status'] == 'accepted'
-    entry = Store(project).load_document()['pages'][0]
+    with pytest.raises(GenerationError, match='one generation attempt returns one original image'):
+        _accept(project, task, envelope)
+    store = Store(project)
+    assert store.load_document()['pages'][0]['blueprint'] is None
+    execution = service.task_status(project, task_id=task['task_id'])['pending_tasks'][0]
+    assert execution['call_allowances'][0]['state'] == 'consumed'
+    request = store.read_object_json(execution['generation_requests'][-1])
+    attempt = store.read_object_json(execution['generation_attempts'][-1])
+    original = {'kind': 'blueprint', 'files': [envelope['files'][0]],
+        'artifact_specs': [envelope['artifact_specs'][1]],
+        'generation_result': {'request_id': request['request_id'], 'attempt_id': attempt['attempt_id']}}
+    assert service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+        produced_against=task['produced_against'], result_payload=original)['status'] == 'accepted'
+    reconstruct = service.continue_project(project)['pending_tasks'][0]
+    assert reconstruct['kind'] == 'reconstruct'
+    assert _accept(project, reconstruct, _svg_envelope('p1'), file_name='page.svg', data=svg)['status'] == 'accepted'
+    entry = store.load_document()['pages'][0]
     assert entry['svg'] and entry['blueprint']
 
 
@@ -114,6 +138,8 @@ def test_historical_multi_page_visual_task_is_retired_and_status_remains_readabl
     project = tmp_path / 'project'
     service.create(project, brief='历史多页审图', draft={'pages': [
         _draft_page('p1', '第一页', '正文一。'), _draft_page('p2', '第二页', '正文二。')]})
+    _prepare_production(project, actions=['dispatch.blueprint', 'allowance.allocate', 'call.begin'],
+        max_external_calls=2, scenario='Legacy multi-page review facts retire before current single-page production')
     store = Store(project)
     doc = store.load_document()
     with pytest.raises(service.ServiceError, match='exactly one page'):
@@ -394,8 +420,11 @@ def test_page_review_cannot_pass_after_design_asset_change(tmp_path):
     image = tmp_path / 'new-asset.png'
     Image.new('RGB', (20, 12), 'green').save(image)
     service.import_asset(project, asset_id='new-asset', kind='image', file_path=image)
-    with pytest.raises(TaskConflict, match='after cancellation'):
+    with pytest.raises(TaskConflict, match='after cancellation|visual inputs changed before claim'):
         pass_page_review(project, visual)
+    _authorize_replacement_image(project, page_id='p1', scenario='Explicit adopted-asset replacement image')
+    reconstruct, svg = _start(project, 'p1')
+    _accept(project, reconstruct, _svg_envelope('p1'), file_name='page.svg', data=svg)
     replacement = service.continue_project(project)['pending_tasks'][0]
     assert replacement['review_stage'] == 'page_visual'
     assert replacement['task_id'] != visual['task_id']
@@ -420,9 +449,10 @@ def test_style_change_retires_open_review_and_rebuilds_only_current_page(tmp_pat
     old_task = next(store.read_object_json(ref) for ref in changed['tasks']
                     if store.read_object_json(ref)['task_id'] == visual['task_id'])
     assert old_task['status'] == 'superseded'
-    with pytest.raises(TaskConflict, match='after cancellation'):
+    with pytest.raises(TaskConflict, match='after cancellation|visual inputs changed before claim'):
         pass_page_review(project, visual)
-    reconstruct = service.continue_project(project)['pending_tasks'][0]
+    _authorize_replacement_image(project, page_id='p1', scenario='Explicit current-style replacement image')
+    reconstruct, svg = _start(project, 'p1')
     assert reconstruct['kind'] == 'reconstruct' and reconstruct['scope_pages'] == ['p1']
     _accept(project, reconstruct, _svg_envelope('p1'), file_name='page.svg', data=svg)
     replacement = service.continue_project(project)['pending_tasks'][0]
