@@ -214,6 +214,13 @@ def installation(config, arm, *, enforce_isolation=True):
         raise CampaignError("wrong deck_master module origin")
     check_ref(spec["manifest"])
     root = Path(spec["module_file"]).resolve().parent
+    candidate_manifest = read(spec["manifest"]["path"])
+    manifest_module = candidate_manifest.get("module_path") or candidate_manifest.get("installed_module_path")
+    if (candidate_manifest.get("source_sha") != spec["source_sha"]
+            or candidate_manifest.get("source_tree") != spec["source_tree"]
+            or candidate_manifest.get("wheel_sha256") != spec["wheel_sha256"]
+            or not manifest_module or Path(manifest_module).resolve() != root / "__init__.py"):
+        raise CampaignError("actual pinned candidate manifest source/tree/wheel/module differs")
     expected = {}
     for item in spec["package_files"]:
         relative = Path(item["relative_path"])
@@ -247,9 +254,12 @@ def installation(config, arm, *, enforce_isolation=True):
         from deck_master import capabilities
         observed = capabilities.installation_identity()
     identity = observed.get("install") or {}
-    if (identity.get("source_sha") != spec["source_sha"] or identity.get("source_tree") != spec["source_tree"]
+    if (identity.get("source_sha") != spec["source_sha"]
+            or identity.get("source_tree") is not None and identity["source_tree"] != spec["source_tree"]
             or identity.get("wheel_sha256") != spec["wheel_sha256"]):
         raise CampaignError("installed source/tree/wheel metadata differs from admitted arm")
+    observed["tree_observation"] = {"sdk_source_tree": identity.get("source_tree"),
+                                    "pinned_candidate_manifest_source_tree": candidate_manifest["source_tree"]}
     for name, module in tuple(sys.modules.items()):
         if (name == "deck_master" or name.startswith("deck_master.")) and getattr(module, "__file__", None):
             if not Path(module.__file__).resolve().is_relative_to(root):
@@ -575,9 +585,31 @@ def observe(journal, state, stage, ordinal, result_path, result_sha256, observat
     obs_ref = write_once(target / "raw-root-completion.json", observed)
     journal.append("native_output_frozen", {"ordinal": ordinal, "raw": raw_ref, "observation": obs_ref})
     try:
+        observation = json.loads(observed)
+        objects, object_errors = [], []
+        declared_objects = observation.get("native_object_files", [])
+        if not isinstance(declared_objects, list):
+            raise CampaignError("native_object_files must be a list of original file bindings")
+        # Preserve the entire readable in-scope collection before any metadata
+        # or hash refusal. A bad first item must not discard later originals.
+        for index, item in enumerate(declared_objects):
+            try:
+                original = Path(item["path"]).resolve(strict=True)
+                if not original.is_relative_to(target.parent.parent.resolve()) or original.suffix != ".json":
+                    raise CampaignError("native proposal originals must be JSON files inside this allowed stage packet")
+                original_raw = original.read_bytes()
+                frozen = write_once(target / "native-objects" / f"{index:04d}-{digest(original_raw)}.json", original_raw)
+                objects.append({"original": reference(original), "frozen": frozen, "declared_ref": item.get("declared_ref")})
+                if digest(original_raw) != item.get("sha256"):
+                    raise CampaignError("Root observed different native proposal-object bytes")
+            except Exception as exc:
+                object_errors.append({"index": index, "error_type": type(exc).__name__, "error": str(exc)})
+        if declared_objects:
+            journal.append("native_objects_frozen", {"ordinal": ordinal, "objects": objects, "errors": object_errors})
+        if object_errors:
+            raise CampaignError("native object collection has errors; all readable in-scope originals were preserved")
         if digest(raw) != result_sha256 or digest(observed) != observation_sha256:
             raise CampaignError("Root observed different output/observation bytes")
-        observation = json.loads(observed)
         completed = observation["completion"]
         dispatch = read(target.parent.parent / "dispatch.json")
         executor = invocation["executor"]
@@ -600,18 +632,6 @@ def observe(journal, state, stage, ordinal, result_path, result_sha256, observat
         task = task_for(store, dispatch["task_id"])
         if task["status"] != "running" or task.get("execution_ref") != executor:
             raise CampaignError("actual native execution did not claim this current Task")
-        objects = []
-        for item in observation.get("native_object_files", []):
-            original = Path(item["path"]).resolve(strict=True)
-            if not original.is_relative_to(target.parent.parent.resolve()) or original.suffix != ".json":
-                raise CampaignError("native proposal originals must be JSON files inside this allowed stage packet")
-            original_raw = original.read_bytes()
-            frozen = write_once(target / "native-objects" / (digest(original_raw) + ".json"), original_raw)
-            objects.append({"original": reference(original), "frozen": frozen, "declared_ref": item["declared_ref"]})
-            if digest(original_raw) != item["sha256"]:
-                raise CampaignError("Root observed different native proposal-object bytes")
-        if objects:
-            journal.append("native_objects_frozen", {"ordinal": ordinal, "objects": objects})
         # Parse only after raw immutable storage. No controller metadata/semantic repair.
         result = json.loads(raw)
         if not isinstance(result, dict):
@@ -673,13 +693,26 @@ def materialize_native_objects(journal, state, stage, ordinal):
     canonical JSON encoding. Root freezes its full response and object files
     first. This function never fills changed layers, diff, prose or a Ref.
     """
-    from deck_master import models
+    from deck_master import models, content_production, tasks
     from deck_master.content import check_page
     from deck_master.models import canonical_json_bytes
     invocation, target, envelope, proof = observed_result(journal, stage, ordinal)
     objects = proof.get("native_objects") or []
     if envelope.get("variant") != "input_revision" or not objects:
         raise CampaignError("only an actual input_revision with frozen native proposal objects uses this step")
+    store = store_for(state)
+    document = store.load_document()
+    dispatch = read(target.parent.parent / "dispatch.json")
+    task = task_for(store, dispatch["task_id"])
+    content_production.parse_compose_v2(envelope)
+    if (task["kind"] != "compose" or task.get("intent") != "input_revision"
+            or content_production.expected_variant(task) != "input_revision"
+            or task["status"] != "running" or task.get("execution_ref") != invocation["executor"]
+            or not tasks.task_inputs_current(store, document, task)
+            or envelope.get("task_id") != task["task_id"] or envelope.get("operation_id") != task["operation_id"]
+            or envelope.get("produced_against") != task["produced_against"]
+            or envelope.get("eligibility_digest") != (task.get("collaboration_binding") or {}).get("eligibility_digest")):
+        raise CampaignError("native objects require the exact claimed current input_revision Task and unchanged envelope binding")
     proposals = envelope.get("payload", {}).get("proposals", [])
     declared = [proposal.get("ref") for proposal in proposals]
     if any(not isinstance(ref, dict) or set(ref) != {"path", "sha256"} for ref in declared):
@@ -696,7 +729,6 @@ def materialize_native_objects(journal, state, stage, ordinal):
             raise CampaignError("native object, own canonical Ref and unchanged formal proposal Ref disagree")
         seen.add(hashed)
         pending.append((obj, expected, item["frozen"]))
-    store = store_for(state)
     revision = store.current_revision_id()
     prepared = {ref["sha256"]: obj for obj, ref, _ in pending}
     for proposal in proposals:

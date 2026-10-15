@@ -122,11 +122,23 @@ def snapshot_ref(journal, name):
     return read(journal.root / 'snapshots' / (safe_name(name) + '.json'))
 
 
+def first_initial_complete(journal):
+    """First journal-observed completion declaration, never a quality choice.
+
+    native_output_kind comes from Root's actual completion observation. The
+    recorder does not infer semantic completeness from text, JSON or hashes.
+    """
+    return next((item for item in events(journal, 'native_observed')
+                 if item['role'] == 'initial_writer' and item['native_output_kind'] == 'complete_manuscript'), None)
+
+
 def role_policy(journal, role):
     if role not in ROLES:
         raise CampaignError('unregistered native role')
     if role == 'initial_writer' and events(journal, 'feedback_delivered'):
         raise CampaignError('post-feedback work cannot be relabeled initial writing')
+    if role == 'initial_writer' and first_initial_complete(journal) is not None:
+        raise CampaignError('first complete native draft ends initial writing; use its single feedback/repair or separate extra work')
     if role in {'initial_writer', 'repair_writer'} and events(journal, 'verification_started'):
         raise CampaignError('read-only closure feedback cannot initiate another comparison repair')
     if role == 'feedback':
@@ -317,6 +329,10 @@ def snapshot(journal, name, ordinal):
         raise CampaignError('snapshot requires an actual complete native author manuscript')
     if name == 'original_complete' and (data['role'] != 'initial_writer' or events(journal, 'feedback_delivered')):
         raise CampaignError('freeze the original before substantive feedback')
+    if name == 'original_complete':
+        first = first_initial_complete(journal)
+        if first is None or data['ordinal'] != first['ordinal'] or data['raw']['sha256'] != first['raw']['sha256']:
+            raise CampaignError('original_complete must freeze the first observed complete native draft, never a later preferred draft')
     if name == 'repaired_complete' and (not events(journal, 'repair_begun') or data['role'] != 'repair_writer'):
         raise CampaignError('repaired timepoint requires the actual single repair')
     if name in {'repaired_complete', 'equal_budget_evaluated'} and events(journal, 'repair_begun'):
@@ -329,6 +345,10 @@ def snapshot(journal, name, ordinal):
             repaired = snapshot_ref(journal, 'repaired_complete')
             if repaired['raw']['sha256'] != data['raw']['sha256'] or not any(e['role'] == 'verification' and e['native_output_kind'] == 'review' for e in events(journal, 'native_observed')):
                 raise CampaignError('separate independent read-only closure verification is missing')
+        else:
+            original = snapshot_ref(journal, 'original_complete')
+            if data['ordinal'] != original['ordinal'] or data['raw']['sha256'] != original['raw']['sha256']:
+                raise CampaignError('without the single real feedback/repair, evaluated manuscript must have the original execution and bytes')
     if name in {'original_complete', 'equal_budget_evaluated'} and data['role'] not in {'initial_writer', 'repair_writer'}:
         raise CampaignError('later work cannot replace comparison drafts')
     if name == 'extra_work' and data['role'] != 'extra_writer':
@@ -342,7 +362,10 @@ def snapshot(journal, name, ordinal):
     record = {'timepoint': name, 'ordinal': ordinal, 'raw': data['raw'], 'blind_exact_copy': blind,
               'byte_offset_map': [{'original_start': 0, 'view_start': 0, 'length': len(raw)}],
               'removed_bytes': 0, 'format_family_identifiability': 'POSSIBLE_DISCLOSED; native wrapping retained',
-              'professional_quality': 'NOT_ASSERTED'}
+              'professional_quality': 'NOT_ASSERTED',
+              'completeness_declaration': {'source': 'Root completion observation native_output_kind',
+                                          'observation': data['observation'],
+                                          'semantic_validation_by_recorder': 'NOT_PERFORMED'}}
     if name == 'equal_budget_evaluated':
         record['single_feedback'] = events(journal, 'feedback_delivered')[0]
         record['readonly_verifications'] = [e for e in events(journal, 'native_observed') if e['role'] == 'verification']

@@ -31,6 +31,10 @@ entries `{relative_path,sha256}` relative to the installed `deck_master` directo
 All non-pyc installed members must match, with no additional members. Every
 command checks interpreter, module origin, original manifest and installed bytes.
 Final/E1/E2 use their actual managed `capabilities.installation_identity`.
+The tree is always checked against the pinned actual candidate manifest. Some
+release metadata does not expose `source_tree`; that SDK observation remains
+null. When the SDK does expose a tree, it must also match. A missing observable
+field is never filled from the specification or treated as a different tree.
 
 A0 uses `adapter_profile: "A0-public-legacy"` plus the actual original
 `wheel: {path,sha256}`. A0 has no new capabilities/read-task-method API; the
