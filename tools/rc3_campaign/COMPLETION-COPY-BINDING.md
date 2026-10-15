@@ -99,17 +99,17 @@ rebinds the exact admission: even semantically identical JSON with different
 bytes is identity drift. Any refusal leaves the original binding/barrier
 unchanged; no ledger compensation or extra allowance is invented.
 
-The companion guards canonical public regular-file paths before each body
-open, including nested Ref paths in every JSON object it reads. At bootstrap,
-direct copy diagnosis and locked reload it reads the registration through this
-guard, preflights its nested Refs and the exposure/C-method JSON consumed by
-the frozen validator, and passes that same parsed registration to unchanged
-`u.validate`. It also preflights existing Journal metadata and invocation Refs
-before the old uniqueness reader. It never delegates an unchecked registration
-to `u.campaign` or `u.read`. An alias or forbidden path is rejected before the
-old reader can attempt to open it; opaque strings are not followed as files.
+The companion guards canonical public regular-file paths at actual external
+file consumers. At bootstrap, direct copy diagnosis and locked reload it
+preflights every file-Ref position consumed by frozen registration validation
+(protocol, admission, exposure, case brief/materials, roles, Cyber file rows
+and barrier methods), then passes the same parsed registration to unchanged
+`u.validate`. It also checks prior Journal invocation Refs before the old
+uniqueness reader. Other proof/snapshot/manifest/receipt external Refs are
+checked when actually consumed by `checked`/`check_ref`. It never delegates an
+unchecked registration to `u.campaign` or `u.read`.
 
-Ref shape is checked before any delegated body open, even if a `path` object
+Ref shape is checked before any delegated body open, even if a file-Ref value
 has no digest. Every file-Ref position consumed by the frozen registration
 validator and prior Journal invocation reader is checked explicitly, so a
 missing `path` or wrong shape cannot bypass the guard either. The old Ref
@@ -117,7 +117,12 @@ contract remains compatible: `path` and a valid lowercase SHA256 are required;
 `bytes` is optional and, when present, is checked for type/range and actual
 length. Legal extra metadata fields are retained. Non-file relationship
 metadata such as `copy_pair` digest/length is not mistaken for a file Ref,
-and opaque strings do not cause file IO. The full original bytes and complete
+and opaque strings do not cause file IO. Ordinary domain StoreRefs inside
+snapshot SDK-outcome/method metadata remain relative references; the companion
+does not follow them as external files or open their object bodies. Unused
+relationship metadata is also preserved. This is a typed distinction, not a
+global permission for relative paths: the same shape at an actual external
+FileRef consumer still fails canonical-path validation. The full original bytes and complete
 Ref identities still govern the admitted copy relation.
 
 `bind-original-slot` emits the established `original_bound` event only after
@@ -170,11 +175,11 @@ A/B proofs without any admission, bind/private event or SDK/model/image call.
 Independent review and Root's exact prospective amendment remain required
 before use to bind the formal slots.
 
-The first independent review found an unchecked transitive registration Ref
+The first independent review found an unchecked consumed registration Ref
 route before the original guard. Its original failure remains frozen. The
-follow-up tests retain a permanent external Python open audit hook and cover
-protocol/source/role/method/exposure Refs, nested JSON and aliases, direct
-copy diagnosis, existing Journal invocation Refs and final locked reload.
+follow-up tests retain their permanent external Python open audit hook at
+actual protocol/source/role/method/exposure FileRef consumers and aliases,
+direct copy diagnosis, prior invocation Refs and final locked reload.
 Sentinel data is newly generated synthetic public test data; its digest comes
 from known in-memory bytes. No sentinel body is read or hashed. The original
 independent negative is replayed with only exact source/output fixture
@@ -184,6 +189,22 @@ Independent R2 found the path-plus-bytes/no-digest variant skipped by the
 first fix. Its actual failed open-attempt test is preserved and separately
 replayed before/after the second fix with the same permanent hook. Added
 checks cover incomplete/invalid file Refs at original registration positions,
-nested JSON, prior invocation entries and final locked reload, plus successful
+prior invocation entries and final locked reload, plus successful
 two-field/extra-metadata compatibility through actual unchanged old validation
 and a complete synthetic binding. No missing digest is repaired by the tool.
+
+Independent R3 preserved a real compatibility failure: generic recursive
+inspection incorrectly treated domain StoreRefs in all four old public
+snapshots/sidecars as external FileRefs. This revision removes that generic
+classification and keeps validation at actual typed consumers. Four complete
+and two missing-digest `nested.refs` fixture assertions previously expected
+rejection even though the frozen reader never consumes those values as files;
+they now assert metadata preservation and no corresponding IO. The former
+versions/results remain in Git and review evidence. Real consumed-Ref negative
+checks remain, alongside an ordinary snapshot SDK-outcome StoreRef-shape
+positive and the same shape refused at true external file positions.
+
+Existing proof freshness is unchanged. A later read-only diagnosis can expose
+the old 45-minute observation rule after type compatibility is repaired. Such
+an actual refusal stays separate from the type result; this tool does not
+refresh an old proof, alter its native time or bypass the old observation check.

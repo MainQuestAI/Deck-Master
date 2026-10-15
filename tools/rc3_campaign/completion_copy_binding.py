@@ -70,30 +70,15 @@ def preflight_file_ref(ref):
     return path
 
 
-def preflight_refs(value):
-    """Guard nested file Ref paths before a frozen reader can follow them.
-
-    Extra fields on old registration/method rows belong to their old schema;
-    this preflight only applies our path/regular-file boundary, not a new one.
-    It never opens a referenced body or treats opaque path strings as reads.
-    """
-    if isinstance(value, dict):
-        if 'path' in value:
-            preflight_file_ref(value)
-        for item in value.values():
-            preflight_refs(item)
-    elif isinstance(value, list):
-        for item in value:
-            preflight_refs(item)
-
-
 def public_json(path):
-    """Guard before opening, then guard all nested Refs before delegation."""
+    """Read a known external JSON file, preserving its typed domain metadata.
+
+    Nested StoreRefs or relationship objects are not external file reads.
+    Each actual external Ref consumer preflights its own argument separately.
+    """
     path = canonical(path)
     require(stat.S_ISREG(path.stat().st_mode), 'actual regular file required')
-    value = json.loads(path.read_bytes())
-    preflight_refs(value)
-    return value
+    return json.loads(path.read_bytes())
 
 
 def preflight_registration(config):
@@ -129,9 +114,9 @@ def legacy_checked(ref):
 def public_campaign(root):
     """Retain old validation on the same preflighted registration object.
 
-    The frozen validator follows exposure and C method JSON. Preflight those
-    nested objects too, before calling it, without changing the old helpers.
-    Journal metadata can contain invocation Refs used by old uniqueness checks.
+    Preflight exactly the Ref positions the frozen validator follows, including
+    exposure/C-method files. Their unused metadata is not followed as a file.
+    Prior binding invocation Refs are consumed by old uniqueness checks too.
     """
     journal = u.Journal(canonical(root))
     config = public_json(journal.root / 'registration.json')

@@ -235,14 +235,34 @@ def change_registration_ref(f, ref, location):
     elif location == 'method-nested':
         value = deepcopy(config['cyberppt'])
         value['nested'] = {'refs': [ref]}
-        config['barrier_methods']['U-LIVE-01-C'] = c.save(f['directory'] / 'method-with-nested-ref.json', value)
+        config['barrier_methods']['U-LIVE-01-A'] = c.save(f['directory'] / 'method-with-nested-ref.json', value)
     else: config['protocol'] = ref
     path.write_bytes(c.encoded(config))
 
 
+def rebind_synthetic_fixture_metadata(f, *, snapshot=None):
+    """Declare changed engineering metadata honestly; no original proof rewrite."""
+    config = json.loads((Path(f['campaign']) / 'registration.json').read_bytes())
+    proof = json.loads(Path(f['proof']['path']).read_bytes())
+    proof['method_identity'] = config['barrier_methods'][f['slot']]
+    lineage_ref = f['lineage']
+    if snapshot:
+        proof['original_snapshot'] = snapshot
+        lineage = json.loads(Path(f['lineage']['path']).read_bytes())
+        lineage['earliest_complete_snapshot_sha256'] = snapshot['sha256']
+        lineage_ref = c.save(f['directory'] / 'metadata-lineage.json', lineage)
+        proof['lineage_read_execution'] = lineage_ref
+    proof_ref = c.save(f['directory'] / 'metadata-proof.json', proof)
+    amendment = json.loads(Path(f['admission']['path']).read_bytes())
+    amendment.update(registration=m.reference(Path(f['campaign'])/'registration.json'), proof=proof_ref,
+                     original_snapshot=proof['original_snapshot'], lineage=lineage_ref)
+    f['proof'] = proof_ref
+    f['admission'] = c.save(f['directory'] / 'metadata-amendment.json', amendment)
+
+
 @pytest.mark.parametrize('bind', [False, True])
 @pytest.mark.parametrize('location', ['protocol', 'source', 'role', 'method', 'exposure-nested', 'method-nested', 'alias'])
-def test_registration_transitive_paths_rejected_before_any_open(setup, bind, location):
+def test_consumed_Ref_paths_guarded_and_unused_nested_metadata_preserved(setup, bind, location):
     f = fixture(setup)
     ref, attempts = guarded_sentinel(f)
     if location == 'alias':
@@ -250,10 +270,16 @@ def test_registration_transitive_paths_rejected_before_any_open(setup, bind, loc
         alias.symlink_to(ref['path'])
         ref = {**ref, 'path': str(alias)}
     change_registration_ref(f, ref, location)
-    with pytest.raises(m.Error, match='never read|aliases'):
-        execute(f, bind=bind)
+    if location in {'exposure-nested', 'method-nested'}:
+        # These fields were never consumed as external Refs by the old reader.
+        # Preserve their data instead of inventing a read of their target.
+        rebind_synthetic_fixture_metadata(f)
+        assert execute(f, bind=bind)['status'] == ('ORIGINAL_BOUND_NO_PRIVATE_RELEASE' if bind else 'DIAGNOSIS_ONLY_NO_ADMISSION_NO_BINDING')
+    else:
+        with pytest.raises(m.Error, match='never read|aliases'):
+            execute(f, bind=bind)
     assert attempts == []
-    assert not u.events(c.Journal(f['campaign']), 'original_bound')
+    assert len(u.events(c.Journal(f['campaign']), 'original_bound')) == (1 if bind and location in {'exposure-nested', 'method-nested'} else 0)
 
 
 def test_direct_copy_context_preflights_registration_before_old_reader(setup):
@@ -315,13 +341,13 @@ def test_malformed_legacy_Ref_positions_reject_before_body_open(setup, bind, sha
 
 
 @pytest.mark.parametrize('location', ['exposure-nested', 'method-nested'])
-def test_nested_path_without_digest_is_not_skipped(setup, location):
+def test_unconsumed_nested_path_without_digest_is_preserved_without_IO(setup, location):
     f = fixture(setup)
     ref, attempts = guarded_sentinel(f)
     ref.pop('sha256')
     change_registration_ref(f, ref, location)
-    with pytest.raises(m.Error, match='file Ref'):
-        execute(f, bind=False)
+    rebind_synthetic_fixture_metadata(f)
+    assert execute(f, bind=False)['status'] == 'DIAGNOSIS_ONLY_NO_ADMISSION_NO_BINDING'
     assert attempts == []
 
 
@@ -373,3 +399,34 @@ def test_legacy_two_field_Refs_extra_fields_and_opaque_metadata_remain_legal(set
     amendment['registration'] = m.reference(path)
     admitted = c.save(f['directory'] / 'two-field-compatible-amendment.json', amendment)
     assert execute(f, admission=admitted)['status'] == 'ORIGINAL_BOUND_NO_PRIVATE_RELEASE'
+
+
+def test_real_snapshot_StoreRef_shape_is_metadata_not_external_file_IO(setup):
+    f = fixture(setup)
+    # Exact ordinary shape from the public ULA snapshot's accepted-outcome
+    # metadata. The target is not opened, resolved, statted or created.
+    store_ref = {'path': '.deckmaster/objects/ab/' + 'ab'*32 + '.json', 'sha256': 'ab'*32}
+    value = json.loads(Path(f['snapshot']['path']).read_bytes())
+    value['sdk_outcomes_separate'] = [{'data': {'outcome': {'operation_result': {'result_refs': [store_ref]}}}}]
+    value['opaque_relationship'] = {'path': 'not-a-file-relation', 'tag': 'preserve unknown metadata'}
+    snap = c.save(f['directory'] / 'snapshot-with-domain-metadata.json', value)
+    rebind_synthetic_fixture_metadata(f, snapshot=snap)
+    before = Path(snap['path']).read_bytes()
+    assert execute(f, bind=False)['all_original_binding_checks_passed']
+    assert execute(f)['status'] == 'ORIGINAL_BOUND_NO_PRIVATE_RELEASE'
+    assert Path(snap['path']).read_bytes() == before
+
+
+@pytest.mark.parametrize('location', ['protocol', 'source', 'role', 'method', 'original_snapshot'])
+def test_actual_external_Ref_consumer_still_refuses_relative_StoreRef_shape(setup, location):
+    f = fixture(setup)
+    store_ref = {'path': '.deckmaster/objects/ab/' + 'ab'*32 + '.json', 'sha256': 'ab'*32}
+    if location == 'original_snapshot':
+        proof = json.loads(Path(f['proof']['path']).read_bytes())
+        proof['original_snapshot'] = store_ref
+        f['proof'] = c.save(f['directory'] / 'wrong-external-snapshot-proof.json', proof)
+    else:
+        change_registration_ref(f, store_ref, location)
+    with pytest.raises(m.Error, match='absolute canonical public path required'):
+        execute(f, bind=False)
+    assert not u.events(c.Journal(f['campaign']), 'original_bound')
