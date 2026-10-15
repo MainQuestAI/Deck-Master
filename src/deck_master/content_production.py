@@ -1441,14 +1441,25 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         raise tasks_mod.EnvelopeError("(result)/payload/diff/page_order", "page order is outside this task's scope")
     old_plan = store.read_object_json(document["content_plan"]) if document.get("content_plan") else None
     plan_input = single.get("plan") or (copy.deepcopy(old_plan["input"]) if old_plan else None)
-    if plan_input is not None and plan_input.get("schema_version") == "content_plan.v2":
+    submitted_plan = plan_input if plan_input is not None and plan_input.get("schema_version") == "content_plan.v2" else None
+    if submitted_plan is not None:
         models.validate_content_plan_semantics(plan_input)
         if plan_input["project_id"] != document["project_id"]:
             raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Plan belongs to another project")
+        if (plan_input.get("narrative_ref") not in (None, narrative_ref)
+                or plan_input["mode"] != "planned" and plan_input.get("narrative_ref") != narrative_ref):
+            raise tasks_mod.EnvelopeError("(result)/payload/proposals/plan/narrative_ref", "Plan binds another Narrative")
+        if plan_input["mode"] == "planned" and plan_input["page_links"]:
+            raise tasks_mod.EnvelopeError("(result)/payload/proposals/plan/page_links", "a planned Plan has no bound page_links")
+        if not pages and plan_input["mode"] != "planned":
+            raise tasks_mod.EnvelopeError("(result)/payload/proposals/plan/mode", "without actual Pages an input revision can only deliver a planned Plan")
         plan_input = plan_input["input"]
     if plan_input is not None:
         models.validate_schema("content_plan_input", plan_input)
-        if plan_input["page_order"] != order:
+        # CONTRACTS §11.2: before Page production, this is a proposed order,
+        # not Document.pages membership. Real resulting Pages still bind exactly.
+        planning_only = not pages and ("plan" in single or old_plan and old_plan.get("mode") == "planned" and not removed)
+        if plan_input["page_order"] != order and not planning_only:
             raise tasks_mod.EnvelopeError("(result)/payload/proposals", "Plan and resulting page order must match")
         for role in plan_input["page_roles"]:
             if set(role.get("narrative_node_ids", [])) - known_nodes:
@@ -1476,6 +1487,17 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         check_page(page)
         _check_mapping_against(store, document, narrative, narrative_ref, plan_input, page,
             require_role_mapping=not imported_mapping)
+    if submitted_plan is not None and submitted_plan["mode"] in ("bound", "imported_mapping"):
+        for link in submitted_plan["page_links"]:
+            pid = link["page_id"]
+            if (link["plan_role_page_id"] != pid
+                    or models.sha256_bytes(models.canonical_json_bytes(pages[pid])) != link["page_ref"]["sha256"]):
+                raise tasks_mod.EnvelopeError("(result)/payload/proposals/plan/page_links", "bound Plan links must identify the actual resulting Pages and roles")
+            try:
+                if store.read_object_json(link["page_ref"]) != pages[pid]:
+                    raise ValueError("Page Ref differs from the resulting Page")
+            except (ValueError, StoreError) as exc:
+                raise tasks_mod.EnvelopeError("(result)/payload/proposals/plan/page_links", str(exc)) from exc
     virtual_update = {'input_digest': expected_digest, 'upsert_pages': [pages[pid] for pid in sorted(changed_pages)],
         'remove_page_ids': list(removed), 'page_order': order, 'impact_summary': summary.strip()}
     violation = tasks_mod.page_limit_violation({**document, 'pages': [{'page_id': pid} for pid in order]})
