@@ -6,6 +6,8 @@
 
 initial_design 不要求旧蓝图或风格图；restyle 要求每个目标的当前真实原图与独立风格参考。实际调用附件按目标原图 target_original 在先、独立参考在后的固定顺序传递，外部参考使用导入的原始字节。feasibility 可以只讨论真实 Narrative/Plan，保存建议或配方仍为零图像调用；不能据此派发实际样页。
 
+只出设计方案沿原 `request.intent=design_trial`、Scope.layers=[design]、max_external_calls=0/max_candidate_count=0，使用正式 `design.feasibility/design.propose` 动作。v3 feasibility 调用前者，其他零调用建议使用后者；旧 style.propose 仅兼容纯规划权限，不覆盖 trial、change.commit、dispatch、调用或采用。无 Page 时可讨论真实 Narrative/Plan；未命名页的全局讨论要求 deck 设计范围，已命名的 planned Page 仍严格检查页 ID/manifest，空 pages 集不是全页。规划不伪造 Page、蓝图、来源或任务。
+
 确认配方并不授予执行权限。首批显式选择一页或两页均可，需当前 Request/authorization 的范围、调用和候选预算覆盖；两个结果可反序返回，每个只保存候选。采用与扩展各自记录，不自动扩大范围。配方 Ref 不被“最新配方”替代。晚到、暂停、撤权或目标改变不抹去已发调用。
 
 新工作单声明 content_requirements_v1；v3 配方另声明 style_recipe_v3。production_request 保存解析后的 design_context、完整 content_requirements 与真实 content_basis。实际 prompt 使用同一完整要求和已编译 recipe_parameters；单位、限定、表格归属及节点/方向关系始终来自 Page。Plan 提供该页角色与全局论证推进；imported_mapping 未知角色保持 null，无 Narrative 时不制造主线。notes 和未消费的字体不进入图像 prompt。

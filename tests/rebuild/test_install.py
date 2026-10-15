@@ -545,14 +545,84 @@ def test_isolated_full_chain_and_local_edit(wheel_venv, tmp_path):
     assert blueprint_sha
 
     def _svg_for_page(view_payload, sha):
-        atoms = [atom for page in view_payload["pages"] for atom in page["visible_atoms"]
+        import xml.etree.ElementTree as ET
+
+        assert len(view_payload["pages"]) == 1
+        entry = view_payload["pages"][0]
+        atoms = [atom for atom in entry["visible_atoms"]
                  if isinstance(atom.get("text"), str) and atom["text"].strip()]
-        height = max(150, len(atoms) * 8 + 24)
-        lines = "".join(
-            f'<text x="6" y="{16 + 8 * index}" font-family="{family}" font-size="6">{atom["text"]}</text>'
-            for index, atom in enumerate(atoms))
-        return (f'<svg viewBox="0 0 200 {height}" data-blueprint-sha256="{sha}">'
-                f'<rect width="200" height="{height}" fill="#ffffff"/>{lines}</svg>').encode()
+        blocks = entry["page"]["customer_visible"]["body_blocks"]
+        tables = {index: block for index, block in enumerate(blocks) if block["type"] == "table"}
+        table_atoms = {index: [] for index in tables}
+        groups = []
+        for atom in atoms:
+            pointer = atom["pointer"].split("/")
+            block_index = int(pointer[3]) if pointer[1:3] == ["customer_visible", "body_blocks"] else None
+            if block_index in tables:
+                if not table_atoms[block_index]:
+                    groups.append(("table", block_index))
+                table_atoms[block_index].append(atom)
+            else:
+                groups.append(("atom", atom))
+
+        canvas = view_payload["design_context"]["canvas"]
+        width, height = canvas["width_px"], canvas["height_px"]
+        margin = 32
+        row_count = sum(1 if kind == "atom" else 1 + len(tables[value]["rows"])
+                        + bool(tables[value].get("title")) for kind, value in groups)
+        row_height = min(36, (height - 2 * margin) / max(1, row_count))
+        font_size = min(22, row_height * .65)
+        baseline = margin + row_height * .8
+        root = ET.Element("svg", {"xmlns": "http://www.w3.org/2000/svg",
+                                  "viewBox": f"0 0 {width} {height}", "data-blueprint-sha256": sha})
+        ET.SubElement(root, "rect", {"width": str(width), "height": str(height), "fill": "#ffffff"})
+        rendered_atoms = []
+
+        def text(atom, x, y):
+            element = ET.SubElement(root, "text", {
+                "x": str(x), "y": str(y), "font-family": family, "font-size": str(font_size),
+                "data-atom-id": atom["atom_id"], "fill": "#20242a"})
+            element.text = atom["text"]
+            rendered_atoms.append(atom["atom_id"])
+
+        for kind, value in groups:
+            if kind == "atom":
+                text(value, margin + 8, baseline)
+                baseline += row_height
+                continue
+            table = tables[value]
+            if table.get("title"):
+                heading = ET.SubElement(root, "text", {
+                    "x": str(margin + 8), "y": str(baseline), "font-family": family,
+                    "font-size": str(font_size), "fill": "#20242a"})
+                heading.text = table["title"]
+                baseline += row_height
+            column_width = (width - 2 * margin) / len(table["columns"])
+            column_indices = {column["id"]: index for index, column in enumerate(table["columns"])}
+            for row_index in range(1 + len(table["rows"])):
+                ET.SubElement(root, "rect", {
+                    "x": str(margin), "y": str(baseline - font_size),
+                    "width": str(width - 2 * margin), "height": str(row_height),
+                    "fill": "#edf1f5" if row_index == 0 else "#ffffff",
+                    "stroke": "#b8c1ca", "stroke-width": "1"})
+                for column_index in range(1, len(table["columns"])):
+                    x = margin + column_index * column_width
+                    ET.SubElement(root, "line", {
+                        "x1": str(x), "x2": str(x), "y1": str(baseline - font_size),
+                        "y2": str(baseline - font_size + row_height), "stroke": "#b8c1ca"})
+                for atom in table_atoms[value]:
+                    pointer = atom["pointer"].split("/")
+                    if pointer[4] == "columns":
+                        atom_row, atom_column = 0, int(pointer[5])
+                    else:
+                        table_row, cell_index = int(pointer[5]), int(pointer[7])
+                        cell = table["rows"][table_row]["cells"][cell_index]
+                        atom_row, atom_column = table_row + 1, column_indices[cell["column_id"]]
+                    if atom_row == row_index:
+                        text(atom, margin + atom_column * column_width + 8, baseline)
+                baseline += row_height
+        assert sorted(rendered_atoms) == sorted(atom["atom_id"] for atom in atoms)
+        return ET.tostring(root, encoding="utf-8", xml_declaration=True)
 
     code, view, _ = _iso_run(wheel_venv, ["next-step", "--project", str(project)], home, work)
     _adopt(wheel_venv, home, work, project, "reconstruct",

@@ -323,7 +323,12 @@ def validate_result(store, document, task, envelope):
         fail('result', 'the planned action requires a result in its explicit write slot')
     entry = next((e for e in document['pages'] if e['page_id'] == action['page_id']), None)
     slot = action['write_slots'][0]
-    if not entry or entry['page'] != action['page_ref'] or (action.get('mode') != 'trial' and entry.get(slot) != action['target_ref']):
+    page_current = bool(entry and entry['page'] == action['page_ref'])
+    if entry and not page_current and slot in ('blueprint', 'svg'):
+        from .visual_dependencies import page_visual_equivalent
+        page_current = (page_visual_equivalent(store, action['page_ref'], entry['page'], action['page_id'])
+                        and tasks.task_inputs_current(store, document, task))
+    if not page_current or (action.get('mode') != 'trial' and entry.get(slot) != action['target_ref']):
         fail('adoption_target', 'planned target slot changed; late result cannot overwrite it', conflict=True)
     if envelope.get('page_order') or envelope.get('content_update') or envelope.get('content_plan') or envelope.get('reviews'):
         fail('result', 'result exceeds the explicitly planned write scope')

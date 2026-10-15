@@ -48,24 +48,23 @@ class NativeImageContext:
     __slots__ = ("__weakref__",)
 
 
-def control_digest(document, *, store=None, task=None):
+def control_digest(document, *, store, task):
     """Current control and actual target slots, separate from historical input."""
     region = document.get("collaboration") or {}
     control = {"request": region.get("request"), "authority_policy": region.get("authority_policy")}
-    if store is not None and task is not None:
-        from .dependency_slices import _head_for_identity
-        binding = task.get("collaboration_binding") or {}
-        authorization_ref = binding.get("authorization_ref")
-        if authorization_ref is not None:
-            record = store.read_object_json(authorization_ref)
-            control["authorization_head"] = _head_for_identity(
-                store, document, "authorizations", "authorization_id", record["authorization_id"])
-        ids = set(task.get("scope_pages") or [])
-    else:
-        ids = {entry["page_id"] for entry in document["pages"]}
+    from .dependency_slices import _head_for_identity
+    from .visual_dependencies import page_visual_digest
+    binding = task.get("collaboration_binding") or {}
+    authorization_ref = binding.get("authorization_ref")
+    if authorization_ref is not None:
+        record = store.read_object_json(authorization_ref)
+        control["authorization_head"] = _head_for_identity(
+            store, document, "authorizations", "authorization_id", record["authorization_id"])
+    ids = set(task.get("scope_pages") or [])
     return sha256_bytes(canonical_json_bytes({
         "policy": document.get("policy"), "collaboration": control,
-        "pages": [{"page_id": entry["page_id"], "page": entry["page"],
+        "pages": [{"page_id": entry["page_id"],
+                   "visual_sha256": page_visual_digest(store.read_object_json(entry["page"])),
                    "blueprint": entry.get("blueprint")} for entry in document["pages"] if entry["page_id"] in ids],
     }))
 
@@ -88,6 +87,8 @@ def image_binding(store, document, task_id, attempt_id):
     task = tasks._lookup_task(document, task_id, store)
     if not generation.is_new(task) or task.get("kind") != "blueprint":
         raise _reject("task", "native observations require a generation.v1 blueprint Task")
+    if not tasks.task_inputs_current(store, document, task):
+        raise _reject("visual_inputs", "the Task's registered visual Page/Plan/design inputs changed")
     attempt, attempt_ref = generation._read_owned(store, task, "generation_attempts", attempt_id)
     # Observation appends version the Attempt. The genuine call identity is
     # its immutable begun version, so an exact settlement replay is stable.

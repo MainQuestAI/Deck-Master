@@ -57,7 +57,10 @@ def stored_blueprint_request(store, task):
                 raise ModelError("task/inputs", "requirements Page is outside actual immutable task inputs")
             page = store.read_object_json(page_ref)
             actual = project_prompt(page, resolved, resolved.get("assets") or [])
-            if projection != actual["projection"] or not value["prompt"].endswith(actual["prompt"]):
+            # The immutable policy/instruction prefix is historical evidence;
+            # a newer prompt policy must not reinterpret an old Request.
+            payload = json.dumps(projection, ensure_ascii=False, indent=2, sort_keys=True)
+            if projection != actual["projection"] or not value["prompt"].endswith("Structured input:\n" + payload):
                 raise ModelError("task/inputs", "requirements/design projection differs from its actual prompt")
         found.append((value, ref))
     if len(found) > 1 and any(item[0] != found[0][0] for item in found[1:]):
@@ -244,8 +247,11 @@ def project_prompt(
         "Composition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\n"
         "Text: render the supplied customer-visible text verbatim and legibly\n"
         "Constraints: do not add claims or invent numeric values, dates, customer data, or outcomes. "
-        "If a chart needs data absent from the input, use an unlabeled schematic marked 示意数据, "
-        "without plausible-looking values. Do not omit modules; connect arrows to their actual nodes; "
+        "If a quantitative judgment requires data absent from the input, return that gap to the content stage "
+        "for the necessary evidence; preserve the fixed copy and qualifications. Do not substitute a decorative "
+        "quantity chart or invent schematic data. Preserve qualitative mechanisms or teaching illustrations only "
+        "when the fixed manuscript explicitly requests them and they create no quantitative impression. "
+        "Do not omit modules; connect arrows to their actual nodes; "
         "use only permitted assets; no watermark; no internal notes\n"
         "Structured input:\n" + payload
     )

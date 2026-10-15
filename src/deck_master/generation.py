@@ -256,11 +256,20 @@ def settle_attempt(store, document, task, target, *, attempt_id, outcome, report
                 raise NativeObservationRejected("report", "native selectors cannot carry self-reported claims")
             if outcome != "consumed":
                 raise NativeObservationRejected("outcome", "a successful native completion is a consumed call")
-            metadata, output = consume_image_context(adapter_context, store, document, task, attempt, selector)
+            # A terminal replay reads an already authenticated call fact. It
+            # confers no new output or execution/adoption permission, and does
+            # not require a live proof after that call's target was adopted.
+            metadata = next((observed for ref in attempt["observations"]
+                if (observed := store.read_object_json(ref)).get("observer") == "tool_observed"
+                and observed.get("source", {}).get("source") == "native_host_image.v1"
+                and all(observed["source"].get(key) == value for key, value in selector.items())), None
+                ) if target["state"] == "consumed" else None
+            if metadata is None:
+                metadata, output = consume_image_context(adapter_context, store, document, task, attempt, selector)
+                output_ref = store.put_blob(output, ext="png")
             if invocation_ref and invocation_ref != metadata["invocation_ref"]:
                 raise NativeObservationRejected("invocation_ref", "native invocation differs from the supplied identity")
             invocation_ref = metadata["invocation_ref"]
-            output_ref = store.put_blob(output, ext="png")
         except Exception as exc:  # proof admission never rolls back an already sent call
             # Proof rejection must not roll back an already sent call's facts.
             # The report stays Host-attested and cannot satisfy image adoption.

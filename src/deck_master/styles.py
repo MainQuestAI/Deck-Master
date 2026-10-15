@@ -153,9 +153,15 @@ def _proposal_pages(input) -> list[str]:
 def propose(project, *, input):
     store = Store(project_path(project)); document = load_snapshot(store)
     from . import eligibility
-    eligibility.guard(store, document, "style.propose",
-                      context={"targets": {"page_ids": _proposal_pages(input),
-                                           "layers": ["design"]}})
+    action = "style.propose"
+    targets = {"page_ids": _proposal_pages(input), "layers": ["design"]}
+    if isinstance(input, dict) and input.get("schema_version") == "style_input.v3":
+        action = "design.feasibility" if input.get("intent") == "feasibility" else "design.propose"
+        if action == "design.feasibility":
+            # A named planned Page still consumes its explicit planning scope.
+            # Only an unnamed global discussion uses deck scope, never '*'.
+            targets["subject"] = "pages" if targets["page_ids"] else "deck"
+    eligibility.guard(store, document, action, context={"targets": targets})
     proposal = _proposal(store, document, input); validate_schema('style_proposal', proposal)
     ref = store.put_json_object(proposal)
     return {'status': 'suggestion', 'proposal_id': 'style-proposal-' + ref['sha256'],

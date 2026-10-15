@@ -35,7 +35,7 @@ def test_real_claim_time_survives_same_executor_and_unknown_call(store, monkeypa
     start(store, task)
     claimed = run_desk.detail(store.project_root, task_id=task['task_id'])
     assert claimed['task']['execution_started_at'] == '2026-09-30T00:00:00Z'
-    assert store.read_current()['minimum_writer'] == 'workbench-quality.v1'
+    assert store.read_current()['minimum_writer'] == 'rc3.v1'
     pointer = store.read_current()
     monkeypatch.setattr(service, '_utc_now_iso', lambda: '2026-09-30T00:20:00Z')
     start(store, task)

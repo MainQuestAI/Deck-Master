@@ -13,6 +13,7 @@ lock, so a stale submission is refused with current unchanged (exit 5).
 
 from __future__ import annotations
 
+import copy
 import json
 import re
 import uuid
@@ -618,16 +619,15 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
                         'usage': 'prior observation only; final checks still follow review_plan.units',
                     })
     if task.get("kind") == "blueprint":
-        for ref in task.get("inputs") or []:
-            try:
-                candidate = store.read_object_json(ref)
-            except (StoreError, UnicodeDecodeError, json.JSONDecodeError):
-                continue
-            if candidate.get("schema_version") == "deck_blueprint_request.v1":
-                summary["production_request"] = candidate
+        from .production import stored_blueprint_request
+        candidate, _ = stored_blueprint_request(store, task)
+        if candidate is not None:
+            summary["production_request"] = candidate
+            if candidate.get("resolved_design_context") is not None:
+                summary["resolved_design_context"] = copy.deepcopy(candidate["resolved_design_context"])
+            else:
                 page = store.read_object_json(next(p["page"] for p in document["pages"] if p["page_id"] == candidate["page_id"]))
                 summary["resolved_design_context"], _ = resolve_design(page, document["design_context"], document["design_context"].get("assets") or [])
-                break
         if task.get("protocol_version"):
             from .generation import prepared_input
             summary["generation_input"] = prepared_input(store, document, task)
@@ -653,7 +653,8 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     page_ref = page_entry["page"]
     page = store.read_object_json(page_ref)
     from .production import resolve_generation_design
-    design = resolve_generation_design(store, document, page_entry)
+    modern = store.workbench_protocol_required(document)
+    design = resolve_generation_design(store, document, page_entry) if modern else document["design_context"]
     request = project_prompt(page, design, design.get("assets") or [])
     request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
@@ -700,7 +701,8 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     )
     bumped["tasks"] = list(document.get("tasks") or []) + [task_ref]
     from .models import require_writer
-    require_writer(bumped, "rc3.v1")
+    if modern:
+        require_writer(bumped, "rc3.v1")
     store._commit_locked(blobs=[],
         base_revision=document["revision_id"],
         document=bumped,
