@@ -1,0 +1,16 @@
+{
+  "status": "PASS_INSTALLED_OFFLINE_BROWSER_ONLY",
+  "source_head": "740af2bddbc1199762c750be2f98474feaadb5a6",
+  "source_tracked": 3944,
+  "installed_members": 271,
+  "source_package_before_after_equal": true,
+  "module": "/workspace/work/rc3/reviews/env-04-r5-installed-740af2b/lib/python3.12/site-packages/deck_master/__init__.py",
+  "module_origins_all_installed": true,
+  "checks": 9,
+  "downloads": 3,
+  "external_requests": 0,
+  "page_errors": 0,
+  "checks_sha256": "fbeb4da90aea04696ebb1608f7fa7b1dd84a335f6d70aa44e014d3aa6de3a20a",
+  "font_argument": "DejaVu Sans (same as CI)",
+  "not_model_human_or_professional": true
+}

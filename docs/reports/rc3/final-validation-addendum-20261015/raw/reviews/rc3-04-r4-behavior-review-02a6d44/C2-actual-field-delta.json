@@ -1,0 +1,39 @@
+{
+  "C2-explicit-reason": {
+    "actual_changed_document_fields": [
+      "change",
+      "committed_at",
+      "content_basis",
+      "content_plan",
+      "parent_revision_id",
+      "revision_id",
+      "tasks"
+    ],
+    "existing_reviews_sources_policy_permissions_usage_fields_equal": true,
+    "interpretation_of_run2_new_fact_or_authority_created_false": "No independently verified business/source fact or authority created by the authored reason; ordinary task/adoption transaction facts are intentionally created."
+  },
+  "C2-summary-fallback": {
+    "actual_changed_document_fields": [
+      "change",
+      "committed_at",
+      "content_basis",
+      "content_plan",
+      "parent_revision_id",
+      "revision_id",
+      "tasks"
+    ],
+    "existing_reviews_sources_policy_permissions_usage_fields_equal": true,
+    "interpretation_of_run2_new_fact_or_authority_created_false": "No independently verified business/source fact or authority created by the authored reason; ordinary task/adoption transaction facts are intentionally created."
+  },
+  "C2-proposal-only": {
+    "actual_changed_document_fields": [
+      "change",
+      "committed_at",
+      "parent_revision_id",
+      "revision_id",
+      "tasks"
+    ],
+    "existing_reviews_sources_policy_permissions_usage_fields_equal": true,
+    "interpretation_of_run2_new_fact_or_authority_created_false": "No independently verified business/source fact or authority created by the authored reason; ordinary task/adoption transaction facts are intentionally created."
+  }
+}

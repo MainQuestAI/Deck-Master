@@ -1,0 +1,110 @@
+{
+  "verdict": "PASS_LIMITED_FIXED_CODE_REVIEW",
+  "must_fix": [],
+  "head": "740af2bddbc1199762c750be2f98474feaadb5a6",
+  "tree": "0ef706cca75acefaba218f714ffbc5c29f5d8aae",
+  "parent": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+  "product_delta_files": 1,
+  "test_delta_files": 2,
+  "docs_delta_files": 9,
+  "actual_finite_tests": {
+    "passed": 11,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.89,
+    "single_run": true,
+    "cases": [
+      {
+        "classname": "tests.rebuild.test_service_flow",
+        "name": "test_design_rejects_unreadable_asset_and_old_project_gets_recovery_hint"
+      },
+      {
+        "classname": "tests.rebuild.test_t06_boundaries",
+        "name": "test_restricted_assets_never_dispatched[restricted]"
+      },
+      {
+        "classname": "tests.rebuild.test_t06_boundaries",
+        "name": "test_restricted_assets_never_dispatched[unspecified]"
+      },
+      {
+        "classname": "",
+        "name": "test_actual_bad_task_keeps_owned_error_path_and_read_only_missing_proof[damaged-bytes]"
+      },
+      {
+        "classname": "",
+        "name": "test_actual_bad_task_keeps_owned_error_path_and_read_only_missing_proof[valid-hash-malformed-json]"
+      },
+      {
+        "classname": "",
+        "name": "test_other_errors_propagate_the_exact_original_instance[status-error0]"
+      },
+      {
+        "classname": "",
+        "name": "test_other_errors_propagate_the_exact_original_instance[qualify-error1]"
+      },
+      {
+        "classname": "",
+        "name": "test_other_errors_propagate_the_exact_original_instance[status-error2]"
+      },
+      {
+        "classname": "",
+        "name": "test_other_errors_propagate_the_exact_original_instance[status-error3]"
+      },
+      {
+        "classname": "",
+        "name": "test_other_errors_propagate_the_exact_original_instance[qualify-error4]"
+      },
+      {
+        "classname": "",
+        "name": "test_other_errors_propagate_the_exact_original_instance[status-error5]"
+      }
+    ]
+  },
+  "remaining_non_docs_byte_equal": 739,
+  "original_assertions_preserved": 156,
+  "current_assertions": 160,
+  "safe_copies": 6,
+  "safe_copy_bytes": 28682,
+  "source_unchanged": {
+    "fixed_full_identity_equal": true,
+    "fixed_tracked_count": 3944,
+    "fixed_before_sha256": "a7f02c5697ea03cc06e81020b40ea6900cfd7e19d959cb6b6d13ed317ea0054a",
+    "fixed_after_sha256": "a7f02c5697ea03cc06e81020b40ea6900cfd7e19d959cb6b6d13ed317ea0054a",
+    "fixed_status_before": "",
+    "fixed_status_after": "",
+    "live_static_full_identity_equal": true,
+    "live_before_sha256": "6cdc3846f6b963e11ac626a0b4e3d6aa5ae9112575f2aa3c2ee5888679199bb1",
+    "live_after_sha256": "6cdc3846f6b963e11ac626a0b4e3d6aa5ae9112575f2aa3c2ee5888679199bb1",
+    "prior_frozen_reports": [
+      {
+        "directory": "rc3-04-r4-code-review-02a6d44",
+        "files": 33,
+        "all_manifest_files_unchanged": true,
+        "manifest_sha256": "2b46a4d9ddba25296bc7110ad903d145b43c94479ee9a049d0888f860db76028"
+      },
+      {
+        "directory": "rc3-05-public-envelope-preflight",
+        "files": 8,
+        "all_manifest_files_unchanged": true,
+        "manifest_sha256": "51569656ec1a19aadd2b3d2c8c3e4689a9c192fb8343cf60d612fa3be70f1c1e"
+      },
+      {
+        "directory": "rc3-05-public-envelope-preflight-addendum-740af2b",
+        "files": 4,
+        "all_manifest_files_unchanged": true,
+        "manifest_sha256": "2e42f94ff1e1954093a32ae549124281d32f3b1a1f6be14ec59200021ac582d5"
+      }
+    ],
+    "ledger_byte_equal_to_parent": true
+  },
+  "report_sha256": "cf7da4838e93bc1643c206fd661b06208711e699d6ef616263ad9b6292c36b18",
+  "static_audit_sha256": "9bdda01c53f34f0aa1f7e94dbcbf26c2477f188c677068410e2be2d7e0e857bb",
+  "limitations": [
+    "No broad/UI/install/CI performed by this reviewer",
+    "No native/provider/model or human/desktop acceptance claim",
+    "Existing lineage path is a family of strict provenance errors; missing proof remains false, direct resolver strict",
+    "Old R4 limited code review missed these asset-boundary negative controls; Root fixed broad exposed the real defect and old reports/failures remain unchanged",
+    "Public-grammar addendum is separately frozen and does not assert RC3-05 readiness"
+  ]
+}

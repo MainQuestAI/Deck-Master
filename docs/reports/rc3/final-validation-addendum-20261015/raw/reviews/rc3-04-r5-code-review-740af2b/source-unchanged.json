@@ -1,0 +1,32 @@
+{
+  "fixed_full_identity_equal": true,
+  "fixed_tracked_count": 3944,
+  "fixed_before_sha256": "a7f02c5697ea03cc06e81020b40ea6900cfd7e19d959cb6b6d13ed317ea0054a",
+  "fixed_after_sha256": "a7f02c5697ea03cc06e81020b40ea6900cfd7e19d959cb6b6d13ed317ea0054a",
+  "fixed_status_before": "",
+  "fixed_status_after": "",
+  "live_static_full_identity_equal": true,
+  "live_before_sha256": "6cdc3846f6b963e11ac626a0b4e3d6aa5ae9112575f2aa3c2ee5888679199bb1",
+  "live_after_sha256": "6cdc3846f6b963e11ac626a0b4e3d6aa5ae9112575f2aa3c2ee5888679199bb1",
+  "prior_frozen_reports": [
+    {
+      "directory": "rc3-04-r4-code-review-02a6d44",
+      "files": 33,
+      "all_manifest_files_unchanged": true,
+      "manifest_sha256": "2b46a4d9ddba25296bc7110ad903d145b43c94479ee9a049d0888f860db76028"
+    },
+    {
+      "directory": "rc3-05-public-envelope-preflight",
+      "files": 8,
+      "all_manifest_files_unchanged": true,
+      "manifest_sha256": "51569656ec1a19aadd2b3d2c8c3e4689a9c192fb8343cf60d612fa3be70f1c1e"
+    },
+    {
+      "directory": "rc3-05-public-envelope-preflight-addendum-740af2b",
+      "files": 4,
+      "all_manifest_files_unchanged": true,
+      "manifest_sha256": "2e42f94ff1e1954093a32ae549124281d32f3b1a1f6be14ec59200021ac582d5"
+    }
+  ],
+  "ledger_byte_equal_to_parent": true
+}

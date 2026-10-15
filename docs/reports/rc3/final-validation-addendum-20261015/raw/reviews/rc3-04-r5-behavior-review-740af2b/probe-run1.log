@@ -1,0 +1,4 @@
+{"case": "C3-bad-Task-JSON", "status": "PASS", "exception": null}
+{"case": "C3-asset-restricted", "status": "PASS", "exception": null}
+{"case": "C3-asset-unspecified", "status": "PASS", "exception": null}
+{"case": "C3-asset-missing", "status": "PASS", "exception": null}

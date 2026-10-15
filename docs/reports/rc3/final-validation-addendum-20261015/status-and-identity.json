@@ -1,0 +1,190 @@
+{
+  "schema": "rc3_04_final_docs_status_identity.v1",
+  "snapshot_utc": "2026-10-15T09:24:11.994033+00:00",
+  "derived_index_not_runtime_receipt": true,
+  "software": {
+    "head": "740af2bddbc1199762c750be2f98474feaadb5a6",
+    "tree": "0ef706cca75acefaba218f714ffbc5c29f5d8aae",
+    "parent": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+    "version": "1.0.0rc3",
+    "writer_floor": "rc3-entry.v1 /Entry13",
+    "docs_only_commit_non_docs_unchanged": true,
+    "git_object_groups": {
+      "src": "04a89e229060bf259221658d4a38d18183488104",
+      "tests": "f5cf6b5f106ecc7831c44dcae0b16a09141d17be",
+      "skills": "7b9973fd38537136fa1e6a5b6835ead37d60e200",
+      "examples": "e16d8caad8e99bff5ae6cbbe68739aefc48dd82c",
+      "tools": "974bedd5ec367bc0922c4ed61fb6c4f2a3db759a",
+      "pyproject.toml": "e8ca868422c21a458a7554cdf40e3ab6c3520067"
+    }
+  },
+  "current_candidate": {
+    "kind": "actual R5 candidate, not yet final-docs rebuilt candidate",
+    "name": "candidate-04-r5-740af2b",
+    "source_head": "740af2bddbc1199762c750be2f98474feaadb5a6",
+    "source_tree": "0ef706cca75acefaba218f714ffbc5c29f5d8aae",
+    "wheel_sha256": "0690dd667da48d4fe47fc2202489f73a9e029900a010163b72ef2ae2e4ddc48e",
+    "manifest_sha256": "fb6271c4bf24c4c4662183d44127bdd8651c86718cde7c967d5e0c431bf7cae5",
+    "manifest": "raw/candidate-04-r5-740af2b/manifest.json",
+    "installed_module_path": "/workspace/work/rc3/candidate-04-r5-740af2b/prefix/.deck-master/releases/740af2bddbc1-0690dd667da4/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "actual_home_modified": false,
+    "strict_byte_audit": {
+      "path": "raw/reviews/rc3-04-r5-root-validation-740af2b/strict-installed-bytes.json",
+      "sha256": "e6e5867ff56aa3dd6660786846709c064120214ffeacccd6f9cae688e375a722",
+      "canonical_members": 270,
+      "generated_members": 1,
+      "explicit_roles": 4,
+      "verdict": "PASS_BYTES_ONLY"
+    },
+    "legacy_basic_collector_subset_count": 263,
+    "r4_r5_reuse": {
+      "path": "raw/reviews/rc3-04-r5-root-validation-740af2b/r4-package-byte-reuse.json",
+      "members": 271,
+      "identical": 270,
+      "only_changed": [
+        "deck_master/eligibility.py"
+      ],
+      "not_claimed": "No entire installation equality; pyc differs. Unchanged C1/C2/UI reused only at original R4 identity, not rerun."
+    }
+  },
+  "completed": {
+    "r5_fixed_unit": {
+      "status": "PASS",
+      "passed": 2369,
+      "deselected": 506,
+      "pytest_seconds": 622.6,
+      "source_tracked": 3944,
+      "source_head_tree_status_before_after_equal": true,
+      "result": "raw/reviews/rc3-04-r5-root-validation-740af2b/unit-result.json",
+      "raw_log_sha256": "b7129630d30498fcdc738b695bf00627dce36725442f6169ecca5615dc77864d"
+    },
+    "r4_fixed_render": {
+      "status": "PASS_AT_R4_ONLY",
+      "head": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+      "passed": 71,
+      "warnings": 22,
+      "deselected": 2804,
+      "result": "raw/reviews/rc3-04-r4-root-validation-02a6d44/render-result.json",
+      "not_claimed": "No new R5 full render run"
+    },
+    "r5_installed_offline_ui": {
+      "status": "PASS_INSTALLED_OFFLINE_BROWSER_ONLY",
+      "downloads": 3,
+      "external_requests": 0,
+      "page_errors": 0,
+      "source_tracked": 3944,
+      "installed_members": 271,
+      "before_after_equal": true,
+      "module_origins_all_installed": true,
+      "font_argument": "DejaVu Sans",
+      "checks_sha256": "fbeb4da90aea04696ebb1608f7fa7b1dd84a335f6d70aa44e014d3aa6de3a20a",
+      "check_count": 9,
+      "checks_ref": "raw/reviews/rc3-04-r5-installed-gates-740af2b/offline/actual-evidence/checks.json"
+    }
+  },
+  "pending": {
+    "r5_source_browser": {
+      "status": "PENDING_RUNNING",
+      "root_session": 53976,
+      "active_log_not_copied": true
+    },
+    "r5_installed_full_recovery": {
+      "status": "PENDING_RUNNING",
+      "root_session": 87309,
+      "active_log_not_copied": true
+    },
+    "final_docs_head_build_strict_271_member_compare": {
+      "status": "PENDING_FINAL_DOCS_HEAD",
+      "not_claimed": "Future wheel hash/member equality not prefilled"
+    },
+    "independent_final_docs_review": {
+      "status": "PENDING_FINAL_DOCS_HEAD"
+    },
+    "new_exact_head_seven_ci": {
+      "status": "PENDING_FINAL_DOCS_HEAD",
+      "previous_final_head_CI_8223_status": "FAIL",
+      "previous_run": 38696634552
+    },
+    "merge_pr119": {
+      "status": "NOT_MERGED_REQUIRES_ACTUAL_LOCAL_AND_CI_AND_REVIEWS_PASS"
+    },
+    "rc3_05_execution": {
+      "status": "NOT_STARTED_PENDING_RC3_04_MERGE",
+      "effects_controller": "NOT_RUN"
+    }
+  },
+  "review_provenance": [
+    {
+      "stage": "R4 code",
+      "report": "raw/reviews/rc3-04-r4-code-review-02a6d44/report.md",
+      "sha256": "da8830a8278c5d375b16dfccbecbf64a47dd8bfae1e3a7c5af0e0143a3b70e86",
+      "scope": "Historical limited code review; C3 broad-error expectation superseded by R5, not whole 17-check reapproval"
+    },
+    {
+      "stage": "R4 installed behavior",
+      "report": "raw/reviews/rc3-04-r4-behavior-review-02a6d44/report.md",
+      "sha256": "e2e97076fb5f61511f33c60f6ce6b5de1344c227686da5f0aac5907cd8951c76",
+      "scope": "9 finite actual installed tracks; C2 unchanged, C3 asset boundary superseded"
+    },
+    {
+      "stage": "R4 installed UI",
+      "report": "raw/reviews/rc3-04-r4-installed-ui-review-02a6d44/report.md",
+      "sha256": "20bba4bf16d44e096b082d760981e4f6d5e831e0a30188e309c3b80af786db9f",
+      "scope": "6 families /7 successful actual executions /5 preserved author probe failures; no R5 UI rerun claim"
+    },
+    {
+      "stage": "R5 code",
+      "report": "raw/reviews/rc3-04-r5-code-review-740af2b/report.md",
+      "sha256": "cf7da4838e93bc1643c206fd661b06208711e699d6ef616263ad9b6292c36b18",
+      "scope": "11 finite checks; original asset3 +two real corrupt Task variants +six forced type/path controls"
+    },
+    {
+      "stage": "R5 installed behavior",
+      "report": "raw/reviews/rc3-04-r5-behavior-review-740af2b/report.md",
+      "sha256": "51e915d6d4e9042cf5c099c7e09d0b8427dca90ee8d1922261818c286b2ee0d9",
+      "scope": "4 actual installed SDK tracks; no HTTP/Studio/Host16 claim"
+    }
+  ],
+  "preserved_failures": {
+    "original_8223_CI": "../r4-ci-failure-evidence-20261015/manifest.json",
+    "original_94_mapping": "../r4-focused-evidence-20261015/original94-r4-mapping.json",
+    "r4_unit_asset_3_fail": "../r5-asset-boundary-evidence-20261015/manifest.json",
+    "r4_interrupted_broad": "raw/reviews/rc3-04-r4-root-validation-02a6d44/infrastructure-interruption.json",
+    "r4_partial_browser": {
+      "tests": 283,
+      "passed": 279,
+      "failed": 4,
+      "complete": false,
+      "status": "INFRA_INTERRUPTED_NO_BROAD_PASS"
+    },
+    "same_r4_post_space_exact_browser": {
+      "passed": 4,
+      "whole_browser_or_recovery_pass": false,
+      "log": "raw/reviews/rc3-04-r4-root-validation-02a6d44/storage-diagnostic.log"
+    },
+    "storage_relocation": {
+      "path": "raw/reviews/rc3-04-r4-root-validation-02a6d44/storage-relocation.jsonl",
+      "records": 9,
+      "archive_not_deleted": true,
+      "archive_tree_not_copied": true
+    }
+  },
+  "role_entry_provenance": {
+    "path": "../entry-integration-handoff-20261015/role-entry-paths.json",
+    "actual_combination": "R3 new1 +R2 reused15; same actual Host",
+    "rerun_on_r5": false,
+    "shared_methods_and_role_bytes": "Root strict four-role proof plus unchanged declared canonical resources; not model/quality evidence"
+  },
+  "ledger": {
+    "path": "../evidence-ledger.json",
+    "sha256": "daceae45c257431938479e29104aa3381a395c880b719613fee97e3a23004272",
+    "ac_count": 37,
+    "cq_count": 13,
+    "all_bytes_status_owner_signers_unchanged": true
+  },
+  "human": "NOT_RUN_DEFERRED_OWNER_AUDIENCE_TIMING_PROFESSIONAL_DESKTOP",
+  "rc3_05_fair_E1_E2_E3_and_controller_execution": "NOT_RUN",
+  "unknown_tokens_and_fees": "UNKNOWN_NOT_ZERO",
+  "future_outcome_source": "Root external frozen full-gate summary and actual PR119 GitHub checks; 05 ledger references actual results later, absent here",
+  "copy_policy": "Only these explicit frozen reports, logs, manifests, identity/check summaries and finite SDK probe sources. No whole 838/162 evidence folders; no Store/registry/runtimeauth/key/HMAC/venv/customer material/raw wheel/session/binaries. No redacted copy is presented as an original."
+}

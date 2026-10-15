@@ -1,0 +1,16 @@
+{
+  "status": "PASS_LIMITED",
+  "must_fix": [],
+  "formal_installed_cases": 4,
+  "first_run_passed": 4,
+  "reviewer_probe_failures": 0,
+  "source_tracked_unchanged": 3944,
+  "validation_and_managed_package_files_each_unchanged": 358,
+  "actual_installed_deck_master_module_origins": 50,
+  "R4_to_R5_nonbytecode_members_unchanged": 270,
+  "R4_to_R5_only_nonbytecode_member_changed": "eligibility.py",
+  "actual_real_model_image_provider_human_calls": 0,
+  "R4_C1_C2_UI_rerun": false,
+  "broad_or_card_acceptance_claim": false,
+  "execution": "STOPPED_AFTER_FINITE_REVIEW"
+}

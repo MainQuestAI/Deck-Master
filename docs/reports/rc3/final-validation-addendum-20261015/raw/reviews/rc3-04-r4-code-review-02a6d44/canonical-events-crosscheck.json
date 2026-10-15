@@ -1,0 +1,9 @@
+{
+  "summary_event_count": 94,
+  "counts": {
+    "FAILED": 90,
+    "ERROR": 4
+  },
+  "canonical_log_events_equal_mapping": true,
+  "test_functions_exist_in_current": true
+}
