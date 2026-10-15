@@ -293,3 +293,83 @@ def test_old_journal_invocation_ref_is_preflighted_before_uniqueness_reader(setu
         execute(f, bind=False)
     assert attempts == []
     assert len(u.events(c.Journal(f['campaign']), 'original_bound')) == 1
+
+
+@pytest.mark.parametrize('bind', [False, True])
+@pytest.mark.parametrize('shape', ['path-only', 'path-bytes', 'no-path', 'bad-sha', 'bad-bytes', 'not-object'])
+@pytest.mark.parametrize('location', ['protocol', 'source', 'role', 'method'])
+def test_malformed_legacy_Ref_positions_reject_before_body_open(setup, bind, shape, location):
+    f = fixture(setup)
+    ref, attempts = guarded_sentinel(f)
+    if shape == 'path-only': ref = {'path': ref['path']}
+    elif shape == 'path-bytes': ref.pop('sha256')
+    elif shape == 'no-path': ref.pop('path')
+    elif shape == 'bad-sha': ref['sha256'] = 'not-a-SHA256'
+    elif shape == 'bad-bytes': ref['bytes'] = True
+    else: ref = 'opaque string is not a file Ref at an actual file Ref position'
+    change_registration_ref(f, ref, location)
+    with pytest.raises(m.Error, match='file Ref|byte length'):
+        execute(f, bind=bind)
+    assert attempts == []
+    assert not u.events(c.Journal(f['campaign']), 'original_bound')
+
+
+@pytest.mark.parametrize('location', ['exposure-nested', 'method-nested'])
+def test_nested_path_without_digest_is_not_skipped(setup, location):
+    f = fixture(setup)
+    ref, attempts = guarded_sentinel(f)
+    ref.pop('sha256')
+    change_registration_ref(f, ref, location)
+    with pytest.raises(m.Error, match='file Ref'):
+        execute(f, bind=False)
+    assert attempts == []
+
+
+@pytest.mark.parametrize('shape', ['path-only', 'path-bytes', 'no-path', 'not-object'])
+def test_old_journal_incomplete_invocation_ref_is_rejected_before_reader(setup, shape):
+    f = fixture(setup)
+    ref, attempts = guarded_sentinel(f)
+    if shape == 'path-only': ref = {'path': ref['path']}
+    elif shape == 'path-bytes': ref.pop('sha256')
+    elif shape == 'no-path': ref.pop('path')
+    else: ref = 'not a file Ref'
+    c.Journal(f['campaign']).append('original_bound', {'slot': 'U-READ-01-A', 'invocations': [ref]})
+    with pytest.raises(m.Error, match='file Ref'):
+        execute(f, bind=False)
+    assert attempts == []
+
+
+@pytest.mark.parametrize('bind', [False, True])
+def test_locked_reload_path_without_sha_rejected_before_old_open(setup, monkeypatch, bind):
+    f = fixture(setup)
+    ref, attempts = guarded_sentinel(f)
+    ref.pop('sha256')
+    real, calls = m.public_campaign, []
+    def at_reload(root):
+        calls.append(str(root))
+        if len(calls) == 3: change_registration_ref(f, ref, 'protocol')
+        return real(root)
+    monkeypatch.setattr(m, 'public_campaign', at_reload)  # scheduling only; original reader is not patched
+    with pytest.raises(m.Error, match='file Ref'):
+        execute(f, bind=bind)
+    assert len(calls) == 3 and attempts == []
+    assert not u.events(c.Journal(f['campaign']), 'original_bound')
+
+
+def test_legacy_two_field_Refs_extra_fields_and_opaque_metadata_remain_legal(setup):
+    f = fixture(setup)
+    path = Path(f['campaign']) / 'registration.json'
+    config = json.loads(path.read_bytes())
+    for key in ('protocol', 'admission_review', 'exposure_registry'):
+        config[key] = {k: v for k, v in config[key].items() if k != 'bytes'}
+        config[key]['legal_extra_metadata'] = 'preserved by old Ref contract'
+    config['role_instructions']['initial_writer'].pop('bytes')
+    config['barrier_methods']['U-LIVE-01-C'].pop('bytes')
+    config['barrier_methods']['U-READ-01-C'].pop('bytes')
+    config['observable_configuration']['invocation_parameters'] = {'opaque_locator': 'private/oracle/not-a-file-Ref'}
+    path.write_bytes(c.encoded(config))
+    assert u.validate(config) == config  # actual unchanged legacy validation accepts these file Refs
+    amendment = json.loads(Path(f['admission']['path']).read_bytes())
+    amendment['registration'] = m.reference(path)
+    admitted = c.save(f['directory'] / 'two-field-compatible-amendment.json', amendment)
+    assert execute(f, admission=admitted)['status'] == 'ORIGINAL_BOUND_NO_PRIVATE_RELEASE'

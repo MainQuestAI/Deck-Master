@@ -46,16 +46,28 @@ def reference(path):
 
 
 def check_ref(ref):
-    require(isinstance(ref, dict) and set(ref) == {'path', 'sha256', 'bytes'}, 'exact file Ref required')
-    path = canonical(ref['path'])
-    require(type(ref['bytes']) is int and ref['bytes'] >= 0, 'actual byte length required')
-    require(stat.S_ISREG(path.stat().st_mode) and path.stat().st_size == ref['bytes'], 'actual regular file/byte length differs')
+    path = preflight_file_ref(ref)
+    if 'bytes' in ref:
+        require(path.stat().st_size == ref['bytes'], 'actual regular file/byte length differs')
     return u.check_ref(ref)
 
 
 def checked(ref):
     check_ref(ref)
     return public_json(ref['path'])
+
+
+def preflight_file_ref(ref):
+    """Legacy file Refs require path+sha256; bytes and extra fields stay legal."""
+    require(isinstance(ref, dict) and {'path', 'sha256'} <= set(ref), 'file Ref needs path and sha256 before body IO')
+    require(isinstance(ref['path'], str) and isinstance(ref['sha256'], str)
+            and len(ref['sha256']) == 64 and all(ch in '0123456789abcdef' for ch in ref['sha256']),
+            'file Ref path and lowercase SHA256 must be valid before body IO')
+    if 'bytes' in ref:
+        require(type(ref['bytes']) is int and ref['bytes'] >= 0, 'actual byte length required')
+    path = canonical(ref['path'])
+    require(stat.S_ISREG(path.stat().st_mode), 'actual regular file required')
+    return path
 
 
 def preflight_refs(value):
@@ -66,9 +78,8 @@ def preflight_refs(value):
     It never opens a referenced body or treats opaque path strings as reads.
     """
     if isinstance(value, dict):
-        if 'path' in value and 'sha256' in value:
-            path = canonical(value['path'])
-            require(stat.S_ISREG(path.stat().st_mode), 'actual regular file required')
+        if 'path' in value:
+            preflight_file_ref(value)
         for item in value.values():
             preflight_refs(item)
     elif isinstance(value, list):
@@ -85,6 +96,36 @@ def public_json(path):
     return value
 
 
+def preflight_registration(config):
+    """Known old reader Ref positions also reject a missing path or bad shape.
+
+    A relationship object such as copy_pair may have digest/length without a
+    file path; it is not reclassified as a file Ref by a generic key heuristic.
+    """
+    require(isinstance(config, dict), 'registration object required')
+    for key in ('protocol', 'admission_review', 'exposure_registry'):
+        preflight_file_ref(config.get(key))
+    require(isinstance(config.get('cases'), dict), 'registration cases object required')
+    for case in config['cases'].values():
+        require(isinstance(case, dict) and isinstance(case.get('materials'), list), 'case file Ref positions required')
+        for ref in [case.get('brief'), *case['materials']]:
+            preflight_file_ref(ref)
+    for key in ('role_instructions', 'barrier_methods'):
+        require(isinstance(config.get(key), dict), 'registration file Ref mapping required')
+        for ref in config[key].values():
+            preflight_file_ref(ref)
+    cyber = config.get('cyberppt')
+    require(isinstance(cyber, dict) and isinstance(cyber.get('files'), list), 'Cyber file Ref rows required')
+    for ref in cyber['files']:
+        preflight_file_ref(ref)
+
+
+def legacy_checked(ref):
+    preflight_file_ref(ref)
+    u.check_ref(ref)
+    return public_json(ref['path'])
+
+
 def public_campaign(root):
     """Retain old validation on the same preflighted registration object.
 
@@ -94,14 +135,20 @@ def public_campaign(root):
     """
     journal = u.Journal(canonical(root))
     config = public_json(journal.root / 'registration.json')
-    checked(config['exposure_registry'])
+    preflight_registration(config)
+    legacy_checked(config['exposure_registry'])
     for case in u.CASES:
-        checked(config['barrier_methods'][case + '-C'])
+        legacy_checked(config['barrier_methods'][case + '-C'])
     paths = sorted((journal.root / 'journal').glob('*.json'))
     for path in paths:
         canonical(path)
     for path in paths:
-        public_json(path)
+        event = public_json(path)
+        if event.get('kind') == 'original_bound':
+            invocations = event.get('data', {}).get('invocations')
+            require(isinstance(invocations, list), 'old binding invocation Ref list required')
+            for ref in invocations:
+                preflight_file_ref(ref)
     return journal, u.validate(config)
 
 

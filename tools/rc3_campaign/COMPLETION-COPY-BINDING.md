@@ -78,8 +78,8 @@ creates an amendment or upgrades an engineering campaign.
 
 `copy_pair` has exactly the observed values: `ordinal`, `task_id`,
 `project_id`, `invocation`, `method_read`, `original_completion`,
-`frozen_completion`, `sha256`, `bytes`. File Refs are canonical absolute
-`{path,sha256,bytes}`; neither an unavailable path nor a caller's claimed
+`frozen_completion`, `sha256`, `bytes`. Newly generated Refs record canonical
+absolute `{path,sha256,bytes}`; neither an unavailable path nor a caller's claimed
 digest is proof. The two completion Refs must be the actual manifest and
 selected snapshot/receipt Refs. Tool and helper locations are explicit;
 placing a new file does not relabel an older source or installed candidate.
@@ -108,6 +108,17 @@ the frozen validator, and passes that same parsed registration to unchanged
 before the old uniqueness reader. It never delegates an unchecked registration
 to `u.campaign` or `u.read`. An alias or forbidden path is rejected before the
 old reader can attempt to open it; opaque strings are not followed as files.
+
+Ref shape is checked before any delegated body open, even if a `path` object
+has no digest. Every file-Ref position consumed by the frozen registration
+validator and prior Journal invocation reader is checked explicitly, so a
+missing `path` or wrong shape cannot bypass the guard either. The old Ref
+contract remains compatible: `path` and a valid lowercase SHA256 are required;
+`bytes` is optional and, when present, is checked for type/range and actual
+length. Legal extra metadata fields are retained. Non-file relationship
+metadata such as `copy_pair` digest/length is not mistaken for a file Ref,
+and opaque strings do not cause file IO. The full original bytes and complete
+Ref identities still govern the admitted copy relation.
 
 `bind-original-slot` emits the established `original_bound` event only after
 all checks. It retains the old event fields and adds the exact amendment,
@@ -168,3 +179,11 @@ Sentinel data is newly generated synthetic public test data; its digest comes
 from known in-memory bytes. No sentinel body is read or hashed. The original
 independent negative is replayed with only exact source/output fixture
 bindings changed, preserving its audit hook and assertion.
+
+Independent R2 found the path-plus-bytes/no-digest variant skipped by the
+first fix. Its actual failed open-attempt test is preserved and separately
+replayed before/after the second fix with the same permanent hook. Added
+checks cover incomplete/invalid file Refs at original registration positions,
+nested JSON, prior invocation entries and final locked reload, plus successful
+two-field/extra-metadata compatibility through actual unchanged old validation
+and a complete synthetic binding. No missing digest is repaired by the tool.
