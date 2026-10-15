@@ -23,14 +23,14 @@ spec = importlib.util.spec_from_file_location("rc3_image_event_engineering", SCR
 e = importlib.util.module_from_spec(spec); spec.loader.exec_module(e)
 
 
-def setup(tmp_path, monkeypatch, *, scope_specs=None, parent=None, total=None, legacy=False, protocol_ref=None, installation=None, prior_dispatch=None):
+def setup(tmp_path, monkeypatch, *, scope_specs=None, parent=None, total=None, legacy=False, protocol_ref=None, installation=None, prior_dispatch=None, page_id_bindings=None):
     protocol = protocol_ref or e.save(tmp_path / "protocol.json", {"scope": "SYNTHETIC_ENGINEERING_ONLY"})
     scopes = []
     for slot, checkpoint, pids, instruction in scope_specs or [("scope-one", "Q4B", ["p1"], "Synthetic event one")]:
         message = tmp_path / (slot + ".txt"); message.write_text(instruction)
         scopes.append({"scope_slot": slot, "parent_id": "original-flow", "checkpoint": checkpoint,
             "instruction": e.reference(message), "max_calls": len(pids),
-            "leaves": [{"leaf_id": slot + "-" + pid, "page_label": pid, "page_id": pid,
+            "leaves": [{"leaf_id": slot + "-" + pid, "page_label": pid, "page_id": (page_id_bindings or {}).get(pid, pid),
                 "max_calls": 1, "max_candidates": 1, "retries": 0} for pid in pids]})
     parent = parent or {"parent_id": "original-flow", "matrix_slot": "08", "case": "Q4",
         "whole_run_id": "synthetic-original-flow", "repetition": 1, "arm": "B", "max_calls": sum(s["max_calls"] for s in scopes)}

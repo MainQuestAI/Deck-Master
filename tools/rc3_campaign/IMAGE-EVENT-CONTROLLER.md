@@ -40,6 +40,14 @@ passed to a public SDK. Same-checkpoint semantic Page identity then stays fixed.
 Both M02 uses register distinct stable Page IDs; their original parent and
 actual project remain shared.
 
+For M02's `scope-events-v1` profile, each leaf's stable `page_label` must equal
+one of its own use's preregistered `page_ids`. All live/read labels are distinct.
+Its `page_id` may remain null while the recorder is registered and initialized
+before manuscript creation; a nonnull value must equal that leaf's planned ID.
+This is a planning identity check, not a Page or a production grant. Begin and
+preparation still require the actual current own-SDK Page, Task, frozen Request,
+reserved allowance and then in-flight Attempt. Null cannot be dispatched.
+
 `activation` is Root's operational `host_attested` decision: `observer_id=/root`,
 the exact `policy_sha256`, `legacy_writer_route=HISTORICAL_READ_ONLY`, and
 `evidence_kind=ROOT_ACTUAL_DECISION` (or engineering). No platform signature or

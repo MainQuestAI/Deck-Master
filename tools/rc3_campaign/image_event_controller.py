@@ -582,12 +582,14 @@ def validate_m02_policy(config):
     require(len(parents) == 1, "one original M02 whole-run parent required")
     scopes = [s for s in policy["scopes"] if s["parent_id"] == parents[0]["parent_id"]]
     wanted = set(config["scopes"]["live"]["page_ids"] + config["scopes"]["read"]["page_ids"])
-    actual = [leaf["page_id"] for scope in scopes for leaf in scope["leaves"]]
-    require(len(actual) == len(set(actual)) and set(actual) == wanted, "event M02 Pages must be exactly the distinct two-use Pages")
+    leaves = [leaf for scope in scopes for leaf in scope["leaves"]]
+    labels = [leaf["page_label"] for leaf in leaves]
+    require(len(labels) == len(set(labels)) and set(labels) == wanted, "event M02 planned Page labels must be exactly the distinct two-use Pages")
+    require(all(leaf["page_id"] is None or leaf["page_id"] == leaf["page_label"] for leaf in leaves), "bound M02 Page must equal its own planned Page ID")
     require(parents[0]["max_calls"] == sum(config["scopes"][p]["max_external_calls"] for p in ("live", "read")), "event M02 shared cap differs from both registered scopes")
     for phase in ("live", "read"):
         selected = [s for s in scopes if s["checkpoint"] == phase]
-        require(len(selected) == 1 and selected[0]["max_calls"] == config["scopes"][phase]["max_external_calls"] and {x["page_id"] for x in selected[0]["leaves"]} == set(config["scopes"][phase]["page_ids"]), "M02 event scope cannot borrow Pages/calls across uses")
+        require(len(selected) == 1 and selected[0]["max_calls"] == config["scopes"][phase]["max_external_calls"] and {x["page_label"] for x in selected[0]["leaves"]} == set(config["scopes"][phase]["page_ids"]), "M02 event scope cannot borrow Pages/calls across uses")
         require(selected[0]["instruction"]["sha256"] == config["scopes"][phase]["instruction"]["sha256"], "M02 event instruction differs from its fixed use")
         require(config["scopes"][phase]["max_candidates"] == config["scopes"][phase]["max_external_calls"], "M02 event profile registers one candidate per permitted call")
     require(event["installations"]["B"] == config["installation"], "M02 event/profile must bind the same own B installation")
