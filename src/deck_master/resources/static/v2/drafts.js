@@ -134,7 +134,7 @@ export class DraftEditor {
       if (['dirty', 'unknown', 'conflict', 'saving'].includes(this.status)) {
         if (!this.node.closest('#modal')) {
           const dialog = modal('保留当前输入再恢复', el('p', {}, '当前稿和待核实保存请求将保留在本机副本中。'),
-            [button('下载当前稿', () => this.download()), button('打开所选草稿', () => { if (this.restoreCopy(copy)) dialog.close(); })]);
+            [button('下载当前稿', () => this.download()), button('打开所选草稿', () => { if (this.restoreCopy(copy)) dialog.close(); })], {protectDraft: true});
           return;
         }
         this.restoreConfirm?.remove();
@@ -291,9 +291,9 @@ export class DraftEditor {
       if (result.record && canonical(result.record.draft) === canonical(pending.draft)) this.confirm(result.record);
       else if (!result.record || result.record.etag === pending.expected_etag) {
         this.note = '项目中尚未发现本次保存。后写草稿保持独立，可以重试已发送的原内容。';
-        modal('原草稿尚未确认保存', el('p', {}, this.note), [button('重试已发送的内容', () => {
-          document.querySelector('#modal').close(); this.submitPending();
-        })]); this.updateStatus();
+        const dialog = modal('原草稿尚未确认保存', el('p', {}, this.note), [button('重试已发送的内容', () => {
+          dialog.close(); this.submitPending();
+        })], {protectDraft: true}); this.updateStatus();
       } else { this.status = 'conflict'; this.pendingSave = null; this.persist(); this.updateStatus(); }
     } catch (error) { this.note = readableError(error); this.updateStatus(); }
   }
@@ -314,15 +314,15 @@ export class DraftEditor {
             target: draft.target, base_revision: draft.base_revision, base_ref: draft.base_ref,
             requirement_basis: content.requirement?.basis ?? null, annotation_refs: content.requirement?.annotation_refs || []}, null, 2))));
       };
-      modal('保留两份个人草稿', el('div', {class: 'conflict-panes draft-conflict-panes'},
+      const dialog = modal('保留两份个人草稿', el('div', {class: 'conflict-panes draft-conflict-panes'},
         pane('本机', '你的本机草稿', local), pane('项目', '项目中已保存的草稿', saved)),
         [button('下载本机稿', () => this.download(local)), button('另存为个人草稿', () => {
           if (!this.archiveLocal()) { this.updateStatus(); return; }
           this.persist(); this.draft = structuredClone(local); this.draft.draft_id = 'draft-' + crypto.randomUUID(); this.etag = null;
           this.input.value = this.draft.content.text || '';
           this.pendingSave = null; this.sequence = undefined; this.status = 'dirty'; this.persist(); this.updateStatus();
-          document.querySelector('#modal').close(); this.save();
-        })]);
+          dialog.close(); this.save();
+        })], {protectDraft: true});
     } catch (error) { this.note = readableError(error); this.updateStatus(); }
   }
   async download(draft = this.draft) {

@@ -5,7 +5,7 @@ brief and real source material it drives content composition, blueprint
 generation, editable SVG/PPT production, review and repair — all through one
 CLI and a loopback review workbench.
 
-**Status:** rebuilt core (spec pack v1.1), Python package `1.0.0.dev2`.
+**Status:** rebuilt core (spec pack v1.1), Python package `1.0.0rc3`.
 **License:** Apache-2.0.
 
 Flow Quality v1.1 adds complete task context, directory sources and input
@@ -46,7 +46,7 @@ uv pip install --python .venv/bin/python -e ".[dev]"
 
 The only command surface is the rebuilt CLI: `deck-master ...` after install,
 or `python -m deck_master ...` from a source checkout. Release activation also
-registers the single Codex Skill; see [installation](skills/deck-master/references/installation.md).
+registers all four Codex Skills (Master, Content, Design, Review); see [installation](skills/deck-master/references/installation.md).
 
 ## Quick Start
 

@@ -354,5 +354,7 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
                             write_scope=scope, adoption_policy=adoption_policy,
                             authorization_ref=authorization_ref, decision_refs=decision_refs)
     task["collaboration_binding"] = binding
+    task.setdefault("protocol_version", "changes.v1")
+    task["required_capabilities"] = list(dict.fromkeys([*task.get("required_capabilities", []), "collaboration.v1", "rc3-entry.v1"]))
     require_binding(document, task)
     return task

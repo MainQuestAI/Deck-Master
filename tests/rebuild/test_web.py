@@ -13,6 +13,7 @@ from deck_master.editing import edit_page, review_status
 from deck_master.models import bump_revision
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer, open_view, stop_service
+from rc3_fixtures import public_project, authorize_scope, evidence_for, historical_snapshot
 
 SPEC_DIR = Path(__file__).resolve().parents[2] / "docs" / "specs" / "deck-master-rebuild-v1"
 ENVELOPES = SPEC_DIR / "examples" / "roundtrips" / "result-envelope"
@@ -62,10 +63,18 @@ def _compose_pending_project(tmp_path):
 
 
 def _adopted_project(tmp_path):
-    project, task = _compose_pending_project(tmp_path)
     envelope = json.loads((ENVELOPES / "compose.json").read_text())
-    service.accept_result(project, task_id=task["task_id"], operation_id=task["operation_id"],
-                          produced_against=task["produced_against"], result_payload=envelope)
+    fixture = public_project(tmp_path, create_input={'brief': 'L1 synthetic confirmed web manuscript'},
+                             manuscript={'pages': envelope['pages'], 'page_order': envelope['page_order']})
+    project = fixture['project']
+    store = Store(project)
+    scope = {**store.load_document()['collaboration']['request']['scope'],
+             'layers': ['page_copy', 'svg', 'review']}
+    authorize_scope(project, actions=['page.edit', 'dispatch.host_task'], scope=scope,
+        max_external_calls=0, max_candidate_count=0, adoption_policy='within_scope',
+        evidence=evidence_for(project, text='L1 synthetic: edit this imported page and request its review', locator='L1:web-test'))
+    service.open_host_task(store, kind='review', page_ids=['p09'], instruction='L1 synthetic preproduction review request',
+                           review_stage='preproduction')
     return project, Store(project)
 
 
@@ -148,8 +157,12 @@ def test_view_revision_matches_document_and_follows_edits(server):
         (review_status(store, store.load_document()) == "pass")
 
 
-def test_view_status_tracks_review_interpretation(server):
-    url, project, store = server
+def test_view_status_tracks_review_interpretation(tmp_path):
+    # Fixed historical synthetic output/review facts exercise the reader;
+    # these bytes are never presented as a current production success.
+    page = json.loads((ENVELOPES / 'compose.json').read_text())['pages'][0]
+    fixture = historical_snapshot(tmp_path, scenario='historical synthetic web review interpretation', pages=[page])
+    project, store = fixture['project'], Store(fixture['project'])
     work = store.staging_dir / "web-pptx"
     work.mkdir(parents=True, exist_ok=True)
     pptx_file = work / "deck.pptx"
@@ -162,7 +175,12 @@ def test_view_status_tracks_review_interpretation(server):
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach-pptx")
     _fabricate_fail_review(store, store.load_document())
 
-    _, _, view = _get_json(f"{url}/api/view")
+    instance = WorkbenchServer(project)
+    url = instance.start().rstrip('/')
+    try:
+        _, _, view = _get_json(f"{url}/api/view")
+    finally:
+        instance.stop()
     document = store.load_document()
     assert review_status(store, document) == "fail"
     assert view["view_status"] == "awaiting_review", \
@@ -177,21 +195,18 @@ def test_view_status_tracks_review_interpretation(server):
 # failure as null plus reason.
 
 
-def test_cli_accept_auto_opens_workbench_after_first_content(tmp_path, monkeypatch, capsys):
-    project, task = _compose_pending_project(tmp_path)
+def test_cli_import_auto_opens_workbench_after_first_content(tmp_path, monkeypatch, capsys):
+    project = tmp_path / 'imported-cli'
     result_file = tmp_path / "compose-result.json"
-    result_file.write_text((ENVELOPES / "compose.json").read_text())
+    envelope = json.loads((ENVELOPES / 'compose.json').read_text())
+    result_file.write_text(json.dumps({'pages': envelope['pages'], 'page_order': envelope['page_order']}))
     opened = []
     def _fake_open(url, new=0):
         opened.append(url)
         return True
     monkeypatch.setattr("deck_master.web.webbrowser.open", _fake_open)
     try:
-        exit_code = cli.main([
-            "task", "accept", "--project", str(project),
-            "--task-id", task["task_id"], "--operation-id", task["operation_id"],
-            "--produced-against", task["produced_against"], "--result", str(result_file),
-        ])
+        exit_code = cli.main(['import-draft', '--project', str(project), '--input', str(result_file)])
         assert exit_code == 0
         payload = json.loads(capsys.readouterr().out)
         assert payload["review_url"], "first content triggers the automatic workbench URL"
@@ -316,7 +331,14 @@ def test_user_text_is_served_as_data_not_markup(server):
         if "innerHTML" in line and "=" in line:
             assert '""' in line or "''" in line or "replaceChildren" in line, \
                 "innerHTML is only used to clear containers, never to inject user text"
-    # SVG previews are served sandboxed.
+
+
+def test_historical_svg_preview_is_served_sandboxed(tmp_path):
+    # The malicious SVG is a fixed historical synthetic reader input, not an
+    # adopted current Host result or a claim that compilation succeeded.
+    page = json.loads((ENVELOPES / 'compose.json').read_text())['pages'][0]
+    fixture = historical_snapshot(tmp_path, scenario='historical synthetic SVG CSP reader', pages=[page])
+    project, store = fixture['project'], Store(fixture['project'])
     work = store.staging_dir / "svg-xss"
     work.mkdir(parents=True, exist_ok=True)
     svg_file = work / "page.svg"
@@ -327,11 +349,16 @@ def test_user_text_is_served_as_data_not_markup(server):
                                       "description": "svg", "read_set": []})
     bumped["pages"][0]["svg"] = adopt_artifact(store, svg_file, "svg", page_id="p09")
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="attach-svg")
-    _, _, view = _get_json(f"{url}/api/view")
-    status, headers, body = _get(f"{url}/api/file?path={view['pages'][0]['slots']['svg']['path']}"
-                                 f"&sha256={view['pages'][0]['slots']['svg']['sha256']}")
-    assert status == 200
-    assert "sandbox" in headers.get("Content-Security-Policy", "")
+    instance = WorkbenchServer(project)
+    url = instance.start().rstrip('/')
+    try:
+        _, _, view = _get_json(f"{url}/api/view")
+        status, headers, body = _get(f"{url}/api/file?path={view['pages'][0]['slots']['svg']['path']}"
+                                     f"&sha256={view['pages'][0]['slots']['svg']['sha256']}")
+        assert status == 200
+        assert "sandbox" in headers.get("Content-Security-Policy", "")
+    finally:
+        instance.stop()
 
 
 import urllib.parse  # noqa: E402  (used by the whitelist test above)

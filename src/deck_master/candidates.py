@@ -329,7 +329,7 @@ def _superseded_tasks(store, document, affected_ids):
 
 def record_result(store, *, document, task, updated_task, artifacts, artifact_refs,
                   generation_binding, envelope, produced_against, result_digest,
-                  page_refs=None, content_update=None):
+                  page_refs=None, content_update=None, receipt_envelope=None):
     """Caller holds the same task-accept lock and has validated the real result.
 
     One trial returns exactly one planned result: an image/SVG artifact, a
@@ -338,7 +338,7 @@ def record_result(store, *, document, task, updated_task, artifacts, artifact_re
     """
     if content_update is not None:
         return _record_changeset_result(store, document=document, task=task, updated_task=updated_task,
-                                        envelope=envelope, content_update=content_update,
+                                        envelope=envelope, content_update=content_update, receipt_envelope=receipt_envelope,
                                         produced_against=produced_against, result_digest=result_digest)
     if page_refs:
         return _record_page_result(store, document=document, task=task, updated_task=updated_task,
@@ -400,7 +400,7 @@ def _record_page_result(store, *, document, task, updated_task, envelope, page_r
 
 
 def _record_changeset_result(store, *, document, task, updated_task, envelope, content_update,
-                             produced_against, result_digest):
+                             produced_against, result_digest, receipt_envelope=None):
     from .tasks import EnvelopeError, ModelError, StaleInputContext, _validate_content_update_request, page_limit_violation
     from .content import check_page
     from .content_ops import validate_host_result
@@ -424,7 +424,16 @@ def _record_changeset_result(store, *, document, task, updated_task, envelope, c
                             'compose.v1 content trials must submit the complete content_plan')
     try:
         resulting_pages = [{'page_id': pid} for pid in content_update['page_order']]
-        validate_plan_input(store, document, plan_value, resulting_pages)
+        if plan_value.get('schema_version') == 'content_plan_input.v2':
+            from .content_plan import validate_plan_input_v2
+            previous = store.read_object_json(document['content_plan']) if document.get('content_plan') else {}
+            validate_plan_input_v2(store, document, plan_value,
+                mode='imported_mapping' if previous.get('mode') == 'imported_mapping' else 'planned',
+                imported_manuscript=previous.get('imported_manuscript'))
+            if plan_value['page_order'] != content_update['page_order']:
+                raise EnvelopeError('(result)/content_plan', 'Plan order differs from the candidate changeset')
+        else:
+            validate_plan_input(store, document, plan_value, resulting_pages)
     except (ModelError, ContentPlanError) as exc:
         raise EnvelopeError('(result)/content_plan', str(exc)) from exc
     frozen = copy.deepcopy(content_update)
@@ -443,7 +452,7 @@ def _record_changeset_result(store, *, document, task, updated_task, envelope, c
     updated_task['candidate_refs'] = [candidate_ref]
     updated_task['result_refs'] = [changeset_ref, *([plan_input_ref] if plan_input_ref else []), candidate_ref]
     return _commit_candidate(store, document=document, task=task, updated_task=updated_task,
-                             candidate_ref=candidate_ref, writer=CONTENT_WRITER, envelope=envelope,
+                             candidate_ref=candidate_ref, writer=CONTENT_WRITER, envelope=receipt_envelope or envelope,
                              produced_against=produced_against, result_digest=result_digest, response={
                                  'status': 'candidate_ready', 'result_kind': 'content_update',
                                  'revision_id': None, 'candidate_ids': [candidate['candidate_id']],
@@ -732,12 +741,35 @@ def adopt(project, *, input, base_revision, operation_id):
                 or input['project_id'] != document['project_id']):
             raise operations.OperationError('conflict', 'base_revision', 'adoption plan needs a new current basis; no candidates adopted', exit_code=5)
         from . import eligibility
-        eligibility.guard(store, document, "candidate.adopt", context={
-            "targets": {"page_ids": [item['page_id'] for item in input['selections']
-                                     if item.get('page_id')],
-                        "layers": [layer for layer in
-                                   dict.fromkeys(_adoption_layer(item) for item in input['selections'])
-                                   if layer]}})
+        target_pages = []
+        layers = []
+        membership = False
+        order_change = False
+        records = _records(store, document)
+        for item in input['selections']:
+            layer = _adoption_layer(item)
+            if layer:
+                layers.append(layer)
+            if item.get('page_id'):
+                target_pages.append(item['page_id'])
+            if item.get('result_kind') == 'content_update':
+                changeset = store.read_object_json(item['result_ref'])
+                from .content_ops import _derived_source_scope
+                _, _, source_task = _lookup(records, item['candidate_id'])
+                sources = _derived_source_scope(store, document, source_task)
+                old_order = [entry['page_id'] for entry in document['pages']]
+                target_pages.extend(page['page_id'] for page in changeset.get('upsert_pages', [])
+                                    if sources is None or page['page_id'] in old_order)
+                target_pages.extend(sources or [])
+                target_pages.extend(changeset.get('remove_page_ids', []))
+                layers.append('plan')
+                membership = membership or set(old_order) != set(changeset['page_order'])
+                retained = set(old_order) & set(changeset['page_order'])
+                order_change = order_change or ([pid for pid in old_order if pid in retained]
+                    != [pid for pid in changeset['page_order'] if pid in retained])
+        eligibility.guard(store, document, "candidate.adopt", context={"targets": {
+            "page_ids": sorted(set(target_pages)), "layers": sorted(set(layers)),
+            "allow_page_membership_change": membership, "allow_page_order_change": order_change}})
         ids = [item['candidate_id'] for item in input['selections']]
         current_plan = _plan(store, document, ids)
         if current_plan != input:
@@ -749,7 +781,6 @@ def adopt(project, *, input, base_revision, operation_id):
             if artifact['page_id'] != item['page_id'] or artifact['role'] != item['stage']:
                 raise operations.OperationError('candidate_invalid', 'result_ref', 'candidate result identity differs')
             store.read_object_bytes(artifact['file'])
-        records = _records(store, document)
         content = any(item.get('result_kind', 'artifact') != 'artifact' for item in input['selections'])
         updated = bump_revision(copy.deepcopy(document), {'operation_id': operation_id,
                                                            'kind': 'content_update' if content else 'artifact_adoption',

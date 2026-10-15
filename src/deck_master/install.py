@@ -1,8 +1,7 @@
 """Isolated candidate releases; activation only inside an explicit prefix.
 
-v1.1 adds the Codex skill chain (§8): each release carries ``skill/deck-master``
-extracted from its wheel, ``install activate`` establishes one managed link at
-``$CODEX_HOME/skills/deck-master`` → ``<prefix>/.deck-master/current/skill/deck-master``,
+RC3 carries four public entries under ``skill/<name>``. Activation registers
+all four ``$CODEX_HOME/skills/<name>`` links through the same release current pointer,
 rollback retires the link when the previous release predates skills, and a
 one-time migration moves the legacy companion layout aside without deleting
 anything. The installer never touches third-party skills or config.toml.
@@ -16,6 +15,9 @@ from pathlib import Path
 import fcntl, hashlib, json, os, re, stat, subprocess, sys, uuid, zipfile
 
 from .errors import HostSkillConflict
+
+PUBLIC_SKILLS = ('deck-master', 'deck-content', 'deck-design', 'deck-review')
+_METHOD_INVENTORY = 'deck_master/resources/method-inventory.json'
 
 @contextmanager
 def _locked(root):
@@ -141,32 +143,127 @@ def _codex_skill_root():
     home=os.environ.get('CODEX_HOME') or os.path.join(os.path.expanduser('~'),'.codex')
     return Path(home)/'skills'
 
-def _managed_target(root):
-    """The one link target this installer owns (always through current)."""
-    return str(root/'current'/'skill'/'deck-master')
+def _managed_target(root, name='deck-master'):
+    """Only links through this installation's current pointer are managed."""
+    return str(root / 'current' / 'skill' / name)
 
-def _link_state(root):
-    """managed | absent | conflict(path kind) for the Codex skill entry."""
-    link=_codex_skill_root()/'deck-master'
+
+def _link_state(root, name='deck-master'):
+    link = _codex_skill_root() / name
     if link.is_symlink():
-        return ('managed' if os.readlink(link)==_managed_target(root) else 'foreign', str(link))
+        return ('managed' if os.readlink(link) == _managed_target(root, name) else 'foreign', str(link))
     if link.exists():
         return ('occupied', str(link))
     return ('absent', str(link))
 
-def _extract_skill(release: Path, wheel: Path) -> None:
+
+def _wheel_skills(archive):
+    """Validate the whole Skill namespace before extracting any candidate file."""
+    names = archive.namelist()
+    if len(names) != len(set(names)):
+        raise ValueError('duplicate wheel members')
+    try:
+        inventory = json.loads(archive.read(_METHOD_INVENTORY))
+    except (KeyError, ValueError) as exc:
+        raise ValueError('candidate wheel lacks a readable strict method inventory') from exc
+    if inventory.get('schema_version') != 'method_resource_inventory.v1' or inventory.get('public_skills') != list(PUBLIC_SKILLS):
+        raise ValueError('unsupported candidate Skill inventory')
+    if set(inventory.get('generated_exceptions', {})) != {_METHOD_INVENTORY}:
+        raise ValueError('unknown generated method exception')
+    rows = inventory.get('files', {})
+    from .method_resources import RELATIVE_PATHS
+    expected_sources = {'skills/RESOLVER.md'}
+    expected_sources.update(f'skills/{skill}/{name}' for skill in PUBLIC_SKILLS
+                            for name in ('SKILL.md', 'agents/openai.yaml'))
+    expected_sources.update('skills/deck-master/' + relative
+                            for relative in (*RELATIVE_PATHS.values(), 'references/installation.md'))
+    if {row.get('canonical_source') for row in rows.values()} != expected_sources:
+        raise ValueError('unknown or missing canonical source in candidate inventory')
+    actual = {name for name in names if not name.endswith('/') and
+              (name.startswith('deck_master/resources/skill/') or name.startswith('deck_master/resources/skills/'))}
+    if set(rows) != actual:
+        raise ValueError('wheel has unknown or missing canonical Skill files')
+    extracted = {}
+    sources = set()
+    for name, row in rows.items():
+        if name.startswith('deck_master/resources/skill/'):
+            relative = 'deck-master/' + name.removeprefix('deck_master/resources/skill/')
+        else:
+            relative = name.removeprefix('deck_master/resources/skills/')
+        parts = Path(relative).parts
+        if not parts or any(part in ('.', '..') for part in parts) or Path(relative).is_absolute():
+            raise ValueError('invalid Skill resource path')
+        if relative == 'RESOLVER.md':
+            canonical = 'skills/RESOLVER.md'
+        elif parts[0] in PUBLIC_SKILLS and len(parts) > 1:
+            canonical = 'skills/' + relative
+            if parts[0] != 'deck-master' and (len(parts) > 3 or '/references/' in relative):
+                raise ValueError('shared methods must not be copied into other Skills')
+        else:
+            raise ValueError('unknown canonical Skill resource')
+        if row.get('canonical_source') != canonical or canonical in sources:
+            raise ValueError('canonical Skill source mapping mismatch')
+        sources.add(canonical)
+        raw = archive.read(name)
+        if hashlib.sha256(raw).hexdigest() != row.get('sha256'):
+            raise ValueError('candidate method bytes differ from inventory: ' + name)
+        extracted[relative] = raw
+    for skill in PUBLIC_SKILLS:
+        for required in ('SKILL.md', 'agents/openai.yaml'):
+            if f'{skill}/{required}' not in extracted:
+                raise ValueError('candidate missing public Skill resource: ' + skill + '/' + required)
+    return inventory, extracted
+
+
+def _extract_skill(release: Path, wheel: Path) -> dict:
     with zipfile.ZipFile(wheel) as archive:
-        names=[n for n in archive.namelist()
-               if n.startswith('deck_master/resources/skill/') and not n.endswith('/')]
-        if not any(n=='deck_master/resources/skill/SKILL.md' for n in names):
-            raise ValueError('candidate wheel carries no deck-master skill')
-        skill_root=release/'skill'/'deck-master'
-        skill_root.mkdir(parents=True,exist_ok=True)
-        for name in names:
-            relative=name[len('deck_master/resources/skill/'):]
-            target=skill_root/relative
-            target.parent.mkdir(parents=True,exist_ok=True)
-            target.write_bytes(archive.read(name))
+        inventory, extracted = _wheel_skills(archive)
+    # The fresh release is private until candidate_ready and activation.
+    for relative, raw in extracted.items():
+        target = release / 'skill' / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(raw)
+    (release / 'method-inventory.json').write_text(json.dumps(inventory, indent=2) + '\n')
+    return inventory
+
+
+def _installed_resource_paths(release, inventory):
+    rows = []
+    for wheel_path, row in inventory['files'].items():
+        if wheel_path.startswith('deck_master/resources/skill/'):
+            extracted = release / 'skill/deck-master' / wheel_path.removeprefix('deck_master/resources/skill/')
+        else:
+            extracted = release / 'skill' / wheel_path.removeprefix('deck_master/resources/skills/')
+        rows.append({**row, 'wheel_path': wheel_path, 'host_path': str(extracted),
+                     'package_relative_path': wheel_path})
+    return rows
+
+
+def _verify_installed_resources(python, release, inventory, version):
+    """Ask the isolated interpreter for its actual resource roots and bytes."""
+    code = '''import hashlib,json,importlib.metadata
+from pathlib import Path
+import deck_master
+root=Path(deck_master.__file__).resolve().parent
+paths=json.loads(__import__('sys').argv[1])
+print(json.dumps({'version':deck_master.__version__,'metadata_version':importlib.metadata.version('deck-master'),
+ 'module_path':str(root/'__init__.py'),
+ 'files':{p:{'path':str(root.parent/p),'sha256':hashlib.sha256((root.parent/p).read_bytes()).hexdigest()} for p in paths}}))'''
+    result = subprocess.run([str(python), '-I', '-c', code, json.dumps(list(inventory['files']))],
+                            check=True, capture_output=True, text=True, timeout=60)
+    actual = json.loads(result.stdout)
+    if (actual['version'] != version or actual['metadata_version'] != version
+            or not Path(actual['module_path']).is_relative_to(release)):
+        raise ValueError('candidate version or module origin differs from isolated release')
+    rows = _installed_resource_paths(release, inventory)
+    for row in rows:
+        installed = actual['files'][row['wheel_path']]
+        if not Path(installed['path']).is_relative_to(release) or installed['sha256'] != row['sha256']:
+            raise ValueError('installed method differs from canonical wheel bytes: ' + row['wheel_path'])
+        if hashlib.sha256(Path(row['host_path']).read_bytes()).hexdigest() != row['sha256']:
+            raise ValueError('extracted Host method differs from canonical wheel bytes: ' + row['host_path'])
+        row['installed_package_path'] = installed['path']
+    return rows
 
 def install_candidate(prefix, manifest_path):
     manifest_path=Path(manifest_path).resolve();manifest=json.loads(manifest_path.read_text())
@@ -174,16 +271,24 @@ def install_candidate(prefix, manifest_path):
     if Path(name).name!=name:raise ValueError('wheel must be beside manifest')
     wheel=manifest_path.parent/name
     if hashlib.sha256(wheel.read_bytes()).hexdigest()!=manifest['wheel_sha256']:raise ValueError('wheel hash mismatch')
+    with zipfile.ZipFile(wheel) as archive:
+        actual_files = {name: hashlib.sha256(archive.read(name)).hexdigest()
+                        for name in archive.namelist() if not name.endswith('/')}
+        if actual_files != manifest.get('files'):
+            raise ValueError('release file inventory differs from actual wheel bytes')
     root=Path(prefix).resolve()/'.deck-master'
     with _locked(root):
         release=_release(root,manifest['release_id']);release.mkdir(parents=True,exist_ok=False)
         record={**manifest,'status':'installing','document_schema':'deck_document.v1'}
         (release/'release.json').write_text(json.dumps(record,indent=2))
         try:
-            _extract_skill(release,wheel)
+            inventory = _extract_skill(release,wheel)
+            if manifest.get('method_resource_inventory') != inventory:
+                raise ValueError('release manifest method inventory differs from wheel')
             subprocess.run([sys.executable,'-m','venv',str(release/'venv')],check=True,capture_output=True,timeout=120)
             python=release/'venv/bin/python'
             subprocess.run([str(python),'-I','-m','pip','install',str(wheel)],check=True,capture_output=True,timeout=300)
+            installed_paths = _verify_installed_resources(python, release, inventory, manifest['package_version'])
             probe=subprocess.run([str(python),'-I','-m','deck_master','doctor','--step','compile'],check=True,capture_output=True,text=True,timeout=60)
             info=json.loads(probe.stdout)
             if not Path(info['module_path']).is_relative_to(release):raise RuntimeError('candidate borrowed external module')
@@ -195,7 +300,9 @@ def install_candidate(prefix, manifest_path):
             render_probe=subprocess.run([str(python),'-I','-m','deck_master','doctor','--step','render'],check=True,capture_output=True,text=True,timeout=60)
             subprocess.run([str(python),'-I','-c','from deck_master.pipeline import render_deck; render_deck("probe-output/deck.pptx","probe-rendered",fonts={})'],cwd=release,check=True,capture_output=True,timeout=120)
             record.update(status='candidate_ready',probe=info,render_probe=json.loads(render_probe.stdout),
-                          skill_sha256=hashlib.sha256((release/'skill'/'deck-master'/'SKILL.md').read_bytes()).hexdigest())
+                          skill_sha256=hashlib.sha256((release/'skill'/'deck-master'/'SKILL.md').read_bytes()).hexdigest(),
+                          public_skills=list(PUBLIC_SKILLS), method_resource_inventory=inventory,
+                          installed_resource_paths=installed_paths)
         except Exception as exc:
             record.update(status='failed',error=str(exc))
             (release/'release.json').write_text(json.dumps(record,indent=2));raise
@@ -282,40 +389,47 @@ def _validate_legacy_companion(current):
             str(manifest),
             'companion manifest does not match deck_master_companion_manifest.v3 with '
             'bundled_symlink_only on its deck skill rows; refusing to migrate')
-def _ensure_host_skill_link(root):
-    """Create or repair the managed Codex link; refuse anything else."""
-    state,path=_link_state(root)
-    if state in ('managed','absent'):
-        link=Path(path)
-        if not link.is_symlink() or os.readlink(link)!=_managed_target(root):
-            _mkdir(link.parent)
-            _replace_link(link,_managed_target(root))
-        return {'host_skill':'registered','skill_link':str(link),'skill_target':_managed_target(root)}
-    raise HostSkillConflict(
-        path,
-        f'the Codex skill path is occupied by a {"real directory or file" if state=="occupied" else "foreign symlink"}; '
-        'remove or rename it before activating')
+def _ensure_host_skill_link(root, name='deck-master'):
+    state, path = _link_state(root, name)
+    if state not in ('managed', 'absent'):
+        raise HostSkillConflict(path, 'the Host Skill path belongs to another installation or user')
+    link = Path(path)
+    if state != 'managed':
+        _mkdir(link.parent)
+        _replace_link(link, _managed_target(root, name))
+    return {'name': name, 'status': 'registered', 'skill_link': str(link), 'skill_target': _managed_target(root, name)}
 
-def _retire_host_skill_link(root):
-    """Drop the managed link only when it points at this installation."""
-    state,path=_link_state(root)
-    if state=='managed':
+
+def _retire_host_skill_link(root, name='deck-master'):
+    state, path = _link_state(root, name)
+    if state == 'managed':
         _unlink(Path(path))
-    return {'host_skill':'host_skill_unregistered','skill_link':path if state!='absent' else None}
+    return {'name': name, 'status': 'unregistered', 'skill_link': path if state != 'absent' else None}
+
 
 def _sync_host_skill(root, *, register: bool):
-    """After a release switch: keep the link valid, retire it without a skill."""
-    skill_marker=root/'current'/'skill'/'deck-master'/'SKILL.md'
-    if not register:
-        state,path=_link_state(root)
-        return {'host_skill':'registered' if state=='managed' and skill_marker.is_file() else 'host_unregistered',
-                'skill_link':path if state!='absent' else None}
-    if not skill_marker.is_file():
-        return _retire_host_skill_link(root)
-    return _ensure_host_skill_link(root)
+    rows = []
+    for name in PUBLIC_SKILLS:
+        marker = root / 'current/skill' / name / 'SKILL.md'
+        if not register:
+            state, path = _link_state(root, name)
+            rows.append({'name': name, 'status': 'registered' if state == 'managed' and marker.is_file() else 'host_unregistered',
+                         'skill_link': path if state != 'absent' else None})
+        elif marker.is_file():
+            rows.append(_ensure_host_skill_link(root, name))
+        else:
+            rows.append(_retire_host_skill_link(root, name))
+    active = [row for row in rows if row['status'] == 'registered']
+    master = rows[0]
+    result = {'host_skill': 'registered' if active else ('host_skill_unregistered' if register else 'host_unregistered'),
+              'skill_link': master['skill_link'], 'skill_links': rows}
+    if master.get('skill_target'):
+        result['skill_target'] = master['skill_target']
+    return result
+
 
 def _preflight_host_skill(root, *, removed_links=()):
-    # Walk from the root: exists() alone treats dangling links as missing.
+    # Check every name before any migration, launcher or pointer mutation.
     parent = _codex_skill_root().absolute()
     for component in reversed((parent, *parent.parents)):
         try:
@@ -326,16 +440,36 @@ def _preflight_host_skill(root, *, removed_links=()):
             elif component.exists() and not component.is_dir():
                 raise ValueError('not a directory')
         except (OSError, RuntimeError, ValueError) as exc:
-            raise HostSkillConflict(str(component), f'invalid Codex skill parent: {exc}; current is unchanged') from exc
-    state,path=_link_state(root)
-    if state in ('occupied','foreign') and 'deck-master' not in removed_links:
-        raise HostSkillConflict(path, 'the Codex skill path belongs to another installation or user; current is unchanged')
+            raise HostSkillConflict(str(component), f'invalid Codex Skill parent: {exc}; current is unchanged') from exc
+    for name in PUBLIC_SKILLS:
+        state, path = _link_state(root, name)
+        if state in ('occupied', 'foreign') and name not in removed_links:
+            raise HostSkillConflict(path, 'the Host Skill path belongs to another installation or user; current is unchanged')
 
 def _checked_release(root, release_id):
     release=_release(root, release_id)
     record=json.loads((release/'release.json').read_text())
     if record.get('status')!='candidate_ready':
         raise ValueError('candidate checks incomplete')
+    if record.get('public_skills') is not None:
+        if record['public_skills'] != list(PUBLIC_SKILLS):
+            raise ValueError('candidate public Skill set is incomplete')
+        rows = record.get('installed_resource_paths', [])
+        expected = set((record.get('method_resource_inventory') or {}).get('files', {}))
+        if not expected or {row.get('wheel_path') for row in rows} != expected:
+            raise ValueError('candidate installed method path inventory is incomplete')
+        actual_host = {str(path) for path in (release / 'skill').rglob('*') if path.is_file()}
+        if actual_host != {row['host_path'] for row in rows}:
+            raise ValueError('candidate Host Skill tree has unknown or missing files')
+        for row in rows:
+            for key in ('host_path', 'installed_package_path'):
+                path = Path(row[key])
+                if (not path.resolve().is_relative_to(release) or not path.is_file()
+                        or hashlib.sha256(path.read_bytes()).hexdigest() != row['sha256']):
+                    raise ValueError('candidate method resource changed after installation: ' + str(path))
+        for name in PUBLIC_SKILLS:
+            if not (release / 'skill' / name / 'SKILL.md').is_file():
+                raise ValueError('candidate public Skill missing: ' + name)
     return release
 
 _LAUNCHER_TEXT='#!/bin/sh\nexec "$(dirname "$0")/../current/venv/bin/python" -I -m deck_master "$@"\n'

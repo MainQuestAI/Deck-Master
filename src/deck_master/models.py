@@ -522,7 +522,7 @@ def validate_compose_result_semantics(result: dict[str, Any]) -> None:
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
                "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
-               "collaboration.v1": 11, "rc3.v1": 12}
+               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13}
 
 
 def require_writer(document, minimum):
@@ -551,7 +551,7 @@ def collaboration_required(document) -> bool:
     writer also keeps its mandatory initial-region contract.
     """
     return (document.get('collaboration') is not None or
-            document.get('compatibility', {}).get('minimum_writer') == 'collaboration.v1')
+            document.get('compatibility', {}).get('minimum_writer') in ('collaboration.v1', 'rc3-entry.v1'))
 
 
 # Central registry of accepted proposal projections (CONTRACTS §3.1). A

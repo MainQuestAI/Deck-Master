@@ -889,7 +889,8 @@
             "icon-quality.v1",
             "workbench-quality.v1",
             "collaboration.v1",
-            "rc3.v1"
+            "rc3.v1",
+            "rc3-entry.v1"
           ]
         }
       },

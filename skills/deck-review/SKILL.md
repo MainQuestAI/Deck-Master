@@ -1,0 +1,52 @@
+---
+name: deck-review
+description: 只读审查项目快照、外部PPTX或明确文件集，检查内容、关系、口播、视觉与交付证据并返回具体findings；不制作、不自动修复，换Skill名称不产生独立身份。
+---
+
+# Deck Review
+
+## Use when
+
+用户只要审稿、批评、检查事实/推论/页序/视觉/口播/转换/隐私或核对交付文件；源可以是固定项目快照、外部文件或明确文件集。
+
+## Do not use when
+
+要写稿/修稿用 Content，方案/样页用 Design，完整制作/执行返修用 Master。Review 自身不生图、不转换为生产项目、不接纳候选，也不把“只审”解释为可修。
+
+## 方法与允许产物
+
+实际读取指定范围、当前文件/固定快照、任务与相关来源，再读 review-and-repair、content-methods、content-calibration、physical-units；前审按工作单的完整方法集。定位到页/atom/行列归属/责任箭头/实际文件 hash，写期待、实际、事实/推论依据、用途影响、F0–F3、修复责任层及验证边界。稀疏、教学示意、诚实未知须按用途判断，不强造数字或删限定。
+
+严格只读使用 `external_review.evaluate` 或文档化 review evaluate，persistence=none；不创建项目、Task、Review 或控制记录。报告/临时文件放源目录外，不接受重叠目录、别名/符号链接、错 SHA 或覆写源。输出 findings、工程观察、source_unchanged、needs_reviewer/needs_tool 和真实覆盖限制；缺阅图/渲染不判 pass。用户另有明确保存意图才由 Master 走固定原稿绑定/CAS的 review import，保持原来源与证据等级。
+
+作者自审标 host_self；同作者换 Skill 名、task、execution ID 或提示词不会变成 independent。独立执行须有实际非作者执行与受信回执，人类 professional 须真实人类通道；缺能力明确 needs_reviewer。字符回读不替代关系/实际渲染，旧 Desktop 记录不等于本轮桌面验收。
+
+## 退出条件与下一责任
+
+返回可读报告、证据/范围、未完成维度的具体原因即完成约定审查；未验证项保留缺口。下一责任按问题归属 Content/Design/Master 或交付判定；本职责不制作也不自动修复。
+
+## 同一发布版与方法
+
+先读取本次 Host 入口路径，不从 PATH 或 HOME 猜另一套安装。把 `skill_entry` 设为实际加载的 SKILL.md 路径（保留未解析的 Host 路径，升级/回退后重新解析），执行：
+
+```python
+from pathlib import Path
+
+skill_file = Path(skill_entry).expanduser().resolve(strict=True)
+release = skill_file.parents[2]
+skill_name = skill_file.parent.name
+python = release / "venv/bin/python"
+if (skill_name not in ("deck-master", "deck-content", "deck-design", "deck-review")
+        or skill_file != release / "skill" / skill_name / "SKILL.md"
+        or release.parent.name != "releases"
+        or release.parent.parent.name != ".deck-master"
+        or not (release / "release.json").is_file()
+        or not python.is_file()):
+    raise RuntimeError("Skill is not in a complete managed release; check installation")
+deck_master_cli = [str(python), "-I", "-m", "deck_master"]
+```
+
+用 `subprocess.run([*deck_master_cli, ...])` 调用；不能将参数拼成 shell 字符串。
+源码开发安装须通过 doctor.module_path 核对所属 checkout 与实际 Python。
+四入口共享 [路由与恢复方法](../deck-master/references/collaboration-routing.md)，内容/设计/审查方法只有 `deck-master/references` 一处 canonical；不复制到其他 Skill。
+真实工作单的 `method_resources` 是要读取的准确文件、路径与 SHA。用该发布版 Python 调用 `method_resources.read_skill_methods`，传本角色、`entry_mode=named|natural|master|recovery`、真实 project/task_id；自然路由另传原始 text。返回字节只证明读取，实际完成的判断、修改、产物和限制另记。恢复读取当前 scope/决定/撤回和 completion，不重复建项目或补授权。

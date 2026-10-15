@@ -29,16 +29,28 @@ export function toast(message) {
   toast.timer = setTimeout(() => target.classList.remove('visible'), 4500);
 }
 export function announce(message) { document.querySelector('#route-status').textContent = message; }
-export function modal(title, body, actions = [], {fallback} = {}) {
-  const dialog = document.querySelector('#modal');
+let modalTail = null;
+export function modal(title, body, actions = [], {fallback, protectDraft = false} = {}) {
+  const shared = document.querySelector('#modal');
+  // An asynchronous service error must never replace a draft conflict or
+  // recovery decision while the user is comparing their retained text.
+  const waiting = Boolean(modalTail || shared.open && shared.dataset.protectDraft === 'true');
+  const blocker = modalTail || shared;
+  const dialog = waiting ? el('dialog', {class: 'queued-modal'}) : shared;
   const trigger = document.activeElement;
-  const heading = el('h2', {id: 'dialog-title'}, title);
+  const heading = el('h2', {id: waiting ? 'dialog-title-' + crypto.randomUUID() : 'dialog-title'}, title);
   dialog.replaceChildren(el('div', {class: 'modal-body'}, heading, body,
     el('div', {class: 'modal-actions'}, button('关闭', () => dialog.close()), actions)));
   dialog.setAttribute('aria-labelledby', heading.id);
-  dialog.className = '';
-  if (!dialog.open) dialog.showModal();
+  dialog.className = waiting ? 'queued-modal' : '';
+  dialog.dataset.protectDraft = String(protectDraft);
+  if (waiting) {
+    document.body.append(dialog);
+    modalTail = dialog;
+    blocker.addEventListener('close', () => { if (dialog.isConnected) dialog.showModal(); }, {once: true});
+  } else if (!dialog.open) dialog.showModal();
   dialog.onclose = () => {
+    if (waiting) { if (modalTail === dialog) modalTail = null; dialog.remove(); }
     if (trigger?.isConnected) { trigger.focus(); return; }
     // UX-06b：触发器在模态期间被卸载（列表刷新、条目移除）：调用方可以在 O2 里
     // 指定工具内的回退目标（如工具标题）；没有指定则回退到工作面标题。

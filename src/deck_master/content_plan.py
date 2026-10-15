@@ -44,6 +44,12 @@ def bind_result(store, document, task, value, pages):
     Resolving a locator proves a reference exists, not that the cited claim is
     true. No missing plan, source, goal or source version is manufactured.
     """
+    if value is not None and value.get("schema_version") == "content_plan_input.v2":
+        previous = store.read_object_json(document["content_plan"]) if document.get("content_plan") else {}
+        mode = "imported_mapping" if previous.get("mode") == "imported_mapping" and not document.get("narrative") else "bound"
+        return build_v2_plan(store, document, task, value, pages, narrative_ref=document.get("narrative"),
+            mode=mode, imported_manuscript=previous.get("imported_manuscript") if mode == "imported_mapping" else None,
+            require_role_mapping=mode != "imported_mapping")
     required = task.get("protocol_version") == PROTOCOL
     if required:
         from .generation import check_host

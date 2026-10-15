@@ -352,6 +352,12 @@ class Store:
             self._verify_read_set_entry(entry)
         for ref in blobs:
             self.read_object_bytes(ref)
+        if base_revision is not None and document.get("collaboration") is not None:
+            # This runtime commits the complete RC3 entry/gate contract. Older
+            # rc3.v1 binaries know notes/design but not its enforced defaults.
+            from .models import require_writer
+            document = copy.deepcopy(document)
+            require_writer(document, "rc3-entry.v1")
         validate_document_semantics(document)
         change = document.get("change") or {}
         change_operation = operation_id or change.get("operation_id") or ""

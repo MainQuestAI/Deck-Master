@@ -265,9 +265,9 @@ def test_wheel_and_sdist_exclude_customer_material_and_secrets(tmp_path: Path) -
     native = dict(wheel_files)["deck_master/compiler/native.py"].decode("utf-8")
     assert "B0 2a866cf" in native
     # License texts ship and match pyproject metadata.
-    license_text = dict(wheel_files)["deck_master-1.0.0.dev2.dist-info/licenses/LICENSE"].decode("utf-8") \
+    license_text = dict(wheel_files)[next(n for n in wheel_names if n.endswith("dist-info/licenses/LICENSE"))].decode("utf-8") \
         if any(n.endswith("dist-info/licenses/LICENSE") for n in wheel_names) \
-        else dict(wheel_files)["deck_master-1.0.0.dev2.dist-info/LICENSE"].decode("utf-8")
+        else dict(wheel_files)[next(n for n in wheel_names if n.endswith("dist-info/LICENSE"))].decode("utf-8")
     assert "Apache License" in license_text
     metadata_name = next(n for n in wheel_names if n.endswith("METADATA"))
     metadata_text = dict(wheel_files)[metadata_name].decode("utf-8")

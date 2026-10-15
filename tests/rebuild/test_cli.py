@@ -9,6 +9,8 @@ import pytest
 
 import deck_master.cli as cli
 import deck_master.service as service
+from deck_master.store import Store
+from rc3_fixtures import authorize_scope, evidence_for
 
 
 def _material(tmp_path: Path) -> Path:
@@ -48,6 +50,14 @@ def test_call_allocate_routes_to_transactional_allowance_service(tmp_path, capsy
     code, project, payload = _create(tmp_path, capsys)
     assert code == 0
     task_id = payload["pending_tasks"][0]["task_id"]
+    # Current projects have no implicit call credit. The historical CLI's
+    # allocation positive now supplies the exact named permission explicitly.
+    store = Store(project)
+    document = store.load_document()
+    authorize_scope(project, actions=['allowance.allocate'],
+        scope=document['collaboration']['request']['scope'], max_external_calls=1,
+        max_candidate_count=0, adoption_policy='candidate_only',
+        evidence=evidence_for(project, text='L1 synthetic: authorize one allowance allocation', locator='L1:cli-allocate'))
     assert cli.main(["task", "call", "allocate", "--project", str(project),
                      "--task-id", task_id, "--count", "1"]) == 0
     allocated = json.loads(capsys.readouterr().out)
@@ -120,7 +130,7 @@ def test_import_plan_alias_accepts_v2_draft_and_rejects_v1(tmp_path, capsys):
         "visual_spec": {"intent": "import", "reference_mode": "new_design"}}]}, ensure_ascii=False))
     assert cli.main(["import-plan", "--input", str(draft), "--project", str(project)]) == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["status"] == "accepted"
+    assert payload["status"] == "created"
     legacy_plan = tmp_path / "legacy-plan.json"
     legacy_plan.write_text(json.dumps({"narrative_plan": {"beats": []}, "sourcing_plan": {}}))
     assert cli.main(["import-plan", "--input", str(legacy_plan), "--project", str(project)]) == 2

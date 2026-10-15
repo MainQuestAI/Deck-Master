@@ -11,7 +11,7 @@ import hashlib
 from pathlib import Path
 
 from .content import check_page
-from .models import bump_revision, default_design_context, new_document, validate_document_semantics
+from .models import bump_revision, validate_document_semantics
 from .store import Store
 
 V1_PAGE_SCHEMA = 'deck_page_package.v1'
@@ -309,17 +309,26 @@ def import_legacy(input_path, out_path, *, inspect_only: bool = False) -> dict:
     if plan['unknown_fields']:
         raise LegacyNormalizationRequired(plan['unknown_fields'])
     _check_output_location(root, out)
-    created: Path | None = None
+    import shutil
+    import tempfile
+    from . import service
+    out = out.absolute()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    private = Path(tempfile.mkdtemp(prefix=".rc3-legacy-", dir=out.parent))
+    candidate = private / out.name
     try:
         if out.exists() and any(out.iterdir()):
             raise LegacyError(f'{out}: output directory must be fresh')
 
-        store = Store(out)
-        created = store.project_root
-        document = new_document(project_id=out.name, task={'title': f'Legacy import of {root.name}',
-                                                            'brief': f'Read-only import from {root}'})
-        store.init_project(document, operation_id='legacy-import-init')
-        design = default_design_context()
+        format_name = plan['format']
+        _, payload = _classify(root)
+        pages_payload = (_map_hd_run(payload, []) if format_name == 'hd_run'
+                         else [_map_v1_page(page, []) for page in payload['pages']])
+        service.create(candidate, title=f'Legacy import of {root.name}',
+            brief=f'Read-only import from {root}', draft={'pages': pages_payload})
+        store = Store(candidate)
+        document = store.load_document()
+        design = document['design_context']
         work = store.staging_dir / 'legacy-import'
         work.mkdir(parents=True, exist_ok=True)
 
@@ -333,17 +342,10 @@ def import_legacy(input_path, out_path, *, inspect_only: bool = False) -> dict:
             ref = _import_media_artifact(store, copied, role, item['path'])
             media_artifacts[item['path']] = (ref, role)
 
-        format_name = plan['format']
-        _, payload = _classify(root)
-        if format_name == 'hd_run':
-            pages_payload = _map_hd_run(payload, [])
-        else:
-            pages_payload = [_map_v1_page(page, []) for page in payload['pages']]
-
         page_entries = []
-        for mapped in pages_payload:
-            normalized = check_page(mapped)
-            page_ref = store.put_json_object(normalized)
+        for entry in document['pages']:
+            normalized = store.read_object_json(entry['page'])
+            page_ref = entry['page']
             svg_ref = None
             for rel_path, (ref, role) in media_artifacts.items():
                 stem = Path(rel_path).stem
@@ -381,13 +383,13 @@ def import_legacy(input_path, out_path, *, inspect_only: bool = False) -> dict:
         after = snapshot(snapshot_root)
         if after != before:
             raise LegacySourceModified(f'{root}: source files changed during import; refusing the copy')
+        if not out.exists():
+            out.mkdir()
+        (candidate / '.deckmaster').rename(out / '.deckmaster')
         return {'status': 'imported', 'project': str(out), 'revision_id': bumped['revision_id'],
                 'page_count': len(page_entries), 'format': plan['format'], 'report': report}
-    except Exception:
-        if created is not None and created.exists() and not inspect_only:
-            import shutil
-            shutil.rmtree(created, ignore_errors=True)
-        raise
+    finally:
+        shutil.rmtree(private)
 
 
 def _import_media_artifact(store: Store, path: Path, role: str, original_rel_path: str) -> dict:

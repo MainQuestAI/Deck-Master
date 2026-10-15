@@ -10,6 +10,8 @@ import hashlib
 
 import pytest
 
+from rc3_fixtures import historical_snapshot
+
 from test_eligibility_enforcement import _settle_preproduction  # noqa: E402  (shared fixture)
 
 from deck_master import collaboration, eligibility, service
@@ -59,9 +61,13 @@ def _project(tmp_path, *, region=True, policy=None, pages=False):
     """A collaboration.v1 project: service.create then the region bootstrap that
     T02's migration apply performs (no production runs yet)."""
     project = tmp_path / "proj"
-    service.create(project, brief="eligibility resolver",
-                   draft={"pages": [_page("p1", "第一页。"), _page("p2", "第二页。")]}
-                   if pages else None)
+    if region:
+        service.create(project, brief="eligibility resolver",
+                       draft={"pages": [_page("p1", "第一页。"), _page("p2", "第二页。")]}
+                       if pages else None)
+    else:
+        project = historical_snapshot(tmp_path, scenario="fixed unmigrated gate trajectory",
+            pages=[_page("p1", "第一页。"), _page("p2", "第二页。")] if pages else [])['project']
     store = Store(project)
     if policy:
         _set_policy(store, policy)
@@ -293,15 +299,13 @@ def test_evaluate_is_side_effect_free(tmp_path):
     assert _fingerprint(store) == before
 
 
-def test_guard_is_shadow_below_the_collaboration_writer(tmp_path):
+def test_guard_refuses_legacy_new_writes_but_keeps_readers(tmp_path):
     project, store = _project(tmp_path, region=False)
     document = store.load_document()
-    decision = eligibility.guard(store, document, "call.begin")
-    assert decision["enforcement"] == "shadow"
-    assert "migration_required" in decision["reason_codes"]
-    # The resolver still computes it (locked here), but no legacy project is
-    # blocked in this increment.
-    assert decision["allowed"] is False
+    with pytest.raises(eligibility.EligibilityBlocked) as exc:
+        eligibility.guard(store, document, "call.begin")
+    assert exc.value.decision["enforcement"] == "active"
+    assert "migration_required" in exc.value.decision["reason_codes"]
     assert eligibility.guard(store, document, "export.review")["allowed"] is True
 
 
@@ -650,6 +654,7 @@ def test_input_reconciliation_pending_blocks_production(tmp_path):
     _start(project, store)
     _grant(project, store, actions=("dispatch.blueprint", "compile.ppt"),
            scope=_scope(page_ids=["p1", "p2"], layers=["blueprint", "output"]))
+    _settle_preproduction(store, seed="input-basis")
     assert _evaluate(store, "compile.ppt")["allowed"] is True
     service.inputs_update(project, patch={"reason": "new material",
                                           "task_patch": {"audience": "主管"}},
@@ -669,6 +674,8 @@ def _put_preproduction_review(store, kind, review_id, *, reviewer_type="independ
     document = store.load_document()
     deps = [{"kind": "content", "identity": f"page:{entry['page_id']}",
              "sha256": entry["page"]["sha256"]} for entry in document.get("pages") or []]
+    deps.extend({"kind": "content", "identity": role, "sha256": document[role]["sha256"]}
+                for role in ("narrative", "content_plan") if document.get(role))
     review_ref = store.put_json_object({
         "schema_version": "deck_review.v1", "review_id": review_id, "kind": kind,
         "review_stage": "preproduction", "status": "pass",

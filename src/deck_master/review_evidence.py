@@ -264,6 +264,33 @@ class ProviderRegistry:
         payload[channel] = [receipt]
         return _mint(self, payload)
 
+    def external_review_context(self, store, *, external_report, source_bindings,
+                                 selector, artifact_revision=None):
+        """Trusted controller verifies a completed external independent review.
+
+        This is SDK bootstrap surface, never JSON/import or an environment loader.
+        Human final reviews use the separately registered identity adapter protocol.
+        """
+        from .review_import import _context, _report
+        report = _report(external_report)
+        _, control, artifact, _ = _context(store.project_root, report, artifact_revision)
+        expected = external_review_binding(store, control, artifact, external_report, source_bindings)
+        provider, raw, claims = self._resolve(selector, 'independent_review_receipts', expected)
+        reviewers = [review.get('reviewer') or {} for review in report.get('reviews') or []]
+        executor = claims.get('executor_ref')
+        if (not executor or executor in expected['author_execution_refs'] or not reviewers
+                or any(item.get('type') != 'independent_host' or item.get('execution_ref') != executor
+                       for item in reviewers)):
+            raise EvidenceRejected('receipt/executor_ref', 'external review must name its actual independent executor')
+        proof = {'schema_version': 'authenticated_review_receipt.v1', 'provider_id': provider.provider_id,
+                 'adapter_version': provider.adapter_version, 'authentication': provider.authentication,
+                 'raw_event_ref': store.put_blob(raw, ext='json'), 'claims': claims}
+        validate_schema('authenticated_review_receipt', proof)
+        receipt = {**claims, 'receipt_ref': store.put_json_object(proof)}
+        return _mint(self, {'adapter_version': provider.adapter_version, 'external_review_binding': expected,
+                           'verified_user_events': [], 'independent_review_receipts': [receipt],
+                           'human_review_receipts': []})
+
     def user_event_context(self, store, document, *, action_binding, source_ref, presentation_ref, receipt_ref, selector):
         expected = {"project_id": document["project_id"], "request_id":
                     ((document.get("collaboration") or {}).get("request") or {}).get("request_id"),
@@ -331,3 +358,41 @@ def validate_review_context(context, store, document, task, envelope):
         if proof["claims"] != {key: value for key, value in receipt.items() if key != "receipt_ref"}:
             raise EvidenceRejected("receipt/proof", "stored authenticated proof differs from the issued context")
     return payload
+
+
+def external_review_binding(store, control, artifact, external_report, source_bindings):
+    """Exact SDK import binding; selectors/claims never come from project config."""
+    from .content_review import _subjects_digest, author_execution_refs
+    from .review_import import _report
+    report = _report(external_report)
+    subjects = [row['target_ref'] for row in source_bindings]
+    page_ids = [entry['page_id'] for entry in artifact['pages'] if entry['page'] in subjects]
+    return {'project_id': control['project_id'],
+            'request_id': ((control.get('collaboration') or {}).get('request') or {}).get('request_id'),
+            'task_id': 'review-import-' + external_report['report_sha256'],
+            'artifact_revision_id': artifact['revision_id'],
+            'packet_sha256': report['source_manifest_sha256'],
+            'subjects_sha256': _subjects_digest(subjects),
+            'author_execution_refs': sorted(author_execution_refs(store, artifact, subjects)),
+            'write_scope': {'layers': ['review'], 'page_ids': page_ids},
+            'source_bindings_sha256': sha256_bytes(canonical_json_bytes(source_bindings)),
+            'result_sha256': external_report['report_sha256']}
+
+
+
+
+
+def validate_external_review_context(context, store, control, artifact, external_report, source_bindings):
+    payload = context_payload(context)
+    expected = external_review_binding(store, control, artifact, external_report, source_bindings)
+    if payload.get('external_review_binding') != expected:
+        raise EvidenceRejected('receipt/external_review_binding', 'external report needs its own exact authenticated completion')
+    receipts = payload.get('independent_review_receipts') or []
+    if len(receipts) != 1:
+        raise EvidenceRejected('receipt', 'a live completed external review receipt is required')
+    receipt = receipts[0]
+    proof = store.read_object_json(receipt['receipt_ref'])
+    validate_schema('authenticated_review_receipt', proof)
+    if proof['claims'] != {key: value for key, value in receipt.items() if key != 'receipt_ref'}:
+        raise EvidenceRejected('receipt/proof', 'persisted original proof differs from its issued context')
+    return receipt

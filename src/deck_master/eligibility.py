@@ -251,7 +251,7 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
 # Actions that need a preproduction content review before real page production
 # (CONTRACTS §1.9, §6.3: 新论证 full_deck 默认需要独立内容前审).
 PREPRODUCTION_GATED_ACTIONS = ("dispatch.blueprint", "style.trial", "style.expand",
-                               "change.commit")
+                               "change.commit", "compile.ppt", "stage.assemble")
 
 # Every delivery entry consumes the same authorization vocabulary: a grant
 # naming any delivery entry covers the others (they are the same delivery
@@ -270,7 +270,7 @@ DELIVERY_ENTRY_ACTIONS = ("export.delivery", "handoff.delivery", "studio.deliver
 CONTROL_PLANE_ACTIONS = ("request.start", "request.pause", "request.resume",
                          "decision.record", "authorization.grant",
                          "authorization.revoke", "migration.describe", "migration.apply",
-                         "review.import")
+                         )
 
 # Fact channels: recording that a call settled/released, that a task was
 # cancelled, or staging a material upload never creates production. CONTRACTS
@@ -291,8 +291,7 @@ FACT_ACTIONS = ("call.settle", "task.cancel", "material.upload")
 # caller declares persistence=none (see test_persistence_none_forbids_project_writes).
 ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
                    "export.engineering", "readiness.final", "review.strict",
-                   "task.cancel", "call.settle", "material.upload", "candidate.select",
-                   "restore",
+                   "task.cancel", "call.settle", "material.upload",
                    *CONTROL_PLANE_ACTIONS)
 
 # Per-intent production ceiling (CONTRACTS §5 table). A new request only
@@ -718,6 +717,9 @@ def _covers(store: Store, scope: dict | None, targets: dict | None) -> bool:
         allowed = scope_page_ids(store, scope)
         if allowed is None or not set(wanted_pages) <= set(allowed):
             return False
+    for flag in ("allow_page_membership_change", "allow_page_order_change"):
+        if targets.get(flag) and not scope.get(flag):
+            return False
     wanted_layers = set(targets.get("layers") or [])
     if wanted_layers and not wanted_layers <= set(scope.get("layers") or []):
         return False
@@ -807,8 +809,31 @@ def _slot_covered_by_binding(spec: ActionSpec, bound_ref, ref, actions) -> bool:
             and spec.name in SLOT_ACTIONS and spec.external_calls)
 
 
+def _fixed_delivery_state(store, artifact, control, selected, ref, record):
+    """A fixed old file may retain delivery permission, never production scope."""
+    fixed = (record.get('constraints') or {}).get('fixed_delivery') or {}
+    request = _request(artifact) or {}
+    if (record.get('delivery_binding') != 'exact_artifact' or not fixed
+            or fixed.get('source_request_id') != request.get('request_id')
+            or record.get('request_id') != request.get('request_id')
+            or fixed.get('artifact_ref') != (artifact.get('outputs') or {}).get('pptx')
+            or fixed.get('subject_ref') != (selected or {}).get('subject_ref')
+            or fixed.get('file_sha256') != (selected or {}).get('file_sha256')
+            or fixed.get('notes_policy') != (selected or {}).get('notes_policy')
+            or models.compute_input_digest(artifact) != models.compute_input_digest(control)
+            or artifact.get('narrative') != control.get('narrative')):
+        return None
+    # Only this read judgement uses the source request. Current auth heads,
+    # withdrawals, source rights, user/task facts and policy remain authoritative.
+    view = {**artifact, 'task': control['task'], 'sources': control['sources'],
+        'policy': control['policy'], 'narrative': control.get('narrative'),
+        'collaboration': {**control['collaboration'], 'request': {**request, 'closed': False, 'paused': False}}}
+    state = dependency_slices.authorization_effectiveness(store, view, ref)
+    return {**state, 'fixed_file_only': True}
+
+
 def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
-                          targets: dict, task: dict | None = None) -> list[dict]:
+                          targets: dict, task: dict | None = None, *, artifact=None, selected_output=None) -> list[dict]:
     candidates = []
     # Only pure proposal permissions share these names. They never cover a
     # trial, dispatch, change commit, allowance, or candidate adoption.
@@ -837,11 +862,15 @@ def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
                         "page.edit", "dispatch.host_task")):
                 continue
         state = dependency_slices.authorization_effectiveness(store, document, ref)
+        if spec.delivery and artifact is not None:
+            fixed_state = _fixed_delivery_state(store, artifact, document, selected_output, ref, record)
+            if fixed_state is not None:
+                state = fixed_state
         candidates.append({
             "ref": ref, "record": record, "effective": state["effective"],
             "reasons": state["reasons"], "assurance": (record.get("evidence") or {}).get("assurance"),
             "covers": _covers(store, record.get("scope"), targets),
-            "mode": record.get("mode"),
+            "mode": record.get("mode"), "fixed_file_only": state.get('fixed_file_only', False),
         })
     return candidates
 
@@ -904,7 +933,7 @@ def _intent_allows(spec: ActionSpec, request: dict | None, targets=None) -> str 
     if spec.name in _INTENT_BLOCKED_ACTIONS.get(intent, ()):
         return _INTENT_STOPS.get(intent, f"request intent {intent!r} does not reach {spec.name!r}")
     speech_edit = spec.name == "page.edit" and (targets or {}).get("layers") == ["speech"]
-    if spec.name in _CONTENT_INTENT_BLOCKED_ACTIONS.get(content_intent, ()) and not speech_edit:
+    if spec.name in _CONTENT_INTENT_BLOCKED_ACTIONS.get(content_intent, ()) and not speech_edit and not (spec.name == "dispatch.compose" and (targets or {}).get("layers") == ["speech"]):
         return (f"content_intent {content_intent!r} does not reach {spec.name!r}; "
                 "the request must say it wants that production")
     return None
@@ -973,13 +1002,14 @@ def preproduction_state(store: Store, document: dict) -> dict:
 # Delivery policy (one interpretation: delivery_eligibility)
 
 
-def delivery_control_state(store: Store, artifact_snapshot: dict, control_snapshot: dict) -> dict:
+def delivery_control_state(store: Store, artifact_snapshot: dict, control_snapshot: dict, *, selected_output=None) -> dict:
     """The unified delivery judgement for an artifact snapshot read under the
     current control (CONTRACTS §8): the selected artifact supplies pages/output/
     reviews, the current head supplies policy and collaboration control."""
     from . import delivery_eligibility
-    merged = {**artifact_snapshot, "policy": control_snapshot.get("policy") or {}}
-    professional = delivery_eligibility.professional_policy(store, merged)
+    merged = {**artifact_snapshot, "policy": control_snapshot.get("policy") or {},
+              "reviews": control_snapshot.get("reviews") or []}
+    professional = delivery_eligibility.professional_policy(store, merged, selected_output=selected_output)
     return {"professional": professional,
             "output_pptx": (artifact_snapshot.get("outputs") or {}).get("pptx"),
             "artifact_revision_id": artifact_snapshot.get("revision_id"),
@@ -1012,12 +1042,18 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
     targets = dict(context.get("targets") or {})
     task = context.get("task")
     reasons: list[dict] = []
+    fixed_candidates = (_authority_candidates(store, control, spec, targets, task,
+        artifact=artifact, selected_output=context.get('selected_output')) if spec.delivery else [])
+    fixed_delivery = any(c['effective'] and c['covers'] and c.get('fixed_file_only') for c in fixed_candidates)
 
     def block(code, detail, **extra):
         reasons.append({"code": code, "detail": detail, **extra})
 
     # -- writer boundary ---------------------------------------------------
-    if not enforced and (spec.production or spec.delivery):
+    legacy_allowed = action in ("create", "continue_project", "migration.describe", "migration.apply",
+                                "review.strict", "export.review", "export.engineering",
+                                "task.cancel", "call.settle", "readiness.final")
+    if not enforced and not legacy_allowed and (spec.production or spec.delivery or spec.writes):
         block("migration_required",
               "this project predates the collaboration writer boundary; "
               "run collaboration migration apply before this action",
@@ -1027,7 +1063,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
               "a strict read-only request never writes to the source project")
 
     # -- request state -----------------------------------------------------
-    if enforced and action not in ROUTING_ACTIONS:
+    if enforced and action not in ROUTING_ACTIONS and action != "restore" and not fixed_delivery:
         if request is None:
             block("decision_needed",
                   "no current work request; start one that names the intended intent, "
@@ -1048,7 +1084,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                       content_intent=request.get("content_intent"))
 
     # -- scope coverage ----------------------------------------------------
-    if enforced and request is not None and request.get("scope"):
+    if enforced and request is not None and request.get("scope") and not fixed_delivery:
         wanted = dict(targets or {}) if action in ROUTING_ACTIONS \
             else _effective_targets(spec, targets)
         if (wanted.get("layers") or target_page_ids(store, wanted)) \
@@ -1073,7 +1109,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
             # it must not refuse to answer because of it (AC-P02: the same
             # policy result and gaps are returned, not raised).
             continue
-        state = (_delivery_decision_state(store, control, targets)
+        state = ({"satisfied": True, "via": "fixed_file_delivery_authorization"} if fixed_delivery else _delivery_decision_state(store, control, targets)
                  if topic == "delivery_acceptance"
                  else _decision_topic_covered(store, control, topic, targets))
         if not state["satisfied"]:
@@ -1147,7 +1183,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         authority_assurance = request_evidence.get("assurance")
         candidates = []
         if spec.authority in ("execute", "either", "delegate"):
-            candidates = _authority_candidates(store, control, spec, targets, task)
+            candidates = fixed_candidates if spec.delivery else _authority_candidates(store, control, spec, targets, task)
             usable = [c for c in candidates if c["effective"]
                       and (c["mode"] == "execute" or spec.authority in ("delegate", "either"))]
             covering = [c for c in usable if c["covers"]]
@@ -1292,7 +1328,10 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                       missing="decision", topics=["delivery_acceptance"],
                       card={"kind": "delivery_card", "projection": spec.card,
                             "topics": ["delivery_acceptance"]})
-        delivery = delivery_control_state(store, artifact or control, control)
+        if (models.compute_input_digest(artifact) != models.compute_input_digest(control)
+                or artifact.get('narrative') != control.get('narrative')):
+            block('basis_stale', 'selected output no longer matches current audience/source/argument facts')
+        delivery = delivery_control_state(store, artifact or control, control, selected_output=context.get("selected_output"))
         professional = delivery["professional"]
         if professional["required"] and not professional["satisfied"]:
             block("professional_review_required",
@@ -1322,7 +1361,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
     if spec.name in FACT_ACTIONS:
         # A fact channel records what already happened; nothing here can refuse
         # it (the surrounding state stays visible in the other decision fields).
-        reasons = []
+        reasons = [reason for reason in reasons if reason["code"] == "persistence_none"]
     reasons.sort(key=lambda item: REASON_ORDER.index(item["code"])
                  if item["code"] in REASON_ORDER else len(REASON_ORDER))
     codes = []
@@ -1335,7 +1374,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         "schema_version": SCHEMA_VERSION,
         "allowed": allowed,
         "action": spec.name,
-        "enforcement": "active" if enforced else "shadow",
+        "enforcement": "active",
         "scope": normalize_scope(effective_scope),
         "required_artifact_refs": required_artifacts,
         "required_decision_topics": list(spec.decision_topics),
@@ -1556,19 +1595,17 @@ class EligibilityBlocked(operations.OperationError):
 
 
 def guard(store: Store, document: dict, action: str, *, context: dict | None = None) -> dict:
-    """Consume the resolver at one write/routing boundary.
+    """Consume one active decision; historical readers/fact settlement remain legal.
 
-    An enforced project raises :class:`EligibilityBlocked` for a blocked action;
-    routing/analysis actions return the decision so the caller can report the
-    gap (``continue`` hands out a decision card, it never raises). A project
-    below the writer boundary keeps current behaviour and returns the computed
-    decision with ``enforcement="shadow"`` — the migration-required decision is
-    still computed for dedicated tests and for the deployment step that enables
-    the new writer for real projects.
+    Every new business write, including legacy-project production, is refused
+    when ineligible. Routing returns the same named gap without dispatching.
+    Restore recovers facts under scope while preserving current stop/control.
     """
     decision = evaluate(store, document, document, action, context)
-    if decision["enforcement"] == "active" and not decision["allowed"] \
-            and decision["action"] not in ROUTING_ACTIONS:
+    if not decision["allowed"] and (
+            "migration_required" in decision["reason_codes"]
+            or "persistence_none" in decision["reason_codes"]
+            or decision["action"] not in ROUTING_ACTIONS):
         raise EligibilityBlocked(decision)
     return decision
 

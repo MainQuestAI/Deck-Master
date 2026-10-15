@@ -77,7 +77,7 @@ def human_evidence_status(review: dict, *, project_id: str | None = None) -> dic
     return {'verified': False, 'reason': reason or 'human_identity_rejected'}
 
 
-def required_professional_dependencies(store, doc) -> dict[str, str]:
+def required_professional_dependencies(store, doc, *, selected_output=None) -> dict[str, str]:
     """Runtime-computed minimum dependency set for a final professional review:
     the current PPTX artifact plus every current page's content digest. A
     reviewer-supplied empty array therefore never counts as complete."""
@@ -91,6 +91,8 @@ def required_professional_dependencies(store, doc) -> dict[str, str]:
     for entry in doc.get('pages') or []:
         if entry.get('page'):
             required[f"content:page:{entry['page_id']}"] = entry['page']['sha256']
+    if selected_output and selected_output.get("file_sha256"):
+        required["artifact:pptx"] = selected_output["file_sha256"]
     return required
 
 
@@ -110,7 +112,7 @@ def _ref_pair(ref) -> tuple | None:
     return None
 
 
-def professional_policy(store, doc) -> dict:
+def professional_policy(store, doc, *, selected_output=None) -> dict:
     """The single professional-evidence interpretation for delivery.
 
     Returns required/satisfied/human_signoff plus per-review diagnosis. When
@@ -129,7 +131,7 @@ def professional_policy(store, doc) -> dict:
         'reviews': [],
     }
 
-    current_ref = (doc.get('outputs') or {}).get('pptx')
+    current_ref = (selected_output or {}).get("subject_ref") or (doc.get('outputs') or {}).get('pptx')
     pptx_pair = _ref_pair(current_ref)
     reviews = []
     for ref in doc.get('reviews') or []:
@@ -146,11 +148,13 @@ def professional_policy(store, doc) -> dict:
     if not required:
         return result
 
-    required_deps = required_professional_dependencies(store, doc)
+    required_deps = required_professional_dependencies(store, doc, selected_output=selected_output)
     # The same artifact map the shared check summary uses: declared review
     # dependencies are validated against one currentness rule, never two.
     from .editing import _current_artifact_digests
     artifacts = _current_artifact_digests(store, doc)
+    if selected_output and selected_output.get("file_sha256"):
+        artifacts["artifact:pptx"] = selected_output["file_sha256"]
     # Replacement effectiveness (F02, PR107 round 2): recording a replacement
     # is not the same as resolving what it replaces. A record is only retired
     # by a replacement that is itself an effective re-judgment — same logical
@@ -274,3 +278,66 @@ def _diagnose(review, ref, doc, pptx_pair, required_deps, replaced, artifacts, *
 def _sort_reasons(reasons):
     rank = {name: i for i, name in enumerate(_REASON_ORDER)}
     return sorted(reasons, key=lambda r: (rank.get(r, len(rank)), r))
+
+
+def selected_output(store, artifact, *, notes_policy=None, file_path=None):
+    """Pure exact bytes of the proposed public projection (never a stored approval)."""
+    from pathlib import Path
+    from .exports import resolve_notes_policy, _pptx_projection_notes
+    from .export_sanitize import pptx
+    from .models import sha256_bytes
+    policy = resolve_notes_policy(store, artifact, notes_policy)
+    ref = artifact.get("outputs", {}).get("pptx")
+    result = {"artifact_ref": ref, "subject_ref": None, "file_sha256": None,
+              "original_file_sha256": None, "notes_policy": policy, "projection": "sanitized_public"}
+    if not ref:
+        return result
+    obj = store.read_object_json(ref)
+    raw = store.read_object_bytes(obj["file"])
+    projected = pptx(raw, "deck.pptx", notes=_pptx_projection_notes(store, artifact, policy),
+                     include_notes=policy["pptx_notes"])
+    digest = sha256_bytes(projected)
+    result.update(file_sha256=digest, original_file_sha256=obj["file"]["sha256"],
+        subject_ref={"path": f".deckmaster/objects/{digest[:2]}/{digest}.pptx", "sha256": digest})
+    if file_path is not None:
+        actual = sha256_bytes(Path(file_path).expanduser().read_bytes())
+        if actual == digest:
+            pass
+        elif actual == obj["file"]["sha256"]:
+            result.update(file_sha256=actual, subject_ref=ref, projection="original_internal")
+        else:
+            from .store import ConflictError
+            raise ConflictError("file_path", "candidate_not_selected_output: file differs from both exact output projections")
+    return result
+
+
+def describe(project, *, revision=None, file_path=None, notes_policy=None):
+    """Read-only shared final judgement: selected actual file plus current control."""
+    from .store import Store
+    from .snapshots import load_snapshot
+    from . import eligibility
+    from .editing import check_summary
+    from .models import input_alignment
+    store = Store(project)
+    control = store.load_document()
+    artifact = load_snapshot(store, revision) if revision else control
+    selected = selected_output(store, artifact, notes_policy=notes_policy, file_path=file_path)
+    effective = {**artifact, "policy": control["policy"], "reviews": control.get("reviews", [])}
+    summary = check_summary(store, effective)
+    professional = professional_policy(store, effective, selected_output=selected)
+    decision = eligibility.evaluate(store, artifact, control, "export.delivery", {"selected_output": selected})
+    engineering = bool(selected["file_sha256"] and summary["status"] == "pass"
+                       and input_alignment(artifact) != "needs_reconciliation")
+    codes = list(decision["reason_codes"])
+    if not engineering:
+        codes.append("engineering_checks_required")
+    allowed = engineering and decision["allowed"] and professional["satisfied"]
+    return {"status": "ready" if allowed else "blocked", "project_id": control["project_id"],
+        "artifact_revision_id": artifact["revision_id"], "control_revision_id": control["revision_id"],
+        "revision_id": artifact["revision_id"], "selected_output": selected,
+        "engineering_ready": engineering, "engineering": {"ready": engineering, "summary": summary},
+        "review_status": summary["status"], "unresolved": {"missing_dimensions": sorted(summary["missing_dimensions"]),
+            "failed_dimensions": [k for k,v in summary["dimensions"].items() if v.get("open_must_fix") or v["status"] == "fail"]},
+        "professional": professional, "eligibility": decision, "collaboration": decision,
+        "reason_codes": list(dict.fromkeys(codes)), "next_action": decision.get("next_action") or
+            ("deliver_selected_file" if allowed else "resolve_named_delivery_gaps")}

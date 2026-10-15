@@ -20,6 +20,11 @@ from .models import canonical_json_bytes, sha256_bytes
 from . import __version__
 
 RELATIVE_PATHS = {
+    "collaboration-routing": "references/collaboration-routing.md",
+    "physical-units": "references/physical-units.md",
+    "style-calibration": "references/style-calibration.md",
+    "candidates-and-stages": "references/candidates-and-stages.md",
+    "icon-quality": "references/icon-quality.md",
     "visual-reference": "references/visual-reference.md",
     "source-reading": "references/source-reading.md",
     "content-methods": "references/content-methods.md",
@@ -34,9 +39,9 @@ RELATIVE_PATHS = {
 # the examples; an input revision additionally reads the update method.
 _INITIAL_METHODS = ("source-reading", "content-methods", "content-examples")
 _INPUT_REVISION_METHODS = ("source-reading", "content-methods", "content-examples", "input-update")
-_RECONSTRUCTION_METHODS = ("blueprint-svg",)
-_REVIEW_METHODS = ("review-and-repair",)
-_REPAIR_METHODS = ("review-and-repair", "content-methods", "blueprint-svg")
+_RECONSTRUCTION_METHODS = ("blueprint-svg", "physical-units")
+_REVIEW_METHODS = ("review-and-repair", "physical-units")
+_REPAIR_METHODS = ("review-and-repair", "content-methods", "blueprint-svg", "physical-units")
 
 # compose.v2 phases (content collaboration v1.2 CONTRACTS §5). Each phase reads
 # the shared reading discipline, its own method section, and the concrete
@@ -46,10 +51,10 @@ _PHASE_METHODS = {
     "argument": ("source-reading", "content-methods", "content-examples"),
     "page_copy": ("source-reading", "content-methods", "content-examples"),
     "speech": ("content-methods", "content-examples"),
-    "design": ("content-methods", "visual-reference"),
-    "production": ("content-methods", "visual-reference"),
-    "review": ("review-and-repair", "content-methods"),
-    "delivery": ("content-methods", "review-and-repair"),
+    "design": ("content-methods", "visual-reference", "physical-units"),
+    "production": ("content-methods", "visual-reference", "physical-units"),
+    "review": ("review-and-repair", "content-methods", "physical-units"),
+    "delivery": ("content-methods", "review-and-repair", "physical-units"),
 }
 
 _PYPROJECT_NAME_PATTERN = re.compile(r'(?m)^\s*name\s*=\s*"deck-master"\s*$')
@@ -157,8 +162,7 @@ def read_task_methods(project, task_id: str) -> dict:
     if task is None:
         raise MethodResourceMissing("task_id", "task is not referenced by the current project")
     order = service.task_summary(store, document, task)
-    items = read_methods(task["kind"], intent=task.get("intent") or task.get("review_stage"),
-                         phase=(task.get("collaboration_binding") or {}).get("phase"))
+    items = _read_entries(order["method_resources"])
     return {"schema_version": "method_consumption.v1", "status": order["method_basis_status"],
             "project_id": document["project_id"], "task_id": task_id,
             "dispatch_revision": task.get("dispatch_revision"),
@@ -167,3 +171,145 @@ def read_task_methods(project, task_id: str) -> dict:
             "consumption": "runtime_returned_bytes", "work_order": order,
             "limitations": ["Returning method bytes does not prove the Host applied them",
                             "basis_changed does not retroactively update the dispatched task"]}
+
+
+PUBLIC_SKILLS = ("deck-master", "deck-content", "deck-design", "deck-review")
+ENTRY_MODES = ("named", "natural", "master", "recovery")
+_ROLE_METHODS = {
+    "deck-master": ("collaboration-routing", "input-update", "review-and-repair"),
+    "deck-content": ("collaboration-routing", "source-reading", "content-methods", "content-examples", "input-update"),
+    "deck-design": ("collaboration-routing", "visual-reference", "style-calibration", "candidates-and-stages", "blueprint-svg", "physical-units"),
+    "deck-review": ("collaboration-routing", "source-reading", "content-methods", "review-and-repair", "physical-units"),
+}
+_ROLE_TASKS = {
+    "deck-content": ("compose",),
+    "deck-design": ("style_analyze", "blueprint", "reconstruct", "repair"),
+    "deck-review": ("review",),
+}
+
+
+def route_request(text: str) -> dict:
+    """Conservative responsibility suggestion; never a grant or stored Request.
+
+    Explicit names take precedence. Unclear/mixed production stays with Master;
+    the actual Host resolves meaning against the existing Runtime request.
+    """
+    if not isinstance(text, str) or not text.strip():
+        raise ValueError("natural routing requires the original non-empty instruction")
+    normalized = text.casefold()
+    explicit = re.findall(r"(?<![a-z0-9_-])deck-(?:master|content|design|review)(?![a-z0-9_-])", normalized)
+    if explicit:
+        skill = explicit[0] if len(set(explicit)) == 1 else "deck-master"
+    elif any(word in normalized for word in ("只审", "只读", "审查", "审稿", "review", "audit", "critique")):
+        skill = "deck-review"
+    elif any(word in normalized for word in ("完整ppt", "整套ppt", "完整作品", "full deck", "complete deck", "恢复", "续作", "resume", "continue")):
+        skill = "deck-master"
+    elif any(word in normalized for word in ("样页", "设计方案", "视觉方案", "版式", "sample page", "design", "layout")):
+        skill = "deck-design"
+    elif any(word in normalized for word in ("策划", "规划", "大纲", "写稿", "逐页稿", "正文", "口播", "讲稿", "内容包", "plan", "write", "manuscript", "speech", "content")):
+        skill = "deck-content"
+    else:
+        skill = "deck-master"
+    content_intent = None
+    if skill == "deck-content":
+        if any(word in normalized for word in ("完整内容", "内容包", "content_full", "content package")):
+            content_intent = "content_full"
+        elif any(word in normalized for word in ("口播", "讲稿", "speech", "speaker notes")):
+            content_intent = "speech_only"
+        elif any(word in normalized for word in ("写稿", "逐页稿", "正文", "write", "manuscript")):
+            content_intent = "write_only"
+        else:
+            content_intent = "plan_only"
+    return {"skill": skill, "content_intent": content_intent, "explicit_name": bool(explicit),
+            "authority": "routing_suggestion_only"}
+
+
+def route_skill(text: str) -> str:
+    return route_request(text)["skill"]
+
+
+def _read_entries(entries) -> list[dict]:
+    """Read exactly the actual workorder/manifest list; no extra fifth method."""
+    root = resolve_root().resolve()
+    items = []
+    seen = set()
+    for entry in entries:
+        method_id = entry.get("id")
+        relative = entry.get("relative_path")
+        if method_id not in RELATIVE_PATHS or RELATIVE_PATHS[method_id] != relative or method_id in seen:
+            raise MethodResourceMissing(str(relative), "unknown or duplicate declared method resource")
+        seen.add(method_id)
+        path = Path(entry["path"])
+        if path.resolve() != root / relative or not path.is_file():
+            raise MethodResourceMissing(relative, "declared method is missing or outside this installation")
+        raw = path.read_bytes()
+        if sha256_bytes(raw) != entry["sha256"]:
+            raise MethodResourceMissing(relative, "declared method bytes changed; re-read the workorder")
+        items.append({**entry, "content": raw.decode("utf-8")})
+    return items
+
+
+def _read_ids(ids) -> list[dict]:
+    root = resolve_root()
+    entries = []
+    for method_id in dict.fromkeys(ids):
+        relative = RELATIVE_PATHS[method_id]
+        path = root / relative
+        if not path.is_file():
+            raise MethodResourceMissing(relative, "declared shared method is missing")
+        entries.append({"id": method_id, "relative_path": relative, "path": str(path),
+                        "sha256": sha256_bytes(path.read_bytes())})
+    return _read_entries(entries)
+
+
+def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=None, text=None) -> dict:
+    """Read one responsibility's actual bytes plus current, read-only context.
+
+    This does not create a project, dispatch a Task, grant scope, claim independent
+    identity or execute a model. A role can finish independently of full_deck.
+    """
+    if skill not in PUBLIC_SKILLS:
+        raise ValueError("unknown public Skill")
+    if entry_mode not in ENTRY_MODES:
+        raise ValueError("unknown Skill entry mode")
+    route = route_request(text) if entry_mode == "natural" else None
+    if route and route["skill"] != skill:
+        raise ValueError(f"instruction routes to {route['skill']}; preserve its responsibility")
+    if entry_mode in ("master", "recovery") and project is None:
+        raise ValueError("Master handoff/recovery requires the existing project")
+    if task_id is not None and project is None:
+        raise ValueError("task method consumption requires its real project")
+    context = None
+    dispatch = None
+    if project is not None:
+        from . import content_production, service
+        from .store import Store
+        store = Store(Path(project).expanduser())
+        document = store.load_document()
+        request = (document.get("collaboration") or {}).get("request")
+        context = {"project_id": document["project_id"], "artifact_revision_id": document["revision_id"],
+                   "request": request,
+                   "completion": content_production.completion_status(store, document)}
+        if task_id is not None:
+            task = next((item for ref in document["tasks"]
+                         if (item := store.read_object_json(ref))["task_id"] == task_id), None)
+            if task is None:
+                raise MethodResourceMissing("task_id", "task is not referenced by the current project")
+            if skill != "deck-master" and task["kind"] not in _ROLE_TASKS[skill]:
+                raise ValueError(f"{skill} does not execute {task['kind']}; hand off to the responsible role")
+            order = service.task_summary(store, document, task)
+            dispatch_items = _read_entries(order["method_resources"])
+            dispatch = {"task_id": task_id, "work_order": order, "status": order["method_basis_status"],
+                        "dispatch_method_release": task.get("method_release"),
+                        "current_method_release": method_release(dispatch_items), "methods": dispatch_items}
+    # A Task consumes its actual manifest verbatim, including a declared missing
+    # calibration error. Role entry guidance is separate and never adds a
+    # calibration file to an A/B content-method control.
+    items = dispatch["methods"] if dispatch else _read_ids(_ROLE_METHODS[skill])
+    entry_methods = _read_ids(("collaboration-routing",)) if dispatch else []
+    return {"schema_version": "skill_method_consumption.v1", "skill": skill, "entry_mode": entry_mode,
+            "route": route, "context": context, "dispatch": dispatch,
+            "method_release": method_release(items), "methods": items, "entry_methods": entry_methods,
+            "consumption": "runtime_returned_bytes", "host_application": "not_recorded",
+            "limitations": ["Returned bytes are not evidence of model application or independent review",
+                            "Routing and Skill names never create authorization or independent identity"]}

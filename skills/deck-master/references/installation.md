@@ -7,7 +7,7 @@ A release used from Codex also needs its managed Skill registration.
 ## Candidate, activation and rollback
 
 Build and check the candidate first. `install candidate` creates an isolated
-virtual environment, extracts `skill/deck-master/` from the wheel, and runs
+virtual environment, extracts the four `skill/<name>/` entries and shared methods from the wheel, and runs
 compile/render/compose/view checks. It does not activate or register the Skill.
 
 ```bash
@@ -27,9 +27,11 @@ path to `releases/<id>/skill/deck-master/SKILL.md` and invoke that same release'
 `venv/bin/python -I -m deck_master`, as shown in SKILL.md. Do not substitute a
 HOME or PATH installation. Reload the Skill entry and resolve again after
 activation or rollback. Skill bytes are not rewritten during installation.
-Activation manages exactly one link:
-`$CODEX_HOME/skills/deck-master` (default `~/.codex/skills/deck-master`) to
-`<prefix>/.deck-master/current/skill/deck-master`.
+Activation manages all four links under `$CODEX_HOME/skills` (default `~/.codex/skills`):
+`deck-master`, `deck-content`, `deck-design`, and `deck-review`, each pointing to
+`<prefix>/.deck-master/current/skill/<name>`. All four entries are preflighted
+before switching current. An error compensates pointers, launcher and each
+managed link; external changes are reported without overwriting them.
 A real directory/file or a foreign link at that path is a `host_skill_conflict`
 (exit 5); resolve the named conflict before retrying. `--no-host-registration`
 on both `activate` and `rollback` leaves every Host entry untouched, including legacy cleanup and retiring a
@@ -38,8 +40,12 @@ reported separately; a preserved link can remain unreadable.
 No config.toml changes, other Host registrations or third-party Skill changes occur.
 
 Rollback follows `previous` and keeps method and CLI releases aligned. If the
-previous release predates the Skill, the managed link is removed and the result
-reports `host_skill_unregistered`. Project data and recorded calls are not rolled back.
+previous release predates the Skill, managed links missing from that release are removed and the result
+reports `host_skill_unregistered`. Project data and recorded calls are not rolled back. RC3-04 projects use the
+forward writer floor `rc3-entry.v1`; a real older writer must refuse them after
+rollback, while the matching current Runtime can continue to read and settle
+existing call facts. The label `rc3.v1` alone is insufficient because historical
+RC3 binaries already recognized it.
 
 ## Legacy companion layout
 
@@ -110,3 +116,24 @@ The executable source-side verification drivers are indexed in
 `examples/workbench/README.md`; `w12_installed_acceptance.py` builds a fixed Git
 candidate and then checks it using its installed interpreter. A synthetic
 browser/CLI pass is not 30-page real Host, professional or customer acceptance.
+
+## RC3 resource identity
+
+The version is PEP 440 `1.0.0rc3`. `tools/build_release.py` builds both wheel and
+sdist. The wheel contains a generated `resources/method-inventory.json` with an
+exhaustive mapping from every Skill/method resource to canonical source and
+SHA256. Unknown/missing/symlink canonical files or extra wheel Skill members
+fail comparison; a fixed legacy file count is not evidence. The only generated
+method exception is that inventory itself. Four entries share one editable
+`skills/deck-master/references` tree, packaged at `resources/skill/references`;
+other entries contain no copied references.
+
+Candidate installation validates wheel inventory, extracted Host bytes, actual
+installed resource bytes and module origin using the candidate interpreter.
+`release.json` records each canonical/wheel/Host/installed-package path and hash.
+It never borrows source methods through the working directory. Build metadata,
+CLI version, workorder dispatch/current method basis and actual Host application
+must be recorded separately. `runtime_returned_bytes` is not model application.
+Use a temporary prefix, registry and CODEX_HOME for diagnostics; do not alter
+real HOME or third-party Skill/config to prove candidate readiness. Real human
+professional/desktop acceptance remains separately recorded.

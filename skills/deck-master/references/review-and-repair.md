@@ -51,3 +51,7 @@ preproduction 工作单给出 source-reading、content-methods、content-example
 真实非作者 Host controller 观察 native 独立执行的身份、固定工作单和完成输出，并经当前 Runtime 已注册 provider 核对，可诚实取得 host_attested 独立回执；普通模型前审不硬加平台密码学签名。作者提交 JSON、执行 ID、hash 或换 reviewer.id 不能生成该证明。人类专业复核、Owner 接受、听众理解和完整试讲各自留证，没有对应人或环境就 NOT_RUN，模型不扮演人类。
 
 按时间点保存：原始完整生成稿 → 至多一次同口径独立审阅/自主返修后的首次 Owner 完整稿 → Owner 后改稿；方法修改后的原输入复跑另存方法版本和首稿。当前稿修好可以关闭该缺陷，不能回写首次 Owner F1 失败为 PASS，也不能把人工精修旧稿改名为新方法首稿。
+
+## 实际物理尺寸与净空
+
+成品审查同时读取 [physical-units](physical-units.md)，核对实际 p:sldSz、逐显式角色可见 run 的有效pt，SVG与原生PPT渲染墨迹两层padding。角色不可判记unverifiable，文字覆盖不能代替关系或可读性。当前报告的模型/工程/人类/桌面证据分别标注；不将历史Desktop记录当本轮人类已验。

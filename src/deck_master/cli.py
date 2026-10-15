@@ -23,6 +23,8 @@ from .service import ServiceError
 from .store import StoreError, ConflictError
 from .tasks import EnvelopeError, TaskConflict
 
+LEGACY_IMPORT_COMMAND = ('import', 'legacy')
+
 
 def _emit(payload: dict[str, Any]) -> int:
     json.dump(payload, sys.stdout, ensure_ascii=False, indent=1, default=str)
@@ -32,6 +34,15 @@ def _emit(payload: dict[str, Any]) -> int:
 
 def _error(code: str, message: str, next_action: str, field: str | None = None) -> dict:
     return {"error": {"code": code, "message": message, "field": field, "next_action": next_action}}
+
+
+def _declaration_file(path, *, request=False):
+    if path is None:
+        return None
+    from .collaboration_api import validate_declarations
+    value = json.loads(Path(path).read_text('utf-8'))
+    validate_declarations({'request_input': value} if request else {'instruction_evidence': value})
+    return value
 
 
 def _fail(exc: Exception) -> int:
@@ -90,7 +101,7 @@ def build_parser() -> argparse.ArgumentParser:
     request = commands.add_parser("request").add_subparsers(dest="request_command", required=True)
     for name in ("start", "replace"):
         leaves.append((request.add_parser(name), "request." + name, True))
-    for name in ("decision", "adopt-proposal"):
+    for name in ("decision", "grant", "adopt-proposal", "pause", "resume", "revoke"):
         leaves.append((commands.add_parser(name), name, True))
     migration = commands.add_parser("migration").add_subparsers(dest="migration_command", required=True)
     for name in ("describe", "apply"):
@@ -103,6 +114,32 @@ def build_parser() -> argparse.ArgumentParser:
             leaf.add_argument("--input", required=True)
             leaf.add_argument("--base-revision")
             leaf.add_argument("--operation-id")
+
+    eligible = sub.add_parser("eligibility", help="Read action eligibility against current control")
+    eligible.set_defaults(collaboration_action='eligibility')
+    eligible.add_argument("project_arg", nargs="?")
+    eligible.add_argument("--project")
+    eligible.add_argument("--action", required=True)
+    eligible.add_argument("--input", required=True)
+    eligible.add_argument("--artifact-revision")
+    review_cmd = sub.add_parser("review", help="Evaluate external bytes or explicitly import a report")
+    review_sub = review_cmd.add_subparsers(dest="review_command", required=True)
+    evaluate = review_sub.add_parser("evaluate")
+    evaluate.set_defaults(collaboration_action='review.evaluate')
+    evaluate.add_argument("source", nargs='?')
+    evaluate.add_argument("--source-sha256")
+    evaluate.add_argument("--source-input", help="JSON descriptor for a fixed project snapshot or explicit file set")
+    evaluate.add_argument("--scope", help="JSON scope file; default is read-only review of the supplied source")
+    evaluate.add_argument("--revision")
+    evaluate.add_argument("--persistence", choices=("none",), default="none")
+    evaluate.add_argument("--report-output")
+    report_import = review_sub.add_parser("import")
+    report_import.set_defaults(collaboration_action='review.import')
+    report_import.add_argument("project_arg", nargs="?")
+    report_import.add_argument("--project")
+    report_import.add_argument("--input", required=True)
+    report_import.add_argument("--base-revision")
+    report_import.add_argument("--operation-id")
 
     doctor = sub.add_parser("doctor")
     doctor.add_argument("--step", choices=("compose","blueprint","compile","render","view","export"), default="view")
@@ -140,6 +177,7 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--out", required=True)
     create.add_argument("--design", default=None)
     create.add_argument("--draft", default=None, help="complete draft JSON to import")
+    create.add_argument("--request-input", help="JSON work-request input; transport evidence remains untrusted")
     create.add_argument("--no-open", action="store_true")
     create.add_argument("--audience", default=None, help="who must understand or decide what")
     create.add_argument("--scenario", default=None, help="the exchange scenario")
@@ -183,6 +221,11 @@ def build_parser() -> argparse.ArgumentParser:
     import_draft = sub.add_parser("import-draft")
     import_draft.add_argument("--project", required=True)
     import_draft.add_argument("--input", required=True)
+    import_draft.add_argument("--base-revision")
+    import_draft.add_argument("--operation-id")
+    import_draft.add_argument("--instruction-evidence", help="JSON declaration of the actual import instruction")
+    import_draft.add_argument("--request-input", help="JSON work-request input")
+    import_draft.add_argument("--change-mainline", action="store_true")
 
     import_asset = sub.add_parser("import")
     import_asset.add_argument("--project", required=True)
@@ -368,7 +411,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
-    if len(argv) >= 2 and argv[0] == 'import' and argv[1] == 'legacy' and \
+    if len(argv) >= 2 and tuple(argv[:2]) == LEGACY_IMPORT_COMMAND and \
             any(flag in argv[2:] for flag in ('--input', '--out', '--inspect')):
         return _dispatch_import_legacy(argv[2:])
     legacy = _legacy_dispatch(argv)
@@ -388,16 +431,54 @@ def main(argv: list[str] | None = None) -> int:
                 return _emit(read_task_methods(options.project, options.task_id))
             items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
-        if options.command == "collaboration":
-            from .collaboration_api import invoke
-            project = options.project or options.project_arg
-            if not project or (options.project and options.project_arg and options.project != options.project_arg):
-                raise ModelError("project", "provide one project path")
-            data = json.loads(Path(options.input).read_text("utf-8")) if getattr(options, "input", None) else {}
-            for key in ("base_revision", "operation_id"):
-                if getattr(options, key, None) is not None:
-                    data[key] = getattr(options, key)
-            result, _, code = invoke(project, options.collaboration_action, data)
+        if options.command in ("collaboration", "eligibility", "review"):
+            from .collaboration_api import invoke, error_response
+            try:
+                if options.command == 'review' and options.review_command == 'evaluate':
+                    if (options.source_input is None) == (options.source is None):
+                        raise ModelError('source', 'provide one SOURCE path or --source-input descriptor')
+                    source = json.loads(Path(options.source_input).read_text('utf-8')) if options.source_input else options.source
+                    if options.revision:
+                        if options.source_input:
+                            raise ModelError('revision', 'put revision in source-input or use --revision once')
+                        source = {'kind': 'project', 'path': options.source, 'revision': options.revision}
+                    scope = json.loads(Path(options.scope).read_text('utf-8')) if options.scope else {
+                        'subject': 'deck', 'page_ids': [], 'page_manifest_ref': None,
+                        'external_artifact_ref': None, 'layers': ['review'],
+                        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'review'}
+                    data = {'source': source, 'source_sha256': options.source_sha256, 'scope': scope,
+                            'persistence': options.persistence, 'report_output': options.report_output}
+                    project, action = None, options.collaboration_action
+                else:
+                    project = options.project or options.project_arg
+                    if not project or (options.project and options.project_arg and options.project != options.project_arg):
+                        raise ModelError('project', 'provide one project path')
+                    data = json.loads(Path(options.input).read_text('utf-8')) if getattr(options, 'input', None) else {}
+                    if not isinstance(data, dict):
+                        raise ModelError('input', 'input JSON must be an object')
+                    for key in ('base_revision', 'operation_id'):
+                        if getattr(options, key, None) is not None:
+                            if key in data and data[key] != getattr(options, key):
+                                raise ModelError(key, 'JSON and command line values disagree')
+                            data[key] = getattr(options, key)
+                    if options.command == 'eligibility':
+                        action = options.collaboration_action
+                        target_keys = {'subject', 'page_ids', 'page_manifest_ref', 'external_artifact_ref', 'layers',
+                                       'allow_page_membership_change', 'allow_page_order_change', 'purpose'}
+                        if set(data) <= target_keys:
+                            data = {'targets': data}
+                        if 'action' in data and data['action'] != options.action:
+                            raise ModelError('action', 'JSON and command line actions disagree')
+                        data['action'] = options.action
+                        if options.artifact_revision:
+                            if data.get('artifact_revision') not in (None, options.artifact_revision):
+                                raise ModelError('artifact_revision', 'JSON and command line revisions disagree')
+                            data['artifact_revision'] = options.artifact_revision
+                    else:
+                        action = options.collaboration_action
+                result, _, code = invoke(project, action, data)
+            except Exception as exc:
+                result, _, code = error_response(exc)
             return _emit(result) if code == 0 else _emit_and_exit(result, code)
         if options.command == "workbench":
             from .launcher import open_workbench
@@ -472,6 +553,8 @@ def main(argv: list[str] | None = None) -> int:
             draft = None
             if options.draft:
                 draft = json.loads(open(options.draft, encoding="utf-8").read())
+                from .collaboration_api import validate_declarations
+                validate_declarations({'draft': draft})
             task_fields = _merge_task_fields(options)
             payload = service.create(
                 options.out,
@@ -486,6 +569,7 @@ def main(argv: list[str] | None = None) -> int:
                 page_limit=task_fields.get("page_limit"),
                 existing_decisions=task_fields.get("existing_decisions"),
                 project_format=options.project_format,
+                request_input=_declaration_file(options.request_input, request=True),
             )
             if _project_has_pages(options.out):
                 payload = _attach_workbench_url(options.out, payload)
@@ -524,7 +608,12 @@ def main(argv: list[str] | None = None) -> int:
             rejected = _reject_legacy_run(options.project)
             if rejected is not None:
                 return rejected
-            payload = service.import_draft(options.project, draft_path=options.input)
+            payload = service.import_draft(
+                options.project, draft_path=options.input, base_revision=options.base_revision,
+                operation_id=options.operation_id,
+                instruction_evidence=_declaration_file(options.instruction_evidence),
+                request_input=_declaration_file(options.request_input, request=True),
+                preserve_mainline=not options.change_mainline)
             if _project_has_pages(options.project):
                 payload = _attach_workbench_url(options.project, payload)
             return _emit(payload)
@@ -873,47 +962,13 @@ def _legacy_final_readiness(argv) -> int:
     rejected = _reject_legacy_run(project)
     if rejected is not None:
         return rejected
-    from . import eligibility
-    from .editing import check_summary
-    from .delivery_eligibility import professional_policy
-    from .store import Store
+    from .delivery_eligibility import describe
     from .view import project_view
-    store = Store(project)
-    doc = store.load_document()
-    summary = check_summary(store, doc)
-    professional = professional_policy(store, doc)
-    readiness = eligibility.evaluate(store, doc, doc, "readiness.final")
-    view = project_view(project)
-    engineering_ready = bool(summary['status'] == 'pass' and doc['outputs'].get('pptx'))
-    report = {
-        'status': 'ready' if engineering_ready and professional['satisfied'] else 'blocked',
-        'review_status': summary['status'],
-        'unresolved': {'missing_dimensions': sorted(summary['missing_dimensions']),
-                       'failed_dimensions': sorted(k for k, v in summary['dimensions'].items()
-                                                 if v['open_must_fix'] or v['status'] == 'fail')},
-        'professional': {
-            'required': professional['required'],
-            'satisfied': professional['satisfied'],
-            'human_signoff': professional['human_signoff'],
-            'gap_reasons': professional['gap_reasons'],
-            'evidence': professional['evidence'],
-        },
-        'engineering_ready': engineering_ready,
-        'view_status': view['view_status'],
-        'revision_id': doc['revision_id'],
-        'evidence_level': 'engineering',
-        # One eligibility interpretation for this report too (CONTRACTS §8):
-        # readiness *reports* the control/scope gaps instead of raising.
-        'eligibility': {
-            'allowed': readiness['allowed'],
-            'action': readiness['action'],
-            'enforcement': readiness['enforcement'],
-            'reason_codes': readiness['reason_codes'],
-            'responsible_role': readiness['responsible_role'],
-            'next_action': readiness['next_action'],
-        },
-    }
-    return _emit(report)
+    report = describe(project, revision=_option_value(argv, '--revision'),
+                      file_path=_option_value(argv, '--file'),
+                      notes_policy=_option_value(argv, '--notes-policy'))
+    return _emit({**report, 'view_status': project_view(project)['view_status'],
+                  'evidence_level': 'engineering'})
 
 
 def _legacy_import_plan(argv) -> int:
@@ -928,7 +983,13 @@ def _legacy_import_plan(argv) -> int:
             all(isinstance(page, dict) and page.get('schema_version') == 'deck_page_package.v2'
                 for page in pages):
         # 已是 v2 完整稿:按 import-draft 语义接收,源数据不改,未知字段由 check_page 显式报错。
-        return _emit(service.import_draft(project or '.', draft_payload=raw))
+        from .collaboration_api import validate_declarations
+        validate_declarations({'draft': raw})
+        return _emit(service.import_draft(project or '.', draft_payload=raw,
+            base_revision=_option_value(argv, '--base-revision'), operation_id=_option_value(argv, '--operation-id'),
+            instruction_evidence=_declaration_file(_option_value(argv, '--instruction-evidence')),
+            request_input=_declaration_file(_option_value(argv, '--request-input'), request=True),
+            preserve_mainline='--change-mainline' not in argv))
     legacy_keys = sorted(set(raw) - {'pages', 'page_order'}) if isinstance(raw, dict) else []
     return _emit_and_exit(_legacy_json(
         'legacy_plan_format',

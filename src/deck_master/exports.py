@@ -48,7 +48,9 @@ def _context(project, revision):
     return store, doc, _logical_identity(str(store.project_root), doc["revision_id"])
 
 
-def _facts(store, doc):
+def _facts(store, doc, *, selected_output=None):
+    control = store.load_document()
+    doc = {**doc, "policy": control["policy"], "reviews": control.get("reviews", [])}
     from .editing import check_summary
     from .production_detail import projection
     from .workbench import _ReadContext, _deck_output
@@ -88,7 +90,7 @@ def _facts(store, doc):
     for key, reason in (summary.get("dimension_reasons") or {}).items():
         gaps.append(quality_gap(key, reason))
     from .delivery_eligibility import professional_policy
-    professional = professional_policy(store, doc)
+    professional = professional_policy(store, doc, selected_output=selected_output)
     if professional["required"] and not professional["satisfied"]:
         # Report the named professional gaps wherever this snapshot's gaps are
         # listed, including when the engineering gate refuses first.
@@ -235,6 +237,11 @@ def _artifact(store, ref, role, page_id):
 
 def resolve_notes_policy(store, document, notes_policy=None):
     """Resolve a projection choice against this exact selected snapshot."""
+    if isinstance(notes_policy, dict):
+        resolved = resolve_notes_policy(store, document, notes_policy.get('selection') if notes_policy.get('source') == 'explicit' else None)
+        if resolved != notes_policy:
+            raise ExportError('invalid_notes_policy', 'resolved notes policy belongs to another selected snapshot', exit_code=2, http_status=422)
+        return resolved
     choices = ('pptx_notes', 'separate_script', 'both', 'pure_reading')
     if notes_policy is not None and notes_policy not in choices:
         raise ExportError('invalid_notes_policy', 'choose pptx_notes, separate_script, both or pure_reading',
@@ -433,7 +440,9 @@ def variant_metadata(store, doc):
 
 
 def _bundle(store, doc, identity, purpose, export_id, target, notes_policy):
-    facts = _facts(store, doc)
+    from .delivery_eligibility import selected_output
+    selected = selected_output(store, doc, notes_policy=notes_policy) if purpose != "engineering" else None
+    facts = _facts(store, doc, selected_output=selected)
     _gate(store, doc, facts, purpose)
     report = _public_report(doc, facts, purpose)
     report['notes_policy'] = notes_policy
@@ -446,6 +455,8 @@ def _bundle(store, doc, identity, purpose, export_id, target, notes_policy):
         (target / "delivery.json").write_bytes(canonical_json_bytes(report))
     else:
         originals = _write_public(store, doc, target, report)
+        if (target / "deck.pptx").is_file():
+            store.put_blob((target / "deck.pptx").read_bytes(), ext="pptx")
     files = []
     for path in sorted(target.rglob("*")):
         if path.is_file():
@@ -497,11 +508,13 @@ def create(project, *, purpose="review", revision=None, export_id=None, output_d
         # artifact snapshot read under the current control determines whether
         # this delivery is authorized and professionally evidenced.
         from . import eligibility
+        from .delivery_eligibility import selected_output
+        selected = selected_output(store, doc, notes_policy=resolved_notes)
         action = "delivery.historical" if revision else "export.delivery"
         control = store.load_document()
         decision = eligibility.evaluate(store, doc, control, action,
-                                        {"expected_output_ref": (doc.get("outputs") or {}).get("pptx")})
-        if decision["enforcement"] == "active" and not decision["allowed"]:
+                                        {"expected_output_ref": (doc.get("outputs") or {}).get("pptx"), "selected_output": selected})
+        if not decision["allowed"]:
             raise eligibility.EligibilityBlocked(decision)
     cache = safe_path(store.project_root, ".deckmaster", "workbench", "exports")
     cache.mkdir(parents=True, exist_ok=True)

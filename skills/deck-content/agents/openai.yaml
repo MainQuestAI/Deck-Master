@@ -1,0 +1,6 @@
+interface:
+  display_name: "Deck Content"
+  short_description: "独立策划、论证、逐页写稿和口播：只做策划、按确认大纲写完整正文、只写指定页讲稿或提供完整内容包；完成内容后返回，不自动制作PPT。"
+  default_prompt: "Use $deck-content for the requested responsibility and preserve the current scope."
+policy:
+  allow_implicit_invocation: true

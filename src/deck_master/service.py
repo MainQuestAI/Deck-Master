@@ -106,102 +106,96 @@ def create(
     page_limit: int | None = None,
     existing_decisions: list[str] | None = None,
     project_format: str | None = None,
+    request_input: dict | None = None,
+    adapter_context=None,
 ) -> dict:
-    """Create the project; register real sources; optionally import a draft."""
+    """Publish a complete RC3 project atomically; no old writer is visible."""
+    import shutil
+    import tempfile
+    from . import collaboration, content_production
+    from .project_initialization import collaboration_region, request_defaults
     if project_format not in (None, "workbench.v3"):
-        raise ServiceError("project_format", "unsupported project format")
+        raise ServiceError("project_format", "only the current workbench.v3 format can be created")
     if draft is not None:
         _validate_draft(draft)
-    # presentation_mode stays a user-provided fact only when the caller actually
-    # chose one; the default must never be reported as user-confirmed (§3.1).
-    if presentation_mode is None:
-        presentation_mode_source = "default"
-        presentation_mode = "live"
-    else:
-        presentation_mode_source = "provided"
-    project_dir = Path(project_dir).expanduser()
-    store = Store(project_dir)
-    discovered = discover_sources(sources or [], out_dir=project_dir)
-    # Phase 1 reads and validates every material before any state is written;
-    # a failure here must not leave even a layout shell behind (§4).
-    extracts: list = []
-    for source_path in discovered["adopted"]:
-        try:
-            extract, data = read_source_snapshot(source_path)
-        except (SourceUnreadable, SourceUnsupported) as exc:
-            if source_path.resolve() in discovered['explicit']:
-                raise
-            discovered['errored'].append({'path': str(source_path), 'code': exc.error_code, 'detail': str(exc)})
-            continue
-        extracts.append((source_path, extract, data))
-    store.ensure_layout()
-    operation_id = _new_operation_id("create")
-
-    source_entries: list[dict] = []
-    seen_ids: set[str] = set()
-    for source_path, extract, data in extracts:
-        source_entries.append(
-            _entry_from_extract(store, source_path, extract, _new_source_id(seen_ids), data=data))
-        seen_ids.add(source_entries[-1]["source_id"])
-    source_manifest = {
-        "sources_adopted": [
-            {"source_id": entry["source_id"], "name": entry["name"]}
-            for entry in source_entries
-        ],
-        "sources_skipped": discovered["skipped"],
-        "sources_errored": discovered["errored"],
-    }
-
-    design = normalize_design_assets(store, design or {}, base_dir=project_dir)
-    document = new_document(
-        project_id=project_dir.name if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", project_dir.name)
-        else "project-" + uuid.uuid4().hex,
-        task={
-            "title": title or "Deck task",
-            "brief": brief,
-            "audience": audience,
-            "scenario": scenario,
-            "presentation_mode": presentation_mode,
-            "presentation_mode_source": presentation_mode_source,
-            "page_limit": page_limit,
-            "existing_decisions": existing_decisions or [],
-        },
-        design_context=design,
-        sources=source_entries,
-        operation_id=operation_id,
-    )
-    if project_format == "workbench.v3":
-        document["compatibility"] = {"project_format": "workbench.v3", "minimum_writer": "content-plan.v1"}
-    store.init_project(document, operation_id=operation_id)
-
-    if draft:
-        _adopt_draft(store, draft)
+    target = Path(project_dir).expanduser().absolute()
+    if target.exists() and (not target.is_dir() or any(target.iterdir())):
+        raise ServiceError("project", "select a new or empty project directory")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    private = Path(tempfile.mkdtemp(prefix=".rc3-create-", dir=target.parent))
+    stage = private / target.name
+    store = Store(stage)
+    try:
+        discovered = discover_sources(sources or [], out_dir=target)
+        extracts = []
+        for source_path in discovered["adopted"]:
+            try:
+                extract, data = read_source_snapshot(source_path)
+                extracts.append((source_path, extract, data))
+            except (SourceUnreadable, SourceUnsupported) as exc:
+                if source_path.resolve() in discovered["explicit"]:
+                    raise
+                discovered["errored"].append({"path": str(source_path), "code": exc.error_code, "detail": str(exc)})
+        store.ensure_layout()
+        entries, seen = [], set()
+        for path, extract, data in extracts:
+            entry = _entry_from_extract(store, path, extract, _new_source_id(seen), data=data)
+            entries.append(entry); seen.add(entry["source_id"])
+        mode_source = "provided" if presentation_mode is not None else "default"
+        document = new_document(project_id=target.name if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", target.name)
+            else "project-" + uuid.uuid4().hex,
+            task={"title": title or "Deck task", "brief": brief, "audience": audience,
+                "scenario": scenario, "presentation_mode": presentation_mode or "live",
+                "presentation_mode_source": mode_source, "page_limit": page_limit,
+                "existing_decisions": existing_decisions or []},
+            design_context=normalize_design_assets(store, design or {}, base_dir=target), sources=entries,
+            operation_id=_new_operation_id("create"))
+        document["collaboration"] = collaboration_region(imported=draft is not None)
+        from .models import require_writer
+        require_writer(document, "rc3-entry.v1")
+        if draft is not None:
+            from .project_initialization import prepare_manuscript
+            document, _ = prepare_manuscript(store, document, draft, adapter_context=adapter_context)
+        store.init_project(document, operation_id=document["change"]["operation_id"])
+        request = request_defaults(store, document, supplied=request_input,
+            page_ids=[p["page_id"] for p in (draft or {}).get("pages", [])], imported=draft is not None)
+        collaboration.start_request(stage, input=request, base_revision=document["revision_id"],
+            operation_id=_new_operation_id("request"), adapter_context=adapter_context)
         document = store.load_document()
-        return {**_response(
-            status="created",
-            document=document,
-            requested_action="create",
-            pending_tasks=_pending_host_tasks(document, store),
-            next_action=AUTO_VIEW,
-            result_refs=[entry["page"] for entry in document.get("pages") or []],
-        ), **source_manifest}
-    document = store.load_document()
-    decision = eligibility.evaluate(store, document, document, "create")
-    task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
-    document = store.load_document()
-    response = {**_response(
-        status="created",
-        document=document,
-        requested_action="create",
-        pending_tasks=[task_summary(store, document, task)],
-        next_action="submit_host_results",
-    ), **source_manifest}
-    if decision["enforcement"] == "active":
-        response["eligibility"] = _eligibility_report(decision)
+        if request["intent"] in ("full_deck", "content_only"):
+            if content_production.completion_status(store, document)['state'] == 'completed':
+                updated = content_production.close_completed_content_request(store, copy.deepcopy(document))
+                collaboration.commit_collaboration_change(store, document, operation_id=_new_operation_id('complete'),
+                    action='request.complete', digest=collaboration.payload_digest('request.complete', {'request_id': request.get('request_id')}),
+                    description='Complete the requested fixed content without production', updated=updated,
+                    response={'request_id': updated['collaboration']['request']['request_id'], 'closed_reason': 'completed'})
+            else:
+                content_production.next_phase_task(store, document)
+        if not target.exists():
+            target.mkdir()
+        (stage / ".deckmaster").rename(target / ".deckmaster")
+    finally:
+        shutil.rmtree(private)
+    store = Store(target); document = store.load_document()
+    response = _response(status="created", document=document, requested_action="create",
+        pending_tasks=_pending_host_tasks(document, store), next_action="submit_host_results" if not draft else "inspect_imported_manuscript")
+    response.update(sources_adopted=[{"source_id": entry["source_id"], "name": entry["name"]} for entry in entries],
+        sources_skipped=discovered["skipped"], sources_errored=discovered["errored"])
+    response["completion"] = content_production.completion_status(store, document)
     return response
 
 
 def _validate_draft(payload):
+    if not isinstance(payload, dict):
+        raise ServiceError("draft", "a manuscript object is required")
+    unknown = set(payload) - {"pages", "page_order", "brief", "title", "schema_version", "content_plan"}
+    if unknown:
+        raise ServiceError("draft", f"unsupported manuscript fields: {sorted(unknown)}")
+    if payload.get("schema_version") not in (None, "deck_draft.v1"):
+        raise ServiceError("draft/schema_version", "unsupported manuscript version")
+    if payload.get("content_plan") is not None:
+        from .models import validate_schema
+        validate_schema("content_plan_input", payload["content_plan"])
     pages = payload.get('pages') if isinstance(payload, dict) else None
     if not isinstance(pages, list) or not pages:
         raise ServiceError('(draft)/pages', 'draft must carry a non-empty pages array')
@@ -520,7 +514,7 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         "project_context": _project_context(store, document, task, dispatched),
         "staging_dir": str(store.staging_dir / task['operation_id']),
     }
-    for key in ("stage_request", "candidate_refs", "execution_ref", "execution_started_at"):
+    for key in ("collaboration_binding", "stage_request", "candidate_refs", "execution_ref", "execution_started_at"):
         if key in task:
             summary[key] = task[key]
     if task.get("change_binding"):
@@ -814,6 +808,8 @@ def _with_eligibility(project_dir, response: dict) -> dict:
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     decision = eligibility.evaluate(store, document, document, "continue_project")
+    from .content_production import completion_status
+    response["completion"] = completion_status(store, document)
     if decision["enforcement"] == "active":
         response["eligibility"] = _eligibility_report(decision)
     return response
@@ -884,6 +880,17 @@ def _continue_project(project_dir: Path | str) -> dict:
     pages; an explicitly resumed cancelled revision gets a new task identity.
     """
     store = Store(Path(project_dir).expanduser())
+    initial = store.load_document()
+    if initial.get("collaboration") is None:
+        from .collaboration_migration import describe
+        return _response(status="needs_input", document=initial, requested_action="continue",
+            findings=[{"code": "migration_required", "migration": describe(project_dir)}],
+            next_action="describe_and_apply_migration")
+    from .content_production import completion_status
+    initial_completion = completion_status(store, initial)
+    if initial_completion['state'] == 'completed':
+        return {**_response(status='completed', document=initial, requested_action='continue',
+            next_action='return_requested_content', result_refs=initial_completion['outputs']), 'completion': initial_completion}
     _recover_input_revision(store)
     document = _retire_missing_page_inputs(store, store.load_document())
     pending = _pending_host_tasks(document, store, include_trials=False)
@@ -909,6 +916,10 @@ def _continue_project(project_dir: Path | str) -> dict:
         # Phased content production (CONTRACTS §5/§6.3). This plans content
         # phases only; entry-level eligibility enforcement is T04's card.
         from . import content_production
+        completion = content_production.completion_status(store, document)
+        if completion["state"] == "completed":
+            return {**_response(status="completed", document=document, requested_action="continue",
+                next_action="return_requested_content", result_refs=completion["outputs"]), "completion": completion}
         phase_status = content_production.content_phase_status(store, document)
         if phase_status.get("action") == "dispatch":
             task = content_production.next_phase_task(store, document)
@@ -921,7 +932,7 @@ def _continue_project(project_dir: Path | str) -> dict:
                 pending_tasks=pending or ([task_summary(store, document, task)] if task else []),
                 next_action="submit_host_results",
             )
-        if phase_status.get("action") == "await_decision" and not (document.get("pages") or []):
+        if phase_status.get("action") in ("await_decision", "blocked"):
             return _response(
                 status="needs_input",
                 document=document,
@@ -1695,7 +1706,7 @@ def accept_result(
     for key in ("candidate_ids", "candidate_refs", "result_kind", "current_artifacts_changed", "current_content_changed", "new_page_hashes", "unchanged_reason", "impact_summary", "work_complete", "operation_result", "journal_warning", "same_revision",
                 # compose.v2 phased results (CONTRACTS §11.5) project their write
                 # set and invalidation to adapters without a second truth.
-                "variant", "adopted", "page_refs", "plan_ref", "narrative_ref", "proposal_refs",
+                "variant", "adopted", "changed_layers", "page_refs", "plan_ref", "narrative_ref", "proposal_refs",
                 "adopted_refs", "invalidated_refs", "invalidated_outputs", "invalidated_reviews",
                 "effective_scope", "plan_note", "page_count", "creates_confirmation",
                 "authorizes_production"):
@@ -1704,47 +1715,30 @@ def accept_result(
     return response
 
 
-def import_draft(
-    project_dir: Path | str,
-    *,
-    draft_path: Path | str | None = None,
-    draft_payload: dict | None = None,
-) -> dict:
-    """Receive a complete Page list; adopt only if the whole draft validates."""
+def import_draft(project_dir, *, draft_path=None, draft_payload=None, base_revision=None,
+                 operation_id=None, instruction_evidence=None, request_input=None,
+                 preserve_mainline=True, adapter_context=None):
+    """Use the shared source-bound manuscript transaction, never compose.v1."""
     if draft_payload is None:
         if draft_path is None:
-            raise ServiceError("(draft)", "provide --input draft file or inline payload")
+            raise ServiceError("draft", "provide a draft payload or file")
         draft_payload = json.loads(Path(draft_path).expanduser().read_text("utf-8"))
     _validate_draft(draft_payload)
-    pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
-    page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
-    if not isinstance(pages, list) or not pages:
-        raise ServiceError("(draft)/pages", "draft must carry a non-empty pages array")
-
-    project_dir = Path(project_dir).expanduser()
     store = Store(project_dir)
-    store.ensure_layout()
-    if store.current_revision_id() is None:
-        # Draft without create: build the Document shell from the draft first.
-        document = new_document(
-            project_id=project_dir.name,
-            task={
-                "title": draft_payload.get("title") or "Imported draft",
-                "brief": draft_payload.get("brief") or "Draft import.",
-            },
-            operation_id=_new_operation_id("draft"),
-        )
-        store.init_project(document, operation_id=document["change"]["operation_id"])
-    outcome = _adopt_draft(store, draft_payload)
-    document = store.load_document()
-    return _response(
-        status="accepted",
-        document=document,
-        requested_action="import draft",
-        pending_tasks=_pending_host_tasks(document, store),
-        next_action=outcome.get("next_action") or AUTO_VIEW,
-        result_refs=outcome.get("result_refs") or [],
-    )
+    if not (store.deck_root / "current.json").exists():
+        return create(project_dir, brief=draft_payload.get("brief") or "Import this manuscript preserving its mainline",
+            title=draft_payload.get("title") or "Imported manuscript", draft=draft_payload,
+            request_input=request_input, adapter_context=adapter_context)
+    if request_input is not None:
+        raise ServiceError("request_input", "start/replace the explicit scoped request before importing into an existing project")
+    if base_revision is None or operation_id is None:
+        raise ServiceError("base_revision", "existing-project import requires base_revision and operation_id")
+    from .project_initialization import adopt_manuscript
+    result = adopt_manuscript(store, draft_payload, base_revision=base_revision, operation_id=operation_id,
+        evidence=instruction_evidence, preserve_mainline=preserve_mainline, adapter_context=adapter_context)
+    doc = store.load_document()
+    return {**_response(status=result["status"], document=doc, requested_action="import draft",
+        result_refs=result.get("page_refs")), **result}
 
 
 def _svg_referenced_asset_ids(store, svg_ref):

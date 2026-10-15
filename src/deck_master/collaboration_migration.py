@@ -15,18 +15,18 @@ from . import collaboration, models, tasks as tasks_mod
 from .models import canonical_json_bytes, require_writer, sha256_bytes
 from .store import ConflictError, Store, StoreError
 
-_TARGET_WRITER = "collaboration.v1"
+_TARGET_WRITER = "rc3-entry.v1"
 _MIGRATION_ACTION = "collaboration.migration"
 _RUNNABLE_STATUSES = ("awaiting_host", "running", "queued")
 
 
 def migration_plan(store, document) -> dict:
-    tasks = []
+    tasks, unreadable = [], []
     for ref in document.get("tasks") or []:
         try:
             tasks.append(store.read_object_json(ref))
-        except Exception:  # noqa: BLE001 - unreadable tasks are simply not counted
-            continue
+        except Exception:  # noqa: BLE001 - report uncertainty instead of claiming zero calls
+            unreadable.append(ref)
     runnable = [task for task in tasks if task.get("status") in _RUNNABLE_STATUSES]
     unknown_calls = sum(
         1 for task in tasks for allowance in task.get("call_allowances") or []
@@ -47,10 +47,12 @@ def migration_plan(store, document) -> dict:
         "target_minimum_writer": _TARGET_WRITER,
         "needs_migration": document.get("collaboration") is None,
         "counts": {"pages": len(pages), "sources": len(document.get("sources") or []),
-                   "reviews": len(document.get("reviews") or []), "tasks": len(tasks),
+                   "reviews": len(document.get("reviews") or []), "tasks": len(document.get("tasks") or []),
                    "runnable_tasks": len(runnable)},
         "tasks_to_supersede": sorted(task["task_id"] for task in runnable),
-        "unknown_calls": unknown_calls,
+        "unknown_calls": unknown_calls if not unreadable else None,
+        "known_unknown_calls": unknown_calls, "unreadable_task_refs": unreadable,
+        "limitations": ["Task and call counts are incomplete; recover unreadable objects before apply"] if unreadable else [],
         "pending_decisions": pending,
         "reusable": {
             "page_refs": [entry["page"] for entry in pages if entry.get("page")],
@@ -81,7 +83,8 @@ def migration_response(plan, superseded_ids):
                     "before any new production"}
 
 
-def apply(project, *, base_revision: str, plan_digest: str, operation_id: str) -> dict:
+def apply(project, *, base_revision: str, plan_digest: str, operation_id: str,
+          instruction_evidence=None, request_input=None, adapter_context=None) -> dict:
     """Apply the described migration in one transaction (MIGRATION §3).
 
     Apply only establishes the control region with ``request=null``: a real
@@ -95,7 +98,8 @@ def apply(project, *, base_revision: str, plan_digest: str, operation_id: str) -
         document = store.load_document()
         from . import eligibility
         eligibility.guard(store, document, "migration.apply")
-        digest = collaboration.payload_digest(_MIGRATION_ACTION, {"plan_digest": plan_digest})
+        digest = collaboration.payload_digest(_MIGRATION_ACTION, {"plan_digest": plan_digest, "instruction_evidence": instruction_evidence,
+            "request_input": request_input})
         # CONTRACTS §6.1: replay-before-CAS, like every other collaboration write.
         replay = collaboration.replay_or_conflict(store, document, operation_id,
                                                   _MIGRATION_ACTION, digest)
@@ -109,6 +113,8 @@ def apply(project, *, base_revision: str, plan_digest: str, operation_id: str) -
         if sha256_bytes(canonical_json_bytes(current_plan)) != plan_digest:
             raise ConflictError("plan_digest",
                                 "project state changed since describe; run migration describe again")
+        if current_plan["unreadable_task_refs"]:
+            raise StoreError("migration/tasks", "needs_recovery: unreadable Task facts prevent a safe migration")
         # Retire runnable legacy tasks to settle-only. Their allowance facts and
         # every immutable ref are preserved; only the status moves.
         task_refs = []
@@ -125,21 +131,37 @@ def apply(project, *, base_revision: str, plan_digest: str, operation_id: str) -
                 superseded_ids.append(task["task_id"])
             else:
                 task_refs.append(ref)
-        region = {
-            "schema_version": "collaboration.v1",
-            "authority_policy": "traceable",
-            "quality_profile": {"content_review_requirement": "independent_model_or_human",
-                                "requirement_origin": "default_new_argument",
-                                "override_decision_ref": None},
-            "request": None,
-            "decisions": [],
-            "authorizations": [],
-        }
+        from .project_initialization import collaboration_region, imported_plan
+        region = collaboration_region()
         updated = {**document, "collaboration": region, "tasks": task_refs}
+        if document.get("pages"):
+            old_plan = store.read_object_json(document["content_plan"]) if document.get("content_plan") else None
+            if not old_plan or old_plan.get("schema_version") != "content_plan.v2":
+                source_ref = store.put_blob(canonical_json_bytes({"revision_id": document["revision_id"],
+                    "page_refs": [entry["page"] for entry in document["pages"]]}), ext="json")
+                unknown = {"kind": "imported_unknown", "assurance": "unverified", "source_ref": source_ref,
+                    "source_locator": "migration:fixed-original-snapshot", "actor_id": None,
+                    "transport_receipt_ref": None, "presentation_ref": None}
+                updated["content_plan"] = imported_plan(store, document, document["pages"], source_ref, unknown)
+        response = migration_response(current_plan, superseded_ids)
+        if request_input is not None:
+            value = dict(request_input)
+            if instruction_evidence is not None:
+                value["instruction_evidence"] = instruction_evidence
+            updated, request_result = collaboration._stage_request(store, updated, value,
+                operation_id=operation_id, digest=digest, adapter_context=adapter_context)
+            response["request"] = request_result
+        elif instruction_evidence is not None:
+            resolved = collaboration.resolve_evidence(instruction_evidence, adapter_context, store=store,
+                action_binding=digest, project_id=document["project_id"], request_id=None)
+            collaboration._require_stored_evidence_refs(store, resolved, "migration/instruction_evidence")
+            response["migration_instruction_evidence"] = resolved
+            response["creates_request"] = False
+            response["creates_confirmation"] = False
         require_writer(updated, _TARGET_WRITER)
         return collaboration.commit_collaboration_change(
             store, document, operation_id=operation_id, action=_MIGRATION_ACTION,
             digest=digest, description="collaboration migration apply", updated=updated,
-            response=migration_response(current_plan, superseded_ids))
+            response=response)
 
     return locked(store)

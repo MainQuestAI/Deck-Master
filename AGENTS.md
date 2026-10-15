@@ -20,7 +20,11 @@ The current Flow Quality increment follows
 ACCEPTANCE and MIGRATION. Its T1–T9 are distinct from the older rebuild cards
 below. This increment authorizes retiring the listed repository skills;
 the real Codex AC-17 session and actual HOME migration remain user-run checks.
-The single public skill is `skills/deck-master/SKILL.md`.
+RC3 now exposes `deck-master`, `deck-content`, `deck-design`, and `deck-review`.
+Their sole shared editable method source is `skills/deck-master/references/`;
+read the chosen Skill and its actual workorder method paths/hash.
+Content sub-intents return their own complete outputs; Design remains bounded
+and Review stays read-only. Changing Skill names does not create independence.
 
 The active implementation baseline for the mainline rebuild is
 `docs/specs/deck-master-rebuild-v1/` (spec pack v1.1). Rules for this effort:
@@ -70,6 +74,9 @@ deck-master view --project <dir> --json
 
 ## Task Routing
 
+- New projects default to `workbench.v3` with rc3 collaboration and a real
+  instruction source; no implicit production grant. Old projects require
+  explicit migration before formal writes.
 - New deck from material: `deck-master create --brief … --source … --out …`
   (a plain material directory is enough; no library/workspace/backend setup).
 - Change task facts or materials: `deck-master inputs show --project <dir>`,

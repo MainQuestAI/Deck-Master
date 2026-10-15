@@ -9,6 +9,8 @@ import json
 
 import pytest
 
+from rc3_fixtures import claimed_phase_task, claim_fixture_task, historical_snapshot
+
 from deck_master import collaboration, content_production, models, service
 from deck_master.models import ModelError, bump_revision, require_writer
 from deck_master.store import Store
@@ -186,7 +188,7 @@ def _submit(project, task, payload, variant, **over):
 
 def _dispatch(store, *, phase, **over):
     import uuid
-    return content_production.open_phase_task(
+    return claimed_phase_task(
         store, store.load_document(), operation_id=f"phase-{phase}-{uuid.uuid4().hex[:6]}",
         phase=phase, **over)
 
@@ -227,7 +229,7 @@ def test_phase_dispatch_carries_compose_v2_and_binding(tmp_path):
     _request(project, store)
     task = _dispatch(store, phase="framing")
     assert task["protocol_version"] == "compose.v2"
-    assert set(task["required_capabilities"]) == {"compose.v2", "collaboration.v1"}
+    assert set(task["required_capabilities"]) == {"compose.v2", "collaboration.v1", "rc3-entry.v1"}
     binding = task["collaboration_binding"]
     assert binding["phase"] == "framing" and binding["executor_type"] == "host"
     assert binding["adoption_policy"] == "proposal_only"
@@ -267,15 +269,16 @@ def test_phase_dispatch_requires_an_open_request(tmp_path):
 
 
 def test_legacy_project_keeps_compose_v1(tmp_path):
-    """The phased protocol never applies below the collaboration.v1 writer."""
-    project = tmp_path / "legacy"
-    service.create(project, brief="legacy", sources=[], project_format="workbench.v3")
-    store = Store(project)
-    task = service.open_compose_task(store, store.load_document(), operation_id="legacy-compose")
-    assert task.get("protocol_version") == "compose.v1"
-    assert "collaboration_binding" not in task
-    phases = content_production.content_phase_status(store, store.load_document())
-    assert phases["action"] == "inactive"
+    """Historical readers keep v1; a new legacy dispatch requires migration."""
+    from deck_master import eligibility
+    fixture = historical_snapshot(tmp_path, scenario="pre-collaboration compose protocol")
+    project, store = fixture['project'], Store(fixture['project'])
+    old = service._input_compose_task(store.load_document(), operation_id="old-dispatched", reason="fixed history", store=store)
+    assert old.get("collaboration_binding") is None
+    with pytest.raises(eligibility.EligibilityBlocked) as exc:
+        service.open_compose_task(store, store.load_document(), operation_id="new-legacy-compose")
+    assert "migration_required" in exc.value.decision["reason_codes"]
+    assert content_production.content_phase_status(store, store.load_document())["action"] == "inactive"
 
 
 # ---------------------------------------------------------------------------
@@ -459,7 +462,7 @@ def test_page_copy_needs_an_adopted_narrative(tmp_path):
 
 def test_page_copy_keeps_membership_change_behind_the_scope(tmp_path):
     project, store = _project(tmp_path)
-    _request(project, store)
+    _request(project, store, intent="full_deck", content_intent=None)
     _, out = _accept_argument(project, store)
     _adopt_direction(project, store, out["result_refs"][0])
     task = _dispatch(store, phase="page_copy")
@@ -489,7 +492,7 @@ def test_page_copy_keeps_membership_change_behind_the_scope(tmp_path):
 
 def _deck_with_pages(tmp_path, *, notes="这一页讲清楚两个独立判断。", kind="cue"):
     project, store = _project(tmp_path)
-    _request(project, store)
+    _request(project, store, intent="full_deck", content_intent=None)
     _, out = _accept_argument(project, store)
     _adopt_direction(project, store, out["result_refs"][0])
     task = _dispatch(store, phase="page_copy")
@@ -506,7 +509,7 @@ def test_speech_writes_notes_mapping_and_rebinds_page_links(tmp_path):
     entry = document["pages"][0]
     body_before = store.read_object_json(entry["page"])["customer_visible"]
     plan_before = document["content_plan"]
-    task = content_production.open_phase_task(
+    task = claimed_phase_task(
         store, store.load_document(), operation_id="phase-speech", phase="speech",
         page_ids=["p1"])
     content_production._stamp_speech_kind(store, task, "cue")
@@ -540,7 +543,7 @@ def test_speech_refuses_body_edits_and_the_wrong_kind(tmp_path):
     project, store = _deck_with_pages(tmp_path)
     document = store.load_document()
     entry = document["pages"][0]
-    task = content_production.open_phase_task(
+    task = claimed_phase_task(
         store, store.load_document(), operation_id="phase-speech", phase="speech", page_ids=["p1"])
     content_production._stamp_speech_kind(store, task, "cue")
     current = store.load_document()["pages"][0]
@@ -606,6 +609,7 @@ def test_input_revision_reuses_the_single_swap_path(tmp_path):
     store.commit_change(base_revision=document["revision_id"], document=bumped,
                         operation_id="dispatch-rev-1")
     task = tasks_lookup(store, task["task_id"])
+    claim_fixture_task(project, task)
     payload = {"changed_layers": ["page_copy"],
                "proposals": [{"layer": "page_copy", "ref": store.put_json_object(updated)}],
                "diff": {"input_digest": task["input_digest"], "summary": "补充紧急程度的适用条件",
@@ -639,6 +643,7 @@ def test_input_revision_refusals(tmp_path):
     store.commit_change(base_revision=document["revision_id"], document=bumped,
                         operation_id="dispatch-rev-2")
     task = tasks_lookup(store, task["task_id"])
+    claim_fixture_task(project, task)
     page = _page(store, store.load_document(), "p1")
     proposal = store.put_json_object(page)
     with pytest.raises(EnvelopeError, match="unknown layers"):

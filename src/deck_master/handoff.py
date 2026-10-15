@@ -26,9 +26,11 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
     resolved_notes = resolve_notes_policy(store, document, notes_policy)
     if purpose == "delivery":
         from . import eligibility
+        from .delivery_eligibility import selected_output
+        selected = selected_output(store, document, notes_policy=notes_policy, file_path=candidate)
         decision = eligibility.evaluate(store, document, document, "handoff.delivery",
-                                        {"expected_output_ref": (document.get("outputs") or {}).get("pptx")})
-        if decision["enforcement"] == "active" and not decision["allowed"]:
+                                        {"expected_output_ref": (document.get("outputs") or {}).get("pptx"), "selected_output": selected})
+        if not decision["allowed"]:
             raise eligibility.EligibilityBlocked(decision)
     output_ref = (document.get("outputs") or {}).get("pptx")
     expected_hash = None
@@ -95,7 +97,7 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
     if purpose == "delivery" and review_status != "pass":
         gaps.append("required_review_not_pass")
     from .delivery_eligibility import professional_policy
-    professional = professional_policy(store, document)
+    professional = professional_policy(store, document, selected_output=selected if purpose == "delivery" else None)
     if purpose == "delivery" and professional["required"] and not professional["satisfied"]:
         gaps.append("professional_review_not_satisfied")
     from .models import input_alignment

@@ -89,7 +89,8 @@ def listing(registry):
     return {"schema_version": "project_registry.v1", "projects": entries}
 
 
-def create_project(registry, *, path, title, brief, audience, sources=None, page_limit=None):
+def create_project(registry, *, path, title, brief, audience, sources=None, page_limit=None,
+                   presentation_mode=None, scenario="", request_input=None, draft=None):
     """Prepare a complete project privately, publish it, then register explicitly.
 
     Registry failures leave a complete project that can be registered again;
@@ -116,7 +117,9 @@ def create_project(registry, *, path, title, brief, audience, sources=None, page
     stage = stage_root / target.name
     try:
         result = service.create(stage, brief=brief, title=title, audience=audience,
-                                sources=sources or [], page_limit=page_limit, project_format="workbench.v3")
+                                sources=sources or [], page_limit=page_limit, project_format="workbench.v3",
+                                presentation_mode=presentation_mode, scenario=scenario,
+                                request_input=request_input, draft=draft)
         # mkdir reserves the destination without replacing an existing folder.
         target.mkdir()
         try:

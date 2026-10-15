@@ -5,6 +5,8 @@ import hashlib
 
 import pytest
 
+from rc3_fixtures import historical_snapshot
+
 from synthetic_review_provider import synthetic_user_context, synthetic_runtime_call
 
 from deck_master import collaboration, service
@@ -41,7 +43,10 @@ def _declared(store, kind: str = "host_attested_instruction", **over) -> dict:
 
 def _project(tmp_path, *, migrate=True):
     project = tmp_path / "proj"
-    service.create(project, brief="collaboration contracts")
+    if migrate:
+        service.create(project, brief="collaboration contracts")
+    else:
+        project = historical_snapshot(tmp_path, scenario="unmigrated control rejection")["project"]
     store = Store(project)
     if migrate:
         document = store.load_document()

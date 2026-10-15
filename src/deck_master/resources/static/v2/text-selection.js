@@ -106,7 +106,7 @@ export function rangeReplacementEditor({label, draft, read, writable, save, appl
     actionGroup(capture,rebase),el('div',{class:'range-fields'},start.node,end.node),replacement.node,
     actionGroup(validate,compare));
   const body=el('div',{class:'stack'},form,review,status);
-  const dialog=modal('精确修改选段',body,[button('取消并保留范围草稿',()=>dialog.close())],{fallback});
+  const dialog=modal('精确修改选段',body,[button('取消并保留范围草稿',()=>dialog.close())],{fallback,protectDraft:true});
   return {dispose(){if(dialog.open&&dialog.contains(body))dialog.close();}};
 }
 export function textObject(app, source, {revision, pageId, layer, label = '原始文本'} = {}) {

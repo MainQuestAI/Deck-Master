@@ -70,6 +70,11 @@ function contentView(app, data) {
     select.addEventListener('change', show); show();
     node.append(detail('正文原文与精确选段', el('label', {}, '选择文字对象 ', select), textSlot));
   }
+  if (data.page?.speaker_notes) node.append(detail('本页口播稿',
+    el('p', {class:'muted'}, `固定于 ${version(data.revision_id)}；来自正式稿件，与个人笔记分别保留。`),
+    el('pre', {class:'read-text', tabindex:'0', 'aria-label':'本页正式口播稿'}, data.page.speaker_notes),
+    (data.page.content_mapping?.speech_segments||[]).length>0&&detail('口播段落与估时依据',
+      el('pre', {class:'evidence-json'}, JSON.stringify(data.page.content_mapping.speech_segments,null,2)))));
   if (data.page?.customer_visible && !app.readonly && app.health.ui_capabilities?.includes('content_ops.v1') && data.revision_id === app.route.revision && data.page_id === app.route.page_id) node.append(pageContentEditor(app, data));
   node.append(button('查看本页来源', () => sourceView(app, data))); return node;
 }

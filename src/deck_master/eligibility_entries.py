@@ -46,6 +46,7 @@ READ_REASONS = {
     "read_download": "reads an already-fixed immutable export object",
     "read_plan": "immutable derived plan/preview; writes no Document, Task, allowance or call",
     "read_analysis": "read-only analysis/plan output",
+    "external_report": "strict persistence=none source reader; optional new report outside the source; no source Document, Task, Review, cache or log writes",
     "ui_state": "personal UI journal / gallery / overview state; never writes project control or business objects",
     "legacy_refusal": "legacy mapping/refusal surface: maps to a rebuilt command or refuses with guidance; writes nothing",
     "internal": "internal write mechanics/helper used by classified entries; not an independently reachable business entry",
@@ -84,7 +85,7 @@ SERVICE_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
                       "service.accept_result → tasks.accept_result: call facts settle first "
                       "(unchanged protocol, CONTRACTS §6.1 accept_result exception), then "
                       "adoption consumes the gate", None),
-    "import_draft": ("import_draft", "service.import_draft: guard before _adopt_draft", None),
+    "import_draft": ("import_draft", "service.import_draft → project_initialization.adopt_manuscript; private canonical create for new projects, scoped CAS import for existing projects", None),
     "import_asset": ("asset.import", "service.import_asset: guard before the design commit", None),
     "update_design": ("design.update", "service.update_design: guard before the design commit", None),
     "task_start": ("task.start", "service.task_start: guard before the claim commit", None),
@@ -120,13 +121,61 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration.resolve_evidence": (None, "-", READ_REASONS["internal"]),
     "collaboration.replay_or_conflict": (None, "-", READ_REASONS["internal"]),
     "collaboration.commit_collaboration_change": (None, "-", READ_REASONS["internal"]),
-    "collaboration_migration.describe": ("migration.describe",
-                                         "collaboration_migration.describe: read-only migration plan", None),
+    "collaboration_migration.describe": (None, "-", READ_REASONS["read_model"]),
     "collaboration_migration.apply": ("migration.apply",
                                       "collaboration_migration.apply: single-transaction migration "
                                       "with plan digest + CAS", None),
     "collaboration_migration.migration_plan": (None, "-", READ_REASONS["internal"]),
     "collaboration_migration.migration_response": (None, "-", READ_REASONS["internal"]),
+    "content_production.adopt_proposal": ("proposal.adopt", "content_production.adopt_proposal: locked exact decision/scope/basis adoption", None),
+    "content_production.completion_status": (None, "-", READ_REASONS["read_model"]),
+    "external_review.evaluate": (None, "-", READ_REASONS["external_report"]),
+    "review_import.describe_bindings": (None, "-", READ_REASONS["read_model"]),
+    "review_import.import_report": ("review.import", "review_import.import_report: locked source/identity/dependency binding and current-control eligibility before commit", None),
+    "delivery_eligibility.describe": (None, "-", READ_REASONS["read_model"]),
+    # The dispatcher is classified by each actual accepted action. It is never
+    # exempted as a whole because the same function also performs writes.
+    "collaboration_api.invoke[show]": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_api.invoke[migration.describe]": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_api.invoke[eligibility]": (None, "-", READ_REASONS["read_analysis"]),
+    "collaboration_api.invoke[delivery.describe]": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_api.invoke[review.bindings]": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_api.invoke[review.evaluate]": (None, "-", READ_REASONS["external_report"]),
+    "collaboration_api.invoke[request.start]": ("request.start", "collaboration.start_request", None),
+    "collaboration_api.invoke[request.replace]": ("request.start", "collaboration.start_request", None),
+    "collaboration_api.invoke[decision]": ("decision.record", "collaboration.record_decision", None),
+    "collaboration_api.invoke[grant]": ("authorization.grant", "collaboration.grant", None),
+    "collaboration_api.invoke[adopt-proposal]": ("proposal.adopt", "content_production.adopt_proposal", None),
+    "collaboration_api.invoke[pause]": ("request.pause", "collaboration.pause_request", None),
+    "collaboration_api.invoke[resume]": ("request.resume", "collaboration.resume_request", None),
+    "collaboration_api.invoke[revoke]": ("authorization.revoke", "collaboration.revoke_authorization", None),
+    "collaboration_api.invoke[migration.apply]": ("migration.apply", "collaboration_migration.apply", None),
+    "collaboration_api.invoke[review.import]": ("review.import", "review_import.import_report", None),
+    "collaboration_api.invoke[draft.import]": ("import_draft", "service.import_draft", None),
+    "collaboration_api.invoke[continue]": ("continue_project", "service.continue_project; its actual dispatch helpers enforce production gates", None),
+}
+
+
+PUBLIC_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
+    "legacy.import_legacy": ("create", "legacy.import_legacy: canonical private create/import normalization; inspect_only remains a source read", None),
+    "legacy.looks_like_legacy_run": (None, "-", READ_REASONS["read_model"]),
+    "legacy.snapshot": (None, "-", READ_REASONS["read_model"]),
+    "legacy.inspect_legacy": (None, "-", READ_REASONS["read_analysis"]),
+    "registry.create_project": ("create", "registry.create_project: privately prepares service.create then registers the complete project", None),
+    "registry.registry_path": (None, "-", READ_REASONS["internal"]),
+    "registry.register": (None, "-", READ_REASONS["install"]),
+    "registry.remove": (None, "-", READ_REASONS["install"]),
+    "registry.registered_path": (None, "-", READ_REASONS["read_model"]),
+    "registry.listing": (None, "-", READ_REASONS["read_model"]),
+    "samples.create_sample": ("create", "samples.create_sample: canonical create/import, then labeled synthetic display objects; no grant or review approval", None),
+    "samples.create_gallery_sample": ("create", "samples.create_gallery_sample: canonical sample creation with no execution grant or review approval", None),
+    "samples.sample_info": (None, "-", READ_REASONS["read_model"]),
+    "project_initialization.collaboration_region": (None, "-", READ_REASONS["internal"]),
+    "project_initialization.instruction": (None, "-", READ_REASONS["internal"]),
+    "project_initialization.request_defaults": (None, "-", READ_REASONS["internal"]),
+    "project_initialization.imported_plan": (None, "-", READ_REASONS["internal"]),
+    "project_initialization.prepare_manuscript": (None, "-", READ_REASONS["internal"]),
+    "project_initialization.adopt_manuscript": ("import_draft", "project_initialization.adopt_manuscript: locked current-scope/CAS before the single manuscript commit", None),
 }
 
 
@@ -161,8 +210,8 @@ OPERATIONS_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "candidate_preview.request": ("render.preview",
                                   "candidate_preview.request: local candidate rendering request", None),
     "restoration.commit": ("restore",
-                           "restoration.commit: reporting-only decision (never refused: "
-                           "restore recovers content facts and keeps the current control)", None),
+                           "restoration.commit: current scope guards fact recovery; "
+                           "current control and fees are preserved", None),
     "source_uploads.receive": (None, "-", READ_REASONS["staging"]),
     "stages.assemble": ("stage.assemble", "stages.assemble: guard before the assembly commit", None),
     "styles.propose": ("style.propose", "styles.propose: guard before the proposal/recipe commit", None),
@@ -207,13 +256,21 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration request start": ("request.start", "collaboration.start_request", None),
     "collaboration request replace": ("request.start", "collaboration.start_request", None),
     "collaboration decision": ("decision.record", "collaboration.record_decision", None),
+    "collaboration grant": ("authorization.grant", "collaboration.grant", None),
+    "collaboration pause": ("request.pause", "collaboration.pause_request", None),
+    "collaboration resume": ("request.resume", "collaboration.resume_request", None),
+    "collaboration revoke": ("authorization.revoke", "collaboration.revoke_authorization", None),
     "collaboration adopt-proposal": ("proposal.adopt", "content_production.adopt_proposal", None),
     "collaboration migration apply": ("migration.apply", "collaboration_migration.apply", None),
+    "eligibility": (None, "-", READ_REASONS["read_analysis"]),
+    "review evaluate": (None, "-", READ_REASONS["external_report"]),
+    "review import": ("review.import", "review_import.import_report", None),
     # -- creation and routing
     "create": ("create", "cli.create → service.create (routing gate)", None),
     "continue": ("continue_project", "cli.continue → service.continue_project (decision card)", None),
     "import-draft": ("import_draft", "cli.import-draft → service.import_draft", None),
     "import": ("asset.import", "cli.import → service.import_asset", None),
+    "import legacy": ("create", "cli._dispatch_import_legacy → legacy.import_legacy → canonical create/import", None),
     # -- execution and fees
     "task accept": ("task.accept", "cli.task accept → service.accept_result", None),
     "task start": ("task.start", "cli.task start → service.task_start", None),
@@ -256,11 +313,11 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "handoff-check": ("handoff.delivery", "cli.handoff-check → handoff.check_handoff", None),
     # -- history and policy
     "history restore": ("restore",
-                        "cli.history restore → editing.restore (reporting-only decision: the "
+                        "cli.history restore → editing.restore (current scope guards recovery; "
                         "current request/withdrawal/pause stay in force)", None),
     "history commit-restore": ("restore",
-                               "cli.history commit-restore → restoration.commit (reporting-only "
-                               "decision; recovery keeps the current control)", None),
+                               "cli.history commit-restore → restoration.commit (current scope "
+                               "guards recovery; recovery keeps current control)", None),
     "ui plan-clear": (None, "-", READ_REASONS["ui_state"]),
     "ui commit-clear": (None, "-", READ_REASONS["ui_state"]),
     # -- read-only / non-project
@@ -319,9 +376,36 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 }
 
 
-# HTTP: exact route literals plus prefix rows for parameterised paths. Prefix
-# rows are matched longest-first, so a more specific row wins.
+# HTTP: exact legacy literals and method-qualified canonical adapter templates.
+# Legacy prefix rows classify only the literal prefix found in a read handler;
+# they never exempt an arbitrary newly added descendant write route.
 HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
+    "GET /api/projects/{project_id}/collaboration": (None, "-", READ_REASONS["read_model"]),
+    "GET /api/projects/{project_id}/collaboration/migration": (None, "-", READ_REASONS["read_model"]),
+    "POST /api/projects/{project_id}/collaboration/requests": ("request.start", "collaboration_api.invoke → collaboration.start_request (start/replace share the locked request service)", None),
+    "POST /api/projects/{project_id}/collaboration/decisions": ("decision.record", "collaboration_api.invoke → collaboration.record_decision", None),
+    "POST /api/projects/{project_id}/collaboration/authorizations": ("authorization.grant", "collaboration_api.invoke → collaboration.grant", None),
+    "POST /api/projects/{project_id}/collaboration/proposal-adoptions": ("proposal.adopt", "collaboration_api.invoke → content_production.adopt_proposal", None),
+    "POST /api/projects/{project_id}/collaboration/request/pause": ("request.pause", "collaboration_api.invoke → collaboration.pause_request", None),
+    "POST /api/projects/{project_id}/collaboration/request/resume": ("request.resume", "collaboration_api.invoke → collaboration.resume_request", None),
+    "POST /api/projects/{project_id}/collaboration/authorizations/{authorization_id}/revoke": ("authorization.revoke", "collaboration_api.invoke → collaboration.revoke_authorization", None),
+    "POST /api/projects/{project_id}/collaboration/migration": ("migration.apply", "collaboration_api.invoke → collaboration_migration.apply", None),
+    "POST /api/projects/{project_id}/eligibility": (None, "-", READ_REASONS["read_analysis"]),
+    "POST /api/projects/{project_id}/reviews/import": ("review.import", "collaboration_api.invoke → review_import.import_report", None),
+    "POST /api/projects/{project_id}/reviews/bindings": (None, "-", READ_REASONS["read_model"]),
+    "POST /api/projects/{project_id}/draft/import": ("import_draft", "collaboration_api.invoke → service.import_draft", None),
+    "POST /api/projects/{project_id}/continue": ("continue_project", "collaboration_api.invoke → service.continue_project; every real dispatch consumes the shared core gate", None),
+    "GET /api/projects/{project_id}/delivery-eligibility": (None, "-", READ_REASONS["read_model"]),
+    "POST /api/reviews/evaluate": (None, "-", READ_REASONS["external_report"]),
+    # Launcher writes only its registry for register/remove/open. The explicit
+    # create/sample endpoints additionally invoke canonical project creation.
+    "/api/projects": (None, "-", READ_REASONS["read_model"]),
+    "/api/projects/register": (None, "-", READ_REASONS["install"]),
+    "/api/projects/remove": (None, "-", READ_REASONS["install"]),
+    "/api/projects/open": (None, "-", READ_REASONS["install"]),
+    "/api/projects/create": ("create", "launcher.do_POST → registry.create_project → service.create", None),
+    "/api/projects/sample": ("create", "launcher.do_POST → samples.create_sample → canonical create/import, no business authorization", None),
+    "/api/directories/pick": (None, "-", READ_REASONS["install"]),
     # -- write routes
     "/api/annotations/batch": ("annotation.save", "web.do_POST → annotation_service.save", None),
     "/api/changes/plan": ("change.plan", "web.do_POST → changes.plan (immutable plan object)", None),
@@ -353,9 +437,9 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
                       "web.do_POST → service.open_host_task (feedback dispatch)", None),
     "/api/cancel": ("task.cancel", "web.do_POST → service.task_cancel (available while paused)", None),
     "/api/history/commit-restore": ("restore",
-                                    "web.do_POST → restoration.commit (reporting-only decision)", None),
+                                    "web.do_POST → restoration.commit (current scope guards recovery)", None),
     "/api/restore": ("restore",
-                     "web.do_POST → editing.restore (reporting-only decision)", None),
+                     "web.do_POST → editing.restore (current scope guards recovery)", None),
     "/api/exports": ("export.delivery",
                      "web.do_POST → exports.create (purpose=delivery consumes the gate)", None),
     "/api/export": ("export.delivery",
@@ -376,6 +460,20 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "/api/text-ranges/validate": (None, "-", READ_REASONS["read_model"]),
     # -- read/projection routes
     "/api/check": (None, "-", READ_REASONS["read_model"]),
+    "/api/candidate-preview/file": (None, "-", READ_REASONS["read_download"]),
+    "/api/candidate-preview/status": (None, "-", READ_REASONS["read_model"]),
+    "/api/content/lineage/": (None, "-", READ_REASONS["read_model"]),
+    "/api/content/sources/": (None, "-", READ_REASONS["read_model"]),
+    "/api/content/uploads/": (None, "-", READ_REASONS["read_model"]),
+    "/api/history/plan-restore": (None, "-", READ_REASONS["read_plan"]),
+    "/api/icons/catalog": (None, "-", READ_REASONS["read_model"]),
+    "/api/icons/catalog/file": (None, "-", READ_REASONS["read_download"]),
+    "/api/icons/inspect": (None, "-", READ_REASONS["read_analysis"]),
+    "/api/icons/list": (None, "-", READ_REASONS["read_model"]),
+    "/api/styles/references": (None, "-", READ_REASONS["read_model"]),
+    "/api/styles/references/": (None, "-", READ_REASONS["read_model"]),
+    "/api/ui-state/backups": (None, "-", READ_REASONS["ui_state"]),
+    "/api/view/summary": (None, "-", READ_REASONS["read_model"]),
     "/api/compose/handoff": (None, "-", READ_REASONS["read_model"]),
     "/api/content-plan": (None, "-", READ_REASONS["read_model"]),
     "/api/export-facts": (None, "-", READ_REASONS["read_model"]),
@@ -487,37 +585,75 @@ def cli_surface() -> set[str]:
     legacy = {f"legacy:{name}" for name in
               set(cli._LEGACY_ALIAS) | set(cli._LEGACY_GUIDANCE) | set(cli._LEGACY_RETIRED)}
     legacy |= {f"legacy:build {name}" for name in cli._LEGACY_BUILD_SUBCOMMANDS}
-    return parsed | legacy
+    return parsed | legacy | {' '.join(cli.LEGACY_IMPORT_COMMAND)}
+
+
+def cli_adapter_actions() -> dict[str, str]:
+    """Actual parser dispatch defaults consumed by CLI's shared invoke branch."""
+    from . import cli
+    found = {}
+    def walk(current, words):
+        subparsers = next((action for action in current._actions
+                           if isinstance(action, argparse._SubParsersAction)), None)
+        if subparsers is None:
+            action = current.get_default('collaboration_action')
+            if action is not None:
+                found[' '.join(words)] = action
+        else:
+            for name, child in subparsers.choices.items():
+                walk(child, [*words, name])
+    walk(cli.build_parser(), [])
+    return found
 
 
 def http_surface() -> set[str]:
-    """Every ``/api`` route literal in the HTTP frontends."""
+    """Legacy frontend literals and every exact method-qualified adapter route."""
     import re
     from importlib import resources
     found = set()
-    for filename in ("web.py", "view_server.py", "local_runtime.py"):
+    for filename in ("web.py", "launcher.py", "view_server.py", "local_runtime.py"):
         try:
             text = resources.files("deck_master").joinpath(filename).read_text("utf-8")
         except (FileNotFoundError, ModuleNotFoundError):
             continue
         for match in re.finditer(r"['\"](/api/[^'\"]*)['\"]", text):
             found.add(match.group(1))
+    from .collaboration_api import HTTP_ROUTES
+    found.update(f'{method} {template}' for method, template in HTTP_ROUTES)
     return found
 
 
 def collaboration_surface() -> set[str]:
     """Public functions of the T02 collaboration write path and its migration."""
     import inspect
-    from . import collaboration, collaboration_migration
+    from . import collaboration, collaboration_migration, collaboration_api, external_review, review_import
     found = set()
     for module_name, module in (("collaboration", collaboration),
-                                ("collaboration_migration", collaboration_migration)):
+                                ("collaboration_migration", collaboration_migration),
+                                ("external_review", external_review), ("review_import", review_import)):
         for name, value in vars(module).items():
             if name.startswith("_") or not inspect.isfunction(value):
                 continue
             if getattr(value, "__module__", "") != f"deck_master.{module_name}":
                 continue
             found.add(f"{module_name}.{name}")
+    found.update(f'collaboration_api.invoke[{action}]' for action in collaboration_api._FIELDS)
+    for module_name, names in {'content_production': ('adopt_proposal', 'completion_status'),
+                               'delivery_eligibility': ('describe',)}.items():
+        module = importlib.import_module(f'deck_master.{module_name}')
+        found.update(f'{module_name}.{name}' for name in names if inspect.isfunction(getattr(module, name, None)))
+    return found
+
+
+def public_surface() -> set[str]:
+    """Other canonical business entries and their explicit nonbusiness helpers."""
+    import inspect
+    found = set()
+    for module_name in ('legacy', 'registry', 'samples', 'project_initialization'):
+        module = importlib.import_module(f'deck_master.{module_name}')
+        for name, value in vars(module).items():
+            if not name.startswith('_') and inspect.isfunction(value) and value.__module__ == module.__name__:
+                found.add(f'{module_name}.{name}')
     return found
 
 
@@ -527,6 +663,7 @@ SURFACES = {
     "collaboration": (collaboration_surface, COLLABORATION_ENTRIES),
     "cli": (cli_surface, CLI_ENTRIES),
     "http": (http_surface, HTTP_ENTRIES),
+    "public": (public_surface, PUBLIC_ENTRIES),
 }
 
 # §6.2 boundary actions without a dedicated frontend entry are realized by
@@ -547,6 +684,21 @@ BOUNDARY_VIA: dict[str, tuple[str, ...]] = {
 }
 
 
+def _http_template_matches(template, path):
+    from urllib.parse import unquote
+    expected, actual = template.strip('/').split('/'), path.strip('/').split('/')
+    if len(expected) != len(actual):
+        return False
+    for part, value in zip(expected, actual, strict=True):
+        if part.startswith('{') and part.endswith('}'):
+            value = unquote(value)
+            if not value or '/' in value:
+                return False
+        elif part != value:
+            return False
+    return True
+
+
 def classify(surface: str, entry: str) -> Classification | None:
     table = SURFACES[surface][1]
     row = table.get(entry)
@@ -554,10 +706,19 @@ def classify(surface: str, entry: str) -> Classification | None:
         if entry in legacy_refusal_entries():
             row = (None, "-", READ_REASONS["legacy_refusal"])
     if row is None and surface == "http":
-        for prefix in sorted(HTTP_PREFIX_ENTRIES, key=len, reverse=True):
-            if entry.startswith(prefix):
-                row = HTTP_PREFIX_ENTRIES[prefix]
-                break
+        method, separator, path = entry.partition(' ')
+        qualified = bool(separator and method in ('GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'))
+        matches = []
+        for name, classification in HTTP_ENTRIES.items():
+            verb, sep, template = name.partition(' ')
+            if sep and (not qualified or verb == method) and _http_template_matches(template, path if qualified else entry):
+                matches.append(classification)
+        # An unqualified GET/POST migration path is ambiguous. It cannot be
+        # called a read exemption without knowing the actual HTTP method.
+        if matches and all(value == matches[0] for value in matches):
+            row = matches[0]
+        if row is None and not qualified:
+            row = HTTP_PREFIX_ENTRIES.get(entry)
     if row is None:
         return None
     action, gate, exempt = row

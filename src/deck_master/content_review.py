@@ -209,23 +209,85 @@ def _subjects_digest(subjects) -> str:
 
 
 def author_execution_refs(store, document, subjects) -> set[str]:
-    """Execution identities of the tasks whose results are the reviewed artifacts.
+    """Authors of retained current content, including earlier Page-copy writers.
 
-    A task that never claimed an execution ref still has an identity: its own
-    task id. Either form may appear as a receipt's executor_ref, and neither can
-    count as the independent reviewer.
+    Only adopted refs on the committed ancestry count. Retained visible atoms
+    and notes keep their author across a notes-only or partial copy update;
+    replacing all their content ends that lineage. Proposal refs never became
+    current, so cannot invent authorship. Missing lineage is an explicit gap.
     """
-    wanted = {(ref.get("path"), ref.get("sha256")) for ref in subjects or []}
-    found: set[str] = set()
-    for ref in document.get("tasks") or []:
+    from .content import visible_atoms
+    from .store import StoreError
+
+    def key(ref):
+        return (ref.get("path"), ref.get("sha256"))
+
+    def tokens(obj):
+        schema = obj.get("schema_version")
+        if schema == "deck_page_package.v2":
+            values = {("visible", atom["atom_id"], atom["text"]) for atom in visible_atoms(obj)
+                      if str(atom.get("text") or "").strip()}
+            values.update(("notes", line.strip()) for line in (obj.get("speaker_notes") or "").splitlines() if line.strip())
+            if not values:
+                values.add(("visual", canonical_json_bytes(obj.get("visual_spec") or {}).decode()))
+            return values
+        if schema == "narrative.v1":
+            return {("node", node["node_id"], canonical_json_bytes(node).decode()) for node in obj.get("nodes", [])}
+        if schema in ("content_plan.v1", "content_plan.v2"):
+            return {("plan_input", canonical_json_bytes(obj.get("input") or {}).decode())}
+        return set()
+
+    wanted = {key(ref) for ref in subjects or []}
+    retained = {}
+    for ref in subjects or []:
+        try:
+            obj = store.read_object_json(ref)
+        except (ValueError, UnicodeError):
+            continue  # a final binary subject has no editorial ancestry
+        except (StoreError, OSError) as exc:
+            raise ModelError("content_review/author_lineage", "reviewed content is unreadable") from exc
+        if obj.get("schema_version") == "deck_page_package.v2":
+            retained[("page", obj["page_id"])] = tokens(obj)
+        elif obj.get("schema_version") == "narrative.v1":
+            retained[("narrative", None)] = tokens(obj)
+        elif obj.get("schema_version") in ("content_plan.v1", "content_plan.v2"):
+            retained[("content_plan", None)] = tokens(obj)
+    adopted = set(wanted)
+    revision = document.get("revision_id")
+    seen = set()
+    task_refs = {}
+    while revision:
+        if revision in seen:
+            raise ModelError("content_review/author_lineage", "cyclic committed ancestry")
+        seen.add(revision)
+        try:
+            snap = document if revision == document["revision_id"] else store.load_document(revision)
+            task_refs.update({key(ref): ref for ref in snap.get("tasks") or []})
+            pointers = {("page", entry["page_id"]): entry["page"] for entry in snap.get("pages") or []}
+            pointers.update({(role, None): snap[role] for role in ("narrative", "content_plan") if snap.get(role)})
+            for identity in list(retained):
+                ref = pointers.get(identity)
+                if not ref:
+                    del retained[identity]
+                    continue
+                retained[identity].intersection_update(tokens(store.read_object_json(ref)))
+                if retained[identity]:
+                    adopted.add(key(ref))
+                else:
+                    del retained[identity]
+        except (StoreError, OSError, ValueError, KeyError, TypeError) as exc:
+            raise ModelError("content_review/author_lineage", "committed author lineage requires recovery") from exc
+        revision = snap.get("parent_revision_id")
+        if not retained:
+            break
+    found = set()
+    for ref in task_refs.values():
         try:
             task = store.read_object_json(ref)
-        except Exception:  # noqa: BLE001
-            continue
-        produced = {(item.get("path"), item.get("sha256")) for item in task.get("result_refs") or []}
-        if not produced & wanted:
-            continue
-        found.add(task["execution_ref"] if task.get("execution_ref") else task["task_id"])
+        except (StoreError, OSError, ValueError, TypeError) as exc:
+            raise ModelError("content_review/author_lineage", "Task author facts require recovery") from exc
+        if {key(item) for item in task.get("result_refs") or []} & adopted:
+            found.add(task.get("execution_ref") or task["task_id"])
     return found
 
 
