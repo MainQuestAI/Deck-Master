@@ -200,6 +200,26 @@ executions. Actual over-budget calls remain recorded and cannot be consumed as
 equal-budget results. Verification and production calls are separately counted.
 This is not a claim that phase count equals the original twelve whole workflows.
 
+## Separate native image observer
+
+`image_controller.py` records separately admitted bounded image trials. Its
+global budget pins one canonical ledger root before the first call; every batch
+uses the same root and whole-workflow/repetition/page/arm keys. A new batch or a
+copied ledger cannot reset consumed/unknown rights. Each prepared trial binds
+the real own-installed Task/Request/Attempt, authorization, exact tool arguments
+and reference bytes. Root alone makes the actual literal image-tool call; only
+after its genuine completion may the new observer seal and settle it. It never
+reads historical pilot keys. Each new observer root owns its own private key,
+which must never enter reports or portable evidence.
+
+The independent R2 result for observer bytes `bf3998cfb8e8bd0f3aaafb743859fac42dc355a282c5ecab07045877767a33f7`
+and common controller `729c3edb8a632a2fa6e2f2a75d7e20f84252448a24d02d87f11f5f5772e24ec7`
+is limited to unique-ledger functionality and actual installed-metadata
+compatibility. Its synthetic engineering cases do not constitute actual native
+tool/registry admission, E2 effects, or a broader assurance conclusion. Root must
+complete the separate real native positive/negative admission before using such
+evidence. Content GENTRY does not admit images.
+
 The engineering unit suite uses explicitly synthetic observations and is not
 Host, model-quality, GENTRY, E1/E2/E3 or human evidence. Actual Root native
 positive/negative admission remains required before benchmark execution. Human
