@@ -99,6 +99,18 @@ interruption may retain immutable orphan bytes and requires reconciliation.
 This technical sequence must be shared, frozen and independently reviewed for
 both arms before a Writer runs. It does not loosen the product's envelope schema.
 
+The separate [public layer supplement](input-revision-layer-rules.v1.json) states
+the unchanged consumer's new/existing Page and speech boundaries. Within a layer,
+Page identity is unique by `page_id`, while Narrative and Plan each permit one
+proposal. A valid existing Page can share its canonical Ref across `page_copy`
+and `speech`; different Refs across those layers are also legal. Supply one
+sidecar per unique new object. The adapter validates all layer identities before
+storing each object once. The SDK still decides whether each layer is legal:
+speech cannot add a Page, even when page_copy adds it in that same result, and
+speech cannot carry a visible-body change. A new Page can carry initial notes
+through an authorized page_copy proposal. The supplement must be pinned and
+actually dispatched before fresh Writer runs; it does not revise earlier runs.
+
 An invocation observation contains `observation_kind`, `assurance:"host_attested"`,
 `observed_at_utc`, actual `project_id`/`task_id`, and `spawn` with `tool`, actual
 `canonical_task_name`/`returned_task_name`, `fork_turns`, `inherited_identities`.

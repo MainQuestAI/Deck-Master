@@ -5,6 +5,7 @@ do not run a benchmark Writer, establish GENTRY admission, or grade content.
 """
 import importlib.util
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -336,3 +337,153 @@ def test_input_revision_objects_are_frozen_before_sdk_storage_and_never_rewritte
         assert outcome["status"] == "accepted" and outcome["variant"] == "input_revision"
         assert (target / "raw-native-output").read_bytes() == result.read_bytes()
         assert not journal.unfinished()
+
+
+def _page_layer_materialization(tmp_path, monkeypatch, *, mode):
+    """Actual SDK project/Task; only the native observation boundary is synthetic.
+
+    This seam tests adapter storage and SDK acceptance, not native provenance.
+    The separate observation tests above cover the recorder's immutable intake.
+    """
+    from deck_master import collaboration, service
+    from deck_master.models import canonical_json_bytes
+    from test_compose_v2_phases import _deck_with_pages, _page, _plan_input
+
+    project, store = _deck_with_pages(tmp_path)
+    if mode in {"new-page-speech", "new-page-initial-notes"}:
+        document = store.load_document()
+        current = document["collaboration"]["request"]
+        collaboration.start_request(project, input={"intent": "full_deck", "content_intent": None,
+            "instruction_evidence": {"kind": "host_attested_instruction",
+                "text": "Synthetic engineering authorization explicitly includes p-new."},
+            "scope": {**current["scope"], "page_ids": ["p1", "p-new"], "page_manifest_ref": None},
+            "replace_request_id": current["request_id"]},
+            base_revision=document["revision_id"], operation_id="rq-c02-include-new-page")
+    service.inputs_update(project, patch={"reason": "Synthetic Page layer regression",
+        "task_patch": {"audience": "Engineering readers"}},
+        base_revision=store.current_revision_id(), operation_id="rq-c02-inputs")
+    task = next(store.read_object_json(ref) for ref in store.load_document()["tasks"]
+                if store.read_object_json(ref).get("intent") == "input_revision"
+                and store.read_object_json(ref)["status"] == "awaiting_host")
+    executor = "host:rq-c02-synthetic-seam-not-native"
+    service.task_start(project, task_id=task["task_id"], execution_ref=executor,
+        supported_protocols=[task["protocol_version"]], capabilities=task["required_capabilities"])
+    task = c.task_for(store, task["task_id"])
+    document = store.load_document()
+    original = store.read_object_json(document["pages"][0]["page"])
+    copy_page = deepcopy(original)
+    copy_page["speaker_notes"] = "Synthetic engineering cue; no audience test was conducted."
+    copy_page["content_mapping"]["speech_segments"] = [{"segment_id": "rq-c02-cue",
+        "start_codepoint": 0, "end_codepoint": len(copy_page["speaker_notes"]),
+        "narrative_node_ids": ["n1"], "kind": "cue", "estimated_seconds": 12}]
+    speech_page = copy_page
+    if mode == "different-layer-refs":
+        speech_page = deepcopy(copy_page)
+        copy_page["customer_visible"]["body_blocks"][0]["text"] += " Synthetic visible-copy change."
+    elif mode in {"new-page-speech", "new-page-initial-notes"}:
+        copy_page = _page(store, document, "p-new", notes=copy_page["speaker_notes"])
+        speech_page = copy_page
+    elif mode == "speech-body-change":
+        copy_page["customer_visible"]["title"] += " Unauthorized speech body change"
+
+    target = tmp_path / "synthetic-stage" / "executions" / "0001"
+    target.mkdir(parents=True)
+    c.save(target.parent.parent / "dispatch.json", {"task_id": task["task_id"]})
+    objects = []
+    by_digest = {}
+
+    def frozen_ref(obj):
+        hashed = c.digest(canonical_json_bytes(obj))
+        ref = {"path": f".deckmaster/objects/{hashed[:2]}/{hashed}.json", "sha256": hashed}
+        if hashed not in by_digest:
+            frozen = c.save(target / f"object-{len(objects)}.json", obj)
+            objects.append({"frozen": frozen, "declared_ref": ref})
+            by_digest[hashed] = obj
+        return ref
+
+    proposals = [{"layer": "page_copy", "ref": frozen_ref(copy_page)},
+                 {"layer": "speech", "ref": frozen_ref(speech_page)}]
+    changed_layers = ["page_copy", "speech"]
+    if mode == "duplicate-page-ref":
+        proposals.append(deepcopy(proposals[0]))
+    elif mode == "duplicate-page-id":
+        duplicate = deepcopy(copy_page)
+        duplicate["customer_visible"]["title"] += " Second copy proposal for the same page"
+        proposals.append({"layer": "page_copy", "ref": frozen_ref(duplicate)})
+    elif mode == "duplicate-speech-id":
+        duplicate = deepcopy(speech_page)
+        duplicate["speaker_notes"] += " Another speech proposal."
+        duplicate["content_mapping"]["speech_segments"][0]["end_codepoint"] = len(duplicate["speaker_notes"])
+        proposals.append({"layer": "speech", "ref": frozen_ref(duplicate)})
+    elif mode == "duplicate-sidecar":
+        objects.append(deepcopy(objects[0]))
+    elif mode == "new-page-initial-notes":
+        proposals = [proposals[0], {"layer": "plan", "ref": frozen_ref(_plan_input(document, ["p1", "p-new"]))}]
+        changed_layers = ["page_copy", "plan"]
+    elif mode == "outside-layer":
+        changed_layers = ["page_copy"]
+
+    envelope = {"schema_version": "compose_result.v2", "kind": "compose", "variant": "input_revision",
+        "task_id": task["task_id"], "operation_id": task["operation_id"],
+        "produced_against": task["produced_against"],
+        "eligibility_digest": task["collaboration_binding"]["eligibility_digest"], "usage_events": [],
+        "payload": {"changed_layers": changed_layers, "proposals": proposals,
+            "diff": {"input_digest": task["input_digest"],
+                "summary": "Synthetic regression of complete Page object layer identities.",
+                "changed_page_ids": [copy_page["page_id"]]}}}
+    raw = c.save(target / "synthetic-envelope.json", envelope)
+    proof = {"raw": raw, "native_objects": objects,
+             "scope": "SYNTHETIC_ENGINEERING_SEAM_NO_NATIVE_COMPLETION"}
+    invocation = {"executor": executor, "role": "initial_writer"}
+    monkeypatch.setattr(c, "observed_result", lambda *_: (invocation, target, envelope, proof))
+    return c.Journal(tmp_path / "recording"), {"project": str(project)}, store, task, by_digest, copy_page
+
+
+@pytest.mark.parametrize("mode", ["same-ref", "different-layer-refs", "new-page-initial-notes"])
+def test_page_objects_materialize_once_per_identity_and_actual_sdk_accepts(tmp_path, monkeypatch, mode):
+    journal, state, store, task, objects, proposed_page = _page_layer_materialization(tmp_path, monkeypatch, mode=mode)
+    before = store.load_document()
+    materialized = c.materialize_native_objects(journal, state, "synthetic-stage", 1)
+    assert len(materialized["refs"]) == len(objects)
+    assert store.load_document() == before
+    puts = [event for event in journal.events() if event["kind"] == "sdk_intent"
+            and event["data"]["operation"] == "Store.put_json_object.exact_frozen_native_proposal"]
+    assert len(puts) == len(objects)
+    accepted = c.accept(journal, state, "synthetic-stage", 1)
+    assert accepted["status"] == "accepted" and accepted["adopted"] is True
+    after = store.load_document()
+    assert after["parent_revision_id"] == before["revision_id"]
+    entry = next(entry for entry in after["pages"] if entry["page_id"] == proposed_page["page_id"])
+    assert store.read_object_json(entry["page"]) == proposed_page
+    assert c.task_for(store, task["task_id"])["status"] == "completed"
+
+
+@pytest.mark.parametrize("mode", ["duplicate-page-ref", "duplicate-page-id", "duplicate-speech-id",
+                                  "duplicate-sidecar", "outside-layer"])
+def test_page_proposal_identity_errors_reject_all_objects_before_any_store_write(tmp_path, monkeypatch, mode):
+    journal, state, store, _, _, _ = _page_layer_materialization(tmp_path, monkeypatch, mode=mode)
+    before = {str(path.relative_to(store.project_root)): path.read_bytes()
+              for path in store.project_root.rglob("*") if path.is_file()}
+    with pytest.raises(c.CampaignError):
+        c.materialize_native_objects(journal, state, "synthetic-stage", 1)
+    after = {str(path.relative_to(store.project_root)): path.read_bytes()
+             for path in store.project_root.rglob("*") if path.is_file()}
+    assert before == after
+    assert not journal.events()
+
+
+@pytest.mark.parametrize(("mode", "error"), [("new-page-speech", "speech cannot add a Page"),
+                                           ("speech-body-change", "speech changes only notes")])
+def test_runtime_still_refuses_illegal_speech_after_adapter_identity_checks(tmp_path, monkeypatch, mode, error):
+    from deck_master.tasks import EnvelopeError
+    journal, state, store, task, objects, _ = _page_layer_materialization(tmp_path, monkeypatch, mode=mode)
+    before = store.load_document()
+    materialized = c.materialize_native_objects(journal, state, "synthetic-stage", 1)
+    assert len(materialized["refs"]) == len(objects) == 1
+    assert store.load_document() == before
+    # Valid immutable Page bytes are not semantic adoption. The unchanged SDK
+    # checks original current membership/body and rejects the illegal envelope.
+    with pytest.raises(EnvelopeError, match=error):
+        c.accept(journal, state, "synthetic-stage", 1)
+    assert store.load_document() == before
+    assert c.task_for(store, task["task_id"])["status"] == "running"

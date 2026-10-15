@@ -713,12 +713,16 @@ def materialize_native_objects(journal, state, stage, ordinal):
             or envelope.get("produced_against") != task["produced_against"]
             or envelope.get("eligibility_digest") != (task.get("collaboration_binding") or {}).get("eligibility_digest")):
         raise CampaignError("native objects require the exact claimed current input_revision Task and unchanged envelope binding")
-    proposals = envelope.get("payload", {}).get("proposals", [])
+    payload = envelope.get("payload", {})
+    proposals = payload.get("proposals", [])
+    layers = payload.get("changed_layers")
+    if (not isinstance(layers, list) or not layers
+            or any(not isinstance(layer, str) or layer not in content_production.CHANGED_LAYERS for layer in layers)
+            or not isinstance(proposals, list) or any(not isinstance(proposal, dict) for proposal in proposals)):
+        raise CampaignError("native proposals require the declared input_revision layers and object collection")
     declared = [proposal.get("ref") for proposal in proposals]
     if any(not isinstance(ref, dict) or set(ref) != {"path", "sha256"} for ref in declared):
         raise CampaignError("each native proposal declares its complete canonical Ref")
-    if len({(ref["path"], ref["sha256"]) for ref in declared}) != len(declared):
-        raise CampaignError("duplicate native proposal Refs are ambiguous")
     pending, seen = [], set()
     for item in objects:
         check_ref(item["frozen"])
@@ -731,6 +735,7 @@ def materialize_native_objects(journal, state, stage, ordinal):
         pending.append((obj, expected, item["frozen"]))
     revision = store.current_revision_id()
     prepared = {ref["sha256"]: obj for obj, ref, _ in pending}
+    identities = set()
     for proposal in proposals:
         ref = proposal["ref"]
         try:
@@ -738,6 +743,8 @@ def materialize_native_objects(journal, state, stage, ordinal):
         except Exception as exc:
             raise CampaignError("missing native sidecar or proposal Ref outside this actual Store") from exc
         layer = proposal.get("layer")
+        if layer not in layers:
+            raise CampaignError("each native proposal belongs to its declared changed layer")
         canonical = digest(canonical_json_bytes(obj))
         if ref != {"path": f".deckmaster/objects/{canonical[:2]}/{canonical}.json", "sha256": canonical}:
             raise CampaignError("formal proposal has a noncanonical or foreign object Ref")
@@ -756,6 +763,14 @@ def materialize_native_objects(journal, state, stage, ordinal):
             check_page(obj)
         else:
             raise CampaignError("unknown native proposal layer")
+        # A complete Page can be referenced by both copy and speech. The public
+        # consumer resolves each layer independently, then checks its semantics.
+        # Within a layer it permits one proposal per Page (or singleton layer),
+        # including when conflicting proposals carry different canonical Refs.
+        identity = (layer, obj["page_id"] if layer in {"page_copy", "speech"} else None)
+        if identity in identities:
+            raise CampaignError("duplicate native proposal identity within its layer")
+        identities.add(identity)
     # Every byte/ref/set/type check above finishes before the first Store put.
     # An I/O interruption can leave immutable orphan objects, never a current
     # manuscript adoption; its unresolved intent requires real reconciliation.

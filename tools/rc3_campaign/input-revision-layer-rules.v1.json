@@ -1,0 +1,38 @@
+{
+  "format": "rc3-public-input-revision-layer-rules.v1",
+  "scope": "Public consumer rules for serialization and layer identity only. This document supplies no task content, missing facts, diff, notes or time estimates.",
+  "approval": "A future registration must pin these exact bytes and its independent review. It must be dispatched symmetrically before any new Writer output. Existing registrations and outputs are unchanged.",
+  "source": {
+    "path": "src/deck_master/content_production.py",
+    "sha256": "51cb80b4d62527a9bd2c0edf8aaba4725ec969524200a0c0b50fa8de005742a3",
+    "consumer": "_accept_input_revision",
+    "contract": "src/deck_master/resources/contracts/compose-result.v2.schema.json"
+  },
+  "input_revision": {
+    "envelope": "Use the actual Task's unchanged compose_result.v2 metadata and variant=input_revision. payload declares non-empty changed_layers, complete proposal Refs and an actual diff. Only layers authorized by the Task are permitted.",
+    "layers": ["narrative", "plan", "page_copy", "speech"],
+    "singletons": "Narrative and Plan each have at most one proposal in their layer. Every declared changed layer needs a substantive proposal, except an authorized page_copy removal represented by the diff.",
+    "page_identity": "page_copy and speech each carry complete deck_page_package.v2 objects with complete content_mapping. Each layer permits at most one proposal for a given page_id, even when duplicate proposals have different Refs.",
+    "cross_layer_refs": "An existing Page may use the same canonical Ref in page_copy and speech if that complete Page independently satisfies both layers. Different Refs for the same Page across those two layers are also permitted. Runtime combines the copy proposal and speech fields; the two Refs need not match.",
+    "object_storage": "Provide one original sidecar per distinct new canonical JSON object. The adapter freezes all original files, validates the complete object/Ref/layer-identity collection before writing, and materializes each unique object once. It does not fill or rewrite the formal envelope. Existing own-Store Refs remain subject to the same identity checks."
+  },
+  "new_and_existing_pages": {
+    "new_page_copy": "Only authorized page_copy can introduce a Page, subject to actual request/Task membership scope, resulting order, Plan, mapping and all other Runtime checks. A new Page object may contain its initial speaker_notes and speech_segments; their presence alone does not mean that a separate speech-layer proposal is required.",
+    "existing_page_copy": "For an existing Page, page_copy without a declared speech layer cannot silently change its speaker_notes. A declared speech layer must have its own valid proposal; a label alone does not authorize a change.",
+    "speech_membership": "speech cannot add a Page. Existing means present in the Document before this result. A Page introduced by page_copy in the same result is still new for speech and cannot be proposed in that speech layer.",
+    "speech_fields": "Each speech proposal is checked against the original stored Page, not against a newly changed page_copy proposal. After removing speaker_notes and content_mapping.speech_segments, the remaining original and speech Page objects must match. Runtime copies only notes and speech segments from that proposal.",
+    "speech_mapping": "Speech must meet the actually requested kind, complete mapping and honest per-segment estimated_seconds. The adapter and Root do not invent estimates, fill nodes or repair source claims. A requested verbatim policy still requires actual verbatim content."
+  },
+  "distinct_speech_variant": "The separate compose_result.v2 variant=speech uses payload.updates[] with page_id, page_ref, speaker_notes and speech_segments. Do not substitute that shape for input_revision's layer/proposal structure, or vice versa.",
+  "exact_public_checks": [
+    "for layer in (\"page_copy\", \"speech\"):",
+    "if pid in seen_pages:",
+    "if layer == \"speech\":",
+    "if pid not in entries:",
+    "speech cannot add a Page",
+    "speech changes only notes and speech segments",
+    "page_copy cannot silently change speech"
+  ],
+  "authority_and_outcome": "Object materialization is not SDK acceptance or professional qualification. The actual unchanged Runtime remains the authority for semantic, scope, source, Plan, mapping and atomic adoption checks. SDK rejection preserves current; immutable unadopted objects can remain.",
+  "all_arms": "Share this technical supplement before new outputs for all comparison arms. Each arm follows its own installed public contracts. An arm without this consumer keeps its own format and actual limitations; native-only reference content is not forced into Deck Master objects."
+}
