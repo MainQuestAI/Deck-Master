@@ -1,0 +1,74 @@
+{
+  "parent": "02a6d44da85cf4ecde9d84d4587f648587c41597",
+  "level": "L1 actual Runtime diagnostic; no provider/human/fee claim",
+  "rows": [
+    {
+      "permission": "restricted",
+      "underlying": {
+        "type": "ModelError",
+        "path": "design_context/allowed_asset_ids",
+        "detail": "asset 'logo' is missing or not allowed for external use"
+      },
+      "R4_projection": {
+        "requirement": "fidelity_only",
+        "declared_requirement": "fidelity_only",
+        "requirement_origin": "confirmed_manuscript",
+        "requirement_reasons": [],
+        "required": true,
+        "satisfied": false,
+        "status": "unreadable",
+        "units": [
+          "page_copy",
+          "progression"
+        ],
+        "satisfied_units": [],
+        "missing_units": [
+          "page_copy",
+          "progression"
+        ],
+        "blocking_findings": [],
+        "review_refs": [],
+        "needs_reviewer": false,
+        "via": null,
+        "reasons": [
+          "stored applicability evidence is unreadable; preserve and inspect the original records"
+        ]
+      },
+      "source_unchanged_by_both_reads": true
+    },
+    {
+      "permission": "unspecified",
+      "underlying": {
+        "type": "ModelError",
+        "path": "design_context/allowed_asset_ids",
+        "detail": "asset 'logo' is missing or not allowed for external use"
+      },
+      "R4_projection": {
+        "requirement": "fidelity_only",
+        "declared_requirement": "fidelity_only",
+        "requirement_origin": "confirmed_manuscript",
+        "requirement_reasons": [],
+        "required": true,
+        "satisfied": false,
+        "status": "unreadable",
+        "units": [
+          "page_copy",
+          "progression"
+        ],
+        "satisfied_units": [],
+        "missing_units": [
+          "page_copy",
+          "progression"
+        ],
+        "blocking_findings": [],
+        "review_refs": [],
+        "needs_reviewer": false,
+        "via": null,
+        "reasons": [
+          "stored applicability evidence is unreadable; preserve and inspect the original records"
+        ]
+      },
+      "source_unchanged_by_both_reads": true
+    }
+  ]
+}

@@ -12,7 +12,7 @@ from deck_master import collaboration, eligibility, generation, service, tasks
 from deck_master.models import ModelError, bump_revision, default_design_context
 from deck_master.production import project_prompt
 from deck_master.store import Store, StoreError
-from rc3_fixtures import authorize_scope, claim_fixture_task, evidence_for, settle_fidelity_review
+from rc3_fixtures import authorize_scope, claim_fixture_task, evidence_for, settle_fidelity_review, source_snapshot
 
 DRAFT = Path(__file__).resolve().parents[2] / 'docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/compose.json'
 
@@ -234,9 +234,11 @@ def test_restricted_assets_never_dispatched(tmp_path, permission):
     s.commit_change(base_revision=before['revision_id'], document=injected,
         operation_id=injected['change']['operation_id'])
     before_dispatch = s.load_document()
+    snapshot = source_snapshot(s.project_root)
     with pytest.raises(ModelError, match='not allowed for external use'):
         dispatch(s)
     assert s.load_document() == before_dispatch
+    assert source_snapshot(s.project_root) == snapshot
 
 
 def test_effective_overrides_and_canvas(tmp_path):

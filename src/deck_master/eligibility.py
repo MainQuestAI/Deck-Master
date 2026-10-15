@@ -986,11 +986,15 @@ def preproduction_state(store: Store, document: dict) -> dict:
     try:
         status = content_review.preproduction_status(store, document)
         qualified = content_review.qualify_for_production(store, document)
-    except (ModelError, StoreError):
-        # A damaged immutable record must not make the read-only project
-        # projection disappear. It cannot establish a passing review either.
-        # Keep the production resolver strict; report this missing proof at
-        # the eligibility boundary without repairing or skipping any object.
+    except ModelError as exc:
+        # Only the strict adopted-generation lineage reader reports this
+        # path. A damaged Task must not erase read-only recovery, but asset
+        # I/O and current design/permission errors keep their own contracts.
+        # Never turn those semantic failures into missing review evidence.
+        if exc.path != 'blueprint/provenance/generation_request':
+            raise
+        # Keep the production resolver strict without repairing or skipping
+        # any immutable object or treating the missing proof as a pass.
         state = content_review.requirement_state(store, document)
         units = content_review.required_units(store, document)
         return {'requirement': state['effective'], 'declared_requirement': state['declared'],

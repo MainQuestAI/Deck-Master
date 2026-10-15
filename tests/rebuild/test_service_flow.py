@@ -10,7 +10,7 @@ import pytest
 
 import deck_master.service as service
 from page_visual_helpers import pass_page_review
-from rc3_fixtures import authorize_scope, claim_fixture_task, evidence_for, settle_fidelity_review
+from rc3_fixtures import authorize_scope, claim_fixture_task, evidence_for, settle_fidelity_review, source_snapshot
 
 
 def _prepare_production(project, *, actions, max_external_calls, scenario,
@@ -643,6 +643,19 @@ def test_design_rejects_unreadable_asset_and_old_project_gets_recovery_hint(tmp_
     image = tmp_path / 'asset.png'
     Image.new('RGB', (8, 8), 'blue').save(image)
     service.import_asset(project, asset_id='logo', kind='logo', file_path=image)
+    # Reach the original asset-recovery path under a real, narrowly bounded
+    # production instruction, rather than stopping at absent authority.
+    scope = {'subject': 'pages', 'page_ids': ['p1'], 'page_manifest_ref': None,
+        'external_artifact_ref': None, 'layers': ['blueprint'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False,
+        'purpose': 'working'}
+    authorize_scope(project, actions=['dispatch.blueprint'], scope=scope,
+        max_external_calls=1, max_candidate_count=0, adoption_policy='within_scope',
+        evidence=evidence_for(project, text='L1 test: prepare at most one blueprint for p1 '
+            'only if its actual assets and review are valid; no provider call is made.',
+            locator='L1:unreadable-asset:bounded-production'))
+    settle_fidelity_review(project, page_ids=['p1'], execution_ref='L1-unreadable-asset-fidelity',
+        scenario='Exact confirmed one-page manuscript before asset fault injection')
     store = Store(project)
     before = store.load_document()
     changed = deepcopy(before['design_context'])
@@ -658,9 +671,13 @@ def test_design_rejects_unreadable_asset_and_old_project_gets_recovery_hint(tmp_
     damaged['design_context'] = changed
     store.commit_change(base_revision=before['revision_id'], document=damaged,
                         operation_id='old-bad-asset')
+    snapshot = source_snapshot(project)
     result = service.continue_project(project)
     assert result['status'] == 'needs_input'
     assert result['findings'][0]['code'] == 'broken_asset_reference'
+    assert result['findings'][0]['field'] == 'asset:logo'
+    assert result['next_action'] == 'restore_or_replace_asset'
+    assert source_snapshot(project) == snapshot
 
 
 def test_canvas_change_invalidates_all_pages_groupwise(tmp_path):
