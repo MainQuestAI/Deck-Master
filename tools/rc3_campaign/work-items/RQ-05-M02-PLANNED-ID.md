@@ -27,3 +27,13 @@ SDK Page/claim/frozen Request/allowance/Attempt before a single charged dispatch
 Engineering observation/install seams remain explicit. No model/image call or
 formal M02 effect is claimed. Freeze a separate commit for independent review
 and re-review; previous code reviews and CI retain their exact source identity.
+
+R1 independently reproduced a same-use late-binding defect in 1057523: an actual
+claimed live-02 Task/right could charge the still-null live-01 leaf. Static
+planning validation alone does not enforce late identity. Keep that failure;
+require M02's actual Page ID to equal its selected original planned label at
+begin, preparation and saved-preparation consumption. Recheck explicit handoff
+leaf/row identity before charging, including a previously mismatched preparation.
+Test real same-use rights against the wrong leaf, the legitimate leaf, and an
+unchanged non-M02 late-binding control. No additional restriction on other cases,
+budget reset, altered Runtime right or broader phase permission is introduced.

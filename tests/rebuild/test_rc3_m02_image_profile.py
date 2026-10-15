@@ -104,3 +104,71 @@ def test_unbound_policy_still_requires_real_sdk_page_attempt_and_right(flow, tmp
     e.mark_dispatch(ledger, "live-p1", boot["path"])
     row = e.inspect_accounting(ledger)["all_rows"][0]
     assert row["page_id"] == "p1" and row["attempt_id"] == attempt["attempt_id"]
+
+
+def same_use_null_slots(flow, tmp_path, monkeypatch, *, case="M02"):
+    from test_rc3_image_events import fixture_request_instruction, handoff
+    parent = {"parent_id": "original-flow", "matrix_slot": case, "case": case,
+        "whole_run_id": "synthetic-same-use-slots", "repetition": 1, "arm": "B", "max_calls": 2}
+    ledger, config, boot = event_setup(tmp_path, monkeypatch, parent=parent,
+        scope_specs=[("live", "live", ["p1", "p2"], fixture_request_instruction(flow))],
+        page_id_bindings={"p1": None, "p2": None})
+    start(flow); frozen = freeze(flow)
+    binding = handoff(tmp_path, config, flow, {"allowance_id": "call-1"}, slot="live")
+    binding.update(page_id="p1", leaf_id="live-p2")
+    args = {"task_id": flow[2]["task_id"], "allowance_id": "call-1",
+        "execution_ref": EXECUTION, "request_id": frozen["request_id"]}
+    return ledger, config, boot, frozen, binding, args
+
+
+def test_m02_begin_rejects_another_null_slot_in_same_use(flow, tmp_path, monkeypatch):
+    from rc3_fixtures import source_snapshot
+    ledger, config, _, _, binding, args = same_use_null_slots(flow, tmp_path, monkeypatch)
+    before = source_snapshot(flow[0])
+    with pytest.raises(ValueError, match="planned Page"):
+        e.guard_call_begin(config, binding, "p1", args)
+    assert source_snapshot(flow[0]) == before
+    assert e.inspect_accounting(ledger)["total_charged"] == 0
+
+
+def test_m02_prepare_rejects_another_null_slot_despite_real_same_use_right(flow, tmp_path, monkeypatch):
+    from rc3_fixtures import source_snapshot
+    ledger, _, _, frozen, binding, _ = same_use_null_slots(flow, tmp_path, monkeypatch)
+    attempt = begin(flow, frozen); binding["attempt_id"] = attempt["attempt_id"]
+    before = source_snapshot(flow[0])
+    with pytest.raises(ValueError, match="planned Page"):
+        e.prepare_page_call(ledger, binding, "live-p2", attempt["attempt_id"])
+    assert source_snapshot(flow[0]) == before
+    assert not e._call_dir(ledger, "live-p2").exists()
+    assert e.inspect_accounting(ledger)["total_charged"] == 0
+
+
+def test_m02_dispatch_rechecks_a_mismatched_preparation(flow, tmp_path, monkeypatch):
+    from rc3_fixtures import source_snapshot
+    ledger, _, boot, frozen, binding, _ = same_use_null_slots(flow, tmp_path, monkeypatch)
+    attempt = begin(flow, frozen); binding["attempt_id"] = attempt["attempt_id"]
+    # Explicit validation seam constructs the historical bug's preparation.
+    # Restore the guard before dispatch; no real image/model call is made.
+    with monkeypatch.context() as seam:
+        seam.setattr(e, "_require_m02_page_id", lambda *_args: None, raising=False)
+        e.prepare_page_call(ledger, binding, "live-p2", attempt["attempt_id"])
+    before = source_snapshot(flow[0])
+    with pytest.raises(ValueError, match="planned Page"):
+        e.mark_dispatch(ledger, "live-p2", boot["path"])
+    assert source_snapshot(flow[0]) == before
+    assert not (e._call_dir(ledger, "live-p2") / "dispatch-mark.json").exists()
+    assert e.inspect_accounting(ledger)["total_charged"] == 0
+
+
+@pytest.mark.parametrize("case", ["M02", "Q4"])
+def test_null_slot_late_binding_m02_matches_planned_id_other_cases_keep_semantics(flow, tmp_path, monkeypatch, case):
+    ledger, config, boot, frozen, binding, args = same_use_null_slots(flow, tmp_path, monkeypatch, case=case)
+    if case == "M02":
+        binding["leaf_id"] = "live-p1"
+    assert e.guard_call_begin(config, binding, "p1", args)["attempt_id"] is None
+    attempt = begin(flow, frozen); binding["attempt_id"] = attempt["attempt_id"]
+    e.prepare_page_call(ledger, binding, binding["leaf_id"], attempt["attempt_id"])
+    row = e.mark_dispatch(ledger, binding["leaf_id"], boot["path"])
+    assert row["page_id"] == "p1"
+    assert row["page_label"] == ("p1" if case == "M02" else "p2")
+    assert e.inspect_accounting(ledger)["total_charged"] == 1

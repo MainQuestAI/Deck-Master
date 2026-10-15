@@ -235,6 +235,11 @@ def _scope(config, binding):
     return policy, parent, scope
 
 
+def _require_m02_page_id(parent, leaf, page_id, binding):
+    if parent["case"] == "M02":
+        require(leaf and page_id == leaf["page_label"] and binding.get("leaf_id") in {None, leaf["leaf_id"]}, "M02 actual Page must equal its own planned Page ID and leaf")
+
+
 def validate_scope_binding(config, binding, *, before_begin=False):
     require(binding.get("format") == HANDOFF, "use the explicit actual scope handoff")
     policy, parent, scope = _scope(config, binding)
@@ -330,6 +335,7 @@ def guard_call_begin(config, binding, page_id, arguments):
     eligibility.guard(store, doc, "call.begin", context={"task": task, "allowance_id": binding["allowance_id"], "targets": {"page_ids": [page_id]}})
     leaves = [v for v in facts["scope"]["leaves"] if v.get("page_id") == page_id or v.get("page_id") is None and v["leaf_id"] == binding.get("leaf_id")]
     require(len(leaves) == 1, "bind one preregistered actual Page leaf before begin")
+    _require_m02_page_id(facts["parent"], leaves[0], page_id, binding)
     with b.locked(root):
         root, actual_config, policy, frontier = load(root)
         require(actual_config == config, "begin must use the exact active event registration")
@@ -351,6 +357,7 @@ def prepare_page_call(root, binding, leaf_id, attempt_id):
         require(leaf, "leaf does not belong to this real scope")
         page_id = leaf.get("page_id") or binding.get("page_id")
         require(page_id, "bind an actual Page before preparation, not a future placeholder")
+        _require_m02_page_id(spec["parent"], leaf, page_id, binding)
         actual = inspect_own_rights(config, binding, page_id, attempt_id)
         require(actual["native_product_capability"] == "OWN_NATIVE_IMAGE_REGISTRY" or spec["scope"].get("allow_A0_host_observed_only") is True, "own native capability blocked; no B adapter transplant")
         dest = _call_dir(root, leaf_id)
@@ -391,6 +398,11 @@ def _preparation(root, config, leaf_id):
     dest = _call_dir(root, leaf_id); p = read(dest / "preparation.json")
     require(p["registration_sha256"] == digest(canonical(config)), "preparation was rebound to another registration")
     require(read(dest / "literal-tool-arguments.json") == p["tool_arguments"], "literal tool arguments changed")
+    _, parent, scope = _scope(config, p["scope_binding"])
+    if parent["case"] == "M02":
+        leaf = next((v for v in scope["leaves"] if v["leaf_id"] == leaf_id), None)
+        _require_m02_page_id(parent, leaf, p["row"]["page_id"], p["scope_binding"])
+        require(p["row"]["leaf_id"] == leaf_id and p["row"]["page_label"] == leaf["page_label"], "prepared M02 planned Page slot changed")
     return dest, p
 
 

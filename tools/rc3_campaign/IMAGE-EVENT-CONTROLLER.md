@@ -47,6 +47,11 @@ before manuscript creation; a nonnull value must equal that leaf's planned ID.
 This is a planning identity check, not a Page or a production grant. Begin and
 preparation still require the actual current own-SDK Page, Task, frozen Request,
 reserved allowance and then in-flight Attempt. Null cannot be dispatched.
+M02's actual Page ID must equal that leaf's original planned label at begin,
+preparation and the saved-preparation check before dispatch or settlement.
+Actual rights to a different Page in the same live/read use do not satisfy this
+identity check. An explicit handoff leaf must name the same slot. Other cases
+retain their existing late-binding semantics.
 
 `activation` is Root's operational `host_attested` decision: `observer_id=/root`,
 the exact `policy_sha256`, `legacy_writer_route=HISTORICAL_READ_ONLY`, and
