@@ -99,6 +99,16 @@ rebinds the exact admission: even semantically identical JSON with different
 bytes is identity drift. Any refusal leaves the original binding/barrier
 unchanged; no ledger compensation or extra allowance is invented.
 
+The companion guards canonical public regular-file paths before each body
+open, including nested Ref paths in every JSON object it reads. At bootstrap,
+direct copy diagnosis and locked reload it reads the registration through this
+guard, preflights its nested Refs and the exposure/C-method JSON consumed by
+the frozen validator, and passes that same parsed registration to unchanged
+`u.validate`. It also preflights existing Journal metadata and invocation Refs
+before the old uniqueness reader. It never delegates an unchecked registration
+to `u.campaign` or `u.read`. An alias or forbidden path is rejected before the
+old reader can attempt to open it; opaque strings are not followed as files.
+
 `bind-original-slot` emits the established `original_bound` event only after
 all checks. It retains the old event fields and adds the exact amendment,
 pair and new tool identity. All old and new dependency Refs are retained in
@@ -148,3 +158,13 @@ Separate actual-public-data diagnostics read the preserved four original
 A/B proofs without any admission, bind/private event or SDK/model/image call.
 Independent review and Root's exact prospective amendment remain required
 before use to bind the formal slots.
+
+The first independent review found an unchecked transitive registration Ref
+route before the original guard. Its original failure remains frozen. The
+follow-up tests retain a permanent external Python open audit hook and cover
+protocol/source/role/method/exposure Refs, nested JSON and aliases, direct
+copy diagnosis, existing Journal invocation Refs and final locked reload.
+Sentinel data is newly generated synthetic public test data; its digest comes
+from known in-memory bytes. No sentinel body is read or hashed. The original
+independent negative is replayed with only exact source/output fixture
+bindings changed, preserving its audit hook and assertion.

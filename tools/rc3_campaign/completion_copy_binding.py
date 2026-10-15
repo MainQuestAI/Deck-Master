@@ -55,13 +55,60 @@ def check_ref(ref):
 
 def checked(ref):
     check_ref(ref)
-    return u.read(ref['path'])
+    return public_json(ref['path'])
+
+
+def preflight_refs(value):
+    """Guard nested file Ref paths before a frozen reader can follow them.
+
+    Extra fields on old registration/method rows belong to their old schema;
+    this preflight only applies our path/regular-file boundary, not a new one.
+    It never opens a referenced body or treats opaque path strings as reads.
+    """
+    if isinstance(value, dict):
+        if 'path' in value and 'sha256' in value:
+            path = canonical(value['path'])
+            require(stat.S_ISREG(path.stat().st_mode), 'actual regular file required')
+        for item in value.values():
+            preflight_refs(item)
+    elif isinstance(value, list):
+        for item in value:
+            preflight_refs(item)
+
+
+def public_json(path):
+    """Guard before opening, then guard all nested Refs before delegation."""
+    path = canonical(path)
+    require(stat.S_ISREG(path.stat().st_mode), 'actual regular file required')
+    value = json.loads(path.read_bytes())
+    preflight_refs(value)
+    return value
+
+
+def public_campaign(root):
+    """Retain old validation on the same preflighted registration object.
+
+    The frozen validator follows exposure and C method JSON. Preflight those
+    nested objects too, before calling it, without changing the old helpers.
+    Journal metadata can contain invocation Refs used by old uniqueness checks.
+    """
+    journal = u.Journal(canonical(root))
+    config = public_json(journal.root / 'registration.json')
+    checked(config['exposure_registry'])
+    for case in u.CASES:
+        checked(config['barrier_methods'][case + '-C'])
+    paths = sorted((journal.root / 'journal').glob('*.json'))
+    for path in paths:
+        canonical(path)
+    for path in paths:
+        public_json(path)
+    return journal, u.validate(config)
 
 
 def copy_context(campaign, slot, proof_ref):
     """Read-only actual pair discovery, not authorization or a new first draft."""
     root = canonical(campaign)
-    cj, config = u.campaign(root)
+    cj, config = public_campaign(root)
     require(slot in u.SLOTS and slot.rsplit('-', 1)[1] in {'A', 'B'}, 'A/B completion-copy bridge only; C keeps original route')
     proof = checked(proof_ref)
     require(proof.get('slot') == slot, 'exact original slot proof required')
@@ -228,7 +275,7 @@ def original_record(cj, config, slot, proof_ref, proof, snap, manifest, pair):
 def execute(campaign, slot, proof_path, proof_sha256, *, admission_path=None, admission_sha256=None, bind=False):
     proof_ref = reference(proof_path)
     require(proof_ref['sha256'] == proof_sha256, 'original proof bytes differ')
-    cj, _ = u.campaign(canonical(campaign))
+    cj, _ = public_campaign(campaign)
     with cj.locked():
         if bind:
             require(admission_path and admission_sha256, 'binding needs an exact prospective Root amendment')
@@ -249,7 +296,7 @@ def execute(campaign, slot, proof_path, proof_sha256, *, admission_path=None, ad
             check_ref(ref)
         require(Path(pair['original_completion']['path']).read_bytes() == Path(pair['frozen_completion']['path']).read_bytes(),
                 'completion copies changed before binding')
-        require(u.validate(u.read(cj.root / 'registration.json')) == config, 'registration changed while validating')
+        require(public_campaign(cj.root)[1] == config, 'registration changed while validating')
         if not bind:
             return {'status': 'DIAGNOSIS_ONLY_NO_ADMISSION_NO_BINDING', 'slot': slot, 'copy_pair': pair,
                     'all_original_binding_checks_passed': True, 'ledger_event_appended': False,

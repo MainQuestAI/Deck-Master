@@ -4,6 +4,7 @@ The existing recorder fixture's tiny Cyber hashes are explicitly a pytest-only
 portability seam. Frozen production helpers and constants are never changed.
 """
 from copy import deepcopy
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -202,3 +203,93 @@ def test_no_SDK_import_or_private_open_entrypoint():
     subprocess.run([sys.executable,'-I','-B','-c',code,str(SCRIPT)],check=True)
     result = subprocess.run([sys.executable,'-I','-B',str(SCRIPT),'--help'],capture_output=True,text=True,check=True)
     assert 'open-private' not in result.stdout
+
+
+def guarded_sentinel(f):
+    """The permanent external audit hook blocks even an attempted body open."""
+    path = f['directory'] / 'synthetic-oracle-path-guard' / 'never-read-sentinel'
+    path.parent.mkdir()
+    body = b'SYNTHETIC PUBLIC TEST SENTINEL. NEVER READ OR HASH THIS FILE.\n'
+    with path.open('xb') as stream:
+        stream.write(body)
+    ref = {'path': str(path), 'sha256': hashlib.sha256(body).hexdigest(), 'bytes': len(body)}
+    attempts = []
+    def audit(event, args):
+        if event == 'open' and str(args[0]) == str(path):
+            attempts.append(event)
+            raise AssertionError('external audit blocked forbidden OPEN before sentinel body IO')
+    sys.addaudithook(audit)  # Deliberately never removed; no sentinel is read/hashed later.
+    return ref, attempts
+
+
+def change_registration_ref(f, ref, location):
+    path = Path(f['campaign']) / 'registration.json'
+    config = json.loads(path.read_bytes())
+    if location == 'source': config['cases']['U-LIVE-01']['materials'][0] = ref
+    elif location == 'role': config['role_instructions']['initial_writer'] = ref
+    elif location == 'method': config['barrier_methods']['U-LIVE-01-A'] = ref
+    elif location == 'exposure-nested':
+        value = json.loads(Path(config['exposure_registry']['path']).read_bytes())
+        value['nested'] = {'refs': [ref]}
+        config['exposure_registry'] = c.save(f['directory'] / 'exposure-with-nested-ref.json', value)
+    elif location == 'method-nested':
+        value = deepcopy(config['cyberppt'])
+        value['nested'] = {'refs': [ref]}
+        config['barrier_methods']['U-LIVE-01-C'] = c.save(f['directory'] / 'method-with-nested-ref.json', value)
+    else: config['protocol'] = ref
+    path.write_bytes(c.encoded(config))
+
+
+@pytest.mark.parametrize('bind', [False, True])
+@pytest.mark.parametrize('location', ['protocol', 'source', 'role', 'method', 'exposure-nested', 'method-nested', 'alias'])
+def test_registration_transitive_paths_rejected_before_any_open(setup, bind, location):
+    f = fixture(setup)
+    ref, attempts = guarded_sentinel(f)
+    if location == 'alias':
+        alias = f['directory'] / 'public-looking-alias.json'
+        alias.symlink_to(ref['path'])
+        ref = {**ref, 'path': str(alias)}
+    change_registration_ref(f, ref, location)
+    with pytest.raises(m.Error, match='never read|aliases'):
+        execute(f, bind=bind)
+    assert attempts == []
+    assert not u.events(c.Journal(f['campaign']), 'original_bound')
+
+
+def test_direct_copy_context_preflights_registration_before_old_reader(setup):
+    f = fixture(setup)
+    ref, attempts = guarded_sentinel(f)
+    change_registration_ref(f, ref, 'protocol')
+    with pytest.raises(m.Error, match='never read'):
+        m.copy_context(f['campaign'], f['slot'], f['proof'])
+    assert attempts == []
+
+
+@pytest.mark.parametrize('bind', [False, True])
+def test_final_locked_reload_preflights_changed_ref_before_old_validator(setup, monkeypatch, bind):
+    f = fixture(setup)
+    ref, attempts = guarded_sentinel(f)
+    real = m.public_campaign
+    calls = []
+    def at_reload(root):
+        calls.append(str(root))
+        if len(calls) == 3:
+            # Scheduling seam only: bootstrap and copy_context already passed,
+            # then an external registration changes just before locked reload.
+            change_registration_ref(f, ref, 'protocol')
+        return real(root)
+    monkeypatch.setattr(m, 'public_campaign', at_reload)
+    with pytest.raises(m.Error, match='never read'):
+        execute(f, bind=bind)
+    assert len(calls) == 3 and attempts == []
+    assert not u.events(c.Journal(f['campaign']), 'original_bound')
+
+
+def test_old_journal_invocation_ref_is_preflighted_before_uniqueness_reader(setup):
+    f = fixture(setup)
+    ref, attempts = guarded_sentinel(f)
+    c.Journal(f['campaign']).append('original_bound', {'slot': 'U-READ-01-A', 'invocations': [ref]})
+    with pytest.raises(m.Error, match='never read'):
+        execute(f, bind=False)
+    assert attempts == []
+    assert len(u.events(c.Journal(f['campaign']), 'original_bound')) == 1
