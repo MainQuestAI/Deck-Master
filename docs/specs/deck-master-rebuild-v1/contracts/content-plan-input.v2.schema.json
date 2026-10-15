@@ -164,7 +164,8 @@
             "items": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "description": "References to node_id values whose role is qualification in this Plan's bound Narrative; use actual node IDs, not qualification sentences or display labels. Runtime validates identity and node role; semantic support still requires content review."
           },
           "content_profile": {
             "enum": [
