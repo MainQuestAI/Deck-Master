@@ -1,7 +1,7 @@
 """Ordinary CI entry for S09's finite, isolated substantive case suite.
 
 The carrier is deliberately outside pytest's automatic filename patterns. This
-wrapper executes all 59 cases in one real -I -B interpreter and checks every
+wrapper executes all 70 cases in one real -I -B interpreter and checks every
 JUnit outcome; no production flag guard or substantive case is patched.
 """
 from datetime import datetime, timezone
@@ -17,7 +17,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 CASES = Path(__file__).with_name("rc3_q2_later_300_cases.py").resolve()
 TOOL = ROOT / "tools/rc3_campaign/q2_later_300.py"
-EXPECTED_CASES = 59
+EXPECTED_CASES = 70
 
 
 def run_logged(tmp_path, argv):
@@ -31,7 +31,7 @@ def run_logged(tmp_path, argv):
     stdout, stderr = b"", b""
     execution_error = None
     try:
-        result = subprocess.run(argv, cwd=ROOT, env=env, capture_output=True, timeout=120)
+        result = subprocess.run(argv, cwd=ROOT, env=env, capture_output=True, timeout=180)
         stdout, stderr = result.stdout, result.stderr
     except subprocess.TimeoutExpired as exc:
         stdout, stderr = exc.stdout or b"", exc.stderr or b""

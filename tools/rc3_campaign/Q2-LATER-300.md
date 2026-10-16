@@ -133,6 +133,26 @@ A0 uses its original accepted legacy result Refs in the current manuscript;
 it is not required to supply B's `adopted` field or modern Request. These are
 lifecycle facts, not a duration-quality threshold, quality PASS or model gate.
 
+The accepted cut must cover the complete selected native manuscript, not merely
+one adopted ordinal. Frozen selected carriers contribute Narrative, Plan input,
+Page body/mapping, notes/segments and explicit membership/order declarations.
+Their actual chronological order resolves later corrections of the same
+component; distinct components remain required. Current manuscript content must
+match that effective projection. Plan wrapper versions/task/basis/derived links
+are SDK metadata; declared Plan input is compared, and speech ranges remain
+separate from the Page body. Unsupported or malformed selected carriers block
+the SDK cut. Unselected failed/abandoned history does not need adoption.
+
+A later technical correction can establish the same selected content through
+its actual SDK adoption, even when the earlier selected envelopes were not
+individually accepted. A different later draft cannot substitute for a missing
+selected component. Neither raw originals nor the original complete cut change.
+An owner-later necessary repair may change those components only after the
+recorded first-SDK manuscript is checked against that same original cut; its
+actual adopted repair outputs then define the current projection. A0 also keeps
+the SDK's honest no-change acceptance when its concrete unchanged reason and
+current input-reconciliation binding identify the completed original Task.
+
 Validation uses substantive real SDK source cases in a real isolated child of
 ordinary pytest, plus new engineering installations of the original own wheels.
 Synthetic native observations/reviews are explicitly marked. Logs retain all

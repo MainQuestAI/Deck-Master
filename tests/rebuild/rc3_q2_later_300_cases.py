@@ -681,3 +681,117 @@ def test_real_argument_proposal_receipt_is_not_an_adopted_necessary_repair(tmp_p
                             ('review-prepare', {'role': 'verification', 'stage': 'unadopted-V', 'bootstrap': f['bootstrap']['path']})]:
         with pytest.raises(ValueError, match='accepted necessary repair'): step(f, action, **payload)
     assert step(f, 'status')['resources'] == before
+
+
+def freeze_input_delta(f, stage, components):
+    """Synthetic native delta, real own Task/claim/completion and exact objects."""
+    from deck_master.models import canonical_json_bytes
+    c = f['c']; store = c.store_for(f['state']); doc = store.load_document(); task = f['task']
+    proposals = []; objects = []; changed = []
+    for kind, pid, text in components:
+        if kind == 'plan':
+            obj = deepcopy(store.read_object_json(doc['content_plan'])['input'])
+            obj['chapters'] = [{'chapter_id': 'neutral-selected', 'title': text, 'page_ids': obj['page_order']}]; layer = 'plan'
+        else:
+            obj = deepcopy(store.read_object_json(next(x['page'] for x in doc['pages'] if x['page_id'] == pid)))
+            layer = 'page_copy' if kind == 'page' else 'speech'; changed.append(pid)
+            if kind == 'page': obj['customer_visible']['title'] += ' '+text
+            else:
+                obj['speaker_notes'] = text
+                obj['content_mapping']['speech_segments'] = [{'segment_id': 'cue', 'start_codepoint': 0, 'end_codepoint': len(text),
+                    'narrative_node_ids': [], 'kind': 'cue', 'estimated_seconds': 5}]
+        digest = c.digest(canonical_json_bytes(obj)); ref = {'path': '.deckmaster/objects/'+digest[:2]+'/'+digest+'.json', 'sha256': digest}
+        sidecar = c.save(Path(f['dispatch']['packet'])/(kind+'-'+(pid or 'deck')+'-native.json'), obj)
+        proposals.append({'layer': layer, 'ref': ref}); objects.append({**sidecar, 'declared_ref': ref})
+    envelope = {'schema_version': 'compose_result.v2', 'kind': 'compose', 'variant': 'input_revision', 'task_id': task['task_id'],
+        'operation_id': task['operation_id'], 'produced_against': task['produced_against'],
+        'eligibility_digest': task['collaboration_binding']['eligibility_digest'], 'usage_events': [],
+        'payload': {'changed_layers': list(dict.fromkeys(x['layer'] for x in proposals)), 'proposals': proposals,
+            'diff': {'input_digest': task['input_digest'], 'summary': 'SYNTHETIC selected neutral component changes', 'changed_page_ids': sorted(set(changed))}}}
+    raw, obs = freeze_result(f, envelope, stage, f['invocation'], native_objects=objects)
+    return {'stage': stage, 'invocation': deepcopy(f['invocation']), 'raw': raw, 'observation': obs, 'components': components, 'envelope': envelope}
+
+
+def selected_pair(base, second=('page', 'p2', 'SELECTED TWO'), same_component=False, abandoned=False):
+    f = launch(inputs(fixture(base)), stage='selected-one'); actor = f['invocation']['executor']
+    if abandoned:
+        raw, obs = freeze_result(f, {'SYNTHETIC_ABANDONED_INVALID_ENVELOPE': True})
+        one = {'invocation': deepcopy(f['invocation']), 'observation': obs}
+    else: one = freeze_input_delta(f, 'selected-one', [('page', 'p1', 'SELECTED ONE')])
+    launch(f, stage='selected-two', executor=actor, tool='collaboration.followup_task')
+    two = freeze_input_delta(f, 'selected-two', [('page', 'p1', 'CORRECTED TWO')] if same_component or abandoned else [second])
+    selected = [two] if abandoned else [one, two]
+    manifest = f['c'].save(f['base']/'selected-complete.json', {'format': 'rc3-native-complete-draft-manifest.v1',
+        'SYNTHETIC_NOT_MODEL_COMPLETENESS': True, 'complete_native_manuscript_observed': True, 'assurance': 'host_attested',
+        'raw_stage_ordinals': [x['invocation']['ordinal'] for x in selected], 'completeness_source_observation': two['observation'], 'readonly_conversion': None})
+    original = step(f, 'snapshot', name='original_complete', native_manifest=manifest['path'])
+    return f, one, two, original
+
+
+def accept_delta(f, record):
+    step(f, 'objects', stage=record['stage'], ordinal=record['invocation']['ordinal'])
+    outcome = step(f, 'accept', stage=record['stage'], ordinal=record['invocation']['ordinal'])
+    assert outcome['adopted'] is True
+    return outcome
+
+
+@pytest.mark.parametrize('component,name', [('page', 'first_sdk_complete'), ('plan', 'first_sdk_complete'),
+                                           ('speech', 'first_sdk_complete'), ('page', 'owner_later')])
+def test_selected_complete_components_cannot_be_masked_by_one_partial_adoption(tmp_path, component, name):
+    f, one, _, original = selected_pair(tmp_path, (component, '' if component == 'plan' else 'p2', 'SELECTED TWO'))
+    accept_delta(f, one); c = f['c']; j = c.Journal(f['state']['root'])
+    before = c.store_for(f['state']).load_document(); events = j.events(); resources = step(f, 'status')['resources']
+    with pytest.raises(ValueError, match='later300s coverage'):
+        step(f, 'snapshot', name=name, native_manifest=None)
+    assert c.store_for(f['state']).load_document() == before and j.events() == events
+    assert step(f, 'status')['resources'] == resources and c.reference(original['path']) == original
+    assert not (j.root/'snapshots'/(name+'.json')).exists()
+
+
+@pytest.mark.parametrize('component', ['page', 'plan', 'speech'])
+def test_later_technical_correction_can_adopt_the_exact_complete_selected_content(tmp_path, component):
+    second = (component, '' if component == 'plan' else 'p2', 'SELECTED TWO')
+    f, one, two, original = selected_pair(tmp_path, second)
+    launch(f, stage='technical-complete', executor=f['invocation']['executor'], tool='collaboration.followup_task')
+    correction = freeze_input_delta(f, 'technical-complete', one['components']+two['components'])
+    accept_delta(f, correction)
+    result = step(f, 'snapshot', name='first_sdk_complete', native_manifest=None)
+    c = f['c']; j = c.Journal(f['state']['root'])
+    assert c.reference(original['path']) == original and c.read(result['path'])['timepoint'] == 'first_sdk_complete'
+    accepted = [e['data']['ordinal'] for e in j.events() if e['kind'] == 'result_accepted']
+    assert accepted == [3] and one['invocation']['ordinal'] == 1 and two['invocation']['ordinal'] == 2
+    proof = next(e['data']['coverage'] for e in j.events() if e['kind'] == 'later300s_cut' and e['data']['name'] == 'first_sdk_complete')
+    assert proof['selected_ordinals'] == [1, 2] and proof['same_native_content_current'] is True
+
+
+def test_later_selected_correction_replaces_same_component_without_adopting_old_alternative(tmp_path):
+    f, _, two, original = selected_pair(tmp_path, same_component=True); accept_delta(f, two)
+    step(f, 'snapshot', name='first_sdk_complete', native_manifest=None)
+    assert f['c'].reference(original['path']) == original
+
+
+def test_unselected_failed_history_does_not_need_adoption_or_a_full_rewrite(tmp_path):
+    f, _, two, original = selected_pair(tmp_path, abandoned=True); c = f['c']; store = c.store_for(f['state'])
+    before_p2 = store.load_document()['pages'][1]['page']; accept_delta(f, two)
+    step(f, 'snapshot', name='first_sdk_complete', native_manifest=None)
+    assert store.load_document()['pages'][1]['page'] == before_p2 and c.reference(original['path']) == original
+
+
+def test_different_later_accepted_draft_cannot_hide_selected_unadopted_content(tmp_path):
+    f, _, two, original = selected_pair(tmp_path)
+    launch(f, stage='different-draft', executor=f['invocation']['executor'], tool='collaboration.followup_task')
+    different = freeze_input_delta(f, 'different-draft', [('page', 'p1', 'OTHER ALTERNATIVE')]+two['components']); accept_delta(f, different)
+    before = step(f, 'status')['resources']
+    with pytest.raises(ValueError, match='later300s coverage'):
+        step(f, 'snapshot', name='first_sdk_complete', native_manifest=None)
+    assert step(f, 'status')['resources'] == before and f['c'].reference(original['path']) == original
+
+
+def test_owner_later_preserves_proven_original_and_allows_actual_necessary_speech_repair(tmp_path):
+    f = finish_speech_repair(repair_fixture(tmp_path, 'speech')); c = f['c']; j = c.Journal(f['state']['root'])
+    original = c.reference(j.root/'snapshots/original_complete.json'); first = c.reference(j.root/'snapshots/first_sdk_complete.json')
+    result = step(f, 'snapshot', name='owner_later', native_manifest=None)
+    assert c.reference(original['path']) == original and c.reference(first['path']) == first
+    proof = next(e['data']['coverage'] for e in j.events() if e['kind'] == 'later300s_cut' and e['data']['name'] == 'owner_later')
+    assert proof['native_cut'] == original and proof['accepted_repair_ordinals']
+    assert c.read(result['path'])['timepoint'] == 'owner_later'

@@ -378,7 +378,8 @@ def adopted_writers(c, j, state, role):
             # Legacy acceptance has no adopted flag. Require actual accepted
             # result Refs in the current manuscript, never a proposal receipt.
             current = store.load_document(); refs = [x['page'] for x in current['pages']]+[current[k] for k in ('narrative', 'content_plan') if current.get(k)]
-            if outcome.get('adopted') is False or not any(r in refs for r in task.get('result_refs', [])): continue
+            unchanged = bool(outcome.get('unchanged_reason')) and (current.get('content_basis') or {}).get('resolved_by_task_id') == task['task_id']
+            if outcome.get('adopted') is False or not (unchanged or any(r in refs for r in task.get('result_refs', []))): continue
         adopted.append((inv, task, data))
     return adopted
 
@@ -424,6 +425,124 @@ def verification_stage(c, j, state, stage, ordinal=None):
         verification_ready(c, j, state, c.task_for(c.store_for(state), dispatch['task_id']))
 
 
+def native_changes(c, j, state, inv):
+    """Project a frozen manuscript carrier, without adopting/replaying it."""
+    store = c.store_for(state); stage = j.root/'stages'/inv['stage']
+    proof = read(stage/'executions'/f"{inv['ordinal']:04d}"/'observed.json')
+    envelope = json.loads(checked(proof['raw'])); checked(proof['observation'])
+    task = read(stage/'task.json'); require(envelope.get('kind') == 'compose', 'later300s coverage needs a compose manuscript carrier')
+    changes = {}
+    def page(obj, *, speech_only=False):
+        pid = obj['page_id']; changes.pop(('absent', pid), None)
+        if not speech_only:
+            body = deepcopy(obj); body.pop('speaker_notes', None)
+            if body.get('content_mapping'): body['content_mapping'].pop('speech_segments', None)
+            changes['page', pid] = body
+        changes['notes', pid] = obj.get('speaker_notes', '')
+        if 'speech_segments' in (obj.get('content_mapping') or {}):
+            changes['segments', pid] = obj['content_mapping']['speech_segments']
+    def plan(obj): changes['plan', ''] = obj['input'] if obj.get('schema_version') in {'content_plan.v1', 'content_plan.v2'} else obj
+    if envelope.get('schema_version') == 'compose_result.v2':
+        from deck_master import content_production
+        content_production.parse_compose_v2(envelope)
+        require(envelope['task_id'] == task['task_id'] and envelope['operation_id'] == task['operation_id']
+                and envelope['produced_against'] == task['produced_against'], 'later300s native coverage Task binding differs')
+        payload = envelope['payload']; variant = envelope['variant']
+        if variant in {'framing', 'narrative'}:
+            changes['narrative', ''] = payload['narrative']
+            if payload.get('plan') is not None: plan(payload['plan'])
+        elif variant == 'page_copy':
+            for obj in payload['pages']: page(obj)
+            changes['order', ''] = payload['page_order']; plan(payload['plan_input'])
+        elif variant == 'speech':
+            for update in payload['updates']:
+                changes['notes', update['page_id']] = update['speaker_notes']
+                changes['segments', update['page_id']] = update['speech_segments']
+        elif variant == 'input_revision':
+            frozen = {x['declared_ref']['sha256']: x for x in proof.get('native_objects', [])}
+            proposals = []
+            for proposal in payload.get('proposals', []):
+                ref = proposal['ref']; item = frozen.get(ref['sha256'])
+                if item:
+                    require(item['declared_ref'] == ref, 'later300s coverage native proposal Ref differs')
+                    obj = json.loads(checked(item['frozen']))
+                else: obj = store.read_object_json(ref)
+                from deck_master.models import canonical_json_bytes
+                digest = c.digest(canonical_json_bytes(obj))
+                require(ref == {'path': f'.deckmaster/objects/{digest[:2]}/{digest}.json', 'sha256': digest}, 'later300s coverage proposal is not its native canonical object')
+                proposals.append((proposal['layer'], obj, ref))
+            narrative = next((ref for layer, _, ref in proposals if layer == 'narrative'), None)
+            for layer, obj, _ in proposals:
+                if layer == 'narrative': changes['narrative', ''] = obj
+                elif layer == 'plan': plan(obj)
+                elif layer in {'page_copy', 'speech'}:
+                    obj = deepcopy(obj)
+                    if narrative and obj.get('content_mapping'): obj['content_mapping']['narrative_ref'] = narrative
+                    page(obj, speech_only=layer == 'speech')
+                else: raise Error('unsupported later300s native coverage layer')
+            diff = payload['diff']
+            for pid in diff.get('removed_page_ids', []): changes['absent', pid] = True
+            if diff.get('page_order') is not None: changes['order', ''] = diff['page_order']
+    else:
+        require(state['arm'] == 'A0' and isinstance(envelope.get('content_update'), dict)
+                and not any(envelope.get(k) for k in ('files', 'artifact_specs', 'usage_events', 'pages')),
+                'unsupported legacy later300s manuscript coverage')
+        update = envelope['content_update']
+        for obj in update.get('upsert_pages', []): page(obj)
+        for pid in update.get('remove_page_ids', []): changes['absent', pid] = True
+        if update.get('page_order') is not None: changes['order', ''] = update['page_order']
+        if envelope.get('content_plan') is not None: plan(envelope['content_plan'])
+    return changes
+
+
+def manuscript_coverage(c, j, state, native_cut, name):
+    """Latest selected declaration per component must be actually current.
+
+    Unselected history grants no coverage and imposes no per-turn adoption gate.
+    A later correction may cover the same bytes; a different later draft cannot
+    erase selected components. Necessary owner-later repair follows a proven
+    first-SDK manuscript, never a blanket accepted-event exemption.
+    """
+    original = json.loads(checked(native_cut)); selected = {x['ordinal'] for x in original['native_originals']}
+    invocations = [e['data'] for e in j.events() if e['kind'] == 'native_begun' and e['data']['ordinal'] in selected]
+    expected = {}
+    def merge(inv):
+        for (kind, pid), value in native_changes(c, j, state, inv).items():
+            if kind == 'absent':
+                for key in [('page', pid), ('notes', pid), ('segments', pid)]: expected.pop(key, None)
+            elif kind == 'page': expected.pop(('absent', pid), None)
+            expected[kind, pid] = value
+    for inv in invocations: merge(inv)
+    def match(manuscript):
+        doc = manuscript['document']; pages = {p['object']['page_id']: p['object'] for p in manuscript['pages']}
+        for (kind, pid), value in expected.items():
+            if kind == 'page':
+                actual = deepcopy(pages.get(pid)); require(actual is not None, 'later300s coverage missing selected Page '+pid)
+                actual.pop('speaker_notes', None)
+                if actual.get('content_mapping'): actual['content_mapping'].pop('speech_segments', None)
+            elif kind == 'notes': actual = (pages.get(pid) or {}).get('speaker_notes', '')
+            elif kind == 'segments': actual = ((pages.get(pid) or {}).get('content_mapping') or {}).get('speech_segments')
+            elif kind == 'narrative': actual = manuscript['narrative']
+            elif kind == 'plan': actual = (manuscript['content_plan'] or {}).get('input')
+            elif kind == 'order': actual = [x['page_id'] for x in doc['pages']]
+            else: actual = pid not in pages
+            require(actual == value, 'later300s coverage does not contain selected native '+kind+(':'+pid if pid else ''))
+    repairs = adopted_writers(c, j, state, 'repair_writer') if name == 'owner_later' else []
+    if repairs:
+        first = [e['data'] for e in j.events() if e['kind'] == 'later300s_cut' and e['data']['name'] == 'first_sdk_complete']
+        require(len(first) == 1 and first[0].get('coverage', {}).get('native_cut') == native_cut,
+                'owner_later repair coverage requires its actual proven first SDK cut')
+        match(json.loads(checked(first[0]['snapshot']))['manuscript'])
+        layers = accepted_repair_layers(j, c, state)
+        for inv, task, _ in repairs:
+            require((task.get('collaboration_binding') or {}).get('phase') in layers, 'owner_later needs actual necessary repair lineage')
+            merge(inv)
+    manuscript = c.current_manuscript(c.store_for(state)); match(manuscript)
+    return {'native_cut': native_cut, 'selected_ordinals': sorted(selected), 'effective_components': [kind+(':'+pid if pid else '') for kind, pid in expected],
+            'current_revision': manuscript['document']['revision_id'], 'same_native_content_current': True,
+            'accepted_repair_ordinals': [inv['ordinal'] for inv, _, _ in repairs]}
+
+
 def later_cut_ready(c, j, state, name, native_manifest):
     updates = [e for e in j.events() if e['kind'] == 'later_inputs_updated']
     doc = c.store_for(state).load_document()
@@ -438,9 +557,9 @@ def later_cut_ready(c, j, state, name, native_manifest):
         return  # d0 independently validates completeness and frozen observations; SDK adoption is separate.
     cuts = [e['data']['snapshot'] for e in j.events() if e['kind'] == 'later300s_cut' and e['data']['name'] == 'original_complete']
     require(len(cuts) == 1, 'later300s cut requires actual later native complete cut')
-    originals = {x['ordinal'] for x in json.loads(checked(cuts[0]))['native_originals']}
-    require(any(inv['ordinal'] in initial & originals for inv, _, _ in adopted_writers(c, j, state, 'initial_writer')),
+    require(any(inv['ordinal'] in initial for inv, _, _ in adopted_writers(c, j, state, 'initial_writer')),
             'later300s cut requires actual later native SDK adoption')
+    return manuscript_coverage(c, j, state, cuts[0], name)
 
 
 FIELDS = {'release': {'trigger'}, 'materialize': set(), 'request': set(), 'inputs': set(), 'continue-content': set(),
@@ -649,9 +768,9 @@ def advance(action, control, sha, flow, payload=None, engineering=False):
             elif action == 'snapshot':
                 require(p['name'] in {'original_complete', 'first_sdk_complete', 'owner_later'}, 'distinct later300s cuts only; no old equal/qualified/E1 replacement')
                 require(p['name'] == 'original_complete' or p['native_manifest'] is None, 'native manifest belongs only to actual original complete')
-                later_cut_ready(c, j, state, p['name'], p['native_manifest'])
+                coverage = later_cut_ready(c, j, state, p['name'], p['native_manifest'])
                 result = c.snapshot(j, state, p['name'], native_manifest=p['native_manifest'])
-                j.append('later300s_cut', {'name': p['name'], 'snapshot': result, 'old_equal_qualified_unchanged': True})
+                j.append('later300s_cut', {'name': p['name'], 'snapshot': result, 'coverage': coverage, 'old_equal_qualified_unchanged': True})
             else:
                 raise Error('unimplemented finite action')
         j.append('project_frontier', {'revision_id': c.store_for(state).load_document()['revision_id'], 'action': action})
