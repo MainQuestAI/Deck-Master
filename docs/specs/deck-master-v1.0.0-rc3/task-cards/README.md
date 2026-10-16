@@ -18,5 +18,6 @@
 14. [RC3-S10：native table mixed alignment、multiline 与真实 path/perimeter geometry](RC3-S10.md)
 15. [RC3-S13：native C 早期主线确认的有限控制接续](RC3-S13.md)
 16. [RC3-S08：supplied P5 的有限独立 fidelity review 入口](RC3-S08.md)
+17. [RC3-S09：原 Q2 四 main flow 的 300 秒有限接续](RC3-S09.md)
 
 卡片描述没有独立通过状态。执行进度引用唯一候选证据台账；原 AC/CQ 责任见 [验收映射](../TRACEABILITY.md)。RC3-04 前置切片只依赖 RC3-00，完整切片再等待 RC3-01/02/03。
