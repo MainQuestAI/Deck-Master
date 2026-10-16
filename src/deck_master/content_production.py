@@ -1358,7 +1358,8 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         if items:
             single[layer] = store.read_object_json(items[0]["ref"])
     narrative_ref = document.get("narrative")
-    narrative = store.read_object_json(narrative_ref) if narrative_ref else None
+    current_narrative = store.read_object_json(narrative_ref) if narrative_ref else None
+    narrative = current_narrative
     if "narrative" in single:
         narrative = single["narrative"]
         models.validate_narrative_semantics(narrative)
@@ -1532,6 +1533,16 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             artifacts=[], artifact_refs=[], generation_binding=None, envelope=converted,
             receipt_envelope=envelope, content_update=virtual_update,
             produced_against=produced_against, result_digest=result_digest)
+    # Reconciling inputs cannot select the initial argument direction. Keep that
+    # promotion on the ordinary proposal/covering-decision/adopt_proposal path.
+    # Retained proposals and trials do not move the current Narrative pointer.
+    if (binding.get("adoption_policy") not in ("proposal_only", "candidate_only")
+            and (narrative or {}).get("maturity") == "argument"
+            and (current_narrative or {}).get("maturity") != "argument"):
+        raise tasks_mod.EnvelopeError(
+            "(result)/payload/proposals/narrative",
+            "input_revision cannot adopt an initial argument direction; submit an argument "
+            "proposal and use a covering direction decision with adopt_proposal")
     new_pages = []
     for pid in order:
         if planning_only:

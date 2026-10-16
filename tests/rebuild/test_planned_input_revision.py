@@ -6,11 +6,12 @@ from copy import deepcopy
 
 import pytest
 
-from deck_master import content_plan, content_production, eligibility, models, service
+from deck_master import collaboration, content_plan, content_production, eligibility, models, service
 from deck_master.store import Store
 from deck_master.tasks import EnvelopeError, TaskConflict
 
-from test_compose_v2_phases import _argument_narrative, _page, _plan_input, _scope, _source_link
+from test_compose_v2_phases import (_accept_argument, _adopt_direction, _argument_narrative,
+                                  _instruction, _page, _plan_input, _scope, _source_link)
 
 
 def dispatched_revision(tmp_path, *, layers=None):
@@ -18,9 +19,18 @@ def dispatched_revision(tmp_path, *, layers=None):
     source.write_text("SYNTHETIC engineering input: record unknown fields explicitly.\nNo measured benefit is provided.\n")
     project = tmp_path / "p"
     service.create(project, brief="Synthetic planning-only input revision", sources=[source],
-                   audience="Synthetic initial audience", presentation_mode="live", page_limit=8,
-                   request_input={"scope": _scope(layers=layers)} if layers else None)
+                   audience="Synthetic initial audience", presentation_mode="live", page_limit=8)
     store = Store(project)
+    # S06: a planned input revision updates an adopted argument; it cannot
+    # establish the initial direction merely through within_scope.
+    _, argument = _accept_argument(project, store)
+    _adopt_direction(project, store, argument["proposal_refs"][0])
+    if layers:
+        request = store.load_document()["collaboration"]["request"]
+        collaboration.start_request(project, input={"intent": request["intent"], "content_intent": request["content_intent"],
+            "scope": _scope(layers=layers), "replace_request_id": request["request_id"],
+            "instruction_evidence": _instruction(store, "s02-explicit-narrow-request")},
+            base_revision=store.current_revision_id(), operation_id="s02-narrow-request")
     service.inputs_update(project, patch={"reason": "Explicit synthetic audience clarification",
         "task_patch": {"audience": "Synthetic clarified audience"}},
         base_revision=store.current_revision_id(), operation_id="s02-input-update")
