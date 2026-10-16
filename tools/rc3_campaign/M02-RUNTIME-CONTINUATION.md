@@ -44,6 +44,17 @@ whole16/67, live production7/12 and live review5/8. Actual new invocation
 observations, including overruns, remain counted; over-budget raw cannot be
 consumed. Old actors/claims/raw are never re-used as new release executions.
 
+Every consumption and business transition checks effective whole usage and
+every original phase/role limit over historical helper14, auxiliary2 and all
+successor observations. Equality with a cap remains legal. A later overrun
+blocks an earlier `within_budget=true` ordinal, new stage, full export and
+next-use progression; changing phase cannot hide a previous phase's overrun.
+This check does not run in load, invariant validation, actual invocation/raw
+recording, status, transition inspection or exact query/settlement. Thus an
+already claimed execution's actual raw remains preservable after an overrun,
+and durable facts can still resolve an unknown operation without replay or
+refund. Recording and reconciliation do not authorize consumption.
+
 `initial_content` is sources/N/Plan and Page entries excluding `ppt_preview`;
 `initial_pages` preserves the complete original entries, and `initial_outputs`
 preserves original failed output Refs. `protected_refs` must include every

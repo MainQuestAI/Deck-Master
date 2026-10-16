@@ -268,6 +268,25 @@ def costs(journal, config):
             "sdk_queries_successor": sum(e["kind"] == "m02_query_intent" for e in journal.local.events())}
 
 
+def require_effective_budget(journal, config):
+    """Consume only within all inherited caps, never a selected ordinal's flag.
+
+    Every original phase remains counted after advancing to another use.
+    Invocation/raw observations and exact reconciliation can still be recorded
+    after an overrun; recording those facts never authorizes consumption.
+    """
+    count = costs(journal, config)
+    exceeded = []
+    if count["whole"] > count["whole_cap"]:
+        exceeded.append(f"whole={count['whole']}>{count['whole_cap']}")
+    for phase, roles in count["by_phase_role"].items():
+        for role, used in roles.items():
+            cap = config["scopes"][phase]["native_limits"][role]
+            if used > cap:
+                exceeded.append(f"{phase}.{role}={used}>{cap}")
+    require(not exceeded, "inherited native caps exceeded: " + ", ".join(exceeded))
+
+
 def barrier(journal, state, config, command, path):
     """Root serializes *all* old/new routes; local flock alone cannot stop old code."""
     c.check_ref(config["admission"]); ref = c.reference(path); value = c.read(path)
@@ -334,6 +353,7 @@ def query(journal, state, config, operation_key):
 
 
 def claim_read(journal, state, config, stage, ordinal, executor):
+    require_effective_budget(journal, config)
     from deck_master import service
     invocation, target = c.execution(journal, stage, ordinal)
     require(executor == invocation["executor"], "actual successor executor required")
@@ -361,6 +381,7 @@ def inspect_transition(journal, state, config):
 
 
 def cancel_blocked(journal, state, config, evidence):
+    require_effective_budget(journal, config)
     from deck_master import service
     require(m.phase(journal) == "live" and not m.events(journal, "m02_obsolete_task_cancelled"), "one live administrative cancellation only")
     doc = guard(journal, state, config)
@@ -388,6 +409,7 @@ def cancel_blocked(journal, state, config, evidence):
 
 
 def assemble(journal, state, config, operation_id):
+    require_effective_budget(journal, config)
     from deck_master import stages, content_review
     require(m.phase(journal) == "live" and m.events(journal, "m02_obsolete_task_cancelled")
             and not m.events(journal, "m02_supplemental_assembled"), "cancel obsolete task then one unchanged live assembly")
@@ -410,12 +432,12 @@ def current_stage(journal, state, config, stage, ordinal=None):
     dispatch = m.current_stage(journal, stage)
     if ordinal is not None:
         require(any(e["kind"] == "native_begun" and e["data"]["stage"] == stage and e["data"]["ordinal"] == ordinal for e in journal.local.events()), "only actual successor execution ordinal")
-        require(costs(journal, config)["whole"] <= 67, "whole inherited native ceiling exceeded")
     return dispatch
 
 
 def prepare(journal, state, config, stage, task_id, role):
     """Keep original role/scope gates; packet contains current facts, not old raw."""
+    require_effective_budget(journal, config)
     from deck_master import service, tasks
     require(role in m.ROLES, "original M02 role required")
     store = c.store_for(state); doc = guard(journal, state, config); task = c.task_for(store, task_id)
@@ -473,6 +495,7 @@ def begin(journal, state, config, stage, invocation, *, notes=False):
 
 
 def review_prepare(journal, state, config, stage, role, bootstrap):
+    require_effective_budget(journal, config)
     from deck_master import content_review
     current = m.phase(journal)
     require(role in {"feedback", "verification"}, "ordinary content review only")
@@ -489,6 +512,7 @@ def review_prepare(journal, state, config, stage, role, bootstrap):
 
 
 def export_current(journal, state, config, arguments):
+    require_effective_budget(journal, config)
     require(m.events(journal, "m02_supplemental_assembled"), "real supplemental assembly required")
     doc = guard(journal, state, config); final = {r["task_id"] for r in m.events(journal, "stage_prepared") if r.get("m02_phase") == m.phase(journal) and r["role"] == "production_review"}
     accepted = {r.get("task_id") or (r.get("outcome") or {}).get("task_id") for r in m.events(journal, "result_accepted")}
@@ -539,6 +563,8 @@ def execute_bound(journal, state, config, args):
     if command == "status": return {"scope": config["status"], "runtime_epoch": config["runtime_epoch"], "phase": m.phase(journal), "costs": costs(journal, config), "pending": journal.unfinished(), "credit": "NOT_E1_NOT_E2_NOT_HUMAN"}
     if command == "query": return query(journal, state, config, args.operation_key)
     require(not journal.unfinished(), "unresolved old or successor SDK intent; query, no retry")
+    if command not in {"inspect-transition", "begin-native", "begin-notes", "observe", "observe-notes"}:
+        require_effective_budget(journal, config)
     proof = barrier(journal, state, config, command, args.barrier)
     if command == "inspect-transition": return inspect_transition(journal, state, config)
     if command == "cancel-blocked-readback-task": return cancel_blocked(journal, state, config, proof)

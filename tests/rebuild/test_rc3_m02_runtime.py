@@ -1,7 +1,7 @@
 """Ordinary CI entry for S11's finite, isolated substantive case suite.
 
 The carrier is deliberately outside pytest's automatic filename patterns. This
-wrapper executes all 40 cases in one real -I -B interpreter and checks every
+wrapper executes all 43 cases in one real -I -B interpreter and checks every
 JUnit outcome; no production flag guard or substantive case is patched.
 """
 from datetime import datetime, timezone
@@ -17,7 +17,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 CASES = Path(__file__).with_name("rc3_m02_runtime_cases.py").resolve()
 TOOL = ROOT / "tools/rc3_campaign/m02_runtime_continuation.py"
-EXPECTED_CASES = 40
+EXPECTED_CASES = 43
 
 
 def run_logged(tmp_path, argv):

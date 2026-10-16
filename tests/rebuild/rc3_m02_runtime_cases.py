@@ -223,11 +223,91 @@ def test_actual_invocations_inherit_review5of8_and_overrun_stays_counted(tmp_pat
     j, state, cfg = seed(tmp_path)
     dispatch = {"stage": "counted", "role": "production_review", "task_id": "synthetic-unit", "project_id": state["project_id"], "method_release": {}, "m02_phase": "live"}
     c.save(j.root / "stages/counted/dispatch.json", dispatch); j.append("stage_prepared", dispatch)
-    outcomes = [s11.begin(j, state, cfg, "counted", fake_invocation(tmp_path, dispatch, "/root/fresh-" + str(i))) for i in range(4)]
+    outcomes = [s11.begin(j, state, cfg, "counted", fake_invocation(tmp_path, dispatch, "/root/fresh-" + str(i))) for i in range(3)]
+    s11.require_effective_budget(j, cfg)  # Exactly 8/8 remains consumable.
+    outcomes.append(s11.begin(j, state, cfg, "counted", fake_invocation(tmp_path, dispatch, "/root/fresh-3")))
     assert [row["within_budget"] for row in outcomes] == [True, True, True, False]
     assert s11.costs(j, cfg)["whole"] == 20
     assert s11.costs(j, cfg)["by_phase_role"]["live"]["production_review"] == 9
     assert len(m.events(s11.SuccessorView(j.historical), "native_begun")) == 14
+    # Selecting the earlier True ordinal cannot conceal the actual fourth turn.
+    with pytest.raises(s11.Error, match=r"live.production_review=9>8"):
+        s11.claim_read(j, state, cfg, "counted", outcomes[0]["ordinal"], "/root/fresh-0")
+
+
+def test_effective_overrun_blocks_consumption_and_progression_without_writes(tmp_path):
+    from argparse import Namespace
+    j, state, cfg = seed(tmp_path)
+    # Explicit L1 cost observation: independent of any chosen stage/ordinal.
+    for i in range(4):
+        j.append("m02_native_started", {"phase": "live", "role": "production_review", "SYNTHETIC_ACTUAL_COUNT": i})
+    doc = c.store_for(state).load_document(); frontier = len(j.local.events())
+    commands = ("cancel-blocked-readback-task", "assemble-existing-live", "continue-current", "prepare", "review-prepare",
+                "claim-read", "read-notes", "materialize-native-objects", "review-accept", "accept", "accept-notes",
+                "deliver-feedback", "repair-begin", "export-current-version", "release-instruction", "materialize-instruction",
+                "start-next-variant", "prepare-notes")
+    for command in commands:
+        with pytest.raises(s11.Error, match=r"live.production_review=9>8"):
+            s11.execute(j, state, cfg, Namespace(**proof(tmp_path, j, state, cfg, command)))
+    for consume in (lambda: s11.export_current(j, state, cfg, {}),
+                    lambda: s11.prepare(j, state, cfg, "new-stage", "unused", "production_review"),
+                    lambda: s11.review_prepare(j, state, cfg, "new-stage", "feedback", "unused")):
+        with pytest.raises(s11.Error, match=r"live.production_review=9>8"): consume()
+    assert len(j.local.events()) == frontier and c.store_for(state).load_document() == doc
+    # Even a different current phase cannot hide a prior role's overrun.
+    j.append("m02_phase_started", {"phase": "read", "SYNTHETIC_BOUNDARY_ONLY": True})
+    with pytest.raises(s11.Error, match=r"live.production_review=9>8"):
+        s11.require_effective_budget(j, cfg)
+    assert s11.execute(j, state, cfg, Namespace(command="status"))["costs"]["whole"] == 20
+
+
+def test_overrun_preserves_raw_from_an_already_claimed_earlier_execution(tmp_path):
+    from argparse import Namespace
+    from deck_master import service
+    from test_rc3_campaign_controller import fake_invocation
+    j, state, cfg = seed(tmp_path)
+    task = service.open_host_task(c.store_for(state), kind="review", page_ids=["p1"], review_stage="final", instruction="SYNTHETIC preservation boundary")
+    dispatch = s11.prepare(j, state, cfg, "claimed-before-overrun", task["task_id"], "production_review")
+    starts = [s11.begin(j, state, cfg, dispatch["stage"], fake_invocation(tmp_path, dispatch, "/root/raw-" + str(i))) for i in range(3)]
+    first = starts[0]; ordinal = first["ordinal"]; actor = first["executor"]
+    s11.claim_read(j, state, cfg, dispatch["stage"], ordinal, actor)
+    extra = s11.begin(j, state, cfg, dispatch["stage"], fake_invocation(tmp_path, dispatch, "/root/raw-3"))
+    assert extra["within_budget"] is False and first["within_budget"] is True
+    raw = c.save(tmp_path / "raw.json", {"kind": "review", "reviews": [], "usage_events": [], "SYNTHETIC_ONLY": True})
+    _, target = c.execution(j, dispatch["stage"], ordinal)
+    obs = c.save(tmp_path / "completed.json", {"observation_kind": c.OBSERVER_KIND, "assurance": "host_attested", "observed_at_utc": c.now(),
+        "project_id": state["project_id"], "task_id": task["task_id"], "model_output_bytes_sha256": raw["sha256"], "method_release": dispatch["method_release"],
+        "all_method_bytes_read": True, "method_read_record_sha256": c.reference(target / "method-read-record.json")["sha256"],
+        "completion": {"sender": actor, "message_type": "FINAL_ANSWER", "status_observation_tool": "collaboration.list_agents", "observed_status": "completed", "observed_completed_agents": [actor], "raw_final_message": "SYNTHETIC no model call"}})
+    observed = s11.execute(j, state, cfg, Namespace(**proof(tmp_path, j, state, cfg, "observe"), stage=dispatch["stage"], ordinal=ordinal,
+        result=raw["path"], result_sha256=raw["sha256"], observation=obs["path"], observation_sha256=obs["sha256"]))
+    assert observed["status"] == "frozen_before_sdk" and Path(observed["raw"]["path"]).read_bytes() == Path(raw["path"]).read_bytes()
+    assert len(m.events(j, "native_observed")) == 1 and s11.costs(j, cfg)["whole"] == 20
+    for command in ("accept", "review-accept", "materialize-native-objects"):
+        with pytest.raises(s11.Error, match=r"live.production_review=9>8"):
+            s11.execute(j, state, cfg, Namespace(**proof(tmp_path, j, state, cfg, command), stage=dispatch["stage"], ordinal=ordinal))
+
+
+def test_effective_budget_checks_whole_and_every_original_phase_role(tmp_path):
+    j, state, cfg = seed(tmp_path)
+    for phase in m.PHASES:
+        for role in m.ROLES:
+            # Pure cap evaluation of explicit synthetic observations; never a
+            # fabricated SDK/native execution or a rewritten production budget.
+            rows = [{"kind": "m02_native_started", "data": {"phase": phase, "role": role}}] * cfg["scopes"][phase]["native_limits"][role]
+            exact = s11.SuccessorView(rows)
+            no_aux = {**cfg, "auxiliary_executions": []}
+            exact.local = s11.SuccessorView([])
+            s11.require_effective_budget(exact, no_aux)
+            over = s11.SuccessorView(rows + [{"kind": "m02_native_started", "data": {"phase": phase, "role": role}}])
+            over.local = s11.SuccessorView([])
+            with pytest.raises(s11.Error, match=phase + r"\." + role + "="):
+                s11.require_effective_budget(over, no_aux)
+    # Whole evaluation remains independent, including all original roles.
+    rows = [{"kind": "m02_native_started", "data": {"phase": "live", "role": "production"}}] * 68
+    over = s11.SuccessorView(rows); over.local = s11.SuccessorView([])
+    with pytest.raises(s11.Error, match="whole=68>67"):
+        s11.require_effective_budget(over, {**cfg, "auxiliary_executions": []})
 
 
 def test_unknown_sdk_commit_is_never_replayed_or_refunded(tmp_path):
@@ -273,8 +353,11 @@ def test_actual_cancel_commit_lost_ack_is_recovered_without_second_cancel(tmp_pa
     with pytest.raises(ConnectionError):
         c.record_sdk(j, "service.task_cancel", {"task_id": s11.TASK, "reason": "SYNTHETIC exact technical lost-ack test"}, lost_ack, key="cancel-lost")
     assert c.task_for(c.store_for(state), s11.TASK)["status"] == "cancelled"
+    for i in range(4):
+        j.append("m02_native_started", {"phase": "live", "role": "production_review", "SYNTHETIC_ACTUAL_COUNT": i})
     result = s11.query(j, state, cfg, "cancel-lost")
     assert result["status"] == "cancelled" and not j.unfinished()
     assert s11.costs(j, cfg)["sdk_attempts_successor"] == 1
     assert s11.costs(j, cfg)["sdk_queries_successor"] == 1
     assert len(m.events(j, "m02_obsolete_task_cancelled")) == 1
+    assert s11.costs(j, cfg)["by_phase_role"]["live"]["production_review"] == 9
