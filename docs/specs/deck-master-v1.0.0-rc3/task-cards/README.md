@@ -15,6 +15,6 @@
 11. [RC3-S06：input_revision 的初始 argument 方向边界](RC3-S06.md)
 12. [RC3-S05-C1：标准 pytest 入口执行 S05 隔离用例](RC3-S05-C1.md)
 13. [RC3-S07：generic Page adoption 同步派生 Plan links](RC3-S07.md)
-14. [RC3-S10：native table mixed alignment、multiline 与真实 path geometry](RC3-S10.md)
+14. [RC3-S10：native table mixed alignment、multiline 与真实 path/perimeter geometry](RC3-S10.md)
 
 卡片描述没有独立通过状态。执行进度引用唯一候选证据台账；原 AC/CQ 责任见 [验收映射](../TRACEABILITY.md)。RC3-04 前置切片只依赖 RC3-00，完整切片再等待 RC3-01/02/03。

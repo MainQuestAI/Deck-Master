@@ -29,7 +29,30 @@ def change_paths(original, target, mutation):
     selected = frame if mutation.startswith('frame_') else rule
     path = selected._element.find('p:spPr/a:custGeom/a:pathLst/a:path', NS)
     assert path is not None
-    if mutation in ('partial_rule', 'frame_partial'):
+    if mutation.startswith('frame_clip_'):
+        w, h = int(path.get('w')), int(path.get('h'))
+        if mutation == 'frame_clip_bottom_left':
+            points = [(0, 0), (w, 0), (w, h), (220*9525, h), (0, 270*9525)]
+        elif mutation == 'frame_clip_top_left':
+            points = [(220*9525, 0), (w, 0), (w, h), (0, h), (0, 90*9525)]
+        elif mutation == 'frame_clip_bottom_right':
+            points = [(0, 0), (w, 0), (w, 270*9525), (660*9525, h), (0, h)]
+        elif mutation == 'frame_clip_top_right':
+            points = [(0, 0), (660*9525, 0), (w, 90*9525), (w, h), (0, h)]
+        else:
+            assert mutation in ('frame_clip_safe', 'frame_clip_safe_reversed')
+            d = 20*9525
+            points = [(d, 0), (w-d, 0), (w, d), (w, h-d), (w-d, h), (d, h), (0, h-d), (0, d)]
+            if mutation.endswith('_reversed'):
+                points.reverse()
+        for child in list(path):
+            path.remove(child)
+        for i, (x, y) in enumerate(points):
+            command = OxmlElement('a:moveTo' if i == 0 else 'a:lnTo')
+            point = OxmlElement('a:pt'); point.set('x', str(x)); point.set('y', str(y))
+            command.append(point); path.append(command)
+        path.append(OxmlElement('a:close'))
+    elif mutation in ('partial_rule', 'frame_partial'):
         if mutation == 'partial_rule':
             path.find('a:lnTo/a:pt', NS).set('y', str(int(path.get('h')) // 4))
         else:
@@ -205,3 +228,33 @@ def test_additional_native_coordinate_environment_is_unverified(tmp_path, enviro
     assert native_invariants(target)['text'] == native_invariants(compiled.pptx_path)['text']
     report = readback(target, [source], [page])
     assert report['status'] == 'fail' and any(f['code'] == 'unverifiable_table_ownership' for f in report['findings'])
+
+
+@pytest.mark.parametrize('corner', ['bottom_left', 'top_left', 'bottom_right', 'top_right'])
+def test_real_convex_frame_perimeter_bounds_every_cell_and_header_carrier(tmp_path, corner):
+    page, _, compiled, source = compile_fixture(tmp_path)
+    target = tmp_path / ('clipped-' + corner + '.pptx')
+    change_paths(compiled.pptx_path, target, 'frame_clip_' + corner)
+    assert native_invariants(compiled.pptx_path) == native_invariants(target)
+    report = readback(target, [source], [page])
+    assert report['status'] == 'fail', report
+    if corner.startswith('top_'):
+        assert any(f['code'] == 'unverifiable_table_ownership' and f.get('table_id') == 'ledger'
+                   for f in report['findings']), report
+    else:
+        atom_id = f"atom:{PID}:cell:ledger:gamma:{'key' if corner.endswith('left') else 'context'}:display_text"
+        finding = next(f for f in report['findings'] if f.get('atom_id') == atom_id
+                       and f['code'] == 'table_cell_ownership_mismatch')
+        assert finding['native_frame_perimeter']
+        if corner.endswith('right'):
+            assert len(finding['native_carriers']) == 2  # include the last native line outside the sloped edge
+
+
+@pytest.mark.parametrize('mutation', ['frame_clip_safe', 'frame_clip_safe_reversed'])
+def test_true_convex_perimeter_with_all_carriers_inside_passes_in_both_windings(tmp_path, mutation):
+    page, _, compiled, source = compile_fixture(tmp_path)
+    target = tmp_path / (mutation + '.pptx')
+    change_paths(compiled.pptx_path, target, mutation)
+    assert native_invariants(compiled.pptx_path) == native_invariants(target)
+    report = readback(target, [source], [page])
+    assert report['status'] == 'pass', report

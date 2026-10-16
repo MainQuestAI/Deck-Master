@@ -42,6 +42,22 @@ def _inside(item, bounds):
             and item['y'] + item['height'] <= bottom + epsilon)
 
 
+
+def _inside_perimeter(item, perimeter):
+    """Contain all carrier corners in an already verified convex frame.
+
+    Keep the same two-EMU rounding allowance as rectangular cell containment;
+    an axis-aligned frame envelope cannot replace its actual sloped edges.
+    """
+    edges = list(zip(perimeter, perimeter[1:] + perimeter[:1]))
+    winding = 1 if sum(a[0]*b[1] - b[0]*a[1] for a, b in edges) > 0 else -1
+    corners = [(x, y) for x in (item['x'], item['x'] + item['width'])
+               for y in (item['y'], item['y'] + item['height'])]
+    return all(winding * ((b[0]-a[0])*(y-a[1]) - (b[1]-a[1])*(x-a[0]))
+               >= -(2 / EMU_PER_PX) * math.dist(a, b)
+               for a, b in edges for x, y in corners)
+
+
 def _native_grid_shape(native, *, frame):
     """A narrow native grid subset, not a DrawingML bounding-box inference.
 
@@ -149,7 +165,7 @@ def _native_grid_shape(native, *, frame):
         for key, value in (('top', top), ('bottom', bottom)):
             if abs(a[1]-value) <= epsilon and abs(b[1]-value) <= epsilon:
                 sides[key].append(sorted((a[0], b[0])))
-    return {**geometry, 'sides': sides} if all(sides.values()) else None
+    return {**geometry, 'sides': sides, 'perimeter': tuple(points)} if all(sides.values()) else None
 
 
 def _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete):
@@ -200,11 +216,12 @@ def _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete):
             atom_id = f'atom:{page_id}:column:{table_id}:{column}:label'
             headers = atoms.get(atom_id, [])
             if (not headers or atom_id in incomplete
-                    or any(not _inside(item, (xs[index], ys[0], xs[index + 1], ys[1])) for item in headers)):
+                    or any(not _inside(item, (xs[index], ys[0], xs[index + 1], ys[1]))
+                           or not _inside_perimeter(item, frame['perimeter']) for item in headers)):
                 valid = False
                 break
         if valid:
-            grids.add((xs, ys))
+            grids.add((xs, ys, frame['perimeter']))
     return next(iter(grids)) if len(grids) == 1 else None
 
 
@@ -316,10 +333,11 @@ def check_native_relations(root, source, page):
                     continue
                 x, y = min(item["x"] for item in carriers), min(item["y"] for item in carriers)
                 if grid is not None:
-                    xs, ys = grid
+                    xs, ys, perimeter = grid
                     column_index = columns.index(column_id)
                     bounds = (xs[column_index], ys[row_index + 1], xs[column_index + 1], ys[row_index + 2])
-                    mismatch = any(not _inside(item, bounds) for item in carriers)
+                    mismatch = any(not _inside(item, bounds) or not _inside_perimeter(item, perimeter)
+                                   for item in carriers)
                 else:
                     bounds = None
                     mismatch = any(abs(item['x'] - header_x.get(column_id, item['x'])) > tolerance_x
@@ -337,6 +355,7 @@ def check_native_relations(root, source, page):
                                      "svg_elements": [item["element"] for item in carriers],
                                      "readback_layer": "native_pptx", "position": [x, y],
                                      "cell_bounds": bounds,
+                                     **({"native_frame_perimeter": perimeter} if grid is not None else {}),
                                      "native_carriers": [{key: item[key] for key in
                                          ('native_shape_id', 'element', 'x', 'y', 'width', 'height')}
                                          for item in carriers],
