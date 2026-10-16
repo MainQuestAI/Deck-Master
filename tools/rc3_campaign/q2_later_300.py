@@ -258,6 +258,7 @@ def prepared(s, c, j, state, reg, stage, task_id, role):
     """Original main full-own files; public method/summary calls now explicit intents."""
     from deck_master import content_production, service
     c.safe_name(stage); store = c.store_for(state); doc = store.load_document(); task = c.task_for(store, task_id)
+    if role == 'verification': verification_ready(c, j, state, task)
     s.role_task(j, state, task, role)
     target = j.root/'stages'/stage; target.mkdir(parents=True, exist_ok=False)
     methods = s.read_methods(j, state, task)
@@ -292,6 +293,7 @@ def prepared(s, c, j, state, reg, stage, task_id, role):
 
 def begin(s, c, j, state, reg, row, stage, observation):
     target, dispatch = c.stage_info(j, stage); o = read(observation); spawn = o['spawn']; executor = spawn['canonical_task_name']
+    verification_stage(c, j, state, stage)
     require(o.get('observation_kind') == c.OBSERVER_KIND and o.get('assurance') == 'host_attested'
             and o.get('task_id') == dispatch['task_id'] and o.get('project_id') == row['project_id']
             and executor.startswith('/root/') and spawn.get('returned_task_name') == executor, 'actual own project/Task invocation required')
@@ -325,6 +327,7 @@ def begin(s, c, j, state, reg, row, stage, observation):
 
 def review_accept(c, j, state, stage, ordinal, bootstrap):
     """d0 protected provider/collector; only author set becomes genuine old union later."""
+    verification_stage(c, j, state, stage, ordinal)
     require(importlib.util.find_spec('deck_master.review_evidence') is not None, 'BLOCKED_MISSING_OWN_CAPABILITY: original protected review')
     from deck_master import content_review, review_evidence, service
     invocation, target, envelope, proof = c.observed_result(j, stage, ordinal)
@@ -357,11 +360,87 @@ def review_accept(c, j, state, stage, ordinal, bootstrap):
     return data
 
 
-def accepted_repair_layers(j):
-    accepted = {e['data']['ordinal'] for e in j.events() if e['kind'] == 'result_accepted'}
-    return {(read(j.root/'stages'/e['data']['stage']/'task.json').get('collaboration_binding') or {}).get('phase')
-            for e in j.events() if e['kind'] == 'native_begun' and e['data']['role'] == 'repair_writer'
-            and e['data']['ordinal'] in accepted}
+def adopted_writers(c, j, state, role):
+    """Actual completed SDK adoption, tied to this later frozen native result."""
+    events = j.events(); store = c.store_for(state)
+    invocations = {e['data']['ordinal']: e['data'] for e in events if e['kind'] == 'native_begun' and e['data']['role'] == role}
+    frozen = {e['data']['ordinal']: e['data'] for e in events if e['kind'] == 'native_output_frozen'}
+    adopted = []
+    for e in events:
+        if e['kind'] != 'result_accepted' or e['data'].get('role') != role: continue
+        data = e['data']; inv = invocations.get(data['ordinal']); outcome = data['outcome']
+        if not inv or data['ordinal'] not in frozen or data['raw'] != frozen[data['ordinal']]['raw']: continue
+        task = c.task_for(store, data['task_id']); dispatch = read(j.root/'stages'/inv['stage']/'dispatch.json')
+        if dispatch['task_id'] != task['task_id'] or task['status'] != 'completed' or outcome.get('status') != 'accepted': continue
+        if state['arm'] == 'B':
+            if outcome.get('adopted') is not True: continue
+        else:
+            # Legacy acceptance has no adopted flag. Require actual accepted
+            # result Refs in the current manuscript, never a proposal receipt.
+            current = store.load_document(); refs = [x['page'] for x in current['pages']]+[current[k] for k in ('narrative', 'content_plan') if current.get(k)]
+            if outcome.get('adopted') is False or not any(r in refs for r in task.get('result_refs', [])): continue
+        adopted.append((inv, task, data))
+    return adopted
+
+
+def accepted_repair_layers(j, c=None, state=None):
+    if c is None: _, c = helpers()
+    if state is None: state = read(j.root/'run.json')
+    events = j.events()
+    requests = [e['data']['request']['request_id'] for e in events if e['kind'] == 'later_repair_request']
+    dispatched = {(e['data']['task']['task_id'], e['data']['layer']) for e in events if e['kind'] == 'repair_task_dispatched'}
+    return {binding['phase'] for _, task, _ in adopted_writers(c, j, state, 'repair_writer')
+            for binding in [task.get('collaboration_binding') or {}]
+            if binding.get('request_id') in requests and (task['task_id'], binding.get('phase')) in dispatched}
+
+
+def verification_ready(c, j, state, task=None, *, request_required=True):
+    repairs = [e['data'] for e in j.events() if e['kind'] == 'repair_begun']
+    require(len(repairs) == 1 and set(repairs[0]['necessary_layers']) <= accepted_repair_layers(j, c, state),
+            'verification needs actual adopted and accepted necessary repair layers')
+    if not request_required: return
+    doc = c.store_for(state).load_document(); current = (doc.get('collaboration') or {}).get('request') or {}
+    requests = [e['data'] for e in j.events() if e['kind'] == 'later_review_request' and e['data']['role'] == 'verification']
+    instruction = next(e['data']['instruction_evidence'] for e in j.events() if e['kind'] == 'later_instruction')
+    expected_scope = {'subject': 'pages', 'page_ids': [x['page_id'] for x in doc['pages']],
+        'page_manifest_ref': doc.get('content_plan'), 'external_artifact_ref': None, 'layers': ['review'],
+        'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'review'}
+    require(len(requests) == 1 and requests[0]['request'] == current and current.get('intent') == 'review_only'
+            and not current.get('closed') and not current.get('paused') and current.get('scope') == expected_scope
+            and current.get('instruction_evidence') == {**instruction, 'assurance': 'host_attested'}, 'actual current verification Request required')
+    if task is not None:
+        binding = task.get('collaboration_binding') or {}
+        require(task.get('kind') == 'review' and task.get('review_stage') == 'preproduction'
+                and binding.get('request_id') == current['request_id'] and binding.get('phase') == 'review'
+                and task.get('scope_pages') == expected_scope['page_ids'], 'actual current verification Task binding required')
+
+
+def verification_stage(c, j, state, stage, ordinal=None):
+    _, dispatch = c.stage_info(j, stage)
+    if ordinal is not None:
+        inv, _ = c.execution(j, stage, ordinal)
+        require(inv['role'] == dispatch['role'], 'actual invocation/dispatch roles differ')
+    if dispatch['role'] == 'verification':
+        verification_ready(c, j, state, c.task_for(c.store_for(state), dispatch['task_id']))
+
+
+def later_cut_ready(c, j, state, name, native_manifest):
+    updates = [e for e in j.events() if e['kind'] == 'later_inputs_updated']
+    doc = c.store_for(state).load_document()
+    require(len(updates) == 1 and doc['task']['brief'] == updates[0]['data']['patch']['task_patch']['brief']
+            and '10 分钟' not in doc['task']['brief'] and doc['task']['brief'].count('5 分钟') == 1,
+            'later300s cut requires actual current 300s inputs')
+    initial = {e['data']['ordinal'] for e in j.events() if e['kind'] == 'native_begun'
+               and e['data']['role'] == 'initial_writer' and e['sequence'] > updates[0]['sequence']}
+    if name == 'original_complete':
+        require(native_manifest is not None and set(read(native_manifest).get('raw_stage_ordinals', [])) <= initial,
+                'later300s cut requires actual later initial native originals')
+        return  # d0 independently validates completeness and frozen observations; SDK adoption is separate.
+    cuts = [e['data']['snapshot'] for e in j.events() if e['kind'] == 'later300s_cut' and e['data']['name'] == 'original_complete']
+    require(len(cuts) == 1, 'later300s cut requires actual later native complete cut')
+    originals = {x['ordinal'] for x in json.loads(checked(cuts[0]))['native_originals']}
+    require(any(inv['ordinal'] in initial & originals for inv, _, _ in adopted_writers(c, j, state, 'initial_writer')),
+            'later300s cut requires actual later native SDK adoption')
 
 
 FIELDS = {'release': {'trigger'}, 'materialize': set(), 'request': set(), 'inputs': set(), 'continue-content': set(),
@@ -463,7 +542,7 @@ def advance(action, control, sha, flow, payload=None, engineering=False):
                         require(not any(e['kind'] in {'feedback_delivered', 'repair_begun'} for e in j.events())
                                 and all((j.root/'snapshots'/(n+'.json')).is_file() for n in ('original_complete', 'first_sdk_complete')), 'later original/accepted cuts before single feedback')
                     else:
-                        require(len(repair) == 1 and set(repair[0]['necessary_layers']) <= accepted_repair_layers(j), 'verification needs actual accepted necessary repair layers')
+                        verification_ready(c, j, state, request_required=False)
                     previous = [e['data'] for e in j.events() if e['kind'] == 'later_review_request' and e['data']['role'] == role]
                     if previous:
                         require(len(previous) == 1 and previous[0]['request'] == current and not current.get('closed'), 'review Request already consumed/changed')
@@ -476,7 +555,7 @@ def advance(action, control, sha, flow, payload=None, engineering=False):
                     require(len(repair) == 1 and not any(e['kind'] == 'later_repair_request' for e in j.events())
                             and not any(e['kind'] == 'native_begun' and e['data']['role'] == 'verification' for e in j.events()), 'single necessary repair Request before verification')
                     layers = [x for x in ('narrative', 'plan', 'page_copy', 'speech') if
-                              (x == 'narrative' and 'argument' in repair[0]['necessary_layers']) or
+                              (x in {'narrative', 'plan'} and 'argument' in repair[0]['necessary_layers']) or
                               (x in {'plan', 'page_copy'} and 'page_copy' in repair[0]['necessary_layers']) or
                               (x == 'speech' and 'speech' in repair[0]['necessary_layers'])]
                     request_scope = {'subject': 'deck', 'page_ids': [e['page_id'] for e in doc['pages']],
@@ -507,7 +586,7 @@ def advance(action, control, sha, flow, payload=None, engineering=False):
                     require(not any(e['kind'] == 'feedback_delivered' for e in j.events())
                             and all((j.root/'snapshots'/(n+'.json')).is_file() for n in ('original_complete', 'first_sdk_complete')), 'freeze later native and accepted complete cuts before single feedback')
                 else:
-                    require(any(e['kind'] == 'repair_begun' for e in j.events()), 'verification only after necessary repair')
+                    verification_ready(c, j, state)
                 if reg['installations'][state['arm']].get('adapter_profile') == 'A0-public-legacy':
                     result = c.record_sdk(j, 'content_review.dispatch_preproduction_review.A0-original', {}, lambda: content_review.dispatch_preproduction_review(state['project']))
                 else:
@@ -523,6 +602,7 @@ def advance(action, control, sha, flow, payload=None, engineering=False):
                 result = begin(s, c, j, state, reg, row, p['stage'], p['observation'])
             elif action == 'claim':
                 from deck_master import service
+                verification_stage(c, j, state, p['stage'], p['ordinal'])
                 inv, target = c.execution(j, p['stage'], p['ordinal']); require(inv['within_budget'], 'actual over-budget native retained; cannot consume')
                 dispatch = read(target.parent.parent/'dispatch.json'); task = c.task_for(c.store_for(state), dispatch['task_id'])
                 args = {'task_id': task['task_id'], 'execution_ref': inv['executor'], 'supported_protocols': [task['protocol_version']] if task.get('protocol_version') else None,
@@ -533,8 +613,10 @@ def advance(action, control, sha, flow, payload=None, engineering=False):
                 c.save(target/'claim.json', claim); r = c.save(target/'method-read-record.json', result)
                 j.append('method_bytes_returned', {'ordinal': p['ordinal'], 'executor': inv['executor'], 'record': r, 'limitation': 'full bytes returned; actual native read separately observed'})
             elif action == 'observe':
+                verification_stage(c, j, state, p['stage'], p['ordinal'])
                 result = c.observe(j, state, **{k: p[k] for k in ('stage', 'ordinal')}, result_path=p['result'], result_sha256=p['result_sha256'], observation_path=p['observation'], observation_sha256=p['observation_sha256'])
             elif action in {'objects', 'accept', 'review-accept'}:
+                verification_stage(c, j, state, p['stage'], p['ordinal'])
                 inv, _, envelope, _ = c.observed_result(j, p['stage'], p['ordinal'])
                 require(not any(envelope.get(k) for k in ('usage_events', 'files', 'artifact_specs', 'generation_result', 'style_analysis')),
                         'Q2 content-only image/render/production budget is zero')
@@ -543,6 +625,7 @@ def advance(action, control, sha, flow, payload=None, engineering=False):
                 elif action == 'review-accept': result = review_accept(c, j, state, p['stage'], p['ordinal'], p['bootstrap'])
                 else: result = c.accept(j, state, p['stage'], p['ordinal'])
             elif action == 'feedback':
+                verification_stage(c, j, state, p['stage'], p['ordinal'])
                 c.observed_result_for_feedback(j, p['stage'], p['ordinal'])
                 resources.once('content_feedback', 'one', p); result = c.deliver_feedback(j, p['stage'], p['ordinal'])
             elif action == 'repair':
@@ -566,6 +649,7 @@ def advance(action, control, sha, flow, payload=None, engineering=False):
             elif action == 'snapshot':
                 require(p['name'] in {'original_complete', 'first_sdk_complete', 'owner_later'}, 'distinct later300s cuts only; no old equal/qualified/E1 replacement')
                 require(p['name'] == 'original_complete' or p['native_manifest'] is None, 'native manifest belongs only to actual original complete')
+                later_cut_ready(c, j, state, p['name'], p['native_manifest'])
                 result = c.snapshot(j, state, p['name'], native_manifest=p['native_manifest'])
                 j.append('later300s_cut', {'name': p['name'], 'snapshot': result, 'old_equal_qualified_unchanged': True})
             else:

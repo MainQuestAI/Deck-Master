@@ -4,6 +4,7 @@ No actual native/model/formal call. Ordinary CI invokes this explicit carrier
 in a real -I -B child; installation/guard/provider are not patched.
 """
 from copy import deepcopy
+import gc
 import importlib.util
 from pathlib import Path
 import sys
@@ -13,6 +14,13 @@ import pytest
 TOOL = Path(__file__).resolve().parents[2]/'tools/rc3_campaign/q2_later_300.py'
 spec = importlib.util.spec_from_file_location('s09_cases', TOOL)
 p = importlib.util.module_from_spec(spec); spec.loader.exec_module(p)
+
+
+@pytest.fixture(autouse=True)
+def release_completed_neutral_fixture_memory():
+    """Collect completed fixture/helper cycles; retain every artifact and case."""
+    yield
+    gc.collect()
 
 
 def installation(base, c):
@@ -178,7 +186,7 @@ def freeze_result(f, envelope, stage=None, invocation_record=None, native_object
     return raw, observation
 
 
-def finish_initial(f):
+def native_initial(f):
     from deck_master.models import canonical_json_bytes
     c = f['c']; store = c.store_for(f['state']); doc = store.load_document(); task = f['task']
     obj = store.read_object_json(doc['pages'][0]['page']); obj['customer_visible']['title'] += ' 300s'
@@ -190,12 +198,18 @@ def finish_initial(f):
         'payload': {'changed_layers': ['page_copy'], 'proposals': [{'layer': 'page_copy', 'ref': ref}],
             'diff': {'input_digest': task['input_digest'], 'summary': 'SYNTHETIC new300s Page; p2/notes/evidence retained', 'changed_page_ids': ['p1']}}}
     raw, obs = freeze_result(f, envelope, native_objects=[{**sidecar, 'declared_ref': ref}])
-    step(f, 'objects', stage=f['stage'], ordinal=f['invocation']['ordinal'])
-    f['accepted'] = step(f, 'accept', stage=f['stage'], ordinal=f['invocation']['ordinal'])
     manifest = c.save(f['base']/'native-complete-manifest.json', {'format': 'rc3-native-complete-draft-manifest.v1',
         'SYNTHETIC_NOT_MODEL_COMPLETENESS': True, 'complete_native_manuscript_observed': True, 'assurance': 'host_attested',
         'raw_stage_ordinals': [f['invocation']['ordinal']], 'completeness_source_observation': obs, 'readonly_conversion': None})
-    step(f, 'snapshot', name='original_complete', native_manifest=manifest['path'])
+    f['native_manifest'] = manifest
+    return f
+
+
+def finish_initial(f):
+    native_initial(f)
+    step(f, 'objects', stage=f['stage'], ordinal=f['invocation']['ordinal'])
+    f['accepted'] = step(f, 'accept', stage=f['stage'], ordinal=f['invocation']['ordinal'])
+    step(f, 'snapshot', name='original_complete', native_manifest=f['native_manifest']['path'])
     step(f, 'snapshot', name='first_sdk_complete', native_manifest=None)
     return f
 
@@ -400,13 +414,18 @@ def test_actual_F2_preserved_and_cannot_claim(tmp_path):
 
 
 def repair_fixture(base, layer='page_copy'):
+    f = declared_repair(base, layer)
+    step(f, 'repair-request'); f['repair_task'] = step(f, 'repair-task', layer=layer)
+    return f
+
+
+def declared_repair(base, layer='page_copy'):
     f = finish_initial(launch(inputs(fixture(base)))); record = review(f, fail=True)
     step(f, 'review-accept', stage=record['stage'], ordinal=record['ordinal'], bootstrap=f['bootstrap']['path'])
     step(f, 'feedback', stage=record['stage'], ordinal=record['ordinal'])
     necessity = f['c'].save(f['base']/'necessary-repair.json', {'SYNTHETIC_NOT_NATIVE_JUDGMENT': True,
         'necessary_layers': [layer], 'actual_review_finding_refs': ['neutral-f1']})
-    step(f, 'repair', necessity=necessity['path']); step(f, 'repair-request')
-    f['repair_task'] = step(f, 'repair-task', layer=layer)
+    step(f, 'repair', necessity=necessity['path']); f['feedback_record'] = record
     return f
 
 
@@ -517,3 +536,148 @@ def test_private_target_rejected_before_resolve_stat_or_frozen_reader(monkeypatc
         p.canonical('/private/never-open.json')
     with pytest.raises(ValueError, match='ordinary public path'):
         p.advance('release', '/unused-control', '0'*64, 'r04', {'trigger': '/private/never-open.json'}, True)
+
+
+@pytest.mark.parametrize('phase', ['materialized', 'inputs', 'claimed', 'native-frozen'])
+@pytest.mark.parametrize('name', ['first_sdk_complete', 'owner_later'])
+def test_later_sdk_cuts_require_actual_300s_native_adoption(tmp_path, phase, name):
+    f = fixture(tmp_path)
+    f = released(f) if phase == 'materialized' else inputs(f)
+    if phase in {'claimed', 'native-frozen'}: launch(f)
+    if phase == 'native-frozen': native_initial(f)
+    c = f['c']; j = c.Journal(f['state']['root']); before = c.store_for(f['state']).load_document()
+    events = j.events(); resources = step(f, 'status')['resources']
+    with pytest.raises(ValueError, match='later300s cut'):
+        step(f, 'snapshot', name=name, native_manifest=None)
+    assert c.store_for(f['state']).load_document() == before and j.events() == events
+    assert step(f, 'status')['resources'] == resources
+    assert not (j.root/'snapshots'/(name+'.json')).exists()
+
+
+def test_native_complete_before_sdk_remains_legal_but_first_sdk_waits_for_adoption(tmp_path):
+    f = native_initial(launch(inputs(fixture(tmp_path)))); c = f['c']; j = c.Journal(f['state']['root'])
+    original = step(f, 'snapshot', name='original_complete', native_manifest=f['native_manifest']['path'])
+    assert not any(e['kind'] == 'result_accepted' for e in j.events())
+    with pytest.raises(ValueError, match='later300s cut'):
+        step(f, 'snapshot', name='first_sdk_complete', native_manifest=None)
+    step(f, 'objects', stage=f['stage'], ordinal=f['invocation']['ordinal'])
+    outcome = step(f, 'accept', stage=f['stage'], ordinal=f['invocation']['ordinal'])
+    assert outcome['adopted'] is True
+    cut = step(f, 'snapshot', name='first_sdk_complete', native_manifest=None)
+    assert c.reference(original['path']) == original and c.read(cut['path'])['manuscript']['document']['task']['brief'].count('5 分钟') == 1
+
+
+@pytest.mark.parametrize('action', ['review-request', 'review-prepare', 'prepare'])
+def test_every_verification_prepare_route_refuses_declared_but_unadopted_repairs(tmp_path, action):
+    f = declared_repair(tmp_path); c = f['c']; j = c.Journal(f['state']['root'])
+    payload = {'role': 'verification'}
+    if action != 'review-request': payload['stage'] = 'premature-verification'
+    if action == 'review-prepare': payload['bootstrap'] = f['bootstrap']['path']
+    if action == 'prepare':
+        stage, _, _ = legacy_verification_carrier(f)
+        payload['task_id'] = c.read(j.root/'stages'/stage/'dispatch.json')['task_id']
+    before = c.store_for(f['state']).load_document(); events = j.events(); resources = step(f, 'status')['resources']
+    with pytest.raises(ValueError, match='accepted necessary repair'):
+        step(f, action, **payload)
+    assert c.store_for(f['state']).load_document() == before and j.events() == events
+    assert step(f, 'status')['resources'] == resources and not (j.root/'stages/premature-verification').exists()
+
+
+def legacy_verification_carrier(f, claimed=False, observed=False, completion=False):
+    """Real neutral legacy d0 carrier: no production guard is replaced/disabled.
+
+    Deliberately exercise the original frozen API to seed a valid premature
+    Task/packet/invocation, as R1 did. These synthetic setup operations are
+    metered; the fixed public S09 entry must independently refuse consumption.
+    """
+    from deck_master import content_review
+    c = f['c']; stage = 'legacy-premature-verification'; executor = '/root/neutral_legacy_verifier'
+    with p.session(f['control']['path'], f['control']['sha256'], f['flow'], True) as (_, _, j, _, _, reg, state, _, _):
+        with c.native_runtime(f['bootstrap']['path']) as registry:
+            outcome = c.record_sdk(j, 'content_review.dispatch_preproduction_review.SYNTHETIC_legacy_setup', {},
+                lambda: content_review.dispatch_preproduction_review(state['project'], adapter_context=registry.channel_context()))
+        dispatch = c.prepare(j, state, reg, stage, outcome['task']['task_id'], 'verification')
+        obs = invocation(f, stage, executor)
+        inv = c.begin_native(j, state, reg, stage, obs['path']) if claimed or observed else None
+        if claimed or observed: c.claim_read(j, state, stage, inv['ordinal'], executor)
+        if observed or completion:
+            # An actual SDK-readable original review envelope, frozen through
+            # d0's unchanged raw/completion observer, without an S09 V permit.
+            envelope = deepcopy(f['feedback_record']['envelope'])
+            for review_record in envelope['reviews']:
+                review_record['reviewer']['id'] = review_record['reviewer']['execution_ref'] = executor
+            target = c.execution(j, stage, inv['ordinal'])[1]
+            raw = c.save(f['base']/'legacy-review-original.json', envelope)
+            completion = c.save(f['base']/'legacy-review-completion.json', {'SYNTHETIC_NOT_ACTUAL_NATIVE_FINAL': True,
+                'observation_kind': c.OBSERVER_KIND, 'assurance': 'host_attested', 'observed_at_utc': c.now(),
+                'task_id': dispatch['task_id'], 'project_id': dispatch['project_id'], 'method_release': dispatch['method_release'],
+                'model_output_bytes_sha256': raw['sha256'], 'all_method_bytes_read': True,
+                'method_read_record_sha256': c.reference(target/'method-read-record.json')['sha256'], 'native_object_files': [],
+                'completion': {'sender': executor, 'message_type': 'FINAL_ANSWER', 'status_observation_tool': 'collaboration.list_agents',
+                    'observed_status': 'completed', 'observed_completed_agents': [executor], 'raw_final_message': Path(raw['path']).read_text()}})
+            f['legacy_completion_payload'] = {'result': raw['path'], 'result_sha256': raw['sha256'], 'observation': completion['path'], 'observation_sha256': completion['sha256']}
+            if observed: c.observe(j, state, stage, inv['ordinal'], raw['path'], raw['sha256'], completion['path'], completion['sha256'])
+        j.append('project_frontier', {'revision_id': c.store_for(state).load_document()['revision_id'], 'action': 'SYNTHETIC_legacy_carrier_setup'})
+    return stage, obs, inv
+
+
+@pytest.mark.parametrize('action', ['begin', 'claim', 'observe', 'objects', 'accept', 'review-accept', 'feedback'])
+def test_legacy_premature_verification_carriers_cannot_bypass_any_later_entry(tmp_path, action):
+    f = declared_repair(tmp_path); c = f['c']; j = c.Journal(f['state']['root'])
+    stage, observation, inv = legacy_verification_carrier(f, claimed=action != 'begin', observed=action in {'objects', 'accept', 'review-accept', 'feedback'}, completion=action == 'observe')
+    payload = {'stage': stage, 'observation': observation['path']} if action == 'begin' else {'stage': stage, 'ordinal': inv['ordinal']}
+    if action == 'review-accept': payload['bootstrap'] = f['bootstrap']['path']
+    if action == 'observe':
+        payload.update(f['legacy_completion_payload'])
+    before = c.store_for(f['state']).load_document(); events = j.events(); resources = step(f, 'status')['resources']
+    with pytest.raises(ValueError, match='accepted necessary repair'):
+        step(f, action, **payload)
+    assert c.store_for(f['state']).load_document() == before and j.events() == events
+    assert step(f, 'status')['resources'] == resources
+
+
+def test_adopted_repairs_still_require_current_verification_request_and_real_task_binding(tmp_path):
+    f = finish_speech_repair(repair_fixture(tmp_path, 'speech')); c = f['c']; j = c.Journal(f['state']['root'])
+    before = step(f, 'status')['resources']
+    with pytest.raises(ValueError, match='current verification Request'):
+        step(f, 'review-prepare', stage='missing-verification-request', role='verification', bootstrap=f['bootstrap']['path'])
+    assert step(f, 'status')['resources'] == before
+    step(f, 'review-request', role='verification')
+    # The actual previous feedback Task cannot masquerade as the fresh current V Task.
+    with pytest.raises(ValueError, match='verification Task'):
+        step(f, 'prepare', stage='old-feedback-task', role='verification', task_id=f['feedback_record']['dispatch']['task_id'])
+    record = review(f, role='verification', stage='legal-verification', executor='/root/neutral_final_verifier')
+    result = step(f, 'review-accept', stage=record['stage'], ordinal=record['ordinal'], bootstrap=f['bootstrap']['path'])
+    assert result['role'] == 'verification' and result['outcome']['status'] == 'accepted'
+
+
+def test_real_argument_proposal_receipt_is_not_an_adopted_necessary_repair(tmp_path):
+    f = repair_fixture(tmp_path, 'argument'); task = f['repair_task']; c = f['c']
+    request = c.store_for(f['state']).load_document()['collaboration']['request']
+    assert request['scope']['layers'] == ['narrative', 'plan', 'review']
+    assert request['instruction_evidence']['source_ref'] == f['instruction']['source_ref']
+    step(f, 'prepare', stage='argument-repair', role='repair_writer', task_id=task['task_id'])
+    obs = invocation(f, 'argument-repair', '/root/neutral_argument_proposer')
+    inv = step(f, 'begin', stage='argument-repair', observation=obs['path'])
+    step(f, 'claim', stage='argument-repair', ordinal=inv['ordinal'])
+    narrative = {'schema_version': 'narrative.v1', 'narrative_id': 'neutral-repair-proposal', 'version': 1,
+        'project_id': c.store_for(f['state']).load_document()['project_id'], 'origin': 'host_composed', 'maturity': 'argument',
+        'input_basis': [], 'communication_job': {'mode': 'train', 'audience_fact_key': 'task.audience',
+            'audience_question': 'How to preserve unknown facts?', 'desired_outcome': 'Keep the boundary read-only.',
+            'observable_success': 'Record unknown facts explicitly.', 'use_mode': 'live', 'primary_use': 'live'},
+        'central_node_id': 'claim', 'nodes': [{'node_id': 'claim', 'role': 'claim', 'statement': 'Keep unknown explicit.',
+            'authority': 'instruction', 'source_links': [], 'qualification_node_ids': [], 'unresolved_issue_ids': []}],
+        'edges': [], 'issues': [], 'alternatives': [], 'previous_ref': None}
+    envelope = {'schema_version': 'compose_result.v2', 'kind': 'compose', 'variant': 'narrative', 'task_id': task['task_id'],
+        'operation_id': task['operation_id'], 'produced_against': task['produced_against'],
+        'eligibility_digest': task['collaboration_binding']['eligibility_digest'], 'usage_events': [], 'payload': {'narrative': narrative}}
+    freeze_result(f, envelope, 'argument-repair', inv)
+    result = step(f, 'accept', stage='argument-repair', ordinal=inv['ordinal'])
+    assert result['status'] == 'accepted' and result['adopted'] is False
+    j = c.Journal(f['state']['root']); assert p.accepted_repair_layers(j) == set()
+    assert c.store_for(f['state']).load_document().get('narrative') is None
+    before = step(f, 'status')['resources']
+    for action, payload in [('review-request', {'role': 'verification'}),
+                            ('review-prepare', {'role': 'verification', 'stage': 'unadopted-V', 'bootstrap': f['bootstrap']['path']})]:
+        with pytest.raises(ValueError, match='accepted necessary repair'): step(f, action, **payload)
+    assert step(f, 'status')['resources'] == before

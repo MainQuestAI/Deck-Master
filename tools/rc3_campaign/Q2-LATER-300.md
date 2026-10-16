@@ -87,9 +87,16 @@ only those layers through the existing public lifecycle, retaining the same
 52B source. A necessary speech-only repair uses existing speech_only. `repair-task`
 dispatches only a declared layer through the actual public phase API; its SDK
 intent is the existing `initial` enum, while its **metered native role remains
-repair_writer**. Argument output stays proposal-only under the original SDK;
+repair_writer**. Argument repair requests include the existing SDK's required
+narrative+plan scope for that single declared argument layer; no extra repair
+cycle or unnecessary layer is dispatched. Argument output stays proposal-only under the original SDK;
 this adapter invents no direction decision/adoption. Verification needs actual
-accepted necessary-layer results, a fresh current review_request and V<=1.
+adopted necessary-layer results, a fresh current review_request and V<=1.
+Every prepare, begin, claim, observe and consume entry independently checks
+that lifecycle. A completed proposal-only Task is not an adopted repair.
+The actual Task must bind the current verification Request, current Page IDs,
+Plan manifest and the same released 52B instruction. An old feedback Task or
+legacy premature verification packet grants no verification permission.
 Its output never becomes another feedback/repair cycle. A0's actual capability
 refusals remain refusals; no B bridge or migration is imported.
 
@@ -118,6 +125,13 @@ later intents, changed frontiers/current revision, interrupted projections,
 unknown/lost acknowledgments or overruns block new consumption. `status` only
 reports actual local journal/resource facts and does not reconcile or grant retry.
 Later snapshots live only in the new scope; old equal/qualified/E1 cannot be named.
+All later cuts require the actual current 5-minute inputs and later native
+lineage. `original_complete` still records a complete frozen native draft
+before SDK acceptance. `first_sdk_complete` and `owner_later` additionally
+require that original cut and an actual completed/adopted later Writer result.
+A0 uses its original accepted legacy result Refs in the current manuscript;
+it is not required to supply B's `adopted` field or modern Request. These are
+lifecycle facts, not a duration-quality threshold, quality PASS or model gate.
 
 Validation uses substantive real SDK source cases in a real isolated child of
 ordinary pytest, plus new engineering installations of the original own wheels.
