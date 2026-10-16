@@ -89,3 +89,13 @@ is the sole source-suite seam. Public grants/fidelity/call-begin setup and the
 transport-lost response fixture are labeled L1 engineering, never native or
 image execution. The separate managed CLI trace uses the real original package,
 complete installation admission and `-I -B` with no installation seam.
+
+The standard pytest entry `tests/rebuild/test_rc3_scoped_terminal_reconciliation.py`
+now runs the unchanged 45 substantive cases in an actual `-I -B` child process.
+The carrier `tests/rebuild/rc3_scoped_terminal_reconciliation_cases.py` is excluded
+from automatic filename collection and can also be run explicitly with isolated
+pytest. The ordinary outer suite has three checks: the complete 45-case child
+run plus two actual CLI flag refusals. Child JUnit must contain all 45 successful
+unique cases and no skips/errors/failures. Actual argv, UTC, stdout, stderr,
+exit and Runtime flag observations remain in the pytest temporary directory.
+This harness change preserves the production guard and does not relabel CI508.
