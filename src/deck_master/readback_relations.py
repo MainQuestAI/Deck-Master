@@ -42,6 +42,116 @@ def _inside(item, bounds):
             and item['y'] + item['height'] <= bottom + epsilon)
 
 
+def _native_grid_shape(native, *, frame):
+    """A narrow native grid subset, not a DrawingML bounding-box inference.
+
+    Literal single-path line segments and closed convex polygonal frames
+    (including the emitter's rounded-rect outline) are supported, as is an
+    unadjusted native rect preset. Other geometry/paint stays unverified.
+    """
+    try:
+        if (native.find('p:spPr/a:scene3d', NS) is not None
+                or native.find('p:spPr/a:sp3d', NS) is not None):
+            return None
+        transform = native.find('p:spPr/a:xfrm', NS)
+        offset, extent = transform.find('a:off', NS), transform.find('a:ext', NS)
+        x, y = int(offset.get('x')) / EMU_PER_PX, int(offset.get('y')) / EMU_PER_PX
+        width, height = int(extent.get('cx')) / EMU_PER_PX, int(extent.get('cy')) / EMU_PER_PX
+        rotation = int(transform.get('rot', '0'))
+        if min(width, height) <= 0 or rotation % 5400000:
+            return None
+        flips = [transform.get(key, '0') for key in ('flipH', 'flipV')]
+        if any(value not in ('0', '1', 'true', 'false') for value in flips):
+            return None
+        line = native.find('p:spPr/a:ln', NS)
+        color = line.find('a:solidFill/a:srgbClr', NS) if line is not None else None
+        if line is None or int(line.get('w', '0')) <= 0 or color is None:
+            return None
+        if (len(line.findall('a:solidFill', NS)) != 1
+                or len(line.find('a:solidFill', NS)) != 1
+                or line.find('a:noFill', NS) is not None or line.find('a:gradFill', NS) is not None
+                or any(child.tag != '{' + NS['a'] + '}alpha' for child in color)
+                or len(color) > 1):
+            return None
+        if len(color) and not 0 < int(color[0].get('val')) <= 100000:
+            return None
+        dash = line.find('a:prstDash', NS)
+        if line.find('a:custDash', NS) is not None or (dash is not None and dash.get('val') != 'solid'):
+            return None
+        custom = native.find('p:spPr/a:custGeom', NS)
+        preset = native.find('p:spPr/a:prstGeom', NS)
+        if (custom is None) == (preset is None):
+            return None
+        if preset is not None:
+            if not frame or preset.get('prst') != 'rect' or preset.findall('a:avLst/*', NS):
+                return None
+            local = [(0, 0), (1, 0), (1, 1), (0, 1)]
+        else:
+            paths = custom.findall('a:pathLst/a:path', NS)
+            if len(paths) != 1:
+                return None
+            path = paths[0]
+            pw, ph = int(path.get('w')), int(path.get('h'))
+            if min(pw, ph) <= 0 or path.get('stroke', 'true') not in ('1', 'true'):
+                return None
+            commands = list(path)
+            tags = [c.tag.rsplit('}', 1)[-1] for c in commands]
+            if frame:
+                if len(tags) < 5 or tags[0] != 'moveTo' or tags[-1] != 'close' or set(tags[1:-1]) != {'lnTo'}:
+                    return None
+                commands = commands[:-1]
+            elif tags != ['moveTo', 'lnTo']:
+                return None
+            local = []
+            for command in commands:
+                if len(command) != 1 or command[0].tag != '{' + NS['a'] + '}pt':
+                    return None
+                px, py = int(command[0].get('x')), int(command[0].get('y'))
+                if not (0 <= px <= pw and 0 <= py <= ph):
+                    return None
+                local.append((px / pw, py / ph))
+        angle = math.radians(rotation / 60000)
+        points = []
+        for px, py in local:
+            dx, dy = (px - .5) * width, (py - .5) * height
+            dx *= -1 if flips[0] in ('1', 'true') else 1
+            dy *= -1 if flips[1] in ('1', 'true') else 1
+            points.append((x + width / 2 + dx * math.cos(angle) - dy * math.sin(angle),
+                           y + height / 2 + dx * math.sin(angle) + dy * math.cos(angle)))
+    except (AttributeError, TypeError, ValueError, OverflowError):
+        return None
+    epsilon = 2 / EMU_PER_PX
+    if frame and math.dist(points[0], points[-1]) <= epsilon:
+        points.pop()
+    left, top = min(p[0] for p in points), min(p[1] for p in points)
+    right, bottom = max(p[0] for p in points), max(p[1] for p in points)
+    geometry = dict(x=left, y=top, width=right-left, height=bottom-top)
+    if not frame:
+        return geometry if math.dist(*points) > epsilon else None
+    if len(points) < 4 or min(right-left, bottom-top) <= epsilon:
+        return None
+    edges = list(zip(points, points[1:] + points[:1]))
+    turns = []
+    for first, second in zip(edges, edges[1:] + edges[:1]):
+        a, b = (first[1][i] - first[0][i] for i in (0, 1))
+        c, d = (second[1][i] - second[0][i] for i in (0, 1))
+        if math.hypot(a, b) <= epsilon:
+            return None
+        turns.append(math.atan2(a*d-b*c, a*c+b*d))
+    if (not math.isclose(abs(sum(turns)), math.tau, abs_tol=1e-7)
+            or (any(t > 1e-9 for t in turns) and any(t < -1e-9 for t in turns))):
+        return None
+    sides = {'left': [], 'right': [], 'top': [], 'bottom': []}
+    for a, b in edges:
+        for key, value in (('left', left), ('right', right)):
+            if abs(a[0]-value) <= epsilon and abs(b[0]-value) <= epsilon:
+                sides[key].append(sorted((a[1], b[1])))
+        for key, value in (('top', top), ('bottom', bottom)):
+            if abs(a[1]-value) <= epsilon and abs(b[1]-value) <= epsilon:
+                sides[key].append(sorted((a[0], b[0])))
+    return {**geometry, 'sides': sides} if all(sides.values()) else None
+
+
 def _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete):
     """Recover a declared table's complete grid from actual native geometry.
 
@@ -50,8 +160,11 @@ def _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete):
     bounds. An absent/ambiguous grid is unverified, never an enlarged tolerance.
     """
     grids = set()
-    for frame in records:
-        if not frame.get('table_frame') or frame.get('table_id') != table_id:
+    for record in records:
+        if not record.get('table_frame') or record.get('table_id') != table_id:
+            continue
+        frame = record.get('grid_geometry')
+        if frame is None:
             continue
         left, top = frame['x'], frame['y']
         right, bottom = left + frame['width'], top + frame['height']
@@ -59,9 +172,10 @@ def _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete):
         # This epsilon identifies coincident rules; it is not cell text slop.
         epsilon = .02
         vertical, horizontal = [], []
-        for rule in records:
-            if rule['kind'] != 'line':
+        for record in records:
+            if record['kind'] != 'line' or record.get('grid_geometry') is None:
                 continue
+            rule = record['grid_geometry']
             if (rule['width'] <= epsilon and left < rule['x'] < right
                     and abs(rule['y'] - top) <= epsilon
                     and abs(rule['height'] - frame['height']) <= epsilon):
@@ -71,6 +185,12 @@ def _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete):
                     and abs(rule['width'] - frame['width']) <= epsilon):
                 horizontal.append(rule['y'])
         if len(vertical) != len(columns) - 1 or len(horizontal) != len(rows):
+            continue
+        # Every divider must actually meet both drawn frame sides, including
+        # rounded frames. A closed bounding envelope alone is not a perimeter.
+        if any(not any(a-epsilon <= value <= b+epsilon for a, b in frame['sides'][side])
+               for values, sides in ((vertical, ('top', 'bottom')), (horizontal, ('left', 'right')))
+               for value in values for side in sides):
             continue
         xs, ys = (left, *sorted(vertical), right), (top, *sorted(horizontal), bottom)
         if any(b - a <= epsilon for values in (xs, ys) for a, b in zip(values, values[1:])):
@@ -89,6 +209,7 @@ def _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete):
 
 
 def check_native_relations(root, source, page):
+    parents = {child: parent for parent in root.iter() for child in parent}
     shapes = defaultdict(list)
     for native in root.findall(".//p:sp", NS):
         identity = native.find("p:nvSpPr/p:cNvPr", NS)
@@ -119,6 +240,17 @@ def check_native_relations(root, source, page):
             record = {**geometry, 'element': original['id'], 'native_shape_id': identity.get('id'),
                       'node_ref': original.get('node_ref'), 'kind': original['kind'],
                       'table_id': original.get('table_id'), 'table_frame': original.get('table_frame')}
+            ancestor = parents.get(native)
+            grouped = False
+            while ancestor is not None:
+                grouped |= (ancestor.tag == '{' + NS['p'] + '}grpSp'
+                            or (ancestor.tag == '{' + NS['p'] + '}spTree'
+                                and ancestor.find('p:grpSpPr/a:xfrm', NS) is not None))
+                ancestor = parents.get(ancestor)
+            if grouped:
+                incomplete.add(name)  # local xfrm lacks the ancestor transform
+            elif original['kind'] == 'line' or original.get('table_frame'):
+                record['grid_geometry'] = _native_grid_shape(native, frame=bool(original.get('table_frame')))
             records.append(record)
             if original['kind'] == 'text':
                 record['text'] = ''.join(item.text or '' for item in native.findall('.//a:t', NS))
