@@ -202,6 +202,12 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 return value
             except ValueError: raise SvgError(f'{page_id}/{identity}: {key} must use unitless pixels')
         base=dict(id=identity,kind=tag,fill=attrs.get('fill','#000000'),stroke=attrs.get('stroke','none'),stroke_width=num('stroke-width',1),stroke_linecap=attrs.get('stroke-linecap','butt'),stroke_linejoin=attrs.get('stroke-linejoin','miter'),stroke_miterlimit=num('stroke-miterlimit',4),opacity=num('opacity',1),fill_opacity=num('fill-opacity',1),stroke_opacity=num('stroke-opacity',1),atom_id=el.get('data-atom-id'),node_ref=el.get('data-node-ref'),edge_ref=el.get('data-edge-ref'))
+        if el.get('data-table-id'):
+            base['table_id'] = el.get('data-table-id')
+            if tag == 'rect':
+                # Rounded rectangles become paths below; retain their actual
+                # frame semantics without changing emitted native geometry.
+                base['table_frame'] = True
         if any(not 0 <= base[key] <= 1 for key in ('opacity','fill_opacity','stroke_opacity')) or base['stroke_width'] < 0:
             raise SvgError(f'{page_id}/{identity}: invalid opacity or stroke width')
         if 'opacity' in el.attrib:
