@@ -265,7 +265,7 @@ def prepare_grant(store, document, authorization, input):
     if "fixed_budget" in authorization["constraints"]:
         raise ModelError("authorization/constraints/fixed_budget", "budget bindings are computed by the Runtime")
     template = authorization.get("budget_template")
-    if not template:
+    if not template or template == "explicit":
         return None
     if "scope" in input and not input["scope"]:
         raise ModelError("budget/scope", "an explicitly empty scope cannot default to the whole request")

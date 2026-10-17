@@ -759,6 +759,12 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
                     raise ModelError('authorization/max_external_calls', 'a child cannot increase its parent ceiling')
             if authorization['max_candidate_count'] > authority_parent['max_candidate_count']:
                 raise ModelError('authorization/max_candidate_count', 'a child cannot increase its parent candidate ceiling')
+        if replaces_ref:
+            for quantity in ('max_external_calls', 'max_candidate_count'):
+                old_root = eligibility._chain_root_identity(store, document, replaced_record, quantity=quantity)
+                new_root = eligibility._chain_root_identity(store, document, authorization, quantity=quantity)
+                if old_root != new_root:
+                    raise ModelError('authorization/budget_parent_ref', 'a replacement cannot move historical consumption to another numeric root')
         if authorization['delivery_binding'] == 'exact_artifact':
             from .delivery_eligibility import selected_output
             selected = selected_output(store, document, notes_policy=(input.get('constraints') or {}).get('delivery_notes_policy'))

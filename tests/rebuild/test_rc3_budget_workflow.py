@@ -223,6 +223,19 @@ def test_client_cannot_forge_computed_budget_metadata(tmp_path):
     assert store.load_document() == before
 
 
+def test_explicit_numeric_template_keeps_its_declared_cap_without_derived_credits(tmp_path):
+    path, store = project(tmp_path)
+    result = grant(path, store, template='explicit', max_external_calls=1)
+    record = store.read_object_json(result['authorization_ref'])
+    assert record['budget_template'] == 'explicit' and record['max_external_calls'] == 1
+    assert 'fixed_budget' not in record['constraints']
+    doc = store.load_document()
+    task = service.open_blueprint_task(store, doc, doc['pages'][0])
+    assert task['collaboration_binding']['authorization_ref'] == result['authorization_ref']
+    spend(path, store, task)
+    assert eligibility.authorization_budget(store, store.load_document(), result['authorization_ref'])['remaining'] == 0
+
+
 def test_numeric_child_cannot_switch_to_an_unrelated_larger_root(tmp_path):
     path, store = project(tmp_path)
     parent = _grant(path,store,actions=('dispatch.blueprint',),mode='delegate',

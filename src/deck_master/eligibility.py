@@ -576,7 +576,11 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict, 
                     break
                 cursor = store.read_object_json(parent_ref)
         local_used = sum(usage.get(item, 0) for item in descendants)
-        local_ceiling = int(current.get(_quantity) or 0)
+        # Replacing an intermediate parent narrows existing descendants too.
+        # Read its current ceiling while retaining the original numeric chain
+        # and historical Task attribution.
+        current_head = records.get(identity, current)
+        local_ceiling = int(current_head.get(_quantity) or 0)
         remaining = min(remaining, max(0, local_ceiling - local_used))
         if identity == root_id or not current.get("budget_parent_ref"):
             break
