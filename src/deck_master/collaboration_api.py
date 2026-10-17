@@ -10,7 +10,7 @@ from .operations import OperationError
 WRITE_ACTIONS = {name: name for name in (
     'request.start', 'request.replace', 'decision', 'grant', 'adopt-proposal',
     'pause', 'resume', 'revoke', 'migration.apply', 'review.import', 'draft.import')}
-READ_ACTIONS = ('show', 'migration.describe', 'eligibility', 'review.bindings', 'review.evaluate', 'delivery.describe', 'draft.preview')
+READ_ACTIONS = ('show', 'migration.describe', 'eligibility', 'review.bindings', 'review.evaluate', 'delivery.describe', 'draft.preview', 'budget.describe')
 MUTATING_ROUTES = ('continue',)
 _FORBIDDEN = {'adapter_context', 'verified_user_events', 'independent_review_receipts', 'human_review_receipts'}
 _REQUEST = {'intent', 'content_intent', 'scope', 'instruction_evidence', 'variant',
@@ -20,7 +20,7 @@ _DECISION = {'topic', 'delegation_ref', 'authority_mode', 'instruction_evidence'
 _GRANT = {'instruction_evidence', 'basis', 'authorization_id', 'replaces', 'mode', 'actions', 'scope',
           'decision_refs', 'delegated_topics', 'constraints', 'max_external_calls', 'max_candidate_count',
           'budget_template', 'budget_parent_ref', 'budget_key', 'adoption_policy', 'delivery_binding',
-          'parent_authorization_ref', 'expires_at', 'stop_conditions'}
+          'parent_authorization_ref', 'expires_at', 'stop_conditions', 'plan_ref', 'change_plan_id'}
 _FIELDS = {
     'show': set(), 'migration.describe': set(),
     'continue': set(),
@@ -38,6 +38,7 @@ _FIELDS = {
     'review.evaluate': {'source', 'source_sha256', 'scope', 'persistence', 'report_output'},
     'draft.import': {'draft_payload', 'instruction_evidence', 'preserve_mainline'},
     'draft.preview': {'draft_payload', 'preserve_mainline'},
+    'budget.describe': {'budget_template', 'scope', 'plan_ref', 'change_plan_id', 'parent_authorization_ref'},
 }
 
 
@@ -222,6 +223,9 @@ def invoke(project, action, payload=None, *, adapter_context=None, expected_proj
         elif action == 'delivery.describe':
             from .delivery_eligibility import describe
             result = describe(project, **body)
+        elif action == 'budget.describe':
+            from .collaboration_budget import describe
+            result = describe(project, **body)
         elif action == 'review.bindings':
             from . import review_import
             result = review_import.describe_bindings(project, **body)
@@ -269,6 +273,7 @@ def invoke(project, action, payload=None, *, adapter_context=None, expected_proj
 
 
 HTTP_ROUTES = {
+    ('POST', '/api/projects/{project_id}/collaboration/budget-preview'): 'budget.describe',
     ('POST', '/api/reviews/evaluate'): 'review.evaluate',
     ('GET', '/api/projects/{project_id}/collaboration'): 'show',
     ('GET', '/api/projects/{project_id}/collaboration/migration'): 'migration.describe',

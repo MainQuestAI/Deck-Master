@@ -182,6 +182,7 @@ def commit(project, *, plan_id, base_revision, operation_id):
         # covered by an authorization before any task or allowance is created.
         from . import eligibility
         eligibility.guard(store, document, "change.commit", context={
+            "candidate_count": sum(action.get('mode') == 'trial' for action in record['actions']),
             "targets": {"page_ids": [action['page_id'] for action in record['actions']],
                         "layers": _plan_layers(record)}})
         active = [store.read_object_json(ref) for ref in document['tasks']]

@@ -442,7 +442,7 @@ def _same_ref(left, right) -> bool:
     return (left.get("path"), left.get("sha256")) == (right.get("path"), right.get("sha256"))
 
 
-def _chain_root_identity(store: Store, document: dict, record: dict) -> str | None:
+def _chain_root_identity(store: Store, document: dict, record: dict, *, quantity="max_external_calls") -> str | None:
     """The numeric budget root of an authorization: itself, or the top of its
     ``budget_parent_ref`` chain (CONTRACTS §3.4: 子授权共享父预算根)."""
     seen = set()
@@ -461,15 +461,21 @@ def _chain_root_identity(store: Store, document: dict, record: dict) -> str | No
             return identity
         if not isinstance(parent, dict) or not parent.get("authorization_id"):
             return identity
+        # A zero-call future-page authority cannot execute, but its computed
+        # template child is the finite numeric root (§3.4.5).
+        if not parent.get(quantity) and (
+                (quantity == "max_external_calls" and (current.get("constraints") or {}).get("fixed_budget"))
+                or (quantity == "max_candidate_count" and not current.get("parent_authorization_ref"))):
+            return identity
         current = parent
     return current.get("authorization_id")
 
 
-def _budget_chain_ids(store: Store, document: dict, authorization_ref: dict) -> set[str]:
+def _budget_chain_ids(store: Store, document: dict, authorization_ref: dict, *, quantity="max_external_calls") -> set[str]:
     ids = set()
-    root = _chain_root_identity(store, document, store.read_object_json(authorization_ref))
+    root = _chain_root_identity(store, document, store.read_object_json(authorization_ref), quantity=quantity)
     for _, record in _authorization_heads(store, document):
-        if _chain_root_identity(store, document, record) == root:
+        if _chain_root_identity(store, document, record, quantity=quantity) == root:
             ids.add(record.get("authorization_id"))
     return ids
 
@@ -526,7 +532,7 @@ def credit_state(store: Store, document: dict, budget_key: str, ceiling: int = 1
             "state": "available" if used < ceiling else "exhausted"}
 
 
-def authorization_budget(store: Store, document: dict, authorization_ref: dict) -> dict:
+def authorization_budget(store: Store, document: dict, authorization_ref: dict, *, _quantity="max_external_calls") -> dict:
     """Derived budget state of one authorization and its shared budget root.
 
     The chain ceiling is the numeric ceiling of the authorization that holds
@@ -534,22 +540,48 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict) 
     second ledger. ``state`` is available/exhausted (never a revocation).
     """
     record = store.read_object_json(authorization_ref)
-    chain_ids = _budget_chain_ids(store, document, authorization_ref)
-    ceiling = 0
-    for _, other in _authorization_heads(store, document):
-        if other.get("authorization_id") in chain_ids:
-            ceiling = max(ceiling, int(other.get("max_external_calls") or 0))
-    used = 0
+    chain_ids = _budget_chain_ids(store, document, authorization_ref, quantity=_quantity)
+    records = {item["authorization_id"]: item for _, item in _authorization_heads(store, document)}
+    root_id = _chain_root_identity(store, document, record, quantity=_quantity)
+    root = records.get(root_id, record)
+    usage = {}
     for ref in document.get("tasks") or []:
-        try:
-            task = store.read_object_json(ref)
-        except Exception:  # noqa: BLE001
-            continue
-        if task_authorization_id(store, task) not in chain_ids:
-            continue
-        used += sum(1 for entry in task.get("call_allowances") or []
-                    if entry.get("state") in HELD_STATES)
-    unknown = any(entry.get("state") == "unknown"
+        task = store.read_object_json(ref)
+        identity = task_authorization_id(store, task)
+        if identity in chain_ids:
+            if _quantity == "max_candidate_count":
+                count = (max(1, len(task.get("candidate_refs") or []))
+                         if task.get("stage_request", {}).get("mode") == "trial"
+                         and (task.get("candidate_refs") or task["status"] in ("queued", "awaiting_host", "running")) else 0)
+            else:
+                count = sum(entry.get("state") in HELD_STATES for entry in task.get("call_allowances") or [])
+            usage[identity] = usage.get(identity, 0) + count
+    used = sum(usage.values())
+    ceiling = int(root.get(_quantity) or 0)
+    remaining = max(0, ceiling - used)
+    # Each explicit narrower child also limits its own subtree. A sibling's
+    # usage consumes the root, never the other sibling's individual allowance.
+    current, seen = record, set()
+    while current.get("authorization_id") not in seen:
+        identity = current.get("authorization_id"); seen.add(identity)
+        descendants = set()
+        for candidate in records.values():
+            cursor, visited = candidate, set()
+            while cursor.get("authorization_id") not in visited:
+                candidate_id = cursor.get("authorization_id"); visited.add(candidate_id)
+                if candidate_id == identity:
+                    descendants.add(candidate["authorization_id"]); break
+                parent_ref = cursor.get("budget_parent_ref")
+                if not parent_ref:
+                    break
+                cursor = store.read_object_json(parent_ref)
+        local_used = sum(usage.get(item, 0) for item in descendants)
+        local_ceiling = int(current.get(_quantity) or 0)
+        remaining = min(remaining, max(0, local_ceiling - local_used))
+        if identity == root_id or not current.get("budget_parent_ref"):
+            break
+        current = store.read_object_json(current["budget_parent_ref"])
+    unknown = _quantity == "max_external_calls" and any(entry.get("state") == "unknown"
                   for ref in document.get("tasks") or []
                   for entry in (store.read_object_json(ref).get("call_allowances") or []))
     return {
@@ -559,10 +591,20 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict) 
         "budget_template": record.get("budget_template"),
         "ceiling": ceiling,
         "used": used,
-        "remaining": max(0, ceiling - used),
-        "state": "unknown" if unknown else ("available" if used < ceiling else "exhausted"),
+        "remaining": remaining,
+        "state": "unknown" if unknown else ("available" if remaining else "exhausted"),
         "chain_ids": sorted(chain_ids),
     }
+
+
+def candidate_budget(store: Store, document: dict, authorization_ref: dict) -> dict:
+    """Existing trial Tasks reserve slots; their immutable candidates retain use.
+
+    Call slots and candidate slots are distinct quantities on the same authority
+    chain. Cancellation before producing a candidate releases its slot; adopting
+    or restoring content never removes the recorded candidate or spends again.
+    """
+    return authorization_budget(store, document, authorization_ref, _quantity="max_candidate_count")
 
 
 # ---------------------------------------------------------------------------
@@ -1273,6 +1315,23 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                 budget_key = binding_of(task).get("budget_key")
                 if budget_key:
                     budget = credit_state(store, control, budget_key, 1)
+            credit_budgets = []
+            if task is not None:
+                key = binding_of(task).get("budget_key")
+                auth_ref = binding_of(task).get("authorization_ref")
+                fixed = ((store.read_object_json(auth_ref).get("constraints") or {}).get("fixed_budget") or {}) if auth_ref else {}
+                if fixed:
+                    expected = {item["budget_key"] for item in fixed.get("credits") or []
+                                if item["page_id"] in task.get("scope_pages", [])}
+                    if len(task.get("scope_pages") or []) != 1 or expected != {key}:
+                        block("binding_invalid", "a template-funded image task must bind its exact single-page credit")
+                if key:
+                    credit_budgets.append(credit_state(store, control, key))
+            elif candidates:
+                fixed = (chosen["record"].get("constraints") or {}).get("fixed_budget") or {}
+                for credit in fixed.get("credits") or []:
+                    if credit["page_id"] in (target_page_ids(store, targets or {}) or []):
+                        credit_budgets.append(credit_state(store, control, credit["budget_key"]))
             # CONTRACTS §3.3: begin validates its own already-reserved slot; it
             # never needs a second remaining credit for the same slot.
             slot_held = False
@@ -1282,6 +1341,11 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                     entry.get("allowance_id") == allowance_id
                     and entry.get("state") in ("reserved", "in_flight")
                     for entry in task.get("call_allowances") or [])
+            if not slot_held:
+                for credit in credit_budgets:
+                    requested = context.get("count", 1) if task is not None else 1
+                    if credit["state"] == "exhausted" or (isinstance(requested, int) and requested > credit["remaining"]):
+                        block("budget_exhausted", "this page credit is already held or consumed; a repeated grant never refreshes it", budget=credit)
             if budget is not None and not slot_held:
                 requested = context.get("count")
                 batch_over = (isinstance(requested, int) and not isinstance(requested, bool)
@@ -1302,6 +1366,18 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                           "no remaining credit for a new external call; an exhausted budget "
                           "only stops new calls (settlement and adoption stay available)",
                           budget={k: v for k, v in budget.items() if k != "chain_ids"})
+
+        # Candidate quotas constrain new trial slots, not acceptance or adoption
+        # of a result that already owns its slot. The service derives the count
+        # from the actual immutable plan, never from a client quota assertion.
+        count = context.get("candidate_count", 0)
+        if isinstance(count, int) and not isinstance(count, bool) and count > 0:
+            authority = next((item for item in candidates if item["effective"] and item["covers"]), None)
+            if authority:
+                candidate_limit = candidate_budget(store, control, authority["ref"])
+                if count > candidate_limit["remaining"]:
+                    block("budget_exhausted", "the bounded candidate quota has no room for these new trial slots",
+                          candidate_budget=candidate_limit, requested=count)
 
     # -- project stop policy (a separate stop fact: policy.user_stop) -------
     if enforced and spec.external_calls and (control.get("policy") or {}).get("user_stop"):

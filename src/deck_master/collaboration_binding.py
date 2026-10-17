@@ -357,6 +357,15 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
                             write_scope=scope, adoption_policy=adoption_policy,
                             authorization_ref=authorization_ref, decision_refs=decision_refs,
                             include_manuscript=task.get('kind') != 'style_analyze')
+    if authorization_ref is not None and task.get("cost_class") == "external_generation":
+        authorization = store.read_object_json(authorization_ref)
+        budget = (authorization.get("constraints") or {}).get("fixed_budget")
+        if budget and "blueprint" in scope.get("layers", []):
+            pages = scope.get("page_ids") or []
+            credits = {item["page_id"]: item["budget_key"] for item in budget["credits"]}
+            if len(pages) != 1 or pages[0] not in credits:
+                raise ModelError("task/collaboration_binding/budget_key", "a first-image task needs its single authorized page credit")
+            binding["budget_key"] = credits[pages[0]]
     task["collaboration_binding"] = binding
     task.setdefault("protocol_version", "changes.v1")
     task["required_capabilities"] = list(dict.fromkeys([*task.get("required_capabilities", []), "collaboration.v1", "rc3-entry.v1"]))

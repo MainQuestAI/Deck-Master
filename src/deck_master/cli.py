@@ -105,6 +105,11 @@ def build_parser() -> argparse.ArgumentParser:
     collab = sub.add_parser("collaboration", help="Use existing Runtime collaboration transactions")
     commands = collab.add_subparsers(dest="collaboration_command", required=True)
     leaves = [(commands.add_parser("show"), "show", False)]
+    budget = commands.add_parser("budget", help="Preview the bounded production budget without authorizing or calling tools")
+    budget.set_defaults(collaboration_action='budget.describe')
+    budget.add_argument("project_arg", nargs="?")
+    budget.add_argument("--project")
+    budget.add_argument("--input", required=True)
     request = commands.add_parser("request").add_subparsers(dest="request_command", required=True)
     for name in ("start", "replace"):
         leaves.append((request.add_parser(name), "request." + name, True))

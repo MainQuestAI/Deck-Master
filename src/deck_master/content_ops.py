@@ -213,6 +213,7 @@ def commit(project, *, plan_id, base_revision, operation_id):
             fail('base_revision', 'content plan changed; no pages were changed', conflict=True)
         from . import eligibility
         eligibility.guard(store, doc, "content.operation", context={
+            "candidate_count": int(planned['input'].get('mode') == 'trial' and planned['input']['action'] in HOST_ACTIONS),
             "targets": {"page_ids": [item['page_id'] for item in planned['input']['targets']]
                             or [entry['page_id'] for entry in doc['pages']],
                         "layers": ["page_copy", "plan"],

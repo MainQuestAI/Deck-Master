@@ -34,7 +34,11 @@ def _with_blueprint(store, page_id="p1"):
     artifact = store.put_json_object({
         "schema_version": "deck_artifact.v1", "artifact_id": f"bp-{page_id}",
         "role": "blueprint", "page_id": page_id,
-        "file": store.put_blob(b"png-bytes", ext="png"), "media_type": "image/png"})
+        "file": store.put_blob(b"png-bytes", ext="png"), "media_type": "image/png",
+        "created_at": "2026-10-17T00:00:00Z", "dependencies": [], "derived_from": [],
+        "provenance": {"source_type": "legacy_import", "tool": "explicit-L1-fixture",
+            "generated_from_page": next(e["page"] for e in document["pages"] if e["page_id"] == page_id)},
+        "limitations": ["L1 synthetic bytes: no actual image or product effect claim"]})
     import uuid
     operation_id = f"blueprint-{uuid.uuid4().hex[:8]}"
     from deck_master.models import bump_revision
@@ -290,8 +294,10 @@ def test_a_bound_authorization_never_widens_beyond_call_slots(tmp_path):
 
 def test_repeated_materialization_never_refreshes_a_consumed_credit(tmp_path):
     project, store = _project(tmp_path)
+    from test_rc3_notes_visual_inputs import _seed_imported_plan
+    _seed_imported_plan(store)
     _start(project, store, scope=_scope(subject="deck", page_ids=[], layers=["blueprint"]))
-    plan_ref = _plan_object(store, store.load_document(), ["p1"])
+    plan_ref = store.load_document()["content_plan"]
     parent = _grant(project, store, mode="delegate", actions=("dispatch.blueprint",),
                     scope=_scope(subject="deck", page_ids=[], layers=["blueprint"]),
                     delegated_topics=("direction",), max_external_calls=0,

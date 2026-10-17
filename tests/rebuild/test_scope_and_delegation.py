@@ -180,9 +180,11 @@ def test_execute_grant_binds_pages_and_layers(tmp_path):
 
 def test_delegate_materializes_real_page_ids_from_a_fixed_plan(tmp_path):
     project, store = _project(tmp_path)
+    from test_rc3_notes_visual_inputs import _seed_imported_plan
+    _seed_imported_plan(store)
     _start(project, store, scope=_scope(subject="deck", page_ids=[], page_manifest_ref=None,
                                         layers=["plan", "blueprint", "page_copy"]))
-    plan_ref = _plan_object(store, store.load_document(), ["p1", "p2"])
+    plan_ref = store.load_document()["content_plan"]
     parent = _grant(project, store, mode="delegate", actions=("dispatch.blueprint",),
                     scope=_scope(subject="deck", page_ids=[], layers=["plan", "blueprint"]),
                     delegated_topics=("direction",), max_external_calls=0,
