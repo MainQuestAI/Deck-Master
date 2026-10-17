@@ -691,8 +691,13 @@ def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict
     applicable = []
     if records is None:
         records = _preproduction_reviews(store, document)
+    strict_refs = None
+    if requirement_state(store, document)["effective"] == "independent_model_or_human":
+        strict_refs = _independently_accepted_reviews(store, document, records)
     for item in records:
         review = item["review"]
+        if strict_refs is not None and item["review_ref"]["sha256"] not in strict_refs:
+            continue
         notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' else {}
         deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
                 for dep in review.get("dependencies") or []}
@@ -714,6 +719,97 @@ def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict
             continue
         applicable.append(item)
     return applicable
+
+
+def _independently_accepted_reviews(store, document, records):
+    """Consume authenticated acceptance facts, never upgrade a prior self-review.
+
+    The receiver's persisted receipt and exact Task/import result establish
+    provenance. A reviewer name or a caller-supplied evidence Ref alone does
+    not. Completed facts remain usable without a currently connected provider.
+    """
+    from .delivery_eligibility import human_evidence_status
+    from .store import StoreError
+    candidates = {item["review_ref"]["sha256"]: item["review"] for item in records
+                  if _reviewer_type(item["review"]) in ("independent_host", "human_internal", "human_external")}
+    accepted = set()
+    if not candidates:
+        return accepted
+
+    def read_object(ref):
+        try:
+            value = store.read_object_json(ref)
+            return value if isinstance(value, dict) else {}
+        except (ModelError, StoreError, OSError, ValueError, KeyError, TypeError):
+            return {}
+
+    def proof_matches(proof, review, *, task_id):
+        try:
+            models.validate_schema("authenticated_review_receipt", proof)
+            claims = proof["claims"]
+            if claims["project_id"] != document["project_id"] or claims["task_id"] != task_id:
+                return False
+            store.read_object_bytes(proof["raw_event_ref"])
+            reviewer = review["reviewer"]
+            if reviewer["type"] == "independent_host":
+                executor = reviewer.get("execution_ref")
+                return (claims["channel"] == "independent_review_receipts"
+                        and reviewer.get("independence_confirmed") is True
+                        and bool(executor) and claims.get("executor_ref") == executor
+                        and executor not in claims["author_execution_refs"])
+            identity = reviewer.get("identity_receipt") or {}
+            return (claims["channel"] == "human_review_receipts"
+                    and claims.get("event_id") == identity.get("event_id")
+                    and bool(claims.get("reviewer_id"))
+                    and claims["reviewer_id"] == identity.get("reviewer_id"))
+        except (ModelError, StoreError, OSError, ValueError, KeyError, TypeError):
+            return False
+
+    # Import of a verified human also has the established identity-adapter path.
+    for digest, review in candidates.items():
+        if human_evidence_status(review, project_id=document["project_id"])["verified"]:
+            accepted.add(digest)
+    for task_ref in document.get("tasks") or []:
+        task = read_object(task_ref)
+        if task.get("kind") != "review" or task.get("review_stage") != STAGE or task.get("status") != "completed":
+            continue
+        refs = task.get("result_refs") or []
+        matching = {ref["sha256"] for ref in refs} & (candidates.keys() - accepted)
+        if not matching:
+            continue
+        proofs = [read_object(ref) for ref in refs]
+        for digest in matching:
+            review = candidates[digest]
+            if any(proof_matches(proof, review, task_id=task["task_id"])
+                   and proof["claims"]["subjects_sha256"] == _subjects_digest(review["subjects"])
+                   for proof in proofs if proof.get("schema_version") == "authenticated_review_receipt.v1"):
+                accepted.add(digest)
+    # Independent external imports have no Task; their immutable commit receipt
+    # binds both the imported Review refs and the original authenticated report.
+    remaining = candidates.keys() - accepted
+    if remaining:
+        from .snapshots import committed_snapshots
+        for snapshot in committed_snapshots(store):
+            response = ((snapshot.get("change") or {}).get("operation_receipt") or {}).get("response") or {}
+            report_ref = response.get("report_ref")
+            if not report_ref:
+                continue
+            for ref in response.get("review_refs") or []:
+                digest = ref["sha256"]
+                if digest not in remaining:
+                    continue
+                review = candidates[digest]
+                evidence = (review.get("reviewer") or {}).get("evidence_ref")
+                if not evidence:
+                    continue
+                proof = read_object(evidence)
+                if (proof_matches(proof, review, task_id="review-import-" + report_ref["sha256"])
+                        and proof["claims"]["result_sha256"] == report_ref["sha256"]):
+                    accepted.add(digest)
+            remaining = candidates.keys() - accepted
+            if not remaining:
+                break
+    return accepted
 
 
 def preproduction_status(store, document, *, adapter_context=None, page_ids=None) -> dict:

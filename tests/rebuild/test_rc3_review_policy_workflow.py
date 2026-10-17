@@ -29,7 +29,8 @@ def decide(store, value):
         base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
 
 
-def test_normal_api_choice_unblocks_real_self_review_without_a_receipt_provider(tmp_path):
+@pytest.mark.parametrize('reviewer_type', ['host_self', 'independent_host'])
+def test_normal_api_choice_unblocks_review_but_strict_requires_proven_independence(tmp_path, reviewer_type):
     project, store = _deck(tmp_path)
     before = store.load_document()
     missing = content_review.dispatch_preproduction_review(project)
@@ -53,8 +54,10 @@ def test_normal_api_choice_unblocks_real_self_review_without_a_receipt_provider(
         supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
     document = store.load_document()
     reviews = [_review(store, document, kind, reviewer={
-        'type': 'host_self', 'id': 'synthetic-ordinary-host', 'execution_ref': None,
-        'independence_confirmed': False, 'identity_receipt': None, 'assurance': 'host_attested'})
+        'type': reviewer_type, 'id': 'synthetic-ordinary-host',
+        'execution_ref': 'unverified-independent-name' if reviewer_type == 'independent_host' else None,
+        'independence_confirmed': reviewer_type == 'independent_host',
+        'identity_receipt': None, 'assurance': 'host_attested'})
         for kind in content_review.required_units(store, document)]
     accepted = service.accept_result(project,
         **{key: task[key] for key in ('task_id', 'operation_id', 'produced_against')},
@@ -65,6 +68,10 @@ def test_normal_api_choice_unblocks_real_self_review_without_a_receipt_provider(
     assert strict['status'] == 'accepted'
     assert content_review.requirement_state(store, store.load_document())['effective'] == 'independent_model_or_human'
     assert content_review.dispatch_preproduction_review(project)['status'] == 'needs_reviewer'
+    qualification = content_review.qualify_for_production(store, store.load_document())
+    assert qualification['allowed'] is False
+    assert qualification['requirement'] == 'independent_model_or_human'
+    assert qualification['missing_units']
 
 
 @pytest.mark.parametrize('bad', ['empty_reason', 'empty_pages', 'one_page', 'future_page', 'wrong_layer',
@@ -208,3 +215,41 @@ def test_requirement_change_supersedes_pending_review_and_retains_call_facts(tmp
     assert retired['status'] == 'superseded'
     assert retired['call_allowances'] == original['call_allowances']
     assert current['pages'] == before['pages'] and current['policy'] == before['policy']
+
+
+def test_strict_consumes_authenticated_external_import_after_provider_goes_offline(tmp_path):
+    from deck_master import models, review_evidence, review_import
+    from deck_master.store import Store
+    from synthetic_review_provider import SyntheticProvider
+    from test_rc3_collaboration_adapters import imported_project, external_packet_for_page
+
+    project = imported_project(tmp_path)
+    store = Store(project)
+    decide(store, choice(store, 'independent_model_or_human'))
+    external = external_packet_for_page(tmp_path, project)
+    template = external['report']['reviews'][0]
+    external['report']['reviews'] = []
+    for kind in content_review.required_units(store, store.load_document()):
+        review = copy.deepcopy(template)
+        review.update(kind=kind, status='pass', review_id='L1-imported-' + kind)
+        review['reviewer'].update(type='independent_host', execution_ref='L1-external-reviewer',
+                                  independence_confirmed=True)
+        external['report']['reviews'].append(review)
+    external['report_sha256'] = models.sha256_bytes(models.canonical_json_bytes(external['report']))
+    bindings = review_import.describe_bindings(project, external_report=external)['source_bindings']
+    registry = review_evidence.ProviderRegistry()
+    provider = SyntheticProvider()
+    registry.register(provider)
+    document = store.load_document()
+    binding = review_evidence.external_review_binding(store, document, document, external, bindings)
+    selector = provider.issue('L1-external-review', {**binding, 'executor_ref': 'L1-external-reviewer'},
+                              'independent_review_receipts')
+    with review_evidence.ProviderRuntime(registry).bound():
+        context = registry.external_review_context(store, external_report=external,
+            source_bindings=bindings, selector=selector)
+        review_import.import_report(project, external_report=external, source_bindings=bindings,
+            evidence=_instruction(store), base_revision=document['revision_id'],
+            operation_id=str(uuid.uuid4()), adapter_context=context)
+    provider.ready = False
+    assert review_evidence.DEFAULT_REGISTRY.describe()['providers'] == []
+    assert content_review.qualify_for_production(store, store.load_document())['allowed']
