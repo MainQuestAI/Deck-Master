@@ -310,6 +310,11 @@ def test_adopting_an_existing_svg_candidate_invalidates_delivery_with_named_gaps
     store.commit_change(base_revision=document['revision_id'], document=bumped, operation_id='workbench-basis')
     assert exports.create(project, purpose='delivery')['export_id']
     qualify_synthetic_manuscript(store)
+    authorize_scope(project, actions=['change.commit'], scope=export_scope(),
+        max_external_calls=0, max_candidate_count=1, adoption_policy='candidate_only',
+        evidence=evidence_for(project,
+            text='L1 explicit instruction: create one SVG comparison candidate without changing current artifacts.',
+            locator='L1:test_export:single-svg-trial'))
     task = dispatch(store, 'p1')
     service.task_start(project, task_id=task['task_id'], execution_ref='synthetic-l1-candidate-host',
         supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])

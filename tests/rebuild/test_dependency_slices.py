@@ -89,7 +89,7 @@ def _record_decision(project, store, *, basis, topic="direction") -> dict:
 
 def _grant(project, store, *, basis, parent_ref=None, expires_at=None, operation_id="op-grant") -> dict:
     payload = {"mode": "execute", "actions": ["task.start"], "scope": _scope(layers=["page_copy"]),
-               "basis": basis, "max_external_calls": 1, "instruction_evidence": _declared(store)}
+               "basis": basis, "max_external_calls": 0, "instruction_evidence": _declared(store)}
     if parent_ref is not None:
         payload["parent_authorization_ref"] = parent_ref
     if expires_at is not None:

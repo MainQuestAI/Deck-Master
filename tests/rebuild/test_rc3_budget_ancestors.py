@@ -71,3 +71,56 @@ def test_replacement_cannot_move_existing_consumption_to_a_different_root(tmp_pa
     assert store.load_document()==before
     assert eligibility.authorization_budget(store,before,root['authorization_ref'])['used']==1
     assert eligibility.authorization_budget(store,before,other['authorization_ref'])['used']==0
+
+
+@pytest.mark.parametrize('parent_version', ['current', 'stale'])
+def test_lowered_numeric_parent_cannot_mint_a_fresh_computed_root(tmp_path, parent_version):
+    from deck_master import collaboration_budget
+    from test_eligibility_enforcement import _declared
+    path,store=project(tmp_path)
+    root,parent,child=chain(path,store)
+    current_parent=lower_parent(path,store,root,parent)
+    before=store.load_document()
+    try:
+        derived=collaboration_budget.materialize_execution(path,
+            parent_authorization_ref=(current_parent if parent_version == 'current' else parent)['authorization_ref'],
+            budget_template='initial_per_page',base_revision=store.current_revision_id(),
+            operation_id='L1-no-fresh-root-after-parent-zero',instruction_evidence=_declared(store))
+    except (ModelError,eligibility.EligibilityBlocked):
+        assert store.load_document()==before
+        return
+    doc=store.load_document()
+    assert store.read_object_json(derived['authorization_ref'])['max_external_calls']==0
+    assert eligibility.authorization_budget(store,doc,derived['authorization_ref'])['remaining']==0
+    with pytest.raises(eligibility.EligibilityBlocked):
+        service.open_blueprint_task(store,doc,doc['pages'][0])
+    assert store.load_document()==doc
+
+
+@pytest.mark.parametrize('kind',['explicit_zero','lowered_top_level'])
+def test_numeric_zero_top_level_cannot_be_reclassified_as_pure_planning(tmp_path,kind):
+    from deck_master import collaboration_budget
+    from test_eligibility_enforcement import _declared
+    path,store=project(tmp_path)
+    parent=_grant(path,store,mode='delegate',actions=('dispatch.blueprint',),
+        max_external_calls=0 if kind=='explicit_zero' else 2,max_candidate_count=0,
+        budget_template='explicit' if kind=='explicit_zero' else None,
+        operation_id='L1-numeric-top-parent')
+    if kind=='lowered_top_level':
+        parent=_grant(path,store,mode='delegate',actions=('dispatch.blueprint',),
+            authorization_id=parent['authorization_id'],replaces=parent['authorization_ref'],
+            max_external_calls=0,max_candidate_count=0,operation_id='L1-lower-top-parent')
+    before=store.load_document()
+    try:
+        derived=collaboration_budget.materialize_execution(path,
+            parent_authorization_ref=parent['authorization_ref'],budget_template='initial_per_page',
+            base_revision=store.current_revision_id(),operation_id='L1-no-new-numeric-root',
+            instruction_evidence=_declared(store))
+    except (ModelError,eligibility.EligibilityBlocked):
+        assert store.load_document()==before
+        return
+    doc=store.load_document()
+    assert eligibility.authorization_budget(store,doc,derived['authorization_ref'])['remaining']==0
+    with pytest.raises(eligibility.EligibilityBlocked):
+        service.open_blueprint_task(store,doc,doc['pages'][0])
+    assert store.load_document()==doc
