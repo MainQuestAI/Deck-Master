@@ -1,4 +1,4 @@
-import {get, post, readableError, ApiError} from './api.js';
+import {get, post, canonical, readableError, ApiError} from './api.js';
 import {el, button, modal, version, field, downloadJSON} from './dom.js';
 import {pageText} from './page-text.js';
 import {diffView} from './text-diff.js';
@@ -255,6 +255,45 @@ export function budgetForm(app, {changePlanId=null}={}) {
   }
   body.prepend(button('只读计算制作预算',read,false,{disabled:isEdit&&!changePlanId}));
   if(!isEdit||changePlanId)read();
+}
+
+export async function adoptCandidates(app, editor, plan, onComplete) {
+  await app.business.available();
+  const selection = {schema_version:'candidate_selection.v1', project_id:plan.project_id,
+    base_revision:plan.base_revision, candidate_ids:plan.selections.map(item=>item.candidate_id)};
+  let checked;
+  try { checked = await post('/api/candidates/plan', {input:selection}); }
+  catch(error) {
+    if(error.status===409)modal('本次未采用任何页，选择已保留',el('p',{},readableError(error)+' 请读取当前状态后重新预览采用影响。'));
+    throw error;
+  }
+  if(canonical(checked.plan)!==canonical(plan))throw Error('采用目标已变化，请重新预览采用影响。');
+  const submit = value => app.business.submit(editor,'candidates.adopt',
+    {input:value,base_revision:value.base_revision},value,onComplete);
+  const authority=checked.adoption_authority;
+  if(!authority || authority.eligibility.allowed)return submit(plan);
+  if(!authority.eligibility.reason_codes.every(code=>['authority_insufficient','authorization_revoked','scope_exceeded'].includes(code))) {
+    throw Object.assign(new Error('当前条件不允许采用，请处理本次工作与范围中的缺口。'),{details:authority.eligibility});
+  }
+  const form=controlForm(app,{title:'授权采用所选候选',action:'candidate.adopt.grant:'+checked.plan_ref.sha256,path:'/collaboration/authorizations',
+    baseRevision:()=>plan.base_revision,
+    body:el('div',{class:'stack'},scopeView(app,authority.scope),
+      el('p',{},`仅采用已比较的 ${plan.selections.length} 个候选；图像调用上限 0，新增试作上限 0。`)),
+    initial:`明确采用已比较的 ${plan.selections.length} 个所选候选，仅更新所列页面与图层，保留其它稿件。`,
+    explanation:'本次试作权限仅允许返回候选。确认后为所列范围记录零调用采用权限，再核对原候选与当前目标并采用。取消会保留当前稿件。',
+    build:instruction_evidence=>({mode:'execute',actions:['candidate.adopt'],scope:authority.scope,
+      max_external_calls:0,max_candidate_count:0,adoption_policy:'within_scope',instruction_evidence}),
+    onSuccess:async(result,response,{dialog,status})=>{
+      try {
+        const current=await post('/api/candidates/plan',{input:{...selection,base_revision:response.control_revision_id}});
+        if(canonical(current.plan.selections)!==canonical(plan.selections))throw Error('采用目标已变化，请重新预览。');
+        dialog.close();
+        await submit(current.plan);
+      } catch(error) {
+        status.replaceChildren(el('p',{class:'field-error'},readableError(error)+' 采用权限已记录，当前稿件保留；请重新预览采用影响。'));
+      }
+    }});
+  return form;
 }
 
 async function reviewPolicyForm(app) {

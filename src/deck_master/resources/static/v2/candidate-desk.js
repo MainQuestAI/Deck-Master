@@ -9,6 +9,7 @@ import {pageText} from './page-text.js';
 import {candidateCards} from './candidate-cards.js';
 import {candidateIconReview} from './icon-workbench.js';
 import {openCandidate} from './trial-actions.js';
+import {adoptCandidates} from './collaboration-desk.js';
 
 const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content' ? '逐页稿' : 'SVG';
 const clock = value => new Date(value).toLocaleString('zh-CN', {hour12: false});
@@ -265,7 +266,7 @@ export function candidateDesk(app, data) {
   async function adoptSelected() {
     if (busy || !currentPlan || planInvalid) return; busy = true; controls(); const value = structuredClone(currentPlan);
     try {
-      await app.business.submit(app.editor, 'candidates.adopt', {input: value, base_revision: value.base_revision}, value, async result => {
+      await adoptCandidates(app, app.editor, value, async result => {
         currentPlan = null; planInvalid = false;
         const prior = selected?.candidate_id !== value.selections[0].candidate_id;
         impact.replaceChildren(el('p', {class: 'success-note'}, `${prior ? '先前提交的候选' : '这个候选'}已采用到 ${version(result.revision_id)}。${prior ? '当前比较选择未变。' : ''}本页下游与整稿待更新，请继续单页预览、审图和整稿制作。`),
@@ -414,7 +415,7 @@ export function candidateBatch(app) {
   async function adoptSelection() {
     if (busy || !currentPlan || currentPlan.base_revision !== revision) return; busy = true; controls(); const value = structuredClone(currentPlan);
     try {
-      await app.business.submit(app.editor, 'candidates.adopt', {input: value, base_revision: value.base_revision}, value, result => {
+      await adoptCandidates(app, app.editor, value, result => {
         currentPlan = null; revision = result.revision_id;
         for (const id of result.candidate_ids) selected.delete(id);
         persist(); impact.replaceChildren(el('p', {class: 'success-note'}, `已整批采用 ${result.candidate_ids.length} 页到 ${version(result.revision_id)}；其它页保留。下游预览、整稿与审阅待更新。`));
