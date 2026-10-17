@@ -22,6 +22,22 @@ def rendered_words(png):
             for word in ET.fromstring(data).iter('{http://www.w3.org/1999/xhtml}word')]
 
 
+def test_table_can_share_slide_with_unbound_caption_text(tmp_path):
+    page = page_fixture()
+    root = ET.fromstring(svg_fixture(page))
+    ET.SubElement(root, 'text', {'id':'unbound-caption','x':'80','y':'140','font-size':'20',
+        'font-family':resolve_host_font(),'fill':'#20242a'}).text = 'Additional caption outside the table'
+    path = tmp_path/'caption.svg'; path.write_bytes(ET.tostring(root))
+    source = parse_svg(path.read_bytes(), page_id=PID)
+    assert next(shape for shape in source['shapes'] if shape['kind']=='text'
+                and shape['text']=='Additional caption outside the table')['atom_id'] is None
+    compiled = compile_deck([SvgInput(PID,path,page['speaker_notes'])],
+                            CompileOptions(fonts=host_fonts()),tmp_path/'compiled')
+    assert readback(compiled.pptx_path,[source],[page])['status']=='pass'
+    assert any(shape.text=='Additional caption outside the table'
+               for shape in Presentation(compiled.pptx_path).slides[0].shapes if shape.has_text_frame)
+
+
 def tight_table(tmp_path, anchor, gap, *, multiline=False, name='tight'):
     page = page_fixture()
     root = ET.fromstring(svg_fixture(page))

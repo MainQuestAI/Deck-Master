@@ -104,7 +104,7 @@ def _trim_table_text_slack(grid_shapes, text_boxes, page_id):
     for source, shape, glyph_width, anchor in text_boxes:
         if source.get('rotation'):
             continue
-        identity = source.get('atom_id', '')
+        identity = source.get('atom_id') or ''
         matches = [xs for table_id, choices in grids.items() if len(choices) == 1
                    and any(identity.startswith(f'atom:{page_id}:{kind}:{table_id}:') for kind in ('cell', 'column'))
                    for xs in choices]
