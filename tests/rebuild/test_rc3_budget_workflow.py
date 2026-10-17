@@ -22,6 +22,7 @@ def project(tmp_path, *, intent='full_deck', pages=('p1', 'p2')):
 
 def grant(path, store, *, template='initial_per_page', **updates):
     value = {'mode': 'execute', 'actions': ['dispatch.blueprint', 'change.commit'],
+             'adoption_policy': 'within_scope',
              'scope': store.load_document()['collaboration']['request']['scope'],
              'budget_template': template, 'instruction_evidence': _declared(store)}
     value.update(updates)
@@ -127,6 +128,9 @@ def test_smaller_explicit_cap_wins_and_cannot_be_raised_by_repeat(tmp_path):
     path, store = project(tmp_path)
     first = grant(path, store, max_external_calls=1)
     assert first['budget']['explicit_limit_conflict']
+    preview = collaboration_budget.describe(path, budget_template='initial_per_page')
+    assert preview['computed_upper_bound'] == 2 and preview['max_external_calls'] == 1
+    assert preview['explicit_limit_conflict'] and '现有数字额度上限 1' in preview['display']
     second = grant(path, store, max_external_calls=50)
     assert store.read_object_json(second['authorization_ref'])['max_external_calls'] == 1
     assert eligibility.authorization_budget(store,store.load_document(),second['authorization_ref'])['ceiling'] == 1

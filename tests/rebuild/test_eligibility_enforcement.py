@@ -87,6 +87,7 @@ def _grant(project, store, *, actions, mode="execute", scope=None, operation_id=
                "scope": scope or _scope(), "decision_refs": [],
                "delegated_topics": list(extra.pop("delegated_topics", ["direction"] if mode == "delegate" else [])),
                "max_external_calls": max_external_calls, "max_candidate_count": 1,
+               "adoption_policy": "within_scope",
                "instruction_evidence": _declared(store)}
     payload.update(extra)
     return collaboration.grant(project, input=payload,

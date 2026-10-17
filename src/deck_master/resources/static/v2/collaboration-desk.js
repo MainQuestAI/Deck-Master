@@ -224,12 +224,13 @@ export function budgetForm(app, {changePlanId=null}={}) {
     '先在所选页制作或已保存意见中预览修改影响，再从该预览打开制作预算。无需填写方案编号。'),status);
   let preview=null,serial=0;
   const form=controlForm(app,{title:'记录制作预算',action:'grant',path:'/collaboration/authorizations',body,
-    explanation:'预算按本次明确制作范围和实际方案计算。每页首次调用至多一次，重试为零；已有费用与额度保留。局部试作先返回有界比较候选，采用仍需已有的明确权限。先只读查看影响，再记录这次制作授权。',
+    explanation:'预算按本次明确制作范围和实际方案计算。每页首次调用至多一次，重试为零；已有费用与额度保留。整套制作或直接修改允许在所列范围内更新当前稿；局部试作只返回比较候选，采用需另有明确权限。先只读查看影响，再记录这次制作授权。',
     baseRevision:()=>preview?.control_revision_id,
     build:instruction_evidence=>{
       if(!preview)throw Error('请先读取当前制作预算。');
       return {mode:'execute',actions:isEdit?['change.commit','dispatch.blueprint']:['dispatch.blueprint'],
         scope:preview.scope,budget_template:template,plan_ref:preview.plan_ref,
+        adoption_policy:isEdit&&preview.max_candidate_count>0?'candidate_only':'within_scope',
         ...(isEdit?{change_plan_id:changePlanId,max_candidate_count:preview.max_candidate_count}:{}),instruction_evidence};
     },
     onSuccess:(result,response,{dialog,status})=>{

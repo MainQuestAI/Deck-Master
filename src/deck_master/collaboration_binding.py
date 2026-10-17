@@ -135,6 +135,12 @@ def build_binding(store, document, *, phase: str, executor_type: str, write_scop
     if adoption_policy not in ADOPTION_POLICIES:
         raise ModelError("task/collaboration_binding/adoption_policy",
                          f"adoption_policy must be one of {ADOPTION_POLICIES}")
+    if authorization_ref is not None:
+        from .eligibility import current_authorization_record
+        authorization = current_authorization_record(store, document, authorization_ref)
+        if adoption_policy == "within_scope" and authorization.get("adoption_policy") != "within_scope":
+            raise ModelError("task/collaboration_binding/adoption_policy",
+                             "candidate_only authority requires a trial task; automatic adoption needs explicit within_scope authority")
     region = document.get("collaboration") or {}
     current = request if request is not None else region.get("request")
     if current is None or current.get("closed"):

@@ -442,6 +442,45 @@ def _same_ref(left, right) -> bool:
     return (left.get("path"), left.get("sha256")) == (right.get("path"), right.get("sha256"))
 
 
+def _planning_only_zero_authority(store, record, *, document=None):
+    """A never-numeric planning lineage may materialize its first finite root.
+
+    A lowered numeric parent, an explicit zero budget or a nonzero ancestor is
+    still a numeric limit. Historical refs keep prior root attribution stable;
+    a new grant also checks current heads before using the planning exception.
+    """
+    if record.get('mode') != 'delegate' or record.get('max_external_calls'):
+        return False
+    heads = {item['authorization_id']: item for _, item in _authorization_heads(store, document)} if document else {}
+    pending, seen = [record], set()
+    while pending:
+        current = pending.pop()
+        if current.get('max_external_calls') or current.get('budget_template') == 'explicit' \
+                or (current.get('constraints') or {}).get('fixed_budget'):
+            return False
+        head = heads.get(current.get('authorization_id'))
+        if head is not None and head != current:
+            pending.append(head)
+        for ref in (current.get('budget_parent_ref'), current.get('parent_authorization_ref'), current.get('replaces')):
+            if not ref:
+                continue
+            digest = ref.get('sha256')
+            if digest in seen:
+                continue
+            seen.add(digest)
+            pending.append(store.read_object_json(ref))
+    return True
+
+
+def current_authorization_record(store, document, ref):
+    """Read today's ceiling/scope without changing historical ledger links."""
+    current_ref, record = dependency_slices._resolve_current(
+        store, document, 'authorizations', 'authorization_id', ref)
+    if current_ref is None:
+        raise ModelError('authorization/parent_ref', 'the parent identity must remain in current control')
+    return record
+
+
 def _chain_root_identity(store: Store, document: dict, record: dict, *, quantity="max_external_calls") -> str | None:
     """The numeric budget root of an authorization: itself, or the top of its
     ``budget_parent_ref`` chain (CONTRACTS §3.4: 子授权共享父预算根)."""
@@ -464,7 +503,8 @@ def _chain_root_identity(store: Store, document: dict, record: dict, *, quantity
         # A zero-call future-page authority cannot execute, but its computed
         # template child is the finite numeric root (§3.4.5).
         if not parent.get(quantity) and (
-                (quantity == "max_external_calls" and (current.get("constraints") or {}).get("fixed_budget"))
+                (quantity == "max_external_calls" and (current.get("constraints") or {}).get("fixed_budget")
+                 and _planning_only_zero_authority(store, parent))
                 or (quantity == "max_candidate_count" and not current.get("parent_authorization_ref"))):
             return identity
         current = parent
@@ -664,6 +704,12 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
     phase = binding.get("phase")
     write_scope = binding.get("write_scope")
     expected = None
+    auth_ref = binding.get('authorization_ref')
+    if auth_ref and binding.get('adoption_policy') == 'within_scope':
+        authorization = current_authorization_record(store, document, auth_ref)
+        if authorization.get('adoption_policy') != 'within_scope':
+            return {'status': 'invalid', 'reasons': ['adoption_policy_exceeded'],
+                    'new_protocol': True, 'digest': digest, 'expected_digest': None}
     if digest and phase and isinstance(basis, list):
         expected = binding_eligibility_digest(phase, write_scope, basis)
         if expected != digest:
@@ -945,7 +991,8 @@ def _rank_authority_candidates(store, document, candidates, spec, *, task=None,
             fundable = budget['state'] != 'unknown' and budget['remaining'] >= calls
         if usable and slots > 0:
             fundable = fundable and candidate_budget(store, document, item['ref'])['remaining'] >= slots
-        return (not usable, assurance_missing, not fundable, item['mode'] != 'execute')
+        return (not usable, assurance_missing, not fundable, item['mode'] != 'execute',
+                item['record'].get('adoption_policy') != 'within_scope')
 
     return sorted(candidates, key=priority)
 

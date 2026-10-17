@@ -185,7 +185,7 @@ def describe_document(store, document, *, budget_template, scope=None, plan_ref=
     if expected is None or request.get("intent") != expected:
         raise ModelError("budget/template", "this template does not cover the current request intent")
     scope = dict(scope or request["scope"])
-    parent = store.read_object_json(parent_authorization_ref) if parent_authorization_ref else None
+    parent = eligibility.current_authorization_record(store, document, parent_authorization_ref) if parent_authorization_ref else None
     fixed_ref, order = _fixed_plan(store, document, plan_ref)
     selected = eligibility.scope_page_ids(store, scope)
     if selected is None:
@@ -250,6 +250,19 @@ def describe_document(store, document, *, budget_template, scope=None, plan_ref=
     plan.update(scope=concrete_scope, plan_ref=fixed_ref,
                 artifact_revision_id=document["revision_id"], control_revision_id=document["revision_id"])
     plan["credit_problems"] = credit_problems(store, document, plan)
+    computed = plan["max_external_calls"]
+    ceiling = computed
+    if parent and not eligibility._planning_only_zero_authority(store, parent, document=document):
+        ceiling = min(ceiling, parent["max_external_calls"])
+    for _, other in eligibility._authorization_heads(store, document):
+        if other.get("request_id") == request["request_id"] and other.get("budget_template") == budget_template \
+                and (other.get("constraints") or {}).get("fixed_budget"):
+            ceiling = min(ceiling, other["max_external_calls"])
+            break
+    plan.update(computed_upper_bound=computed, max_external_calls=ceiling,
+                explicit_limit_conflict=ceiling < computed)
+    if ceiling < computed:
+        plan["display"] += f"；现有数字额度上限 {ceiling} 次，不能通过重复授权增加。"
     return plan
 
 
@@ -285,8 +298,8 @@ def prepare_grant(store, document, authorization, input):
         ceiling = min(ceiling, explicit)
     parent_ref = authorization.get("parent_authorization_ref")
     if parent_ref:
-        parent = store.read_object_json(parent_ref)
-        if parent["max_external_calls"]:
+        parent = eligibility.current_authorization_record(store, document, parent_ref)
+        if not eligibility._planning_only_zero_authority(store, parent, document=document):
             ceiling = min(ceiling, parent["max_external_calls"])
         authorization["budget_parent_ref"] = parent_ref
     # Repeated grants share the first numeric root, even with new IDs/Plans.
@@ -297,7 +310,7 @@ def prepare_grant(store, document, authorization, input):
             ceiling = min(ceiling, other["max_external_calls"])
             break
     authorization["max_external_calls"] = ceiling
-    plan["computed_upper_bound"] = plan["max_external_calls"]
+    plan["computed_upper_bound"] = plan.get("computed_upper_bound", plan["max_external_calls"])
     plan["max_external_calls"] = ceiling
     plan["explicit_limit_conflict"] = ceiling < plan["computed_upper_bound"]
     authorization["budget_key"] = plan["credits"][0]["budget_key"] if len(plan["credits"]) == 1 else None
@@ -317,7 +330,7 @@ def materialize_execution(project, *, parent_authorization_ref=None, plan_ref=No
     doc = store.load_document(); request = (doc.get("collaboration") or {}).get("request") or {}
     if request_id is not None and request_id != request.get("request_id"):
         raise ModelError("budget/request", "materialization must name the current request")
-    parent = store.read_object_json(parent_authorization_ref) if parent_authorization_ref else {}
+    parent = eligibility.current_authorization_record(store, doc, parent_authorization_ref) if parent_authorization_ref else {}
     scope = dict(parent.get("scope") or request.get("scope") or {})
     if page_order:
         if scope.get("page_manifest_ref") and list(page_order) != eligibility.scope_page_ids(store, scope):

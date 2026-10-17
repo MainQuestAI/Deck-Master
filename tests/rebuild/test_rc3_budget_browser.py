@@ -36,6 +36,7 @@ def test_budget_preview_and_normal_grant_keep_scope_and_per_page_credits(tmp_pat
             current = store.load_document()
             record = store.read_object_json(current['collaboration']['authorizations'][-1])
             assert record['max_external_calls'] == 2
+            assert record['adoption_policy'] == 'within_scope'
             assert record['scope']['page_ids'] == ['p1','p2']
             assert len(record['constraints']['fixed_budget']['credits']) == 2
             assert current['policy'] == before['policy']

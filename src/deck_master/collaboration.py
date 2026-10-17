@@ -736,7 +736,7 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
             authorization['budget_parent_ref'] = authorization['parent_authorization_ref']
         numeric_parent_ref = authorization.get('budget_parent_ref')
         if numeric_parent_ref:
-            numeric_parent = store.read_object_json(numeric_parent_ref)
+            numeric_parent = eligibility.current_authorization_record(store, document, numeric_parent_ref)
             if (numeric_parent.get('schema_version') != 'collaboration_authorization.v1'
                     or numeric_parent.get('project_id') != document['project_id']
                     or numeric_parent.get('request_id') != request['request_id']):
@@ -744,17 +744,17 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
             # This is a numeric ledger link, not an authority inheritance.
             # Withdrawn roots retain their cap/consumption; fresh explicit
             # authority may share that budget without reviving the old grant.
-            if numeric_parent['max_external_calls'] or not computed_budget:
+            if not computed_budget or not eligibility._planning_only_zero_authority(store, numeric_parent, document=document):
                 if authorization['max_external_calls'] > numeric_parent['max_external_calls']:
                     raise ModelError('authorization/max_external_calls', 'a child cannot increase its numeric parent ceiling')
         authority_parent_ref = authorization.get('parent_authorization_ref')
         if authority_parent_ref:
-            authority_parent = store.read_object_json(authority_parent_ref)
+            authority_parent = eligibility.current_authorization_record(store, document, authority_parent_ref)
             if (authority_parent['max_external_calls'] and numeric_parent_ref
                     and eligibility._chain_root_identity(store, document, authority_parent)
                     != eligibility._chain_root_identity(store, document, store.read_object_json(numeric_parent_ref))):
                 raise ModelError('authorization/budget_parent_ref', 'a child must share its numeric authority parent root')
-            if authority_parent['max_external_calls'] or not computed_budget:
+            if not computed_budget or not eligibility._planning_only_zero_authority(store, authority_parent, document=document):
                 if authorization['max_external_calls'] > authority_parent['max_external_calls']:
                     raise ModelError('authorization/max_external_calls', 'a child cannot increase its parent ceiling')
             if authorization['max_candidate_count'] > authority_parent['max_candidate_count']:
