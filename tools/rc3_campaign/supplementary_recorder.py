@@ -834,8 +834,12 @@ def observe(root, stage, ordinal, result, result_sha256, observation, observatio
         raise
 
 
-def accepted_native(journal, stage, ordinal):
+def require_scoped_native_observation(journal, stage, ordinal):
     require(any(e["kind"] == "scoped_native_observed" and e["data"]["stage"] == stage and e["data"]["ordinal"] == ordinal for e in journal.events()), "scoped full view/method consumption not observed")
+
+
+def accepted_native(journal, stage, ordinal):
+    require_scoped_native_observation(journal, stage, ordinal)
     return c.observed_result(journal, stage, ordinal)
 
 
@@ -870,10 +874,11 @@ def accept(root, stage, ordinal, *, render_reserve=0, bootstrap=None, materializ
 
 def feedback(root, stage, ordinal):
     journal, state, _ = load(root)
-    accepted_native(journal, stage, ordinal)
     resources = Resources(state)
     with resources.locked():
-        c.observed_result_for_feedback(journal, stage, ordinal)
+        require_scoped_native_observation(journal, stage, ordinal)
+        _, _, _, proof = c.observed_result_for_feedback(journal, stage, ordinal)
+        c.check_ref(proof['observation'])
         resources.once("content_feedback", "one", {"stage": stage, "ordinal": ordinal})
         return c.deliver_feedback(journal, stage, ordinal)
 

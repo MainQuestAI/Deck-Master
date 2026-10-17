@@ -211,6 +211,63 @@ def test_shared_pool_case_feedback_and_stable_svg_do_not_reset(tmp_path, monkeyp
     with pytest.raises(m.Error, match="copied run"): m.load(copied)
 
 
+def synthetic_feedback_record(tmp_path, monkeypatch, *, role='feedback', within=True, scoped=True):
+    """Isolate post-acceptance mechanics; these events are not native proof."""
+    root, state, _, task = setup(tmp_path, monkeypatch)
+    journal = c.Journal(root)
+    target = root/'stages/review/executions/0001'
+    raw = c.save(target/'raw-native-output', {'SYNTHETIC_NOT_NATIVE': True, 'reviews': [
+        {'review_id': 'synthetic-review', 'status': 'fail', 'findings': [{'finding_id': 'F1'}]}]})
+    observation = c.save(target/'raw-root-completion.json', {'SYNTHETIC_NOT_NATIVE': True})
+    c.save(target/'observed.json', {'raw': raw, 'observation': observation})
+    journal.append('native_begun', {'ordinal': 1, 'stage': 'review', 'role': role,
+        'executor': '/root/synthetic-reviewer', 'within_budget': within})
+    if scoped:
+        journal.append('scoped_native_observed', {'ordinal': 1, 'stage': 'review'})
+    return root, state, task, journal, raw, observation
+
+
+def test_accepted_feedback_delivers_once_and_allows_one_necessary_repair(tmp_path, monkeypatch):
+    root, state, task, journal, raw, _ = synthetic_feedback_record(tmp_path, monkeypatch)
+    resources = m.Resources(state)
+    before = resources.journal.events()
+    with pytest.raises(c.CampaignError, match='formal review acceptance'):
+        m.feedback(root, 'review', 1)
+    assert resources.journal.events() == before
+    journal.append('result_accepted', {'ordinal': 1, 'role': 'feedback', 'task_id': task['task_id'],
+        'SYNTHETIC_ACCEPTANCE_FACT_NOT_NATIVE': True})
+    original = Path(raw['path']).read_bytes()
+    result = m.feedback(root, 'review', 1)
+    assert result['feedback_raw'] == raw and result['actual_reviews'][0]['findings'] == [{'finding_id': 'F1'}]
+    assert Path(raw['path']).read_bytes() == original
+    with pytest.raises((m.Error, c.CampaignError)):
+        m.feedback(root, 'review', 1)
+    assert sum(event['kind'] == 'feedback_delivered' for event in journal.events()) == 1
+    assert sum(event['kind'] == 'content_feedback' for event in resources.journal.events()) == 1
+    necessity = c.save(tmp_path/'necessary.json', {'necessary_layers': ['page_copy'],
+        'actual_review_finding_refs': ['F1'], 'reason': 'Synthetic existing finding only.'})
+    assert m.repair_begin(root, necessity['path'])['repair_cycle'] == 1
+    with pytest.raises((m.Error, c.CampaignError)):
+        m.repair_begin(root, necessity['path'])
+    assert sum(event['kind'] == 'content_repair_cycle' for event in resources.journal.events()) == 1
+
+
+@pytest.mark.parametrize('fault', ['unscoped', 'role', 'over_budget', 'raw_hash', 'observation_hash'])
+def test_feedback_keeps_scope_budget_and_original_evidence_guards(tmp_path, monkeypatch, fault):
+    root, state, task, journal, raw, observation = synthetic_feedback_record(tmp_path, monkeypatch,
+        scoped=fault != 'unscoped', role='initial_writer' if fault == 'role' else 'feedback',
+        within=fault != 'over_budget')
+    journal.append('result_accepted', {'ordinal': 1, 'role': 'feedback', 'task_id': task['task_id'],
+        'SYNTHETIC_ACCEPTANCE_FACT_NOT_NATIVE': True})
+    if fault in ('raw_hash', 'observation_hash'):
+        Path((raw if fault == 'raw_hash' else observation)['path']).write_text('changed')
+    before = m.Resources(state).journal.events()
+    with pytest.raises((m.Error, c.CampaignError)):
+        m.feedback(root, 'review', 1)
+    assert m.Resources(state).journal.events() == before
+    assert not any(event['kind'] == 'feedback_delivered' for event in journal.events())
+
+
 def test_sdk_refusal_counts_and_actual_queries_remain_possible(tmp_path, monkeypatch):
     root, _, _, _ = setup(tmp_path, monkeypatch)
     with pytest.raises(Exception):
