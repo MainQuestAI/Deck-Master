@@ -1456,9 +1456,6 @@ def _accept_result_locked(
                              artifacts=artifacts, artifact_refs=artifact_refs, generation_binding=generation_binding,
                              envelope=envelope, produced_against=produced_against, result_digest=result_digest,
                              page_refs=page_refs)
-    validate_task_semantics(updated_task)
-    task_ref = store.put_json_object(updated_task)
-
     new_document = bump_revision(
         document,
         {"operation_id": operation_id, "kind": "task_update", "description": "", "read_set": []},
@@ -1502,6 +1499,21 @@ def _accept_result_locked(
         new_document["pages"] = [
             _merge_page_entry(existing, page_slots, page_refs, pid) for pid in order
         ]
+    if page_refs and plan_ref is None and document.get('content_plan'):
+        previous_ref = document['content_plan']
+        plan = store.read_object_json(previous_ref)
+        if (plan.get('schema_version') == 'content_plan.v2'
+                and plan.get('mode') in ('bound', 'imported_mapping')
+                and [(e['page_id'], e['page']) for e in new_document['pages']]
+                != [(e['page_id'], e['page']) for e in document['pages']]):
+            # The accepted Page write already passed its actual scope gate.
+            # Maintain only derived links, never grant an editorial Plan write
+            # or repair a stale mapping. Trials returned before this boundary.
+            from .content_plan import refresh_v2_plan_links
+            plan_ref = refresh_v2_plan_links(
+                store, document, task, plan, new_document['pages'], previous_ref=previous_ref)
+            attach(new_document, plan_ref)
+            result_refs.append(plan_ref)
     if envelope['kind'] in ('blueprint', 'reconstruct', 'repair') and (page_refs or artifacts):
         changed_ids = set(page_refs) | {a['page_id'] for a in artifacts if a.get('page_id')}
         new_document['outputs'] = {key: None for key in new_document['outputs']}
@@ -1511,6 +1523,8 @@ def _accept_result_locked(
                 if (entry['page_id'] in page_refs or 'blueprint' in page_slots.get(entry['page_id'], {})) and 'svg' not in page_slots.get(entry['page_id'], {}):
                     entry['svg'] = None
     new_document["reviews"] = list(new_document.get("reviews") or []) + review_refs
+    validate_task_semantics(updated_task)
+    task_ref = store.put_json_object(updated_task)
     _replace_task_in_document(new_document, task, task_ref, store)
     if envelope["kind"] == "compose":
         new_document["change"] = {

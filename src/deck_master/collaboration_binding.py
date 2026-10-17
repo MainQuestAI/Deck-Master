@@ -135,6 +135,12 @@ def build_binding(store, document, *, phase: str, executor_type: str, write_scop
     if adoption_policy not in ADOPTION_POLICIES:
         raise ModelError("task/collaboration_binding/adoption_policy",
                          f"adoption_policy must be one of {ADOPTION_POLICIES}")
+    if authorization_ref is not None:
+        from .eligibility import current_authorization_record
+        authorization = current_authorization_record(store, document, authorization_ref)
+        if adoption_policy == "within_scope" and authorization.get("adoption_policy") != "within_scope":
+            raise ModelError("task/collaboration_binding/adoption_policy",
+                             "candidate_only authority requires a trial task; automatic adoption needs explicit within_scope authority")
     region = document.get("collaboration") or {}
     current = request if request is not None else region.get("request")
     if current is None or current.get("closed"):
@@ -326,7 +332,8 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
                write_scope: dict | None = None, adoption_policy: str = "within_scope",
                authorization_ref: dict | None = None, decision_refs=(),
                page_ids=None, action: str | None = None,
-               action_targets: dict | None = None) -> dict:
+               action_targets: dict | None = None, candidate_count=0,
+               external_call_count=None) -> dict:
     """Attach the binding to a task about to be dispatched.
 
     ``action`` names the service action this task executes under. When the
@@ -352,11 +359,22 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
         targets = action_targets or {"page_ids": scope.get("page_ids") or [],
                                      "layers": scope.get("layers") or []}
         authorization_ref = eligibility.covering_authorization_ref(store, document, action,
-                                                                    targets)
+            targets, candidate_count=candidate_count,
+            count=external_call_count if external_call_count is not None
+                  else (1 if task.get('cost_class') == 'external_generation' else None))
     binding = build_binding(store, document, phase=phase, executor_type=executor_type,
                             write_scope=scope, adoption_policy=adoption_policy,
                             authorization_ref=authorization_ref, decision_refs=decision_refs,
                             include_manuscript=task.get('kind') != 'style_analyze')
+    if authorization_ref is not None and task.get("cost_class") == "external_generation":
+        authorization = store.read_object_json(authorization_ref)
+        budget = (authorization.get("constraints") or {}).get("fixed_budget")
+        if budget and "blueprint" in scope.get("layers", []):
+            pages = scope.get("page_ids") or []
+            credits = {item["page_id"]: item["budget_key"] for item in budget["credits"]}
+            if len(pages) != 1 or pages[0] not in credits:
+                raise ModelError("task/collaboration_binding/budget_key", "a first-image task needs its single authorized page credit")
+            binding["budget_key"] = credits[pages[0]]
     task["collaboration_binding"] = binding
     task.setdefault("protocol_version", "changes.v1")
     task["required_capabilities"] = list(dict.fromkeys([*task.get("required_capabilities", []), "collaboration.v1", "rc3-entry.v1"]))

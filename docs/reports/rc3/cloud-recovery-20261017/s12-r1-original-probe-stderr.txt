@@ -1,0 +1,29 @@
+Public redacted copy; original hash and published-copy identity are recorded in verification.json.
+Traceback (most recent call last):
+  File "tests/rebuild/rc3_m02_image_installed_probe.py", line 284, in <module>
+    main()
+  File "tests/rebuild/rc3_m02_image_installed_probe.py", line 173, in main
+    fixture.run("mark", leaf="M02-read-01")
+  File "tests/rebuild/rc3_m02_image_fixture.py", line 283, in run
+    return s12.execute(self.ledger, command, barrier_path=barrier["path"], handoff=handoff or self.handoff, arguments=arguments,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "tests/rebuild/rc3_s12_evidence.py", line 82, in wrapped
+    result = _original(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "tools/rc3_campaign/m02_image_transition.py", line 664, in execute
+    return execute_bound(root, command, barrier_path=barrier_path, handoff=handoff, arguments=arguments,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "tools/rc3_campaign/m02_image_transition.py", line 691, in execute_bound
+    return mark(values, leaf, bootstrap)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "tools/rc3_campaign/m02_image_transition.py", line 492, in mark
+    boot = b.bootstrap(config, bootstrap)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "tools/rc3_campaign/image_controller.py", line 189, in bootstrap
+    sdk = sdk_controller(config)
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "tools/rc3_campaign/image_controller.py", line 96, in sdk_controller
+    require(Path(spec["path"]).absolute() == path, "SDK controller must be the pinned sibling file")
+  File "tools/rc3_campaign/image_controller.py", line 45, in require
+    raise ImageControllerError(message)
+rc3_image_event_image_controller.ImageControllerError: SDK controller must be the pinned sibling file

@@ -1,4 +1,4 @@
-import {get, post, readableError, ApiError} from './api.js';
+import {get, post, canonical, readableError, ApiError} from './api.js';
 import {el, button, modal, version, field, downloadJSON} from './dom.js';
 import {pageText} from './page-text.js';
 import {diffView} from './text-diff.js';
@@ -81,7 +81,7 @@ function instructionBuffer(app, action) {
   return buffer;
 }
 
-function controlForm(app, {title, action, path, body, explanation, build, initial = '', baseRevision, onSuccess}) {
+function controlForm(app, {title, action, path, body, explanation, build, initial = '', baseRevision, onSuccess, canSubmitNew=()=>true}) {
   if (document.querySelector('#modal')?.open) return;
   const base_revision = app.info.control_revision_id || app.info.revision_id;
   const instruction = instructionBuffer(app, action); instruction.input.value = initial;
@@ -90,6 +90,7 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
   const form = el('form', {class: 'stack'}, el('p', {}, explanation), fields, instruction.node, status);
   let pending = null, sending = false;
   const submit = button('确认' + title, () => form.requestSubmit(), true);
+  const refreshSubmit=()=>{submit.disabled=sending||(!pending&&!canSubmitNew());};
   const dialog = modal(title, form, [submit], {protectDraft: true});
   instruction.onRestore=copy=>{
     if(copy.pending&&copy.pending.path!==projectAPI(app)+path){
@@ -100,9 +101,10 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
     submit.hidden=false;
     submit.textContent=pending?'核实并重试原请求':'确认'+title;
     status.replaceChildren(...(pending?[el('p',{},'已恢复待核实的原请求。版本、范围、操作编号均保持原样，不按当前表单重新提交。'),details('已冻结的原请求',pending)]:[]));
+    refreshSubmit();
   };
   form.addEventListener('submit', async event => {
-    event.preventDefault(); if (sending) return;
+    event.preventDefault(); if (sending||(!pending&&!canSubmitNew())) return;
     if (!instruction.input.value.trim()) { instruction.input.reportValidity(); return; }
     sending = true; submit.disabled = true; fields.disabled = true; instruction.lock(true); instruction.save();
     try {
@@ -139,9 +141,10 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
           status.append(button('保留输入并读取当前状态', () => { instruction.save(); dialog.close(); app.loadRoute({...app.route}); }));
         }
       }
-    } finally { sending = false; submit.disabled = false; }
+    } finally { sending = false; refreshSubmit(); }
   });
-  return {dialog,submit,instruction,status};
+  refreshSubmit();
+  return {dialog,submit,instruction,status,refreshSubmit};
 }
 
 export async function requestForm(app, {source = null, transition = null} = {}) {
@@ -207,10 +210,139 @@ function stateDetails(app) {
           body:scopeView(app,auth.scope),explanation:'撤回后停止该授权及其下级的后续采用和制作。已发生调用与费用保留；其它授权不能接管原任务。',build:instruction_evidence=>({evidence:instruction_evidence,reason:instruction_evidence.text})});
       },false,{disabled:Boolean(app.info.sample?.readonly)})))),
     controlRecovery(app),requestControls(app),
+    request&&!request.closed&&!app.info.sample?.readonly&&button('选择内容审阅方式',()=>{document.querySelector('#modal').close();reviewPolicyForm(app);}),
+    request&&!request.closed&&['full_deck','edit'].includes(request.intent)&&!app.info.sample?.readonly&&button('查看制作预算',()=>{document.querySelector('#modal').close();budgetForm(app);}),
     !app.info.sample?.readonly&&button('导入确认稿',()=>{document.querySelector('#modal').close();draftImportForm(app);}),
     app.health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',()=>{document.querySelector('#modal').close();externalReviewForm(app);}),
     details('当前控制与请求身份',{control_revision_id:app.info.control_revision_id,reading_revision_id:app.route.revision,...state}));
   modal('本次工作与范围',body);
+}
+
+export function budgetForm(app, {changePlanId=null}={}) {
+  const request=app.info.collaboration.request,isEdit=request.intent==='edit';
+  const template=isEdit?'edit_rebuild_per_page':'initial_per_page';
+  const status=el('div',{class:'stack',role:'status'});
+  const body=el('div',{class:'stack'},isEdit&&el('p',{},changePlanId?
+    '使用刚才修改影响预览的固定方案。记录预算后，保留修改要求并按当前版本重新预览，再交接任务。':
+    '先在所选页制作或已保存意见中预览修改影响，再从该预览打开制作预算。无需填写方案编号。'),status);
+  let preview=null,serial=0;
+  const form=controlForm(app,{title:'记录制作预算',action:'grant',path:'/collaboration/authorizations',body,
+    explanation:'预算按本次明确制作范围和实际方案计算。每页首次调用至多一次，重试为零；已有费用与额度保留。整套制作或直接修改允许在所列范围内更新当前稿；局部试作只返回比较候选，采用需另有明确权限。先只读查看影响，再记录这次制作授权。',
+    baseRevision:()=>preview?.control_revision_id,
+    canSubmitNew:()=>Boolean(preview&&!preview.blocked&&!preview.credit_problems?.length),
+    build:instruction_evidence=>{
+      if(!preview)throw Error('请先读取当前制作预算。');
+      return {mode:'execute',actions:isEdit?['change.commit','dispatch.blueprint']:['dispatch.blueprint'],
+        scope:preview.scope,budget_template:template,plan_ref:preview.plan_ref,
+        adoption_policy:isEdit&&preview.max_candidate_count>0?'candidate_only':'within_scope',
+        ...(isEdit?{change_plan_id:changePlanId,max_candidate_count:preview.max_candidate_count}:{}),instruction_evidence};
+    },
+    onSuccess:(result,response,{dialog,status})=>{
+      if(isEdit)status.append(button('读取当前版本并重新预览修改',()=>{dialog.close();app.go({...app.route,revision:response.control_revision_id});}));
+    }});
+  async function read(){
+    const token=++serial;preview=null;form.refreshSubmit();
+    status.replaceChildren(el('p',{},'正在只读计算范围和已有额度；未派发任务。'));
+    try{
+      const value=resultOf(await post(projectAPI(app)+'/collaboration/budget-preview',{
+        budget_template:template,...(isEdit?{change_plan_id:changePlanId}: {})}));
+      if(token!==serial)return;
+      preview=value;
+      status.replaceChildren(el('p',{},value.display),scopeView(app,value.scope),
+        isEdit&&el('p',{},`比较候选上限 ${value.max_candidate_count} 个；采用仍需已有的明确权限。`),
+        value.credit_problems?.length>0&&el('p',{class:'field-error'},'已有页面额度被预留或消费，重复授权不会刷新。'),
+        value.scope_gaps?.length>0&&el('p',{class:'field-error'},'方案包含范围外页面或图层，请先处理明确缺口。'),
+        details('计算依据与逐页额度',value));
+      form.refreshSubmit();
+    }catch(error){if(token===serial)status.replaceChildren(admissionView(app,error));}
+  }
+  body.prepend(button('只读计算制作预算',read,false,{disabled:isEdit&&!changePlanId}));
+  if(!isEdit||changePlanId)read();
+}
+
+// Request intent/scope can only change through an explicit request transition.
+// An authorization-scope gap, identified by the resolver's authorization IDs,
+// can instead be covered by a new exact zero-call adoption grant.
+export function adoptionBlockReason(authority) {
+  const decision=authority?.eligibility;
+  if(!decision || decision.allowed)return null;
+  const reasons=decision.reasons||[];
+  const requestGap=reasons.some(reason=>reason.code==='scope_exceeded' &&
+    (!Array.isArray(reason.authorization_ids)||!reason.authorization_ids.length||
+      'request_intent' in reason||'authorized_pages' in reason||'authorized_layers' in reason));
+  if(requestGap)return '所选候选超出本次请求的用途或范围。请先在“本次工作与范围”明确替换或扩大请求，再重新预览采用影响。';
+  const codes=decision.reason_codes||[];
+  if(!codes.length||!codes.every(code=>['authority_insufficient','authorization_revoked','scope_exceeded'].includes(code)))
+    return '当前条件不允许采用，请处理本次工作与范围中的缺口。';
+  // A scope code without its detailed authorization-only reason is not a grant gap.
+  if(codes.includes('scope_exceeded')&&!reasons.some(reason=>reason.code==='scope_exceeded'))
+    return '请先在“本次工作与范围”明确替换或扩大请求，再重新预览采用影响。';
+  return null;
+}
+
+export async function adoptCandidates(app, editor, plan, onComplete) {
+  await app.business.available();
+  const selection = {schema_version:'candidate_selection.v1', project_id:plan.project_id,
+    base_revision:plan.base_revision, candidate_ids:plan.selections.map(item=>item.candidate_id)};
+  let checked;
+  try { checked = await post('/api/candidates/plan', {input:selection}); }
+  catch(error) {
+    if(error.status===409)modal('本次未采用任何页，选择已保留',el('p',{},readableError(error)+' 请读取当前状态后重新预览采用影响。'));
+    throw error;
+  }
+  if(canonical(checked.plan)!==canonical(plan))throw Error('采用目标已变化，请重新预览采用影响。');
+  const submit = value => app.business.submit(editor,'candidates.adopt',
+    {input:value,base_revision:value.base_revision},value,onComplete);
+  const authority=checked.adoption_authority;
+  if(!authority || authority.eligibility.allowed)return submit(plan);
+  const blocker=adoptionBlockReason(authority);
+  if(blocker)throw Object.assign(new Error(blocker),{details:authority.eligibility});
+  const form=controlForm(app,{title:'授权采用所选候选',action:'candidate.adopt.grant:'+checked.plan_ref.sha256,path:'/collaboration/authorizations',
+    baseRevision:()=>plan.base_revision,
+    body:el('div',{class:'stack'},scopeView(app,authority.scope),
+      el('p',{},`仅采用已比较的 ${plan.selections.length} 个候选；图像调用上限 0，新增试作上限 0。`)),
+    initial:`明确采用已比较的 ${plan.selections.length} 个所选候选，仅更新所列页面与图层，保留其它稿件。`,
+    explanation:'本次试作权限仅允许返回候选。确认后为所列范围记录零调用采用权限，再核对原候选与当前目标并采用。取消会保留当前稿件。',
+    build:instruction_evidence=>({mode:'execute',actions:['candidate.adopt'],scope:authority.scope,
+      max_external_calls:0,max_candidate_count:0,adoption_policy:'within_scope',instruction_evidence}),
+    onSuccess:async(result,response,{dialog,status})=>{
+      try {
+        const current=await post('/api/candidates/plan',{input:{...selection,base_revision:response.control_revision_id}});
+        if(canonical(current.plan.selections)!==canonical(plan.selections))throw Error('采用目标已变化，请重新预览。');
+        dialog.close();
+        await submit(current.plan);
+      } catch(error) {
+        status.replaceChildren(el('p',{class:'field-error'},readableError(error)+' 采用权限已记录，当前稿件保留；请重新预览采用影响。'));
+      }
+    }});
+  return form;
+}
+
+async function reviewPolicyForm(app) {
+  const revision=app.info.control_revision_id||app.info.revision_id;
+  const request=app.info.collaboration?.request;
+  let current;
+  try {
+    current=await get('/api/view/summary?'+new URLSearchParams({revision}));
+    if(current.project_id!==app.info.project_id||current.revision_id!==revision)throw Error('当前稿件版本不匹配，请重新读取后选择。');
+  } catch(error) {app.setNotice(readableError(error));return;}
+  const choice=field('内容审阅方式',el('select',{required:true},
+    el('option',{value:''},'请选择本次审阅方式'),
+    el('option',{value:'independent_model_or_human'},'独立模型或人员审阅（默认要求）'),
+    el('option',{value:'host_self'},'由当前制作工具自审')));
+  const scope={subject:'deck',page_ids:current.pages.map(page=>page.page_id),page_manifest_ref:null,external_artifact_ref:null,
+    layers:['review'],allow_page_membership_change:false,allow_page_order_change:false,purpose:request.scope.purpose};
+  const preview=Object.create(app);preview.summary=current;
+  controlForm(app,{title:'选择内容审阅方式',action:'decision',path:'/collaboration/decisions',
+    explanation:'独立审阅需要实际可用的审阅通道。选择制作工具自审只适用于下面这些页面和当前请求，不代表独立审阅，也不代替正式交付所需的人类专业复核。',
+    body:el('div',{class:'stack'},choice.node,scopeView(preview,scope),
+      el('p',{class:'muted'},'请在明确要求中说明选择和原因。此操作不授予制作权限或增加调用额度；换请求或新增页面后需重新核对。')),
+    baseRevision:()=>revision,
+    build:instruction_evidence=>{
+      if(!choice.input.value)throw Error('请选择本次内容审阅方式。');
+      return {decision:{topic:'policy',disposition:'accepted',authority_mode:'direct_user',scope,
+        value:{content_review_requirement:choice.input.value,reason:instruction_evidence.text},instruction_evidence}};
+    }});
 }
 
 function migrationForm(app) {

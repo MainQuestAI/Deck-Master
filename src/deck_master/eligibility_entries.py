@@ -154,6 +154,7 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration_api.invoke[review.import]": ("review.import", "review_import.import_report", None),
     "collaboration_api.invoke[draft.import]": ("import_draft", "service.import_draft", None),
     "collaboration_api.invoke[draft.preview]": (None, "-", READ_REASONS['read_analysis']),
+    "collaboration_api.invoke[budget.describe]": (None, "-", READ_REASONS['read_analysis']),
     "collaboration_api.invoke[continue]": ("continue_project", "service.continue_project; its actual dispatch helpers enforce production gates", None),
 }
 
@@ -254,6 +255,7 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "capabilities": (None, "-", READ_REASONS["read_model"]),
     "methods": (None, "-", READ_REASONS["read_model"]),
     "collaboration show": (None, "-", READ_REASONS["read_model"]),
+    "collaboration budget": (None, "-", READ_REASONS["read_analysis"]),
     "collaboration migration describe": (None, "-", READ_REASONS["read_model"]),
     "collaboration request start": ("request.start", "collaboration.start_request", None),
     "collaboration request replace": ("request.start", "collaboration.start_request", None),
@@ -387,6 +389,7 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "POST /api/projects/{project_id}/collaboration/requests": ("request.start", "collaboration_api.invoke → collaboration.start_request (start/replace share the locked request service)", None),
     "POST /api/projects/{project_id}/collaboration/decisions": ("decision.record", "collaboration_api.invoke → collaboration.record_decision", None),
     "POST /api/projects/{project_id}/collaboration/authorizations": ("authorization.grant", "collaboration_api.invoke → collaboration.grant", None),
+    "POST /api/projects/{project_id}/collaboration/budget-preview": (None, "-", READ_REASONS['read_analysis']),
     "POST /api/projects/{project_id}/collaboration/proposal-adoptions": ("proposal.adopt", "collaboration_api.invoke → content_production.adopt_proposal", None),
     "POST /api/projects/{project_id}/collaboration/request/pause": ("request.pause", "collaboration_api.invoke → collaboration.pause_request", None),
     "POST /api/projects/{project_id}/collaboration/request/resume": ("request.resume", "collaboration_api.invoke → collaboration.resume_request", None),

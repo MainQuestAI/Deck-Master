@@ -82,8 +82,93 @@ def _downgrade_decision_effective(store, document, override_ref) -> bool:
             or record.get("disposition") != "accepted"
             or record.get("authority_mode") not in ("direct_user", "delegated")):
         return False
+    value = record.get("value")
+    if (not isinstance(value, dict) or value.get("content_review_requirement") != "host_self"
+            or not isinstance(value.get("reason"), str) or not value["reason"].strip()
+            or not _quality_decision_source_allowed(store, document, record)
+            or not _quality_scope_covered(store, document, record)):
+        return False
     from . import dependency_slices
+    current_ref, _ = dependency_slices._resolve_current(store, document, "decisions", "decision_id", override_ref)
+    if current_ref != override_ref:
+        return False
     return dependency_slices.decision_effectiveness(store, document, override_ref)["effective"]
+
+
+def _quality_decision_source_allowed(store, document, decision):
+    """A stored claimed authority is not an authenticated/traceable instruction."""
+    allowed = ("verified_user",) if (document.get("collaboration") or {}).get("authority_policy") == "verified_user" else ("host_attested", "verified_user")
+    if (decision.get("evidence") or {}).get("assurance") not in allowed:
+        return False
+    if decision.get("authority_mode") == "direct_user":
+        return True
+    if decision.get("authority_mode") != "delegated":
+        return False
+    ref = decision.get("delegation_ref")
+    seen = set()
+    while ref:
+        digest = ref.get("sha256")
+        if digest in seen or len(seen) >= 8:
+            return False
+        seen.add(digest)
+        try:
+            grant = store.read_object_json(ref)
+        except Exception:  # noqa: BLE001 - unreadable authority cannot relax review
+            return False
+        if (grant.get("mode") != "delegate" or "policy" not in grant.get("delegated_topics", [])
+                or (grant.get("evidence") or {}).get("assurance") not in allowed):
+            return False
+        ref = grant.get("parent_authorization_ref")
+    return bool(seen)
+
+
+def _quality_scope_covered(store, document, decision):
+    from .eligibility import _covers, _page_coverage_from_binding, scope_page_ids
+    request = (document.get("collaboration") or {}).get("request") or {}
+    pages = [entry["page_id"] for entry in document.get("pages") or []]
+    targets = {"subject": "pages", "page_ids": pages, "layers": ["review"]}
+    return bool(pages) and decision.get("request_id") == request.get("request_id") and not request.get("closed") \
+        and set(scope_page_ids(store, decision.get("scope")) or []) == set(pages) \
+        and _covers(store, decision.get("scope"), targets) \
+        and (_covers(store, request.get("scope"), targets)
+             or _page_coverage_from_binding(store, request, targets, None, document))
+
+
+def apply_requirement_decision(store, document, decision, decision_ref, *, previous_document):
+    """Atomically bind an explicit policy choice through the normal decision API.
+
+    Defaults, proposals and unrelated policy records never select self-review.
+    This changes neither production grants nor the human professional policy.
+    """
+    value = decision.get("value")
+    if (decision.get("topic") != "policy" or decision.get("disposition") != "accepted"
+            or not isinstance(value, dict) or "content_review_requirement" not in value):
+        return document
+    requirement = value["content_review_requirement"]
+    if requirement not in ("host_self", "independent_model_or_human"):
+        raise ModelError("decision/value/content_review_requirement", "choose independent_model_or_human or explicit host_self")
+    if (not isinstance(value.get("reason"), str) or not value["reason"].strip()
+            or not _quality_decision_source_allowed(store, document, decision)):
+        raise ModelError("decision/value", "review policy requires an explicit user instruction or policy delegation and a nonempty reason")
+    if requirement == "host_self" and not _quality_scope_covered(store, document, decision):
+        raise ModelError("decision/scope", "self-review must explicitly cover every current manuscript page's review layer within this request")
+    region = document["collaboration"]
+    updated = {**document, "collaboration": {**region, "quality_profile": {
+        "content_review_requirement": requirement, "requirement_origin": "explicit_decision",
+        "override_decision_ref": decision_ref}}}
+    if requirement_state(store, previous_document)["effective"] != requirement:
+        refs = []
+        for ref in document.get("tasks") or []:
+            task = store.read_object_json(ref)
+            if (task.get("kind") == "review" and task.get("review_stage") == STAGE
+                    and task.get("status") in ("awaiting_host", "running", "queued")
+                    and (task.get("collaboration_binding") or {}).get("request_id") == decision["request_id"]):
+                task = {**task, "status": "superseded", "updated_at": decision["created_at"]}
+                ref = store.put_json_object(task)
+            refs.append(ref)
+        updated["tasks"] = refs
+    models.validate_collaboration_region(updated["collaboration"])
+    return updated
 
 
 def requirement_state(store, document) -> dict:
@@ -606,8 +691,13 @@ def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict
     applicable = []
     if records is None:
         records = _preproduction_reviews(store, document)
+    strict_refs = None
+    if requirement_state(store, document)["effective"] == "independent_model_or_human":
+        strict_refs = _independently_accepted_reviews(store, document, records)
     for item in records:
         review = item["review"]
+        if strict_refs is not None and item["review_ref"]["sha256"] not in strict_refs:
+            continue
         notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' else {}
         deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
                 for dep in review.get("dependencies") or []}
@@ -629,6 +719,97 @@ def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict
             continue
         applicable.append(item)
     return applicable
+
+
+def _independently_accepted_reviews(store, document, records):
+    """Consume authenticated acceptance facts, never upgrade a prior self-review.
+
+    The receiver's persisted receipt and exact Task/import result establish
+    provenance. A reviewer name or a caller-supplied evidence Ref alone does
+    not. Completed facts remain usable without a currently connected provider.
+    """
+    from .delivery_eligibility import human_evidence_status
+    from .store import StoreError
+    candidates = {item["review_ref"]["sha256"]: item["review"] for item in records
+                  if _reviewer_type(item["review"]) in ("independent_host", "human_internal", "human_external")}
+    accepted = set()
+    if not candidates:
+        return accepted
+
+    def read_object(ref):
+        try:
+            value = store.read_object_json(ref)
+            return value if isinstance(value, dict) else {}
+        except (ModelError, StoreError, OSError, ValueError, KeyError, TypeError):
+            return {}
+
+    def proof_matches(proof, review, *, task_id):
+        try:
+            models.validate_schema("authenticated_review_receipt", proof)
+            claims = proof["claims"]
+            if claims["project_id"] != document["project_id"] or claims["task_id"] != task_id:
+                return False
+            store.read_object_bytes(proof["raw_event_ref"])
+            reviewer = review["reviewer"]
+            if reviewer["type"] == "independent_host":
+                executor = reviewer.get("execution_ref")
+                return (claims["channel"] == "independent_review_receipts"
+                        and reviewer.get("independence_confirmed") is True
+                        and bool(executor) and claims.get("executor_ref") == executor
+                        and executor not in claims["author_execution_refs"])
+            identity = reviewer.get("identity_receipt") or {}
+            return (claims["channel"] == "human_review_receipts"
+                    and claims.get("event_id") == identity.get("event_id")
+                    and bool(claims.get("reviewer_id"))
+                    and claims["reviewer_id"] == identity.get("reviewer_id"))
+        except (ModelError, StoreError, OSError, ValueError, KeyError, TypeError):
+            return False
+
+    # Import of a verified human also has the established identity-adapter path.
+    for digest, review in candidates.items():
+        if human_evidence_status(review, project_id=document["project_id"])["verified"]:
+            accepted.add(digest)
+    for task_ref in document.get("tasks") or []:
+        task = read_object(task_ref)
+        if task.get("kind") != "review" or task.get("review_stage") != STAGE or task.get("status") != "completed":
+            continue
+        refs = task.get("result_refs") or []
+        matching = {ref["sha256"] for ref in refs} & (candidates.keys() - accepted)
+        if not matching:
+            continue
+        proofs = [read_object(ref) for ref in refs]
+        for digest in matching:
+            review = candidates[digest]
+            if any(proof_matches(proof, review, task_id=task["task_id"])
+                   and proof["claims"]["subjects_sha256"] == _subjects_digest(review["subjects"])
+                   for proof in proofs if proof.get("schema_version") == "authenticated_review_receipt.v1"):
+                accepted.add(digest)
+    # Independent external imports have no Task; their immutable commit receipt
+    # binds both the imported Review refs and the original authenticated report.
+    remaining = candidates.keys() - accepted
+    if remaining:
+        from .snapshots import committed_snapshots
+        for snapshot in committed_snapshots(store):
+            response = ((snapshot.get("change") or {}).get("operation_receipt") or {}).get("response") or {}
+            report_ref = response.get("report_ref")
+            if not report_ref:
+                continue
+            for ref in response.get("review_refs") or []:
+                digest = ref["sha256"]
+                if digest not in remaining:
+                    continue
+                review = candidates[digest]
+                evidence = (review.get("reviewer") or {}).get("evidence_ref")
+                if not evidence:
+                    continue
+                proof = read_object(evidence)
+                if (proof_matches(proof, review, task_id="review-import-" + report_ref["sha256"])
+                        and proof["claims"]["result_sha256"] == report_ref["sha256"]):
+                    accepted.add(digest)
+            remaining = candidates.keys() - accepted
+            if not remaining:
+                break
+    return accepted
 
 
 def preproduction_status(store, document, *, adapter_context=None, page_ids=None) -> dict:

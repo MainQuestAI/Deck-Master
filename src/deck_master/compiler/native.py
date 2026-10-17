@@ -78,6 +78,51 @@ def paint(parent, color, alpha):
     rgb.append(opacity);fill.append(rgb);parent.append(fill)
 
 
+def _trim_table_text_slack(grid_shapes, text_boxes, page_id):
+    """Trim only measured horizontal slack at actual drawn column boundaries.
+
+    Readback still verifies the full native grid, row/column ownership and
+    perimeter. No source label, font-size tolerance or padding exemption can
+    make an out-of-cell glyph fit. Alignment anchors stay fixed in EMUs.
+    """
+    from ..readback_relations import _native_grid_shape
+    native = [(source, _native_grid_shape(shape._element, frame=bool(source.get('table_frame'))))
+              for source, shape in grid_shapes]
+    grids = {}
+    for source, frame in native:
+        if not source.get('table_frame') or frame is None:
+            continue
+        left, top = frame['x'], frame['y']
+        right, bottom = left + frame['width'], top + frame['height']
+        epsilon = .02  # native zero-width line representation, never text slop
+        vertical = [rule['x'] for original, rule in native if original['kind'] == 'line' and rule
+                    and rule['width'] <= epsilon and left < rule['x'] < right
+                    and abs(rule['y'] - top) <= epsilon and abs(rule['height'] - frame['height']) <= epsilon
+                    and all(any(a-epsilon <= rule['x'] <= b+epsilon for a, b in frame['sides'][side])
+                            for side in ('top', 'bottom'))]
+        grids.setdefault(source['table_id'], set()).add((left, *sorted(vertical), right))
+    for source, shape, glyph_width, anchor in text_boxes:
+        if source.get('rotation'):
+            continue
+        identity = source.get('atom_id') or ''
+        matches = [xs for table_id, choices in grids.items() if len(choices) == 1
+                   and any(identity.startswith(f'atom:{page_id}:{kind}:{table_id}:') for kind in ('cell', 'column'))
+                   for xs in choices]
+        if len(matches) != 1:
+            continue
+        cells = [(round(left*9525), round(right*9525)) for left, right in zip(matches[0], matches[0][1:])
+                 if (round(left*9525) <= anchor < round(right*9525) if source['anchor'] == 'start'
+                     else round(left*9525) < anchor <= round(right*9525) if source['anchor'] == 'end'
+                     else round(left*9525) < anchor < round(right*9525))]
+        if len(cells) != 1:
+            continue
+        left, right = cells[0]
+        maximum = {'middle': 2*min(anchor-left, right-anchor), 'end': anchor-left}.get(source['anchor'], right-anchor)
+        if glyph_width <= maximum < shape.width:
+            shape.width = maximum
+            shape.left = anchor - ({'middle': maximum // 2, 'end': maximum}.get(source['anchor'], 0))
+
+
 def emit(pages, width, height, fonts, output):
     pres=Presentation();pres.slide_width=round(width*9525);pres.slide_height=round(height*9525)
     for page in pages:
@@ -89,6 +134,7 @@ def emit(pages, width, height, fonts, output):
         def X(x):return round((ox+x*k)*9525)
         def Y(y):return round((oy+y*k)*9525)
         def S(v):return round(v*k*9525)
+        grid_shapes, text_boxes = [], []
         for s in page['shapes']:
             if s['kind']=='image':
                 from PIL import Image
@@ -126,6 +172,7 @@ def emit(pages, width, height, fonts, output):
                 # The IR anchor is already in final page coordinates; glyph rotation is
                 # applied once through sh.rotation below, so the box stays at the anchor.
                 sh=slide.shapes.add_textbox(X(x),Y(y),S(w),S(h))
+                text_boxes.append((s, sh, S(text_width), X(anchor)))
                 tf=sh.text_frame;tf.clear();tf.word_wrap=False;tf.vertical_anchor=MSO_ANCHOR.TOP
                 from pptx.enum.text import MSO_AUTO_SIZE
                 tf.auto_size=MSO_AUTO_SIZE.NONE
@@ -186,4 +233,7 @@ def emit(pages, width, height, fonts, output):
                 sh._element.spPr.append(OxmlElement('a:effectLst'))
             else:
                 sh._element.spPr.append(OxmlElement('a:effectLst'))
+            if s['kind'] == 'line' or s.get('table_frame'):
+                grid_shapes.append((s, sh))
+        _trim_table_text_slack(grid_shapes, text_boxes, page['page_id'])
     pres.save(output)

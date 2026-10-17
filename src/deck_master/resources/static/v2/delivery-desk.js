@@ -11,6 +11,8 @@ const descriptions = {
   delivery: '核对所选实际文件、口播保留方式与当前控制。存在未解决项时拒绝生成。',
   engineering: '包含原材料、完整提示词和恢复所需历史，仅供内部恢复；不含认证文件和个人草稿。',
 };
+const notesChoices = {pptx_notes:'写入 PPT 备注', separate_script:'单独导出口播稿', both:'PPT 备注和独立口播稿', pure_reading:'纯阅读稿（不含口播）'};
+const notesLabel = selection => notesChoices[selection] || '按所选稿件要求保留口播';
 const layerNames = {content: '逐页稿', page: '逐页稿', blueprint: '原图', svg: 'SVG', svg_preview: 'SVG 预览', ppt: '整稿 PPT', ppt_preview: 'PPT 预览',
   blueprint_content: '原图内容检查', blueprint_fidelity: '原图一致性检查', conversion: '转换检查', readability: '阅读检查', privacy: '隐私检查', professional_use: '专业使用评估', page_limit: '页数限制', render_report: '制作报告'};
 const panel = (title, ...children) => el('section', {class: 'panel', 'data-container':'section'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
@@ -61,7 +63,9 @@ function exportFiles(record, app) {
   const node = el('section', {class: 'export-result stack'}, el('div',{class:'studio-export-result-heading'},el('h3', {}, `${names[record.purpose]} · ${version(record.revision_id)}`),el('span',{class:'status'},'文件已生成')),
     el('p', {class:'export-archive-name'}, record.archive), el('div', {class:'export-downloads'},
       el('a', {class: 'download-link primary', href: exportURL(record, record.archive), download: record.archive}, '下载 ZIP'),
-      record.files['deck.pptx'] && el('a', {class:'download-link', href:exportURL(record,'deck.pptx'), download:'deck.pptx'}, '下载 PPT')),
+      record.files['deck.pptx'] && el('a', {class:'download-link', href:exportURL(record,'deck.pptx'), download:'deck.pptx'}, '下载 PPT'),
+      record.files['speaker-script.txt'] && el('a', {class:'download-link', href:exportURL(record,'speaker-script.txt'), download:'speaker-script.txt'}, '下载口播稿')),
+    el('p', {class:'export-notes-policy'}, record.purpose==='engineering'?'保留工程恢复原件':notesLabel(record.manifest.notes_policy?.selection)),
     el('p', {class: 'muted'}, '文件已生成。下载由浏览器完成；中断后可继续使用同一链接。'));
   const details = el('details', {}, el('summary', {}, `查看文件与哈希（${record.manifest.files.length} 项）`));
   if (app.health.ui_capabilities?.includes('collaboration.v1') && !app.info.sample?.readonly) {
@@ -86,6 +90,12 @@ export function deliveryDesk(app) {
   const revision = app.route.revision, key = `deck-master:v3:exports:${app.info.project_identity}`;
   const status = el('p', {role: 'status'}), results = el('div', {class: 'stack export-results'}), facts = el('div', {class: 'stack'});
   let disposed = false; app.disposables.push(() => { disposed = true; });
+  const notesChoice = el('select', {'aria-label':'口播稿保留方式', disabled:Boolean(app.info.sample?.readonly)},
+    el('option', {value:''}, '按稿件已有要求'), ...Object.entries(notesChoices).map(([value,label])=>el('option', {value}, label)));
+  const notesStatus = el('p', {class:'muted', role:'status'}, '适用于审阅包和正式交付包；内部工程包保留恢复原件。');
+  const notesOptions = () => notesChoice.value ? {notes_policy:notesChoice.value} : {};
+  let loadJudgement = () => {};
+  notesChoice.addEventListener('change', () => { loadJudgement(); });
   // UX-05b：文件区按「版本—用途—结果」组织：版本先固定，正式用途（交付/审阅）
   // 在先，工程恢复包退到辅助位置；生成结果按同一用途与版本列出。
   const purposeCard = (purpose, primary) => studio ? el('article',{class:'studio-delivery-row'},
@@ -104,6 +114,7 @@ export function deliveryDesk(app) {
     :el('details',{class:'export-group export-recovery'},el('summary',{},'工程恢复包（辅助，仅在需要恢复或交付内部材料时使用）'),el('div',{class:'stack'},purposeCard('engineering',false)));
   const node = panel('版本与文件',studio?versionBar:el('p', {class: 'export-version'}, `本次文件固定为 ${version(revision)}。后台新结果不会改变已经生成的包。`),
     studio&&availability,el('section', {class: 'export-group stack'}, el('h3', {class: 'export-group-title'}, '正式用途（按此版本生成）'),
+      el('label', {class:'stack export-notes-choice'}, '口播稿保留方式', notesChoice), notesStatus,
       el('div', {class: studio?'studio-delivery-options':'export-purpose-grid'}, purposeCard('delivery', true), purposeCard('review', false))),
     recoveryPurpose,app.info.sample?.readonly && el('p', {class: 'muted'}, '只读示例不生成文件包。请在自己的项目操作。'), status,
     el('h3', {class: 'export-group-title'}, '生成结果'), results);
@@ -112,15 +123,31 @@ export function deliveryDesk(app) {
   if (app.health.ui_capabilities?.includes('delivery_eligibility.v1')) {
     const judgement = el('div', {class: 'stack'}, el('p', {role: 'status'}, '正在核对所选实际文件与当前控制。'));
     node.querySelector('.panel-body').prepend(judgement);
+    let serial = 0;
     const load = async () => {
-      try { const value = await deliveryJudgement(app, revision); if (!disposed) judgement.replaceChildren(deliveryJudgementView(value), button('重新核对当前控制', load)); }
-      catch (error) { if (!disposed) judgement.replaceChildren(admissionView(app, error), button('重读交付判断', load)); }
+      const token = ++serial;
+      judgement.replaceChildren(el('p', {role:'status'}, '正在核对所选口播方式、实际文件与当前控制。'));
+      notesStatus.textContent = '正在核对本次口播保留方式；内部工程包保留恢复原件。';
+      try {
+        const value = await deliveryJudgement(app, revision, notesOptions());
+        if (!disposed && token===serial) {
+          notesStatus.textContent = '本次方式：'+notesLabel(value.selected_output?.notes_policy?.selection)+'。内部工程包保留恢复原件。';
+          judgement.replaceChildren(deliveryJudgementView(value), button('重新核对当前控制', load));
+        }
+      }
+      catch (error) {
+        if (!disposed && token===serial) {
+          notesStatus.textContent = '口播方式尚未核对，请重新读取交付判断。';
+          judgement.replaceChildren(admissionView(app, error), button('重读交付判断', load));
+        }
+      }
     };
+    loadJudgement = load;
     load();
   }
   function read() {
     const value = JSON.parse(localStorage.getItem(key) || '[]');
-    if (!Array.isArray(value) || value.some(v => !/^export-[a-f0-9-]{36}$/.test(v.export_id) || !names[v.purpose] || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(v.revision)))
+    if (!Array.isArray(value) || value.some(v => !/^export-[a-f0-9-]{36}$/.test(v.export_id) || !names[v.purpose] || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(v.revision) || v.notes_policy!==undefined&&!Object.hasOwn(notesChoices,v.notes_policy)))
       throw new Error('浏览器中的导出记录暂不可读，请保留现有记录。');
     return value;
   }
@@ -130,6 +157,7 @@ export function deliveryDesk(app) {
   }
   function pending(request, note) {
     const row = el('section', {class: 'export-result stack'}, el('h3', {}, `${names[request.purpose]} · ${version(request.revision)}`), el('p', {role: 'status'}, note));
+    row.append(el('p', {class:'export-notes-policy'}, request.purpose==='engineering'?'保留工程恢复原件':notesLabel(request.notes_policy)));
     const verify = button('核实这个文件包', async () => {
       verify.disabled = true;
       try { const record = await get('/api/exports/' + request.export_id); if (!disposed) row.replaceWith(exportFiles(record, app)); }
@@ -147,7 +175,7 @@ export function deliveryDesk(app) {
       if (!disposed) row.replaceWith(exportFiles(record, app));
     } catch (error) {
       if (disposed) return;
-      if (!error.status || error.status >= 500 || error.code === 'invalid_response') row.replaceWith(pending(request, '生成结果待核实；原版本、用途与编号已保留，勿改成当前新版本重试。'));
+      if (!error.status || error.status >= 500 || error.code === 'invalid_response') row.replaceWith(pending(request, '生成结果待核实；原版本、用途、口播方式与编号已保留，可先核实这个文件包。'));
       else row.replaceChildren(el('h3', {}, `${names[request.purpose]}未生成 · ${version(request.revision)}`),
         admissionView(app, error), gapsView(app, error.details?.gaps, request.revision));
     }
@@ -155,7 +183,7 @@ export function deliveryDesk(app) {
   async function create(purpose, trigger) {
     if (trigger.disabled) return; trigger.disabled = true;
     status.textContent = '';
-    const request = {purpose, revision, export_id: 'export-' + crypto.randomUUID()};
+    const request = {purpose, revision, export_id: 'export-' + crypto.randomUUID(), ...(purpose==='engineering'?{}:notesOptions())};
     try { remember(request); }
     catch (error) { status.textContent = readableError(error) + ' 尚未发送生成请求。'; trigger.disabled = false; return; }
     results.querySelector('.export-empty')?.remove();

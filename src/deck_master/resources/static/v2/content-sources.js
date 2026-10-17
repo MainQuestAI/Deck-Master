@@ -353,7 +353,7 @@ export function content(app, data) {
     el('div',{class:'panel-body stack'},inputs?sourceList:el('p',{class:'muted'},'材料清单按当前输入读取；正在看历史版本，未加载材料列表。'),
       el('p',{class:'muted'},aligned?'当前输入已由内容结果对齐；这不是独立事实核验。':'输入待协调：制作工具尚需按最新材料判断影响。'),
       el('p',{class:'footer-note muted'},'更新材料后，先确认受影响的页面，再比较修改结果。')));
-  const integrationSummary=panel('内容整合',el('p',{},plan?.input_summary||'尚未记录整合结论，已保存的逐页稿仍可阅读。'),el('p',{class:'muted'},`${pages.length} 页 · ${chapters.length} 个章节 · ${goals.filter(goal=>goal.unresolved_facts.length).length} 页有待确认事实`));
+  const integrationSummary=panel('内容整合',el('p',{},modernPlan?'当前内容计划按章节、页面目标与逐页职责记录。':plan?.input_summary||'尚未记录整合结论，已保存的逐页稿仍可阅读。'),el('p',{class:'muted'},`${pages.length} 页 · ${chapters.length} 个章节 · ${goals.filter(goal=>goal.unresolved_facts.length).length} 页有待确认事实`));
   const overview=el('div',{class:'content-layout'},el('section',{class:'stack'},
     studio?null:integrationSummary,
     ref?el('div',{class:'stack'},el('div',{class:'section-head'},el('h2',{},'方案大纲'),el('span',{class:'status'},'内容基准 '+version(ref?.sha256||ref))),...outlineBlocks()):panel('方案大纲',el('p',{},'尚未记录完整内容计划，当前仅能按逐页稿阅读。请交接内容整理。'))),materialAside);

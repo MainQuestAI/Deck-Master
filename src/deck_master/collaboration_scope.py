@@ -17,7 +17,13 @@ def scope_gaps(store, parent, child) -> list[str]:
     if child.get("subject") != parent.get("subject") and not (
             parent.get("subject") == "deck" and child.get("subject") == "pages"):
         gaps.append("subject")
-    if not set(child.get("page_ids") or []) <= set(parent.get("page_ids") or []):
+    from .eligibility import scope_page_ids
+    try:
+        parent_pages = scope_page_ids(store, parent)
+        child_pages = scope_page_ids(store, child)
+    except (KeyError, TypeError, ValueError, OSError, StoreError):
+        parent_pages, child_pages = [], list(child.get("page_ids") or [])
+    if not set(child_pages or []) <= set(parent_pages or []):
         gaps.append("page_ids")
     if not set(child.get("layers") or []) <= set(parent.get("layers") or []):
         gaps.append("layers")
@@ -77,7 +83,8 @@ def delegation_gaps(store, parent, child, *, decision=False) -> list[str]:
     parent_scope = parent.get("scope") or {}
     child_scope = child.get("scope") or {}
     for field in scope_gaps(store, parent_scope, child_scope):
-        if field == "page_ids" and not (parent_scope.get("page_ids") or []):
+        from .eligibility import scope_page_ids
+        if field == "page_ids" and scope_page_ids(store, parent_scope) is None:
             future_gap = _future_pages_gap(parent, child)
             if future_gap is None:
                 continue

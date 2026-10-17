@@ -710,10 +710,31 @@ def test_needs_reviewer_until_independent_preproduction_review(tmp_path):
                               operation_id="review-op-partial")
     partial = _evaluate(store, "dispatch.blueprint")
     assert "needs_reviewer" in partial["reason_codes"], partial["reason_codes"]
-    # The full unit set on the current bytes clears it.
-    for index, kind in enumerate(units[1:], start=1):
-        _put_preproduction_review(store, kind, f"review-pre-{kind}",
-                                  operation_id=f"review-op-full-{index}")
+    # Only an actually authenticated complete review clears strict review;
+    # self-declared stored records cannot acquire stronger assurance at query.
+    from synthetic_review_provider import (synthetic_context, dispatch_with_synthetic_provider,
+                                           accept_with_synthetic_provider)
+    context = synthetic_context()
+    task = dispatch_with_synthetic_provider(project, adapter_context=context)['task']
+    document = store.load_document()
+    subjects = [document[role] for role in ('narrative', 'content_plan') if document.get(role)]
+    subjects += [entry['page'] for entry in document['pages']]
+    deps = [{'kind': 'content', 'identity': role, 'sha256': document[role]['sha256']}
+            for role in ('narrative', 'content_plan') if document.get(role)]
+    deps += [{'kind': 'content', 'identity': 'page:' + entry['page_id'], 'sha256': entry['page']['sha256']}
+             for entry in document['pages']]
+    evidence = store.put_json_object({'evidence_level': 'L1_SYNTHETIC', 'scenario': 'authenticated strict review'})
+    reviews = [{'schema_version': 'deck_review.v2', 'review_id': 'authenticated-' + kind,
+        'kind': kind, 'review_stage': 'preproduction', 'status': 'pass',
+        'subjects': subjects, 'dependencies': deps, 'reviewer': {'type': 'independent_host',
+            'id': 'synthetic-independent', 'execution_ref': 'exec-independent', 'independence_confirmed': True,
+            'identity_receipt': None, 'evidence_ref': evidence, 'assurance': 'host_attested'},
+        'observations': ['Synthetic independent review of the full named manuscript.'], 'findings': [],
+        'created_at': '2026-10-17T00:00:00Z', 'replaces': None} for kind in units]
+    assert accept_with_synthetic_provider(project,
+        **{key: task[key] for key in ('task_id', 'operation_id', 'produced_against')},
+        result_payload={'kind': 'review', 'files': [], 'reviews': reviews},
+        adapter_context=context)['status'] == 'accepted'
     allowed = _evaluate(store, "dispatch.blueprint")
     assert "needs_reviewer" not in allowed["reason_codes"], allowed["reason_codes"]
     assert allowed["preproduction"]["satisfied"] is True
@@ -742,9 +763,7 @@ def test_host_self_is_only_accepted_through_the_explicit_override(tmp_path):
                         "scope": _scope(page_ids=["p1", "p2"], layers=["review"]),
                         "instruction_evidence": _declared(store)},
         base_revision=store.load_document()["revision_id"], operation_id="op-downgrade-1")
-    _set_quality_profile(store, content_review_requirement="host_self",
-                         requirement_origin="explicit_decision",
-                         override_decision_ref=decision["decision_ref"])
+    assert store.load_document()["collaboration"]["quality_profile"]["override_decision_ref"] == decision["decision_ref"]
     from deck_master import content_review
     units = content_review.required_units(store, store.load_document())
     for index, kind in enumerate(units):

@@ -745,6 +745,11 @@
             "eligibility_digest": {
               "type": "string",
               "pattern": "^[a-f0-9]{64}$"
+            },
+            "budget_key": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Runtime-computed per-page credit; consumption remains in call_allowances."
             }
           }
         }

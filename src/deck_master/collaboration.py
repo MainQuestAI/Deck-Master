@@ -643,6 +643,8 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         updated_refs.append(decision_ref)
         updated_region = {**region, "decisions": updated_refs}
         updated = {**document, "collaboration": updated_region}
+        from .content_review import apply_requirement_decision
+        updated = apply_requirement_decision(store, updated, decision, decision_ref, previous_document=document)
         return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_DECISION_RECORD, digest=digest,
                                                 description=f"record decision {decision_id} ({topic})",
@@ -728,6 +730,41 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
             "stop_conditions": list(input.get("stop_conditions") or []),
             "created_at": _now_iso(),
         }
+        from .collaboration_budget import prepare_grant
+        computed_budget = prepare_grant(store, document, authorization, input)
+        if authorization.get('parent_authorization_ref') and not authorization.get('budget_parent_ref'):
+            authorization['budget_parent_ref'] = authorization['parent_authorization_ref']
+        numeric_parent_ref = authorization.get('budget_parent_ref')
+        if numeric_parent_ref:
+            numeric_parent = eligibility.current_authorization_record(store, document, numeric_parent_ref)
+            if (numeric_parent.get('schema_version') != 'collaboration_authorization.v1'
+                    or numeric_parent.get('project_id') != document['project_id']
+                    or numeric_parent.get('request_id') != request['request_id']):
+                raise ModelError('authorization/budget_parent_ref', 'the numeric parent must belong to this project and request')
+            # This is a numeric ledger link, not an authority inheritance.
+            # Withdrawn roots retain their cap/consumption; fresh explicit
+            # authority may share that budget without reviving the old grant.
+            if not computed_budget or not eligibility._planning_only_zero_authority(store, numeric_parent, document=document):
+                if authorization['max_external_calls'] > numeric_parent['max_external_calls']:
+                    raise ModelError('authorization/max_external_calls', 'a child cannot increase its numeric parent ceiling')
+        authority_parent_ref = authorization.get('parent_authorization_ref')
+        if authority_parent_ref:
+            authority_parent = eligibility.current_authorization_record(store, document, authority_parent_ref)
+            if (authority_parent['max_external_calls'] and numeric_parent_ref
+                    and eligibility._chain_root_identity(store, document, authority_parent)
+                    != eligibility._chain_root_identity(store, document, store.read_object_json(numeric_parent_ref))):
+                raise ModelError('authorization/budget_parent_ref', 'a child must share its numeric authority parent root')
+            if not computed_budget or not eligibility._planning_only_zero_authority(store, authority_parent, document=document):
+                if authorization['max_external_calls'] > authority_parent['max_external_calls']:
+                    raise ModelError('authorization/max_external_calls', 'a child cannot increase its parent ceiling')
+            if authorization['max_candidate_count'] > authority_parent['max_candidate_count']:
+                raise ModelError('authorization/max_candidate_count', 'a child cannot increase its parent candidate ceiling')
+        if replaces_ref:
+            for quantity in ('max_external_calls', 'max_candidate_count'):
+                old_root = eligibility._chain_root_identity(store, document, replaced_record, quantity=quantity)
+                new_root = eligibility._chain_root_identity(store, document, authorization, quantity=quantity)
+                if old_root != new_root:
+                    raise ModelError('authorization/budget_parent_ref', 'a replacement cannot move historical consumption to another numeric root')
         if authorization['delivery_binding'] == 'exact_artifact':
             from .delivery_eligibility import selected_output
             selected = selected_output(store, document, notes_policy=(input.get('constraints') or {}).get('delivery_notes_policy'))
@@ -774,7 +811,8 @@ def grant(project, *, input: dict, base_revision: str, operation_id: str,
                                                             f"({authorization['mode']})",
                                                 updated=updated, response={"authorization_ref": authorization_ref,
                                                     "authorization_id": authorization_id,
-                                                    "assurance": evidence["assurance"]})
+                                                    "assurance": evidence["assurance"],
+                                                    **({"budget": computed_budget} if computed_budget else {})})
 
     return locked(store)
 

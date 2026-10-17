@@ -307,6 +307,14 @@ install software, migrate HOME, or change another running project.
 
 ## RC3 role and installation recovery
 
+If an `input_revision` result is refused because it would adopt an initial
+argument direction, retain the Task, original proposal and reconciliation facts.
+Reconcile a substantive framing result first, then follow `continue` through the
+current framing/argument Tasks. The ordinary argument stays proposal-only until
+a covering direction decision names that exact proposal and `adopt_proposal`
+adopts it. An existing argument can still be updated through input reconciliation;
+neither a broad Narrative layer nor `within_scope` selects the initial direction.
+
 Reload the actual loaded Host entry after activate/rollback, resolve its managed
 release and use that release's Python. Do not borrow PATH/HOME methods. All four
 managed links share current; a foreign/occupied path aborts the switch before

@@ -87,6 +87,7 @@ def _grant(project, store, *, actions, mode="execute", scope=None, operation_id=
                "scope": scope or _scope(), "decision_refs": [],
                "delegated_topics": list(extra.pop("delegated_topics", ["direction"] if mode == "delegate" else [])),
                "max_external_calls": max_external_calls, "max_candidate_count": 1,
+               "adoption_policy": "within_scope",
                "instruction_evidence": _declared(store)}
     payload.update(extra)
     return collaboration.grant(project, input=payload,
@@ -507,7 +508,11 @@ def test_accept_refused_out_of_scope_settles_calls_and_keeps_the_draft(tmp_path)
 
 
 def test_accept_in_scope_composes_normally(tmp_path):
-    project, store = _project(tmp_path)
+    # Generic compose returns the whole deck. Keep this positive fixture truly
+    # single-page rather than silently dropping p2 from a two-page Plan.
+    project = public_project(tmp_path, create_input={'brief': 'in-scope generic compose'},
+        manuscript={'pages': [_page('p1', '第一页。')]})['project']
+    store = Store(project)
     _start(project, store, scope=_scope(page_ids=["p1"]))
     document = store.load_document()
     task = _task(document, scope_pages=("p1",),
@@ -526,6 +531,41 @@ def test_accept_in_scope_composes_normally(tmp_path):
     page = store.read_object_json(next(e for e in store.load_document()["pages"]
                                        if e["page_id"] == "p1")["page"])
     assert page["customer_visible"]["body_blocks"][0]["text"] == "新的一句。"
+    document = store.load_document()
+    assert [e['page_id'] for e in document['pages']] == ['p1']
+    assert document['pages'][0]['page'] in outcome['result_refs']
+    assert document['content_plan'] in outcome['result_refs']
+    assert store.read_object_json(document['content_plan'])['page_links'][0]['page_ref'] == document['pages'][0]['page']
+    from deck_master.content_plan import projection
+    assert projection(store, document)['applicability'] == 'current'
+
+
+def test_p1_only_generic_compose_cannot_silently_drop_p2_from_existing_plan(tmp_path):
+    """The original two-page positive fixture now explicitly proves refusal.
+
+    A Page-only return cannot revise the existing v2 Plan's membership/order.
+    """
+    from deck_master.content_plan import ContentPlanError
+    project, store = _project(tmp_path)
+    _start(project, store, scope=_scope(page_ids=['p1']))
+    document = store.load_document()
+    task = _task(document, scope_pages=('p1',), binding=_binding(document, authorization_ref=None))
+    _commit_task(store, task)
+    service.task_start(project, task_id='task-1', execution_ref='host-1')
+    before = store.load_document()
+    page_bytes = [store.read_object_bytes(e['page']) for e in before['pages']]
+    pointer = (store.deck_root / 'current.json').read_bytes()
+    envelope = {'kind': 'compose', 'files': [], 'pages': [_page('p1', '新的一句。')],
+                'page_order': ['p1'], 'artifact_specs': [], 'reviews': [],
+                'usage_events': [], 'notes': 'in-scope page copy'}
+    with pytest.raises(ContentPlanError, match='membership and order'):
+        service.accept_result(project, task_id='task-1', operation_id=task['operation_id'],
+                              produced_against=task['produced_against'], result_payload=envelope)
+    after = store.load_document()
+    assert after == before  # P2, notes, order, Narrative, outputs and every current Ref.
+    assert [e['page_id'] for e in after['pages']] == ['p1', 'p2']
+    assert [store.read_object_bytes(e['page']) for e in after['pages']] == page_bytes
+    assert (store.deck_root / 'current.json').read_bytes() == pointer
 
 
 # ---------------------------------------------------------------------------

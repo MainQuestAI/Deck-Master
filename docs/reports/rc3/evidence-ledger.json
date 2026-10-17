@@ -1619,5 +1619,36 @@
     "repaired_current": null,
     "method_rerun": null
   },
-  "release_conclusion": "NOT_RUN"
+  "release_conclusion": "NOT_RUN",
+  "engineering_recovery": {
+    "date": "2026-10-17",
+    "report": "docs/reports/rc3/cloud-recovery-20261017/README.md",
+    "code_sha": "54b974e7551d4eea59586fc1cb9fc8daa701355f",
+    "scope": "S12 real SDK L0/L1 only; no AC/CQ promotion",
+    "status": "ENGINEERING_REVIEW_LIMITED_ORIGINAL_ARTIFACTS_MISSING",
+    "missing": [
+      "original S12 JSON contracts",
+      "S14-S19 task contracts",
+      "original M02 project/registration/IG and spent-budget frontier",
+      "S11 original independent report/installation evidence"
+    ],
+    "historical_ac_cq_and_draft_results_preserved": true,
+    "ordinary_function_followup": {
+      "date": "2026-10-17",
+      "code_sha": "f9ebfbf98ee704d8784da72eae0ffece600d1562",
+      "report": "docs/reports/rc3/cloud-recovery-20261017/ordinary-function-followup.md",
+      "review_reports": [
+        "docs/reports/rc3/cloud-recovery-20261017/strict-consumption-independent-review.md",
+        "docs/reports/rc3/cloud-recovery-20261017/budget-core-root-review.md",
+        "docs/reports/rc3/cloud-recovery-20261017/budget-candidate-independent-review.md",
+        "docs/reports/rc3/cloud-recovery-20261017/contract-mirror-independent-review.md",
+        "docs/reports/rc3/cloud-recovery-20261017/last-allowance-independent-review.md"
+      ],
+      "status": "LIMITED_ENGINEERING_PASS",
+      "final_head_ci_at_registration": "PENDING_FINAL_HEAD",
+      "old_effect_experiments": "DEFERRED_BY_USER_NOT_AN_ORDINARY_DEVELOPMENT_PREREQUISITE",
+      "scope": "ordinary software review consumption, budgets, quotas, handoffs and adoption authority; L0/L1 only",
+      "ac_cq_owner_statuses_and_formal_candidate_unchanged": true
+    }
+  }
 }

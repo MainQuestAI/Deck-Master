@@ -2,6 +2,7 @@ import {get, post, canonical, fileURL, readableError} from './api.js';
 import {el, button, field, version} from './dom.js';
 import {layers} from './routes.js';
 import {imagePool} from './images.js';
+import {budgetForm} from './collaboration-desk.js';
 
 // Coordinates are relative to the contained image, not the scroll viewport or
 // canvas CSS box. DOM markup from user SVGs is never inserted into the page.
@@ -535,6 +536,7 @@ export class Annotations {
           el('p', {}, `将修改：${a.write_slots.map(s => names[s] || s).join(' / ')}；后续需更新：${a.downstream.map(s => names[s] || s).join(' / ')}`),
           el('p', {class: 'muted'}, '未列出的图层与已有记录保持不变。'),
           el('details', {}, el('summary', {}, '核对固定基准'), el('code', {}, a.page_ref.sha256)))),
+        this.app.info.collaboration?.request?.intent==='edit'&&button('查看这次修改的制作预算',()=>budgetForm(this.app,{changePlanId:response.plan_id})),
         button('确认计划并创建交接', () => this.commit(), true)); this.error.textContent = '';
     } catch (error) {
       this.error.textContent = readableError(error) + ' 原输入与意见保留，请阅读当前版本后重新计划。';

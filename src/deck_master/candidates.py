@@ -646,6 +646,37 @@ def _plan(store, document, candidate_ids):
     return plan
 
 
+def _adoption_targets(store, document, value):
+    target_pages = []
+    layers = []
+    membership = False
+    order_change = False
+    records = _records(store, document)
+    for item in value['selections']:
+        layer = _adoption_layer(item)
+        if layer:
+            layers.append(layer)
+        if item.get('page_id'):
+            target_pages.append(item['page_id'])
+        if item.get('result_kind') == 'content_update':
+            changeset = store.read_object_json(item['result_ref'])
+            from .content_ops import _derived_source_scope
+            _, _, source_task = _lookup(records, item['candidate_id'])
+            sources = _derived_source_scope(store, document, source_task)
+            old_order = [entry['page_id'] for entry in document['pages']]
+            target_pages.extend(page['page_id'] for page in changeset.get('upsert_pages', [])
+                                if sources is None or page['page_id'] in old_order)
+            target_pages.extend(sources or [])
+            target_pages.extend(changeset.get('remove_page_ids', []))
+            layers.append('plan')
+            membership = membership or set(old_order) != set(changeset['page_order'])
+            retained = set(old_order) & set(changeset['page_order'])
+            order_change = order_change or ([pid for pid in old_order if pid in retained]
+                != [pid for pid in changeset['page_order'] if pid in retained])
+    return {"page_ids": sorted(set(target_pages)), "layers": sorted(set(layers)),
+            "allow_page_membership_change": membership, "allow_page_order_change": order_change}
+
+
 @operations.public
 def plan(project, *, input):
     validate_schema('candidate_selection', input)
@@ -654,7 +685,18 @@ def plan(project, *, input):
     if input['project_id'] != document['project_id'] or input['base_revision'] != document['revision_id']:
         raise operations.OperationError('conflict', 'base_revision', 'read current state and preview adoption again', exit_code=5)
     value = _plan(store, document, input['candidate_ids']); ref = store.put_json_object(value)
-    return {'status': 'planned', 'plan_id': 'adopt-plan-' + ref['sha256'], 'plan_ref': ref, 'plan': value}
+    from . import eligibility
+    targets = _adoption_targets(store, document, value)
+    request = (document.get('collaboration') or {}).get('request') or {}
+    scope = {'subject': 'pages', 'page_ids': targets['page_ids'], 'page_manifest_ref': None,
+             'external_artifact_ref': None, 'layers': targets['layers'],
+             'allow_page_membership_change': targets['allow_page_membership_change'],
+             'allow_page_order_change': targets['allow_page_order_change'],
+             'purpose': (request.get('scope') or {}).get('purpose', 'working')}
+    authority = {'scope': scope, 'eligibility': eligibility.evaluate(
+        store, document, document, 'candidate.adopt', {'targets': targets})}
+    return {'status': 'planned', 'plan_id': 'adopt-plan-' + ref['sha256'], 'plan_ref': ref,
+            'plan': value, 'adoption_authority': authority}
 
 
 def _apply_page_selection(store, document, updated, selection, operation_id):
@@ -741,35 +783,9 @@ def adopt(project, *, input, base_revision, operation_id):
                 or input['project_id'] != document['project_id']):
             raise operations.OperationError('conflict', 'base_revision', 'adoption plan needs a new current basis; no candidates adopted', exit_code=5)
         from . import eligibility
-        target_pages = []
-        layers = []
-        membership = False
-        order_change = False
+        eligibility.guard(store, document, "candidate.adopt", context={
+            "targets": _adoption_targets(store, document, input)})
         records = _records(store, document)
-        for item in input['selections']:
-            layer = _adoption_layer(item)
-            if layer:
-                layers.append(layer)
-            if item.get('page_id'):
-                target_pages.append(item['page_id'])
-            if item.get('result_kind') == 'content_update':
-                changeset = store.read_object_json(item['result_ref'])
-                from .content_ops import _derived_source_scope
-                _, _, source_task = _lookup(records, item['candidate_id'])
-                sources = _derived_source_scope(store, document, source_task)
-                old_order = [entry['page_id'] for entry in document['pages']]
-                target_pages.extend(page['page_id'] for page in changeset.get('upsert_pages', [])
-                                    if sources is None or page['page_id'] in old_order)
-                target_pages.extend(sources or [])
-                target_pages.extend(changeset.get('remove_page_ids', []))
-                layers.append('plan')
-                membership = membership or set(old_order) != set(changeset['page_order'])
-                retained = set(old_order) & set(changeset['page_order'])
-                order_change = order_change or ([pid for pid in old_order if pid in retained]
-                    != [pid for pid in changeset['page_order'] if pid in retained])
-        eligibility.guard(store, document, "candidate.adopt", context={"targets": {
-            "page_ids": sorted(set(target_pages)), "layers": sorted(set(layers)),
-            "allow_page_membership_change": membership, "allow_page_order_change": order_change}})
         ids = [item['candidate_id'] for item in input['selections']]
         current_plan = _plan(store, document, ids)
         if current_plan != input:

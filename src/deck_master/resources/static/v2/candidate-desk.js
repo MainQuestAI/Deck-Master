@@ -9,6 +9,7 @@ import {pageText} from './page-text.js';
 import {candidateCards} from './candidate-cards.js';
 import {candidateIconReview} from './icon-workbench.js';
 import {openCandidate} from './trial-actions.js';
+import {adoptCandidates, adoptionBlockReason} from './collaboration-desk.js';
 
 const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content' ? '逐页稿' : 'SVG';
 const clock = value => new Date(value).toLocaleString('zh-CN', {hour12: false});
@@ -258,14 +259,17 @@ export function candidateDesk(app, data) {
       if (disposed || selected.candidate_id !== id) return;
       currentPlan = result.plan; planInvalid = false; live = latest;
       drawColumns(page.stages[stage], page.revision_id, '本次采用目标（新固定基准）', page.page, page.stages.ppt_preview);
-      impact.replaceChildren(impactBox(currentPlan)); renderState();
+      const blocker=adoptionBlockReason(result.adoption_authority);
+      impact.replaceChildren(impactBox(currentPlan),...(blocker?[el('p',{class:'field-error'},blocker)]:[]));
+      if(blocker)currentPlan=null;
+      renderState();
     } catch (error) { currentPlan = null; if (!disposed) impact.replaceChildren(el('div', {class: 'stack'}, el('p', {class: 'field-error'}, readableError(error)), errorItems(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }
   async function adoptSelected() {
     if (busy || !currentPlan || planInvalid) return; busy = true; controls(); const value = structuredClone(currentPlan);
     try {
-      await app.business.submit(app.editor, 'candidates.adopt', {input: value, base_revision: value.base_revision}, value, async result => {
+      await adoptCandidates(app, app.editor, value, async result => {
         currentPlan = null; planInvalid = false;
         const prior = selected?.candidate_id !== value.selections[0].candidate_id;
         impact.replaceChildren(el('p', {class: 'success-note'}, `${prior ? '先前提交的候选' : '这个候选'}已采用到 ${version(result.revision_id)}。${prior ? '当前比较选择未变。' : ''}本页下游与整稿待更新，请继续单页预览、审图和整稿制作。`),
@@ -407,14 +411,17 @@ export function candidateBatch(app) {
       const input = {schema_version: 'candidate_selection.v1', project_id: app.info.project_id, base_revision: latest.revision_id, candidate_ids: [...selected]};
       const result = await post('/api/candidates/plan', {input});
       if (disposed || serial !== token) return;
-      currentPlan = result.plan; revision = result.plan.base_revision; impact.replaceChildren(impactBox(currentPlan));
+      currentPlan = result.plan; revision = result.plan.base_revision;
+      const blocker=adoptionBlockReason(result.adoption_authority);
+      impact.replaceChildren(impactBox(currentPlan),...(blocker?[el('p',{class:'field-error'},blocker)]:[]));
+      if(blocker)currentPlan=null;
     } catch (error) { if (!disposed) impact.replaceChildren(el('div', {class: 'stack'}, el('p', {class: 'field-error'}, readableError(error)), errorItems(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }
   async function adoptSelection() {
     if (busy || !currentPlan || currentPlan.base_revision !== revision) return; busy = true; controls(); const value = structuredClone(currentPlan);
     try {
-      await app.business.submit(app.editor, 'candidates.adopt', {input: value, base_revision: value.base_revision}, value, result => {
+      await adoptCandidates(app, app.editor, value, result => {
         currentPlan = null; revision = result.revision_id;
         for (const id of result.candidate_ids) selected.delete(id);
         persist(); impact.replaceChildren(el('p', {class: 'success-note'}, `已整批采用 ${result.candidate_ids.length} 页到 ${version(result.revision_id)}；其它页保留。下游预览、整稿与审阅待更新。`));

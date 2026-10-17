@@ -300,7 +300,7 @@ ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
 _INTENT_BLOCKED_ACTIONS = {
     "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "style.trial",
                     "style.expand", "change.commit", "compile.ppt", "stage.assemble",
-                    "page.edit", "content.operation"),
+                    "page.edit", "content.operation", "candidate.adopt"),
     "design_trial": ("dispatch.compose", "import_draft", "compile.ppt", "stage.assemble",
                      "page.edit"),
     "edit": ("dispatch.compose", "stage.assemble"),
@@ -442,7 +442,46 @@ def _same_ref(left, right) -> bool:
     return (left.get("path"), left.get("sha256")) == (right.get("path"), right.get("sha256"))
 
 
-def _chain_root_identity(store: Store, document: dict, record: dict) -> str | None:
+def _planning_only_zero_authority(store, record, *, document=None):
+    """A never-numeric planning lineage may materialize its first finite root.
+
+    A lowered numeric parent, an explicit zero budget or a nonzero ancestor is
+    still a numeric limit. Historical refs keep prior root attribution stable;
+    a new grant also checks current heads before using the planning exception.
+    """
+    if record.get('mode') != 'delegate' or record.get('max_external_calls'):
+        return False
+    heads = {item['authorization_id']: item for _, item in _authorization_heads(store, document)} if document else {}
+    pending, seen = [record], set()
+    while pending:
+        current = pending.pop()
+        if current.get('max_external_calls') or current.get('budget_template') == 'explicit' \
+                or (current.get('constraints') or {}).get('fixed_budget'):
+            return False
+        head = heads.get(current.get('authorization_id'))
+        if head is not None and head != current:
+            pending.append(head)
+        for ref in (current.get('budget_parent_ref'), current.get('parent_authorization_ref'), current.get('replaces')):
+            if not ref:
+                continue
+            digest = ref.get('sha256')
+            if digest in seen:
+                continue
+            seen.add(digest)
+            pending.append(store.read_object_json(ref))
+    return True
+
+
+def current_authorization_record(store, document, ref):
+    """Read today's ceiling/scope without changing historical ledger links."""
+    current_ref, record = dependency_slices._resolve_current(
+        store, document, 'authorizations', 'authorization_id', ref)
+    if current_ref is None:
+        raise ModelError('authorization/parent_ref', 'the parent identity must remain in current control')
+    return record
+
+
+def _chain_root_identity(store: Store, document: dict, record: dict, *, quantity="max_external_calls") -> str | None:
     """The numeric budget root of an authorization: itself, or the top of its
     ``budget_parent_ref`` chain (CONTRACTS §3.4: 子授权共享父预算根)."""
     seen = set()
@@ -461,15 +500,22 @@ def _chain_root_identity(store: Store, document: dict, record: dict) -> str | No
             return identity
         if not isinstance(parent, dict) or not parent.get("authorization_id"):
             return identity
+        # A zero-call future-page authority cannot execute, but its computed
+        # template child is the finite numeric root (§3.4.5).
+        if not parent.get(quantity) and (
+                (quantity == "max_external_calls" and (current.get("constraints") or {}).get("fixed_budget")
+                 and _planning_only_zero_authority(store, parent))
+                or (quantity == "max_candidate_count" and not current.get("parent_authorization_ref"))):
+            return identity
         current = parent
     return current.get("authorization_id")
 
 
-def _budget_chain_ids(store: Store, document: dict, authorization_ref: dict) -> set[str]:
+def _budget_chain_ids(store: Store, document: dict, authorization_ref: dict, *, quantity="max_external_calls") -> set[str]:
     ids = set()
-    root = _chain_root_identity(store, document, store.read_object_json(authorization_ref))
+    root = _chain_root_identity(store, document, store.read_object_json(authorization_ref), quantity=quantity)
     for _, record in _authorization_heads(store, document):
-        if _chain_root_identity(store, document, record) == root:
+        if _chain_root_identity(store, document, record, quantity=quantity) == root:
             ids.add(record.get("authorization_id"))
     return ids
 
@@ -526,7 +572,23 @@ def credit_state(store: Store, document: dict, budget_key: str, ceiling: int = 1
             "state": "available" if used < ceiling else "exhausted"}
 
 
-def authorization_budget(store: Store, document: dict, authorization_ref: dict) -> dict:
+def _current_authorization_lineage(store, records, record):
+    """Current policy ancestry; independent of immutable numeric attribution."""
+    pending, identities = [record], set()
+    while pending:
+        current = pending.pop()
+        identity = current['authorization_id']
+        if identity in identities:
+            continue
+        identities.add(identity)
+        current = records.get(identity, current)
+        for key in ('parent_authorization_ref', 'budget_parent_ref'):
+            if current.get(key):
+                pending.append(store.read_object_json(current[key]))
+    return identities
+
+
+def authorization_budget(store: Store, document: dict, authorization_ref: dict, *, _quantity="max_external_calls") -> dict:
     """Derived budget state of one authorization and its shared budget root.
 
     The chain ceiling is the numeric ceiling of the authorization that holds
@@ -534,22 +596,65 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict) 
     second ledger. ``state`` is available/exhausted (never a revocation).
     """
     record = store.read_object_json(authorization_ref)
-    chain_ids = _budget_chain_ids(store, document, authorization_ref)
-    ceiling = 0
-    for _, other in _authorization_heads(store, document):
-        if other.get("authorization_id") in chain_ids:
-            ceiling = max(ceiling, int(other.get("max_external_calls") or 0))
-    used = 0
+    chain_ids = _budget_chain_ids(store, document, authorization_ref, quantity=_quantity)
+    records = {item["authorization_id"]: item for _, item in _authorization_heads(store, document)}
+    root_id = _chain_root_identity(store, document, record, quantity=_quantity)
+    root = records.get(root_id, record)
+    usage = {}
     for ref in document.get("tasks") or []:
-        try:
-            task = store.read_object_json(ref)
-        except Exception:  # noqa: BLE001
-            continue
-        if task_authorization_id(store, task) not in chain_ids:
-            continue
-        used += sum(1 for entry in task.get("call_allowances") or []
-                    if entry.get("state") in HELD_STATES)
-    unknown = any(entry.get("state") == "unknown"
+        task = store.read_object_json(ref)
+        identity = task_authorization_id(store, task)
+        if identity is not None:
+            if _quantity == "max_candidate_count":
+                count = (max(1, len(task.get("candidate_refs") or []))
+                         if task.get("stage_request", {}).get("mode") == "trial"
+                         and (task.get("candidate_refs") or task["status"] in ("queued", "awaiting_host", "running")) else 0)
+            else:
+                count = sum(entry.get("state") in HELD_STATES for entry in task.get("call_allowances") or [])
+            usage[identity] = usage.get(identity, 0) + count
+    used = sum(usage.get(identity, 0) for identity in chain_ids)
+    ceiling = int(root.get(_quantity) or 0)
+    remaining = max(0, ceiling - used)
+    # Each explicit narrower child also limits its own subtree. A sibling's
+    # usage consumes the root, never the other sibling's individual allowance.
+    current, seen = record, set()
+    while current.get("authorization_id") not in seen:
+        identity = current.get("authorization_id"); seen.add(identity)
+        descendants = set()
+        for candidate in records.values():
+            cursor, visited = candidate, set()
+            while cursor.get("authorization_id") not in visited:
+                candidate_id = cursor.get("authorization_id"); visited.add(candidate_id)
+                if candidate_id == identity:
+                    descendants.add(candidate["authorization_id"]); break
+                parent_ref = cursor.get("budget_parent_ref")
+                if not parent_ref:
+                    break
+                cursor = store.read_object_json(parent_ref)
+        local_used = sum(usage.get(item, 0) for item in descendants if item in chain_ids)
+        # Replacing an intermediate parent narrows existing descendants too.
+        # Read its current ceiling while retaining the original numeric chain
+        # and historical Task attribution.
+        current_head = records.get(identity, current)
+        local_ceiling = int(current_head.get(_quantity) or 0)
+        remaining = min(remaining, max(0, local_ceiling - local_used))
+        if identity == root_id or not current.get("budget_parent_ref"):
+            break
+        current = store.read_object_json(current["budget_parent_ref"])
+    if _quantity == 'max_external_calls':
+        # A computed child remains its original numeric root when its planning
+        # parent later acquires an explicit limit. That *current* limit still
+        # covers all descendants, including siblings in other numeric roots.
+        lineages = {identity: _current_authorization_lineage(store, records, item)
+                    for identity, item in records.items()}
+        for identity in _current_authorization_lineage(store, records, record):
+            ancestor = records.get(identity)
+            if ancestor is None or _planning_only_zero_authority(store, ancestor, document=document):
+                continue
+            ancestor_used = sum(usage.get(child_id, 0) for child_id, lineage in lineages.items()
+                                if identity in lineage)
+            remaining = min(remaining, max(0, ancestor['max_external_calls'] - ancestor_used))
+    unknown = _quantity == "max_external_calls" and any(entry.get("state") == "unknown"
                   for ref in document.get("tasks") or []
                   for entry in (store.read_object_json(ref).get("call_allowances") or []))
     return {
@@ -559,10 +664,20 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict) 
         "budget_template": record.get("budget_template"),
         "ceiling": ceiling,
         "used": used,
-        "remaining": max(0, ceiling - used),
-        "state": "unknown" if unknown else ("available" if used < ceiling else "exhausted"),
+        "remaining": remaining,
+        "state": "unknown" if unknown else ("available" if remaining else "exhausted"),
         "chain_ids": sorted(chain_ids),
     }
+
+
+def candidate_budget(store: Store, document: dict, authorization_ref: dict) -> dict:
+    """Existing trial Tasks reserve slots; their immutable candidates retain use.
+
+    Call slots and candidate slots are distinct quantities on the same authority
+    chain. Cancellation before producing a candidate releases its slot; adopting
+    or restoring content never removes the recorded candidate or spends again.
+    """
+    return authorization_budget(store, document, authorization_ref, _quantity="max_candidate_count")
 
 
 # ---------------------------------------------------------------------------
@@ -618,6 +733,12 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
     phase = binding.get("phase")
     write_scope = binding.get("write_scope")
     expected = None
+    auth_ref = binding.get('authorization_ref')
+    if auth_ref and binding.get('adoption_policy') == 'within_scope':
+        authorization = current_authorization_record(store, document, auth_ref)
+        if authorization.get('adoption_policy') != 'within_scope':
+            return {'status': 'invalid', 'reasons': ['adoption_policy_exceeded'],
+                    'new_protocol': True, 'digest': digest, 'expected_digest': None}
     if digest and phase and isinstance(basis, list):
         expected = binding_eligibility_digest(phase, write_scope, basis)
         if expected != digest:
@@ -875,12 +996,57 @@ def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
     return candidates
 
 
+def _target_credit_budgets(store, document, record, targets, external_call_page_ids=None):
+    """The actual page credits a new dispatch must pay from this grant."""
+    fixed = (record.get('constraints') or {}).get('fixed_budget') or {}
+    if not fixed:
+        return [], []
+    pages = set(target_page_ids(store, targets or {}) or []) if external_call_page_ids is None else set(external_call_page_ids)
+    credits = [credit for credit in fixed.get('credits') or [] if credit['page_id'] in pages]
+    missing = sorted(pages - {credit['page_id'] for credit in credits})
+    return [credit_state(store, document, credit['budget_key']) for credit in credits], missing
+
+
+def _rank_authority_candidates(store, document, candidates, spec, *, targets=None, task=None,
+                               count=None, candidate_count=0, external_call_page_ids=None):
+    """Use the same actual budget choice at the gate and Task binding.
+
+    A zero-call planning parent cannot hide its usable execute child. Existing
+    Tasks retain their own numeric authority instead of borrowing another grant.
+    """
+    bound = binding_of(task or {}).get('authorization_ref')
+    if bound and spec.external_calls:
+        identity = store.read_object_json(bound)['authorization_id']
+        candidates = [item for item in candidates if item['record']['authorization_id'] == identity]
+    calls = count if isinstance(count, int) and not isinstance(count, bool) else int(spec.external_calls)
+    slots = candidate_count if isinstance(candidate_count, int) and not isinstance(candidate_count, bool) else 0
+
+    def priority(item):
+        usable = item['effective'] and item['covers'] and (item['mode'] == 'execute' or spec.authority in ('delegate', 'either'))
+        assurance_missing = (document.get('collaboration', {}).get('authority_policy') == 'verified_user'
+                             and item['assurance'] != 'verified_user')
+        fundable = usable
+        if usable and calls > 0:
+            budget = authorization_budget(store, document, item['ref'])
+            fundable = budget['state'] != 'unknown' and budget['remaining'] >= calls
+            if task is None:
+                credits, missing = _target_credit_budgets(store, document, item['record'], targets, external_call_page_ids)
+                fundable = fundable and not missing and all(credit['remaining'] >= 1 for credit in credits)
+        if usable and slots > 0:
+            fundable = fundable and candidate_budget(store, document, item['ref'])['remaining'] >= slots
+        return (not usable, assurance_missing, not fundable, item['mode'] != 'execute',
+                item['record'].get('adoption_policy') != 'within_scope')
+
+    return sorted(candidates, key=priority)
+
+
 def covering_authorization_ref(store: Store, document: dict, action: str,
-                                targets: dict | None) -> dict | None:
+                                targets: dict | None, *, count=None, candidate_count=0,
+                                external_call_page_ids=None) -> dict | None:
     """The effective authorization covering one action's execution.
 
     The precise Ref a dispatched task carries as its binding's
-    ``authorization_ref``: the first effective, covering candidate the gate
+    ``authorization_ref``: the effective, covering, funded candidate the gate
     itself would choose for this action and target (CONTRACTS §3.2, §6.1.4),
     so revocation and budget attribution follow the grant the work actually
     runs under. Pure; ``None`` when no authorization names the action or covers
@@ -891,6 +1057,9 @@ def covering_authorization_ref(store: Store, document: dict, action: str,
     except (ModelError, KeyError):
         return None
     candidates = _authority_candidates(store, document, spec, targets or {}, None)
+    candidates = _rank_authority_candidates(store, document, candidates, spec,
+                                           targets=targets, count=count, candidate_count=candidate_count,
+                                           external_call_page_ids=external_call_page_ids)
     for candidate in candidates:
         if not candidate["effective"] or not candidate["covers"]:
             continue
@@ -1207,6 +1376,9 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         candidates = []
         if spec.authority in ("execute", "either", "delegate"):
             candidates = fixed_candidates if spec.delivery else _authority_candidates(store, control, spec, targets, task)
+            candidates = _rank_authority_candidates(store, control, candidates, spec, targets=targets, task=task,
+                count=context.get('count'), candidate_count=context.get('candidate_count', 0),
+                external_call_page_ids=context.get('external_call_page_ids'))
             usable = [c for c in candidates if c["effective"]
                       and (c["mode"] == "execute" or spec.authority in ("delegate", "either"))]
             covering = [c for c in usable if c["covers"]]
@@ -1273,6 +1445,24 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                 budget_key = binding_of(task).get("budget_key")
                 if budget_key:
                     budget = credit_state(store, control, budget_key, 1)
+            credit_budgets = []
+            if task is not None:
+                key = binding_of(task).get("budget_key")
+                auth_ref = binding_of(task).get("authorization_ref")
+                fixed = ((store.read_object_json(auth_ref).get("constraints") or {}).get("fixed_budget") or {}) if auth_ref else {}
+                if fixed:
+                    expected = {item["budget_key"] for item in fixed.get("credits") or []
+                                if item["page_id"] in task.get("scope_pages", [])}
+                    if len(task.get("scope_pages") or []) != 1 or expected != {key}:
+                        block("binding_invalid", "a template-funded image task must bind its exact single-page credit")
+                if key:
+                    credit_budgets.append(credit_state(store, control, key))
+            elif candidates:
+                credit_budgets, missing = _target_credit_budgets(store, control, chosen['record'], targets,
+                    context.get('external_call_page_ids'))
+                if missing:
+                    block('budget_exhausted', 'this fixed budget has no call credit for the requested pages',
+                          page_ids=missing)
             # CONTRACTS §3.3: begin validates its own already-reserved slot; it
             # never needs a second remaining credit for the same slot.
             slot_held = False
@@ -1282,6 +1472,11 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                     entry.get("allowance_id") == allowance_id
                     and entry.get("state") in ("reserved", "in_flight")
                     for entry in task.get("call_allowances") or [])
+            if not slot_held:
+                for credit in credit_budgets:
+                    requested = context.get("count", 1) if task is not None else 1
+                    if credit["state"] == "exhausted" or (isinstance(requested, int) and requested > credit["remaining"]):
+                        block("budget_exhausted", "this page credit is already held or consumed; a repeated grant never refreshes it", budget=credit)
             if budget is not None and not slot_held:
                 requested = context.get("count")
                 batch_over = (isinstance(requested, int) and not isinstance(requested, bool)
@@ -1302,6 +1497,18 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                           "no remaining credit for a new external call; an exhausted budget "
                           "only stops new calls (settlement and adoption stay available)",
                           budget={k: v for k, v in budget.items() if k != "chain_ids"})
+
+        # Candidate quotas constrain new trial slots, not acceptance or adoption
+        # of a result that already owns its slot. The service derives the count
+        # from the actual immutable plan, never from a client quota assertion.
+        count = context.get("candidate_count", 0)
+        if isinstance(count, int) and not isinstance(count, bool) and count > 0:
+            authority = next((item for item in candidates if item["effective"] and item["covers"]), None)
+            if authority:
+                candidate_limit = candidate_budget(store, control, authority["ref"])
+                if count > candidate_limit["remaining"]:
+                    block("budget_exhausted", "the bounded candidate quota has no room for these new trial slots",
+                          candidate_budget=candidate_limit, requested=count)
 
     # -- project stop policy (a separate stop fact: policy.user_stop) -------
     if enforced and spec.external_calls and (control.get("policy") or {}).get("user_stop"):

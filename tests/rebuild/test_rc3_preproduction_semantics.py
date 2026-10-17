@@ -102,11 +102,7 @@ def _flow(tmp_path, *, speech=False, page_ids=("p1",)):
         "value": {"content_review_requirement": "host_self", "reason": "Synthetic freshness diagnostic only"},
         "scope": _scope(document, ["review"]), "instruction_evidence": instruction},
         base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
-    before = store.load_document()
-    updated = copy.deepcopy(before)
-    updated["collaboration"]["quality_profile"] = {"content_review_requirement": "host_self",
-        "requirement_origin": "explicit_decision", "override_decision_ref": recorded["decision_ref"]}
-    _commit(store, before, updated, "Bind explicit synthetic self-review policy decision")
+    assert store.load_document()["collaboration"]["quality_profile"]["override_decision_ref"] == recorded["decision_ref"]
     assert content_review.requirement_state(store, store.load_document())["effective"] == "host_self"
     return store, _reviewed(store, page_ids=page_ids)
 
