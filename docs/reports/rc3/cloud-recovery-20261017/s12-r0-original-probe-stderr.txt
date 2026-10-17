@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/workspace/Deck-Master/tests/rebuild/rc3_m02_image_installed_probe.py", line 284, in <module>
+    main()
+  File "/workspace/Deck-Master/tests/rebuild/rc3_m02_image_installed_probe.py", line 45, in main
+    from rc3_m02_image_fixture import TransitionFixture, c, m, s11, s12
+  File "/workspace/Deck-Master/tests/rebuild/rc3_m02_image_fixture.py", line 14, in <module>
+    from rc3_m02_runtime_cases import bind_admission, c, m, proof, s11
+  File "/workspace/Deck-Master/tests/rebuild/rc3_m02_runtime_cases.py", line 13, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'

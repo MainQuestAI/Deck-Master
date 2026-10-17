@@ -1619,5 +1619,19 @@
     "repaired_current": null,
     "method_rerun": null
   },
-  "release_conclusion": "NOT_RUN"
+  "release_conclusion": "NOT_RUN",
+  "engineering_recovery": {
+    "date": "2026-10-17",
+    "report": "docs/reports/rc3/cloud-recovery-20261017/README.md",
+    "code_sha": "54b974e7551d4eea59586fc1cb9fc8daa701355f",
+    "scope": "S12 real SDK L0/L1 only; no AC/CQ promotion",
+    "status": "ENGINEERING_REVIEW_LIMITED_ORIGINAL_ARTIFACTS_MISSING",
+    "missing": [
+      "original S12 JSON contracts",
+      "S14-S19 task contracts",
+      "original M02 project/registration/IG and spent-budget frontier",
+      "S11 original independent report/installation evidence"
+    ],
+    "historical_ac_cq_and_draft_results_preserved": true
+  }
 }

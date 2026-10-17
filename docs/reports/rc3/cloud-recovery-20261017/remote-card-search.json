@@ -1,0 +1,23 @@
+{
+  "remote_refs_checked": [
+    "refs/remotes/origin/codex/rc3-s12-remote-validation-20261016",
+    "refs/remotes/origin/codex/skill-flow-review",
+    "refs/remotes/origin/dependabot/github_actions/actions/upload-artifact-7",
+    "refs/remotes/origin/fix/rc3-s02-planned-input-revision",
+    "refs/remotes/origin/impl/rc3-00",
+    "refs/remotes/origin/impl/rc3-01",
+    "refs/remotes/origin/impl/rc3-02",
+    "refs/remotes/origin/impl/rc3-03",
+    "refs/remotes/origin/impl/rc3-04",
+    "refs/remotes/origin/impl/rc3-04-early",
+    "refs/remotes/origin/impl/rc3-05",
+    "refs/remotes/origin/impl/rc3-complete",
+    "refs/remotes/origin/impl/t01-t00-content-collab",
+    "refs/remotes/origin/impl/t02-contracts-migration",
+    "refs/remotes/origin/impl/t03-content-production",
+    "refs/remotes/origin/impl/t04-eligibility-scope",
+    "refs/remotes/origin/integration/t03-t04",
+    "refs/remotes/origin/main"
+  ],
+  "matches": []
+}

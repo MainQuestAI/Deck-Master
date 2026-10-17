@@ -94,3 +94,15 @@ WIP partial successes and failures remain historical and do not validate this
 independently rewritten candidate. Formal M02, final managed admission and
 human acceptance remain future work under the original gates.
 
+2026-10-17 recovery: code 54b974e7 resolves bootstrap through the same
+original registered/hash-checked helper directory used by epoch loading.
+The six-scenario fixture now keeps original helpers separate from the new
+companion and explicitly requests its two neutral Pages. Root ordinary pytest
+passed 12 tests (81 checks / 524 observations); an independent fresh run also
+passed 12. Related S11/M02/image tests passed 84. Dedicated workflow run #2
+passed at that exact code head. Original failures remain preserved in the
+cloud-recovery-20261017 report. These are real SDK L1 checks with synthetic
+history/observations, zero model/image/render calls, and no formal M02 or
+managed admission. Missing original JSON contracts and volatile experiment
+artifacts prevent any stronger original-contract or production conclusion.
+
