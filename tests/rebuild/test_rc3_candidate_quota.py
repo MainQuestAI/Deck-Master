@@ -75,6 +75,25 @@ def test_children_share_numeric_candidate_root_and_keep_their_own_smaller_caps(c
     assert eligibility.candidate_budget(store, store.load_document(), root)['used'] == 2
 
 
+def test_independent_candidate_root_does_not_consume_another_roots_slots(candidate_store):
+    store = candidate_store
+    root = grant(store, 1, actions=['candidate.adopt'], replace=True)
+    zero = grant(store, 0, actions=['candidate.adopt'], parent=root)
+    independent = grant(store, 1, actions=['change.commit'], pages=['p01'], parent=zero)
+    first = dispatch(store, 'p01')
+    assert first['collaboration_binding']['authorization_ref'] == independent
+    doc = store.load_document()
+    roots = {eligibility._chain_root_identity(store, doc, store.read_object_json(ref), quantity='max_candidate_count')
+             for ref in (root, independent)}
+    assert len(roots) == 2
+    budget = eligibility.candidate_budget(store, doc, root)
+    assert budget['used'] == 0 and budget['remaining'] == 1
+    second_authority = grant(store, 1, actions=['change.commit'], pages=['p02'], parent=root)
+    second = dispatch(store, 'p02')
+    assert second['collaboration_binding']['authorization_ref'] == second_authority
+    assert eligibility.candidate_budget(store, store.load_document(), root)['remaining'] == 0
+
+
 def test_restore_keeps_produced_candidate_consumption(candidate_store):
     store = candidate_store
     authority = grant(store, 1, replace=True)

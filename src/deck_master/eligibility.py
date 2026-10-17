@@ -631,7 +631,7 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict, 
                 if not parent_ref:
                     break
                 cursor = store.read_object_json(parent_ref)
-        local_used = sum(usage.get(item, 0) for item in descendants)
+        local_used = sum(usage.get(item, 0) for item in descendants if item in chain_ids)
         # Replacing an intermediate parent narrows existing descendants too.
         # Read its current ceiling while retaining the original numeric chain
         # and historical Task attribution.
