@@ -92,6 +92,34 @@ def test_sibling_computed_authorities_share_current_parent_limit_without_double_
         assert budget['used'] == 2 and budget['remaining'] == 0
 
 
+def test_parent_cap_counts_retry_sibling_in_a_different_numeric_root(tmp_path):
+    path, store = project(tmp_path)
+    parent, child = planning_parent_and_child(path, store)
+    _grant(path, store, mode='delegate', actions=('dispatch.blueprint',),
+        authorization_id=parent['authorization_id'], replaces=parent['authorization_ref'],
+        max_external_calls=2, budget_template='explicit', operation_id='L1-parent-two-before-retry')
+    doc = store.load_document()
+    first = service.open_blueprint_task(store, doc, doc['pages'][0])
+    spend(path, store, first)
+    service.task_cancel(path, task_id=first['task_id'], reason='Synthetic settled call, explicit retry follows.')
+    from test_eligibility_enforcement import _scope
+    retry = _grant(path, store, actions=('dispatch.blueprint',), max_external_calls=1,
+        budget_template='explicit', parent_authorization_ref=parent['authorization_ref'],
+        scope=_scope(page_ids=['p1']), operation_id='L1-parented-explicit-retry')
+    doc = store.load_document()
+    repeated = service.open_blueprint_task(store, doc, doc['pages'][0])
+    assert repeated['collaboration_binding']['authorization_ref'] == retry['authorization_ref']
+    doc = store.load_document()
+    roots = {eligibility._chain_root_identity(store, doc, store.read_object_json(item['authorization_ref']))
+             for item in (child, retry)}
+    assert len(roots) == 2
+    assert eligibility.authorization_budget(store, doc, child['authorization_ref'])['used'] == 1
+    assert eligibility.authorization_budget(store, doc, child['authorization_ref'])['remaining'] == 0
+    with pytest.raises(eligibility.EligibilityBlocked):
+        service.open_blueprint_task(store, doc, doc['pages'][1])
+    assert store.load_document() == doc
+
+
 def chain(path,store):
     root=_grant(path,store,mode='delegate',actions=('dispatch.blueprint',),
         max_external_calls=2,max_candidate_count=2,operation_id='L1-ancestor-root')
