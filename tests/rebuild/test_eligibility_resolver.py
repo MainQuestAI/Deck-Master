@@ -742,9 +742,7 @@ def test_host_self_is_only_accepted_through_the_explicit_override(tmp_path):
                         "scope": _scope(page_ids=["p1", "p2"], layers=["review"]),
                         "instruction_evidence": _declared(store)},
         base_revision=store.load_document()["revision_id"], operation_id="op-downgrade-1")
-    _set_quality_profile(store, content_review_requirement="host_self",
-                         requirement_origin="explicit_decision",
-                         override_decision_ref=decision["decision_ref"])
+    assert store.load_document()["collaboration"]["quality_profile"]["override_decision_ref"] == decision["decision_ref"]
     from deck_master import content_review
     units = content_review.required_units(store, store.load_document())
     for index, kind in enumerate(units):

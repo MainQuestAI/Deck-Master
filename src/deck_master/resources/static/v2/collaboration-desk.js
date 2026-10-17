@@ -207,10 +207,38 @@ function stateDetails(app) {
           body:scopeView(app,auth.scope),explanation:'撤回后停止该授权及其下级的后续采用和制作。已发生调用与费用保留；其它授权不能接管原任务。',build:instruction_evidence=>({evidence:instruction_evidence,reason:instruction_evidence.text})});
       },false,{disabled:Boolean(app.info.sample?.readonly)})))),
     controlRecovery(app),requestControls(app),
+    request&&!request.closed&&!app.info.sample?.readonly&&button('选择内容审阅方式',()=>{document.querySelector('#modal').close();reviewPolicyForm(app);}),
     !app.info.sample?.readonly&&button('导入确认稿',()=>{document.querySelector('#modal').close();draftImportForm(app);}),
     app.health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',()=>{document.querySelector('#modal').close();externalReviewForm(app);}),
     details('当前控制与请求身份',{control_revision_id:app.info.control_revision_id,reading_revision_id:app.route.revision,...state}));
   modal('本次工作与范围',body);
+}
+
+async function reviewPolicyForm(app) {
+  const revision=app.info.control_revision_id||app.info.revision_id;
+  const request=app.info.collaboration?.request;
+  let current;
+  try {
+    current=await get('/api/view/summary?'+new URLSearchParams({revision}));
+    if(current.project_id!==app.info.project_id||current.revision_id!==revision)throw Error('当前稿件版本不匹配，请重新读取后选择。');
+  } catch(error) {app.setNotice(readableError(error));return;}
+  const choice=field('内容审阅方式',el('select',{required:true},
+    el('option',{value:''},'请选择本次审阅方式'),
+    el('option',{value:'independent_model_or_human'},'独立模型或人员审阅（默认要求）'),
+    el('option',{value:'host_self'},'由当前制作工具自审')));
+  const scope={subject:'deck',page_ids:current.pages.map(page=>page.page_id),page_manifest_ref:null,external_artifact_ref:null,
+    layers:['review'],allow_page_membership_change:false,allow_page_order_change:false,purpose:request.scope.purpose};
+  const preview=Object.create(app);preview.summary=current;
+  controlForm(app,{title:'选择内容审阅方式',action:'decision',path:'/collaboration/decisions',
+    explanation:'独立审阅需要实际可用的审阅通道。选择制作工具自审只适用于下面这些页面和当前请求，不代表独立审阅，也不代替正式交付所需的人类专业复核。',
+    body:el('div',{class:'stack'},choice.node,scopeView(preview,scope),
+      el('p',{class:'muted'},'请在明确要求中说明选择和原因。此操作不授予制作权限或增加调用额度；换请求或新增页面后需重新核对。')),
+    baseRevision:()=>revision,
+    build:instruction_evidence=>{
+      if(!choice.input.value)throw Error('请选择本次内容审阅方式。');
+      return {decision:{topic:'policy',disposition:'accepted',authority_mode:'direct_user',scope,
+        value:{content_review_requirement:choice.input.value,reason:instruction_evidence.text},instruction_evidence}};
+    }});
 }
 
 function migrationForm(app) {

@@ -82,8 +82,93 @@ def _downgrade_decision_effective(store, document, override_ref) -> bool:
             or record.get("disposition") != "accepted"
             or record.get("authority_mode") not in ("direct_user", "delegated")):
         return False
+    value = record.get("value")
+    if (not isinstance(value, dict) or value.get("content_review_requirement") != "host_self"
+            or not isinstance(value.get("reason"), str) or not value["reason"].strip()
+            or not _quality_decision_source_allowed(store, document, record)
+            or not _quality_scope_covered(store, document, record)):
+        return False
     from . import dependency_slices
+    current_ref, _ = dependency_slices._resolve_current(store, document, "decisions", "decision_id", override_ref)
+    if current_ref != override_ref:
+        return False
     return dependency_slices.decision_effectiveness(store, document, override_ref)["effective"]
+
+
+def _quality_decision_source_allowed(store, document, decision):
+    """A stored claimed authority is not an authenticated/traceable instruction."""
+    allowed = ("verified_user",) if (document.get("collaboration") or {}).get("authority_policy") == "verified_user" else ("host_attested", "verified_user")
+    if (decision.get("evidence") or {}).get("assurance") not in allowed:
+        return False
+    if decision.get("authority_mode") == "direct_user":
+        return True
+    if decision.get("authority_mode") != "delegated":
+        return False
+    ref = decision.get("delegation_ref")
+    seen = set()
+    while ref:
+        digest = ref.get("sha256")
+        if digest in seen or len(seen) >= 8:
+            return False
+        seen.add(digest)
+        try:
+            grant = store.read_object_json(ref)
+        except Exception:  # noqa: BLE001 - unreadable authority cannot relax review
+            return False
+        if (grant.get("mode") != "delegate" or "policy" not in grant.get("delegated_topics", [])
+                or (grant.get("evidence") or {}).get("assurance") not in allowed):
+            return False
+        ref = grant.get("parent_authorization_ref")
+    return bool(seen)
+
+
+def _quality_scope_covered(store, document, decision):
+    from .eligibility import _covers, _page_coverage_from_binding, scope_page_ids
+    request = (document.get("collaboration") or {}).get("request") or {}
+    pages = [entry["page_id"] for entry in document.get("pages") or []]
+    targets = {"subject": "pages", "page_ids": pages, "layers": ["review"]}
+    return bool(pages) and decision.get("request_id") == request.get("request_id") and not request.get("closed") \
+        and set(scope_page_ids(store, decision.get("scope")) or []) == set(pages) \
+        and _covers(store, decision.get("scope"), targets) \
+        and (_covers(store, request.get("scope"), targets)
+             or _page_coverage_from_binding(store, request, targets, None, document))
+
+
+def apply_requirement_decision(store, document, decision, decision_ref):
+    """Atomically bind an explicit policy choice through the normal decision API.
+
+    Defaults, proposals and unrelated policy records never select self-review.
+    This changes neither production grants nor the human professional policy.
+    """
+    value = decision.get("value")
+    if (decision.get("topic") != "policy" or decision.get("disposition") != "accepted"
+            or not isinstance(value, dict) or "content_review_requirement" not in value):
+        return document
+    requirement = value["content_review_requirement"]
+    if requirement not in ("host_self", "independent_model_or_human"):
+        raise ModelError("decision/value/content_review_requirement", "choose independent_model_or_human or explicit host_self")
+    if (not isinstance(value.get("reason"), str) or not value["reason"].strip()
+            or not _quality_decision_source_allowed(store, document, decision)):
+        raise ModelError("decision/value", "review policy requires an explicit user instruction or policy delegation and a nonempty reason")
+    if requirement == "host_self" and not _quality_scope_covered(store, document, decision):
+        raise ModelError("decision/scope", "self-review must explicitly cover every current manuscript page's review layer within this request")
+    region = document["collaboration"]
+    updated = {**document, "collaboration": {**region, "quality_profile": {
+        "content_review_requirement": requirement, "requirement_origin": "explicit_decision",
+        "override_decision_ref": decision_ref}}}
+    if quality_profile(document).get("content_review_requirement") != requirement:
+        refs = []
+        for ref in document.get("tasks") or []:
+            task = store.read_object_json(ref)
+            if (task.get("kind") == "review" and task.get("review_stage") == STAGE
+                    and task.get("status") in ("awaiting_host", "running", "queued")
+                    and (task.get("collaboration_binding") or {}).get("request_id") == decision["request_id"]):
+                task = {**task, "status": "superseded", "updated_at": decision["created_at"]}
+                ref = store.put_json_object(task)
+            refs.append(ref)
+        updated["tasks"] = refs
+    models.validate_collaboration_region(updated["collaboration"])
+    return updated
 
 
 def requirement_state(store, document) -> dict:

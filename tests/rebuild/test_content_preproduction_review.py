@@ -474,21 +474,11 @@ def test_host_self_needs_an_explicit_effective_downgrade_decision(tmp_path):
                         "authority_mode": "direct_user",
                         "value": {"content_review_requirement": "host_self",
                                   "scope": "this request", "reason": "本次为合成演练"},
-                        "scope": _scope(layers=["review"]),
+                        "scope": _scope(page_ids=[entry["page_id"] for entry in document["pages"]], layers=["review"]),
                         "instruction_evidence": _instruction(store, "policy")},
         base_revision=store.load_document()["revision_id"], operation_id="op-policy")
     document = store.load_document()
-    region = dict(document["collaboration"])
-    region["quality_profile"] = {**region["quality_profile"], "content_review_requirement": "host_self",
-                                 "requirement_origin": "explicit_decision",
-                                 "override_decision_ref": decision["decision_ref"]}
-    bumped = bump_revision(document, {"operation_id": "set-policy", "kind": "collaboration_update",
-                                      "description": "record the downgrade", "read_set": []})
-    bumped["collaboration"] = region
-    store.commit_change(base_revision=document["revision_id"], document=bumped,
-                        operation_id="set-policy")
-    store = Store(project)
-    document = store.load_document()
+    assert document["collaboration"]["quality_profile"]["override_decision_ref"] == decision["decision_ref"]
     state = content_review.requirement_state(store, document)
     assert state["effective"] == "host_self" and not state["reasons"]
     # With host_self, the review is accepted without an independence receipt...
