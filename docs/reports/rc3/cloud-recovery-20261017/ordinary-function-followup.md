@@ -16,6 +16,7 @@
 - `8490c8ff` 区分从未授数额的零调用规划委派与已有数字额度降为零：沿原数字父链、权限父链、替换历史和当前头核对，旧引用也不能把降额后的预算重新变大。只读预览显示既有较小上限，重复授权不刷新额度。
 - 仅候选授权不能被 Runtime 自动提升为采用当前稿的任务；派发原子拒绝且不预留调用。合法 trial 仍能接收真实候选，明确 `within_scope` 的自动制作照常更新所选页。旧任务接受也重新检查当前采用权限。网页区分整套/直接修改与试作的采用方式。
 - `f9ebfbf9` 补齐新预算预览的 CLI、HTTP 和 adapter 精确只读入口登记。grant 仍是唯一授权写入 CAS，未用只读豁免覆盖任何写入口。
+- 全量回归随后发现 Task 的文档 schema 镜像漏同步已实现的可选 `budget_key`，现与 Runtime 字节一致；独立增量复审通过，`required` 不变，package-boundary 5 passed。首次失败保留在 `contract-mirror-before.log`，见 `contract-mirror-independent-review.md`。
 
 此前网页 notes 四种选择、预检/未知响应恢复、正常显式自审选择和 classic 新版 Plan 展示继续保留。本轮没有内置或伪装 LLM provider；没有独立通道时仍返回可读稿与真实缺口，仅用户的明确选择可以改普通前审方式。人类专业交付政策未降低。
 
@@ -23,7 +24,7 @@
 
 普通新建脚本使用 public `create/continue/task_start/accept_result/record_decision/adopt_proposal`，没有重置 collaboration。已真实走过：材料 → framing → argument proposal → 等待方向确认 → 明确决定并采用 → 两页完整 Page/Plan/notes → 缺独立 reviewer → 明确自审 → computed budget → 两个不同逐页 credit 的 blueprint Task → 调用前取消 → 恢复严格要求并拒绝旧自审 → 可读审阅导出。
 
-这是 **L1 合成输入的正常 SDK 软件流程**，内容由验证脚本明确提供，实际模型和图像调用为零。它证明程序流程可用，不代表实际模型已完成整套写作/生图。单独的用户样稿使用自主编写 SVG，经公开 native compiler 实际生成可编辑 PPTX，真实 LibreOffice 渲染与逐页 notes/text 回读；没有伪造生产项目的 readiness 或 professional PASS。最终隔离 wheel 会重新运行同一流程和样稿编译。
+这是 **L1 合成输入的正常 SDK 软件流程**，内容由验证脚本明确提供，实际模型和图像调用为零。它证明程序流程可用，不代表实际模型已完成整套写作/生图。单独的用户样稿使用自主编写 SVG，经公开 native compiler 实际生成可编辑 PPTX，真实 LibreOffice 渲染与逐页 notes/text 回读；没有伪造生产项目的 readiness 或 professional PASS。`70c7d07d` 的全新隔离 candidate 已 ready（未激活），其 own-package 普通主链、样稿编译、真实渲染和 notes/text 回读均重跑 PASS。后续仅镜像文档变化的最终 head 仍会重建准确的 source manifest。
 
 本地证据位于 `/workspace/rc3-product-tryout-20261017/`；独立证据在 `/workspace/rc3-recovery-20261017/`。生成项目、虚拟环境、原件和运行凭据不入仓库。
 
@@ -40,7 +41,7 @@
 | 新入口与既有验证准备 | 漏登记的预算预览导致 inventory 负例报警，已补真实只读分类；纯 task.start 旧 child 数额超过零 parent，以及交付失效测试未授候选槽，分别改为零调用准备、公开显式授予单个试作槽，原业务断言保留。定向 50 passed。 |
 | 预算早期轮次 | R1 36 pass；R2 41 pass/1 非法 fixture kind；R3 43 pass；R4 127 pass/1 网页新版本读取失败，R5–R9 诊断原样保留；R10 4 pass，实际定位并修复项目重读的空 targets 错误。不同轮次不拼成单轮通过。 |
 | 本地全单测初轮 | 主动中断于 477 pass/1 fail/559 deselected；该唯一失败为纯 design.propose 范围测试的旧 child calls=1 超过 parent=0。只将其纯设计 child 设为零调用，保留原 scope 断言，独立数字超额负例仍在。该中断轮不是完整通过；最终完整 CI 必须另收终态。 |
-| 隔离安装首次离线轮 | 13 passed / 1 failed / 47.48s；真实 wheel/sdist 安装链通过，唯一失败为构建后 HEAD 从 8490 切到 f9eb，清单检查检测 source_sha 不一致。冻结最终 head 后重跑，不改测试预期。 |
+| 隔离安装首次离线轮 | 13 passed / 1 failed / 47.48s；真实 wheel/sdist 安装链通过，唯一失败为构建后 HEAD 从 8490 切到 f9eb，清单检查检测 source_sha 不一致。冻结 `70c7d07d` 后清单检查重跑 1 passed / 3.42s，不改测试预期。 |
 | 本地全单测后续诊断 | R2 因命令入口未带仓库工具路径而 collection error；改用 python -m pytest。R3 在修正上述登记和验证准备前为 881 pass/11 fail/3 error 后中断，其中隔离安装依赖下载因云端 DNS 失败，view_url 曾为 null、定向重跑通过。完整 CI 仍需最终 head 全量终态，不能用这些诊断轮替代。已从官方 PyPI 下载依赖留作新隔离安装的离线副本，未改测试安装预期。 |
 
 完整源代码独立复审见 `budget-candidate-independent-review.md`。Root 独立检查协作者实现的预算主体，并通过额外真实空页 scope probe 找到扩大范围缺陷；协作者独立检查 Root 的严格消费、候选数量、授权选择、批次绑定和祖先修复。结论仅为所列修复的有限工程通过，不代表整份 RC3 的实际效果或 Owner 签结论。
