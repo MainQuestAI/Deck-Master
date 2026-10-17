@@ -135,14 +135,16 @@ def test_late_preflight_cannot_replace_new_notes_selection(notes_browser):
     delayed = []
 
     def hold(route):
-        delayed.append((route, route.fetch()))
+        delayed.append(route)
 
     page.route('**/delivery-eligibility?*notes_policy=pptx_notes', hold)
-    files.get_by_role('combobox', name='口播稿保留方式').select_option('pptx_notes')
+    with page.expect_request(lambda request: '/delivery-eligibility?' in request.url
+                             and parse_qs(urlparse(request.url).query).get('notes_policy') == ['pptx_notes']):
+        files.get_by_role('combobox', name='口播稿保留方式').select_option('pptx_notes')
     choose(page, files, 'pure_reading')
     assert len(delayed) == 1
-    route, response = delayed[0]
-    route.fulfill(response=response)
+    route = delayed[0]
+    route.fulfill(response=route.fetch())
     # Wait for the old response to be consumed, then read the visible judgement.
     page.wait_for_load_state('networkidle')
     expect(files.locator('.export-group').get_by_role('status')).to_contain_text(LABELS['pure_reading'])
