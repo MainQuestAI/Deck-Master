@@ -638,7 +638,7 @@ def _stage(project: Path, operation_id: str, name: str, data: bytes) -> None:
 def test_two_executions_race_for_the_last_allowance(tmp_path: Path) -> None:
     # AC-S12: with one slot left, only one execution claims the task and
     # begins the call; the other execution is refused at both layers.
-    project, _ = _make_project(tmp_path)
+    project, original_task = _make_project(tmp_path)
     store = Store(project)
     document = store.load_document()
     bumped = bump_revision(document, {"operation_id": "limit-1", "kind": "policy_update",
@@ -646,7 +646,19 @@ def test_two_executions_race_for_the_last_allowance(tmp_path: Path) -> None:
     bumped["policy"] = {**bumped["policy"], "external_call_limit": 1}
     store.commit_change(base_revision=document["revision_id"], document=bumped, operation_id="limit-1")
     prepare_editorial_project(project)
-    task_id = service.continue_project(store.project_root)["pending_tasks"][0]["task_id"]
+    # A policy change invalidates the original Task's bound grant. A fresh
+    # grant must not silently take over that Task; race under a newly
+    # dispatched Task with current authority instead.
+    from deck_master import eligibility
+    before = store.load_document()
+    with pytest.raises(eligibility.EligibilityBlocked, match='registered basis changed'):
+        tasks_mod.allocate_call_allowances(store, task_id=original_task['task_id'], count=1)
+    assert store.load_document() == before
+    service.task_cancel(project, task_id=original_task['task_id'], reason='L1 policy changed before any external call')
+    from test_content_ops import dispatch
+    task = dispatch(project, store, 'rewrite', ('p09',))
+    assert task['collaboration_binding']['authorization_ref'] == store.load_document()['collaboration']['authorizations'][-1]
+    task_id = task['task_id']
     _start(store.project_root, task_id=task_id, execution_ref="exec-a")
     with pytest.raises(tasks_mod.TaskConflict, match="another execution"):
         _start(store.project_root, task_id=task_id, execution_ref="exec-b")

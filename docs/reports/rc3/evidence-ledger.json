@@ -1641,7 +1641,8 @@
         "docs/reports/rc3/cloud-recovery-20261017/strict-consumption-independent-review.md",
         "docs/reports/rc3/cloud-recovery-20261017/budget-core-root-review.md",
         "docs/reports/rc3/cloud-recovery-20261017/budget-candidate-independent-review.md",
-        "docs/reports/rc3/cloud-recovery-20261017/contract-mirror-independent-review.md"
+        "docs/reports/rc3/cloud-recovery-20261017/contract-mirror-independent-review.md",
+        "docs/reports/rc3/cloud-recovery-20261017/last-allowance-independent-review.md"
       ],
       "status": "LIMITED_ENGINEERING_PASS",
       "final_head_ci_at_registration": "PENDING_FINAL_HEAD",

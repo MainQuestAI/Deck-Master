@@ -42,6 +42,7 @@
 | 预算早期轮次 | R1 36 pass；R2 41 pass/1 非法 fixture kind；R3 43 pass；R4 127 pass/1 网页新版本读取失败，R5–R9 诊断原样保留；R10 4 pass，实际定位并修复项目重读的空 targets 错误。不同轮次不拼成单轮通过。 |
 | 本地全单测初轮 | 主动中断于 477 pass/1 fail/559 deselected；该唯一失败为纯 design.propose 范围测试的旧 child calls=1 超过 parent=0。只将其纯设计 child 设为零调用，保留原 scope 断言，独立数字超额负例仍在。该中断轮不是完整通过；最终完整 CI 必须另收终态。 |
 | 隔离安装首次离线轮 | 13 passed / 1 failed / 47.48s；真实 wheel/sdist 安装链通过，唯一失败为构建后 HEAD 从 8490 切到 f9eb，清单检查检测 source_sha 不一致。冻结 `70c7d07d` 后清单检查重跑 1 passed / 3.42s，不改测试预期。 |
+| 完整普通 unit R4 | 排除单独安装文件的整轮为 2871 passed / 2 skipped / 2 failed，890.30s，不标为 PASS。两失败分别为上述 Task 镜像、旧竞争测试在改 policy 后继续复用旧绑定 Task。后者现在先断言旧 Task basis_stale 且 Document 不变，再公开取消并新派发绑定当前 grant 的 Task；原双执行 claim/begin 竞争断言与全局 limit=1 原样保留。独立该 case 与旧 Task 不借新 grant 两项 2 passed / 0.93s，见 `last-allowance-independent-review.md`。Runtime 代码未变。 |
 | 本地全单测后续诊断 | R2 因命令入口未带仓库工具路径而 collection error；改用 python -m pytest。R3 在修正上述登记和验证准备前为 881 pass/11 fail/3 error 后中断，其中隔离安装依赖下载因云端 DNS 失败，view_url 曾为 null、定向重跑通过。完整 CI 仍需最终 head 全量终态，不能用这些诊断轮替代。已从官方 PyPI 下载依赖留作新隔离安装的离线副本，未改测试安装预期。 |
 
 完整源代码独立复审见 `budget-candidate-independent-review.md`。Root 独立检查协作者实现的预算主体，并通过额外真实空页 scope probe 找到扩大范围缺陷；协作者独立检查 Root 的严格消费、候选数量、授权选择、批次绑定和祖先修复。结论仅为所列修复的有限工程通过，不代表整份 RC3 的实际效果或 Owner 签结论。
