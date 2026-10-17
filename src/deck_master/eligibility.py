@@ -967,7 +967,18 @@ def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
     return candidates
 
 
-def _rank_authority_candidates(store, document, candidates, spec, *, task=None,
+def _target_credit_budgets(store, document, record, targets):
+    """The actual page credits a new dispatch must pay from this grant."""
+    fixed = (record.get('constraints') or {}).get('fixed_budget') or {}
+    if not fixed:
+        return [], []
+    pages = set(target_page_ids(store, targets or {}) or [])
+    credits = [credit for credit in fixed.get('credits') or [] if credit['page_id'] in pages]
+    missing = sorted(pages - {credit['page_id'] for credit in credits})
+    return [credit_state(store, document, credit['budget_key']) for credit in credits], missing
+
+
+def _rank_authority_candidates(store, document, candidates, spec, *, targets=None, task=None,
                                count=None, candidate_count=0):
     """Use the same actual budget choice at the gate and Task binding.
 
@@ -989,6 +1000,9 @@ def _rank_authority_candidates(store, document, candidates, spec, *, task=None,
         if usable and calls > 0:
             budget = authorization_budget(store, document, item['ref'])
             fundable = budget['state'] != 'unknown' and budget['remaining'] >= calls
+            if task is None:
+                credits, missing = _target_credit_budgets(store, document, item['record'], targets)
+                fundable = fundable and not missing and all(credit['remaining'] >= 1 for credit in credits)
         if usable and slots > 0:
             fundable = fundable and candidate_budget(store, document, item['ref'])['remaining'] >= slots
         return (not usable, assurance_missing, not fundable, item['mode'] != 'execute',
@@ -1014,7 +1028,7 @@ def covering_authorization_ref(store: Store, document: dict, action: str,
         return None
     candidates = _authority_candidates(store, document, spec, targets or {}, None)
     candidates = _rank_authority_candidates(store, document, candidates, spec,
-                                           count=count, candidate_count=candidate_count)
+                                           targets=targets, count=count, candidate_count=candidate_count)
     for candidate in candidates:
         if not candidate["effective"] or not candidate["covers"]:
             continue
@@ -1331,7 +1345,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         candidates = []
         if spec.authority in ("execute", "either", "delegate"):
             candidates = fixed_candidates if spec.delivery else _authority_candidates(store, control, spec, targets, task)
-            candidates = _rank_authority_candidates(store, control, candidates, spec, task=task,
+            candidates = _rank_authority_candidates(store, control, candidates, spec, targets=targets, task=task,
                 count=context.get('count'), candidate_count=context.get('candidate_count', 0))
             usable = [c for c in candidates if c["effective"]
                       and (c["mode"] == "execute" or spec.authority in ("delegate", "either"))]
@@ -1412,10 +1426,10 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                 if key:
                     credit_budgets.append(credit_state(store, control, key))
             elif candidates:
-                fixed = (chosen["record"].get("constraints") or {}).get("fixed_budget") or {}
-                for credit in fixed.get("credits") or []:
-                    if credit["page_id"] in (target_page_ids(store, targets or {}) or []):
-                        credit_budgets.append(credit_state(store, control, credit["budget_key"]))
+                credit_budgets, missing = _target_credit_budgets(store, control, chosen['record'], targets)
+                if missing:
+                    block('budget_exhausted', 'this fixed budget has no call credit for the requested pages',
+                          page_ids=missing)
             # CONTRACTS §3.3: begin validates its own already-reserved slot; it
             # never needs a second remaining credit for the same slot.
             slot_held = False
