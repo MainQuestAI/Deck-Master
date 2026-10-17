@@ -22,7 +22,7 @@ Only existing authorization, Task, candidate and allowance facts are used. No pa
 
 ## Final executable evidence
 
-Command: `.venv/bin/python -B -m pytest -q -p no:cacheprovider` over the following files/case, using the separate R6 basetemp and JUnit paths.
+Method: independent ordinary tests over the following files/case, with separate R6 results and JUnit evidence.
 
 1. `test_rc3_budget_workflow.py`
 2. `test_rc3_budget_selection.py`
@@ -39,10 +39,10 @@ Command: `.venv/bin/python -B -m pytest -q -p no:cacheprovider` over the followi
 
 Evidence:
 
-- [R6 log](/workspace/rc3-recovery-20261017/budget-candidate-independent-r6.log): `114 passed in 46.61s`.
-- [R6 JUnit](/workspace/rc3-recovery-20261017/budget-candidate-independent-r6.xml).
-- [R6 before hashes](/workspace/rc3-recovery-20261017/budget-candidate-independent-r6-before.json) and [after hashes](/workspace/rc3-recovery-20261017/budget-candidate-independent-r6-after.json): 26 files, no changed hashes.
-- `ruff check` of the two new boundary-regression files and `git diff --check`: PASS.
+- R6 log（证据 ID `evidence-budget-candidate-independent-r6.log-a7fb54ee`，未入仓）: `114 passed in 46.61s`.
+- R6 JUnit（证据 ID `evidence-budget-candidate-independent-r6.xml-fb7c6616`，未入仓）.
+- R6 before hashes（证据 ID `evidence-budget-candidate-independent-r6-before.json-63333f98`，未入仓） and after hashes（证据 ID `evidence-budget-candidate-independent-r6-after.json-71026ffd`，未入仓）: 26 files, no changed hashes.
+- Python lint check of the two new boundary-regression files and diff whitespace check: PASS.
 
 ## Retained earlier observations
 
@@ -55,11 +55,11 @@ These are separate rounds and are not combined into the R6 result.
 | `budget-ancestor-repro.log/xml` | 2 FAIL | Actual P1: superseded larger intermediate parent was used for calls/candidates. Fixed, retested in R6. |
 | `budget-fresh-root-repro.log/xml` | 1 FAIL | Actual P1: lowered numeric zero parent minted a new computed root. Fixed, retested in R6. |
 | `budget-zero-lineage-independent.log/xml` | 8 PASS | Intermediate zero-lineage regression run; not the final review snapshot. |
-| `/workspace/rc3-product-tryout-20261017/adoption-authority-before.log` | 1 FAIL | Actual P1: candidate-only auto SVG acceptance changed current Page. Fixed, retested in R6. |
+| `evidence-adoption-authority-before.log-409777cd` | 1 FAIL | Actual P1: candidate-only auto SVG acceptance changed current Page. Fixed, retested in R6. |
 | `budget-candidate-independent-r4.log/xml` | 112 PASS / 2 FAIL | New reviewer tests expected internal ModelError instead of the public OperationError wrapper, and a specific policy reason instead of the earlier current-region rejection. Both product operations already rejected safely. Raw failures retained. |
 | `adoption-authority-independent-r5.log/xml` | 5 PASS | Corrected public-interface assertions, preserving dispatch/accept rejection and full Document/pointer invariants. No product bytes changed. |
 
-The earlier budget implementation rounds and their failures remain recorded in [the implementation handoff](/workspace/rc3-recovery-20261017/budget-implementation-handoff.md). Nothing was reset or relabeled as a same-round pass.
+The earlier budget implementation rounds and their failures remain recorded in the implementation handoff（证据 ID `evidence-budget-implementation-handoff.md-ab23909a`，未入仓）. Nothing was reset or relabeled as a same-round pass.
 
 ## Limits and remaining delivery checks
 

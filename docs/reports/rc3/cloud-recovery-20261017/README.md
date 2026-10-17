@@ -1,6 +1,6 @@
 # RC3 云端接续与 S12 工程回归
 
-2026-10-17，新云环境 `/workspace/Deck-Master` 已启动。本次接续保留原实验、失败、费用和授权边界；未操作用户 Mac，未合并、发布或激活日常安装。
+2026-10-17，隔离云端工程环境已启动。本次接续保留原实验、失败、费用和授权边界；未操作用户 Mac，未合并、发布或激活日常安装。
 
 恢复起点为 main `43d4bc8ccbd1850564e9391c84e98db3c424eae4`，PR120 Draft head `48ee08616ec3ad977302c8c34556f2608cad1130`；原七组 CI #516 成功。S12 独立候选 `7c8edea7538645a89d712b671e37b976daf9e386` 尚未进入 PR120，原 gate #517 与专项 workflow #1 均失败。后者在 job env 引用不可用的 `runner.temp`；前者 unit 在两页 fixture 的单页 Request 范围处被正常拒绝，另有 installed recovery 的浏览器点击超时，二者分别保留，不把该超时归因于 S12。
 
@@ -13,7 +13,7 @@
 | 执行归属 | 环境初启仅见服务进程，单 worktree 无其他本地开发/测试；两次远端核对 main/PR120/S12 refs 未变化。原线程 interrupted 为委托消息提供的历史；本工具集无会话历史/状态读取接口，不能证明其他独立云环境没有执行者。后续推送只快进，远端变化即停止核对。 |
 | 仓库合同 | 已读 AGENTS、task index/recovery playbook、RC3 README/TASKS/ACCEPTANCE/SOURCE_GUIDE、RC3-00～05、S11/S12 及相关最终 handoff；原 v1.2 ACCEPTANCE 的 L0–L6、F0–F3、E1/E2/E3 和用户/听众边界继续适用。精确文件身份见 `verification.json`。 |
 | 原 S12 JSON 合同 | 仓库卡引用的 Root-S12/prospective JSON 没有恢复；卡中声明的 13595B / `d1f401…` 不能当成本次已读原件。独立审查只能给仓库范围的有限结论，不能宣称该缺失合同全部通过。 |
-| 易失产物 | `/dev/shm` 为空；`/workspace/shared`、scratch、library-files 无原实验。Library 精确名检索及 10-14 后文件清单未找到对应副本，未下载无关文件。Personal Context 返回不可用。 |
+| 易失产物 | `evidence-shm-0850a74c` 为空；`evidence-shared-5f1a2cb7`、scratch、library-files 无原实验。Library 精确名检索及 10-14 后文件清单未找到对应副本，未下载无关文件。Personal Context 返回不可用。 |
 | S14–S19 | 当前远端所有分支和工作区均无对应任务卡；原线程历史不可读，已请求已授权持久化位置。依赖原合同的实施阻塞，未根据摘要补造卡片或扩大功能。 |
 | M02 / E1 / E2 / E3 | 原 M02 项目、注册、共同 IG/已花费用、当前 Request、原安装和 S11 独立报告未恢复。旧绝对路径与卡中 hash 仅为查找线索，不认证当前可复用。禁止用新中性 fixture 补原实验，也不重新建立正式 root、凭据、池或模型预算。 |
 | 后置人工验收 | Owner、听众、完整试讲/计时、目标 PowerPoint 与适用 professional 证据仍需真实执行，未用模型代答。 |
@@ -34,7 +34,7 @@
 
 六场景为：原 PNG 两页采用与 settlement lost ACK/query、terminal unknown、malformed first callback、grant committed/lost ACK、grant outcome durable/return interrupted、原 read production 达 13/12 时保留已花事实并阻止采用。每个场景保留独立公开 SDK 轨迹；历史/Host/图片均标合成。真实模型、图像工具和 renderer 调用为零，未新增正式 M02、managed admission 或 S11 完整导出。
 
-原始完整本地证据位于 `/workspace/rc3-recovery-20261017/`，含失败目录、own wheel、实际安装、完整 commands/SDK/errors/原件；未删除或覆盖。仓库只保留精选中性摘要、精确 Refs 和错误，不提交 generated project、IG 私钥、缓存或虚拟环境。`verification.json` 给出原证据 hash、六场景检查和源码身份。
+原始完整本地证据位于 `evidence-rc3-recovery-20261017-0e339ab0`，含失败目录、own wheel、实际安装、完整 commands/SDK/errors/原件；未删除或覆盖。仓库只保留精选中性摘要、精确 Refs 和错误，不提交 generated project、IG 私钥、缓存或虚拟环境。`verification.json` 给出原证据 hash、六场景检查和源码身份。
 
 ## 验收与未关闭项
 
@@ -47,3 +47,7 @@
 ## 后续普通开发
 
 用户随后明确要求暂挂旧效果实验，先完成普通开发。上述原件缺口继续限制原实验验收，不再阻断普通功能修复、安装和试用。接续范围与证据见 [普通功能接续](ordinary-function-followup.md)；本页原有失败、预算和有限结论保持原样。
+
+## 公开副本与证据身份
+
+本目录公开副本已移除内部目录及执行命令。未入仓原件仅保留证据 ID，不表示可下载链接；仓库相对链接只指向实际提交的摘要。`verification.json` 分别登记原件 hash/bytes 与脱敏公开副本 hash/bytes，原失败、费用和验收边界保持原结论。

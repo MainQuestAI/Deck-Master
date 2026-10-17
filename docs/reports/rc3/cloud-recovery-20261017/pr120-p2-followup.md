@@ -20,7 +20,7 @@
 
 ## 旧 head 重放与首次失败
 
-使用 `git archive` 的固定旧 head 隔离副本重新运行：P2-01 实际采用返回
+使用 Git 固定提交归档 的固定旧 head 隔离副本重新运行：P2-01 实际采用返回
 `authority_insufficient` 且当前稿不变；P2-02 的追加重试用例仍在旧页 credit 上被
 `budget_exhausted` 拒绝；P2-03 合法空白框稿实际编译与渲染后，唯一关系 finding 为
 `table_cell_ownership_mismatch`。没有只凭审查文字宣布复现。

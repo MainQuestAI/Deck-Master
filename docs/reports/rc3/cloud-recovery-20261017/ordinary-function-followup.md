@@ -26,7 +26,7 @@
 
 这是 **L1 合成输入的正常 SDK 软件流程**，内容由验证脚本明确提供，实际模型和图像调用为零。它证明程序流程可用，不代表实际模型已完成整套写作/生图。单独的用户样稿使用自主编写 SVG，经公开 native compiler 实际生成可编辑 PPTX，真实 LibreOffice 渲染与逐页 notes/text 回读；没有伪造生产项目的 readiness 或 professional PASS。`70c7d07d` 的全新隔离 candidate 已 ready（未激活），其 own-package 普通主链、样稿编译、真实渲染和 notes/text 回读均重跑 PASS。后续仅镜像文档变化的最终 head 仍会重建准确的 source manifest。
 
-本地证据位于 `/workspace/rc3-product-tryout-20261017/`；独立证据在 `/workspace/rc3-recovery-20261017/`。生成项目、虚拟环境、原件和运行凭据不入仓库。
+本地证据位于 `evidence-rc3-product-tryout-20261017-222c7050`；独立证据在 `evidence-rc3-recovery-20261017-0e339ab0`。生成项目、虚拟环境、原件和运行凭据不入仓库。
 
 ## 验证与保留的首次失败
 
@@ -43,7 +43,7 @@
 | 本地全单测初轮 | 主动中断于 477 pass/1 fail/559 deselected；该唯一失败为纯 design.propose 范围测试的旧 child calls=1 超过 parent=0。只将其纯设计 child 设为零调用，保留原 scope 断言，独立数字超额负例仍在。该中断轮不是完整通过；最终完整 CI 必须另收终态。 |
 | 隔离安装首次离线轮 | 13 passed / 1 failed / 47.48s；真实 wheel/sdist 安装链通过，唯一失败为构建后 HEAD 从 8490 切到 f9eb，清单检查检测 source_sha 不一致。冻结 `70c7d07d` 后清单检查重跑 1 passed / 3.42s，不改测试预期。 |
 | 完整普通 unit R4 | 排除单独安装文件的整轮为 2871 passed / 2 skipped / 2 failed，890.30s，不标为 PASS。两失败分别为上述 Task 镜像、旧竞争测试在改 policy 后继续复用旧绑定 Task。后者现在先断言旧 Task basis_stale 且 Document 不变，再公开取消并新派发绑定当前 grant 的 Task；原双执行 claim/begin 竞争断言与全局 limit=1 原样保留。独立该 case 与旧 Task 不借新 grant 两项 2 passed / 0.93s，见 `last-allowance-independent-review.md`。Runtime 代码未变。 |
-| 本地全单测后续诊断 | R2 因命令入口未带仓库工具路径而 collection error；改用 python -m pytest。R3 在修正上述登记和验证准备前为 881 pass/11 fail/3 error 后中断，其中隔离安装依赖下载因云端 DNS 失败，view_url 曾为 null、定向重跑通过。完整 CI 仍需最终 head 全量终态，不能用这些诊断轮替代。已从官方 PyPI 下载依赖留作新隔离安装的离线副本，未改测试安装预期。 |
+| 本地全单测后续诊断 | R2 因命令入口未带仓库工具路径而 collection error；改用 Python 模块测试入口。R3 在修正上述登记和验证准备前为 881 pass/11 fail/3 error 后中断，其中隔离安装依赖下载因云端 DNS 失败，view_url 曾为 null、定向重跑通过。完整 CI 仍需最终 head 全量终态，不能用这些诊断轮替代。已从官方 PyPI 下载依赖留作新隔离安装的离线副本，未改测试安装预期。 |
 
 完整源代码独立复审见 `budget-candidate-independent-review.md`。Root 独立检查协作者实现的预算主体，并通过额外真实空页 scope probe 找到扩大范围缺陷；协作者独立检查 Root 的严格消费、候选数量、授权选择、批次绑定和祖先修复。结论仅为所列修复的有限工程通过，不代表整份 RC3 的实际效果或 Owner 签结论。
 

@@ -27,11 +27,7 @@ No new P1/P2 is established by the available source or independent execution. In
 
 ## Independent execution
 
-Command (one serial run):
-
-```text
-RC3_S12_EVIDENCE_ROOT=/workspace/rc3-recovery-20261017/independent-s12 .venv/bin/python -B -m pytest -q -p no:cacheprovider tests/rebuild/test_rc3_m02_image_transition.py --basetemp=/workspace/rc3-recovery-20261017/independent-tests --junitxml=/workspace/rc3-recovery-20261017/independent-s12.xml
-```
+Method: one independent, serial ordinary S12 test run, with separate evidence and JUnit results.
 
 Observed result: **12 passed in 58.15s**. The own-wheel child executed all six scenarios with **81/81 checks passing and 524 function observations**. The child was `-I -B` and loaded `deck_master` exclusively from its own prefix. Its actual public installation identity reports `metadata_version=1.0.0rc3`, packaged method bytes, `install=null` and `source=null`.
 
@@ -46,9 +42,9 @@ Observed result: **12 passed in 58.15s**. The own-wheel child executed all six s
 
 Evidence:
 
-- `/workspace/rc3-recovery-20261017/independent-s12.log`
-- `/workspace/rc3-recovery-20261017/independent-s12.xml`
-- `/workspace/rc3-recovery-20261017/independent-s12/own-wheel-14e53eafaa3c4c0198b89862685090e8/probe/result.json` — 93467 bytes, SHA256 `649ffad6646a6644a97dc4a8a9d2f95ea7a2e10c97b3a43b30a328b691385825`.
+- `evidence-independent-s12.log-aedd8e12`
+- `evidence-independent-s12.xml-5ccb024f`
+- `evidence-result.json-5df3a546` — 93467 bytes, SHA256 `649ffad6646a6644a97dc4a8a9d2f95ea7a2e10c97b3a43b30a328b691385825`.
 - Its adjacent `identity.json`, `checks/`, `functions/`, `refusals/`, `source-inputs/` and public `neutral-workspaces/` contain the actual observations. The private IG key root is pruned before evidence enumeration; only named public IG files/directories are copied.
 - The independently built wheel SHA256 is `204dcd273d5286496124742200123350f5d99c96a43437e3e2c52f4cbefd6e57`; wheel ZIP metadata can differ from the owner's build, while the probe enforces complete member byte equality against its installed Runtime and Source.
 
@@ -59,7 +55,7 @@ Historical failures remain present: `s12-r0.log` records missing `pytest` in the
 ## Limits and remaining blockers
 
 - **Original S12 prospective contract not recovered.** Neither `Root-S12-prospective-M02-companion-card.json` nor the cited `m02-prospective-controller-02/prospective-companion-cards.json` was available in the repository/recovered evidence provided to this reviewer. The claimed 13595-byte/SHA256 `d1f401a9d500a05edbf991f42f808db033ea5c76b99aa4750f7f414382ebcec4` contract was not read. The parent reported no usable historical-thread read tool. Original-contract completeness therefore remains **UNVERIFIED**, pending an authorized persistent copy; the repository prose has not been treated as a replacement.
-- The separately cited historical full S11 export report at `/dev/shm/rc3-new-work-20261016/s11-independent-R2-v34dqa5k/report.final.json` is absent in this environment. This reviewer has not recertified that report or its reuse clarification. The new fixture openly uses a public content-only export plus synthetic L1 current-read/history/observer premises. It emits `new_S11_full_export_or_formal_M02=false` and `managed_candidate=false`.
+- The separately cited historical full S11 export report at `evidence-report.final.json-be6e8b74` is absent in this environment. This reviewer has not recertified that report or its reuse clarification. The new fixture openly uses a public content-only export plus synthetic L1 current-read/history/observer premises. It emits `new_S11_full_export_or_formal_M02=false` and `managed_candidate=false`.
 - The neutral 12x8 PNGs, invocation/observer facts, prereview, historical rows and administrative Root assertions are synthetic test inputs. SDK writes, authorization/Task/Attempt IDs, own-wheel Runtime, native authentication and acceptance are actual engineering execution. There are zero actual model/image/actor/render calls. This run supplies no product-effect or formal-budget consumption evidence.
 - Formal same-root M02 continuation still requires original persisted state, genuine full-live-export → release → next-read chain, exact final managed installation admission/review, remaining legal budget and actual Root observations. Human Owner/audience and PowerPoint acceptance remain separate and outstanding.
 - Dedicated/ordinary remote CI outcomes and PR120 integration are owned by the parent; no merge, release or PR update was performed by this reviewer.
