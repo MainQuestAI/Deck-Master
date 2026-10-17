@@ -93,7 +93,9 @@ def tight_table(tmp_path, anchor, gap, *, multiline=False, name='tight'):
     font = ImageFont.truetype(str(host_fonts()[resolve_host_font()]), size=1000)
     left, right = (700, 1240) if multiline else (260, 700)
     for line in list(text) if multiline else [text]:
-        width = font.getlength(line.text) / 1000 * 24
+        # Place visible glyphs, not trailing separator whitespace, at the
+        # intended distance from the rule. Keep the source text unchanged.
+        width = font.getlength(line.text.rstrip()) / 1000 * 24
         x = {'start': right-width-gap, 'middle': right-width/2-gap, 'end': left+width+gap}[anchor]
         line.set('x', str(x))
     text.set('text-anchor', anchor)

@@ -294,15 +294,22 @@ def test_fault_before_each_publish_preserves_prefix_and_never_exposes_partial_ev
 
 
 def test_actual_short_write_failure_cannot_publish_partial_journal(setup, monkeypatch):
-    f=setup; before=prefix(f); actual=os.write; count=0
+    f=setup; before=prefix(f); actual=os.write; actual_open=os.open; count=0
+    journal_fds=set()
+    def track_open(path,*args,**kwargs):
+        fd=actual_open(path,*args,**kwargs)
+        target=Path(path)
+        if target.parent==f['run']/'journal' and target.name.startswith('.pending-'):
+            journal_fds.add(fd)
+        return fd
     def fail(fd,raw):
         nonlocal count
-        name=os.readlink('/proc/self/fd/'+str(fd))
-        if '/journal/.pending-' in name:
+        if fd in journal_fds:
             count+=1
             if count==1:return actual(fd,raw[:9])
             raise OSError('interrupted partial journal write')
         return actual(fd,raw)
+    monkeypatch.setattr(os,'open',track_open)
     monkeypatch.setattr(os,'write',fail)
     with pytest.raises(OSError):release(f)
     assert count==2 and prefix(f)==before and len(f['journal'].events())==12
