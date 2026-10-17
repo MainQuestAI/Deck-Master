@@ -109,3 +109,73 @@ def test_edit_preview_passes_real_immutable_plan_to_budget_without_manual_id(tmp
             assert errors == []
         finally:
             browser.close();server.stop()
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('recovery', ['reopen', 'reload', 'late_preview'])
+@pytest.mark.parametrize('width', [1440, 390])
+def test_frozen_budget_request_recovers_without_a_new_valid_preview(tmp_path, recovery, width):
+    path, store = project(tmp_path, intent='edit')
+    server = WorkbenchServer(path)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox'])
+        page = browser.new_page(viewport={'width': width, 'height': 900})
+        errors = []; page.on('pageerror', lambda error: errors.append(str(error)))
+        try:
+            page.goto(server.start())
+            page.get_by_role('checkbox', name='选择第 01 页', exact=True).check()
+            page.get_by_role('textbox', name='所选页的制作要求', exact=True).fill('Synthetic one-page repair.')
+            page.get_by_role('button', name='按所选页设置调用上限', exact=True).click()
+            page.get_by_role('button', name='预览所选页试作', exact=True).click()
+            page.get_by_role('button', name='查看这次修改的制作预算', exact=True).click()
+            dialog = page.get_by_role('dialog', name='记录制作预算')
+            confirm = dialog.get_by_role('button', name='确认记录制作预算', exact=True)
+            expect(confirm).to_be_enabled()
+            dialog.get_by_label('本次明确要求（必填）').fill('Authorize exactly this bounded synthetic image edit.')
+            requests = []
+
+            def lose_response(route):
+                requests.append(route.request.post_data_json)
+                response = route.fetch()
+                assert response.status == 200, response.text()
+                route.abort()
+
+            page.route('**/collaboration/authorizations', lose_response, times=1)
+            before = store.load_document()
+            confirm.click()
+            expect(dialog.get_by_role('button', name='核实并重试原请求', exact=True)).to_be_enabled()
+            committed = store.load_document()
+            assert len(committed['collaboration']['authorizations']) == len(before['collaboration']['authorizations'])+1
+            delayed = []
+            if recovery == 'reload':
+                page.reload()
+                page.get_by_role('button', name='查看本次工作与范围', exact=True).click()
+                page.get_by_role('button', name='查看制作预算', exact=True).click()
+            else:
+                dialog.get_by_role('button', name='关闭', exact=True).click()
+                if recovery == 'late_preview':
+                    def hold_preview(route):
+                        delayed.append((route, route.fetch()))
+                    page.route('**/collaboration/budget-preview', hold_preview, times=1)
+                page.get_by_role('button', name='查看这次修改的制作预算', exact=True).click()
+            dialog = page.get_by_role('dialog', name='记录制作预算')
+            if recovery == 'reopen':
+                expect(dialog).to_contain_text('本次要求有未满足的字段或范围')
+            dialog.get_by_role('combobox', name='恢复本机的请求文字', exact=True).select_option('0')
+            retry = dialog.get_by_role('button', name='核实并重试原请求', exact=True)
+            expect(retry).to_be_enabled()
+            if recovery == 'late_preview':
+                assert len(delayed) == 1
+                with page.expect_response('**/collaboration/budget-preview'):
+                    delayed[0][0].fulfill(response=delayed[0][1])
+                expect(dialog).to_contain_text('本次要求有未满足的字段或范围')
+                expect(retry).to_be_enabled()
+            with page.expect_request('**/collaboration/authorizations') as retried:
+                retry.click()
+            assert retried.value.post_data_json == requests[0]
+            expect(dialog).to_contain_text('请求已记录')
+            assert store.load_document() == committed
+            assert committed['pages'] == before['pages'] and committed['tasks'] == before['tasks']
+            assert errors == []
+        finally:
+            browser.close(); server.stop()

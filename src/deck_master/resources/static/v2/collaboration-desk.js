@@ -81,7 +81,7 @@ function instructionBuffer(app, action) {
   return buffer;
 }
 
-function controlForm(app, {title, action, path, body, explanation, build, initial = '', baseRevision, onSuccess}) {
+function controlForm(app, {title, action, path, body, explanation, build, initial = '', baseRevision, onSuccess, canSubmitNew=()=>true}) {
   if (document.querySelector('#modal')?.open) return;
   const base_revision = app.info.control_revision_id || app.info.revision_id;
   const instruction = instructionBuffer(app, action); instruction.input.value = initial;
@@ -90,6 +90,7 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
   const form = el('form', {class: 'stack'}, el('p', {}, explanation), fields, instruction.node, status);
   let pending = null, sending = false;
   const submit = button('确认' + title, () => form.requestSubmit(), true);
+  const refreshSubmit=()=>{submit.disabled=sending||(!pending&&!canSubmitNew());};
   const dialog = modal(title, form, [submit], {protectDraft: true});
   instruction.onRestore=copy=>{
     if(copy.pending&&copy.pending.path!==projectAPI(app)+path){
@@ -100,9 +101,10 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
     submit.hidden=false;
     submit.textContent=pending?'核实并重试原请求':'确认'+title;
     status.replaceChildren(...(pending?[el('p',{},'已恢复待核实的原请求。版本、范围、操作编号均保持原样，不按当前表单重新提交。'),details('已冻结的原请求',pending)]:[]));
+    refreshSubmit();
   };
   form.addEventListener('submit', async event => {
-    event.preventDefault(); if (sending) return;
+    event.preventDefault(); if (sending||(!pending&&!canSubmitNew())) return;
     if (!instruction.input.value.trim()) { instruction.input.reportValidity(); return; }
     sending = true; submit.disabled = true; fields.disabled = true; instruction.lock(true); instruction.save();
     try {
@@ -139,9 +141,10 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
           status.append(button('保留输入并读取当前状态', () => { instruction.save(); dialog.close(); app.loadRoute({...app.route}); }));
         }
       }
-    } finally { sending = false; submit.disabled = false; }
+    } finally { sending = false; refreshSubmit(); }
   });
-  return {dialog,submit,instruction,status};
+  refreshSubmit();
+  return {dialog,submit,instruction,status,refreshSubmit};
 }
 
 export async function requestForm(app, {source = null, transition = null} = {}) {
@@ -226,6 +229,7 @@ export function budgetForm(app, {changePlanId=null}={}) {
   const form=controlForm(app,{title:'记录制作预算',action:'grant',path:'/collaboration/authorizations',body,
     explanation:'预算按本次明确制作范围和实际方案计算。每页首次调用至多一次，重试为零；已有费用与额度保留。整套制作或直接修改允许在所列范围内更新当前稿；局部试作只返回比较候选，采用需另有明确权限。先只读查看影响，再记录这次制作授权。',
     baseRevision:()=>preview?.control_revision_id,
+    canSubmitNew:()=>Boolean(preview&&!preview.blocked&&!preview.credit_problems?.length),
     build:instruction_evidence=>{
       if(!preview)throw Error('请先读取当前制作预算。');
       return {mode:'execute',actions:isEdit?['change.commit','dispatch.blueprint']:['dispatch.blueprint'],
@@ -236,9 +240,8 @@ export function budgetForm(app, {changePlanId=null}={}) {
     onSuccess:(result,response,{dialog,status})=>{
       if(isEdit)status.append(button('读取当前版本并重新预览修改',()=>{dialog.close();app.go({...app.route,revision:response.control_revision_id});}));
     }});
-  form.submit.disabled=true;
   async function read(){
-    const token=++serial;preview=null;form.submit.disabled=true;
+    const token=++serial;preview=null;form.refreshSubmit();
     status.replaceChildren(el('p',{},'正在只读计算范围和已有额度；未派发任务。'));
     try{
       const value=resultOf(await post(projectAPI(app)+'/collaboration/budget-preview',{
@@ -250,7 +253,7 @@ export function budgetForm(app, {changePlanId=null}={}) {
         value.credit_problems?.length>0&&el('p',{class:'field-error'},'已有页面额度被预留或消费，重复授权不会刷新。'),
         value.scope_gaps?.length>0&&el('p',{class:'field-error'},'方案包含范围外页面或图层，请先处理明确缺口。'),
         details('计算依据与逐页额度',value));
-      form.submit.disabled=Boolean(value.blocked||value.credit_problems?.length);
+      form.refreshSubmit();
     }catch(error){if(token===serial)status.replaceChildren(admissionView(app,error));}
   }
   body.prepend(button('只读计算制作预算',read,false,{disabled:isEdit&&!changePlanId}));
