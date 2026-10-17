@@ -15,6 +15,13 @@ from test_native_table_geometry import PID, atom, page_fixture, svg_fixture
 pytestmark = pytest.mark.render
 
 
+def rendered_words(png):
+    data = subprocess.run(['pdftotext','-bbox',str(png.parent/'deck.pdf'),'-'],
+                          check=True,capture_output=True).stdout
+    return [(word.text, [float(word.get(key)) for key in ('xMin','yMin','xMax','yMax')])
+            for word in ET.fromstring(data).iter('{http://www.w3.org/1999/xhtml}word')]
+
+
 def tight_table(tmp_path, anchor, gap, *, multiline=False, name='tight'):
     page = page_fixture()
     root = ET.fromstring(svg_fixture(page))
@@ -58,12 +65,7 @@ def test_only_empty_slack_is_trimmed_with_alignment_anchor_preserved(tmp_path, a
     # verify actual word positions as well as exact native alignment anchors.
     first = render_deck(original.pptx_path, tmp_path / 'original-render', fonts=host_fonts())
     second = render_deck(compiled.pptx_path, tmp_path / 'trimmed-render', fonts=host_fonts())
-    def words(png):
-        data = subprocess.run(['pdftotext','-bbox',str(png.parent/'deck.pdf'),'-'],
-                              check=True,capture_output=True).stdout
-        return [(word.text, [float(word.get(key)) for key in ('xMin','yMin','xMax','yMax')])
-                for word in ET.fromstring(data).iter('{http://www.w3.org/1999/xhtml}word')]
-    a, b = words(first[0]), words(second[0])
+    a, b = rendered_words(first[0]), rendered_words(second[0])
     assert len(a) == len(b)
     for (text, old), (current, new) in zip(a, b):
         assert text == current
@@ -78,3 +80,12 @@ def test_true_glyph_overflow_is_still_refused(tmp_path, anchor, multiline):
     assert report['status'] == 'fail'
     assert any(item['code'] == 'table_cell_ownership_mismatch' and item['atom_id'] == identity
                for item in report['findings'])
+    rendered = render_deck(compiled.pptx_path, tmp_path/'overflow-render', fonts=host_fonts())
+    selected = [box for text, box in rendered_words(rendered[0])
+                if text in (('First','cue.') if multiline else ('Wait','10','ms'))]
+    assert selected
+    left, right = (700,1240) if multiline else (260,700)
+    if anchor == 'end':
+        assert min(box[0] for box in selected) < left*.75
+    else:
+        assert max(box[2] for box in selected) > right*.75
