@@ -235,7 +235,9 @@ def test_sub_authorization_cannot_exceed_parent(tmp_path):
         payload = {"mode": "execute", "actions": ["design.propose"],
                    "scope": _scope(layers=["design"]),
                    "parent_authorization_ref": parent_ref,
-                   "max_external_calls": 1, "instruction_evidence": _declared(store)}
+                   # This is a zero-call design proposal. Keep its numeric
+                   # bound legal so the independent scope negatives reach it.
+                   "max_external_calls": 0, "instruction_evidence": _declared(store)}
         payload.update(over)
         return collaboration.grant(project, input=payload,
                                    base_revision=store.load_document()["revision_id"],

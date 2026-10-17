@@ -3,6 +3,7 @@ import {el, button, version, icon} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {imageView} from './images.js';
 import {batchNames, batchExclusion, batchInput} from './batch-policy.js';
+import {budgetForm} from './collaboration-desk.js';
 
 export function batchActions(app, selected, onSelectionChange, {initialAction} = {}) {
   const pages = app.summary.pages, label = id => {
@@ -128,6 +129,7 @@ export function batchActions(app, selected, onSelectionChange, {initialAction} =
         el('ul', {}, result.plan.actions.map(item => el('li', {}, label(item.page_id) + ' · ' + batchNames[item.stage] + ' · 采用后更新：' + item.downstream.map(key => ({svg:'SVG', svg_preview:'SVG 预览', ppt_preview:'PPT 预览', deck_outputs:'整稿产物', quality_applicability:'检查依据'})[key] || key).join('、')))),
         el('p', {}, fixed && action.value === 'blueprint' ? '固定参考：' + label(fixed.page_id) + ' · ' + version(fixed.revision_id) : '本次不使用参考原图。'),
         el('p', {class: 'muted'}, '保存只创建待交接任务；返回候选后再决定采用。采用后将使下游预览、整稿及相关检查依据失效。'),
+        app.info.collaboration?.request?.intent==='edit'&&button('查看这次修改的制作预算',()=>budgetForm(app,{changePlanId:result.plan_id})),
         el('details', {}, el('summary', {}, '固定引用与完整影响'), el('pre', {class: 'evidence-json'}, JSON.stringify(result.plan, null, 2))));
     } catch (error) { if (!disposed && token === serial) impact.replaceChildren(el('p', {role: 'alert', class: 'field-error'}, readableError(error))); }
     finally { busy = false; if (!disposed) render(); }

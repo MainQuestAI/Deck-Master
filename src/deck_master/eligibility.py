@@ -917,12 +917,41 @@ def _authority_candidates(store: Store, document: dict, spec: ActionSpec,
     return candidates
 
 
+def _rank_authority_candidates(store, document, candidates, spec, *, task=None,
+                               count=None, candidate_count=0):
+    """Use the same actual budget choice at the gate and Task binding.
+
+    A zero-call planning parent cannot hide its usable execute child. Existing
+    Tasks retain their own numeric authority instead of borrowing another grant.
+    """
+    bound = binding_of(task or {}).get('authorization_ref')
+    if bound and spec.external_calls:
+        identity = store.read_object_json(bound)['authorization_id']
+        candidates = [item for item in candidates if item['record']['authorization_id'] == identity]
+    calls = count if isinstance(count, int) and not isinstance(count, bool) else int(spec.external_calls)
+    slots = candidate_count if isinstance(candidate_count, int) and not isinstance(candidate_count, bool) else 0
+
+    def priority(item):
+        usable = item['effective'] and item['covers'] and (item['mode'] == 'execute' or spec.authority in ('delegate', 'either'))
+        assurance_missing = (document.get('collaboration', {}).get('authority_policy') == 'verified_user'
+                             and item['assurance'] != 'verified_user')
+        fundable = usable
+        if usable and calls > 0:
+            budget = authorization_budget(store, document, item['ref'])
+            fundable = budget['state'] != 'unknown' and budget['remaining'] >= calls
+        if usable and slots > 0:
+            fundable = fundable and candidate_budget(store, document, item['ref'])['remaining'] >= slots
+        return (not usable, assurance_missing, not fundable, item['mode'] != 'execute')
+
+    return sorted(candidates, key=priority)
+
+
 def covering_authorization_ref(store: Store, document: dict, action: str,
-                                targets: dict | None) -> dict | None:
+                                targets: dict | None, *, count=None, candidate_count=0) -> dict | None:
     """The effective authorization covering one action's execution.
 
     The precise Ref a dispatched task carries as its binding's
-    ``authorization_ref``: the first effective, covering candidate the gate
+    ``authorization_ref``: the effective, covering, funded candidate the gate
     itself would choose for this action and target (CONTRACTS §3.2, §6.1.4),
     so revocation and budget attribution follow the grant the work actually
     runs under. Pure; ``None`` when no authorization names the action or covers
@@ -933,6 +962,8 @@ def covering_authorization_ref(store: Store, document: dict, action: str,
     except (ModelError, KeyError):
         return None
     candidates = _authority_candidates(store, document, spec, targets or {}, None)
+    candidates = _rank_authority_candidates(store, document, candidates, spec,
+                                           count=count, candidate_count=candidate_count)
     for candidate in candidates:
         if not candidate["effective"] or not candidate["covers"]:
             continue
@@ -1249,6 +1280,8 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         candidates = []
         if spec.authority in ("execute", "either", "delegate"):
             candidates = fixed_candidates if spec.delivery else _authority_candidates(store, control, spec, targets, task)
+            candidates = _rank_authority_candidates(store, control, candidates, spec, task=task,
+                count=context.get('count'), candidate_count=context.get('candidate_count', 0))
             usable = [c for c in candidates if c["effective"]
                       and (c["mode"] == "execute" or spec.authority in ("delegate", "either"))]
             covering = [c for c in usable if c["covers"]]

@@ -208,10 +208,52 @@ function stateDetails(app) {
       },false,{disabled:Boolean(app.info.sample?.readonly)})))),
     controlRecovery(app),requestControls(app),
     request&&!request.closed&&!app.info.sample?.readonly&&button('选择内容审阅方式',()=>{document.querySelector('#modal').close();reviewPolicyForm(app);}),
+    request&&!request.closed&&['full_deck','edit'].includes(request.intent)&&!app.info.sample?.readonly&&button('查看制作预算',()=>{document.querySelector('#modal').close();budgetForm(app);}),
     !app.info.sample?.readonly&&button('导入确认稿',()=>{document.querySelector('#modal').close();draftImportForm(app);}),
     app.health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',()=>{document.querySelector('#modal').close();externalReviewForm(app);}),
     details('当前控制与请求身份',{control_revision_id:app.info.control_revision_id,reading_revision_id:app.route.revision,...state}));
   modal('本次工作与范围',body);
+}
+
+export function budgetForm(app, {changePlanId=null}={}) {
+  const request=app.info.collaboration.request,isEdit=request.intent==='edit';
+  const template=isEdit?'edit_rebuild_per_page':'initial_per_page';
+  const status=el('div',{class:'stack',role:'status'});
+  const body=el('div',{class:'stack'},isEdit&&el('p',{},changePlanId?
+    '使用刚才修改影响预览的固定方案。记录预算后，保留修改要求并按当前版本重新预览，再交接任务。':
+    '先在所选页制作或已保存意见中预览修改影响，再从该预览打开制作预算。无需填写方案编号。'),status);
+  let preview=null,serial=0;
+  const form=controlForm(app,{title:'记录制作预算',action:'grant',path:'/collaboration/authorizations',body,
+    explanation:'预算按本次明确制作范围和实际方案计算。每页首次调用至多一次，重试为零；已有费用与额度保留。局部试作先返回有界比较候选，采用仍需已有的明确权限。先只读查看影响，再记录这次制作授权。',
+    baseRevision:()=>preview?.control_revision_id,
+    build:instruction_evidence=>{
+      if(!preview)throw Error('请先读取当前制作预算。');
+      return {mode:'execute',actions:isEdit?['change.commit','dispatch.blueprint']:['dispatch.blueprint'],
+        scope:preview.scope,budget_template:template,plan_ref:preview.plan_ref,
+        ...(isEdit?{change_plan_id:changePlanId,max_candidate_count:preview.max_candidate_count}:{}),instruction_evidence};
+    },
+    onSuccess:(result,response,{dialog,status})=>{
+      if(isEdit)status.append(button('读取当前版本并重新预览修改',()=>{dialog.close();app.go({...app.route,revision:response.control_revision_id});}));
+    }});
+  form.submit.disabled=true;
+  async function read(){
+    const token=++serial;preview=null;form.submit.disabled=true;
+    status.replaceChildren(el('p',{},'正在只读计算范围和已有额度；未派发任务。'));
+    try{
+      const value=resultOf(await post(projectAPI(app)+'/collaboration/budget-preview',{
+        budget_template:template,...(isEdit?{change_plan_id:changePlanId}: {})}));
+      if(token!==serial)return;
+      preview=value;
+      status.replaceChildren(el('p',{},value.display),scopeView(app,value.scope),
+        isEdit&&el('p',{},`比较候选上限 ${value.max_candidate_count} 个；采用仍需已有的明确权限。`),
+        value.credit_problems?.length>0&&el('p',{class:'field-error'},'已有页面额度被预留或消费，重复授权不会刷新。'),
+        value.scope_gaps?.length>0&&el('p',{class:'field-error'},'方案包含范围外页面或图层，请先处理明确缺口。'),
+        details('计算依据与逐页额度',value));
+      form.submit.disabled=Boolean(value.blocked||value.credit_problems?.length);
+    }catch(error){if(token===serial)status.replaceChildren(admissionView(app,error));}
+  }
+  body.prepend(button('只读计算制作预算',read,false,{disabled:isEdit&&!changePlanId}));
+  if(!isEdit||changePlanId)read();
 }
 
 async function reviewPolicyForm(app) {

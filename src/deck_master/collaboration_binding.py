@@ -326,7 +326,8 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
                write_scope: dict | None = None, adoption_policy: str = "within_scope",
                authorization_ref: dict | None = None, decision_refs=(),
                page_ids=None, action: str | None = None,
-               action_targets: dict | None = None) -> dict:
+               action_targets: dict | None = None, candidate_count=0,
+               external_call_count=None) -> dict:
     """Attach the binding to a task about to be dispatched.
 
     ``action`` names the service action this task executes under. When the
@@ -352,7 +353,9 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
         targets = action_targets or {"page_ids": scope.get("page_ids") or [],
                                      "layers": scope.get("layers") or []}
         authorization_ref = eligibility.covering_authorization_ref(store, document, action,
-                                                                    targets)
+            targets, candidate_count=candidate_count,
+            count=external_call_count if external_call_count is not None
+                  else (1 if task.get('cost_class') == 'external_generation' else None))
     binding = build_binding(store, document, phase=phase, executor_type=executor_type,
                             write_scope=scope, adoption_policy=adoption_policy,
                             authorization_ref=authorization_ref, decision_refs=decision_refs,

@@ -240,7 +240,7 @@ def commit(project, *, plan_id, base_revision, operation_id):
                     'layers': ['page_copy', 'plan'],
                     'allow_page_membership_change': action in ('merge', 'split'), 'allow_page_order_change': False}
                 authority = eligibility.covering_authorization_ref(store, doc, 'content.operation',
-                    {'page_ids': ids, 'layers': ['page_copy', 'plan']})
+                    {'page_ids': ids, 'layers': ['page_copy', 'plan']}, candidate_count=int(trial))
                 task['collaboration_binding'] = collaboration_binding.build_binding(store, doc,
                     phase='page_copy', executor_type='host', write_scope=scope,
                     adoption_policy='candidate_only' if trial else 'within_scope', authorization_ref=authority,

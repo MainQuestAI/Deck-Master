@@ -362,3 +362,54 @@ def test_explicit_empty_scope_object_never_defaults_to_whole_request(tmp_path,em
         'operation_id':str(uuid.uuid4())})
     assert (http,code)==(400,2)
     assert store.load_document()==before
+
+
+def test_fixed_manifest_zero_call_delegate_materializes_a_real_executable_child(tmp_path):
+    path,store=project(tmp_path)
+    scope=_scope(subject='deck',page_ids=[],page_manifest_ref=store.load_document()['content_plan'])
+    parent=_grant(path,store,mode='delegate',actions=('dispatch.blueprint',),scope=scope,
+        max_external_calls=0,operation_id='L1-zero-call-fixed-delegate')
+    child=collaboration_budget.materialize_execution(path,parent_authorization_ref=parent['authorization_ref'],
+        budget_template='initial_per_page',base_revision=store.current_revision_id(),
+        operation_id='L1-zero-call-execute-child',instruction_evidence=_declared(store))
+    doc=store.load_document();task=service.open_blueprint_task(store,doc,doc['pages'][0])
+    assert task['collaboration_binding']['authorization_ref']==child['authorization_ref']
+    assert task['collaboration_binding']['budget_key'].endswith(':initial:p1')
+    spend(path,store,task)
+    assert eligibility.authorization_budget(store,store.load_document(),parent['authorization_ref'])['ceiling']==0
+    assert eligibility.authorization_budget(store,store.load_document(),child['authorization_ref'])['used']==1
+
+
+def test_old_zero_execute_does_not_shadow_new_explicit_positive_grant(tmp_path):
+    path,store=project(tmp_path)
+    original=_grant(path,store,actions=('dispatch.blueprint',),max_external_calls=0,
+        operation_id='L1-old-zero-execute')
+    current=grant(path,store,instruction_evidence={'kind':'host_attested_instruction',
+        'text':'Explicit new L1 full-deck production authority: use the fixed per-page budget once.',
+        'source_locator':'L1:new-budget-source'})
+    doc=store.load_document();task=service.open_blueprint_task(store,doc,doc['pages'][0])
+    assert task['collaboration_binding']['authorization_ref']==current['authorization_ref']
+    spend(path,store,task)
+    assert eligibility.authorization_budget(store,store.load_document(),original['authorization_ref'])['used']==0
+    assert eligibility.authorization_budget(store,store.load_document(),current['authorization_ref'])['used']==1
+
+
+def test_bound_task_cannot_borrow_new_larger_grant_but_its_last_held_call_can_finish(tmp_path):
+    path,store=project(tmp_path)
+    original=_grant(path,store,actions=('dispatch.blueprint',),max_external_calls=1,
+        operation_id='L1-original-one-call')
+    doc=store.load_document();task=service.open_blueprint_task(store,doc,doc['pages'][0])
+    assert task['collaboration_binding']['authorization_ref']==original['authorization_ref']
+    added=_grant(path,store,actions=('dispatch.blueprint',),max_external_calls=10,
+        operation_id='L1-explicit-extra-grant',instruction_evidence={
+            'kind':'host_attested_instruction','text':'Explicit new L1 extra bounded authority; retain prior Task bindings.',
+            'source_locator':'L1:explicit-extra-source'})
+    before=store.load_document()
+    with pytest.raises(eligibility.EligibilityBlocked) as failure:
+        tasks.allocate_call_allowances(store,task_id=task['task_id'],count=1)
+    assert 'budget_exhausted' in failure.value.payload()['error']['reason_codes']
+    assert store.load_document()==before
+    assert eligibility.authorization_budget(store,before,added['authorization_ref'])['used']==0
+    spend(path,store,task)
+    assert eligibility.authorization_budget(store,store.load_document(),original['authorization_ref'])['used']==1
+    assert eligibility.authorization_budget(store,store.load_document(),added['authorization_ref'])['used']==0

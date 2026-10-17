@@ -182,9 +182,14 @@ def commit(project, *, plan_id, base_revision, operation_id):
         # covered by an authorization before any task or allowance is created.
         from . import eligibility
         eligibility.guard(store, document, "change.commit", context={
+            "count": record['max_calls'],
             "candidate_count": sum(action.get('mode') == 'trial' for action in record['actions']),
             "targets": {"page_ids": [action['page_id'] for action in record['actions']],
                         "layers": _plan_layers(record)}})
+        authorization_ref = eligibility.covering_authorization_ref(store, document, 'change.commit',
+            {'page_ids': [action['page_id'] for action in record['actions']], 'layers': _plan_layers(record)},
+            count=record['max_calls'],
+            candidate_count=sum(action.get('mode') == 'trial' for action in record['actions']))
         active = [store.read_object_json(ref) for ref in document['tasks']]
         for action in record['actions']:
             if action.get('mode') == 'trial':
@@ -206,7 +211,8 @@ def commit(project, *, plan_id, base_revision, operation_id):
             require_writer(updated, 'candidates.v1')
         updated['changes'] = [*document.get('changes', []), change_ref]
         for task_id, action in zip(task_ids, record['actions']):
-            task = _new_task(store, updated, document, record, change_ref, task_id, action)
+            task = _new_task(store, updated, document, record, change_ref, task_id, action,
+                             authorization_ref=authorization_ref)
             updated['tasks'].append(store.put_json_object(task))
         if any(action['kind'] == 'blueprint' for action in record['actions']):
             from .models import require_writer
@@ -217,7 +223,7 @@ def commit(project, *, plan_id, base_revision, operation_id):
                                         operation_id=operation_id, kind='changes.commit', digest=digest, result=result)
 
 
-def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
+def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, authorization_ref=None):
     entry = next(e for e in basis['pages'] if e['page_id'] == action['page_id'])
     inputs = [ref for key, ref in entry.items() if key != 'page_id' and ref] + [change_ref]
     protocol = {'protocol_version': 'changes.v1', 'required_capabilities': ['change_plan']}
@@ -264,6 +270,8 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action):
         store, basis, task, phase="production", executor_type="host",
         page_ids=[action["page_id"]],
         adoption_policy="candidate_only" if action.get("mode") == "trial" else "within_scope",
+        authorization_ref=authorization_ref,
+        candidate_count=int(action.get('mode') == 'trial'), external_call_count=action['max_calls'],
         action="change.commit",
         action_targets={"page_ids": [action["page_id"]], "layers": _plan_layers({"actions": [action]})})
     # Reserve on the prospective complete Document so the whole batch observes
