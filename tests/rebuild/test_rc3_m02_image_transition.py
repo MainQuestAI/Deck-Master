@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import sys
+import sysconfig
 import uuid
 from pathlib import Path
 
@@ -53,6 +54,15 @@ def test_real_own_wheel_six_scenarios_run_in_isolated_interpreter(tmp_path):
         shutil.copyfile(wheel, out / wheel.name)
         checked(out, "venv", [sys.executable, "-I", "-B", "-m", "venv", "--system-site-packages", str(prefix)], env=env)
         python = prefix / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        # --system-site-packages cannot see dependencies when pytest itself
+        # runs in a venv. Add its site directory as a plain path (do not run
+        # its .pth files). The own installed Runtime precedes it and the child
+        # checks every Runtime/resource byte against the wheel and Source.
+        if sys.prefix != sys.base_prefix:
+            layout = checked(out, "prefix-layout", [str(python), "-I", "-B", "-c",
+                "import sysconfig; print(sysconfig.get_path('purelib'))"], env=env)
+            site = Path(layout.stdout.decode().strip())
+            (site / "s12-test-dependencies.pth").write_text(sysconfig.get_path("purelib") + "\n")
         checked(out, "install", [str(python), "-I", "-B", "-m", "pip", "install", "--ignore-installed", "--no-deps",
             "--no-compile", "--disable-pip-version-check", str(wheel)], env=env)
         checked(out, "actual-own-wheel-probe", [str(python), "-I", "-B", str(PROBE), "--wheel", str(wheel),

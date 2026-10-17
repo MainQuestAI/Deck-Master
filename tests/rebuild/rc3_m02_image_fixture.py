@@ -73,6 +73,9 @@ def seed(root, installation):
     m.instruction(hist, state, old, "common", trigger["path"])
     common_argument(hist, state, old)
     args = declare_and_start(hist, state, old, trigger)
+    # This neutral fixture submits two actual Pages. Declare exactly those
+    # targets before opening the Request; retain the SDK's normal scope guard.
+    args["input"]["scope"]["page_ids"] = old["scopes"]["live"]["page_ids"]
     args["input"]["scope"]["layers"] = ["narrative", "plan", "page_copy", "speech", "design", "blueprint", "svg", "review", "output"]
     m.start_variant(hist, state, old, "live", args)
     compose_two(state["project"], store, "live")
@@ -221,12 +224,20 @@ class TransitionFixture:
             mappings.append({"dispatch_sha256": dispatch["sha256"], "scope_slot": "M02--live", "leaf_id": "M02-live-0" + str(i),
                 "project_id": self.state["project_id"], "project": self.state["project"], "actual_request_id": row["actual_request_id"],
                 "instruction_occurrence_sha256": self.protocol["sha256"], "budget_root_id": row["budget_root_id"], "allowance_id": row["allowance_id"]})
+        # Real historical registrations pin paths as well as bytes. Keep their
+        # exact helpers in a different directory from the new companion.
+        frozen_helpers = root / "original-helpers"
+        for name in ("controller.py", "image_controller.py", "image_event_controller.py"):
+            c.write_once(frozen_helpers / name, TOOL.with_name(name).read_bytes())
+        spec = importlib.util.spec_from_file_location("s12_fixture_original_event", frozen_helpers / "image_event_controller.py")
+        original_event = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(original_event)
         original = {"format": s12.e.FORMAT, "status": s12.e.ENGINEERING, "controller_sha256": s12.EVENT_SHA,
-            "sdk_controller": c.reference(TOOL.with_name("controller.py")), "bf_primitives": c.reference(TOOL.with_name("image_controller.py")),
+            "sdk_controller": c.reference(frozen_helpers / "controller.py"), "bf_primitives": c.reference(frozen_helpers / "image_controller.py"),
             "policy": policy, "protocol": self.protocol, "admission_review": self.protocol, "activation": activation,
             "installations": {"B": c.read(self.cfg["predecessor"]["registration"]["path"])["installation"]}, "legacy_mapping": mappings}
         original_ref = s12.e.save(root / "original-image-registration.json", original)
-        s12.e.initialize_epoch(original_ref["path"], self.ledger)
+        original_event.initialize_epoch(original_ref["path"], self.ledger)
         _, _, _, frontier = s12.original_epoch(self.ledger)
         rows = s12.e._records(self.ledger, frontier)
         value = {"format": s12.FORMAT, "status": s12.e.ENGINEERING, "companion_sha256": c.digest(IMAGE_TOOL.read_bytes()),

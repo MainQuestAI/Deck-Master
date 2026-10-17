@@ -69,13 +69,12 @@ def events(journal, kind):
     return [x["data"] for x in journal.events() if x["kind"] == kind]
 
 
-def original_epoch(root):
-    """The frozen loader pins sibling paths as well as hashes.
+def original_event(config):
+    """Resolve frozen dependencies at their original registered paths.
 
     Load only the original registered, exact helper sibling, not an old
     Runtime or a caller-selected API. Never rewrite the original registration.
     """
-    config = read(root / "event-registration.json")
     require(config.get("controller_sha256") == EVENT_SHA, "original event identity required")
     for key, sha in (("sdk_controller", e.COMMON_SHA), ("bf_primitives", e.PRIMITIVES_SHA)):
         c.check_ref(config[key])
@@ -86,7 +85,12 @@ def original_epoch(root):
     spec = importlib.util.spec_from_file_location("s12_original_epoch", path)
     original = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(original)
-    return original.load(root)
+    return original
+
+
+def original_epoch(root):
+    config = read(root / "event-registration.json")
+    return original_event(config).load(root)
 
 
 def protected_frontier(root, rows, *, initial=True):
@@ -489,7 +493,7 @@ def mark(values, leaf, bootstrap):
     root, config, policy, frontier, rows = values[:5]
     dest, prepared = preparation(values, leaf)
     require(not (dest / "dispatch-mark.json").exists(), "already charged; uncertain calls never resend")
-    boot = b.bootstrap(config, bootstrap)
+    boot = original_event(config).b.bootstrap(config, bootstrap)
     actual = rights(values, prepared["scope_binding"])
     require(all(actual[k] == prepared[k] for k in ("binding", "identity", "tool_arguments", "reference_snapshots")), "current rights/inputs changed")
     b.unchanged_references(prepared["reference_snapshots"])
@@ -517,7 +521,7 @@ def seal(values, leaf, callback, bootstrap):
             source = Path(data[key]["path"])
             if source.is_file() and not source.is_symlink():
                 c.write_once(dest / ("raw-first-" + key), source.read_bytes())
-    boot = b.bootstrap(config, bootstrap)
+    boot = original_event(config).b.bootstrap(config, bootstrap)
     from deck_master import capabilities
     require(capabilities.installation_identity() == prepared["identity"], "actual scoped installation changed")
     marker = read(dest / "dispatch-mark.json")
