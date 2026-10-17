@@ -644,7 +644,7 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         updated_region = {**region, "decisions": updated_refs}
         updated = {**document, "collaboration": updated_region}
         from .content_review import apply_requirement_decision
-        updated = apply_requirement_decision(store, updated, decision, decision_ref)
+        updated = apply_requirement_decision(store, updated, decision, decision_ref, previous_document=document)
         return commit_collaboration_change(store, document, operation_id=operation_id,
                                                 action=ACTION_DECISION_RECORD, digest=digest,
                                                 description=f"record decision {decision_id} ({topic})",

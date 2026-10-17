@@ -1201,7 +1201,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
     protocol = design_handoff_protocol_fields(store, document, entries) if review_stage != 'preproduction' else {}
     for ref in document['tasks']:
         task = store.read_object_json(ref)
-        if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running') and all(task.get(key) == value for key, value in protocol.items()):
+        if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running') and (task.get('collaboration_binding') or {}).get('executor_type', 'host') == (executor_type or 'host') and all(task.get(key) == value for key, value in protocol.items()):
             return task
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]

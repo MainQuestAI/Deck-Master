@@ -134,7 +134,7 @@ def _quality_scope_covered(store, document, decision):
              or _page_coverage_from_binding(store, request, targets, None, document))
 
 
-def apply_requirement_decision(store, document, decision, decision_ref):
+def apply_requirement_decision(store, document, decision, decision_ref, *, previous_document):
     """Atomically bind an explicit policy choice through the normal decision API.
 
     Defaults, proposals and unrelated policy records never select self-review.
@@ -156,7 +156,7 @@ def apply_requirement_decision(store, document, decision, decision_ref):
     updated = {**document, "collaboration": {**region, "quality_profile": {
         "content_review_requirement": requirement, "requirement_origin": "explicit_decision",
         "override_decision_ref": decision_ref}}}
-    if quality_profile(document).get("content_review_requirement") != requirement:
+    if requirement_state(store, previous_document)["effective"] != requirement:
         refs = []
         for ref in document.get("tasks") or []:
             task = store.read_object_json(ref)
