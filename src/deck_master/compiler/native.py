@@ -111,7 +111,9 @@ def _trim_table_text_slack(grid_shapes, text_boxes, page_id):
         if len(matches) != 1:
             continue
         cells = [(round(left*9525), round(right*9525)) for left, right in zip(matches[0], matches[0][1:])
-                 if round(left*9525) < anchor < round(right*9525)]
+                 if (round(left*9525) <= anchor < round(right*9525) if source['anchor'] == 'start'
+                     else round(left*9525) < anchor <= round(right*9525) if source['anchor'] == 'end'
+                     else round(left*9525) < anchor < round(right*9525))]
         if len(cells) != 1:
             continue
         left, right = cells[0]

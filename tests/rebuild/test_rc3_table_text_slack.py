@@ -22,6 +22,53 @@ def rendered_words(png):
             for word in ET.fromstring(data).iter('{http://www.w3.org/1999/xhtml}word')]
 
 
+@pytest.mark.parametrize('anchor', ['start', 'end'])
+@pytest.mark.parametrize('multiline', [False, True])
+def test_column_boundary_anchor_trims_only_empty_slack(tmp_path, anchor, multiline):
+    page = page_fixture()
+    root = ET.fromstring(svg_fixture(page))
+    identity = atom('gamma', 'context') if multiline else atom('alpha', 'action')
+    text = next(e for e in root.iter() if e.get('data-atom-id') == identity)
+    font = ImageFont.truetype(str(host_fonts()[resolve_host_font()]), size=1000)
+    left, right = (700, 1240) if multiline else (260, 700)
+    # Fill the cell with visible glyphs at the ordinary body size; only the
+    # emitter's extra 1em crosses the rule. No platform-specific font required.
+    lines = list(text) if multiline else [text]
+    value = 'boundaryglyph ' * 20
+    while font.getlength(value)/1000*24 > right-left-10:
+        value = value[:-1]
+    value = value.rstrip()
+    row, column = ('gamma', 'context') if multiline else ('alpha', 'action')
+    table = page['customer_visible']['body_blocks'][0]
+    cell = next(cell for item in table['rows'] if item['id'] == row
+                for cell in item['cells'] if cell['column_id'] == column)
+    cell['display_text'] = ' '.join([value]*len(lines))
+    text.set('text-anchor', anchor)
+    for index, line in enumerate(lines):
+        line.text = value + (' ' if index < len(lines)-1 else '')
+        line.set('x', str(left if anchor == 'start' else right))
+    path = tmp_path/'boundary.svg'; path.write_bytes(ET.tostring(root))
+    source = parse_svg(path.read_bytes(), page_id=PID)
+    compiled = compile_deck([SvgInput(PID, path, page['speaker_notes'])],
+                            CompileOptions(fonts=host_fonts()), tmp_path/'boundary')
+    report = readback(compiled.pptx_path, [source], [page])
+    assert report['status'] == 'pass', report
+    carriers = [shape for shape in Presentation(compiled.pptx_path).slides[0].shapes
+                if shape.name == identity]
+    assert len(carriers) == len(lines)
+    for carrier in carriers:
+        position = carrier.left if anchor == 'start' else carrier.left+carrier.width
+        assert position == round((left if anchor == 'start' else right)*9525)
+        assert carrier.left >= round(left*9525)
+        assert carrier.left+carrier.width <= round(right*9525)
+    rendered = render_deck(compiled.pptx_path, tmp_path/'boundary-render', fonts=host_fonts())
+    expected = {word for line in lines for word in line.text.split()}
+    selected = [box for word, box in rendered_words(rendered[0]) if word in expected]
+    assert selected
+    assert min(box[0] for box in selected) >= left*.75-.075
+    assert max(box[2] for box in selected) <= right*.75+.075
+
+
 def test_table_can_share_slide_with_unbound_caption_text(tmp_path):
     page = page_fixture()
     root = ET.fromstring(svg_fixture(page))
