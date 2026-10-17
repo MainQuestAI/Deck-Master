@@ -303,12 +303,26 @@ def prepare_grant(store, document, authorization, input):
             ceiling = min(ceiling, parent["max_external_calls"])
         authorization["budget_parent_ref"] = parent_ref
     # Repeated grants share the first numeric root, even with new IDs/Plans.
+    previous_candidate_ceiling = None
     for ref, other in eligibility._authorization_heads(store, document):
         if other.get("request_id") == authorization["request_id"] and other.get("budget_template") == template \
                 and (other.get("constraints") or {}).get("fixed_budget"):
             authorization["budget_parent_ref"] = ref
+            previous_candidate_ceiling = other["max_candidate_count"]
             ceiling = min(ceiling, other["max_external_calls"])
             break
+    if "max_candidate_count" in plan:
+        candidate_ceiling = plan["max_candidate_count"]
+        if previous_candidate_ceiling is not None:
+            candidate_ceiling = min(candidate_ceiling, previous_candidate_ceiling)
+        if "max_candidate_count" in input:
+            explicit = input["max_candidate_count"]
+            if not isinstance(explicit, int) or isinstance(explicit, bool) or explicit < 0:
+                raise ModelError("authorization/max_candidate_count", "must be a nonnegative integer")
+            candidate_ceiling = min(candidate_ceiling, explicit)
+        if parent_ref:
+            candidate_ceiling = min(candidate_ceiling, parent["max_candidate_count"])
+        authorization["max_candidate_count"] = candidate_ceiling
     authorization["max_external_calls"] = ceiling
     plan["computed_upper_bound"] = plan.get("computed_upper_bound", plan["max_external_calls"])
     plan["max_external_calls"] = ceiling
@@ -350,9 +364,9 @@ def materialize_execution(project, *, parent_authorization_ref=None, plan_ref=No
         "parent_authorization_ref": parent_authorization_ref,
         "adoption_policy": parent.get("adoption_policy", "candidate_only"),
         "delivery_binding": parent.get("delivery_binding", "none"),
-        "max_candidate_count": parent.get("max_candidate_count", 0),
         "instruction_evidence": instruction_evidence}
     if not budget_template:
+        payload["max_candidate_count"] = parent.get("max_candidate_count", 0)
         payload["max_external_calls"] = len(scope["page_ids"])
     return collaboration.grant(project, input=payload, base_revision=base_revision,
         operation_id=operation_id, adapter_context=adapter_context)
