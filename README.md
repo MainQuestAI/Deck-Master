@@ -75,6 +75,9 @@ deck-master inputs update --project ./my-deck --patch update.json \
 
 ## Workbench
 
+RC3 的功能进度、试用入口及口播导出/审阅方式操作见
+[RC3 功能进度与试用](docs/rc3-tryout.md)。
+
 The workbench provides a project launcher, production overview, content and
 sources, gallery, style calibration, tasks and delivery. Each page retains its
 source, content, prompts, original image, SVG and PPT views. `deck-master view --open --project <dir>`
