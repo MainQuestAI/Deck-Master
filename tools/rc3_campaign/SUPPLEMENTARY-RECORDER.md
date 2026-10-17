@@ -151,6 +151,13 @@ historical-source quarantine is not silently imposed on unrelated profiles.
 
 ## Repair, image and selected-file boundaries
 
+PR120's local feedback repair separates scoped observation validation from
+the unaccepted-result reader. The four companion tools now pin the repaired
+recorder bytes exactly; none accepts arbitrary helper hashes. This is a new
+tool revision, not an in-place migration of historical registrations or
+admissions. Preserve old evidence and use its original Git revision for old
+tool replay; no historical result is relabeled as passing with this repair.
+
 `deliver-feedback` permits one accepted, actually observed feedback per original
 case. `repair-begin` validates actual feedback findings and necessary semantic
 layers, once per original case. `svg-repair-begin` needs an actual adopted

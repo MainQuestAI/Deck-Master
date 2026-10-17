@@ -20,7 +20,7 @@ import stat
 import sys
 import traceback
 
-SCOPED_SHA = "44210a2965d2a8e44a6de954996b69c3d14fb886ed0e7e6d16ed212e062bb7c9"
+SCOPED_SHA = "ce1b5a9f8deba92f7f2d468b2ddd977c9e2de1438d4bc32e2036eeb12da20cc0"
 COMMON_SHA = "d0b2b079afb7a714c4d7028b7e5eaa6be70cc0cef41db6c73d664c952f373261"
 SOURCE = Path(__file__).with_name("supplementary_recorder.py")
 if hashlib.sha256(SOURCE.read_bytes()).hexdigest() != SCOPED_SHA:

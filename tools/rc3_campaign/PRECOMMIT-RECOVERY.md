@@ -15,7 +15,8 @@ It is not a first-attempt success or a new sample.
 
 ## Fixed dependencies and supported boundary
 
-The tool verifies the sibling supplementary SHA `44210a2965d2a8e44a6de954996b69c3d14fb886ed0e7e6d16ed212e062bb7c9`
+The tool verifies the exact repaired sibling supplementary SHA recorded in
+`precommit_recovery.py` (`SCOPED_SHA`)
 before import; that file verifies sibling d0 SHA
 `d0b2b079afb7a714c4d7028b7e5eaa6be70cc0cef41db6c73d664c952f373261`.
 The original helper/registration/run bytes are not amended. Its own
