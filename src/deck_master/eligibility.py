@@ -572,6 +572,22 @@ def credit_state(store: Store, document: dict, budget_key: str, ceiling: int = 1
             "state": "available" if used < ceiling else "exhausted"}
 
 
+def _current_authorization_lineage(store, records, record):
+    """Current policy ancestry; independent of immutable numeric attribution."""
+    pending, identities = [record], set()
+    while pending:
+        current = pending.pop()
+        identity = current['authorization_id']
+        if identity in identities:
+            continue
+        identities.add(identity)
+        current = records.get(identity, current)
+        for key in ('parent_authorization_ref', 'budget_parent_ref'):
+            if current.get(key):
+                pending.append(store.read_object_json(current[key]))
+    return identities
+
+
 def authorization_budget(store: Store, document: dict, authorization_ref: dict, *, _quantity="max_external_calls") -> dict:
     """Derived budget state of one authorization and its shared budget root.
 
@@ -588,7 +604,7 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict, 
     for ref in document.get("tasks") or []:
         task = store.read_object_json(ref)
         identity = task_authorization_id(store, task)
-        if identity in chain_ids:
+        if identity is not None:
             if _quantity == "max_candidate_count":
                 count = (max(1, len(task.get("candidate_refs") or []))
                          if task.get("stage_request", {}).get("mode") == "trial"
@@ -596,7 +612,7 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict, 
             else:
                 count = sum(entry.get("state") in HELD_STATES for entry in task.get("call_allowances") or [])
             usage[identity] = usage.get(identity, 0) + count
-    used = sum(usage.values())
+    used = sum(usage.get(identity, 0) for identity in chain_ids)
     ceiling = int(root.get(_quantity) or 0)
     remaining = max(0, ceiling - used)
     # Each explicit narrower child also limits its own subtree. A sibling's
@@ -625,6 +641,19 @@ def authorization_budget(store: Store, document: dict, authorization_ref: dict, 
         if identity == root_id or not current.get("budget_parent_ref"):
             break
         current = store.read_object_json(current["budget_parent_ref"])
+    if _quantity == 'max_external_calls':
+        # A computed child remains its original numeric root when its planning
+        # parent later acquires an explicit limit. That *current* limit still
+        # covers all descendants, including siblings in other numeric roots.
+        lineages = {identity: _current_authorization_lineage(store, records, item)
+                    for identity, item in records.items()}
+        for identity in _current_authorization_lineage(store, records, record):
+            ancestor = records.get(identity)
+            if ancestor is None or _planning_only_zero_authority(store, ancestor, document=document):
+                continue
+            ancestor_used = sum(usage.get(child_id, 0) for child_id, lineage in lineages.items()
+                                if identity in lineage)
+            remaining = min(remaining, max(0, ancestor['max_external_calls'] - ancestor_used))
     unknown = _quantity == "max_external_calls" and any(entry.get("state") == "unknown"
                   for ref in document.get("tasks") or []
                   for entry in (store.read_object_json(ref).get("call_allowances") or []))

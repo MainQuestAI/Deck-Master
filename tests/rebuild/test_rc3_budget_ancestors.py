@@ -9,6 +9,89 @@ from test_eligibility_enforcement import _grant
 from test_rc3_budget_workflow import project, spend
 
 
+def planning_parent_and_child(path, store, *, parent=None, operation='L1-planning-parent'):
+    from deck_master import collaboration_budget
+    from test_eligibility_enforcement import _declared
+    planning = _grant(path, store, mode='delegate', actions=('dispatch.blueprint',),
+        max_external_calls=0, operation_id=operation,
+        **({'parent_authorization_ref': parent['authorization_ref']} if parent else {}))
+    child = collaboration_budget.materialize_execution(path,
+        parent_authorization_ref=planning['authorization_ref'], budget_template='initial_per_page',
+        base_revision=store.current_revision_id(), operation_id=operation+'-child',
+        instruction_evidence=_declared(store))
+    return planning, child
+
+
+@pytest.mark.parametrize('ceiling', [0, 1])
+@pytest.mark.parametrize('held', [False, True])
+def test_current_numeric_limit_on_former_planning_parent_constrains_existing_root(tmp_path, ceiling, held):
+    path, store = project(tmp_path)
+    parent, child = planning_parent_and_child(path, store)
+    root = eligibility._chain_root_identity(store, store.load_document(), store.read_object_json(child['authorization_ref']))
+    original = None
+    if held:
+        doc = store.load_document()
+        original = service.open_blueprint_task(store, doc, doc['pages'][0])
+    _grant(path, store, mode='delegate', actions=('dispatch.blueprint',),
+        authorization_id=parent['authorization_id'], replaces=parent['authorization_ref'],
+        max_external_calls=ceiling, budget_template='explicit', operation_id='L1-current-explicit-limit')
+    if ceiling and not held:
+        doc = store.load_document()
+        original = service.open_blueprint_task(store, doc, doc['pages'][0])
+    before = store.load_document()
+    assert eligibility._chain_root_identity(store, before, store.read_object_json(child['authorization_ref'])) == root
+    assert eligibility.authorization_budget(store, before, child['authorization_ref'])['remaining'] == 0
+    with pytest.raises(eligibility.EligibilityBlocked) as failure:
+        service.open_blueprint_task(store, before, before['pages'][1])
+    assert 'budget_exhausted' in failure.value.decision['reason_codes']
+    assert store.load_document() == before
+    if original:
+        spend(path, store, original)
+        assert eligibility.authorization_budget(store, store.load_document(), child['authorization_ref'])['used'] == 1
+
+
+def test_current_intermediate_planning_parent_limit_and_stale_ref(tmp_path):
+    path, store = project(tmp_path)
+    grandparent = _grant(path, store, mode='delegate', actions=('dispatch.blueprint',),
+        max_external_calls=0, operation_id='L1-planning-grandparent')
+    parent, child = planning_parent_and_child(path, store, parent=grandparent)
+    _grant(path, store, mode='delegate', actions=('dispatch.blueprint',),
+        authorization_id=parent['authorization_id'], replaces=parent['authorization_ref'],
+        parent_authorization_ref=grandparent['authorization_ref'],
+        max_external_calls=0, budget_template='explicit', operation_id='L1-intermediate-explicit-zero')
+    before = store.load_document()
+    assert eligibility.authorization_budget(store, before, child['authorization_ref'])['remaining'] == 0
+    assert eligibility.current_authorization_record(store, before, parent['authorization_ref'])['budget_template'] == 'explicit'
+    with pytest.raises(eligibility.EligibilityBlocked):
+        service.open_blueprint_task(store, before, before['pages'][0])
+    assert store.load_document() == before
+
+
+def test_sibling_computed_authorities_share_current_parent_limit_without_double_count(tmp_path):
+    from deck_master import collaboration_budget
+    from test_eligibility_enforcement import _declared
+    path, store = project(tmp_path)
+    parent, child = planning_parent_and_child(path, store)
+    sibling = collaboration_budget.materialize_execution(path,
+        parent_authorization_ref=parent['authorization_ref'], budget_template='initial_per_page',
+        base_revision=store.current_revision_id(), operation_id='L1-sibling-computed',
+        instruction_evidence=_declared(store))
+    doc = store.load_document()
+    first = service.open_blueprint_task(store, doc, doc['pages'][0])
+    spend(path, store, first)
+    _grant(path, store, mode='delegate', actions=('dispatch.blueprint',),
+        authorization_id=parent['authorization_id'], replaces=parent['authorization_ref'],
+        max_external_calls=2, budget_template='explicit', operation_id='L1-shared-parent-two')
+    before = store.load_document()
+    for authority in (child, sibling):
+        assert eligibility.authorization_budget(store, before, authority['authorization_ref'])['remaining'] == 1
+    second = service.open_blueprint_task(store, before, before['pages'][1])
+    assert second['call_allowances'][0]['state'] == 'reserved'
+    for authority in (child, sibling):
+        budget = eligibility.authorization_budget(store, store.load_document(), authority['authorization_ref'])
+        assert budget['used'] == 2 and budget['remaining'] == 0
+
+
 def chain(path,store):
     root=_grant(path,store,mode='delegate',actions=('dispatch.blueprint',),
         max_external_calls=2,max_candidate_count=2,operation_id='L1-ancestor-root')
