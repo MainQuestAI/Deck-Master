@@ -260,6 +260,26 @@ export function budgetForm(app, {changePlanId=null}={}) {
   if(!isEdit||changePlanId)read();
 }
 
+// Request intent/scope can only change through an explicit request transition.
+// An authorization-scope gap, identified by the resolver's authorization IDs,
+// can instead be covered by a new exact zero-call adoption grant.
+export function adoptionBlockReason(authority) {
+  const decision=authority?.eligibility;
+  if(!decision || decision.allowed)return null;
+  const reasons=decision.reasons||[];
+  const requestGap=reasons.some(reason=>reason.code==='scope_exceeded' &&
+    (!Array.isArray(reason.authorization_ids)||!reason.authorization_ids.length||
+      'request_intent' in reason||'authorized_pages' in reason||'authorized_layers' in reason));
+  if(requestGap)return '所选候选超出本次请求的用途或范围。请先在“本次工作与范围”明确替换或扩大请求，再重新预览采用影响。';
+  const codes=decision.reason_codes||[];
+  if(!codes.length||!codes.every(code=>['authority_insufficient','authorization_revoked','scope_exceeded'].includes(code)))
+    return '当前条件不允许采用，请处理本次工作与范围中的缺口。';
+  // A scope code without its detailed authorization-only reason is not a grant gap.
+  if(codes.includes('scope_exceeded')&&!reasons.some(reason=>reason.code==='scope_exceeded'))
+    return '请先在“本次工作与范围”明确替换或扩大请求，再重新预览采用影响。';
+  return null;
+}
+
 export async function adoptCandidates(app, editor, plan, onComplete) {
   await app.business.available();
   const selection = {schema_version:'candidate_selection.v1', project_id:plan.project_id,
@@ -275,9 +295,8 @@ export async function adoptCandidates(app, editor, plan, onComplete) {
     {input:value,base_revision:value.base_revision},value,onComplete);
   const authority=checked.adoption_authority;
   if(!authority || authority.eligibility.allowed)return submit(plan);
-  if(!authority.eligibility.reason_codes.every(code=>['authority_insufficient','authorization_revoked','scope_exceeded'].includes(code))) {
-    throw Object.assign(new Error('当前条件不允许采用，请处理本次工作与范围中的缺口。'),{details:authority.eligibility});
-  }
+  const blocker=adoptionBlockReason(authority);
+  if(blocker)throw Object.assign(new Error(blocker),{details:authority.eligibility});
   const form=controlForm(app,{title:'授权采用所选候选',action:'candidate.adopt.grant:'+checked.plan_ref.sha256,path:'/collaboration/authorizations',
     baseRevision:()=>plan.base_revision,
     body:el('div',{class:'stack'},scopeView(app,authority.scope),

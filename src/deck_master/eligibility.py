@@ -300,7 +300,7 @@ ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
 _INTENT_BLOCKED_ACTIONS = {
     "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "style.trial",
                     "style.expand", "change.commit", "compile.ppt", "stage.assemble",
-                    "page.edit", "content.operation"),
+                    "page.edit", "content.operation", "candidate.adopt"),
     "design_trial": ("dispatch.compose", "import_draft", "compile.ppt", "stage.assemble",
                      "page.edit"),
     "edit": ("dispatch.compose", "stage.assemble"),

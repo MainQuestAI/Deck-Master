@@ -9,7 +9,7 @@ import {pageText} from './page-text.js';
 import {candidateCards} from './candidate-cards.js';
 import {candidateIconReview} from './icon-workbench.js';
 import {openCandidate} from './trial-actions.js';
-import {adoptCandidates} from './collaboration-desk.js';
+import {adoptCandidates, adoptionBlockReason} from './collaboration-desk.js';
 
 const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content' ? '逐页稿' : 'SVG';
 const clock = value => new Date(value).toLocaleString('zh-CN', {hour12: false});
@@ -259,7 +259,10 @@ export function candidateDesk(app, data) {
       if (disposed || selected.candidate_id !== id) return;
       currentPlan = result.plan; planInvalid = false; live = latest;
       drawColumns(page.stages[stage], page.revision_id, '本次采用目标（新固定基准）', page.page, page.stages.ppt_preview);
-      impact.replaceChildren(impactBox(currentPlan)); renderState();
+      const blocker=adoptionBlockReason(result.adoption_authority);
+      impact.replaceChildren(impactBox(currentPlan),...(blocker?[el('p',{class:'field-error'},blocker)]:[]));
+      if(blocker)currentPlan=null;
+      renderState();
     } catch (error) { currentPlan = null; if (!disposed) impact.replaceChildren(el('div', {class: 'stack'}, el('p', {class: 'field-error'}, readableError(error)), errorItems(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }
@@ -408,7 +411,10 @@ export function candidateBatch(app) {
       const input = {schema_version: 'candidate_selection.v1', project_id: app.info.project_id, base_revision: latest.revision_id, candidate_ids: [...selected]};
       const result = await post('/api/candidates/plan', {input});
       if (disposed || serial !== token) return;
-      currentPlan = result.plan; revision = result.plan.base_revision; impact.replaceChildren(impactBox(currentPlan));
+      currentPlan = result.plan; revision = result.plan.base_revision;
+      const blocker=adoptionBlockReason(result.adoption_authority);
+      impact.replaceChildren(impactBox(currentPlan),...(blocker?[el('p',{class:'field-error'},blocker)]:[]));
+      if(blocker)currentPlan=null;
     } catch (error) { if (!disposed) impact.replaceChildren(el('div', {class: 'stack'}, el('p', {class: 'field-error'}, readableError(error)), errorItems(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }
