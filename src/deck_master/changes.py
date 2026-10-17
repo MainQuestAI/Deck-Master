@@ -181,14 +181,16 @@ def commit(project, *, plan_id, base_revision, operation_id):
         # so the plan's own write targets must be inside the request scope and
         # covered by an authorization before any task or allowance is created.
         from . import eligibility
+        external_call_page_ids = [action['page_id'] for action in record['actions'] if action['max_calls'] > 0]
         eligibility.guard(store, document, "change.commit", context={
+            "external_call_page_ids": external_call_page_ids,
             "count": record['max_calls'],
             "candidate_count": sum(action.get('mode') == 'trial' for action in record['actions']),
             "targets": {"page_ids": [action['page_id'] for action in record['actions']],
                         "layers": _plan_layers(record)}})
         authorization_ref = eligibility.covering_authorization_ref(store, document, 'change.commit',
             {'page_ids': [action['page_id'] for action in record['actions']], 'layers': _plan_layers(record)},
-            count=record['max_calls'],
+            count=record['max_calls'], external_call_page_ids=external_call_page_ids,
             candidate_count=sum(action.get('mode') == 'trial' for action in record['actions']))
         active = [store.read_object_json(ref) for ref in document['tasks']]
         for action in record['actions']:
