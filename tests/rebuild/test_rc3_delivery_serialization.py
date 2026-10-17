@@ -1,7 +1,7 @@
 """Delivery/control serialization with actual locks, without product patches."""
 from pathlib import Path
+import os
 import threading
-import time
 import uuid
 
 import pytest
@@ -25,18 +25,8 @@ def test_legacy_export_preserves_review_wait_exit_three_without_changing_shared_
     assert not (tmp_path / 'legacy-delivery').exists()
 
 
-def _open_count(path):
-    count = 0
-    for item in Path('/proc/self/fd').iterdir():
-        try:
-            count += item.resolve() == path
-        except OSError:
-            pass
-    return count
-
-
 @pytest.mark.parametrize('control', ['pause', 'revoke'])
-def test_waiting_delivery_rechecks_committed_control_before_publishing_any_bundle(tmp_path, control):
+def test_waiting_delivery_rechecks_committed_control_before_publishing_any_bundle(tmp_path, monkeypatch, control):
     # The helper authors real PPTX bytes and explicitly synthetic engineering
     # facts. This checks transaction ordering, not human/model quality.
     project, store = _passing_deck(tmp_path)
@@ -47,6 +37,14 @@ def test_waiting_delivery_rechecks_committed_control_before_publishing_any_bundl
     destination = tmp_path / 'delivery'
     before_records = sorted(root.glob('*/export-record.json'))
     outcome = {}
+    waiting = threading.Event()
+    actual_open = os.open
+
+    def observe_open(path, *args, **kwargs):
+        descriptor = actual_open(path, *args, **kwargs)
+        if Path(path) == lock and threading.current_thread() is worker:
+            waiting.set()
+        return descriptor
 
     def deliver():
         try:
@@ -54,13 +52,13 @@ def test_waiting_delivery_rechecks_committed_control_before_publishing_any_bundl
         except Exception as exc:
             outcome['error'] = exc
 
+    worker = threading.Thread(target=deliver)
+    monkeypatch.setattr(os, 'open', observe_open)
     with local_lock(lock):
-        worker = threading.Thread(target=deliver)
         worker.start()
-        deadline = time.monotonic() + 5
-        while _open_count(lock) < 2 and worker.is_alive() and time.monotonic() < deadline:
-            time.sleep(.005)
-        assert _open_count(lock) >= 2, outcome
+        # Observe the worker's real descriptor while retaining the real parent
+        # lock. The worker still blocks in flock, on macOS as well as Linux.
+        assert waiting.wait(5) and worker.is_alive(), outcome
         # This actual public write must commit while export waits on its own
         # cache lock, so delivery must re-evaluate after taking that lock.
         doc = store.load_document()
