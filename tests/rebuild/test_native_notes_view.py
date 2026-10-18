@@ -6,12 +6,13 @@ import pytest
 from pptx import Presentation
 
 from deck_master.compiler.native import attach_notes, notes_records
+from deck_master.compiler import CompileOptions, SvgInput, compile_deck
 from deck_master.export_sanitize import pptx as public_pptx
 
 
 @pytest.mark.render
-@pytest.mark.parametrize('public_copy', [False, True])
-def test_long_notes_are_visible_in_compatible_notes_page(tmp_path, public_copy):
+@pytest.mark.parametrize('route', ['native_compile', 'attachment', 'public_export'])
+def test_long_notes_are_visible_in_compatible_notes_page(tmp_path, route):
     deck = Presentation()
     deck.slides.add_slide(deck.slide_layouts[6])
     raw = io.BytesIO()
@@ -22,8 +23,14 @@ def test_long_notes_are_visible_in_compatible_notes_page(tmp_path, public_copy):
         for i in range(1, 8)
     ) + '\n末段必须可见：完整保留中文、数字与限定。'
     records = [{'page_id': 'notes-page', 'notes': notes}]
-    data = attach_notes(raw.getvalue(), records)
-    if public_copy:
+    if route == 'native_compile':
+        svg = tmp_path / 'page.svg'
+        svg.write_text('<svg viewBox="0 0 1280 720"><rect width="1280" height="720" fill="#fff"/></svg>')
+        compiled = compile_deck([SvgInput('notes-page', svg, notes)], CompileOptions(), tmp_path / 'compiled')
+        data = compiled.pptx_path.read_bytes()
+    else:
+        data = attach_notes(raw.getvalue(), records)
+    if route == 'public_export':
         data = public_pptx(data, 'long-notes-regression', notes=records, include_notes=True)
     source = tmp_path / 'notes.pptx'
     source.write_bytes(data)
