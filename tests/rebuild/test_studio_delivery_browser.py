@@ -1,6 +1,8 @@
 """Production defaults and prototype task/file structure retain real snapshot operations."""
 import io
+import hashlib
 import json
+import re
 import shutil
 import uuid
 import zipfile
@@ -8,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from deck_master import service, tasks, run_desk
+from deck_master import service, tasks, run_desk, exports
 from deck_master.models import content_identity
 from deck_master.samples import create_sample
 from deck_master.store import Store
@@ -80,6 +82,10 @@ def test_task_list_summary_only_transforms_verified_system_templates(tmp_path):
     initial_row=run_desk.task_row(initial)
     assert initial_row['display_instruction']=='阅读全部材料，围绕受众的问题组织完整正文与页面顺序。'
     assert initial_row['instruction'].startswith('Read every source in Task.sources')
+    for intent in ('import_draft', None):
+        initial['intent']=intent
+        assert run_desk.task_row(initial)['display_instruction']==initial_row['display_instruction']
+        assert initial['instruction']==initial_row['instruction']
 
 
 def test_actual_modern_input_workorder_summary_preserves_user_reason_and_raw_text(tmp_path):
@@ -124,7 +130,8 @@ def test_studio_default_tasks_versions_and_actual_review_zip(tmp_path):
             expect(rows.first.locator('.run-requirement')).to_contain_text('create independent current revision')
             expect(rows.first.locator('.run-requirement')).not_to_contain_text('operation ')
             expect(rows.first.locator('.run-requirement')).not_to_contain_text('content_update')
-            expect(rows.nth(1).locator('.run-requirement')).to_contain_text('准确保留第 147 项要求；核对数字与完整正文。')
+            expect(rows.nth(1).locator('.run-requirement')).to_contain_text('制作要求见详情')
+            assert rows.nth(1).locator('.run-requirement').get_attribute('title') is None
             page.screenshot(path=str(evidence/'tasks-1440.png'),full_page=True)
             search=page.get_by_role('searchbox',name='搜索全部任务');search.fill('第 1 项');search.press('Enter')
             expect(rows).to_have_count(1);expect(rows.first).to_have_attribute('data-task-id','studio-task-000')
@@ -166,16 +173,31 @@ def test_studio_default_tasks_versions_and_actual_review_zip(tmp_path):
             link=page.get_by_role('link',name='下载 ZIP',exact=True);expect(link).to_be_visible()
             with page.expect_download() as download:link.click()
             archive=download.value.path();data=Path(archive).read_bytes();(evidence/'review.zip').write_bytes(data)
+            digest=hashlib.sha256(data).hexdigest()
+            packet=exports.show(path,export_id=call.value.post_data_json['export_id'])
+            assert packet['files'][packet['archive']]['sha256']==digest
             with zipfile.ZipFile(io.BytesIO(data)) as bundle:
                 manifests=[name for name in bundle.namelist() if name.endswith('manifest.json')]
                 assert manifests
                 manifest=json.loads(bundle.read(manifests[0]));assert manifest['revision_id']==reading
             assert store.current_revision_id()==current
+            files=page.locator('#delivery-desk')
+            for width,height in [(1440,900),(1280,800),(390,844)]:
+                page.set_viewport_size({'width':width,'height':height})
+                assert not re.search(r'[a-f0-9]{64}|SHA256',files.inner_text())
+                assert not re.search(r'[a-f0-9]{64}|SHA256',files.aria_snapshot())
+                integrity=files.get_by_role('button',name=re.compile('^查看文件与哈希'))
+                integrity.click()
+                dialog=page.get_by_role('dialog',name='文件清单与完整性校验')
+                expect(dialog).to_contain_text('ZIP SHA256 '+digest)
+                dialog.get_by_role('button',name='关闭',exact=True).click()
+                expect(integrity).to_be_focused()
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
             page.set_viewport_size({'width':390,'height':844})
-            for area in ['文件','版本','正在进行']:
+            for area in ['文件','版本','任务记录']:
                 page.get_by_role('button',name=area,exact=True).click()
                 expect(page.get_by_role('button',name=area,exact=True)).to_have_attribute('aria-pressed','true')
-                expect(page.locator({'文件':'.studio-files-version','版本':'.studio-version-reading','正在进行':'.run-filters'}[area])).to_be_visible()
+                expect(page.locator({'文件':'.studio-files-version','版本':'.studio-version-reading','任务记录':'.run-filters'}[area])).to_be_visible()
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth+1')
                 page.screenshot(path=str(evidence/f'{area}-390.png'),full_page=True)
             assert errors==[]

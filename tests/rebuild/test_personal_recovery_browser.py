@@ -43,7 +43,7 @@ def test_studio_clear_backup_download_restore_and_legacy_reading(store,tmp_path)
             recovery=tmp_path/'old-draft.json';download.value.save_as(recovery)
             assert json.loads(recovery.read_text())['draft']['content']['run_desk']['seen']==draft['content']['run_desk']['seen']
             page.get_by_role('dialog',name='个人记录与操作恢复',exact=True).get_by_role('button',name='关闭',exact=True).click()
-            page.get_by_role('button',name='正在进行',exact=True).click()
+            page.get_by_role('button',name='任务记录',exact=True).click()
             page.get_by_role('button',name='个人状态与恢复',exact=True).click()
             panel=page.get_by_role('dialog',name='个人状态与恢复',exact=True)
             panel.get_by_role('button',name='生成清理计划',exact=True).click()

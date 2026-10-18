@@ -429,3 +429,12 @@ textarea{font-size:14px;line-height:1.7}
 .collaboration-control>button {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;min-height:44px;}
 .queued-modal {position:fixed;inset:0;margin:auto;width:min(720px,calc(100vw - 32px));max-height:calc(100dvh - 48px);border-radius:var(--radius-md);}
 @media(max-width:767px) {.topbar .current-control-facts {flex:0 1 150px;}.topbar .crumb {min-width:0;flex:1;}.topbar .crumb>strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.topbar .crumb>.version {display:none;}.collaboration-control>button {padding-inline:8px;font-size:11px;}}
+
+/* AUDIT-F09: the form owns scrolling; headers/actions also work in queued dialogs. */
+dialog:has(> .modal-body > form.launcher-create-form) {overflow:hidden;max-height:calc(100dvh - 48px)}
+dialog:has(> .modal-body > form.launcher-create-form) > .modal-body {display:flex;flex-direction:column;gap:16px;box-sizing:border-box;max-height:calc(100dvh - 50px)}
+dialog:has(> .modal-body > form.launcher-create-form) > .modal-body > h2 {flex:none;margin:0}
+dialog .launcher-create-form {flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:2px 6px 2px 2px}
+dialog .launcher-create-form textarea {min-height:96px}
+dialog:has(> .modal-body > form.launcher-create-form) .modal-actions {flex:none;margin-top:0}
+.gallery-comparison-reason {font-size:12px;line-height:1.5;margin:4px 0 0}

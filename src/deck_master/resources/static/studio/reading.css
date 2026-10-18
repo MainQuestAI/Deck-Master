@@ -58,3 +58,27 @@
 }
 
 .studio-workspace .studio-tool-title[hidden] {display:none}
+
+/* AUDIT-F07: compact the navigation around the same mounted canvas and tools. */
+.studio-workspace .studio-page-reading > .stack > p:first-child {display:none}
+@media(min-width:1024px){
+ .studio-workspace .page-workbench .page-head {padding-bottom:8px;margin-bottom:8px}
+ .studio-workspace .reading-toolbar > .studio-reading-return {order:0}
+ .studio-workspace .reading-toolbar > .page-tools-switcher {order:1;width:auto;padding:0;margin:0;border:0;flex-wrap:nowrap}
+ .studio-workspace .reading-toolbar > .studio-page-actions {order:2;margin-left:auto}
+}
+@media(max-width:767px){
+ .studio-workspace .page-workbench .page-head {display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;padding-bottom:8px;margin-bottom:8px}
+ .studio-workspace .page-workbench .page-head > div:first-child {display:contents}
+ .studio-workspace .page-workbench .page-head h1 {grid-column:1/-1;margin:0}
+ .studio-workspace .page-workbench .page-head p {grid-column:1;grid-row:2;font-size:12px;margin:0}
+ .studio-workspace .page-workbench .page-pager {grid-column:2;grid-row:2;justify-self:end;gap:4px;align-self:center}
+ .studio-workspace .page-workbench .page-pager select {width:112px;padding:6px;font-size:12px}
+ .studio-workspace .page-workbench .page-pager button {width:44px;min-width:44px;height:44px;padding:0;font-size:0}
+ .studio-workspace .page-workbench .page-pager button::after {font-size:16px}
+ .studio-workspace .page-workbench .page-pager button:first-of-type::after {content:'←'}
+ .studio-workspace .page-workbench .page-pager button:last-of-type::after {content:'→'}
+ .studio-workspace .reading-toolbar > .page-tools-switcher {padding-top:0;border:0}
+ .studio-workspace .reading-toolbar > .page-tools-switcher button {min-height:44px;font-size:12px;line-height:16px;padding:4px 2px}
+ .studio-workspace .reading-toolbar > .page-tools-switcher .ui-icon {display:none}
+}

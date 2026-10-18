@@ -311,14 +311,16 @@ def test_delivery_route_version_identities_files_and_blocked_delivery(delivery_w
         expect(files.locator('.export-result .download-link').first).to_be_visible(timeout=30000)
         journal.shot('review-package-generated')
 
-        # 失败腿：正式交付包在未完成的项目上被拒绝，缺项与规则就地列出。
-        page.get_by_role('button', name='生成正式交付包', exact=True).click()
-        gaps = files.locator('.export-gaps')
+        # AUDIT-F05: incomplete formal delivery is explained before dispatch.
+        expect(page.get_by_role('button', name='生成正式交付包', exact=True)).to_be_disabled()
+        expect(files.get_by_label('所选实际文件的交付判断')).to_contain_text('整稿 PPT')
+        files.get_by_role('button', name='查看此版本的交付缺项与制作证据', exact=True).click()
+        gaps = page.get_by_role('dialog', name='此版本的交付缺项与制作证据').locator('.export-gaps')
         expect(gaps).to_be_visible(timeout=30000)
         # 缺项按"哪条规则、下一步做什么"列出；被拒绝时没有下载链接。
         expect(gaps).to_contain_text('对应产物未记录')
         expect(gaps).to_contain_text('先更新对应预览或编译整稿，再重新检查')
-        assert files.locator('.export-result .download-link').count() == 1, '只有审阅包有下载链接，正式交付被拒'
+        assert files.locator('.export-result .download-link').count() == 1, '只有审阅包有下载链接，正式交付未派发'
         journal.shot('delivery-blocked-with-gaps')
     finally:
         journal.flush()

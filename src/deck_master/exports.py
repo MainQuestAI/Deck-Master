@@ -49,8 +49,8 @@ def _context(project, revision):
     return store, doc, _logical_identity(str(store.project_root), doc["revision_id"])
 
 
-def _facts(store, doc, *, selected_output=None):
-    control = store.load_document()
+def _facts(store, doc, *, selected_output=None, control=None):
+    control = store.load_document() if control is None else control
     doc = {**doc, "policy": control["policy"], "reviews": control.get("reviews", [])}
     from .editing import check_summary
     from .production_detail import projection
@@ -114,6 +114,18 @@ def describe(project, *, revision=None):
     return {"project_id": doc["project_id"], **_facts(store, doc), "purposes": ["review", "delivery", "engineering"]}
 
 
+def _engineering_ready(doc, facts):
+    """The recorded engineering predicate used by export and its read-only UI.
+
+    A passing review cannot make an output compiled from another SVG basis
+    current. Input reconciliation keeps its existing distinct export error.
+    """
+    return bool(doc['outputs'].get('pptx')
+                and facts['input_alignment'] != 'needs_reconciliation'
+                and facts['check_summary']['status'] == 'pass'
+                and not any(gap['reason'] == 'basis_changed' for gap in facts['gaps']))
+
+
 def _gate(store, doc, facts, purpose):
     if purpose != "delivery":
         return
@@ -124,11 +136,7 @@ def _gate(store, doc, facts, purpose):
             revision=doc["revision_id"],
             gaps=[{"page_id": None, "layer": "content", "reason": "needs_reconciliation"}],
         )
-    if (
-        not doc["outputs"].get("pptx")
-        or facts["check_summary"]["status"] != "pass"
-        or any(g["reason"] == "basis_changed" for g in facts["gaps"])
-    ):
+    if not _engineering_ready(doc, facts):
         raise ExportError(
             "delivery_blocked",
             ("no current PPT; " if not doc["outputs"].get("pptx") else "")

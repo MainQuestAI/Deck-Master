@@ -50,6 +50,7 @@ export function readableError(error) {
     professional_review_required: '还缺所选实际文件的专业复核。稿件和审阅包仍可阅读，请核对文件与复核范围。',
     scope_exceeded: '本次动作超出明确范围。输入仍保留，请核对所选页、层与用途。',
     authority_insufficient: '当前授权不足以执行本次动作。输入仍保留，请查看实际范围与下一责任。',
+    decision_needed: '还缺本次工作的明确决定。请核对具体缺项、相关范围和下一步操作。',
     authority_channel_unavailable: '当前连接不能核实所需授权。输入仍保留，请通过支持的指令通道继续。',
     budget_exhausted: '当前制作额度已用完。已有结果保留，不会自动重试或刷新额度。',
     budget_unknown: '已有调用费用尚待核实。已有稿件保留，请先核实原调用。',

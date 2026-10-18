@@ -223,7 +223,7 @@ def test_version_area_survives_reading_reload_and_return(historical_pages_browse
     page.get_by_role('combobox', name='阅读历史版本').select_option(value=historical)
     page.get_by_role('button', name='读取所选版本', exact=True).click()
 
-    # 读取版本后面仍留在版本工作区（此前跳回"正在进行"）。
+    # 读取版本后面仍留在版本工作区（此前跳回"任务记录"）。
     expect(page.locator('.runs-subareas button[aria-pressed="true"]')).to_have_text('版本')
     expect(page.locator('#runs-versions')).to_be_visible()
     params = dict(urllib.parse.parse_qsl(page.url.split('#')[1]))
@@ -241,8 +241,8 @@ def test_version_area_survives_reading_reload_and_return(historical_pages_browse
     page.get_by_role('button', name='任务与交付', exact=True).click()
     expect(page.locator('#runs-versions')).to_be_visible()
 
-    # 显式打开某项任务时回到「正在进行」，而不是留在版本区。
-    page.get_by_role('button', name='正在进行', exact=True).click()
+    # 显式打开某项任务时回到「任务记录」，而不是留在版本区。
+    page.get_by_role('button', name='任务记录', exact=True).click()
     page.locator('.run-task').first.get_by_role('button', name='查看这项任务').click()
     expect(page.locator('#runs-tasks')).to_be_visible()
 

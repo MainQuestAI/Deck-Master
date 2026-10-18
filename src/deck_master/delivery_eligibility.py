@@ -316,18 +316,16 @@ def describe(project, *, revision=None, file_path=None, notes_policy=None):
     from .store import Store
     from .snapshots import load_snapshot
     from . import eligibility
-    from .editing import check_summary
-    from .models import input_alignment
+    from .exports import _facts, _engineering_ready
     store = Store(project)
     control = store.load_document()
     artifact = load_snapshot(store, revision) if revision else control
     selected = selected_output(store, artifact, notes_policy=notes_policy, file_path=file_path)
-    effective = {**artifact, "policy": control["policy"], "reviews": control.get("reviews", [])}
-    summary = check_summary(store, effective)
-    professional = professional_policy(store, effective, selected_output=selected)
+    facts = _facts(store, artifact, selected_output=selected, control=control)
+    summary = facts['check_summary']
+    professional = facts['professional']
     decision = eligibility.evaluate(store, artifact, control, "export.delivery", {"selected_output": selected})
-    engineering = bool(selected["file_sha256"] and summary["status"] == "pass"
-                       and input_alignment(artifact) != "needs_reconciliation")
+    engineering = bool(selected["file_sha256"] and _engineering_ready(artifact, facts))
     codes = list(decision["reason_codes"])
     if not engineering:
         codes.append("engineering_checks_required")
@@ -337,7 +335,8 @@ def describe(project, *, revision=None, file_path=None, notes_policy=None):
         "revision_id": artifact["revision_id"], "selected_output": selected,
         "engineering_ready": engineering, "engineering": {"ready": engineering, "summary": summary},
         "review_status": summary["status"], "unresolved": {"missing_dimensions": sorted(summary["missing_dimensions"]),
-            "failed_dimensions": [k for k,v in summary["dimensions"].items() if v.get("open_must_fix") or v["status"] == "fail"]},
+            "failed_dimensions": [k for k,v in summary["dimensions"].items() if v.get("open_must_fix") or v["status"] == "fail"],
+            "gaps": facts['gaps'] if not engineering else []},
         "professional": professional, "eligibility": decision, "collaboration": decision,
         "reason_codes": list(dict.fromkeys(codes)), "next_action": decision.get("next_action") or
             ("deliver_selected_file" if allowed else "resolve_named_delivery_gaps")}

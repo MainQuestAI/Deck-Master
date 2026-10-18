@@ -1,5 +1,7 @@
 """Real browser/HTTP/native-file checks; synthetic content, no model calls."""
 import json
+import hashlib
+import re
 import shutil
 from urllib.parse import parse_qs, urlparse
 
@@ -54,7 +56,7 @@ def choose(page, files, policy):
     with page.expect_response(lambda response: '/delivery-eligibility?' in response.url
                               and parse_qs(urlparse(response.url).query).get('notes_policy') == [policy]):
         files.get_by_role('combobox', name='口播稿保留方式').select_option(policy)
-    expect(files.locator('.export-group').get_by_role('status')).to_contain_text('本次方式：' + LABELS[policy])
+    expect(files.get_by_role('status',name='口播保留方式核对')).to_contain_text('本次方式：' + LABELS[policy])
 
 
 @pytest.mark.parametrize('ui', ['studio', 'v2'])
@@ -62,7 +64,7 @@ def test_web_notes_choices_match_preflight_and_actual_files(notes_browser, tmp_p
     page, url, project, store = notes_browser
     files = open_files(page, url, ui)
     expect(files.get_by_role('combobox', name='口播稿保留方式')).to_have_value('')
-    expect(files.locator('.export-group').get_by_role('status')).to_contain_text('本次方式：写入 PPT 备注')
+    expect(files.get_by_role('status',name='口播保留方式核对')).to_contain_text('本次方式：写入 PPT 备注')
     for policy, label in LABELS.items():
         choose(page, files, policy)
         with page.expect_request(lambda request: request.method == 'POST' and request.url.endswith('/api/exports')) as sent:
@@ -126,6 +128,13 @@ def test_unknown_export_retains_policy_across_reload_and_changed_selection(notes
     expect(pending.get_by_role('link', name='下载口播稿', exact=True)).to_be_visible()
     packet = exports.show(project, export_id=requests[0]['export_id'])
     assert packet['manifest']['notes_policy']['selection'] == 'both'
+    archive,_=exports.download(project,export_id=packet['export_id'],filename=packet['archive'])
+    digest=hashlib.sha256(archive).hexdigest()
+    assert not re.search(r'[a-f0-9]{64}|SHA256',files.inner_text())
+    pending.get_by_role('button',name=re.compile('^查看文件与哈希')).click()
+    dialog=page.get_by_role('dialog',name='文件清单与完整性校验')
+    expect(dialog).to_contain_text('ZIP SHA256 '+digest)
+    dialog.get_by_role('button',name='关闭',exact=True).click()
     expect(files.get_by_role('combobox', name='口播稿保留方式')).to_have_value('pure_reading')
 
 
@@ -147,7 +156,7 @@ def test_late_preflight_cannot_replace_new_notes_selection(notes_browser):
     route.fulfill(response=route.fetch())
     # Wait for the old response to be consumed, then read the visible judgement.
     page.wait_for_load_state('networkidle')
-    expect(files.locator('.export-group').get_by_role('status')).to_contain_text(LABELS['pure_reading'])
+    expect(files.get_by_role('status',name='口播保留方式核对')).to_contain_text(LABELS['pure_reading'])
     detail = files.get_by_label('所选实际文件的交付判断')
     detail.locator('summary').click()
     expect(detail).to_contain_text('pure_reading')

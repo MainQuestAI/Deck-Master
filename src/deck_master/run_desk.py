@@ -67,7 +67,7 @@ def task_instruction_summary(task):
                "audience's open question and write complete visible copy as Page v2 with "
                "an explicit page order. Same source supports different framings; do not "
                "call a rule planner or fill pages from templates.")
-    if task.get('intent') == 'initial' and text == initial:
+    if task.get('intent') in ('initial', 'import_draft', None) and text == initial:
         return '阅读全部材料，围绕受众的问题组织完整正文与页面顺序。'
     trial_suffix = (' 当前为显式 trial：除 content_update 外还须提交完整 content_plan_input；'
                     '结果保存为候选，采用前不改动当前正文、页序或产物。')

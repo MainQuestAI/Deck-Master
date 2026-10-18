@@ -177,3 +177,23 @@
   .studio-workspace .candidate-desk>.toolbar>label {width:100%}
   .studio-workspace .candidate-desk>.toolbar select {flex:1;width:auto;min-width:0}
 }
+
+/* AUDIT-F05: judgement and the formal action are discoverable together. */
+.studio-workspace .delivery-judgement {gap:10px;padding:14px}
+.studio-workspace .delivery-judgement h3,.studio-workspace .delivery-judgement p {margin:0}
+.studio-workspace .delivery-judgement .facts {font-size:12px;gap:6px 12px}
+.studio-workspace .delivery-judgement ul {font-size:12px;line-height:1.6;margin:0;padding-left:18px}
+.studio-workspace .delivery-named-gaps ul {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;margin-top:6px}
+.studio-workspace .delivery-judgement > p,.studio-workspace .delivery-judgement > details {font-size:12px}
+.studio-workspace .studio-delivery-copy .delivery-availability {margin-top:8px;color:var(--fg)}
+@media(min-width:1100px){
+ .studio-workspace .studio-files-desk > .panel-body {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:16px 24px}
+ .studio-workspace .studio-files-desk > .panel-body > * {grid-column:1/-1;min-width:0}
+ .studio-workspace .studio-files-desk .studio-files-version {grid-row:1}
+ .studio-workspace .studio-files-desk .delivery-check-container {grid-column:1;grid-row:2/span 3}
+ .studio-workspace .studio-files-desk .export-group {grid-column:2;grid-row:2}
+ .studio-workspace .studio-files-desk .studio-internal-export {grid-column:2;grid-row:3}
+ .studio-workspace .studio-files-desk .studio-file-summary {grid-column:2;grid-row:4}
+ .studio-workspace .studio-files-desk .studio-delivery-row {grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:14px 0}
+ .studio-workspace .studio-files-desk .studio-delivery-row > .studio-file-symbol {display:none}
+}

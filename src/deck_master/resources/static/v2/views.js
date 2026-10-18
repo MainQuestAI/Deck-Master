@@ -31,7 +31,7 @@ export function runs(app, data) {
       el('details', {}, el('summary', {}, '记录身份与依据'), el('pre', {class: 'evidence-json'}, JSON.stringify(review, null, 2))));
   }
   const selected = data.runDetail?.task || data.tasks.find(task => task.task_id === app.route.task_id);
-  // D15/UAC20：标题、任务专属动作与返回入口属于「正在进行」子区的当前任务上下文；
+  // D15/UAC20：标题、任务专属动作与返回入口属于「任务记录」子区的当前任务上下文；
   // 切到版本/文件后立即放下，离开详情的 URL 状态由 showSubarea persist 清除。
   const titleNode = heading(selected ? '当前任务' : '任务与交付', '任务状态按当前阅读版本展示。复制交接说明不会启动模型。',
     selected?.kind === 'compose' && selected.status === 'awaiting_host' && !app.readonly ? button('交接这项内容整理', () => app.handoff(selected.task_id), true) : null);
@@ -56,12 +56,12 @@ export function runs(app, data) {
       task.result_refs?.length > 0 && el('p', {class: 'muted'}, `${task.result_refs.length} 项已记录结果；这不代表专业质量通过。`)),
     !selected && button('查看这项任务', () => app.go({task_id: task.task_id})), selected && button('查看全部任务', () => app.go({task_id: null}))))): empty('没有已记录的任务', '此版本还没有制作任务。');
   // UX-05b（对账报告 §5：任务/决定/版本/文件职责混排）：四个子区改为分段切换——
-  // 同一时刻只呈现一个工作上下文，默认进入「正在进行」；切换后焦点落到该子区
+  // 同一时刻只呈现一个工作上下文，默认进入「任务记录」；切换后焦点落到该子区
   // 标题，按钮以 aria-pressed 说明当前所在，而不是把四段内容纵向堆在一起。
   // R4（深度复审）：子区上下文随链接保存与恢复——读取版本、刷新或从别的工作面
-  // 返回后仍落在同一个子区；只有初次访问（链接里没有 area）才默认「正在进行」。
+  // 返回后仍落在同一个子区；只有初次访问（链接里没有 area）才默认「任务记录」。
   const subareas = [
-    ['tasks', 'runs-tasks', '正在进行', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel,
+    ['tasks', 'runs-tasks', '任务记录', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel,
       handoffs && (studio ? button('其它修改组的交接',()=>modal('其它修改组的交接',handoffs),false,{class:'studio-other-handoffs'}) : el('details', {}, el('summary', {}, '其它修改组的交接'), handoffs)))],
     ['decisions', 'runs-decisions', '待决定', el('div', {id: 'runs-decisions', class: 'stack runs-subarea'}, batch)],
   ];

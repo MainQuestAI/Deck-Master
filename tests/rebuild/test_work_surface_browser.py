@@ -172,7 +172,7 @@ def test_readonly_sample_keeps_business_controls_disabled(workbench_page, tmp_pa
         expect(page.get_by_role('combobox', name='风格参考原图')).to_be_disabled()
         page.get_by_role('button', name='内容与来源', exact=True).click()
         expect(page.get_by_role('heading', name='内容与来源', exact=True)).to_be_visible()
-        assert page.get_by_role('button', name='添加材料或调整要求', exact=True).count() == 0
+        assert page.get_by_role('button', name='添加材料', exact=True).count() == 0
         assert store.read_current() == before
     finally:
         server.stop()

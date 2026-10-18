@@ -1,0 +1,155 @@
+{
+  "source": "PR122 head a16d5617 (static resources identical to merge/main c2e6d743)",
+  "evidence_level": "synthetic real-browser behavior",
+  "observations": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollY": 0,
+      "canvas_container": {
+        "top": 517.875,
+        "height": 362.125,
+        "width": 760
+      },
+      "canvas": {
+        "width": 611.546875,
+        "height": 344
+      },
+      "tools": [
+        {
+          "label": "意见",
+          "font": "13px",
+          "width": 81,
+          "height": 44
+        },
+        {
+          "label": "试作与候选",
+          "font": "13px",
+          "width": 120,
+          "height": 44
+        },
+        {
+          "label": "图标优化",
+          "font": "13px",
+          "width": 107,
+          "height": 44
+        },
+        {
+          "label": "笔记",
+          "font": "13px",
+          "width": 81,
+          "height": 44
+        },
+        {
+          "label": "详情",
+          "font": "13px",
+          "width": 81,
+          "height": 44
+        }
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "scrollY": 0,
+      "canvas_container": {
+        "top": 517.875,
+        "height": 262.125,
+        "width": 600
+      },
+      "canvas": {
+        "width": 433.765625,
+        "height": 244
+      },
+      "tools": [
+        {
+          "label": "意见",
+          "font": "13px",
+          "width": 81,
+          "height": 44
+        },
+        {
+          "label": "试作与候选",
+          "font": "13px",
+          "width": 120,
+          "height": 44
+        },
+        {
+          "label": "图标优化",
+          "font": "13px",
+          "width": 107,
+          "height": 44
+        },
+        {
+          "label": "笔记",
+          "font": "13px",
+          "width": 81,
+          "height": 44
+        },
+        {
+          "label": "详情",
+          "font": "13px",
+          "width": 81,
+          "height": 44
+        }
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scrollY": 0,
+      "canvas_container": {
+        "top": 639.375,
+        "height": 184.625,
+        "width": 358
+      },
+      "canvas": {
+        "width": 296.875,
+        "height": 167
+      },
+      "tools": [
+        {
+          "label": "意见",
+          "font": "11px",
+          "width": 66.796875,
+          "height": 52
+        },
+        {
+          "label": "试作与候选",
+          "font": "11px",
+          "width": 66.796875,
+          "height": 52
+        },
+        {
+          "label": "图标优化",
+          "font": "11px",
+          "width": 66.796875,
+          "height": 52
+        },
+        {
+          "label": "笔记",
+          "font": "11px",
+          "width": 66.796875,
+          "height": 52
+        },
+        {
+          "label": "详情",
+          "font": "11px",
+          "width": 66.8125,
+          "height": 52
+        }
+      ],
+      "no_horizontal_overflow": true
+    }
+  ],
+  "business_unchanged": true,
+  "errors": []
+}

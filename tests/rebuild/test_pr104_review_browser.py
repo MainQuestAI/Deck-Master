@@ -522,7 +522,7 @@ def test_leaving_task_context_rebuilds_without_reload(flow, area):
         page.evaluate('() => window.sameDocument = "retained"')
         page.get_by_role('button', name=area, exact=True).click()
         expect(page.locator('#view-title')).to_have_text('任务与交付')
-        page.get_by_role('button', name='正在进行', exact=True).click()
+        page.get_by_role('button', name='任务记录', exact=True).click()
         expect(page.locator('.run-detail')).to_be_empty()
         expect(page.locator('.run-rows')).to_be_visible()
         expect(page.locator('#view-title')).to_have_text('任务与交付')

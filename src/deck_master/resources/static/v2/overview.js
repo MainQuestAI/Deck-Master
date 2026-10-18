@@ -14,7 +14,7 @@ const kindLabels = {verify_execution: '执行待核实', handoff: '制作任务�
   replan: '需重新计划', compare_candidates: '候选待决定', reconcile_inputs: '输入待协调',
   prepare_stage: '产物待补齐', refresh_stage: '产物依据已变化', review_results: '结果待阅读', review_quality: '质量记录待查看'};
 const nextLabels = {verify_execution: '去核实', handoff: '去交接', inspect_failure: '查看失败', replan: '重新计划',
-  compare_candidates: '比较候选', reconcile_inputs: '去协调', prepare_stage: '去补齐', refresh_stage: '查看依据',
+  compare_candidates: '比较候选', reconcile_inputs: '去协调', prepare_stage: '查看待补页', refresh_stage: '查看依据',
   review_results: '去阅读', review_quality: '查看记录'};
 const reasonLabels = {unknown_calls_recorded: '任务记录了未知调用；先核实原执行，未确认前不要重复派发。',
   running_task_stale: '任务已运行超过 30 分钟，状态待核实；超时不等于失败。',
@@ -40,7 +40,9 @@ function actionRoute(action) {
   return {surface: 'runs'};
 }
 function todoTitle(action) {
-  const base = kindLabels[action.kind] || action.kind;
+  const layer = {blueprint:'原图',svg:'SVG',svg_preview:'SVG 预览',ppt_preview:'PPT 预览',pptx:'整稿 PPT'}[action.layer] || '产物类型待核实';
+  const base = action.kind === 'prepare_stage' ? `${layer}待生成`
+    : action.kind === 'refresh_stage' ? `${layer}依据已变化` : kindLabels[action.kind] || '待核实事项';
   return action.page_ids?.length ? `${action.page_ids.length} 页${base}` : base;
 }
 function reasonText(action) {
@@ -92,7 +94,7 @@ function todoPanel(app) {
       el('div', {class: 'todo-secondary'},
         el('div', {class: 'todo-list-head'}, el('h3', {}, '接下来'), el('span', {}, `${rest.length} 类事项`)),
         rest.length ? rest.map(action => el('article', {class: 'todo-row'},
-          el('div', {}, el('h3', {}, todoTitle(action)), el('p', {}, reasonText(action))), todoButton(app, action)))
+          el('div', {}, el('h3', {}, todoTitle(action)), el('p', {}, reasonText(action)), el('p',{class:'muted'},todoMeta(app,action))), todoButton(app, action)))
           : el('p', {class: 'muted'}, '处理当前优先事项后，继续核对整稿。')));
     return node;
   }

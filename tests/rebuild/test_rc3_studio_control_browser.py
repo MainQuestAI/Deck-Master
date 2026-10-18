@@ -71,7 +71,7 @@ def rc3_browser(tmp_path, request):
 
 @pytest.mark.parametrize("width,height", [(1280, 800), (1440, 900), (390, 844)])
 def test_current_scope_readable_draft_delivery_and_keyboard(rc3_browser, tmp_path, width, height):
-    page, _, store, _, goto, _ = rc3_browser
+    page, _, store, url, goto, _ = rc3_browser
     page.set_viewport_size({"width": width, "height": height})
     before = store.current_revision_id()
     goto()
@@ -89,9 +89,16 @@ def test_current_scope_readable_draft_delivery_and_keyboard(rc3_browser, tmp_pat
     expect(page.get_by_label("所选实际文件的交付判断")).to_contain_text("当前控制")
     expect(page.get_by_label("所选实际文件的交付判断")).to_contain_text("工程检查")
     expect(page.get_by_role("button", name="生成审阅包", exact=True)).to_be_enabled()
-    page.get_by_role("button", name="生成正式交付包", exact=True).click()
-    expect(page.locator(".export-results")).to_contain_text("未生成")
-    expect(page.locator(".export-results")).to_contain_text("当前稿件、可读报告和本次输入均保留")
+    formal = page.get_by_role("button", name="生成正式交付包", exact=True)
+    expect(formal).to_be_disabled()
+    expect(page.locator('#'+formal.get_attribute('aria-describedby'))).to_contain_text('交付缺口')
+    expect(page.get_by_label("所选实际文件的交付判断")).to_contain_text("整稿 PPT")
+    expect(page.locator(".export-results .export-result")).to_have_count(0)
+    # UI admission supplements the actual server guard; direct POST still refuses.
+    denied = page.request.post(url+'api/exports', data={'purpose':'delivery','revision':before}, headers={
+        'Origin':url.rstrip('/'), 'X-Deck-Token':page.request.get(url+'api/session').json()['token']})
+    assert denied.status == 409
+    assert denied.json()['error']['code'] in ('decision_needed','authority_insufficient','delivery_blocked')
     dimensions = page.evaluate("({width:innerWidth,scroll:document.documentElement.scrollWidth})")
     assert dimensions["scroll"] <= dimensions["width"]
     assert store.current_revision_id() == before

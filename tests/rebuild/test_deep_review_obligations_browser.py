@@ -167,7 +167,7 @@ def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(his
     expect(history_select.locator(f'option[value="{historical}"]')).to_have_count(1, timeout=15000)
     history_select.select_option(value=historical)
     page.get_by_role('button', name='读取所选版本', exact=True).click()
-    page.get_by_role('button', name='正在进行', exact=True).click()
+    page.get_by_role('button', name='任务记录', exact=True).click()
     expect(page.locator('.run-desk')).to_contain_text('固定执行记录')
     expect(page.locator('.run-task').filter(has_text='制作可编辑稿')).to_have_count(0)
     expect(page.locator('.run-task').filter(has_text='整理内容').first).to_contain_text('结果已记录')
@@ -187,7 +187,7 @@ def test_topbar_pending_entry_always_lands_on_the_task_list(historical_obligatio
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name=re.compile(r'^查看待交接任务，\d+ 项$')).click()
     expect(page.locator('#runs-tasks')).to_be_visible(timeout=15000)
-    expect(page.locator('.runs-subareas button[aria-pressed="true"]')).to_have_text('正在进行')
+    expect(page.locator('.runs-subareas button[aria-pressed="true"]')).to_have_text('任务记录')
     expect(page.locator('.run-task').filter(has_text='制作可编辑稿').first).to_contain_text('待接手')
 
 
@@ -211,7 +211,7 @@ def test_area_link_without_the_subarea_falls_back_to_tasks(obligations_browser):
                   [identity, store.current_revision_id()])
     page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
     expect(page.locator('#runs-tasks')).to_be_visible()
-    expect(page.locator('.runs-subareas button[aria-pressed="true"]')).to_have_text('正在进行')
+    expect(page.locator('.runs-subareas button[aria-pressed="true"]')).to_have_text('任务记录')
     # 非法 area 同样回落而不是让整条路由报错。
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'runs', revision: args[1], area: 'bogus'})}",
                   [identity, store.current_revision_id()])

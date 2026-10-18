@@ -124,11 +124,14 @@ export function runDesk(app, data) {
   function studioTask(task) {
     const label=names[task.kind] || '制作任务', next=todo(task);
     const statusIcon=task.status==='completed'?'check':task.status==='failed'||task.needs_verification?'attention':'clock';
-    const summary=(task.display_instruction ?? task.instruction ?? '').trim() || '未记录制作要求';
+    // An exact core summary may preserve authored reasons. Unknown instructions
+    // remain verbatim in detail/search, never in a list tooltip or protocol dump.
+    const verified = task.display_instruction && task.display_instruction !== task.instruction;
+    const summary=verified ? task.display_instruction.trim() : task.instruction?.trim() ? '制作要求见详情' : '未记录制作要求';
     return el('article',{class:'run-task studio-task-record','data-task-id':task.task_id},
       el('div',{class:'studio-task-main'},el('span',{class:'studio-task-symbol','aria-hidden':'true'},icon(task.kind==='compose'?'content':'runs')),
         el('div',{class:'studio-task-copy'},el('h3',{},label),el('p',{class:'run-task-scope'},`目标：${scopeLabel(task)}`),
-          el('p',{class:'run-requirement',title:summary},`要求：${summary}`))),
+          el('p',{class:'run-requirement'},`要求：${summary}`))),
       el('div',{class:'studio-task-state'},el('span',{class:'status'},icon(statusIcon),statuses[task.status]||'状态待核实'),
         next.length>0 && el('p',{class:task.needs_verification?'field-error':'muted'},next.map(key=>actions[key]||key).join(' · '))),
       task.task_id ? button('查看这项任务',()=>app.go({task_id:task.task_id,revision:page.revision_id}),false,{class:'run-task-open'}) : el('span',{class:'field-error'},'记录无法读取'));

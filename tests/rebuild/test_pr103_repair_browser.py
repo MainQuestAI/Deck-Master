@@ -542,7 +542,7 @@ def test_material_editor_keeps_preview_confirmation_and_return_in_context(ux04_b
     else:
         material = project.parent / 'new-material.txt'
         material.write_text('Synthetic PR103 input, not customer material.',encoding='utf-8')
-        page.get_by_role('button',name='添加材料或调整要求',exact=True).click()
+        page.get_by_role('button',name='添加材料',exact=True).click()
         expect(editor.get_by_role('heading',name='添加材料',exact=True)).to_be_visible()
         expect(editor.get_by_label('新增材料完整路径（每行一个）')).to_be_focused()
         editor.get_by_label('新增材料完整路径（每行一个）').fill(str(material))

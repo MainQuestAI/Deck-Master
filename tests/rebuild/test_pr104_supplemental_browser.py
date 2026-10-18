@@ -156,7 +156,7 @@ def test_pressure_history_and_full_breakdown_use_visible_production_controls(flo
     pressure = module('w10_pressure'); info = ui_journal.project_info(flow.project)
     with browser_for(flow.project) as (page, _):
         page.get_by_role('button', name='任务与交付', exact=True).click()
-        expect(page.get_by_role('button', name='正在进行', exact=True)).to_have_attribute('aria-pressed', 'true')
+        expect(page.get_by_role('button', name='任务记录', exact=True)).to_have_attribute('aria-pressed', 'true')
         expect(page.locator('[aria-label="阅读历史版本"]')).to_be_hidden()
         counts = {}
         pressure.read_history_phase(page, counts)
