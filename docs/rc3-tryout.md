@@ -1,6 +1,6 @@
 # RC3 功能进度与试用
 
-当前试用代码在 [PR120](https://github.com/MainQuestAI/Deck-Master/pull/120) 的 `impl/rc3-05` 分支。旧效果实验暂挂，不作为普通功能开发和试用的前置条件；当前候选尚未合并或正式发布。
+[PR120](https://github.com/MainQuestAI/Deck-Master/pull/120) 已合并至 main（`0abf66f7`），包版本为 `1.0.0rc3`。工程候选与完整成品检查分别记录；日用安装和正式发布不随合并自动切换。旧实验不作为普通功能使用或交付的前置条件。
 
 ## 目前能做什么
 
@@ -16,14 +16,14 @@
 | 正常整套制作与局改预算 | 从真实已采用 Plan 或修改影响预览计算逐页首次调用上限，正式任务绑定逐页额度；重复授权保留已有消耗，未知调用仍需核实。 |
 | 候选数量上限 | 正式试作按既有任务保留候选槽。达到上限后不再创建新槽，最后一个合法结果仍可接收、比较与按已有权限采用。 |
 
-尚未完成的是最终真实效果试用与目标 PowerPoint 打开、编辑验证。实际 Host/图片能力、页面观感、长稿质量和现场版与阅读版的整体效果需在实际使用中检查。上述实现和工程测试不替用户作这个判断。
+整稿检查由制作/审阅 Agent 对照任务、原材料和实际文件完成，包括内容、密度、关系、可读性、编辑性及所选讲稿。不要求用户组织听众反馈或真人计时；指定桌面软件仅在本次任务明确要求时适用。
 
 ## 打开工作台
 
 可在新目录克隆试用分支，用 Python 3.11 或 3.12 建立隔离环境。这些命令由你在需要试用的机器执行：
 
 ```bash
-git clone --branch impl/rc3-05 https://github.com/MainQuestAI/Deck-Master.git Deck-Master-rc3-tryout
+git clone --branch main https://github.com/MainQuestAI/Deck-Master.git Deck-Master-rc3-tryout
 cd Deck-Master-rc3-tryout
 python3.12 -m venv .venv
 .venv/bin/python -m pip install .
