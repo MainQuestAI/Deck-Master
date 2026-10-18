@@ -90,20 +90,30 @@ export function deliveryDesk(app) {
   const revision = app.route.revision, key = `deck-master:v3:exports:${app.info.project_identity}`;
   const status = el('p', {role: 'status'}), results = el('div', {class: 'stack export-results'}), facts = el('div', {class: 'stack'});
   let disposed = false; app.disposables.push(() => { disposed = true; });
+  let deliveryReady=false, deliveryBusy=false, deliveryButton=null;
+  const hasJudgement=app.health.ui_capabilities?.includes('delivery_eligibility.v1');
+  const deliveryHint=el('p',{id:'delivery-availability-'+crypto.randomUUID(),class:'muted delivery-availability',role:'status','aria-label':'正式交付可用性'},
+    hasJudgement?'正在核对交付条件，核对完成后再生成。':'当前核心不支持交付判断，暂不能生成正式交付包；请升级核心后重新核对。');
+  function deliveryControls() { if(deliveryButton)deliveryButton.disabled=Boolean(app.info.sample?.readonly)||deliveryBusy||!deliveryReady; }
+  function deliveryState(ready,message) {deliveryReady=ready;deliveryHint.textContent=message;deliveryControls();}
   const notesChoice = el('select', {'aria-label':'口播稿保留方式', disabled:Boolean(app.info.sample?.readonly)},
     el('option', {value:''}, '按稿件已有要求'), ...Object.entries(notesChoices).map(([value,label])=>el('option', {value}, label)));
-  const notesStatus = el('p', {class:'muted', role:'status'}, '适用于审阅包和正式交付包；内部工程包保留恢复原件。');
+  const notesStatus = el('p', {class:'muted', role:'status','aria-label':'口播保留方式核对'}, '适用于审阅包和正式交付包；内部工程包保留恢复原件。');
   const notesOptions = () => notesChoice.value ? {notes_policy:notesChoice.value} : {};
   let loadJudgement = () => {};
   notesChoice.addEventListener('change', () => { loadJudgement(); });
   // UX-05b：文件区按「版本—用途—结果」组织：版本先固定，正式用途（交付/审阅）
   // 在先，工程恢复包退到辅助位置；生成结果按同一用途与版本列出。
-  const purposeCard = (purpose, primary) => studio ? el('article',{class:'studio-delivery-row'},
+  const purposeCard = (purpose, primary) => {
+    const control=button('生成'+names[purpose],event=>create(purpose,event.currentTarget),primary,
+      {disabled:Boolean(app.info.sample?.readonly)||purpose==='delivery','aria-describedby':purpose==='delivery'?deliveryHint.id:null});
+    if(purpose==='delivery')deliveryButton=control;
+    return studio ? el('article',{class:'studio-delivery-row'},
     el('span',{class:'studio-file-symbol','aria-hidden':'true'},icon(purpose==='delivery'?'check':purpose==='review'?'content':'runs')),
-    el('div',{class:'studio-delivery-copy'},el('h3',{},names[purpose]),el('p',{class:'muted'},descriptions[purpose])),
-    button('生成' + names[purpose], event => create(purpose,event.currentTarget),primary,{disabled:Boolean(app.info.sample?.readonly)}))
+    el('div',{class:'studio-delivery-copy'},el('h3',{},names[purpose]),el('p',{class:'muted'},descriptions[purpose]),purpose==='delivery'&&deliveryHint),control)
     : el('article', {class: 'export-purpose stack'},el('h3', {}, names[purpose]), el('p', {}, descriptions[purpose]),
-      button('生成' + names[purpose], event => create(purpose,event.currentTarget),primary,{disabled:Boolean(app.info.sample?.readonly)}));
+      control,purpose==='delivery'&&deliveryHint);
+  };
   const versionBar=el('div',{class:'studio-files-version'},el('div',{},el('strong',{},app.historical?'历史版本文件':'当前阅读版本文件'),
     el('p',{class:'export-version'},`本次文件固定为 ${version(revision)}。后台新结果不会改变已经生成的包。`)),
     button('选择其它版本',()=>app.go({surface:'runs',runs_area:'versions',task_id:null})));
@@ -120,29 +130,41 @@ export function deliveryDesk(app) {
     el('h3', {class: 'export-group-title'}, '生成结果'), results);
   if(studio){node.classList.add('studio-files-desk'); results.append(el('p',{class:'muted export-empty'},'尚未在此浏览器生成文件。选择用途后，下载入口会显示在这里。'));}
   node.id = 'delivery-desk'; node.querySelector('h2').tabIndex = -1;
-  if (app.health.ui_capabilities?.includes('delivery_eligibility.v1')) {
-    const judgement = el('div', {class: 'stack'}, el('p', {role: 'status'}, '正在核对所选实际文件与当前控制。'));
+  if (hasJudgement) {
+    const judgement = el('div', {class: 'stack delivery-check-container'}, el('p', {role: 'status'}, '正在核对所选实际文件与当前控制。'));
     node.querySelector('.panel-body').prepend(judgement);
     let serial = 0;
     const load = async () => {
       const token = ++serial;
+      deliveryState(false,'正在核对交付条件，核对完成后再生成。');
       judgement.replaceChildren(el('p', {role:'status'}, '正在核对所选口播方式、实际文件与当前控制。'));
       notesStatus.textContent = '正在核对本次口播保留方式；内部工程包保留恢复原件。';
       try {
         const value = await deliveryJudgement(app, revision, notesOptions());
         if (!disposed && token===serial) {
+          const bound=value.artifact_revision_id===revision&&typeof value.control_revision_id==='string'&&
+            /^[a-f0-9]{64}$/.test(value.selected_output?.file_sha256||'')&&value.selected_output?.notes_policy&&
+            (!notesChoice.value||value.selected_output.notes_policy.selection===notesChoice.value);
+          const ready=bound&&value.status==='ready'&&value.allowed!==false;
+          deliveryState(ready,ready?'已记录的交付条件满足；生成时仍会重新核验当前控制与实际文件。':
+            value.status==='blocked'?'所选文件仍有交付缺口，请先处理上方具名缺项，再重新核对。':'交付判断的依据不完整，暂不能生成；请重新核对。');
           notesStatus.textContent = '本次方式：'+notesLabel(value.selected_output?.notes_policy?.selection)+'。内部工程包保留恢复原件。';
-          judgement.replaceChildren(deliveryJudgementView(value), button('重新核对当前控制', load));
+          judgement.replaceChildren(deliveryJudgementView(value,app), button('重新核对当前控制', load));
         }
       }
       catch (error) {
         if (!disposed && token===serial) {
+          deliveryState(false,'交付判断读取失败，暂不能生成正式交付包；请重读交付判断。');
           notesStatus.textContent = '口播方式尚未核对，请重新读取交付判断。';
           judgement.replaceChildren(admissionView(app, error), button('重读交付判断', load));
         }
       }
     };
     loadJudgement = load;
+    let observedControl=app.latest?.revision_id;
+    const controlChanged=event=>{const next=event.detail?.revision_id;if(next&&next!==observedControl){observedControl=next;load();}};
+    app.root.addEventListener('summary-refreshed',controlChanged);
+    app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',controlChanged));
     load();
   }
   function read() {
@@ -181,13 +203,17 @@ export function deliveryDesk(app) {
     }
   }
   async function create(purpose, trigger) {
-    if (trigger.disabled) return; trigger.disabled = true;
+    if (trigger.disabled||purpose==='delivery'&&!deliveryReady) return; trigger.disabled = true;
+    if(purpose==='delivery'){deliveryBusy=true;deliveryControls();}
     status.textContent = '';
     const request = {purpose, revision, export_id: 'export-' + crypto.randomUUID(), ...(purpose==='engineering'?{}:notesOptions())};
     try { remember(request); }
-    catch (error) { status.textContent = readableError(error) + ' 尚未发送生成请求。'; trigger.disabled = false; return; }
+    catch (error) { status.textContent = readableError(error) + ' 尚未发送生成请求。';
+      if(purpose==='delivery'){deliveryBusy=false;deliveryControls();}else trigger.disabled=Boolean(app.info.sample?.readonly);return; }
     results.querySelector('.export-empty')?.remove();
-    const row = el('section', {class: 'export-result'}); results.prepend(row); try { await generate(request, row); } finally { trigger.disabled = Boolean(app.info.sample?.readonly); }
+    const row = el('section', {class: 'export-result'}); results.prepend(row); try { await generate(request, row); } finally {
+      if(purpose==='delivery'){deliveryBusy=false;loadJudgement();deliveryControls();}else trigger.disabled=Boolean(app.info.sample?.readonly);
+    }
   }
   try {
     const saved = read();

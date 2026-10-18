@@ -1,0 +1,146 @@
+{
+  "source": "Web UI iteration in this PR",
+  "observations": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "heading": {
+        "top": 49,
+        "bottom": 79.796875,
+        "height": 30.796875
+      },
+      "create": {
+        "top": 807,
+        "bottom": 851,
+        "height": 44
+      },
+      "form": {
+        "top": 95.796875,
+        "bottom": 770,
+        "height": 674.203125,
+        "clientHeight": 674,
+        "scrollHeight": 1003
+      },
+      "fields": [
+        "text",
+        "textarea",
+        "text",
+        "file",
+        "select-one",
+        "select-one",
+        "text",
+        "text",
+        "number"
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "heading": {
+        "top": 49,
+        "bottom": 79.796875,
+        "height": 30.796875
+      },
+      "create": {
+        "top": 707,
+        "bottom": 751,
+        "height": 44
+      },
+      "form": {
+        "top": 95.796875,
+        "bottom": 670,
+        "height": 574.203125,
+        "clientHeight": 574,
+        "scrollHeight": 1003
+      },
+      "fields": [
+        "text",
+        "textarea",
+        "text",
+        "file",
+        "select-one",
+        "select-one",
+        "text",
+        "text",
+        "number"
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": {
+        "top": 49,
+        "bottom": 79.796875,
+        "height": 30.796875
+      },
+      "create": {
+        "top": 751,
+        "bottom": 795,
+        "height": 44
+      },
+      "form": {
+        "top": 95.796875,
+        "bottom": 714,
+        "height": 618.203125,
+        "clientHeight": 618,
+        "scrollHeight": 1171
+      },
+      "fields": [
+        "text",
+        "textarea",
+        "text",
+        "file",
+        "select-one",
+        "select-one",
+        "text",
+        "text",
+        "number"
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 500
+      },
+      "heading": {
+        "top": 49,
+        "bottom": 79.796875,
+        "height": 30.796875
+      },
+      "create": {
+        "top": 407,
+        "bottom": 451,
+        "height": 44
+      },
+      "form": {
+        "top": 95.796875,
+        "bottom": 370,
+        "height": 274.203125,
+        "clientHeight": 274,
+        "scrollHeight": 1171
+      },
+      "fields": [
+        "text",
+        "textarea",
+        "text",
+        "file",
+        "select-one",
+        "select-one",
+        "text",
+        "text",
+        "number"
+      ],
+      "no_horizontal_overflow": true
+    }
+  ],
+  "created_projects": 0
+}

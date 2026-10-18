@@ -396,7 +396,11 @@ def test_delivery_gaps_name_rules_and_keep_unknown_reasons_blocked(workbench):
       {'error':{'code':'delivery_blocked','message':'交付被拒绝：存在未解决项。','revision_id':store.current_revision_id(),'gaps':[
         {'layer':'ppt','reason':'page_limit_violation','page_id':None,'scope':'deck'},
         {'layer':'ppt','reason':'needs_a_later_rule','dimension':'privacy','page_id':'p01'}]}})))
-    page.get_by_role('button',name='生成正式交付包',exact=True).click()
+    # Formal generation is disabled for this incomplete project (AUDIT-F05).
+    # Use the independent review outlet to exercise the same POST-error/gaps
+    # component; the injected response remains an explicit contract fixture.
+    expect(page.get_by_role('button',name='生成正式交付包',exact=True)).to_be_disabled()
+    page.get_by_role('button',name='生成审阅包',exact=True).click()
     gaps=page.locator('.export-gaps')
     gaps.wait_for()
     # A known rule states the rule and the matching action, and stays blocked.
@@ -471,7 +475,7 @@ def test_historical_candidate_list_never_acquires_future_candidate(workbench):
     expect(page.locator('.history-banner')).to_contain_text('历史版本')
     # 候选与试作归「待决定」子区；先切入该子区再核对历史/最新两份记录。
     page.get_by_role('button',name='待决定',exact=True).click()
-    expect(page.get_by_text('还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务可到“正在进行”继续处理。',exact=True)).to_be_visible()
+    expect(page.get_by_text('还没有候选。单页原图或 SVG 中可保存试作要求；正在运行或失败的任务可到“任务记录”继续处理。',exact=True)).to_be_visible()
     expect(page.locator('.candidate-batch-row')).to_have_count(0)
     goto('runs');page.get_by_role('button',name='待决定',exact=True).click()
     expect(page.locator('.candidate-batch-row')).to_have_count(1)

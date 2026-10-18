@@ -1,6 +1,6 @@
 """UX-05 任务、版本与交付反例（FINAL-REPAIR-PLAN AC16–AC18）。
 
-- AC16/F12：大量运行记录下，「正在进行｜待决定｜版本｜文件」四个子区可直接
+- AC16/F12：大量运行记录下，「任务记录｜待决定｜版本｜文件」四个子区可直接
   到达（聚焦子区标题）；SVG 族/正文/PPT 任务的快捷阅读按钮名称与其目标层
   相符。
 - AC17/F09：选中 A、已读 B、当前 C 三个身份可区分；恢复预览同时显示来源
@@ -71,9 +71,9 @@ def test_runs_subareas_reach_decisions_versions_files_and_shortcuts_match_layers
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
 
-    # 四个子区是分段工作上下文：默认进入「正在进行」，同一时刻只呈现一个子区，
+    # 四个子区是分段工作上下文：默认进入「任务记录」，同一时刻只呈现一个子区，
     # 切换后焦点落在该子区标题，大量记录也不需要手动翻找。
-    running = page.get_by_role('button', name='正在进行', exact=True)
+    running = page.get_by_role('button', name='任务记录', exact=True)
     expect(running).to_have_attribute('aria-pressed', 'true')
     expect(page.locator('.run-desk')).to_be_visible()
     expect(page.locator('#runs-versions')).to_be_hidden()
@@ -89,10 +89,12 @@ def test_runs_subareas_reach_decisions_versions_files_and_shortcuts_match_layers
     expect(page.locator('#runs-tasks')).to_be_visible()
     svg_card = page.locator('.run-task').filter(has_text='制作可编辑稿').first
     # 运行列表默认回答要求、目标与状态，而不是只有任务类型和时间。
-    expect(svg_card).to_contain_text('要求：重建这一页的 SVG。')
+    expect(svg_card).to_contain_text('要求：制作要求见详情')
     expect(svg_card).to_contain_text('目标：')
     expect(svg_card.locator('.status')).to_have_text('结果已记录')
     svg_card.get_by_role('button', name='查看这项任务').click()
+    page.locator('.run-detail').get_by_text('制作要求与执行身份', exact=True).click()
+    expect(page.locator('.run-detail')).to_contain_text('重建这一页的 SVG。')
     import re
     page.get_by_role('button', name=re.compile(r'^阅读 第 1 页 .* · SVG$')).click()
     assert 'layer=svg' in page.url
@@ -244,7 +246,7 @@ def test_batch_blocking_reasons_sit_beside_the_field(ux05_browser):
 
 
 def test_task_detail_leaves_subarea_clean_and_version_identity_has_no_value_noise(ux05_browser):
-    # D15/UAC20 前半：详情只在「正在进行」子区生效；切走后标题、交接与返回
+    # D15/UAC20 前半：详情只在「任务记录」子区生效；切走后标题、交接与返回
     # 立即收起且 URL 不再携带 task;版本区三身份不出现 false/空徽标。
     from playwright.sync_api import expect
     page, server, path, store = ux05_browser
@@ -278,7 +280,8 @@ def test_task_detail_leaves_subarea_clean_and_version_identity_has_no_value_nois
     expect(title).to_have_text('任务与交付')
     expect(page.get_by_role('button', name='文件', exact=True)).to_be_visible()
     expect(page.locator('.history-identity')).to_contain_text('当前版本：')
-    # 回到「正在进行」：详情不再自动带出,任务归列表可再次进入。
-    page.get_by_role('button', name='正在进行', exact=True).click()
+    # 回到「任务记录」：详情不再自动带出,任务归列表可再次进入。
+    page.get_by_role('button', name='任务记录', exact=True).click()
     expect(title).to_have_text('任务与交付')
-    expect(page.get_by_text('整理首页图标与正文', exact=False).first).to_be_visible()
+    expect(page.locator('.run-task[data-task-id="tsk-context-compose"]')).to_contain_text('制作要求见详情')
+    expect(page.locator('.run-detail')).to_be_hidden()

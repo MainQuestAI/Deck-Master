@@ -144,7 +144,7 @@ def test_material_entry_opens_the_adjust_form_not_the_first_material_card(ux00_b
     expect(page.locator('.source-card')).to_have_count(2)
     assert page.locator('.materials-adjust-form').get_attribute('open') is None
 
-    page.get_by_role('button', name='添加材料或调整要求', exact=True).click()
+    page.get_by_role('button', name='添加材料', exact=True).click()
     assert page.locator('.materials-adjust-form').get_attribute('open') == ''
     assert page.evaluate('() => document.activeElement && document.activeElement.getAttribute("aria-label")') \
         == '新增材料完整路径（每行一个）'
@@ -155,7 +155,7 @@ def test_material_entry_opens_the_adjust_form_not_the_first_material_card(ux00_b
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'content', revision: args[1]})}",
                   [identity, basis])
     expect(page.locator('.materials-aside span.status')).to_have_text('历史版本')
-    assert page.get_by_role('button', name='添加材料或调整要求', exact=True).count() == 0, \
+    assert page.get_by_role('button', name='添加材料', exact=True).count() == 0, \
         '历史版本不加载当前输入，添加入口不应出现'
 
 

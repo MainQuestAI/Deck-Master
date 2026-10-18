@@ -157,8 +157,14 @@ export function gallery(app, data) {
       () => { rememberAnchor(); app.go({layer: key}); }, false,
       {'aria-pressed': String(s.layer === key), class: s.layer === key ? 'active' : ''}));
     const modes = el('div', {class: 'segmented', role: 'group', 'aria-label': '阅读方式'});
+    const comparisonReason = isNarrow ? '窄屏按页连续阅读，桌面选择 2–4 页可并排比较。'
+      : s.selected_page_ids.length < 2 ? '至少选择 2 页后可并排比较（最多 4 页）。'
+      : s.selected_page_ids.length > 4 ? '并排比较最多 4 页；选页制作范围不受影响。'
+      : `已选 ${s.selected_page_ids.length} 页，可并排比较；支持 2–4 页。`;
+    const comparisonHelp = el('p', {id:'gallery-comparison-'+crypto.randomUUID(),class:'muted gallery-comparison-reason',role:'status'},comparisonReason);
     for (const [key, label] of Object.entries({grid: '联系表', continuous: '连续阅读', compare: '并排比较'})) modes.append(button(label,
       () => resetReading({mode: key}, true), false, {'aria-pressed': String(mode === key), class: mode === key ? 'active' : '',
+        'aria-describedby':key==='compare'?comparisonHelp.id:null,
         disabled: isNarrow && key !== 'continuous' || key === 'compare' && (s.selected_page_ids.length < 2 || s.selected_page_ids.length > 4)}));
     const columns = el('div', {class: 'segmented', role: 'group', 'aria-label': '联系表列数', hidden: mode !== 'grid' || isNarrow});
     for (const number of [2, 3, 4]) columns.append(button(`${number} 列`, () => resetReading({columns: number}, true), false,
@@ -193,17 +199,18 @@ export function gallery(app, data) {
           revision:app.route.revision,batch_action:action,batch_page_ids:chosen});
       },false,{'data-gallery-action':action,'aria-label':`对画廊选页${label}`,disabled:!s.selected_page_ids.length||app.readonly||app.historical||Boolean(app.info.sample?.readonly)}))),
       el('span',{class:'muted'},app.readonly?'历史或只读版本仅供阅读，制作范围保持。':`完整选页带入配置，核对后才保存。${s.selected_page_ids.length > 4 ? '并排比较仅支持 2–4 页；制作范围不受影响。' : ''}`));
-    const filters = el('div', {class: 'row wrap gallery-filter-fields'}, chapter, filter, searchSlot, modes, columns, extras);
+    const modeControls = el('div',{class:'gallery-mode-controls'},modes,comparisonHelp);
+    const filters = el('div', {class: 'row wrap gallery-filter-fields'}, chapter, filter, searchSlot, modeControls, columns, extras);
     if(studio && isNarrow){
       settingsButton.textContent = s.filter.chapter_id || s.filter.status !== 'all' ? '筛选与阅读设置 · 已筛选' : '筛选与阅读设置';
       readingSettings.replaceChildren(el('label',{class:'stack'},'章节',chapter),el('label',{class:'stack'},'页面状态',filter),
-        el('div',{class:'stack'},el('strong',{},'阅读方式'),modes,el('p',{class:'muted'},'窄屏按页连续阅读；回到桌面宽度后恢复原来的阅读方式。')),columns,extras);
+        el('div',{class:'stack'},el('strong',{},'阅读方式'),modeControls,el('p',{class:'muted'},'窄屏按页连续阅读；回到桌面宽度后恢复原来的阅读方式。')),columns,extras);
       controls.replaceChildren(tabs,el('div',{class:'studio-gallery-mobile-search'},searchSlot,settingsButton),
         ...(s.selected_page_ids.length ? [make] : []));
       if(settingsFocus) [...readingSettings.querySelectorAll('[aria-label]')].find(control=>control.getAttribute('aria-label')===settingsFocus)?.focus({preventScroll:true});
     } else if(studio){
       closeReadingSettings();
-      controls.replaceChildren(el('div',{class:'studio-gallery-main'},tabs,el('div',{class:'row wrap'},searchSlot,modes)),el('div',{class:'studio-gallery-filters row wrap'},chapter,filter,columns,extras),make);
+      controls.replaceChildren(el('div',{class:'studio-gallery-main'},tabs,el('div',{class:'row wrap'},searchSlot,modeControls)),el('div',{class:'studio-gallery-filters row wrap'},chapter,filter,columns,extras),make);
     } else if (isNarrow) {
       const expanded = Boolean(query || s.filter.chapter_id || s.filter.status !== 'all');
       controls.replaceChildren(tabs, el('details', {class: 'gallery-filter-disclosure', open: expanded}, el('summary', {}, expanded ? '筛选作品（已筛选）' : '筛选作品与管理选页'), filters));
@@ -213,7 +220,7 @@ export function gallery(app, data) {
       const settings = el('details', {class: 'gallery-reading-settings', open: settingsOpen}, el('summary', {}, '阅读设置'),
         el('div', {class: 'stack'}, columns));
       controls.replaceChildren(el('div', {class: 'row wrap'}, tabs, searchSlot, settings),
-        el('div', {class: 'row wrap'}, modes, chapter, filter, extras));
+        el('div', {class: 'row wrap'}, modeControls, chapter, filter, extras));
     }
     renderLegend();
   }

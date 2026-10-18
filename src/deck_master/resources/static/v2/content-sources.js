@@ -52,6 +52,7 @@ export function content(app, data) {
   const sourceList = el('div', {class:'stack'}), pageList = el('ol', {class:'content-order', 'aria-label':'调整逐页稿顺序'}), goalList = el('div', {class:'stack'});
   let operation, completedAction = null;
   const materialEditor = el('div',{class:'stack'});
+  const retainedInputs = el('div',{class:'retained-inputs row wrap',role:'status',hidden:true});
   let editTrigger = null, editKind = 'task', editSourceId = null, editReturnScroll = null;
   function read() { return {brief:brief.input.value,audience:audience.input.value,decisions:decisions.input.value,reason:reason.input.value,additions:additions.input.value,sources:sourceRows,uploads,order,selected:[...selected],instruction:instruction.input.value,split_point:splitPoint.input.value,merge_title:mergeTitle.input.value,adjustment_action:adjustmentAction,summary:summary.input.value,goals,chapters}; }
   function hydrate(s) {
@@ -76,7 +77,17 @@ export function content(app, data) {
       app.go({surface:'page',page_id:remaining[Math.min(first,remaining.length-1)],layer:'content',revision:result.revision_id});
     } else { if(studio&&completedAction==='outline')app.contentArea='plan';else app.contentFocusPage=app.contentFocusPage || order[0];app.go({surface:'content',revision:result.revision_id}); }
   });
-  const changed=()=>{operation.changed();orderReview.querySelector('.content-request-review')?.remove();adjustmentError.hidden=true;for(const field of [splitPoint,mergeTitle])field.input.removeAttribute('aria-invalid');if(adjustDetails&&!adjustDetails.hidden){adjustDetails.dataset.step='edit';returnEdit.hidden=true;}};
+  const changed=()=>{operation.changed();showRetainedInputs();orderReview.querySelector('.content-request-review')?.remove();adjustmentError.hidden=true;for(const field of [splitPoint,mergeTitle])field.input.removeAttribute('aria-invalid');if(adjustDetails&&!adjustDetails.hidden){adjustDetails.dataset.step='edit';returnEdit.hidden=true;}};
+  function showRetainedInputs() {
+    const taskChanged=inputs && (brief.input.value!==inputs.task.brief || audience.input.value!==inputs.task.audience ||
+      decisions.input.value!==(inputs.task.existing_decisions||[]).join('\n'));
+    const materialsChanged=Boolean(additions.input.value.trim()||uploads.length||sourceRows.some(source=>source.action!=='keep'||
+      source.usage_note!==(inputs?.sources.find(item=>item.source_id===source.source_id)?.usage_note||'')));
+    const other=editKind==='task'?materialsChanged:taskChanged;
+    retainedInputs.hidden=!other;
+    retainedInputs.replaceChildren(...(other ? [el('span',{},editKind==='task'?'还保留了材料变更；预览会列出全部差异。':'还保留了要求修改；预览会列出全部差异。'),
+      button(editKind==='task'?'返回材料变更':'返回要求修改',()=>openMaterialEditor(editKind==='task'?'add':'task'))] : []));
+  }
   for (const field of [brief,audience,decisions,reason,additions,instruction,splitPoint,mergeTitle,summary]) field.input.addEventListener('input',changed);
   function sourceState(source, node) {
     const fact = sourceFacts.get(source.source_id);
@@ -311,7 +322,7 @@ export function content(app, data) {
   const returnEdit=button('返回编辑',()=>{changed();adjustDetails.dataset.step='edit';returnEdit.hidden=true;materialEditor.querySelector('textarea,select')?.focus();},false,{hidden:true});
   const operationHome=el('div',{class:'content-operation-home'},!app.readonly&&operation.node);
   const inputImpact=el('div',{class:'material-input-impact stack'});
-  const inputFields=editable(el('div',{class:'material-input-fields stack'},materialEditor,reason.node,button('预览材料与任务变化',inputPreview)));
+  const inputFields=editable(el('div',{class:'material-input-fields stack'},retainedInputs,materialEditor,reason.node,button('预览材料与任务变化',inputPreview)));
   const adjustDetails = !app.readonly&&inputs ? el('details', {'data-container':'section',class:'panel materials-adjust-form',hidden:true,'data-step':'edit'},el('summary',{class:'panel-head'},'调整任务要求与材料'),
     el('div',{class:'panel-body stack'},editorTitle,el('div',{class:'material-edit-context'},inputFields,inputImpact),el('div',{class:'row wrap'},returnEdit,button('关闭编辑并保留草稿',()=>closeMaterialEditor())))) : null;
   function openMaterialEditor(kind,sourceId=null,trigger=document.activeElement) {
@@ -332,8 +343,9 @@ export function content(app, data) {
       const upload = app.health.ui_capabilities?.includes('material_uploads.v1') ? materialUploads(app,()=>source.upload?[source.upload]:[], (records,event)=>{source.upload=records[0]||null;if(source.upload&&event?.reason==='selected'){source.path='';path.input.value='';source.action='replace';action.value='replace';path.node.hidden=false;}changed();},{single:true}) : null;
       materialEditor.append(...[action,note.node,upload,path.node].filter(Boolean));
     } else {
-      editorTitle.textContent=kind==='add'?'添加材料':'修改任务要求与材料';
-      materialEditor.append(...[brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'),app.health.ui_capabilities?.includes('material_uploads.v1') ? materialUploads(app,()=>uploads,records=>{uploads=records;changed();}) : null,additions.node].filter(Boolean));
+      editorTitle.textContent=kind==='add'?'添加材料':'修改任务要求';
+      if(kind==='add') materialEditor.append(...[app.health.ui_capabilities?.includes('material_uploads.v1') ? materialUploads(app,()=>uploads,records=>{uploads=records;changed();}) : null,additions.node].filter(Boolean));
+      else materialEditor.append(brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'));
     }
     if (!inputImpact.contains(operation.node)) inputImpact.replaceChildren(operation.node);adjustDetails.hidden=false;adjustDetails.open=true;
     adjustDetails.scrollIntoView({block:'start'});(kind==='add'?additions.input:materialEditor.querySelector('textarea,select'))?.focus({preventScroll:true});
@@ -408,7 +420,7 @@ export function content(app, data) {
     if(focus){const title=workAreas.find(p=>!p.hidden)?.querySelector('h2');if(title){title.tabIndex=-1;title.focus();}}
   }
   if(studio)operationHome.hidden=true;
-  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&el('div',{class:'row wrap'},button('添加材料或调整要求',openAdjustForm,false,{disabled:!inputs}),button('修改任务要求',event=>openMaterialEditor('task',null,event.currentTarget),false,{disabled:!inputs}))),
+  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&el('div',{class:'row wrap'},button('添加材料',openAdjustForm,false,{disabled:!inputs}),button('修改任务要求',event=>openMaterialEditor('task',null,event.currentTarget),false,{disabled:!inputs}))),
     alignment,studio?null:hostImpact,adjustDetails,areaNav,
     studio?workAreas:el('div',{class:'stack'},overview,el('details',{class:'panel content-order-panel'},el('summary',{class:'panel-head'},'逐页稿与顺序 · '+pages.length+' 页'),el('div',{class:'panel-body'},pageTools)),
       ref?panel('内容计划与依据',planEvidence,el('details',{},el('summary',{},'编辑内容计划'),planTools)):panel('内容计划',el('p',{},'尚未记录完整内容计划。'))),

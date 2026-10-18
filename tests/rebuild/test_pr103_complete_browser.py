@@ -599,7 +599,7 @@ def test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports(t
         expect(copy).to_be_enabled()
         assert visible_button_style(page, '复制交接说明')['height'] >= 44
         page.screenshot(path=str(page.evidence/'task-handoff.png'), full_page=True)
-        for name in ('待决定', '版本', '文件', '正在进行'):
+        for name in ('待决定', '版本', '文件', '任务记录'):
             control = page.get_by_role('button', name=name, exact=True)
             control.click()
             expect(control).to_have_attribute('aria-pressed', 'true')

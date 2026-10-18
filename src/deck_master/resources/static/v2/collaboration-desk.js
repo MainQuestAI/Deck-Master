@@ -438,7 +438,7 @@ export async function deliveryJudgement(app, revision, options={}) {
   return resultOf(await get(projectAPI(app)+'/delivery-eligibility?'+params));
 }
 
-export function deliveryJudgementView(value) {
+export function deliveryJudgementView(value,app) {
   const labels={pass:'通过',allowed:'允许',blocked:'受阻',fail:'未通过',needs_reviewer:'待审阅',not_evaluated:'未评估',needs_review:'待判断',not_required:'无需此项',ready:'就绪'};
   const state=(part,key)=>{
     if(typeof part==='string')return part;
@@ -449,12 +449,39 @@ export function deliveryJudgementView(value) {
     if(key==='professional'&&typeof part?.satisfied==='boolean')return part.satisfied?'pass':'needs_reviewer';
     return '未记录';
   };
+  const dimensions={content:'正文内容',blueprint_content:'原图内容',blueprint_fidelity:'原图一致性',conversion:'转换检查',readability:'阅读检查',privacy:'隐私检查'};
+  const dimensionName=key=>{const [kind,pageId]=key.split(':');const index=app?.summary.pages.findIndex(page=>page.page_id===pageId)??-1;
+    return `${index<0?'整稿':'第 '+(index+1)+' 页'} · ${dimensions[kind]||'检查项待核实'}`;};
+  const professionalGaps={no_professional_review:'所选实际文件尚无专业复核',identity_adapter_unavailable:'缺少可核实身份的审阅通道',
+    reviewer_not_human:'审阅者类型不满足当前政策',status_not_pass:'专业复核尚未通过',human_identity_evidence_missing:'缺少审阅者身份依据',
+    human_identity_evidence_malformed:'审阅者身份依据不完整',human_identity_rejected:'审阅者身份未核实',identity_adapter_error:'身份核实暂不可用',
+    subject_not_current_pptx:'专业复核对应另一份实际文件',required_dependencies_incomplete:'专业复核依据不完整',stale_review_dependency:'专业复核依据已变化',
+    unresolvable_review_dependency:'专业复核依据暂不可读',no_substantive_observations:'缺少实质审阅意见',open_must_fix_findings:'专业复核仍有必改问题',
+    not_final_stage:'尚未完成最终复核',superseded:'复核已由新记录接续',professional_review_failed:'专业复核未通过'};
+  const missing=value.unresolved?.missing_dimensions||[],failed=value.unresolved?.failed_dimensions||[];
+  const named=[];
+  if(!value.selected_output?.file_sha256)named.push('整稿 PPT · 尚无可核对的实际文件');
+  const outputNames={ppt:'整稿 PPT',render_report:'制作报告',page_limit:'页数规则'};
+  const outputReasons={basis_changed:'制作依据已变化',not_recorded:'尚未记录',unresolved:'仍有未解决问题',page_limit_violation:'未满足页数规则'};
+  for(const gap of value.unresolved?.gaps||[])if(!gap.page_id&&outputNames[gap.layer]&&outputReasons[gap.reason])
+    named.push(`${outputNames[gap.layer]} · ${outputReasons[gap.reason]}`);
+  // Group the server's named dimensions by page range without recomputing any
+  // admission rule. Full identities remain in the existing judgement detail.
+  for(const [list,suffix] of [[missing,'未完成'],[failed,'未通过']]) {
+    for(const kind of new Set(list.map(key=>key.split(':')[0]))) {
+      const keys=list.filter(key=>key.split(':')[0]===kind);
+      named.push(keys.length===1?`${dimensionName(keys[0])} · ${suffix}`:`${dimensions[kind]||'检查项待核实'} · ${keys.length} 页${suffix}`);
+    }
+  }
+  named.push(...(value.professional?.gap_reasons||[]).map(code=>professionalGaps[code]||'专业复核依据待核实（见完整判断）'));
   return el('section',{class:'delivery-judgement stack','aria-label':'所选实际文件的交付判断'},
     el('h3',{},value.allowed===true||value.status==='ready'?'所选文件满足当前交付条件':'所选文件仍有交付缺口'),
     el('p',{},`稿件 ${version(value.artifact_revision_id||value.selected_revision_id)} · 当前控制 ${version(value.control_revision_id)}`),
     el('dl',{class:'facts'},...['engineering','collaboration','professional'].flatMap(key=>[el('dt',{}, {engineering:'工程检查',collaboration:'协作控制',professional:'专业复核'}[key]),el('dd',{},labels[state(value[key]||value[key+'_status'],key)]||state(value[key]||value[key+'_status'],key))])),
     el('p',{},'实际文件与口播保留方式按下面的固定记录核对。当前暂停或撤回同样适用于历史文件。'),
     (value.reason_codes||[]).length>0&&el('ul',{},value.reason_codes.map(code=>el('li',{},readableError({code,message:'此项条件尚未满足。请查看完整判断中的具体依据与范围。'})))),
+    named.length>0&&el('div',{class:'delivery-named-gaps'},el('strong',{},'需处理的记录'),el('ul',{},named.map(text=>el('li',{},text)))),
+    value.status==='blocked'&&el('p',{class:'muted'},'下一步：'+nextAction(value.next_action,value.reason_codes||[])),
     details('实际文件、口播方式、支持依据与完整判断',value));
 }
 

@@ -118,7 +118,7 @@ export async function launcher(root, health) {
     const folder = field('新项目文件夹名（必填）', el('input', {required: true, placeholder: '例如：我的方案', pattern: '[^/\\\\]+', autocomplete: 'off'}), '将在上述位置创建新目录；不能覆盖已有目录。');
     const limit = field('页数目标（可选）', el('input', {type: 'number', min: 1, step: 1}));
     const error = el('p', {class: 'field-error', role: 'alert'});
-    const form = el('form', {class: 'stack'}, title.node, brief.node, audience.node, manuscript.node, work.node, mode.node,
+    const form = el('form', {class: 'stack launcher-create-form'}, title.node, brief.node, audience.node, manuscript.node, work.node, mode.node,
       el('div', {class: 'form-pair'}, parent.node, folder.node), button('选择保存文件夹', event => picker(parent.input, parent.error, event.currentTarget)),
       limit.node, el('p', {class: 'muted'}, '可从用途开始，也可选入完整确认稿；确认稿按明确页序建立导入映射，保留来源。创建项目不会启动模型或授予制作权限。'), error);
     const submit = button('创建项目', () => form.requestSubmit(), true);

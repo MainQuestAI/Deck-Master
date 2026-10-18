@@ -99,7 +99,7 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
     assert_touch_targets(page, '.runs-subareas button')
-    running = page.get_by_role('button', name='正在进行', exact=True)
+    running = page.get_by_role('button', name='任务记录', exact=True)
     expect(running).to_have_attribute('aria-pressed', 'true')
     page.get_by_role('button', name='版本', exact=True).click()
     expect(running).to_have_attribute('aria-pressed', 'false')
