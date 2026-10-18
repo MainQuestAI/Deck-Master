@@ -1,16 +1,27 @@
 {
   "target_version": "V1.0.0-RC3",
-  "candidate_id": null,
-  "candidate_sha": null,
-  "candidate_tree": null,
-  "baseline_sha": "92e9f567eaf506f004cac1ef68f44f314739631a",
+  "candidate_id": "7d772f6f4785-d491630a7c0e",
+  "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+  "candidate_tree": "7001adf5de07548aaede13b1da9697437f71467f",
+  "baseline_sha": "0abf66f7cfc5295d8aca7e4eefc8d677477dd085",
   "specification_ref": {
     "archive_sha256": "3b97b4f22c68a980b212512f1aad4d11789b602b434bedd9a607fe8e9e0493fe",
     "entry": "docs/specs/deck-master-v1.0.0-rc3/README.md"
   },
-  "method_manifest": null,
-  "package_manifest": null,
-  "note": "Active RC3 implementation ledger. Current engineering evidence does not close absent L2–L6 evidence; preserve prior candidate and first-draft failures.",
+  "method_manifest": {
+    "ref": "docs/reports/rc3/closeout-20261018/artifact-manifest.json",
+    "inventory_sha256": "7963034f30b387998aee89c712b7351a72a785d4a97faac239b465f259757e15",
+    "actual_task_ref": "final-review-workorder.json",
+    "task_method_basis": "current"
+  },
+  "package_manifest": {
+    "ref": "docs/reports/rc3/closeout-20261018/artifact-manifest.json",
+    "wheel_sha256": "d491630a7c0ebca657078d50c26eff68db5aba20953c2773755453030ac5059e",
+    "sdist_sha256": "5c75afb7d429d59069ba22a1486a79b822fb1936a9db42387e791598a1344342",
+    "source_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+    "installed_package_files_verified": 271
+  },
+  "note": "Current scoped RC3 acceptance under the 2026-10-18 user-corrected rules. All old rows and first-draft failures remain byte-exact in the archived ledger; current PASS is not human approval, unseen method-effect proof, merge, publication or HOME activation.",
   "ac_results": [
     {
       "ac_id": "AC-B01",
@@ -28,16 +39,19 @@
       "output_hashes": [],
       "evidence_refs": [
         "docs/reports/rc3/baseline.json",
-        "docs/reports/rc3/baseline-a.json"
+        "docs/reports/rc3/baseline-a.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Exact main and final upstream integration tree match; 7 current main CI checks success; independent upstream RF review, N1/N3 fixes and local 99 regressions verified.",
-      "findings": [],
-      "limitations": [
-        "N2 inherited followup assigned to RC3-04",
-        "No RC3 professional/user/desktop acceptance claimed",
-        "Refresh candidate/package identity at final RC3-04/05"
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
+      "findings": [
+        "PR120合流基线与本次可执行候选分别固定；最终源码、方法、wheel/sdist、实际安装和输出hash齐全。"
       ],
-      "signed_by": "Codex / RC3 integration (engineering evidence)"
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-B01"
     },
     {
       "ac_id": "AC-B02",
@@ -47,7 +61,7 @@
         "RC3-00",
         "RC3-01"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
@@ -78,22 +92,19 @@
         "docs/reports/rc3/RC3-01-METHODS.md",
         "docs/reports/rc3/RC3-01-HANDOFF.md",
         "docs/reports/rc3/native-content-handoff-20261014/README.md",
-        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Current B Q1/Q2 complete manuscript/Plan/mapping/notes are frozen after exact installed-method workflow and accepted fresh independent Review/gate pass; engineering input can go to RC3-02/03. Three qualified owner-draft snapshots are first-for-Owner, not actual human acceptance.",
-        "Original complete prototypes/evaluations remain historical; full Q1-Q4/profile/effect scope requires later evidence."
+        "保留原Q1–Q4原型与独立评价；补齐Q3阅读/mixed/同源两版及Q2五分钟完整稿检查，六组浅稿实际识别返修完成。"
       ],
-      "limitations": [
-        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
-        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
-        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
-        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
-        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
-        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-B02"
     },
     {
       "ac_id": "AC-B03",
@@ -127,22 +138,19 @@
       "evidence_refs": [
         "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.md",
         "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.json",
-        "docs/reports/rc3/anchor-calibration-20261014/path-mapping-manifest.json"
+        "docs/reports/rc3/anchor-calibration-20261014/path-mapping-manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Scoped synthetic anchor calibration: 16 initial judgments per fresh native judge (12 negatives/4 controls), source-bound adjudication, 12 substantive repairs, 24 repair none/pass. Four controls passed only in original initial judgments.",
-        "AN-Q3-2 original A F0/fail, B F2/fail, root F2/fail; historical R2 F1 preserved. No forced distribution or rewritten original judgment."
+        "复用原十二锚点独立评价与统一裁决；新增六组成对完整内容审阅及修订未误杀合理稀疏/未知对照。"
       ],
-      "limitations": [
-        "Final scoped synthetic calibration conclusion only; content engineering handoff is a separate B-current result. Current document-head CI pending; no human/release PASS.",
-        "Actual E1 content runs are original uploaded synthetic Q1/Q2, seen_example=true; not the original twelve full Host sessions, unseen transfer or blinded method-effect evaluation.",
-        "Human Owner/listeners/full live timing/desktop acceptance explicitly deferred by user and NOT_RUN; signed_by remains null until final owner conclusion.",
-        "PASS applies only to the synthetic anchor-calibration cycle/card item 5, not RC3-01 overall handoff, actual Native Writer effect or all six shallow-copy pairs.",
-        "A repair canonical FINAL observed but roster list completed was not observed before eviction; B both observed. Host-attested native trace, platform signature/configuration unknown; no SDK receipt or human acceptance asserted.",
-        "Q1-A page_copy repair author observed cross-arm FINAL summaries via unnecessary list_agents; claimed no use is unprovable. Local engineering handoff can be inspected, but not a clean blinded A/B repair-effect sample."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-B03"
     },
     {
       "ac_id": "AC-P01",
@@ -153,7 +161,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "NOT_APPLICABLE",
       "evidence_layers": [
         "L0",
         "L1"
@@ -167,16 +175,20 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：精确selected public PPTX/current-control谓词与合成SDK正负已验证；真实human professional_use/pass仍缺席，不以L1代签。"
+        "本次合成文件的human professional policy未启用；真实人类正向签字不适用。协议正向结果保留L1身份，不升级为人类已看稿。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-P01",
+      "not_applicable_reason": "本次合成文件的human professional policy未启用；真实人类正向签字不适用。协议正向结果保留L1身份，不升级为人类已看稿。"
     },
     {
       "ac_id": "AC-P02",
@@ -187,7 +199,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1"
@@ -201,16 +213,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：当前fixed unit与R2 installed行为覆盖身份/政策/依赖负例；R3按未变模块复用。普通JSON/Skill名不能提升受信人类。"
+        "人类政策负例保留正式入口工程证据，相关Runtime/合同未变；普通Agent检查未冒充human专业签字。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-P02"
     },
     {
       "ac_id": "AC-P03",
@@ -221,10 +236,12 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2",
+        "L6"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -235,16 +252,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：review用途与professional gap分开；F4严格needs_reviewer409/4仍提供完整报告，R2实际installedUI下载通过，R3精确复用。"
+        "当前policy=false；实际readiness=ready、handoff=verified，四种notes政策delivery导出通过，专业与工程状态仍分列。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-P03"
     },
     {
       "ac_id": "AC-C01",
@@ -255,10 +275,11 @@
         "RC3-03",
         "RC3-04"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -269,16 +290,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：新真实instruction source/确认稿imported_mapping/未知来源等级保真；F1完整写集合与F3source/version/locator原失败在R2关闭。"
+        "正式入口保留材料/导入/Host指令的来源等级；本次真实Host仅以host_attested登记指令，不伪造verified_user或历史批准。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-C01"
     },
     {
       "ac_id": "AC-C02",
@@ -289,10 +313,11 @@
         "RC3-03",
         "RC3-04"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -303,16 +328,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：F2 committed历史来源去重保原request/credit、closed授权不重开；pause/resume/明确scope与variant公开轨迹有界验证。"
+        "既有范围与控制用例复用；本次仅8页合成项目和本地交付包，记录明确的process_delegation，未扩张为发布、客户发送或HOME激活。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-C02"
     },
     {
       "ac_id": "AC-C03",
@@ -323,10 +351,12 @@
         "RC3-03",
         "RC3-04"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2",
+        "L6"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -337,16 +367,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：真实audience basis stale与局部copy/notes依赖切片分开，四层原子采用/全失败回滚；R3按17未变安装模块复用R2行为。"
+        "继承语义/局改切片正负例；实际仅备注清理保留全部8页blueprint/SVG/预览，旧输出失效并用最终候选重编，零新增图像调用。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-C03"
     },
     {
       "ac_id": "AC-C04",
@@ -357,7 +390,7 @@
         "RC3-03",
         "RC3-04"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1"
@@ -371,16 +404,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：R2真实旧03安装迁移/rollback拒13/新settle unknown/rollforward speech完成F8；旧Page/visual/closed事实保留。"
+        "迁移、恢复不复活权限的原入口工程证据及最终CI覆盖；当前对应模块未改，真实HOME和旧实验恢复未启动。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-C04"
     },
     {
       "ac_id": "AC-M01",
@@ -392,7 +428,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
@@ -423,22 +459,19 @@
         "docs/reports/rc3/RC3-01-METHODS.md",
         "docs/reports/rc3/RC3-01-HANDOFF.md",
         "docs/reports/rc3/native-content-handoff-20261014/README.md",
-        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Actual four content workflows preserve original native output and first SDK-adopted snapshots separately; B current Q1/Q2 all content units pass and source/claim/Page mappings are fixed.",
-        "Q1-A original page_copy answer-visible F2 was real and repaired; new exercise boundary-probe F2 keeps A blocked. Q1 speech initial native cue was correct; adopted-snapshot speech F2 was controller/protocol caused. Q3/final effect coverage pending."
+        "Q1/Q2已审完整稿保留来源映射；六组浅稿逐项定位并实质返修；研究稿和五分钟稿由独立执行复核，未编造事实和替代。"
       ],
-      "limitations": [
-        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
-        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
-        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
-        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
-        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
-        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-M01"
     },
     {
       "ac_id": "AC-M02",
@@ -450,12 +483,13 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
         "L2",
-        "L3"
+        "L3",
+        "L6"
       ],
       "input_hashes": [
         {
@@ -481,22 +515,21 @@
         "docs/reports/rc3/RC3-01-METHODS.md",
         "docs/reports/rc3/RC3-01-HANDOFF.md",
         "docs/reports/rc3/native-content-handoff-20261014/README.md",
-        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "S01 now permits honest nonspoken cue within requested verbatim; original Q1 native cue was refused by old SDK, then controller relabeled kinds. Original refusals/raw/extra turns preserved. Fresh Q1-B closes speech F2 after three original cue kinds restored with identical text/mapping/20-30-10 timing.",
-        "Live cues/verbatim actual current paths evidenced; read_alone/none, mixed and expressly requested dual-version snapshots/exports still require appropriate later evidence."
+        "现有verbatim/cues工程与完整稿证据保留；补4份真实完整用途稿及独立审阅：read_alone/none、明确read-primary的mixed、共享论证的6页阅读版与4页现场版；当前8页cues的四种文件交付实际通过。"
       ],
       "limitations": [
-        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
-        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
-        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
-        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
-        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
-        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
+        "Four use variants are actual content/text-output checks; no second pair of full Q3 image/PPT productions claimed. Runtime sequential snapshots/versioned exports are covered by unchanged retained engineering evidence and current 56-test regression."
       ],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-M02"
     },
     {
       "ac_id": "AC-M03",
@@ -508,7 +541,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
@@ -539,22 +572,19 @@
         "docs/reports/rc3/RC3-01-METHODS.md",
         "docs/reports/rc3/RC3-01-HANDOFF.md",
         "docs/reports/rc3/native-content-handoff-20261014/README.md",
-        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Current estimated speaking/interaction budgets remain distinct from real timing. Q1-B cue/interaction classification has been accepted and independently verified; Q1-A old classification F2 fixed but new exercise F2 remains.",
-        "Q2-B scope-specific content accepted_variance is formal and current gate pass, not AC-M03 overall PASS or a measured ten-minute trial. Actual AC-U03 timing and Q2 five-minute-change/tradeoff are pending."
+        "Q1原8分钟估计保留；Q2十分钟原Plan与六页五分钟稿有明确真实删留和职责合并，210秒讲述+90秒讨论=300秒，均标estimate，不宣称实测。"
       ],
-      "limitations": [
-        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
-        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
-        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
-        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
-        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
-        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-M03"
     },
     {
       "ac_id": "AC-M04",
@@ -566,12 +596,13 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
         "L2",
-        "L3"
+        "L3",
+        "L6"
       ],
       "input_hashes": [
         {
@@ -597,22 +628,19 @@
         "docs/reports/rc3/RC3-01-METHODS.md",
         "docs/reports/rc3/RC3-01-HANDOFF.md",
         "docs/reports/rc3/native-content-handoff-20261014/README.md",
-        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "B Q1/Q2 current complete visible copy/progression are fresh-reviewed pass with current fixed snapshots. Q1-A old answer-visible/feedback-order findings are fixed through real Page/Plan change and current explicit review closure.",
-        "Q1-A fresh review found NEW page-copy exercise boundary-probe F2; current gate stays blocked. This retained negative is not repaired with a second experimental feedback."
+        "8页实际正文保持推荐→证据→替代→机制→责任→口径→节奏→决定的增量；133个正式atom在SVG/PPT完整，关系和限定回读通过。"
       ],
-      "limitations": [
-        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
-        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
-        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
-        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
-        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
-        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-M04"
     },
     {
       "ac_id": "AC-M05",
@@ -624,7 +652,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
@@ -655,22 +683,19 @@
         "docs/reports/rc3/RC3-01-METHODS.md",
         "docs/reports/rc3/RC3-01-HANDOFF.md",
         "docs/reports/rc3/native-content-handoff-20261014/README.md",
-        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Old 42774a70 anchor and five historical evaluations preserved byte-for-byte; no old grade or pass silently maps to current RC3/CQ.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Four fresh native verifiers differ from all actual manuscript authors and previous reviewers; formal registered-provider SDK acceptance binds Task/packet/subjects/authors/scope/result. All author, JSON-context, changed-result and foreign-Task controls refuse. B Q1/Q2 gate passes via genuine fixed/accepted_variance chains.",
-        "S01 exact cc6150d passes third independent core review (first two REQUEST_CHANGES retained). Page/null-deck central finding_closed/replaces consumed, including stale prior blockers; fresh pass alone cannot erase findings. Confirmed/exploratory/read-only profiles and six-pair actual coverage require later full evidence."
+        "新论证/确认稿/探索/只读的原正式profile证据复用；本次明确使用已审确认稿fidelity路径，前审2units有实际全文/来源观察；独立内容复核保留实际子执行身份，不冒充人类或注册回执。"
       ],
-      "limitations": [
-        "RC3-01 content engineering handoff ready for B current Q1/Q2 only; not overall quality, all AC/CQ, frozen E1 effect or release PASS.",
-        "S01 core cc6150d third independent review PASS; 162 targeted; broad run 1742 passed plus five offline installation rechecks passed (prior 2 failed/3 errors retained), coverage 1747/455 deselected. Final docs-head CI pending; old 1fb3 seven CI success is not current-head CI.",
-        "Supplemental new-SDK consumption/fresh verification is not_original_frozen_E1=true; original author quality, controller mechanical changes and old formal-chain failures stay separate. Common-fix fair A/B rerun/E1 C/blinded effect remain RC3-05 work.",
-        "Q1-A current NEW must-fix F2: exercise omits independent handoff-complete != resolved judgment; current gate missing page_copy, owner snapshot not frozen. No second Writer feedback/repair added; A fail not erased by B pass.",
-        "Six paired shallow-copy actual per-pair coverage, Q3 read_alone/none, mixed/same-source two-version, Q2 five-minute-tradeoff and remaining actual effect evidence still pending. Human Owner/listeners/full measured timing/desktop explicitly deferred and NOT_RUN.",
-        "Q1-A repair cross-arm FINAL exposure retained; claimed non-use is not provable. Not a clean blinded repair-effect sample. No actual HOME activation."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-M05"
     },
     {
       "ac_id": "AC-R01",
@@ -681,10 +706,11 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -695,16 +721,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：当前默认framing无implicit grant/零制作，R3原F9协调主句实际Master完成规划/下一责任并正常停止。"
+        "framing默认零制作与角色入口旧证据复用，相关模块未变；最终CI检查当前代码，不以本次明确8页制作反推模糊输入已授权。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-R01"
     },
     {
       "ac_id": "AC-R02",
@@ -715,10 +744,11 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -729,16 +759,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：CLI/Studio canonical确认稿/fidelity/完整写集合/硬页限真实路径；F5实际新建与空项目future页scope在R2关闭，不重建既定主线。"
+        "实际已安装候选create导入8页确认稿，Narrative为空且Plan为imported_mapping；只做真实保真检查，没有重新访谈或伪造论证批准。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-R02"
     },
     {
       "ac_id": "AC-R03",
@@ -749,7 +782,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1"
@@ -763,16 +796,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：严格源外report源全树hash/mtime/mode不变，Review真实只读；窄scope/越界拒绝保留，needs_reviewer不冒称独立专业结论。"
+        "严格只读/普通审查/单页修改的已验证入口、源hash和范围拒绝证据复用；本次只写自建合成项目，未写用户真实项目。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-R03"
     },
     {
       "ac_id": "AC-R04",
@@ -783,10 +819,11 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -797,16 +834,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：418入口分类及正式writer统一资格/claim/CAS；F1/F3/F6原probe在R2关闭，R3固定unit2362/render71退出0。"
+        "统一资格/CAS/拒绝覆盖复用并由最终CI验证；本次缺前审时正常拒绝生产，缺delivery绑定时拒绝导出，均在合法记录满足条件后继续。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-R04"
     },
     {
       "ac_id": "AC-R05",
@@ -817,7 +857,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1"
@@ -831,16 +871,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：撤回before/mid/accept、still-running stale先结算后业务拒绝、cancel/terminal replay/unknown事实保真；无新真实付费provider调用。"
+        "撤回/取消/晚到/结算的原正式轨迹保留，相关模块未变；当前不新增撤回实验，也不将历史费用恢复。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-R05"
     },
     {
       "ac_id": "AC-R06",
@@ -851,10 +894,11 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -865,16 +909,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：普通needs_reviewer、有效明确降级/委派/fidelity与human professional policy分离，报告和实际缺口可读。"
+        "普通needs_reviewer与明确降级/human policy分离的原轨迹保留；本次确认稿按fidelity使用host_self，未静默降低新论证的独立门槛。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-R06"
     },
     {
       "ac_id": "AC-R07",
@@ -885,10 +932,11 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
-        "L1"
+        "L1",
+        "L2"
       ],
       "input_hashes": [],
       "output_hashes": [],
@@ -899,16 +947,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：共享父预算/耗尽后已发生结果与new begin区分，same-source不刷新credit；copy-only不授权图像，SVG/notes路径保持零额外image。"
+        "共享预算、最后额度、零新调用和采用权限的原正负证据复用；本次真实8次image begin/settle和接纳完整，返修SVG/notes未新增图像调用。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-R07"
     },
     {
       "ac_id": "AC-D01",
@@ -920,8 +971,14 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
       "input_hashes": [],
       "output_hashes": [],
       "evidence_refs": [
@@ -930,16 +987,19 @@
         "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
         "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
-        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-03 software evidence: cf61 fixed delta/independent scope and regression PASS; 5db full unit2111/render71 remains version-specific. Actual 805 native1call/retry0 creates p04 candidate without oldblueprint under explicit1/1scope; 8935character prompt includes realPage/Plan/recipe requirements/basis.",
-        "Actual p04 explicitly adopted as visual_reference_only; native SVG/PPT chain preserves failures. Currentv3 dimensions/18-30pt/readback plus actualpagevisual24962551ff10 threePASS and current5db headlessA-D complete; exactselected a8f7556fca0644ebb232c12949d00736 only; no overallAC PASS.",
-        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+        "无旧图代表页原闭环保留；本次8页从真实image_gen原图开始，实际prompt/request/Plan投影/原图齐全，不使用占位图片。"
       ],
       "limitations": [],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-D01"
     },
     {
       "ac_id": "AC-D02",
@@ -951,8 +1011,12 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2"
+      ],
       "input_hashes": [],
       "output_hashes": [],
       "evidence_refs": [
@@ -961,16 +1025,19 @@
         "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
         "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
-        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Formal synthetic L1 SDK covers dimension-bound recipe/initial1or2/restyle/zero-call feasibility/candidate-only and separate adopt/expand. Actual p04 samepage adopt uses distinct explicit bounded scope; no automatic other7page production.",
-        "No actual single-color-only decision/full coverage extension/user acceptance is invented; professional AC remains NOT_RUN.",
-        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+        "维度决定、采用与扩展的原正负轨迹复用；本次整稿范围来自明确RC3验收委派，不借配色或单页通过扩张授权。"
       ],
       "limitations": [],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-D02"
     },
     {
       "ac_id": "AC-D03",
@@ -982,8 +1049,14 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
       "input_hashes": [],
       "output_hashes": [],
       "evidence_refs": [
@@ -992,16 +1065,19 @@
         "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
         "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
-        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Formal semantic/geometry paired invalidation preserves notes/unrelatedPage/unusedPlan/Decision audit versions; realvalue/scope/role/arrow/target/control changes reject oldresults and retain consumed/unknown facts.",
-        "Actual p04 mechanism+exceptions is one engineering risk sample. Data/architecture/densest page risk/fairE2E3/full8pages are not closed. v2 formal readabilityFAIL F07 preserved; v3 currentactualvisual/mechanical scopedPASS; no whole-risk/professional signoff.",
-        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
+        "矩阵、流程/异常及定义表均经真实8页渲染/原生读回；首轮18条文本框/表格边界发现定向返修清零，18pt正文未缩小。"
       ],
       "limitations": [],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-D03"
     },
     {
       "ac_id": "AC-N01",
@@ -1013,10 +1089,11 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
+        "L2",
         "L6"
       ],
       "input_hashes": [
@@ -1037,19 +1114,19 @@
       ],
       "evidence_refs": [
         "docs/reports/rc3/RC3-02-NOTES.md",
-        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Runtime ca035 independent round3 PASS; bc0b renderer-test boundary round4 PASS; original53f4 CI notes fixture mismatch preserved and examples65 round5 code/regression PASS plus actual installed w12 9checks PASS. Complete installed65 recovery238PASS/1FAIL retained as FAIL; real SVG decoded-before-fit209px vs next-frame actualfit184.6px identified, acf test-only waits existing actualfit state with fixed3viewport+controlled lifecycle PASS. Independent round6 code/regression limited-impact FINAL PASS. New exact docs/current7CI pending. Professional desktop/human/current04-05 integration remain BLOCKED/NOT_RUN; immutable original evidence not overwritten."
+        "最终公开8页备注与Page逐页完全一致；在LibreOffice实际备注页中8/8全文可见；长备注截断经共用writer修复，三条真实阅读器回归通过。"
       ],
-      "limitations": [
-        "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
-        "Synthetic authority/review/native observations are L1; seeded imported_mapping is not formal RC3-04 import E2E.",
-        "Broader current integration/effect coverage and original professional gates remain required; no overall RC3 release PASS.",
-        "Existing compile preproduction enumeration unchanged; first missing-review compilation and later qualified final export recorded separately. RC3-04 selected-file/current-control delivery audit remains required."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-N01"
     },
     {
       "ac_id": "AC-N02",
@@ -1061,10 +1138,11 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
+        "L2",
         "L6"
       ],
       "input_hashes": [
@@ -1085,19 +1163,19 @@
       ],
       "evidence_refs": [
         "docs/reports/rc3/RC3-02-NOTES.md",
-        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Runtime ca035 independent round3 PASS; bc0b renderer-test boundary round4 PASS; original53f4 CI notes fixture mismatch preserved and examples65 round5 code/regression PASS plus actual installed w12 9checks PASS. Complete installed65 recovery238PASS/1FAIL retained as FAIL; real SVG decoded-before-fit209px vs next-frame actualfit184.6px identified, acf test-only waits existing actualfit state with fixed3viewport+controlled lifecycle PASS. Independent round6 code/regression limited-impact FINAL PASS. New exact docs/current7CI pending. Professional desktop/human/current04-05 integration remain BLOCKED/NOT_RUN; immutable original evidence not overwritten."
+        "实际p08仅备注清理使旧输出失效；8页原图/SVG/预览保留，零新增生图，当前文件/备注hash随之更新。"
       ],
-      "limitations": [
-        "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
-        "Synthetic authority/review/native observations are L1; seeded imported_mapping is not formal RC3-04 import E2E.",
-        "Broader current integration/effect coverage and original professional gates remain required; no overall RC3 release PASS.",
-        "Existing compile preproduction enumeration unchanged; first missing-review compilation and later qualified final export recorded separately. RC3-04 selected-file/current-control delivery audit remains required."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-N02"
     },
     {
       "ac_id": "AC-N03",
@@ -1109,7 +1187,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
@@ -1133,19 +1211,19 @@
       ],
       "evidence_refs": [
         "docs/reports/rc3/RC3-02-NOTES.md",
-        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Runtime ca035 independent round3 PASS; bc0b renderer-test boundary round4 PASS; original53f4 CI notes fixture mismatch preserved and examples65 round5 code/regression PASS plus actual installed w12 9checks PASS. Complete installed65 recovery238PASS/1FAIL retained as FAIL; real SVG decoded-before-fit209px vs next-frame actualfit184.6px identified, acf test-only waits existing actualfit state with fixed3viewport+controlled lifecycle PASS. Independent round6 code/regression limited-impact FINAL PASS. New exact docs/current7CI pending. Professional desktop/human/current04-05 integration remain BLOCKED/NOT_RUN; immutable original evidence not overwritten."
+        "重排/拆合/删除的原真实文件回读证据保留；当前按稳定page_id回读8页notes及script，不按旧索引拼接。"
       ],
-      "limitations": [
-        "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
-        "Synthetic authority/review/native observations are L1; seeded imported_mapping is not formal RC3-04 import E2E.",
-        "Broader current integration/effect coverage and original professional gates remain required; no overall RC3 release PASS.",
-        "Existing compile preproduction enumeration unchanged; first missing-review compilation and later qualified final export recorded separately. RC3-04 selected-file/current-control delivery audit remains required."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-N03"
     },
     {
       "ac_id": "AC-N04",
@@ -1157,10 +1235,12 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
+        "L2",
+        "L3",
         "L6"
       ],
       "input_hashes": [
@@ -1181,19 +1261,19 @@
       ],
       "evidence_refs": [
         "docs/reports/rc3/RC3-02-NOTES.md",
-        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": "Immutable visual and Review bytes retained only via actual consumer equivalence; no human/professional sign-off inherited.",
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "Runtime ca035 independent round3 PASS; bc0b renderer-test boundary round4 PASS; original53f4 CI notes fixture mismatch preserved and examples65 round5 code/regression PASS plus actual installed w12 9checks PASS. Complete installed65 recovery238PASS/1FAIL retained as FAIL; real SVG decoded-before-fit209px vs next-frame actualfit184.6px identified, acf test-only waits existing actualfit state with fixed3viewport+controlled lifecycle PASS. Independent round6 code/regression limited-impact FINAL PASS. New exact docs/current7CI pending. Professional desktop/human/current04-05 integration remain BLOCKED/NOT_RUN; immutable original evidence not overwritten."
+        "阅读none无新增讲稿；原注保留的原文件/工程证据有效，当前cues未强写verbatim；必要限制均留在可见正文。"
       ],
-      "limitations": [
-        "L6 here is actual file engineering only; target desktop notes-view/edit-save-reopen and real human/use acceptance NOT_RUN.",
-        "Synthetic authority/review/native observations are L1; seeded imported_mapping is not formal RC3-04 import E2E.",
-        "Broader current integration/effect coverage and original professional gates remain required; no overall RC3 release PASS.",
-        "Existing compile preproduction enumeration unchanged; first missing-review compilation and later qualified final export recorded separately. RC3-04 selected-file/current-control delivery audit remains required."
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-N04"
     },
     {
       "ac_id": "AC-H01",
@@ -1206,7 +1286,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
@@ -1221,16 +1301,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：实际CLI/installed Studio/Host三入口共享Runtime/合同/依据，R3 UI16delta断言通过；最终docsHEAD安装和7CI待Root。"
+        "CLI/Studio/Host现有实际入口、合同/权限/恢复工程证据保留；最终安装以真实Skill路径绑定同一Runtime，新增notes出口统一共用writer。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-H01"
     },
     {
       "ac_id": "AC-H02",
@@ -1243,7 +1326,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
@@ -1258,16 +1341,19 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：16代表组合明确R3新1+R2精确复用15，同一个实际Host；Content独立出口/Design零图/Review host_self needs_reviewer均真实保留。"
+        "四Skill×四入口原16组合实际记录明确其执行者与复用范围；当前路由和资源未变，56项版本导出/安装回归及最终CI复核，不把Skill名字当独立审查。"
       ],
-      "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
-      ],
-      "signed_by": null
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-H02"
     },
     {
       "ac_id": "AC-H03",
@@ -1280,7 +1366,7 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_layers": [
         "L0",
         "L1",
@@ -1295,16 +1381,21 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
-      "historical_reuse_basis": null,
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
       "findings": [
-        "RC3-04工程证据（运行a53a265/tree31cca075；最终CI PENDING_FINAL_HEAD）：当前a53/1.0.0rc3实际隔离release、270canonical+1generated/四Role、23方法资源和真实工作单消费；无真实HOME激活。"
+        "最终候选wheel/sdist与实际隔离安装271个包文件逐一hash相同，实际Host选择对应Skill/Python执行工作单；未切换真实HOME默认安装。"
       ],
       "limitations": [
-        "本卡仅补精确工程证据；原完整AC状态/Owner签署保留。真实人类Owner/受众/计时/桌面/人类professional按既有指令延期NOT_RUN，完整效果/最终候选由RC3-05继续。"
+        "Host selected the isolated managed candidate explicitly. Actual HOME/default-install activation remains NOT_RUN outside this acceptance scope."
       ],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-H03"
     },
     {
       "ac_id": "AC-U01",
@@ -1317,15 +1408,29 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
+      "findings": [
+        "本次材料→已审全文→8张真实原图→原生SVG→8页PPT/备注/四种导出完整对应同一固定候选，非fixture生产。"
+      ],
       "limitations": [],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-U01"
     },
     {
       "ac_id": "AC-U02",
@@ -1338,15 +1443,27 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L2",
+        "L3",
+        "L6"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
+      "findings": [
+        "Agent实际对照来源和整稿检查，独立内容与主线程逐页图文审查均完成；局部措辞、旧引用和成品缺陷修复，未要求用户重写主线。"
+      ],
       "limitations": [],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-U02"
     },
     {
       "ac_id": "AC-U03",
@@ -1359,15 +1476,27 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L2",
+        "L3",
+        "L6"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
+      "findings": [
+        "8页目标未超限；原10分钟和后续5分钟按具体内容估计并区分讨论预留，未用删限定或缩字凑时长，不要求实测试讲。"
+      ],
       "limitations": [],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-U03"
     },
     {
       "ac_id": "AC-U04",
@@ -1380,15 +1509,27 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L2",
+        "L3",
+        "L6"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
+      "findings": [
+        "实际看8页PPT总览及密集页面/局部，结论、单位、归属、箭头和限制可读；原生读回0发现，主要信息编辑保存重开通过。"
+      ],
       "limitations": [],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-U04"
     },
     {
       "ac_id": "AC-U05",
@@ -1401,15 +1542,29 @@
         "RC3-04",
         "RC3-05"
       ],
-      "status": "NOT_RUN",
-      "evidence_layers": [],
+      "status": "PASS",
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
       "input_hashes": [],
       "output_hashes": [],
-      "evidence_refs": [],
-      "historical_reuse_basis": null,
-      "findings": [],
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "historical_reuse_basis": "Current candidate exact dependency review plus versioned original engineering/content evidence; only compiler/native.py changed in Runtime, with new native/public reader regressions and actual whole-deck revalidation.",
+      "findings": [
+        "当前可执行候选、方法/包、真实产物、失败与修订、工程复用范围及适用结果齐全；人类/听众/旧实验未执行不作为当前阻塞。"
+      ],
       "limitations": [],
-      "signed_by": null
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#AC-U05"
     }
   ],
   "cq_results": [
@@ -1418,116 +1573,188 @@
       "parent_ac": "AC-M01",
       "capability_owner": "T03",
       "execution_card": "RC3-01",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_refs": [
         "docs/reports/rc3/RC3-01-METHODS.md",
         "docs/reports/rc3/RC3-01-HANDOFF.md",
         "docs/reports/rc3/native-content-handoff-20261014/README.md",
-        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "Content engineering B Q1/Q2 current handoff ready; final parent AC/CQ effect coverage still incomplete. No overall candidate/release PASS.",
-        "Four full self-contained positive/negative method pages implemented/reviewed; real B current complete drafts/visible relationships/Plan/notes accepted and independently verified. Q1-A new local exercise F2 is retained negative; broader applicable generator/use evidence pending."
-      ]
+        "四类完整正反例保留；六组成对实际审阅和本次完整8页/用途变体证据补齐，未知/建议未补造业务事实。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-01"
     },
     {
       "cq_id": "CQ-02",
       "parent_ac": "AC-M05",
       "capability_owner": "T03",
       "execution_card": "RC3-01",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_refs": [
         "docs/reports/rc3/RC3-01-METHODS.md",
         "docs/reports/rc3/RC3-01-HANDOFF.md",
         "docs/reports/rc3/native-content-handoff-20261014/README.md",
-        "docs/reports/rc3/native-content-handoff-20261014/manifest.json"
+        "docs/reports/rc3/native-content-handoff-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "Content engineering B Q1/Q2 current handoff ready; final parent AC/CQ effect coverage still incomplete. No overall candidate/release PASS.",
-        "Six paired shallow-copy examples installed/read; twelve old-anchor actual repair cycle and real four-run reviews do not automatically cover each of those six paired new cases. Per-pair independent identification/substantive repair/sparse-uncertain-positive coverage awaits exact inventory.",
-        "Protocol-imposed Q1 speech relabeling is distinct from author quality; current B closure real, A new content F2 remains. Supplemental verification is not frozen E1 effect; future fair common-fix A/B/blinded evaluation required."
-      ]
+        "独立执行实际读取六组任务/来源/全文并复核实质修订，合理稀疏和不确定正对照未被误删；只补索引不算修复。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-02"
     },
     {
       "cq_id": "CQ-03",
       "parent_ac": "AC-D01",
       "capability_owner": "T05",
       "execution_card": "RC3-03",
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_refs": [
         "docs/reports/rc3/RC3-03-HANDOFF.md",
         "docs/reports/rc3/native-design-handoff-20261015/README.md",
         "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
         "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
-        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "Actual805 frozen prompt/request full projection and immutableauditbasis retained; cf61 Decision current-head/effective-semantic fix has true old5dbcandidate exactdigest cross-version independent verification. Fidelity imported mapping/nullNarr remains honest.",
-        "This is engineering consumption evidence; all applicable original professional Given/When/Then are not automatically closed.",
-        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
-      ]
+        "8页实际冻结prompt/request完整承接正式Page/Plan投影，确认稿未伪造Narrative；原图和实际调用绑定保留。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-03"
     },
     {
       "cq_id": "CQ-04",
       "parent_ac": "AC-D03",
       "capability_owner": "T05",
       "execution_card": "RC3-03",
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_refs": [
         "docs/reports/rc3/RC3-03-HANDOFF.md",
         "docs/reports/rc3/native-design-handoff-20261015/README.md",
         "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
         "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
-        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "Formal SDK paired body/role/ownership/arrow/target/control negatives and same-relation geometry/notes/P2/Plan/unconsumedDecision positives. Native proof rejection never rolls back actual consumed/unknown fees.",
-        "5db actualold andv2 mechanical controls retain identicaltext wrong-row/reversed-arrow negatives and layout-only positive, scoped to each precise file; currentv3 independent correct-size headlessmechanicalA-D expectedoutcomes met.",
-        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
-      ]
+        "语义/几何配对、归属/反向箭头负例的原SDK证据保留；相关模块未变，实际notes-only证明视觉层可复用。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-04"
     },
     {
       "cq_id": "CQ-05",
       "parent_ac": "AC-D03",
       "capability_owner": "T05",
       "execution_card": "RC3-03",
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_refs": [
         "docs/reports/rc3/RC3-03-HANDOFF.md",
         "docs/reports/rc3/native-design-handoff-20261015/README.md",
         "docs/reports/rc3/native-design-handoff-20261015/manifest.json",
         "docs/reports/rc3/native-design-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/native-design-handoff-20261015/actual-chain-phases.json",
-        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json"
+        "docs/reports/rc3/native-design-handoff-20261015/raw/native-image-pilot-03/run-06-final-readonly-requalification-cf61e5e.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "Actual originalPNG, nativeSVG/PPT/render and nonauthor review show complete17atoms/relations. Preserve c931 physicalFAIL,8aff typographyFAIL,v2 readabilityFAIL F07 and exactRootattribution; v3 authororiginal31leadingFAIL plus one33leadingmechanical adjustment retained.",
-        "Currentv3 actualPPT correctphysical/36runs18-30pt/60native0pic/readbackPASS; F07 fixed only exactfb9SVG/0c145PPT/current249625reviews; all9cells4edges bothlayers includingAA pass(SVGmin12/PPTmin13); nativeheadlessA-D scopedPASS. Not full fairE2E3, densityrisk coverage, human/desktop or full8page approval.",
-        "Final singlep04 nativeengineering exit has actual249625 SDKthreePASS(selecteda8f755), exactfb9SVG/0c145PPT F07fixed and independent5db headlessA-D. Newcf61 installedreader readonly requalification full11keys/currentreviews and all236project/107pure/73originalobject hashes unchanged. Original37AC/13CQ professional status, human/desktop/fairE2E3/full8page/globalRC3 not closed."
-      ]
+        "原关系错位/反向箭头正负例有效；当前133atoms、表格与3条主链箭头的真实原图/SVG/PPT读回、视觉与编辑检查完成。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-05"
     },
     {
       "cq_id": "CQ-06",
       "parent_ac": "AC-N01",
       "capability_owner": "T06",
       "execution_card": "RC3-02",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_refs": [
         "docs/reports/rc3/RC3-02-NOTES.md",
-        "docs/reports/rc3/notes-engineering-20261014/manifest.json"
+        "docs/reports/rc3/notes-engineering-20261014/manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "Runtime ca035 independent round3 PASS; bc0b renderer-test boundary round4 PASS; original53f4 CI notes fixture mismatch preserved and examples65 round5 code/regression PASS plus actual installed w12 9checks PASS. Complete installed65 recovery238PASS/1FAIL retained as FAIL; real SVG decoded-before-fit209px vs next-frame actualfit184.6px identified, acf test-only waits existing actualfit state with fixed3viewport+controlled lifecycle PASS. Independent round6 code/regression limited-impact FINAL PASS. New exact docs/current7CI pending. Professional desktop/human/current04-05 integration remain BLOCKED/NOT_RUN; immutable original evidence not overwritten."
-      ]
+        "8页真实备注/PPT/script完整匹配，公开notes页8/8可见；none和原注保留由现有工程证据及本次阅读稿分支验证。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L6"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-06"
     },
     {
       "cq_id": "CQ-07",
       "parent_ac": "AC-H03",
       "capability_owner": "T07",
       "execution_card": "RC3-04",
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_refs": [
         "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
@@ -1535,38 +1762,100 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "RC3-04运行a53a265实际隔离方法/合同/包/四Role字节与工作单应用证据；16组合为R3新1+R2复用15，同一个实际Host。最终docsHEAD CI PENDING_FINAL_HEAD，不以I03加载或合成门禁代签整个T07/专业/人类/全RC3。"
-      ]
+        "最终候选安装271文件一致，当前实际工作单方法basis=current，Host确实消费已安装方法并形成修订和成品。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-07"
     },
     {
       "cq_id": "CQ-08",
       "parent_ac": "AC-U01",
       "capability_owner": "T08",
       "execution_card": "RC3-05",
-      "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "status": "NOT_APPLICABLE",
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "findings": [
+        "本次补齐普通交付检查，不开展新方法因果效果对照；不要求恢复旧A/B/C实验，不把当前返修说成新方法首次效果。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-08",
+      "not_applicable_reason": "本次补齐普通交付检查，不开展新方法因果效果对照；不要求恢复旧A/B/C实验，不把当前返修说成新方法首次效果。"
     },
     {
       "cq_id": "CQ-09",
       "parent_ac": "AC-U01",
       "capability_owner": "T08",
       "execution_card": "RC3-05",
-      "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "status": "PASS",
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "findings": [
+        "同一完整稿到8页最终文件没有丢atom/主体/关系；制作阶段未补业务事实；实际发现均定位到具体SVG/备注输出层并关闭。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-09"
     },
     {
       "cq_id": "CQ-10",
       "parent_ac": "AC-U02",
       "capability_owner": "T08",
       "execution_card": "RC3-05",
-      "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "status": "PASS",
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "findings": [
+        "原始Q1-A与首次冻结失败、当前B稿和本次返修分别保留；未把旧失败或首轮18条/4页备注截断改成从未发生。"
+      ],
+      "evidence_layers": [
+        "L2",
+        "L3",
+        "L6"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-10"
     },
     {
       "cq_id": "CQ-11",
@@ -1577,28 +1866,55 @@
       "evidence_refs": [
         "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.md",
         "docs/reports/rc3/anchor-calibration-20261014/report/rc3-01-anchor-calibration.json",
-        "docs/reports/rc3/anchor-calibration-20261014/path-mapping-manifest.json"
+        "docs/reports/rc3/anchor-calibration-20261014/path-mapping-manifest.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "Final scoped synthetic recalibration: PASS only this cycle; no overall content/human/release claim. Preserve A F0/B F2/root F2, historical grades and missing A roster-completed observation.",
-        "Scoped actual native synthetic recalibration only: original A/B differences, source-bound root F2, historical grades and A repair completion-observation limitation preserved; 12 substantive repairs/24 none-pass, no blanket downgrading or F2 exemption."
-      ]
+        "复用当前统一F0–F3的12锚点独立初判/裁决/修订记录；本次源措辞与成品缺陷按同一权威分类，没有平行分级。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L3"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-11"
     },
     {
       "cq_id": "CQ-12",
       "parent_ac": "AC-U05",
       "capability_owner": "T08",
       "execution_card": "RC3-05",
-      "status": "NOT_RUN",
-      "evidence_refs": [],
-      "findings": []
+      "status": "PASS",
+      "evidence_refs": [
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
+      ],
+      "findings": [
+        "当前完整稿、4个用途稿、8页成品/备注/编辑/导出和精确工程复用依据齐全；取消的固定实验门槛记不适用而非伪造通过。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L6"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-12"
     },
     {
       "cq_id": "CQ-13",
       "parent_ac": "AC-H01",
       "capability_owner": "T07",
       "execution_card": "RC3-04",
-      "status": "NOT_RUN",
+      "status": "PASS",
       "evidence_refs": [
         "docs/reports/rc3/RC3-04-FINAL-HANDOFF.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/report.md",
@@ -1606,11 +1922,23 @@
         "docs/reports/rc3/entry-integration-handoff-20261015/identity.json",
         "docs/reports/rc3/entry-integration-handoff-20261015/acceptance-map.md",
         "docs/reports/rc3/entry-integration-handoff-20261015/finding-closure-map.json",
-        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json"
+        "docs/reports/rc3/entry-integration-handoff-20261015/role-entry-paths.json",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/closeout-20261018/summary.json",
+        "docs/reports/rc3/closeout-20261018/artifact-manifest.json"
       ],
       "findings": [
-        "RC3-04运行a53a265实际隔离方法/合同/包/四Role字节与工作单应用证据；16组合为R3新1+R2复用15，同一个实际Host。最终docsHEAD CI PENDING_FINAL_HEAD，不以I03加载或合成门禁代签整个T07/专业/人类/全RC3。"
-      ]
+        "最终集成候选通过真实安装和当前工作单/CLI；旧三入口与四Skill未变路径有准确hash复用，新notes三出口有当前真实回归。"
+      ],
+      "evidence_layers": [
+        "L0",
+        "L1",
+        "L2"
+      ],
+      "candidate_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+      "limitations": [],
+      "signed_by": "Codex / RC3-05 scoped Agent acceptance; capability Owner unchanged",
+      "historical_record": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json#CQ-13"
     }
   ],
   "draft_results": {
@@ -1619,7 +1947,7 @@
     "repaired_current": null,
     "method_rerun": null
   },
-  "release_conclusion": "NOT_RUN",
+  "release_conclusion": "PASS",
   "engineering_recovery": {
     "date": "2026-10-17",
     "report": "docs/reports/rc3/cloud-recovery-20261017/README.md",
@@ -1649,6 +1977,504 @@
       "old_effect_experiments": "DEFERRED_BY_USER_NOT_AN_ORDINARY_DEVELOPMENT_PREREQUISITE",
       "scope": "ordinary software review consumption, budgets, quotas, handoffs and adoption authority; L0/L1 only",
       "ac_cq_owner_statuses_and_formal_candidate_unchanged": true
+    },
+    "current_scope_note": "Historical recovery and missing old contracts remain as historical facts. Ordinary current RC3 completion is in closeout-20261018, not blocked by those old experiments."
+  },
+  "historical_ledger": {
+    "ref": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json",
+    "sha256": "88391048ced350103eba5fefdb8eda8bf42e9cd7aa0a9cd28c4733598d932217"
+  },
+  "historical_draft_results_only": true,
+  "release_scope": "Executable RC3 candidate and local synthetic deck acceptance only",
+  "candidate_ci": {
+    "conclusion": "success",
+    "headSha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+    "jobs": [
+      {
+        "conclusion": "success",
+        "name": "Unit (Python 3.12, Node 22)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Ruff (rebuilt core and its tests)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Unit suite (browser and renderer have separate gates)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Unit (Python 3.11, Node 24)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Ruff (rebuilt core and its tests)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Unit suite (browser and renderer have separate gates)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Unit (Python 3.11, Node 22)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Ruff (rebuilt core and its tests)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Unit suite (browser and renderer have separate gates)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Real rendering chain (Python 3.12)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install renderer toolchain",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Renderer-dependent tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Required browser and installed UI (Python 3.12, Node 22)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install toolchain for the installed export fixture",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install Chromium",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Required production design regressions (skips fail)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Build and install the wheel (no editable resource borrowing)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Offline installed UI and fixed-version downloads",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Installed recovery boundaries (runtime paths audited)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Preserve installed UI evidence",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Unit (Python 3.12, Node 24)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Ruff (rebuilt core and its tests)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Unit suite (browser and renderer have separate gates)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Group report",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Summarise group outcomes",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39133654079"
+  },
+  "execution_cards": {
+    "RC3-00": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-01": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-02": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-03": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-04": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-05": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
     }
+  },
+  "evidence_scope": {
+    "L0": "PASS",
+    "L1": "PASS",
+    "L2": "PASS",
+    "L3": "PASS",
+    "L4": "NOT_APPLICABLE",
+    "L5": "NOT_APPLICABLE",
+    "L6": "PASS",
+    "human_professional_policy": "NOT_APPLICABLE",
+    "actual_HOME_activation": "NOT_RUN_OUTSIDE_SCOPE",
+    "old_effect_experiment_recovery": "NOT_APPLICABLE"
   }
 }

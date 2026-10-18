@@ -24,3 +24,4 @@
 
 卡片描述没有独立通过状态。执行进度引用唯一候选证据台账；原 AC/CQ 责任见 [验收映射](../TRACEABILITY.md)。RC3-04 前置切片只依赖 RC3-00，完整切片再等待 RC3-01/02/03。
 
+当前执行索引：[当前收口报告](../../../reports/rc3/closeout-20261018/README.md)；卡片状态统一读取[唯一台账](../../../reports/rc3/evidence-ledger.json)的 `execution_cards`。

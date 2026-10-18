@@ -1,0 +1,550 @@
+{
+  "candidate": {
+    "release_id": "7d772f6f4785-d491630a7c0e",
+    "source_sha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+    "package_version": "1.0.0rc3",
+    "activated": false
+  },
+  "candidate_tree": "7001adf5de07548aaede13b1da9697437f71467f",
+  "baseline_sha": "0abf66f7cfc5295d8aca7e4eefc8d677477dd085",
+  "pr": "https://github.com/MainQuestAI/Deck-Master/pull/122",
+  "candidate_ci": {
+    "conclusion": "success",
+    "headSha": "7d772f6f4785568cf516d9b8fb8a399d2dc8297a",
+    "jobs": [
+      {
+        "conclusion": "success",
+        "name": "Unit (Python 3.12, Node 22)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Ruff (rebuilt core and its tests)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Unit suite (browser and renderer have separate gates)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Unit (Python 3.11, Node 24)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Ruff (rebuilt core and its tests)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Unit suite (browser and renderer have separate gates)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Unit (Python 3.11, Node 22)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Ruff (rebuilt core and its tests)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Unit suite (browser and renderer have separate gates)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Real rendering chain (Python 3.12)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install renderer toolchain",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Renderer-dependent tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Required browser and installed UI (Python 3.12, Node 22)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install toolchain for the installed export fixture",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install Chromium",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Required production design regressions (skips fail)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Build and install the wheel (no editable resource borrowing)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Offline installed UI and fixed-version downloads",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Installed recovery boundaries (runtime paths audited)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Preserve installed UI evidence",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Unit (Python 3.12, Node 24)",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install build backend",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install rebuilt core with dev dependencies",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Ruff (rebuilt core and its tests)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Unit suite (browser and renderer have separate gates)",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "name": "Group report",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Summarise group outcomes",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39133654079"
+  },
+  "execution_cards": {
+    "RC3-00": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-01": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-02": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-03": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-04": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    },
+    "RC3-05": {
+      "status": "PASS",
+      "evidence_ref": "docs/reports/rc3/closeout-20261018/README.md",
+      "remaining": []
+    }
+  },
+  "counts": {
+    "ac": 37,
+    "ac_pass": 36,
+    "ac_not_applicable": 1,
+    "cq": 13,
+    "cq_pass": 12,
+    "cq_not_applicable": 1,
+    "full_deck_pages": 8,
+    "formal_atoms": 133,
+    "native_shapes": 424,
+    "media_images": 0,
+    "actual_image_calls": 8,
+    "image_calls_for_svg_and_notes_repairs": 0,
+    "complete_public_notes_pages": 8,
+    "notes_delivery_policies": 4
+  },
+  "new_runtime_fix": {
+    "paths": [
+      "src/deck_master/compiler/native.py",
+      "tests/rebuild/test_native_notes_view.py"
+    ],
+    "problem": "Default notes master clipped long notes in compatible notes-page view despite full XML text.",
+    "solution": "Shared writer for native compilation and public/attached notes:12pt, wrap, fit in shape. Full text and blank paragraphs retained.",
+    "first_partial_fix": {
+      "candidate": "526f79d0",
+      "result": "Public/attachment regression passed but native emitter still clipped; actual whole-deck failure retained."
+    },
+    "final": "Three actual reader routes and eight raw/public notes pages pass."
+  },
+  "tests": {
+    "methods_speech_boundaries": "116 passed",
+    "notes_final_with_real_readers": "80 passed,1 skipped",
+    "versions_exports_install": "56 passed"
+  },
+  "artifact_checks": {
+    "full_native_readback": "PASS_0_FINDINGS",
+    "final_readiness": "ready",
+    "public_handoff": "verified",
+    "native_edit_save_reopen": "PASS",
+    "actual_public_notes_reader": "PASS_8_OF_8",
+    "four_policy_actual_exports": "PASS"
+  },
+  "prior_failures_preserved": {
+    "native_full_first": 18,
+    "notes_first_clipped_pages": 4,
+    "q1_a_original_failure": "historical unchanged",
+    "six_case_fixes": "actual source-bound repairs and nonauthor review",
+    "content_variant_issues_closed": 3
+  },
+  "limitations": {
+    "same_source_content_variants": "Actual manuscript/Plan/text-output snapshots, with independently reviewed purpose mapping; no claim of two newly generated Q3 PPTs. Runtime sequential/export behavior has retained and current L1 coverage.",
+    "human": "No human approval, audience study or live timing claimed.",
+    "install": "Isolated managed candidate used; real HOME not activated.",
+    "release": "Draft PR only; no merge/publication."
+  },
+  "historical_ledger": {
+    "ref": "docs/reports/rc3/archive/evidence-ledger-before-closeout-20261018.json",
+    "sha256": "88391048ced350103eba5fefdb8eda8bf42e9cd7aa0a9cd28c4733598d932217"
+  },
+  "release_conclusion": "PASS"
+}
