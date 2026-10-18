@@ -359,6 +359,9 @@ def test_delivery_loading_error_late_policy_and_real_ready(tmp_path):
             expect(page.locator('.export-results')).to_contain_text('正式交付包')
             assert len(dispatched)==1
             assert store.current_revision_id() == delivery_eligibility.describe(project)['artifact_revision_id']
+            # Export completion starts its own revalidation. Finish that read
+            # before holding the next one, or the test intercepts its own prerequisite.
+            expect(formal).to_be_enabled()
             # A ready R1 reply cannot enable an R2 surface whose read has failed.
             mode[0]='hold'
             page.get_by_role('button',name='重新核对当前控制',exact=True).click()
