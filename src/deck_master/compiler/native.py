@@ -7,7 +7,7 @@ from pathlib import Path
 from PIL import ImageFont, ImageColor
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Pt
 import io
@@ -36,6 +36,18 @@ def notes_records(data):
     return rows
 
 
+def _write_notes(slide, text):
+    """Use readable notes-page typography in every native compiler exit."""
+    frame = slide.notes_slide.notes_text_frame
+    frame.text = normalize_notes(text)
+    # The stock notes master inherits a large slide-text font. It can hide
+    # paragraphs in compatible notes-page views even with complete XML text.
+    frame.word_wrap = True
+    frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+    for paragraph in frame.paragraphs:
+        paragraph.font.size = Pt(12)
+
+
 def attach_notes(data, records):
     """Attach trusted Page text to a notes-free presentation, including stable IDs."""
     deck = Presentation(io.BytesIO(data))
@@ -45,7 +57,7 @@ def attach_notes(data, records):
         slide.name = record['page_id']
         text = normalize_notes(record['notes'])
         if text:
-            slide.notes_slide.notes_text_frame.text = text
+            _write_notes(slide, text)
     result = io.BytesIO()
     deck.save(result)
     return result.getvalue()
@@ -129,7 +141,7 @@ def emit(pages, width, height, fonts, output):
         slide=pres.slides.add_slide(pres.slide_layouts[6]); k=min(width/page['width'],height/page['height'])
         slide.name = page['page_id']
         if page.get('speaker_notes'):
-            slide.notes_slide.notes_text_frame.text = normalize_notes(page['speaker_notes'])
+            _write_notes(slide, page['speaker_notes'])
         ox=(width-page['width']*k)/2;oy=(height-page['height']*k)/2
         def X(x):return round((ox+x*k)*9525)
         def Y(y):return round((oy+y*k)*9525)
