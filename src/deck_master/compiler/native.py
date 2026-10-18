@@ -7,7 +7,7 @@ from pathlib import Path
 from PIL import ImageFont, ImageColor
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Pt
 import io
@@ -45,7 +45,15 @@ def attach_notes(data, records):
         slide.name = record['page_id']
         text = normalize_notes(record['notes'])
         if text:
-            slide.notes_slide.notes_text_frame.text = text
+            frame = slide.notes_slide.notes_text_frame
+            frame.text = text
+            # The stock notes master inherits a large slide-text font. It can
+            # hide the last paragraphs in compatible readers' notes-page view
+            # even though the complete text is present in notesSlide XML.
+            frame.word_wrap = True
+            frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+            for paragraph in frame.paragraphs:
+                paragraph.font.size = Pt(12)
     result = io.BytesIO()
     deck.save(result)
     return result.getvalue()
