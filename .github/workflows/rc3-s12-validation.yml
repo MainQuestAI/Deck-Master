@@ -42,7 +42,7 @@ jobs:
           python -m pytest -q -p no:cacheprovider tests/rebuild/test_rc3_m02_image_transition.py --basetemp="$RUNNER_TEMP/rc3-s12-working-tests" --junitxml="$RC3_S12_EVIDENCE_ROOT/junit.xml"
       - name: Preserve complete public neutral evidence even on failure
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: rc3-s12-engineering-${{ github.sha }}
           path: ${{ runner.temp }}/rc3-s12-evidence
