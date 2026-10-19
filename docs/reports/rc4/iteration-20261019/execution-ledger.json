@@ -114,15 +114,26 @@
       "record": "Integration-browser-legacy-repair.json",
       "runtime_and_build_inputs_changed": false,
       "status": "FINAL_EXACT_HEAD_CI_PENDING"
+    },
+    {
+      "event": "post_review_full_browser_callback_synchronization_repair",
+      "head_with_failure": "2b6867c5b65fca170f38df9fc92b5eeacdea0c5c",
+      "pr_run": 39206780847,
+      "observed_pr_browser": "490PASS1FAIL; previous two historical import cases pass",
+      "record": "Integration-style-plan-sync-repair.json",
+      "focused_result": "Before exact race1FAIL; same nonblocking delay after4PASS; normal4 plus original full flow5PASS",
+      "runtime_or_packaged_methods_changed": false,
+      "separate_from_designated_four_P2": true,
+      "status": "FINAL_NEW_HEAD_CI_NOT_RUN_AT_ASSEMBLY"
     }
   ],
   "integration_checks": [
     {
       "kind": "current_candidate_ci",
       "evidence": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
-      "state_at_assembly": "in_progress",
-      "note": "Assembly before final legacy browser fixture commit. Runtime/Skill/build inputs match3167; fresh exact-head complete Actions checks and final handoff will provide terminal results. Prior530 full browser489PASS2FAIL is retained in Integration-validation.json.",
-      "observed_at_utc": "2026-10-19T05:51:47.568563+00:00"
+      "state_at_assembly": "NOT_RUN",
+      "note": "Assembly before the new synchronization-fix commit: its exact-head CI has not yet started. Prior2b PR full browser490PASS1FAIL, eight unit and two render successes retained separately. Runtime/Skill/build inputs match3167. Live final PR checks/handoff provide later terminal result.",
+      "observed_at_utc": "2026-10-19T06:32:18.075878+00:00"
     },
     {
       "kind": "installed_resources",
@@ -2271,15 +2282,15 @@
         "unresolved_ac_ids": []
       }
     },
-    "final_ci_state_at_assembly": "in_progress",
-    "state_observed_at_utc": "2026-10-19T05:51:47.568563+00:00",
+    "final_ci_state_at_assembly": "NOT_RUN",
+    "state_observed_at_utc": "2026-10-19T06:32:18.075878+00:00",
     "observation_scope": "Assembly snapshot; the exact-head live checks and final PR handoff provide subsequent terminal CI evidence.",
     "live_terminal_ci": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
     "remaining_engineering_gates": [
       "final_exact_head_ci"
     ],
     "real_acceptance": "DEFERRED_TO_USER_LOCAL_VALIDATION",
-    "summary": "70 AC: 70 PASS, 0 FAIL, 0 BLOCKED, 0 NOT_RUN, 0 NOT_APPLICABLE; 0 unresolved. Engineering candidate BLOCKED; exact-head CI in_progress. User local effects/usability and trusted Host acceptance are separate observations, not inferred PASS."
+    "summary": "70 AC: 70 PASS, 0 FAIL, 0 BLOCKED, 0 NOT_RUN, 0 NOT_APPLICABLE; 0 unresolved. Engineering candidate BLOCKED; exact-head CI NOT_RUN. User local effects/usability and trusted Host acceptance are separate observations, not inferred PASS."
   },
   "status_counts": {
     "PASS": 70,

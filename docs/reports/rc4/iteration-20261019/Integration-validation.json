@@ -194,6 +194,13 @@
       "result": "3 passed in8.53s using real system Chromium,0skips; command-only local browser-path adaptation recorded",
       "original_assertions_retained": true,
       "runtime_changed": false
+    },
+    {
+      "scope": "post-review full-browser style-plan completion race",
+      "record": "Integration-style-plan-sync-repair.json",
+      "before": "Original exact assert held==[] reproduced with command-only1s nonblocking delay",
+      "after": "Identical delay4PASS with4 actual fetch completions; normal4 parameters plus original full screenshot flow5PASS; original UI/scope/late/timeout assertions retained",
+      "runtime_changed": false
     }
   ],
   "final_gate": "Live exact-head Rebuilt Core Gate at PR124 remains separate and required.",
@@ -280,6 +287,40 @@
           "state": "focused3PASS; new exact-head full browser CI required"
         }
       ]
+    },
+    {
+      "head": "2b6867c5b65fca170f38df9fc92b5eeacdea0c5c",
+      "runs": [
+        39206780847,
+        39206774995
+      ],
+      "status": "PR_FAIL; PUSH_INSTALLED_RECOVERY_IN_PROGRESS_AT_ASSEMBLY",
+      "pr_browser_result": {
+        "passed": 490,
+        "failed": 1,
+        "deselected": 3493,
+        "seconds": 1892.73
+      },
+      "all_unit_jobs": "8 successful; each3357PASS2existing skips625deselected",
+      "render_jobs": "2 successful; each133PASS1existing skip3850deselected",
+      "observed_causes": [
+        {
+          "kind": "test_callback_completion_race",
+          "case": "test_screenshot_plan_freezes_target_and_rejects_late_response[p02-False]",
+          "cause": "Plain held assertion can run while the true Route.fetch still yields, before append",
+          "repair": "Wait for callback completion through a test-only DOM signal and existing expect default timeout",
+          "state": "Actual bounded delayed reproduction before1FAIL, after4PASS, normal5PASS; new exact-head full CI required"
+        }
+      ],
+      "separate_from_designated_four_findings": true,
+      "record": "Integration-style-plan-sync-repair.json",
+      "push_observation_at_assembly": {
+        "required_browser": "step succeeded",
+        "wheel_build_install": "step succeeded",
+        "offline_installed_UI": "step succeeded",
+        "installed_recovery": "in_progress; not a whole-gate success claim",
+        "superseding_source": "Only confirmed test synchronization repair and report evidence; runtime/Skill/build inputs unchanged3167"
+      }
     }
   ]
 }

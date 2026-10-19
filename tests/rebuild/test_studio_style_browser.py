@@ -251,12 +251,18 @@ def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalida
             page.get_by_label('已确认的截图规范').select_option(rid)
             expect(page.locator('.visual-style > [role=status]')).to_contain_text('已打开所选确认规范')
             stage(page, 'screenshot', 3)
-            page.route('**/api/styles/plan', lambda route: held.append((route, route.fetch())))
+            def hold_plan(route):
+                held.append((route, route.fetch()))
+                # Test-only completion signal: disabled controls can appear
+                # while the real fetch is still yielding to Playwright.
+                page.locator('html').evaluate("node => {node.dataset.heldStylePlan = 'ready';}")
+            page.route('**/api/styles/plan', hold_plan)
             page.get_by_role('button', name='预览单页试作', exact=True).click()
             stage(page, 'screenshot', 1)
             expect(page.get_by_label('截图风格试作目标', exact=True)).to_be_disabled()
             expect(page.get_by_role('button', name='先试此页', exact=True).first).to_be_disabled()
             expect(page.get_by_label(re.compile('^允许后续风格扩展到 ')).first).to_be_disabled()
+            expect(page.locator('html')).to_have_attribute('data-held-style-plan', 'ready')
             assert held
             if invalidate:
                 page.locator('.sidebar').get_by_role('button', name='制作总览', exact=True).click()

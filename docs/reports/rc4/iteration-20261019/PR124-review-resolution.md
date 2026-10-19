@@ -4,9 +4,9 @@
 
 | Finding | 修复状态与证据 | 受影响 AC |
 | --- | --- | --- |
-| P2-1 准备阶段原 ID 重试卡住 | 已用首个 `.after`、首个 `.witness` 后真实 child exit91 复现；同 UUID 两次均 unavailable/unknown。已在任何准备物前持久冻结preparing请求/旧状态/意图；同ID和无ID接续后精确重放，未确定归属的残留保持原身份。 | N2-03、N2-10：PASS（实际定向证据），新构建/最终CI待完成 |
-| P2-2 symlink Host skills 目录 | 同 fixture 基线 a08 成功，530 发生 ENOTDIR/recovery_conflict；真实目录用于内部锁/计划与发布，原访问链仍核验，CLI logical路径兼容；基线对照、死亡恢复、访问链替换保护、历史receipt及旧prepared兼容通过。 | N2-01：PASS（实际定向证据），新构建/最终CI待完成 |
-| P2-3 旧覆盖异常不回退 | 缺失/符号链接旧不可达快照反例修复前2FAIL2PASS；只在旧覆盖验证边界失效缓存后走既有 canonical scan。四例通过，最终受影响169PASS、缓存关闭共享101PASS；9个正式链损坏控制仍unknown。源/tests/证据已冻结，见 [N4补充报告](N4B-review-P2-cache-fallback.md)。 | N4-12、N4-14：PASS（实际定向证据），新构建/最终CI待完成 |
+| P2-1 准备阶段原 ID 重试卡住 | 已用首个 `.after`、首个 `.witness` 后真实 child exit91 复现；同 UUID 两次均 unavailable/unknown。已在任何准备物前持久冻结preparing请求/旧状态/意图；同ID和无ID接续后精确重放，未确定归属的残留保持原身份。 | N2-03、N2-10：PASS（实际定向证据），干净新构建已验证；最终CI待完成 |
+| P2-2 symlink Host skills 目录 | 同 fixture 基线 a08 成功，530 发生 ENOTDIR/recovery_conflict；真实目录用于内部锁/计划与发布，原访问链仍核验，CLI logical路径兼容；基线对照、死亡恢复、访问链替换保护、历史receipt及旧prepared兼容通过。 | N2-01：PASS（实际定向证据），干净新构建已验证；最终CI待完成 |
+| P2-3 旧覆盖异常不回退 | 缺失/符号链接旧不可达快照反例修复前2FAIL2PASS；只在旧覆盖验证边界失效缓存后走既有 canonical scan。四例通过，最终受影响169PASS、缓存关闭共享101PASS；9个正式链损坏控制仍unknown。源/tests/证据已冻结，见 [N4补充报告](N4B-review-P2-cache-fallback.md)。 | N4-12、N4-14：PASS（实际定向证据），干净新构建已验证；最终CI待完成 |
 | P2-4 台账汇总矛盾 | `tools/summarize_iteration_ledger.py` 仅从已有逐项判定生成计数、未解决 ID、每卡状态、CI/构建 gate 和非空说明；不修改任何 AC 判定、证据或延期观察。 | N5-10：PASS（实际报告一致性证据），最终 CI 单列 |
 
 P2-4 回归：对原真实报告运行 `tests/rebuild/test_iteration_ledger.py`，先得到1FAIL4PASS；更新派生字段后5PASS。FAIL/BLOCKED/NOT_RUN 三种开放判定均保持原值并进入未解决清单；全部组件 PASS 的控制场景仍将未完成 CI 标成 BLOCKED。真实用户本地效果/可用性与可信 Host 验收观察保留延期，不变成 PASS，也不作为新增 content_only gate。
@@ -31,3 +31,5 @@ python -m pytest -q tests/rebuild/test_iteration_ledger.py
 ## 最终完整浏览器跟进
 
 53021ac8 的完整 required-browser job 实际为489PASS/2FAIL，非取消。两项历史 import fixture 调用当前Task构造器后保留RC4 manifest，运行时正确拒绝无collaboration旧Document。后续仅在该历史构造中剥离manifest/policy并冻结实际RC3选择摘要；完整搜索/详情/只读断言、required-browser、timeout与业务writer边界保持。真实系统Chromium聚焦3PASS/0skip；本地临时浏览器路径适配和原失败完整保留在 [修复记录](Integration-browser-legacy-repair.json)。此项为CI后续测试数据修复，与指定四个P2分别记录；完整新head CI仍须终态核验。Runtime/Skill/构建输入保持3167源字节，干净wheel身份不重标。
+
+后续2b6867c5完整PR浏览器得到490PASS/1FAIL，原两个历史import case已通过。新增失败是样式plan测试的真实fetch回调完成竞态，独立于指定四项P2。命令级1秒非阻塞延迟在原source精确复现assert held为空；仅用测试完成事件和已有expect默认超时同步后，同注入四参数4PASS、未注入四参数及原完整截图流程5PASS。Runtime/Skill/构建输入与干净3167包仍一致；证据见 [同步修复记录](Integration-style-plan-sync-repair.json)。新的完整精确head CI仍须通过。
