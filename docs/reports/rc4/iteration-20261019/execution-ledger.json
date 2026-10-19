@@ -104,6 +104,16 @@
       "wheel_sha256": "93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d",
       "targeted_evidence": "PR124-review-resolution.md",
       "status": "FINAL_CI_PENDING"
+    },
+    {
+      "event": "late_full_browser_historical_fixture_repair",
+      "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+      "observed_full_browser": "489PASS/2FAIL; both failures before browser launch at legitimate writer boundary",
+      "repair": "Only historical Task construction, with original UI/read-only assertions intact",
+      "targeted_result": "3PASS actual system Chromium with explicit command-only local path adaptation",
+      "record": "Integration-browser-legacy-repair.json",
+      "runtime_and_build_inputs_changed": false,
+      "status": "FINAL_EXACT_HEAD_CI_PENDING"
     }
   ],
   "integration_checks": [
@@ -111,8 +121,8 @@
       "kind": "current_candidate_ci",
       "evidence": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
       "state_at_assembly": "in_progress",
-      "note": "Timestamped assembly observation; live exact-head Actions checks and final PR handoff provide the later terminal result. AC component findings are separate from whole engineering gate completion.",
-      "observed_at_utc": "2026-10-19T05:44:31.569775+00:00"
+      "note": "Assembly before final legacy browser fixture commit. Runtime/Skill/build inputs match3167; fresh exact-head complete Actions checks and final handoff will provide terminal results. Prior530 full browser489PASS2FAIL is retained in Integration-validation.json.",
+      "observed_at_utc": "2026-10-19T05:51:47.568563+00:00"
     },
     {
       "kind": "installed_resources",
@@ -2262,7 +2272,7 @@
       }
     },
     "final_ci_state_at_assembly": "in_progress",
-    "state_observed_at_utc": "2026-10-19T05:44:31.569775+00:00",
+    "state_observed_at_utc": "2026-10-19T05:51:47.568563+00:00",
     "observation_scope": "Assembly snapshot; the exact-head live checks and final PR handoff provide subsequent terminal CI evidence.",
     "live_terminal_ci": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
     "remaining_engineering_gates": [

@@ -187,6 +187,13 @@
         "locator": "external-evidence/integration-browser-setup-repair-record.json",
         "sha256": "1eaed43285f1a353331ad1a9ceeda0df75b1bcbca3e4b85d6ef749a1f1c38f93"
       }
+    },
+    {
+      "scope": "two late full-browser historical import fixtures",
+      "record": "Integration-browser-legacy-repair.json",
+      "result": "3 passed in8.53s using real system Chromium,0skips; command-only local browser-path adaptation recorded",
+      "original_assertions_retained": true,
+      "runtime_changed": false
     }
   ],
   "final_gate": "Live exact-head Rebuilt Core Gate at PR124 remains separate and required.",
@@ -243,6 +250,34 @@
         {
           "locator": "ci-render-pr.log",
           "sha256": "c503af2a6189d403e5a4cc865f94d6a5fd4734c8a9e1cc417f0e8a75802a8d4e"
+        }
+      ]
+    },
+    {
+      "head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+      "runs": [
+        39202734986
+      ],
+      "status": "FAIL",
+      "browser_result": {
+        "log": "ci-reviewed-530-browser-failed.log",
+        "actual_outcome": "failure, not cancellation; historical filename is misleading",
+        "failed": 2,
+        "passed": 489,
+        "deselected": 3465,
+        "seconds": 2216.39,
+        "sha256": "1af81797feaee56cc0f1b875156783b558c2c1b0b377b57b64ab56cb9bedd62d",
+        "run_id": 39202734986,
+        "job_id": 117899062084,
+        "head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17"
+      },
+      "observed_causes": [
+        {
+          "kind": "historical_Task_fixture_new_manifest",
+          "count": 2,
+          "cause": "Stored pre-collaboration legacy import test invoked current tasks.new_task and retained RC4 method_manifest. Store correctly raised minimum writer then refused the no-collaboration historical Document. Both changed=False/True failed at commit before browser launch.",
+          "repair": "Explicit historical Task strips new manifest/policy and freezes exact RC3 selector digest for compose/import_draft intent. Added compatibility-unchanged and collaboration-absent assertions. Original requirement summary, source search, exact original/added instructions in detail and read-only Document equality assertions unchanged. No writer boundary lowered.",
+          "state": "focused3PASS; new exact-head full browser CI required"
         }
       ]
     }

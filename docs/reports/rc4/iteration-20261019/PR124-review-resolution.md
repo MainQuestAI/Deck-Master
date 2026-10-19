@@ -27,3 +27,7 @@ python -m pytest -q tests/rebuild/test_iteration_ledger.py
 修复源提交 `3167f123487c3a2ea91848d0bec705743fbec2e3`，干净构建 `source_dirty=false`，版本 `1.0.0rc4`，release identity `3167f123487c-93ce9a2d453a`。新 wheel SHA256 `93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d`；sdist SHA256 `ec9bf88635226a91221c76dc4501aec302e0aa92c0d0a5536dc53a41f71f884e`。全新隔离安装核验23份canonical资源、四Skill、69schema、275package成员与90source模块；见 [安装身份](Installed-resource-identity.json)。N6原实际内容应用身份仍保留，不重标为此安装版运行。
 
 唯一台账保留实际反例的FAIL历史，再依各项修复/新安装证据恢复相关判定；completion由同一逐项状态派生。最终CI为另一个工程gate，组装时仍pending；实时精确head检查与PR最终交接记录其后续终态。用户本地真实验收继续延期，不虚标通过。
+
+## 最终完整浏览器跟进
+
+53021ac8 的完整 required-browser job 实际为489PASS/2FAIL，非取消。两项历史 import fixture 调用当前Task构造器后保留RC4 manifest，运行时正确拒绝无collaboration旧Document。后续仅在该历史构造中剥离manifest/policy并冻结实际RC3选择摘要；完整搜索/详情/只读断言、required-browser、timeout与业务writer边界保持。真实系统Chromium聚焦3PASS/0skip；本地临时浏览器路径适配和原失败完整保留在 [修复记录](Integration-browser-legacy-repair.json)。此项为CI后续测试数据修复，与指定四个P2分别记录；完整新head CI仍须终态核验。Runtime/Skill/构建输入保持3167源字节，干净wheel身份不重标。

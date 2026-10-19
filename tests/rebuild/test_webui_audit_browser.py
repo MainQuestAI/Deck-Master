@@ -66,9 +66,17 @@ def test_stored_legacy_import_requirement_is_searchable_and_verbatim_in_detail(t
     task=tasks.new_task(task_id='audit-legacy-import',operation_id='audit-legacy-import-op',
         kind='compose',intent='import_draft',scope_pages=[],inputs=[],dependencies=[],
         dispatch_revision=document['revision_id'],produced_against=content_identity(document),instruction=instruction)
+    # Explicit historical import record; current producers freeze RC4 facts.
+    task.pop('method_manifest',None)
+    task.pop('content_validation_policy',None)
+    from deck_master import method_resources
+    task['method_release']=method_resources.method_release(method_resources._read_ids(
+        method_resources.rc3_method_ids_for(task['kind'],intent=task['intent'])))
     document['tasks']=[store.put_json_object(task)]
     commit(store,document,'record-audit-legacy-import')
     before=store.load_document()
+    assert before.get('compatibility')==document.get('compatibility')
+    assert before.get('collaboration') is None
     server=WorkbenchServer(store.project_root)
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch()
