@@ -404,5 +404,18 @@
     "installed254": "PASS",
     "ledger_boundary16": "PASS",
     "new_exact_head_ci": "NOT_RUN_AT_ASSEMBLY"
+  },
+  "post_review3_navigation_repair": {
+    "source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+    "failed_ff59_runs": [
+      39258531644,
+      39258524157
+    ],
+    "record": "Integration-pressure-navigation-repair.json",
+    "source4": "PASS",
+    "focused10": "PASS",
+    "installed_UI5": "PASS",
+    "latest_installed_N2254": "PASS",
+    "new_exact_head_ci": "NOT_RUN_AT_ASSEMBLY"
   }
 }

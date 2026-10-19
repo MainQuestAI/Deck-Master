@@ -246,3 +246,9 @@ repair has309 source passes and254 actual new-wheel installed passes, including
 [evidence](N2-review3-evidence.json) and [installed proof](Installed-review3-N2.json).
 Original first-witness negatives and the five initial fixture failures are
 retained; sufficiently proven last-unconfirmed-witness recovery stays positive.
+
+The later shared-navigation integration repair retains all N2 Python/test bytes;
+its fresh2a8bef16 wheel separately passes254 installed recovery cases and5 actual
+UI cases. See [latest installed N2 proof](Installed-review3-final-N2.json) and
+[integration record](Integration-pressure-navigation-repair.json). The original
+97-source/death evidence is retained with its actual execution identity.

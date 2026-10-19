@@ -1,0 +1,530 @@
+{
+  "status": "PASS",
+  "source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+  "source_tree": "d54463ec964f9d6191c78c2d4f272bb6dd964cf1",
+  "source_status": " M docs/reports/rc4/iteration-20261019/Installed-resource-identity.json\n",
+  "wheel": "${BUILD_DIR}/deck_master-1.0.0rc4-py3-none-any.whl",
+  "wheel_sha256": "9df19d761a6c19c11d72915c21d8280fed51ca363a65c68c0f60976c8fbbaa7d",
+  "installed_package": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master",
+  "package_files_checked": 275,
+  "runtime_package_origin": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/__init__.py",
+  "pytest_origin": "${SOURCE_CHECKOUT}/.venv/lib/python3.12/site-packages/pytest/__init__.py",
+  "dependencies_pth_executed": false,
+  "command": [
+    "${INSTALLED_VENV}/bin/python",
+    "-I",
+    "-B",
+    "${FINAL_EVIDENCE}/integration/installed_n2_runner.py",
+    "--venv",
+    "${INSTALLED_VENV}",
+    "--wheel",
+    "${BUILD_DIR}/deck_master-1.0.0rc4-py3-none-any.whl",
+    "--out",
+    "${FINAL_EVIDENCE}/integration/installed-n2-review3"
+  ],
+  "targets": [
+    {
+      "path": "${SOURCE_CHECKOUT}/tests/rebuild/test_install_preparation_compatibility.py",
+      "sha256": "2e863dc11b986efd5da62b37606686feeed27df523eac2544f704d7fdd2260f1"
+    },
+    {
+      "path": "${SOURCE_CHECKOUT}/tests/rebuild/test_install_transaction_recovery.py",
+      "sha256": "02a6657ff73d14e5cca66ce824d5813759a5664ed4d60d997cd7e53a60f2479c"
+    },
+    {
+      "path": "${SOURCE_CHECKOUT}/tests/rebuild/test_rc3_install_four_links.py",
+      "sha256": "d5e05399cef5b72d3344914fb5046386e8b264425a65c3272bc81c658482aceb"
+    },
+    {
+      "path": "${SOURCE_CHECKOUT}/tests/rebuild/test_install_host_skill.py",
+      "sha256": "24d9d13e6847dcdb28d557714eb4c4ddf3c1efae7c9ecf64c585bb9e68529336"
+    },
+    {
+      "path": "${SOURCE_CHECKOUT}/tests/rebuild/test_install_preparation_coverage.py",
+      "sha256": "6146c3ba9b18e0011a577d610e35da475a349b5290a7ca3928cea6020f49eab7"
+    }
+  ],
+  "historical_controls": [
+    {
+      "commit": "bc6bd55a07b249660e6af8ab4b19a147bb2caf14",
+      "source": "git archive/git show from fixed git objects",
+      "package_files": 251
+    },
+    {
+      "commit": "001c8f101e07cab1b230e0745a6f0b17fb54882e",
+      "source": "git archive/git show from fixed git objects",
+      "package_files": 251
+    },
+    {
+      "commit": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+      "source": "git archive/git show from fixed git objects",
+      "package_files": 247
+    }
+  ],
+  "scope": "candidate modules verified from installed wheel; fixed historical controls separately audited; no browser rerun; synthetic HOME only",
+  "pytest_arguments": [
+    "-q",
+    "--tb=short",
+    "--basetemp=${FINAL_EVIDENCE}/integration/installed-n2-review3/tests",
+    "--junitxml=${FINAL_EVIDENCE}/integration/installed-n2-review3/pytest.xml",
+    "${SOURCE_CHECKOUT}/tests/rebuild/test_install_preparation_compatibility.py",
+    "${SOURCE_CHECKOUT}/tests/rebuild/test_install_transaction_recovery.py",
+    "${SOURCE_CHECKOUT}/tests/rebuild/test_rc3_install_four_links.py",
+    "${SOURCE_CHECKOUT}/tests/rebuild/test_install_host_skill.py",
+    "${SOURCE_CHECKOUT}/tests/rebuild/test_install_preparation_coverage.py"
+  ],
+  "pytest_exit": 0,
+  "counts": {
+    "passed": 254,
+    "failure": 0,
+    "error": 0,
+    "skipped": 0
+  },
+  "modules": [
+    {
+      "module": "deck_master",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/__init__.py",
+      "sha256": "e41bf0a4aeb0e2b4c59d13b1f30f7f557891d1e383d3c9881d40af82e3e9886c",
+      "artifact_path": "deck_master/__init__.py",
+      "artifact_sha256": "e41bf0a4aeb0e2b4c59d13b1f30f7f557891d1e383d3c9881d40af82e3e9886c"
+    },
+    {
+      "module": "deck_master.activation_transaction",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/activation_transaction.py",
+      "sha256": "0ce5ad66f00b85baabe021c2f4de90beaf89ebab8f12d52f1a117e0aa6dbb150",
+      "artifact_path": "deck_master/activation_transaction.py",
+      "artifact_sha256": "0ce5ad66f00b85baabe021c2f4de90beaf89ebab8f12d52f1a117e0aa6dbb150"
+    },
+    {
+      "module": "deck_master.cli",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/cli.py",
+      "sha256": "d80f1f8658b45afd7e73f1cd526c466e873fde3d17313363dbdefce3c25788bd",
+      "artifact_path": "deck_master/cli.py",
+      "artifact_sha256": "d80f1f8658b45afd7e73f1cd526c466e873fde3d17313363dbdefce3c25788bd"
+    },
+    {
+      "module": "deck_master.collaboration_scope",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/collaboration_scope.py",
+      "sha256": "65a9cd8ff2129908a17a9595115bc3789b987b5c628e2a8f5e7e5479b8462844",
+      "artifact_path": "deck_master/collaboration_scope.py",
+      "artifact_sha256": "65a9cd8ff2129908a17a9595115bc3789b987b5c628e2a8f5e7e5479b8462844"
+    },
+    {
+      "module": "deck_master.compiler",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/__init__.py",
+      "sha256": "c45447cd4fb0139c8d9e96eba4484b2a13c57453bfac2bf2994488d8d7925464",
+      "artifact_path": "deck_master/compiler/__init__.py",
+      "artifact_sha256": "c45447cd4fb0139c8d9e96eba4484b2a13c57453bfac2bf2994488d8d7925464"
+    },
+    {
+      "module": "deck_master.compiler.api",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/api.py",
+      "sha256": "64d5327fb61ae796c4551f980f089df57cba58fc5eb817491ac51d32d3103afc",
+      "artifact_path": "deck_master/compiler/api.py",
+      "artifact_sha256": "64d5327fb61ae796c4551f980f089df57cba58fc5eb817491ac51d32d3103afc"
+    },
+    {
+      "module": "deck_master.compiler.geometry",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/geometry.py",
+      "sha256": "67cc966b6f07a96fca45f477396fafe7dedfb8c2971fb10bbcf11876388cb597",
+      "artifact_path": "deck_master/compiler/geometry.py",
+      "artifact_sha256": "67cc966b6f07a96fca45f477396fafe7dedfb8c2971fb10bbcf11876388cb597"
+    },
+    {
+      "module": "deck_master.compiler.paint",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/paint.py",
+      "sha256": "54f74126c5c5f9e67a2ddf228164cc88d3761130cfb1712639d9f0aaf7e6a18b",
+      "artifact_path": "deck_master/compiler/paint.py",
+      "artifact_sha256": "54f74126c5c5f9e67a2ddf228164cc88d3761130cfb1712639d9f0aaf7e6a18b"
+    },
+    {
+      "module": "deck_master.compiler.svg",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/svg.py",
+      "sha256": "6083928e207390f489fff7273ef20d4d20e4a246dcda3440c9d77c4e69183221",
+      "artifact_path": "deck_master/compiler/svg.py",
+      "artifact_sha256": "6083928e207390f489fff7273ef20d4d20e4a246dcda3440c9d77c4e69183221"
+    },
+    {
+      "module": "deck_master.content",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/content.py",
+      "sha256": "d707d010d8b5ff1fe0ada66eac9d90b3a370ed7c3b52b3753d48472b49065d4c",
+      "artifact_path": "deck_master/content.py",
+      "artifact_sha256": "d707d010d8b5ff1fe0ada66eac9d90b3a370ed7c3b52b3753d48472b49065d4c"
+    },
+    {
+      "module": "deck_master.dependency_slices",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/dependency_slices.py",
+      "sha256": "b735195a1fa9a10ad249379abd8afe16435cdeedd31f414f1a1cea0afa1c8254",
+      "artifact_path": "deck_master/dependency_slices.py",
+      "artifact_sha256": "b735195a1fa9a10ad249379abd8afe16435cdeedd31f414f1a1cea0afa1c8254"
+    },
+    {
+      "module": "deck_master.eligibility",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/eligibility.py",
+      "sha256": "88e329eacb331bd9dbeaeb2fe8f218132d3fe9395cf2bbf9bfd3dcc32a99203f",
+      "artifact_path": "deck_master/eligibility.py",
+      "artifact_sha256": "88e329eacb331bd9dbeaeb2fe8f218132d3fe9395cf2bbf9bfd3dcc32a99203f"
+    },
+    {
+      "module": "deck_master.errors",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/errors.py",
+      "sha256": "9cdb98032e0efbb878d8f92397d8cf919204878727009b8bb6c086ef7ffafa3a",
+      "artifact_path": "deck_master/errors.py",
+      "artifact_sha256": "9cdb98032e0efbb878d8f92397d8cf919204878727009b8bb6c086ef7ffafa3a"
+    },
+    {
+      "module": "deck_master.install",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/install.py",
+      "sha256": "cd23abb0e1a8e23e8566d39cb25424a068d6f6b51de71abfaac31d6cc5cdbffd",
+      "artifact_path": "deck_master/install.py",
+      "artifact_sha256": "cd23abb0e1a8e23e8566d39cb25424a068d6f6b51de71abfaac31d6cc5cdbffd"
+    },
+    {
+      "module": "deck_master.local_state",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/local_state.py",
+      "sha256": "9d71710bc997316659eea0df0e7fc68ad5d188a3e7d0af1a1ed445d00b2faf13",
+      "artifact_path": "deck_master/local_state.py",
+      "artifact_sha256": "9d71710bc997316659eea0df0e7fc68ad5d188a3e7d0af1a1ed445d00b2faf13"
+    },
+    {
+      "module": "deck_master.method_resources",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/method_resources.py",
+      "sha256": "d3eac961d49a5b27030e74910674039aa76dc2a51a8e666940ab3f76f541ea0d",
+      "artifact_path": "deck_master/method_resources.py",
+      "artifact_sha256": "d3eac961d49a5b27030e74910674039aa76dc2a51a8e666940ab3f76f541ea0d"
+    },
+    {
+      "module": "deck_master.models",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/models.py",
+      "sha256": "573133182ca084cb37c5e449a641b6d165e80131b797622c8d60f018dfd088e2",
+      "artifact_path": "deck_master/models.py",
+      "artifact_sha256": "573133182ca084cb37c5e449a641b6d165e80131b797622c8d60f018dfd088e2"
+    },
+    {
+      "module": "deck_master.operations",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/operations.py",
+      "sha256": "ee9d3bccdcd7f6d2ea979248662f406ce6f177695e7e0fb3953d82fb54d65f89",
+      "artifact_path": "deck_master/operations.py",
+      "artifact_sha256": "ee9d3bccdcd7f6d2ea979248662f406ce6f177695e7e0fb3953d82fb54d65f89"
+    },
+    {
+      "module": "deck_master.production",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/production.py",
+      "sha256": "0ddb761ba79117f04a782661486a68014de3b6259e2a9d937a0f753fd417fcc9",
+      "artifact_path": "deck_master/production.py",
+      "artifact_sha256": "0ddb761ba79117f04a782661486a68014de3b6259e2a9d937a0f753fd417fcc9"
+    },
+    {
+      "module": "deck_master.review",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/review.py",
+      "sha256": "0a2598a5a6e0d0f1ef91144becdcf0cbdac72f0ec1500c4c5acb50487afbf6af",
+      "artifact_path": "deck_master/review.py",
+      "artifact_sha256": "0a2598a5a6e0d0f1ef91144becdcf0cbdac72f0ec1500c4c5acb50487afbf6af"
+    },
+    {
+      "module": "deck_master.service",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/service.py",
+      "sha256": "357bba1e06fbac7e8d6f9a4255fd141308d70a18380fd16e4e89360c1624c30d",
+      "artifact_path": "deck_master/service.py",
+      "artifact_sha256": "357bba1e06fbac7e8d6f9a4255fd141308d70a18380fd16e4e89360c1624c30d"
+    },
+    {
+      "module": "deck_master.snapshots",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/snapshots.py",
+      "sha256": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1",
+      "artifact_path": "deck_master/snapshots.py",
+      "artifact_sha256": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1"
+    },
+    {
+      "module": "deck_master.sources",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/sources.py",
+      "sha256": "b3e5827ccb81e71cc4114cd34ba96921f6bc8ba986a3767a7eb945a89f80d871",
+      "artifact_path": "deck_master/sources.py",
+      "artifact_sha256": "b3e5827ccb81e71cc4114cd34ba96921f6bc8ba986a3767a7eb945a89f80d871"
+    },
+    {
+      "module": "deck_master.store",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/store.py",
+      "sha256": "ab4265cd8ba311995d3cdf3305ec2070a991f2d455bdd7fc03b7abb3e016f9d2",
+      "artifact_path": "deck_master/store.py",
+      "artifact_sha256": "ab4265cd8ba311995d3cdf3305ec2070a991f2d455bdd7fc03b7abb3e016f9d2"
+    },
+    {
+      "module": "deck_master.tasks",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/tasks.py",
+      "sha256": "8e73f7ad55882c8f31be5e9a5e37304707701a31cedf1a4250996d388248757c",
+      "artifact_path": "deck_master/tasks.py",
+      "artifact_sha256": "8e73f7ad55882c8f31be5e9a5e37304707701a31cedf1a4250996d388248757c"
+    },
+    {
+      "module": "deck_master.work_context",
+      "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/work_context.py",
+      "sha256": "3a8986d039415a5840991d86c7d846a054a8355190b36e1047e2d62bfe77f72c",
+      "artifact_path": "deck_master/work_context.py",
+      "artifact_sha256": "3a8986d039415a5840991d86c7d846a054a8355190b36e1047e2d62bfe77f72c"
+    }
+  ],
+  "blocked_source_insertions": [
+    {
+      "path": "${SOURCE_CHECKOUT}/src",
+      "caller": "${SOURCE_CHECKOUT}/tests/rebuild/conftest.py"
+    }
+  ],
+  "raw_test_identity_path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/raw-filesystem-identities.json",
+  "source_status_after": " M docs/reports/rc4/iteration-20261019/Installed-resource-identity.json\n",
+  "build_source_dirty": false,
+  "evidence_level": "INSTALLED_SYNTHETIC_ENGINEERING_WITH_SEPARATE_HISTORICAL_CONTROLS",
+  "guarded_summary": {
+    "status": "PASS",
+    "source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+    "source_tree": "d54463ec964f9d6191c78c2d4f272bb6dd964cf1",
+    "wheel_sha256": "9df19d761a6c19c11d72915c21d8280fed51ca363a65c68c0f60976c8fbbaa7d",
+    "installed_package": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master",
+    "resources": {
+      "resource_root": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/resources",
+      "static_root": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/resources/static",
+      "all_package_files_hashed_against_wheel": 275
+    },
+    "counts": {
+      "passed": 254,
+      "failure": 0,
+      "error": 0,
+      "skipped": 0
+    },
+    "per_file_counts": {
+      "tests.rebuild.test_install_preparation_compatibility": {
+        "passed": 27
+      },
+      "tests.rebuild.test_install_transaction_recovery": {
+        "passed": 169
+      },
+      "tests.rebuild.test_rc3_install_four_links": {
+        "passed": 23
+      },
+      "tests.rebuild.test_install_host_skill": {
+        "passed": 23
+      },
+      "tests.rebuild.test_install_preparation_coverage": {
+        "passed": 12
+      }
+    },
+    "process_counts": {
+      "candidate": 124,
+      "historical": 5
+    },
+    "historical_commit_process_counts": {
+      "bc6bd55a07b249660e6af8ab4b19a147bb2caf14": 2,
+      "001c8f101e07cab1b230e0745a6f0b17fb54882e": 3
+    },
+    "candidate_children": 122,
+    "historical_children": 5,
+    "source_python_modules_match_wheel": 90,
+    "raw_identities": {
+      "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/raw-filesystem-identities.json",
+      "count": 15677,
+      "sha256": "5d1b13b9fd12f8f3aee58e64d693106aff7e68e1c3dfef0da71668602ec07eaf",
+      "transaction_records": 518
+    },
+    "scope": "candidate modules verified from installed wheel; fixed historical controls separately audited; no browser rerun; synthetic HOME only",
+    "command": [
+      "${INSTALLED_VENV}/bin/python",
+      "-I",
+      "-B",
+      "${FINAL_EVIDENCE}/integration/installed_n2_runner.py",
+      "--venv",
+      "${INSTALLED_VENV}",
+      "--wheel",
+      "${BUILD_DIR}/deck_master-1.0.0rc4-py3-none-any.whl",
+      "--out",
+      "${FINAL_EVIDENCE}/integration/installed-n2-review3"
+    ],
+    "candidate_unique_loaded_modules": 34,
+    "candidate_module_origins": {
+      "deck_master": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/__init__.py",
+      "deck_master.models": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/models.py",
+      "deck_master.store": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/store.py",
+      "deck_master.activation_transaction": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/activation_transaction.py",
+      "deck_master.errors": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/errors.py",
+      "deck_master.install": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/install.py",
+      "deck_master.cli": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/cli.py",
+      "deck_master.compiler": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/__init__.py",
+      "deck_master.compiler.api": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/api.py",
+      "deck_master.compiler.svg": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/svg.py",
+      "deck_master.compiler.paint": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/paint.py",
+      "deck_master.compiler.geometry": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/compiler/geometry.py",
+      "deck_master.service": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/service.py",
+      "deck_master.eligibility": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/eligibility.py",
+      "deck_master.dependency_slices": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/dependency_slices.py",
+      "deck_master.collaboration_scope": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/collaboration_scope.py",
+      "deck_master.operations": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/operations.py",
+      "deck_master.local_state": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/local_state.py",
+      "deck_master.snapshots": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/snapshots.py",
+      "deck_master.tasks": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/tasks.py",
+      "deck_master.content": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/content.py",
+      "deck_master.method_resources": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/method_resources.py",
+      "deck_master.sources": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/sources.py",
+      "deck_master.production": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/production.py",
+      "deck_master.review": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/review.py",
+      "deck_master.work_context": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/work_context.py",
+      "deck_master.web": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/web.py",
+      "deck_master.view": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/view.py",
+      "deck_master.workbench": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/workbench.py",
+      "deck_master.local_runtime": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/local_runtime.py",
+      "deck_master.capabilities": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/capabilities.py",
+      "deck_master.content_review": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/content_review.py",
+      "deck_master.editing": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/editing.py",
+      "deck_master.review_evidence": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/review_evidence.py"
+    },
+    "candidate_module_hashes": {
+      "deck_master": "e41bf0a4aeb0e2b4c59d13b1f30f7f557891d1e383d3c9881d40af82e3e9886c",
+      "deck_master.models": "573133182ca084cb37c5e449a641b6d165e80131b797622c8d60f018dfd088e2",
+      "deck_master.store": "ab4265cd8ba311995d3cdf3305ec2070a991f2d455bdd7fc03b7abb3e016f9d2",
+      "deck_master.activation_transaction": "0ce5ad66f00b85baabe021c2f4de90beaf89ebab8f12d52f1a117e0aa6dbb150",
+      "deck_master.errors": "9cdb98032e0efbb878d8f92397d8cf919204878727009b8bb6c086ef7ffafa3a",
+      "deck_master.install": "cd23abb0e1a8e23e8566d39cb25424a068d6f6b51de71abfaac31d6cc5cdbffd",
+      "deck_master.cli": "d80f1f8658b45afd7e73f1cd526c466e873fde3d17313363dbdefce3c25788bd",
+      "deck_master.compiler": "c45447cd4fb0139c8d9e96eba4484b2a13c57453bfac2bf2994488d8d7925464",
+      "deck_master.compiler.api": "64d5327fb61ae796c4551f980f089df57cba58fc5eb817491ac51d32d3103afc",
+      "deck_master.compiler.svg": "6083928e207390f489fff7273ef20d4d20e4a246dcda3440c9d77c4e69183221",
+      "deck_master.compiler.paint": "54f74126c5c5f9e67a2ddf228164cc88d3761130cfb1712639d9f0aaf7e6a18b",
+      "deck_master.compiler.geometry": "67cc966b6f07a96fca45f477396fafe7dedfb8c2971fb10bbcf11876388cb597",
+      "deck_master.service": "357bba1e06fbac7e8d6f9a4255fd141308d70a18380fd16e4e89360c1624c30d",
+      "deck_master.eligibility": "88e329eacb331bd9dbeaeb2fe8f218132d3fe9395cf2bbf9bfd3dcc32a99203f",
+      "deck_master.dependency_slices": "b735195a1fa9a10ad249379abd8afe16435cdeedd31f414f1a1cea0afa1c8254",
+      "deck_master.collaboration_scope": "65a9cd8ff2129908a17a9595115bc3789b987b5c628e2a8f5e7e5479b8462844",
+      "deck_master.operations": "ee9d3bccdcd7f6d2ea979248662f406ce6f177695e7e0fb3953d82fb54d65f89",
+      "deck_master.local_state": "9d71710bc997316659eea0df0e7fc68ad5d188a3e7d0af1a1ed445d00b2faf13",
+      "deck_master.snapshots": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1",
+      "deck_master.tasks": "8e73f7ad55882c8f31be5e9a5e37304707701a31cedf1a4250996d388248757c",
+      "deck_master.content": "d707d010d8b5ff1fe0ada66eac9d90b3a370ed7c3b52b3753d48472b49065d4c",
+      "deck_master.method_resources": "d3eac961d49a5b27030e74910674039aa76dc2a51a8e666940ab3f76f541ea0d",
+      "deck_master.sources": "b3e5827ccb81e71cc4114cd34ba96921f6bc8ba986a3767a7eb945a89f80d871",
+      "deck_master.production": "0ddb761ba79117f04a782661486a68014de3b6259e2a9d937a0f753fd417fcc9",
+      "deck_master.review": "0a2598a5a6e0d0f1ef91144becdcf0cbdac72f0ec1500c4c5acb50487afbf6af",
+      "deck_master.work_context": "3a8986d039415a5840991d86c7d846a054a8355190b36e1047e2d62bfe77f72c",
+      "deck_master.web": "1a220cd449cbe1a421028797252374c21da166dd209929e373780cdd4252dc5a",
+      "deck_master.view": "c531f19ff3a5ed2e5ffc65a6afb883cbce138080042d53132668b20220854b02",
+      "deck_master.workbench": "f2407eb468e4adf69ec87c2af29f0a43245cb66859ee32f511c3830e9980edfd",
+      "deck_master.local_runtime": "06b54277cdf9991ae68699aa3837928f9ce091feb64ef32ca6aed57e5cab8bad",
+      "deck_master.capabilities": "912bb42757194bd33311df430662e183c8749ffc9a717485d84cd2a053fabe08",
+      "deck_master.content_review": "70413f599402c225333d7f2052a12c9380475dd64f7b12b4a01115811046a52d",
+      "deck_master.editing": "b7e81d418a4d1b59d06b23f0a21e238bd9f0ea421e7acfe1529a69f25b2113f2",
+      "deck_master.review_evidence": "d64af299a8f76baf8f9045077f8c352f1aaf09a7fa030c40b53651548cc3eea4"
+    },
+    "historical_inprocess_control_count": 23,
+    "historical_inprocess_control_commits": [
+      "a08bc68c1cbbbc806205104c2bb01f3f096305f0"
+    ],
+    "blocked_current_source_insertions": {
+      "${SOURCE_CHECKOUT}/tests/rebuild/conftest.py": 1
+    },
+    "import_guard_violations": 0,
+    "source_status_before": " M docs/reports/rc4/iteration-20261019/Installed-resource-identity.json\n",
+    "source_status_after": " M docs/reports/rc4/iteration-20261019/Installed-resource-identity.json\n",
+    "evidence_manifest": {
+      "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3-evidence-manifest.json",
+      "size": 60660,
+      "sha256": "dc861b9424f41107faf32f901aede8598438e82ec9aaee7ef5e38c98202b6c4f"
+    },
+    "primary_evidence": [
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed_n2_runner.py",
+        "size": 20256,
+        "sha256": "b100af91c7837490a97204575fbb2198a6703f0c55aaf7126a57d942f302d87b"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/summarize_installed_n2.py",
+        "size": 5125,
+        "sha256": "4b7c39ce68462c34d2177027fc6160013d46789bda4fe83ca8a3479cf5e04804"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/finalize_installed_n2.py",
+        "size": 7658,
+        "sha256": "267c15e81df4d66fa960bc9529df855740b98fa38c11fea5a21dd545c4f03d10"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3.log",
+        "size": 8789,
+        "sha256": "29cc55d7c0ded73db095662ae74bfe6757cd3a3277cd0fe736c4d75c1fc8bc2b"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3-summary.log",
+        "size": 1455,
+        "sha256": "c08d351647edbc1434a48e735b315f8e3d2ec8338ba35f2c8a6f872390189f54"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/static-review.json",
+        "size": 3672,
+        "sha256": "92eb8df2163fd3b4f6db47479dc37b3c8a8decc34e4c93bd88bcb82a958af826"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/reviewed-source.diff",
+        "size": 6089,
+        "sha256": "80d8aab8f2dda4abe270ab82dd7b5f8b7ff35ce163238084c25323ae578d5b00"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/reviewed-commit-link.json",
+        "size": 1448,
+        "sha256": "0e4f432d631d326549629480da1dd90922d1f04b71e6780c2f09a460b4e86358"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/audit-summary.json",
+        "size": 84559,
+        "sha256": "d261c5b46d509a749e2b3fece3c5e57702d5c64de800692eb916deb52ecfe8f4"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/config.json",
+        "size": 125460,
+        "sha256": "e6f2771be942649b9d7a60e8d7637cada0be2f77f1913c87d3595d65ca362590"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/pytest.xml",
+        "size": 43473,
+        "sha256": "d1850fe4987af73fd96c408d3fd63ee60b162eadf202ddd2cfb89d21574c36c7"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/raw-filesystem-identities.json",
+        "size": 34913486,
+        "sha256": "5d1b13b9fd12f8f3aee58e64d693106aff7e68e1c3dfef0da71668602ec07eaf"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/result.json",
+        "size": 66433,
+        "sha256": "132af293559ed60fb3bf239afada71de700aee04b9422180be464810f97b605f"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/wheel-package-file-hashes.json",
+        "size": 80988,
+        "sha256": "36e2b4a74a5a0a010091d0197a0b0ee61374841745ab49248f3d830eb035a60e"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/guard-process-index.json",
+        "size": 589260,
+        "sha256": "359daed12b6c6e89392830778f8662fd1d0f44be0a72021858a631e414eba35d"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/testcase-index.json",
+        "size": 49321,
+        "sha256": "3eea49ded95351e73e856bcaf552103d0afce531c32feef48a6e19607477bcc6"
+      },
+      {
+        "path": "${FINAL_EVIDENCE}/integration/installed-n2-review3/raw-transaction-index.json",
+        "size": 8636129,
+        "sha256": "90bb18af2a5e01987553fbb1e005a960e0e7575f07f2f6caf45a10699b70ed83"
+      }
+    ],
+    "limitations": [
+      "Synthetic releases and isolated HOME only; actual local/trusted Host acceptance remains deferred.",
+      "Real child exits and external unlink/recreate are tested. Inode collision is explicitly modeled; actual inode reuse is not claimed.",
+      "Fixed historical controls are separate from candidate installed module claims.",
+      "23 DeprecationWarnings are emitted by the external a08 legacy helper control namespace; all assertions passed.",
+      "This N2 runner does not execute browser tests; separate new-wheel UI proof is recorded. No merge, branch deletion, Release/tag, deployment or actual HOME activation."
+    ]
+  },
+  "source_status_note": "Clean2a8bef16 integration build; N2 Python production/tests unchanged from97f41626; later evidence-only changes retain packaged bytes.",
+  "limitations": [
+    "Synthetic prefixes/HOME only; separate real historical controls are not candidate installed imports.",
+    "No N6 or user real acceptance relabeled.",
+    "Separate installed UI5 and final full exact-head CI provide browser evidence."
+  ]
+}

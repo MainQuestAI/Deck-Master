@@ -3,12 +3,12 @@
   "status": "PASS",
   "evidence_level": "INSTALLED_SYNTHETIC_ENGINEERING_READ_ONLY",
   "build_binding": {
-    "source_sha": "97f41626771357ff51fcfdba7a510db9299233ac",
+    "source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
     "source_dirty": false,
     "package_version": "1.0.0rc4",
-    "release_id": "97f416267713-3cf22b1ee61c",
+    "release_id": "2a8bef16f280-9df19d761a6c",
     "wheel": "deck_master-1.0.0rc4-py3-none-any.whl",
-    "wheel_sha256": "3cf22b1ee61cf5b4e1ec93dcc8506acfea90a18ae7a872bb392abcab94cc4f67"
+    "wheel_sha256": "9df19d761a6c19c11d72915c21d8280fed51ca363a65c68c0f60976c8fbbaa7d"
   },
   "execution": {
     "python_executable": "${INSTALLED_VENV}/bin/python",
@@ -34,7 +34,7 @@
         "from_installed_venv": false
       }
     ],
-    "probe_script_sha256": "0bd75e0601938458724ff9ca2a6311fc3952cd6aecd60687770a47755a58e652",
+    "probe_script_sha256": "5db61f090412f30a3594fa7c6eee2776d5090df0a848a38b18e2b1fa283fea9a",
     "invocation": "${INSTALLED_VENV}/bin/python -I -B ${RAW_EVIDENCE}/verify_installed_resource_identity.py"
   },
   "installation_identity": {
@@ -232,8 +232,8 @@
   },
   "control_reload_asset": {
     "path": "deck_master/resources/static/v2/project.js",
-    "sha256": "e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7",
-    "bytes": 29038,
+    "sha256": "21e7cca5783410e1243dc7cb10f1eb93a01bd9c1a60be098872b9c33118b7758",
+    "bytes": 29967,
     "source_wheel_and_installed_identical": true
   },
   "public_skills": [
