@@ -1,12 +1,16 @@
 # Deck Master roadmap
 
-The current increment is [RC4, based on merged PR123](docs/specs/deck-master-next-iteration-20261019/README.md).
-Its six task cards are the development contract; current execution results
-live only in the [candidate ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json).
+The 1.0.0 source line includes the merged RC4 increment (PR124) and normal
+installed native independent review (PR125). The
+[RC4 specification](docs/specs/deck-master-next-iteration-20261019/README.md)
+and [candidate ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
+retain that increment's development contract and dated evidence. Current
+installation, Host requirements and known limitations are in the
+[first-run guide](docs/getting-started.md).
 The package version, a built candidate, an active installation and a public
 GitHub Release are separate facts. This roadmap does not announce a release.
 
-## Current work
+## Included RC4 work
 
 1. N1: recover ordinary input updates from committed receipts, preserve
    legacy requests, and align the bounded HTTP/Python entry points.
@@ -35,7 +39,8 @@ application, professional approval or user feedback.
 
 Public release and activation of a user's installation require their own
 authorization. Installation rollback does not lower a project's writer floor.
-There is no committed date for a final 1.0.0 release.
+Check [GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases)
+for published assets; source version `1.0.0` alone does not publish them.
 
 ## Later decisions
 
