@@ -55,6 +55,34 @@ and pre-fix raw observations remain retained externally. An unfinished record
 without the required witnesses is preserved and refused; an old terminal
 receipt can still replay its historical result without a new ownership claim.
 
+Preparation is now a durable `preparing` phase. The request, original managed
+state and each `.after`/`.witness` intent are saved before creating the artifact;
+its verified identity is saved afterward. A process exit between creation and
+identity persistence leaves a recoverable request rather than an unrecorded
+file collision. The original ID resumes after checking target resources, old
+managed state and all already-proven preparation identities. Unproven residuals
+remain untouched and listed in `preparation_history`; a fresh `preparation_id`
+namespace prevents adopting or deleting them based only on a filename/target.
+The request UUID stays fixed. New preparations never restart formal actions.
+An interruption in this phase reports `preparing`; retry the original request.
+
+The preparing reader retains the finite action/path boundary: migration can
+only move `current` to a prefix-local `legacy-companion-*`, and exact legacy
+retirements must match the live validated migration action set. Watched paths,
+steps, intents and existing witnesses are validated even while preparation is
+partial. Informational skipped entries can grow as retained preparations appear;
+they do not change the frozen action domain. Escaped or invented migration
+actions are refused before creating external witnesses or performing moves.
+
+For a symlink Host skills directory, new plans bind the actual canonical
+directory and separately freeze `host_access_path`/`host_access_identity` for
+the original access ancestry. Locked actions use the verified actual directory;
+the ancestry is checked during nonterminal recovery and before completion.
+Existing `skill_link`/`skill_links` success fields keep the logical access path.
+Terminal receipts remain historical and do not acquire a new alias-identity
+requirement. Previous prepared records without these optional new fields still
+use their frozen parent proof and request; they are not relabeled as preparing.
+
 All transaction backup, publish, unpublish and restoration renames use one
 atomic no-replace operation with a pinned adjacent parent directory descriptor.
 The descriptor's device/inode must match the frozen parent. An external file,
@@ -106,7 +134,7 @@ write and excludes actions never reached. Repeated paths during legacy
 remove/re-register are restored in reverse order. A restored state write can
 also lag its rename and be recovered by the same inode evidence.
 
-`prepared -> applying -> completed` is the success path. Exceptions and Ctrl-C
+`preparing -> prepared -> applying -> completed` is the success path. Exceptions and Ctrl-C
 persist `compensating` before reverse restoration, then `rolled_back` only after
 verifying the original managed paths and parents. Recovery of `compensating`
 continues reverse restoration. Ownership/resource conflicts preserve
@@ -158,7 +186,7 @@ They verify actual pointer/link/launcher inode, bytes, mode and durable state,
 including action-before-log windows and compensation dying again. The broader
 resource-inventory regression retains strict installed/wheel protections.
 
-Current focused result: **270 passed, 0 failed/errors/skips** in
+Current focused result: **290 passed, 0 failed/errors/skips** in
 `N2-focused-junit.xml`. `N2-install-recovery-evidence.json` records source hashes,
 the exact command, twelve AC-to-test mappings checked against that JUnit, and
 47 separately collected child-process exits: 25 forward, 16 retirement,

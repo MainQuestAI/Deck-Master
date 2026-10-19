@@ -29,12 +29,15 @@
     "installed_instances": [
       {
         "evidence": "Installed-resource-identity.json",
-        "status": "PASS",
-        "actual_user_home": false
+        "status": "NOT_RUN",
+        "actual_user_home": false,
+        "prior_validation_status": "PASS",
+        "note": "Superseded by reviewed Runtime/Skill changes; fresh clean build and installed identity are pending."
       }
     ],
     "build_runtime_and_skill_bytes_match_candidate": true,
-    "identity_note": "implementation_sha/tree_sha pin the immutable integration evidence basis. Later report/legacy-fixture/readonly-tool commits retain runtime and packaged Skill bytes; exact final PR head/tree and terminal CI are exposed in PR124 handoff/checks."
+    "identity_note": "implementation_sha/tree_sha pin the immutable integration evidence basis. Later report/legacy-fixture/readonly-tool commits retain runtime and packaged Skill bytes; exact final PR head/tree and terminal CI are exposed in PR124 handoff/checks.",
+    "fresh_build_required": true
   },
   "environment_checks": [
     {
@@ -99,7 +102,8 @@
       "kind": "current_candidate_ci",
       "evidence": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
       "state_at_assembly": "in_progress",
-      "note": "Timestamped assembly observation; live exact-head Actions checks and final PR handoff provide the later terminal result. AC component findings are separate from whole engineering gate completion."
+      "note": "Timestamped assembly observation; live exact-head Actions checks and final PR handoff provide the later terminal result. AC component findings are separate from whole engineering gate completion.",
+      "observed_at_utc": "2026-10-19T05:32:12.452351+00:00"
     },
     {
       "kind": "installed_resources",
@@ -491,7 +495,7 @@
       "status": "PASS",
       "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
       "applicability_reason": null,
-      "observed_result": "four-link activate/rollback and unchanged launch behavior",
+      "observed_result": "Existing symlink Host directory works from real a08 installer baseline to four-Skill RC4; canonical directory/alias protection, logical CLI paths and terminal/legacy receipt compatibility verified.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -509,11 +513,21 @@
           ]
         }
       ],
-      "failure_history": [],
+      "failure_history": [
+        {
+          "review_id": "P2-2",
+          "observed": "A symlink Host skills directory passes preflight but no-follow parent open fails during publication, producing recovery_conflict.",
+          "resolution": "Actual before reproductions retained;20 new targeted cases pass, full290PASS31.13s and47 actual process deaths42completed5rolled_back with intact witnesses. Four forged preparing migration negatives preserve external names/inodes/bytes and damaged records.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
       "limitations": [
         "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
       ],
-      "next_actions": []
+      "next_actions": [
+        "Bind fresh clean build/installed identity and finish final exact-head CI."
+      ]
     },
     {
       "ac_id": "AC-N2-02",
@@ -551,7 +565,7 @@
       "status": "PASS",
       "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
       "applicability_reason": null,
-      "observed_result": "real process deaths before pending, after action and before step state",
+      "observed_result": "Durable preparing request/old-state/intents precede every .after/.witness; both actual death windows resume original UUID or matching no-ID call, preserve uncertain residuals and replay without duplicate activation.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -570,11 +584,21 @@
           ]
         }
       ],
-      "failure_history": [],
+      "failure_history": [
+        {
+          "review_id": "P2-1",
+          "observed": "Preparation creates durable .after/.witness before any transaction record; two real death windows leave same UUID retry repeatedly unknown.",
+          "resolution": "Actual before reproductions retained;20 new targeted cases pass, full290PASS31.13s and47 actual process deaths42completed5rolled_back with intact witnesses. Four forged preparing migration negatives preserve external names/inodes/bytes and damaged records.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
       "limitations": [
         "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
       ],
-      "next_actions": []
+      "next_actions": [
+        "Bind fresh clean build/installed identity and finish final exact-head CI."
+      ]
     },
     {
       "ac_id": "AC-N2-04",
@@ -778,7 +802,7 @@
       "status": "PASS",
       "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
       "applicability_reason": null,
-      "observed_result": "UUIDv4 exact bindings, pending mismatch and prepared discovery",
+      "observed_result": "Durable preparing request/old-state/intents precede every .after/.witness; both actual death windows resume original UUID or matching no-ID call, preserve uncertain residuals and replay without duplicate activation.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -803,11 +827,21 @@
           ]
         }
       ],
-      "failure_history": [],
+      "failure_history": [
+        {
+          "review_id": "P2-1",
+          "observed": "Preparation creates durable .after/.witness before any transaction record; two real death windows leave same UUID retry repeatedly unknown.",
+          "resolution": "Actual before reproductions retained;20 new targeted cases pass, full290PASS31.13s and47 actual process deaths42completed5rolled_back with intact witnesses. Four forged preparing migration negatives preserve external names/inodes/bytes and damaged records.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
       "limitations": [
         "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
       ],
-      "next_actions": []
+      "next_actions": [
+        "Bind fresh clean build/installed identity and finish final exact-head CI."
+      ]
     },
     {
       "ac_id": "AC-N2-11",
@@ -1127,7 +1161,7 @@
     {
       "ac_id": "AC-N3-12",
       "owner": "N3",
-      "status": "PASS",
+      "status": "NOT_RUN",
       "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
       "applicability_reason": null,
       "observed_result": "old writer refusal, first-floor failure atomicity and installed identity",
@@ -1147,7 +1181,9 @@
       ],
       "failure_history": [],
       "limitations": [],
-      "next_actions": []
+      "next_actions": [
+        "Verify fresh repaired wheel in a new isolated installed environment; retain prior evidence as superseded."
+      ]
     },
     {
       "ac_id": "AC-N4-01",
@@ -1398,7 +1434,7 @@
       "status": "PASS",
       "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
       "applicability_reason": null,
-      "observed_result": "corrupt/missing/schema/foreign/cycle/symlink/race never prove absence",
+      "observed_result": "First enabled lookup discards unreadable unreachable old coverage and scans selected canonical ancestry; four branch cases match cache-off; nine damaged selected-chain controls remain unknown.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -1407,11 +1443,33 @@
         {
           "kind": "SYNTHETIC_ENGINEERING",
           "path": "N4-validation-resumed.txt"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-cache-fallback.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-validation.txt"
         }
       ],
-      "failure_history": [],
+      "failure_history": [
+        {
+          "review_id": "P2-3",
+          "observed": "Unreadable unreachable snapshots in old coverage cache turn first enabled query unknown while canonical disabled/second query is not_found.",
+          "resolution": "Original extended test2FAIL2PASS; fixed4PASS; final affected169PASS and cache-off shared101PASS with original controls and pointer/log bytes unchanged.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
       "limitations": [],
-      "next_actions": []
+      "next_actions": [
+        "Bind frozen source/build/install identities and complete final exact-head CI."
+      ]
     },
     {
       "ac_id": "AC-N4-13",
@@ -1440,7 +1498,7 @@
       "status": "PASS",
       "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
       "applicability_reason": null,
-      "observed_result": "ordinary/content/Task new and legacy receipt parity with cache off",
+      "observed_result": "First enabled lookup discards unreadable unreachable old coverage and scans selected canonical ancestry; four branch cases match cache-off; nine damaged selected-chain controls remain unknown.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -1449,11 +1507,33 @@
         {
           "kind": "SYNTHETIC_ENGINEERING",
           "path": "N4-validation-resumed.txt"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-cache-fallback.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-validation.txt"
         }
       ],
-      "failure_history": [],
+      "failure_history": [
+        {
+          "review_id": "P2-3",
+          "observed": "Unreadable unreachable snapshots in old coverage cache turn first enabled query unknown while canonical disabled/second query is not_found.",
+          "resolution": "Original extended test2FAIL2PASS; fixed4PASS; final affected169PASS and cache-off shared101PASS with original controls and pointer/log bytes unchanged.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
       "limitations": [],
-      "next_actions": []
+      "next_actions": [
+        "Bind frozen source/build/install identities and complete final exact-head CI."
+      ]
     },
     {
       "ac_id": "AC-N5-01",
@@ -1652,7 +1732,7 @@
     {
       "ac_id": "AC-N5-08",
       "owner": "N5",
-      "status": "PASS",
+      "status": "NOT_RUN",
       "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
       "applicability_reason": null,
       "observed_result": "built/isolated installed version and all canonical resource identities",
@@ -1676,7 +1756,9 @@
       ],
       "failure_history": [],
       "limitations": [],
-      "next_actions": []
+      "next_actions": [
+        "Verify fresh repaired wheel in a new isolated installed environment; retain prior evidence as superseded."
+      ]
     },
     {
       "ac_id": "AC-N5-09",
@@ -1709,7 +1791,7 @@
       "status": "PASS",
       "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
       "applicability_reason": null,
-      "observed_result": "sole ledger, exact candidate/build identities, PR113 disposition and honest limits",
+      "observed_result": "Summary, unresolved IDs, per-card counts and completion gates are derived from actual explicit AC adjudications; known product counterexamples remain FAIL rather than cleared.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -1726,13 +1808,30 @@
         {
           "kind": "STATIC_REVIEW",
           "path": "README.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "tests/rebuild/test_iteration_ledger.py"
+          ],
+          "path": "PR124-review-resolution.md"
         }
       ],
-      "failure_history": [],
+      "failure_history": [
+        {
+          "review_id": "P2-4",
+          "observed": "70 PASS rows conflicted with NOT_RUN completion, unresolved list of all70 and null summary.",
+          "resolution": "Actual old report fails current-ledger guard (1FAIL4PASS); after derivation five regressions pass, preserving open FAIL/BLOCKED/NOT_RUN rows, evidence and deferred user acceptance.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
       "limitations": [
         "The applicable AC requires the mapped focused compatibility evidence; full existing CI is a separate engineering candidate gate, reported live at PR124 and in final handoff. No full-CI completion is inferred from focused results."
       ],
-      "next_actions": []
+      "next_actions": [
+        "Preserve explicit remaining product adjudications; regenerate summary and validate after final candidate/build updates."
+      ]
     },
     {
       "ac_id": "AC-N6-01",
@@ -2078,91 +2177,106 @@
     }
   ],
   "completion": {
-    "engineering_candidate": "NOT_RUN",
-    "all_six_tasks": "NOT_RUN",
+    "engineering_candidate": "BLOCKED",
+    "all_six_tasks": "BLOCKED",
     "unresolved_ac_ids": [
-      "AC-N1-01",
-      "AC-N1-02",
-      "AC-N1-03",
-      "AC-N1-04",
-      "AC-N1-05",
-      "AC-N1-06",
-      "AC-N1-07",
-      "AC-N1-08",
-      "AC-N1-09",
-      "AC-N1-10",
-      "AC-N1-11",
-      "AC-N1-12",
-      "AC-N2-01",
-      "AC-N2-02",
-      "AC-N2-03",
-      "AC-N2-04",
-      "AC-N2-05",
-      "AC-N2-06",
-      "AC-N2-07",
-      "AC-N2-08",
-      "AC-N2-09",
-      "AC-N2-10",
-      "AC-N2-11",
-      "AC-N2-12",
-      "AC-N3-01",
-      "AC-N3-02",
-      "AC-N3-03",
-      "AC-N3-04",
-      "AC-N3-05",
-      "AC-N3-06",
-      "AC-N3-07",
-      "AC-N3-08",
-      "AC-N3-09",
-      "AC-N3-10",
-      "AC-N3-11",
       "AC-N3-12",
-      "AC-N4-01",
-      "AC-N4-02",
-      "AC-N4-03",
-      "AC-N4-04",
-      "AC-N4-05",
-      "AC-N4-06",
-      "AC-N4-07",
-      "AC-N4-08",
-      "AC-N4-09",
-      "AC-N4-10",
-      "AC-N4-11",
-      "AC-N4-12",
-      "AC-N4-13",
-      "AC-N4-14",
-      "AC-N5-01",
-      "AC-N5-02",
-      "AC-N5-03",
-      "AC-N5-04",
-      "AC-N5-05",
-      "AC-N5-06",
-      "AC-N5-07",
-      "AC-N5-08",
-      "AC-N5-09",
-      "AC-N5-10",
-      "AC-N6-01",
-      "AC-N6-02",
-      "AC-N6-03",
-      "AC-N6-04",
-      "AC-N6-05",
-      "AC-N6-06",
-      "AC-N6-07",
-      "AC-N6-08",
-      "AC-N6-09",
-      "AC-N6-10"
+      "AC-N5-08"
     ],
-    "summary": null
+    "per_task_component_findings": {
+      "N1": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 12,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      },
+      "N2": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 12,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      },
+      "N3": {
+        "status": "BLOCKED",
+        "counts": {
+          "PASS": 11,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 1,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": [
+          "AC-N3-12"
+        ]
+      },
+      "N4": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 14,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      },
+      "N5": {
+        "status": "BLOCKED",
+        "counts": {
+          "PASS": 9,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 1,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": [
+          "AC-N5-08"
+        ]
+      },
+      "N6": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 10,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      }
+    },
+    "final_ci_state_at_assembly": "in_progress",
+    "state_observed_at_utc": "2026-10-19T05:32:12.452351+00:00",
+    "observation_scope": "Assembly snapshot; the exact-head live checks and final PR handoff provide subsequent terminal CI evidence.",
+    "live_terminal_ci": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
+    "remaining_engineering_gates": [
+      "unresolved_acceptance",
+      "final_exact_head_ci",
+      "current_build_identity",
+      "installed_resource_identity"
+    ],
+    "real_acceptance": "DEFERRED_TO_USER_LOCAL_VALIDATION",
+    "summary": "70 AC: 68 PASS, 0 FAIL, 0 BLOCKED, 2 NOT_RUN, 0 NOT_APPLICABLE; 2 unresolved. Engineering candidate BLOCKED; exact-head CI in_progress. User local effects/usability and trusted Host acceptance are separate observations, not inferred PASS."
   },
   "status_counts": {
-    "PASS": 70,
+    "PASS": 68,
     "FAIL": 0,
     "BLOCKED": 0,
-    "NOT_RUN": 0,
+    "NOT_RUN": 2,
     "NOT_APPLICABLE": 0
   },
   "delivery_disposition": {
-    "engineering": "Implementation complete; exact-head final CI remains separately required.",
+    "engineering": "All four designated review findings have actual targeted repair evidence. Fresh clean build, installed-resource identity and final new-head CI remain required.",
     "real_acceptance": "DEFERRED_TO_USER_LOCAL_VALIDATION",
     "user_instruction_utc": "2026-10-19T04:49:00Z",
     "user_instruction": "先按照他的产出是 OK 的，然后按照这个方向先把所有开发动作做完。我们先评审，等实际真实验收，我到本地跑实际校验的时候，再做回复好了",
@@ -2179,5 +2293,48 @@
       "status": "DEFERRED_TO_USER_LOCAL_VALIDATION",
       "not_claimed": "Actual nonauthor reading is not relabeled a trusted Runtime receipt; default policy unchanged."
     }
-  ]
+  ],
+  "review_findings": {
+    "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+    "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b",
+    "verdict": "REQUEST_CHANGES",
+    "findings": [
+      {
+        "id": "P2-1",
+        "ac_ids": [
+          "AC-N2-03",
+          "AC-N2-10"
+        ],
+        "observed": "Preparation creates durable .after/.witness before any transaction record; two real death windows leave same UUID retry repeatedly unknown.",
+        "status": "RESOLVED_PENDING_FINAL_CI"
+      },
+      {
+        "id": "P2-2",
+        "ac_ids": [
+          "AC-N2-01"
+        ],
+        "observed": "A symlink Host skills directory passes preflight but no-follow parent open fails during publication, producing recovery_conflict.",
+        "status": "RESOLVED_PENDING_FINAL_CI"
+      },
+      {
+        "id": "P2-3",
+        "ac_ids": [
+          "AC-N4-12",
+          "AC-N4-14"
+        ],
+        "observed": "Unreadable unreachable snapshots in old coverage cache turn first enabled query unknown while canonical disabled/second query is not_found.",
+        "status": "RESOLVED_PENDING_FINAL_CI"
+      },
+      {
+        "id": "P2-4",
+        "ac_ids": [
+          "AC-N5-10"
+        ],
+        "observed": "70 PASS rows conflicted with NOT_RUN completion, unresolved list of all70 and null summary.",
+        "status": "RESOLVED_PENDING_FINAL_CI"
+      }
+    ],
+    "closed_prior_p1": "Persistent inode witnesses accepted by reviewer; not reopened.",
+    "followup_state": "TARGETED_FIXES_COMPLETE_PENDING_FRESH_BUILD_AND_FINAL_CI"
+  }
 }

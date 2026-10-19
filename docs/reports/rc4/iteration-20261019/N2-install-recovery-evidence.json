@@ -1,27 +1,28 @@
 {
   "schema_version": "rc4_n2_install_recovery_evidence.v2",
-  "executed_at_utc": "2026-10-19T04:52:11.607121+00:00",
-  "git_head_at_execution": "bc6bd55a07b249660e6af8ab4b19a147bb2caf14",
+  "executed_at_utc": "2026-10-19T05:40:52.636011+00:00",
+  "git_head_at_execution": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
   "dirty_worktree": true,
   "candidate_commit": "integration Owner records the final commit in the unique execution ledger",
   "implementation_files_sha256": {
-    "src/deck_master/install.py": "176d43dd280c539ab024412f02c86a7600510c3a4aef49dfaa466fac17774201",
-    "src/deck_master/activation_transaction.py": "58a0bf2eb330df00154e770389a1476e26d7a76a5bc6c44d1ad3086d9333045b",
+    "src/deck_master/install.py": "096ba0670e7ceac41be63158afece086d439a8080913532eecf2afc85ba62bc6",
+    "src/deck_master/activation_transaction.py": "0ce5ad66f00b85baabe021c2f4de90beaf89ebab8f12d52f1a117e0aa6dbb150",
     "src/deck_master/cli.py": "d80f1f8658b45afd7e73f1cd526c466e873fde3d17313363dbdefce3c25788bd",
     "src/deck_master/errors.py": "9cdb98032e0efbb878d8f92397d8cf919204878727009b8bb6c086ef7ffafa3a",
     "tests/rebuild/test_install_transaction_recovery.py": "7651f8d8f9e2e0987bdaba7f6199a4c3260cc5f29a5ead4c215aee31a228e273",
     "tests/rebuild/test_rc3_install_four_links.py": "d5e05399cef5b72d3344914fb5046386e8b264425a65c3272bc81c658482aceb",
-    "tests/rebuild/test_review_round3.py": "d8618814fbe87a9ba7fc8d0c349cf22994839d0be16da052b5bcf0da914ad87b"
+    "tests/rebuild/test_review_round3.py": "d8618814fbe87a9ba7fc8d0c349cf22994839d0be16da052b5bcf0da914ad87b",
+    "tests/rebuild/test_install_preparation_compatibility.py": "22881397d17f81263e153c6407113166cf7d86f209f3e3a83a17fbc07da550e8"
   },
-  "test_command": ".venv/bin/python -m pytest tests/rebuild/test_install_transaction_recovery.py tests/rebuild/test_rc3_install_four_links.py tests/rebuild/test_install_host_skill.py tests/rebuild/test_rc3_resource_inventory.py tests/rebuild/test_install.py::test_activation_failure_preserves_current_and_rollback tests/rebuild/test_review_round3.py tests/rebuild/test_review_round4.py --junitxml=docs/reports/rc4/iteration-20261019/N2-focused-junit.xml -q",
+  "test_command": ".venv/bin/python -m pytest tests/rebuild/test_install_preparation_compatibility.py tests/rebuild/test_install_transaction_recovery.py tests/rebuild/test_rc3_install_four_links.py tests/rebuild/test_install_host_skill.py tests/rebuild/test_rc3_resource_inventory.py tests/rebuild/test_install.py::test_activation_failure_preserves_current_and_rollback tests/rebuild/test_review_round3.py tests/rebuild/test_review_round4.py --junitxml=docs/reports/rc4/iteration-20261019/N2-focused-junit.xml -q",
   "pytest": {
     "name": "pytest",
     "errors": "0",
     "failures": "0",
     "skipped": "0",
-    "tests": "270",
-    "time": "19.550",
-    "timestamp": "2026-10-19T04:51:28.947826+00:00",
+    "tests": "290",
+    "time": "31.019",
+    "timestamp": "2026-10-19T05:40:02.969207+00:00",
     "hostname": "fcd830c3f48b"
   },
   "ac_mapping": {
@@ -29,9 +30,10 @@
       "engineering_assertions_passed": true,
       "tests": [
         "test_normal_contract_and_no_duplicate_same_target_actions",
-        "test_upgrade_four_links_rollback_single_and_return"
+        "test_upgrade_four_links_rollback_single_and_return",
+        "test_real_rc3_to_four_skills_supports_symlink_directory"
       ],
-      "passed_cases": 2,
+      "passed_cases": 4,
       "evidence_scope": "SYNTHETIC_ENGINEERING"
     },
     "AC-N2-02": {
@@ -48,9 +50,11 @@
       "tests": [
         "test_process_death_prepared_pointer_and_final_result_windows",
         "test_process_death_each_addition_no_recreation_of_published_inode",
-        "test_death_between_backup_and_replacement_recovers_original_plan"
+        "test_death_between_backup_and_replacement_recovers_original_plan",
+        "test_real_death_before_prepared_record_resumes_original_request",
+        "test_symlink_host_directory_recovers_real_action_before_log_death"
       ],
-      "passed_cases": 23,
+      "passed_cases": 28,
       "evidence_scope": "SYNTHETIC_ENGINEERING"
     },
     "AC-N2-04": {
@@ -59,9 +63,10 @@
         "test_exact_activate_and_rollback_replay_after_later_switch_changes_nothing",
         "test_replay_reports_current_unknown_without_reapplying_history",
         "test_historical_replay_does_not_clear_another_transactions_pending_pointer",
-        "test_historical_terminal_record_without_inode_witnesses_still_replays"
+        "test_historical_terminal_record_without_inode_witnesses_still_replays",
+        "test_completed_receipt_replays_after_alias_inode_replacement"
       ],
-      "passed_cases": 4,
+      "passed_cases": 5,
       "evidence_scope": "SYNTHETIC_ENGINEERING"
     },
     "AC-N2-05": {
@@ -94,9 +99,11 @@
         "test_atomic_rename_pins_host_parent_when_ancestor_is_replaced",
         "test_atomic_rename_primitive_preserves_both_source_and_existing_destination",
         "test_unsupported_atomic_rename_never_uses_overwriting_fallback",
-        "test_lost_inode_witness_refuses_even_simulated_recycled_inode"
+        "test_lost_inode_witness_refuses_even_simulated_recycled_inode",
+        "test_preparing_request_binding_and_known_external_artifact_are_protected",
+        "test_symlink_access_chain_replacement_during_activation_is_preserved"
       ],
-      "passed_cases": 39,
+      "passed_cases": 41,
       "evidence_scope": "SYNTHETIC_ENGINEERING"
     },
     "AC-N2-08": {
@@ -113,9 +120,10 @@
       "tests": [
         "test_opt_out_never_resolves_or_writes_host_including_recovery",
         "test_legacy_optout_preserves_host_configuration_and_inodes_whole_lifecycle",
-        "test_legacy_companion_move_and_exact_retirement_survive_process_death"
+        "test_legacy_companion_move_and_exact_retirement_survive_process_death",
+        "test_preparing_optout_recovery_never_resolves_or_writes_host"
       ],
-      "passed_cases": 9,
+      "passed_cases": 10,
       "evidence_scope": "SYNTHETIC_ENGINEERING"
     },
     "AC-N2-10": {
@@ -129,9 +137,10 @@
         "test_replay_still_returns_completed_result_when_stale_pointer_unlink_repeatedly_fails",
         "test_pending_cleanup_captures_and_preserves_racing_replacement",
         "test_pending_publish_never_replaces_external_occupant_at_syscall_boundary",
-        "test_process_death_after_pending_capture_replays_completed_receipt"
+        "test_process_death_after_pending_capture_replays_completed_receipt",
+        "test_preparation_exception_preserves_intent_and_same_id_can_complete"
       ],
-      "passed_cases": 16,
+      "passed_cases": 20,
       "evidence_scope": "SYNTHETIC_ENGINEERING"
     },
     "AC-N2-11": {
@@ -142,9 +151,11 @@
         "test_copied_record_in_different_prefix_refuses_original_paths",
         "test_strict_resource_change_after_prepared_is_recovery_conflict_with_safe_compensation",
         "test_journal_symlink_is_refused_without_writing_its_external_target",
-        "test_unfinished_record_without_inode_witnesses_is_preserved_and_refused"
+        "test_unfinished_record_without_inode_witnesses_is_preserved_and_refused",
+        "test_previous_prepared_format_without_preparation_namespace_still_recovers",
+        "test_damaged_preparing_migration_never_writes_external_paths"
       ],
-      "passed_cases": 13,
+      "passed_cases": 18,
       "evidence_scope": "SYNTHETIC_ENGINEERING"
     },
     "AC-N2-12": {
@@ -201,7 +212,26 @@
       "artifact": "N2-before-inode-fix.raw.json",
       "sha256": "68c3fc02571ef1b5a17058f2aa4a4a292a5b3cb31b81df8484af9f10a6d2b640"
     },
-    "home_isolation": "HOME and CODEX_HOME explicitly isolated beneath each temporary fixture"
+    "home_isolation": "HOME and CODEX_HOME explicitly isolated beneath each temporary fixture",
+    "review_P2": {
+      "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+      "before_artifact": "N2-P2-before.json",
+      "before_sha256": "7a8eead97f9c0a447e4d205ac7348e2a562a13d8fd25eaf27dd3bf049f181bc8",
+      "observed_before": [
+        "two actual child91 exits left after/witness artifacts without this ID journal; two same-ID retries each returned FileExists/unavailable/unknown",
+        "baseline a08 installer activated all four entries through symlink Host directory; RC4 ENOTDIR reported conflict and compensated current"
+      ],
+      "fix": [
+        "preparing persists original request/managed state/intents before after/witness; same-ID recovery preserves unverifiable artifacts and records a fresh preparation namespace",
+        "canonical Host directory used for locked actions; original symlink access ancestry frozen; CLI logical paths and terminal receipt replay preserved",
+        "preparing migration/steps/watched/intents remain bounded; migration action domains checked against live validated legacy plan; malformed/escaped plans refused without external writes"
+      ],
+      "new_targeted_cases": 20,
+      "prior_inode_raw": {
+        "artifact": "N2-install-recovery-evidence.inode-witness.raw.json",
+        "sha256": "0c36bc7630f9c082c12081509c3fd7635858d8370d0a994803282f50c4b67b77"
+      }
+    }
   },
   "summary": {
     "process_death_cases": 47,
@@ -219,19 +249,54 @@
   },
   "retained_evidence": {
     "raw": {
-      "artifact": "N2-install-recovery-evidence.inode-witness.raw.json",
+      "artifact": "N2-install-recovery-evidence.preparing-symlink.raw.json",
       "storage": "outside repository; exact path in owner handoff",
-      "sha256": "0c36bc7630f9c082c12081509c3fd7635858d8370d0a994803282f50c4b67b77",
-      "bytes": 1244066,
+      "sha256": "89f60d71c8e54288c826288a50e7e14d6b0830363a3e1c6af9797776fdd8304e",
+      "bytes": 1249390,
       "contains": "47 complete frozen requests, original managed snapshots, each action/preparation/backup before and after recovery; temporary fixtures removed after capture"
     },
     "junit": {
       "artifact": "N2-focused-junit.xml",
-      "sha256": "a558c58cd7433b214f3f419b1d1f2b6132697f3408ed4f0de2667263a0a4b492",
-      "tests": 270
+      "sha256": "e88e5a08930e150ca0bef376fd7bf4c0c55d2fe737dc5f8d7c904a9b39171647",
+      "tests": 290
     }
   },
   "key_proofs": {
+    "durable_preparing_and_bounded_recovery": {
+      "tests": [
+        "test_real_death_before_prepared_record_resumes_original_request",
+        "test_preparation_exception_preserves_intent_and_same_id_can_complete",
+        "test_preparing_request_binding_and_known_external_artifact_are_protected",
+        "test_preparing_optout_recovery_never_resolves_or_writes_host",
+        "test_previous_prepared_format_without_preparation_namespace_still_recovers",
+        "test_damaged_preparing_migration_never_writes_external_paths"
+      ],
+      "passed_cases": 15,
+      "verified_assertions": [
+        "real child91 exits after first actual after/witness creation leave a durable preparing request and intent before activation",
+        "explicit-ID and automatic recovery use original UUID, complete, then exact replay without mutation; retained unknown artifact snapshots unchanged",
+        "KI/OSError, changed request, known external artifact and optout retain bounded recovery behavior",
+        "four actual preparing-record mutations test external move source/destination, removed path traversal and invented nonlegacy removal; external tree names/inodes/hashes and malformed record unchanged",
+        "previous prepared record without namespace/access fields still resumes frozen transaction"
+      ],
+      "basis": "actual filesystem assertions in hashed test source; all matching JUnit cases passed"
+    },
+    "symlink_host_baseline_and_access_chain": {
+      "tests": [
+        "test_real_rc3_to_four_skills_supports_symlink_directory",
+        "test_symlink_host_directory_recovers_real_action_before_log_death",
+        "test_symlink_access_chain_replacement_during_activation_is_preserved",
+        "test_completed_receipt_replays_after_alias_inode_replacement"
+      ],
+      "passed_cases": 5,
+      "verified_assertions": [
+        "real fixed-a08 installer and RC4 both upgrade from single Skill through existing symlink directory to four entries/current new/previous old",
+        "RC4 frozen Host is canonical actual directory; CLI skill_link/skill_links retain original logical access paths",
+        "real action-before-log child91 recovers completed; alias replacement during activation conflicts and preserves external alias",
+        "terminal historical receipt replay ignores later alias inode replacement and never reapplies installation"
+      ],
+      "basis": "actual filesystem assertions in hashed test source; all matching JUnit cases passed"
+    },
     "inode_reuse_protection": {
       "tests": [
         "test_external_replacement_is_preserved_and_compensates_only_owned_paths",
@@ -330,7 +395,7 @@
   "process_death_cases": [
     {
       "case": 1,
-      "transaction_id": "1d4c2452-e99a-4977-94fc-a86a576c6aa7",
+      "transaction_id": "dec0933d-f50e-4afb-804f-1ca8e49d5695",
       "direction": "forward",
       "breakpoint": "prepared",
       "named_step": null,
@@ -363,12 +428,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906323",
+          "dev_inode": "33:1059450",
           "kind": "symlink",
           "target": "releases/old"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906338",
+          "dev_inode": "33:1059478",
           "kind": "symlink",
           "target": "releases/new"
         }
@@ -376,7 +441,7 @@
     },
     {
       "case": 2,
-      "transaction_id": "dad0bb8d-b448-45ee-a585-932dd1888a20",
+      "transaction_id": "f6438244-71cd-4435-8ad7-c8d837c0e93f",
       "direction": "forward",
       "breakpoint": "pending",
       "named_step": null,
@@ -409,12 +474,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906385",
+          "dev_inode": "33:1059552",
           "kind": "symlink",
           "target": "releases/old"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906400",
+          "dev_inode": "33:1059580",
           "kind": "symlink",
           "target": "releases/new"
         }
@@ -422,7 +487,7 @@
     },
     {
       "case": 3,
-      "transaction_id": "cc568a57-0a8c-435c-bbf7-a115a9834953",
+      "transaction_id": "8455dbb7-98ef-4445-af65-027dba86e885",
       "direction": "forward",
       "breakpoint": "before_completed",
       "named_step": null,
@@ -455,12 +520,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906462",
+          "dev_inode": "33:1059682",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906462",
+          "dev_inode": "33:1059682",
           "kind": "symlink",
           "target": "releases/new"
         }
@@ -468,7 +533,7 @@
     },
     {
       "case": 4,
-      "transaction_id": "bd6d7d00-e3c7-4452-9607-a973b69daa81",
+      "transaction_id": "049008d8-2d4e-4886-97bd-b74c2c40554e",
       "direction": "forward",
       "breakpoint": "completed",
       "named_step": null,
@@ -501,12 +566,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906525",
+          "dev_inode": "33:1059785",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906525",
+          "dev_inode": "33:1059785",
           "kind": "symlink",
           "target": "releases/new"
         }
@@ -514,7 +579,7 @@
     },
     {
       "case": 5,
-      "transaction_id": "133c2235-fb3c-4f4e-96e3-a596d315e9fc",
+      "transaction_id": "db1d158b-6926-4176-ae63-55c129c70372",
       "direction": "forward",
       "breakpoint": "pending_captured",
       "named_step": null,
@@ -547,12 +612,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906587",
+          "dev_inode": "33:1059887",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906587",
+          "dev_inode": "33:1059887",
           "kind": "symlink",
           "target": "releases/new"
         }
@@ -560,7 +625,7 @@
     },
     {
       "case": 6,
-      "transaction_id": "be454534-0d73-4f45-a3dd-9762e579a217",
+      "transaction_id": "90acb23c-fc2a-41ce-a18e-57d5e22131e2",
       "direction": "forward",
       "breakpoint": "before_action",
       "named_step": "current",
@@ -593,25 +658,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906634",
+          "dev_inode": "33:1059961",
           "kind": "symlink",
           "target": "releases/old"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906649",
+          "dev_inode": "33:1059989",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:906634",
+            "dev_inode": "33:1059961",
             "kind": "symlink",
             "target": "releases/old"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:906649",
+            "dev_inode": "33:1059989",
             "kind": "symlink",
             "target": "releases/new"
           }
@@ -620,7 +685,7 @@
     },
     {
       "case": 7,
-      "transaction_id": "2f24dbeb-a076-4644-ade8-4a9536a45cd6",
+      "transaction_id": "39ed51c1-57f0-40d1-8cd4-3d5d2e5fbfe9",
       "direction": "forward",
       "breakpoint": "after_backup",
       "named_step": "current",
@@ -654,7 +719,7 @@
         "inode_witness_count": 8,
         "current_after_exit": null,
         "current_after_recovery": {
-          "dev_inode": "33:906713",
+          "dev_inode": "33:1060093",
           "kind": "symlink",
           "target": "releases/new"
         },
@@ -662,12 +727,12 @@
           "kind": "link",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:906698",
+            "dev_inode": "33:1060065",
             "kind": "symlink",
             "target": "releases/old"
           },
           "after_recovery": {
-            "dev_inode": "33:906713",
+            "dev_inode": "33:1060093",
             "kind": "symlink",
             "target": "releases/new"
           }
@@ -676,7 +741,7 @@
     },
     {
       "case": 8,
-      "transaction_id": "36040d16-9566-4b67-b4f1-3099e39937dd",
+      "transaction_id": "ed7013f3-a7c3-4e1c-abf6-1eda183bb6c5",
       "direction": "forward",
       "breakpoint": "after_action",
       "named_step": "current",
@@ -709,29 +774,29 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906777",
+          "dev_inode": "33:1060197",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906777",
+          "dev_inode": "33:1060197",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:906777",
+            "dev_inode": "33:1060197",
             "kind": "symlink",
             "target": "releases/new"
           },
           "backup_after_exit": {
-            "dev_inode": "33:906762",
+            "dev_inode": "33:1060169",
             "kind": "symlink",
             "target": "releases/old"
           },
           "after_recovery": {
-            "dev_inode": "33:906777",
+            "dev_inode": "33:1060197",
             "kind": "symlink",
             "target": "releases/new"
           }
@@ -740,7 +805,7 @@
     },
     {
       "case": 9,
-      "transaction_id": "330b748a-f890-4a05-a493-db22888d1303",
+      "transaction_id": "f79f0ca4-6f0d-4852-a9e4-43eae240bfe8",
       "direction": "forward",
       "breakpoint": "applied",
       "named_step": "current",
@@ -773,29 +838,29 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906841",
+          "dev_inode": "33:1060301",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906841",
+          "dev_inode": "33:1060301",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:906841",
+            "dev_inode": "33:1060301",
             "kind": "symlink",
             "target": "releases/new"
           },
           "backup_after_exit": {
-            "dev_inode": "33:906826",
+            "dev_inode": "33:1060273",
             "kind": "symlink",
             "target": "releases/old"
           },
           "after_recovery": {
-            "dev_inode": "33:906841",
+            "dev_inode": "33:1060301",
             "kind": "symlink",
             "target": "releases/new"
           }
@@ -804,7 +869,7 @@
     },
     {
       "case": 10,
-      "transaction_id": "cf5e7b1b-19ac-448b-8b6c-9e7e01925158",
+      "transaction_id": "5429a789-ece1-4698-84ac-562ccc94da14",
       "direction": "forward",
       "breakpoint": "before_action",
       "named_step": "previous",
@@ -837,12 +902,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:906889",
+          "dev_inode": "33:1060376",
           "kind": "symlink",
           "target": "releases/old"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906904",
+          "dev_inode": "33:1060404",
           "kind": "symlink",
           "target": "releases/new"
         },
@@ -851,7 +916,7 @@
           "after_exit": null,
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:906903",
+            "dev_inode": "33:1060397",
             "kind": "symlink",
             "target": "releases/old"
           }
@@ -860,7 +925,7 @@
     },
     {
       "case": 11,
-      "transaction_id": "4a71147e-3bc8-424f-9102-bec493bf5f26",
+      "transaction_id": "d9958e05-9217-416b-8d01-26aae32c5ef1",
       "direction": "forward",
       "breakpoint": "after_backup",
       "named_step": "previous",
@@ -893,12 +958,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:906980",
+          "dev_inode": "33:1060538",
           "kind": "symlink",
           "target": "releases/old"
         },
         "current_after_recovery": {
-          "dev_inode": "33:906993",
+          "dev_inode": "33:1060570",
           "kind": "symlink",
           "target": "releases/new"
         },
@@ -906,12 +971,12 @@
           "kind": "link",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:906979",
+            "dev_inode": "33:1060531",
             "kind": "symlink",
             "target": "releases/bare"
           },
           "after_recovery": {
-            "dev_inode": "33:906992",
+            "dev_inode": "33:1060563",
             "kind": "symlink",
             "target": "releases/old"
           }
@@ -920,7 +985,7 @@
     },
     {
       "case": 12,
-      "transaction_id": "2f4cd4fc-587a-4941-b920-dc632bbc3bc4",
+      "transaction_id": "9bc3f4fd-5fc1-4cda-a060-4880fc691682",
       "direction": "forward",
       "breakpoint": "after_action",
       "named_step": "previous",
@@ -953,25 +1018,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907042",
+          "dev_inode": "33:1060646",
           "kind": "symlink",
           "target": "releases/old"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907057",
+          "dev_inode": "33:1060674",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907056",
+            "dev_inode": "33:1060667",
             "kind": "symlink",
             "target": "releases/old"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907056",
+            "dev_inode": "33:1060667",
             "kind": "symlink",
             "target": "releases/old"
           }
@@ -980,7 +1045,7 @@
     },
     {
       "case": 13,
-      "transaction_id": "30588286-8891-4a90-8155-a77abd12c1d6",
+      "transaction_id": "61466053-1f94-4709-8731-436ea0bc69a8",
       "direction": "forward",
       "breakpoint": "applied",
       "named_step": "previous",
@@ -1013,25 +1078,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907106",
+          "dev_inode": "33:1060750",
           "kind": "symlink",
           "target": "releases/old"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907121",
+          "dev_inode": "33:1060778",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907120",
+            "dev_inode": "33:1060771",
             "kind": "symlink",
             "target": "releases/old"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907120",
+            "dev_inode": "33:1060771",
             "kind": "symlink",
             "target": "releases/old"
           }
@@ -1040,7 +1105,7 @@
     },
     {
       "case": 14,
-      "transaction_id": "876665c3-0abd-4b5d-acda-b012d516c575",
+      "transaction_id": "eb52db01-a506-4003-944f-ae5db935d50c",
       "direction": "forward",
       "breakpoint": "before_action",
       "named_step": "deck-master",
@@ -1073,12 +1138,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907184",
+          "dev_inode": "33:1060881",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907184",
+          "dev_inode": "33:1060881",
           "kind": "symlink",
           "target": "releases/new"
         },
@@ -1087,7 +1152,7 @@
           "after_exit": null,
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907185",
+            "dev_inode": "33:1060886",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           }
@@ -1096,7 +1161,7 @@
     },
     {
       "case": 15,
-      "transaction_id": "6916ff6c-d2cb-4b79-a8bc-014afa8402c9",
+      "transaction_id": "44a6d3ca-0a5b-4b43-809e-79449e827e28",
       "direction": "forward",
       "breakpoint": "after_action",
       "named_step": "deck-master",
@@ -1129,25 +1194,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907251",
+          "dev_inode": "33:1060990",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907251",
+          "dev_inode": "33:1060990",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907252",
+            "dev_inode": "33:1060995",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907252",
+            "dev_inode": "33:1060995",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           }
@@ -1156,7 +1221,7 @@
     },
     {
       "case": 16,
-      "transaction_id": "f826f55b-1b19-4ba1-9d84-d0b65ae61727",
+      "transaction_id": "36de46ea-e202-44a7-a0af-99b8a7226ef5",
       "direction": "forward",
       "breakpoint": "applied",
       "named_step": "deck-master",
@@ -1189,25 +1254,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907318",
+          "dev_inode": "33:1061099",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907318",
+          "dev_inode": "33:1061099",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907319",
+            "dev_inode": "33:1061104",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907319",
+            "dev_inode": "33:1061104",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           }
@@ -1216,7 +1281,7 @@
     },
     {
       "case": 17,
-      "transaction_id": "5a75d84e-565d-4ee7-9461-0db9933d8ccf",
+      "transaction_id": "150587df-8701-489c-b788-8800732947af",
       "direction": "forward",
       "breakpoint": "before_action",
       "named_step": "deck-content",
@@ -1249,12 +1314,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907384",
+          "dev_inode": "33:1061207",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907384",
+          "dev_inode": "33:1061207",
           "kind": "symlink",
           "target": "releases/new"
         },
@@ -1263,7 +1328,7 @@
           "after_exit": null,
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907385",
+            "dev_inode": "33:1061212",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           }
@@ -1272,7 +1337,7 @@
     },
     {
       "case": 18,
-      "transaction_id": "41130cae-8745-420b-95a0-b9181b8ae7d5",
+      "transaction_id": "1f0f82b4-f4c6-46dd-ba52-e8c05f41584d",
       "direction": "forward",
       "breakpoint": "after_action",
       "named_step": "deck-content",
@@ -1305,25 +1370,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907448",
+          "dev_inode": "33:1061311",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907448",
+          "dev_inode": "33:1061311",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907449",
+            "dev_inode": "33:1061316",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907449",
+            "dev_inode": "33:1061316",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           }
@@ -1332,7 +1397,7 @@
     },
     {
       "case": 19,
-      "transaction_id": "b12cc4e8-5725-4dcb-ad75-5ed0d4218061",
+      "transaction_id": "cc60d80c-2929-4c2e-ae0c-65a2fc155b52",
       "direction": "forward",
       "breakpoint": "applied",
       "named_step": "deck-content",
@@ -1365,25 +1430,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907512",
+          "dev_inode": "33:1061415",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907512",
+          "dev_inode": "33:1061415",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907513",
+            "dev_inode": "33:1061420",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907513",
+            "dev_inode": "33:1061420",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           }
@@ -1392,7 +1457,7 @@
     },
     {
       "case": 20,
-      "transaction_id": "13f9173d-8e52-413a-9ea7-1a28d8696929",
+      "transaction_id": "2ef9bc65-1ed2-4a26-bdec-f08abffa5052",
       "direction": "forward",
       "breakpoint": "before_action",
       "named_step": "deck-design",
@@ -1425,12 +1490,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907575",
+          "dev_inode": "33:1061518",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907575",
+          "dev_inode": "33:1061518",
           "kind": "symlink",
           "target": "releases/new"
         },
@@ -1439,7 +1504,7 @@
           "after_exit": null,
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907577",
+            "dev_inode": "33:1061528",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           }
@@ -1448,7 +1513,7 @@
     },
     {
       "case": 21,
-      "transaction_id": "7c39fd91-f582-4a08-b1e1-09ed024dc063",
+      "transaction_id": "4fc85409-bdbf-43d1-92f4-c43c5913f6eb",
       "direction": "forward",
       "breakpoint": "after_action",
       "named_step": "deck-design",
@@ -1481,25 +1546,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907639",
+          "dev_inode": "33:1061622",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907639",
+          "dev_inode": "33:1061622",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907641",
+            "dev_inode": "33:1061632",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907641",
+            "dev_inode": "33:1061632",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           }
@@ -1508,7 +1573,7 @@
     },
     {
       "case": 22,
-      "transaction_id": "03a99ece-02e7-4e1c-bae8-d3f10daa7dd5",
+      "transaction_id": "85f8b042-de42-431d-af10-16f080820977",
       "direction": "forward",
       "breakpoint": "applied",
       "named_step": "deck-design",
@@ -1541,25 +1606,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907703",
+          "dev_inode": "33:1061726",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907703",
+          "dev_inode": "33:1061726",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907705",
+            "dev_inode": "33:1061736",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907705",
+            "dev_inode": "33:1061736",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           }
@@ -1568,7 +1633,7 @@
     },
     {
       "case": 23,
-      "transaction_id": "8e5787ba-9127-42a3-a5f7-1b6f338f700c",
+      "transaction_id": "47e20bc2-eb1e-4905-9503-d413cc411bd6",
       "direction": "forward",
       "breakpoint": "before_action",
       "named_step": "deck-review",
@@ -1601,12 +1666,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907766",
+          "dev_inode": "33:1061829",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907766",
+          "dev_inode": "33:1061829",
           "kind": "symlink",
           "target": "releases/new"
         },
@@ -1615,7 +1680,7 @@
           "after_exit": null,
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907769",
+            "dev_inode": "33:1061844",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           }
@@ -1624,7 +1689,7 @@
     },
     {
       "case": 24,
-      "transaction_id": "22cb0386-390a-4d2f-894f-a0701d93f06b",
+      "transaction_id": "2ac8a08c-87a5-4708-bb6e-cbff1e601404",
       "direction": "forward",
       "breakpoint": "after_action",
       "named_step": "deck-review",
@@ -1657,25 +1722,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907830",
+          "dev_inode": "33:1061933",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907830",
+          "dev_inode": "33:1061933",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907833",
+            "dev_inode": "33:1061948",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907833",
+            "dev_inode": "33:1061948",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           }
@@ -1684,7 +1749,7 @@
     },
     {
       "case": 25,
-      "transaction_id": "970edf63-23aa-42ab-9a04-98f6fbd48e94",
+      "transaction_id": "051a84bc-496e-4590-90b6-699b0ca9e8c6",
       "direction": "forward",
       "breakpoint": "applied",
       "named_step": "deck-review",
@@ -1717,25 +1782,25 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:907902",
+          "dev_inode": "33:1062037",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:907902",
+          "dev_inode": "33:1062037",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:907905",
+            "dev_inode": "33:1062052",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           },
           "backup_after_exit": null,
           "after_recovery": {
-            "dev_inode": "33:907905",
+            "dev_inode": "33:1062052",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           }
@@ -1744,7 +1809,7 @@
     },
     {
       "case": 26,
-      "transaction_id": "182ea27b-f2e2-4607-bbac-25235f13e357",
+      "transaction_id": "d90af2c5-5911-4bcb-8e02-2a0c81a54574",
       "direction": "retirement",
       "breakpoint": "before_action",
       "named_step": "deck-master",
@@ -1777,19 +1842,19 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908007",
+          "dev_inode": "33:1062223",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908007",
+          "dev_inode": "33:1062223",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "named_step": {
           "kind": "remove",
           "after_exit": {
-            "dev_inode": "33:907978",
+            "dev_inode": "33:1062175",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           },
@@ -1800,7 +1865,7 @@
     },
     {
       "case": 27,
-      "transaction_id": "bef14762-66ba-4657-951c-08dadcca1177",
+      "transaction_id": "38da7ceb-a7b2-40de-b703-2c5adbffc72b",
       "direction": "retirement",
       "breakpoint": "after_backup",
       "named_step": "deck-master",
@@ -1833,12 +1898,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908104",
+          "dev_inode": "33:1062407",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908104",
+          "dev_inode": "33:1062407",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -1846,7 +1911,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:908083",
+            "dev_inode": "33:1062359",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           },
@@ -1856,7 +1921,7 @@
     },
     {
       "case": 28,
-      "transaction_id": "5570809e-d139-49d3-be85-714a315a06c2",
+      "transaction_id": "49578db8-55f5-489f-870a-c7e1b8c56ebc",
       "direction": "retirement",
       "breakpoint": "after_action",
       "named_step": "deck-master",
@@ -1889,12 +1954,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908201",
+          "dev_inode": "33:1062591",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908201",
+          "dev_inode": "33:1062591",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -1902,7 +1967,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:908180",
+            "dev_inode": "33:1062543",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           },
@@ -1912,7 +1977,7 @@
     },
     {
       "case": 29,
-      "transaction_id": "e6cfdc81-918d-43be-95bf-58bd777b5ba1",
+      "transaction_id": "0283b9c1-7c8a-4856-a8c8-48d9f23eed37",
       "direction": "retirement",
       "breakpoint": "applied",
       "named_step": "deck-master",
@@ -1945,12 +2010,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908298",
+          "dev_inode": "33:1062775",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908298",
+          "dev_inode": "33:1062775",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -1958,7 +2023,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:908277",
+            "dev_inode": "33:1062727",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
           },
@@ -1968,7 +2033,7 @@
     },
     {
       "case": 30,
-      "transaction_id": "b55f1b77-627e-428c-a078-8211548fdf55",
+      "transaction_id": "7b3fc91a-fb1e-4825-b25b-d1a5e67004d7",
       "direction": "retirement",
       "breakpoint": "before_action",
       "named_step": "deck-content",
@@ -2001,19 +2066,19 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908394",
+          "dev_inode": "33:1062958",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908394",
+          "dev_inode": "33:1062958",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "named_step": {
           "kind": "remove",
           "after_exit": {
-            "dev_inode": "33:908374",
+            "dev_inode": "33:1062915",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           },
@@ -2024,7 +2089,7 @@
     },
     {
       "case": 31,
-      "transaction_id": "c6527e59-bde4-435d-a1c1-4c835516d85c",
+      "transaction_id": "06f38f9d-f893-4f2a-9fc3-ee82e6ea9dd2",
       "direction": "retirement",
       "breakpoint": "after_backup",
       "named_step": "deck-content",
@@ -2057,12 +2122,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908491",
+          "dev_inode": "33:1063142",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908491",
+          "dev_inode": "33:1063142",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2070,7 +2135,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:908471",
+            "dev_inode": "33:1063099",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           },
@@ -2080,7 +2145,7 @@
     },
     {
       "case": 32,
-      "transaction_id": "fb70d510-e8c6-4e41-82a5-640e521052b8",
+      "transaction_id": "251f351c-6829-4168-bb27-b8ef8de92455",
       "direction": "retirement",
       "breakpoint": "after_action",
       "named_step": "deck-content",
@@ -2113,12 +2178,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908588",
+          "dev_inode": "33:1063326",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908588",
+          "dev_inode": "33:1063326",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2126,7 +2191,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:908568",
+            "dev_inode": "33:1063283",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           },
@@ -2136,7 +2201,7 @@
     },
     {
       "case": 33,
-      "transaction_id": "e64a82f4-6dfc-459e-baa5-7fdb5dacfcdc",
+      "transaction_id": "0d1b3fa2-9838-4d84-bd5f-f6298e87358d",
       "direction": "retirement",
       "breakpoint": "applied",
       "named_step": "deck-content",
@@ -2169,12 +2234,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908685",
+          "dev_inode": "33:1063510",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908685",
+          "dev_inode": "33:1063510",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2182,7 +2247,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:908665",
+            "dev_inode": "33:1063467",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
           },
@@ -2192,7 +2257,7 @@
     },
     {
       "case": 34,
-      "transaction_id": "21d8e21e-b904-4252-90f0-98006761190f",
+      "transaction_id": "0abc5283-264c-4407-8b41-8fa5a67a3185",
       "direction": "retirement",
       "breakpoint": "before_action",
       "named_step": "deck-design",
@@ -2225,19 +2290,19 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908781",
+          "dev_inode": "33:1063693",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908781",
+          "dev_inode": "33:1063693",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "named_step": {
           "kind": "remove",
           "after_exit": {
-            "dev_inode": "33:908762",
+            "dev_inode": "33:1063655",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           },
@@ -2248,7 +2313,7 @@
     },
     {
       "case": 35,
-      "transaction_id": "59d3924a-be33-49e4-ac5e-6c20db1ec2c7",
+      "transaction_id": "c484e821-e486-435f-a233-ea849112217e",
       "direction": "retirement",
       "breakpoint": "after_backup",
       "named_step": "deck-design",
@@ -2281,12 +2346,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908878",
+          "dev_inode": "33:1063877",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908878",
+          "dev_inode": "33:1063877",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2294,7 +2359,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:908859",
+            "dev_inode": "33:1063839",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           },
@@ -2304,7 +2369,7 @@
     },
     {
       "case": 36,
-      "transaction_id": "458da4aa-deb2-4f71-884f-16151480fa8d",
+      "transaction_id": "73d10130-0eab-4cc9-8b61-02388182c2c4",
       "direction": "retirement",
       "breakpoint": "after_action",
       "named_step": "deck-design",
@@ -2337,12 +2402,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:908975",
+          "dev_inode": "33:1064061",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:908975",
+          "dev_inode": "33:1064061",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2350,7 +2415,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:908956",
+            "dev_inode": "33:1064023",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           },
@@ -2360,7 +2425,7 @@
     },
     {
       "case": 37,
-      "transaction_id": "c01f3f45-751e-40a3-a96a-4be3b6be5a1d",
+      "transaction_id": "3b5db0ec-c1e4-42ae-86be-95248e3fa445",
       "direction": "retirement",
       "breakpoint": "applied",
       "named_step": "deck-design",
@@ -2393,12 +2458,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:909072",
+          "dev_inode": "33:1064245",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909072",
+          "dev_inode": "33:1064245",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2406,7 +2471,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:909053",
+            "dev_inode": "33:1064207",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
           },
@@ -2416,7 +2481,7 @@
     },
     {
       "case": 38,
-      "transaction_id": "d8066fb0-f067-48e4-8f15-8e4ad3192d64",
+      "transaction_id": "4e56cca9-273d-4e43-b830-90eb1f3194bd",
       "direction": "retirement",
       "breakpoint": "before_action",
       "named_step": "deck-review",
@@ -2449,19 +2514,19 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:909168",
+          "dev_inode": "33:1064428",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909168",
+          "dev_inode": "33:1064428",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "named_step": {
           "kind": "remove",
           "after_exit": {
-            "dev_inode": "33:909150",
+            "dev_inode": "33:1064395",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           },
@@ -2472,7 +2537,7 @@
     },
     {
       "case": 39,
-      "transaction_id": "133312a2-8dad-475b-9a26-5d9b9b2461a2",
+      "transaction_id": "f754c800-6d49-44e5-b3f0-094178b2a239",
       "direction": "retirement",
       "breakpoint": "after_backup",
       "named_step": "deck-review",
@@ -2505,12 +2570,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:909265",
+          "dev_inode": "33:1064612",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909265",
+          "dev_inode": "33:1064612",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2518,7 +2583,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:909247",
+            "dev_inode": "33:1064579",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           },
@@ -2528,7 +2593,7 @@
     },
     {
       "case": 40,
-      "transaction_id": "d10000e2-63b2-446e-afa5-c3ce7e1a92da",
+      "transaction_id": "45a60719-8167-4c8b-a2a0-5a8d48d459bb",
       "direction": "retirement",
       "breakpoint": "after_action",
       "named_step": "deck-review",
@@ -2561,12 +2626,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:909362",
+          "dev_inode": "33:1064796",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909362",
+          "dev_inode": "33:1064796",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2574,7 +2639,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:909344",
+            "dev_inode": "33:1064763",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           },
@@ -2584,7 +2649,7 @@
     },
     {
       "case": 41,
-      "transaction_id": "2e3ddd88-1d4e-4259-8b3d-3a8ec6d67d27",
+      "transaction_id": "5a9d709f-0d82-4a8e-a024-016d6465c56f",
       "direction": "retirement",
       "breakpoint": "applied",
       "named_step": "deck-review",
@@ -2617,12 +2682,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 9,
         "current_after_exit": {
-          "dev_inode": "33:909459",
+          "dev_inode": "33:1064980",
           "kind": "symlink",
           "target": "releases/bare"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909459",
+          "dev_inode": "33:1064980",
           "kind": "symlink",
           "target": "releases/bare"
         },
@@ -2630,7 +2695,7 @@
           "kind": "remove",
           "after_exit": null,
           "backup_after_exit": {
-            "dev_inode": "33:909441",
+            "dev_inode": "33:1064947",
             "kind": "symlink",
             "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
           },
@@ -2640,7 +2705,7 @@
     },
     {
       "case": 42,
-      "transaction_id": "b74dfa84-4cdd-4637-a620-56df17ba4925",
+      "transaction_id": "e4f6430a-dbde-45af-b10e-93cf3c4dfff3",
       "direction": "compensation",
       "breakpoint": "compensating",
       "named_step": null,
@@ -2673,12 +2738,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:909521",
+          "dev_inode": "33:1065080",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909506",
+          "dev_inode": "33:1065052",
           "kind": "symlink",
           "target": "releases/old"
         }
@@ -2686,7 +2751,7 @@
     },
     {
       "case": 43,
-      "transaction_id": "7eca370a-6506-43e7-a7cf-b349ffa52a9b",
+      "transaction_id": "15b95ca4-3c5f-4662-89dd-2e2b05803520",
       "direction": "compensation",
       "breakpoint": "before_restore",
       "named_step": null,
@@ -2719,12 +2784,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:909588",
+          "dev_inode": "33:1065187",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909573",
+          "dev_inode": "33:1065159",
           "kind": "symlink",
           "target": "releases/old"
         }
@@ -2732,7 +2797,7 @@
     },
     {
       "case": 44,
-      "transaction_id": "a0a4519f-37f5-458a-b630-e8c264ccf493",
+      "transaction_id": "a1a87db9-a55d-4205-bd45-462d361cf07e",
       "direction": "compensation",
       "breakpoint": "after_unpublish",
       "named_step": null,
@@ -2765,12 +2830,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:909655",
+          "dev_inode": "33:1065294",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909640",
+          "dev_inode": "33:1065266",
           "kind": "symlink",
           "target": "releases/old"
         }
@@ -2778,7 +2843,7 @@
     },
     {
       "case": 45,
-      "transaction_id": "b707019f-e5a4-4aef-8254-122ecdfcf532",
+      "transaction_id": "188a6f05-60b0-42f4-bf2a-732f460fdb81",
       "direction": "compensation",
       "breakpoint": "after_restore",
       "named_step": null,
@@ -2811,12 +2876,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:909722",
+          "dev_inode": "33:1065401",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909707",
+          "dev_inode": "33:1065373",
           "kind": "symlink",
           "target": "releases/old"
         }
@@ -2824,7 +2889,7 @@
     },
     {
       "case": 46,
-      "transaction_id": "4fa17700-1ace-42a5-90a1-f589f9016151",
+      "transaction_id": "2078a699-de9d-4d3e-85a2-b1200728b502",
       "direction": "compensation",
       "breakpoint": "restored",
       "named_step": null,
@@ -2857,12 +2922,12 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 8,
         "current_after_exit": {
-          "dev_inode": "33:909789",
+          "dev_inode": "33:1065508",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909774",
+          "dev_inode": "33:1065480",
           "kind": "symlink",
           "target": "releases/old"
         }
@@ -2870,7 +2935,7 @@
     },
     {
       "case": 47,
-      "transaction_id": "04b2b7aa-a5f6-43ef-9b45-58f1e93fe37c",
+      "transaction_id": "eb4e9e62-5aa3-4fd1-9b94-dc9c5aa316c8",
       "direction": "optout",
       "breakpoint": "after_action",
       "named_step": "current",
@@ -2903,29 +2968,29 @@
         "persistent_inode_witnesses_match_after_exit_and_recovery": true,
         "inode_witness_count": 4,
         "current_after_exit": {
-          "dev_inode": "33:909856",
+          "dev_inode": "33:1065615",
           "kind": "symlink",
           "target": "releases/new"
         },
         "current_after_recovery": {
-          "dev_inode": "33:909856",
+          "dev_inode": "33:1065615",
           "kind": "symlink",
           "target": "releases/new"
         },
         "named_step": {
           "kind": "link",
           "after_exit": {
-            "dev_inode": "33:909856",
+            "dev_inode": "33:1065615",
             "kind": "symlink",
             "target": "releases/new"
           },
           "backup_after_exit": {
-            "dev_inode": "33:909841",
+            "dev_inode": "33:1065587",
             "kind": "symlink",
             "target": "releases/old"
           },
           "after_recovery": {
-            "dev_inode": "33:909856",
+            "dev_inode": "33:1065615",
             "kind": "symlink",
             "target": "releases/new"
           }

@@ -117,9 +117,17 @@ def resolve_operation(store, operation_id, *, head_revision=None, use_cache=None
             control = coverage_cache.current_head(store)
             head = head_revision if head_revision is not None else control
             cached = coverage_cache.get(root) if enabled else None
-            if cached is not None and not coverage_cache.valid(store, cached):
-                coverage_cache.discard(root)
-                cached = None
+            if cached is not None:
+                try:
+                    valid_coverage = coverage_cache.valid(store, cached)
+                except READ_FAILURES:
+                    # Old coverage may describe a no-longer-selected branch.
+                    # Unreadable cached paths invalidate this disposable hint;
+                    # only the selected canonical scan may establish unknown.
+                    valid_coverage = False
+                if not valid_coverage:
+                    coverage_cache.discard(root)
+                    cached = None
             coverage, head, document = coverage_cache.scan(
                 store, root=root, control=control, operation_id=operation_id,
                 head_revision=head_revision, cached=cached)

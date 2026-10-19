@@ -410,9 +410,10 @@ def test_store_receipt_wrapper_has_one_cold_scan(tmp_path, monkeypatch):
     assert result is None and measured['snapshot_decode'] == measured['snapshot_read'] == 0
 
 
-def test_divergent_history_rebuilds_without_merging_unreachable_operations(tmp_path):
+@pytest.mark.parametrize('old_damage', ['unchanged', 'missing', 'corrupt_replacement', 'symlink'])
+def test_divergent_history_rebuilds_without_merging_unreachable_operations(tmp_path, old_damage):
     store = project(tmp_path); base = store.load_document()
-    op = str(uuid.uuid4()); submit(store, op, base['revision_id'], {})
+    op = str(uuid.uuid4()); saved = submit(store, op, base['revision_id'], {})
     operations.resolve_operation(store, 'absent')
     # Replace the control with a different valid branch from the same root,
     # reusing the operation ID only on that selected ancestry. Cached branch
@@ -421,6 +422,30 @@ def test_divergent_history_rebuilds_without_merging_unreachable_operations(tmp_p
                                  'description': 'Selected divergent ancestry', 'read_set': []})
     (store.revisions_dir / (branch['revision_id'] + '.json')).write_bytes(canonical_json_bytes(branch))
     (store.deck_root / 'current.json').write_bytes(canonical_json_bytes({'format': 'deckmaster-current.v1', 'revision_id': branch['revision_id']}))
+    old_path = store.revisions_dir / (saved['committed_revision_id'] + '.json')
+    if old_damage == 'missing':
+        old_path.unlink()
+    elif old_damage == 'corrupt_replacement':
+        replacement = old_path.with_suffix('.replacement')
+        replacement.write_bytes(b'{broken'); replacement.replace(old_path)
+    elif old_damage == 'symlink':
+        external = tmp_path / 'old-unreachable.json'; external.write_bytes(old_path.read_bytes())
+        old_path.unlink(); old_path.symlink_to(external)
+    pointer = (store.deck_root / 'current.json').read_bytes()
+    logs = {path.name: path.read_bytes() for path in (store.deck_root / 'operations').glob('*.json')}
+    # The first cache-enabled lookup must fall back from stale coverage, not
+    # report unknown merely because an unreachable old snapshot is unreadable.
+    assert cache.get(cache.root_identity(store)).head == saved['committed_revision_id']
+    first_enabled = operations.resolve_operation(store, 'absent')
+    canonical_absent = operations.resolve_operation(store, 'absent', use_cache=False)
+    assert first_enabled == canonical_absent
+    assert first_enabled.state == 'not_found' and first_enabled.head_revision == branch['revision_id']
+    assert (store.deck_root / 'current.json').read_bytes() == pointer
+    assert {path.name: path.read_bytes() for path in (store.deck_root / 'operations').glob('*.json')} == logs
+    save_evidence(f'N4B-stale-coverage-{old_damage}.json', {'old_unreachable_damage': old_damage,
+        'first_enabled': asdict(first_enabled), 'canonical': asdict(canonical_absent),
+        'pointer_bytes_sha256_before_after': hashlib.sha256(pointer).hexdigest(),
+        'operations_log_sha256_before_after': {name: hashlib.sha256(raw).hexdigest() for name, raw in logs.items()}})
     enabled = operations.resolve_operation(store, op)
     canonical = operations.resolve_operation(store, op, use_cache=False)
     assert enabled == canonical and enabled.reason == 'legacy_receipt_only'

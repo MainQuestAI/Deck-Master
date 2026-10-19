@@ -379,11 +379,18 @@ Explicit completed replay returns historical `cli_active`/`host_skill`, with
 independent current installation observations. A no-ID rollback after completion
 is a new toggle, not a retry of the frozen old target.
 
+`preparing` records the frozen request and preparation intents before creating
+temporary files or inode witnesses. Resume its original ID/request; unproven
+residual preparations remain preserved while that transaction prepares in a
+separate recorded namespace. A symlink Host Skill directory uses its verified
+real directory for locking and actions, retains access-chain checks, and keeps
+logical CLI paths.
+
 Ctrl-C (exit 130) reports transaction state; `compensating` resumes reverse
 recovery and a terminal `rolled_back` ID returns the original failure.
 `installation_recovery_conflict` retains external paths and backup/preparation
 artifacts; do not delete them or claim restoration. Unverifiable journals and
-persistence problems retain unknown state. Prefix then shared Host locks
+persistence problems without a verifiable phase retain unknown state. Prefix then shared Host locks
 coordinate managed switches. `--no-host-registration` never resolves, locks,
 scans, reads or writes Host, including migration recovery. Rollback can retire
 managed links absent from an older release; it does not downgrade project

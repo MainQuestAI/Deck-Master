@@ -23,7 +23,7 @@ from .store import _atomic_write_bytes
 
 VERSION = 'activation_transaction.v1'
 TERMINAL = {'completed', 'rolled_back'}
-STATES = {'prepared', 'applying', 'compensating', 'recovery_conflict', *TERMINAL}
+STATES = {'preparing', 'prepared', 'applying', 'compensating', 'recovery_conflict', *TERMINAL}
 KINDS = {'link', 'launcher', 'remove', 'move'}
 
 
@@ -50,7 +50,7 @@ def rename_noreplace(source, destination, expected_parent=None):
     source, destination = Path(source), Path(destination)
     if source.parent != destination.parent:
         raise ValueError('installation rename must use one adjacent parent')
-    directory = os.open(source.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    directory = os.open(source.parent.resolve(strict=True), os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     try:
         info = os.fstat(directory)
         if expected_parent is not None and (info.st_dev, info.st_ino) != (
@@ -209,6 +209,50 @@ def _validate_record(root, record, ident):
         raise ValueError('invalid frozen Host root')
     if not request['register_host'] and request['host_root'] is not None:
         raise ValueError('opt-out transaction contains Host root')
+    namespace = record.get('preparation_id', ident)
+    transaction_id(namespace)
+    preparing = record['state'] == 'preparing'
+    migration = record.get('migration', {})
+    moved = migration.get('moved')
+    removed = migration.get('removed_links', [])
+    if (not isinstance(migration.get('migrated'), bool) or not isinstance(removed, list) or
+            len(removed) != len(set(removed)) or any(not isinstance(name, str) or
+            not re.fullmatch(r'(?:deck|ppt)-[^/]+', name) or Path(name).name != name for name in removed)):
+        raise ValueError('invalid frozen legacy migration')
+    if moved is not None:
+        destination = Path(moved['to'])
+        if (not migration['migrated'] or moved['from'] != str(root / 'current') or destination.parent != root or
+                not re.fullmatch(r'legacy-companion-[A-Za-z0-9-]+', destination.name)):
+            raise ValueError('legacy migration escaped its managed paths')
+    if host is None and removed:
+        raise ValueError('opt-out migration contains Host actions')
+    watched_paths = {root / 'current', root / 'previous', root / 'bin/deck-master'}
+    if host:
+        watched_paths.update(host / name for name in ('deck-master', 'deck-content', 'deck-design', 'deck-review', *removed))
+    for row in record['watched']:
+        if Path(row['path']) not in watched_paths or not isinstance(row['parent_identity'], dict):
+            raise ValueError('watched path is outside the managed installation')
+    if preparing and ({Path(row['path']) for row in record['watched']} != watched_paths or
+                      len(record['watched']) != len(watched_paths)):
+        raise ValueError('preparing transaction lacks its complete frozen managed state')
+    access = record.get('host_access_path')
+    if preparing and host is not None and access is None:
+        raise ValueError('preparing transaction lacks its frozen Host access chain')
+    if access is not None and (host is None or not Path(access).is_absolute() or '..' in Path(access).parts or
+                               not isinstance(record.get('host_access_identity'), dict)):
+        raise ValueError('invalid frozen Host access chain')
+    if record['state'] == 'preparing':
+        if not isinstance(record.get('preparations'), list):
+            raise ValueError('preparing transaction lacks durable preparation intents')
+        allowed = {root, root / 'bin'} | ({host} if host else set())
+        for item in record['preparations']:
+            path = Path(item['path'])
+            if (path.parent not in allowed or
+                    not re.fullmatch(r'\.deck-master-' + re.escape(namespace) + r'-[0-9]+\.(?:after|witness)', path.name) or
+                    item['kind'] not in ('link', 'launcher', 'witness') or
+                    not isinstance(item['expected'], dict) or
+                    (item['identity'] is not None and not isinstance(item['identity'], dict))):
+                raise ValueError('preparation intent is outside the frozen namespace')
     for index, step in enumerate(record['steps']):
         path = Path(step['path'])
         kind = step['kind']
@@ -223,7 +267,7 @@ def _validate_record(root, record, ident):
             raise ValueError('action is outside managed installation paths')
         if kind == 'launcher' and path != root / 'bin/deck-master':
             raise ValueError('launcher action outside launcher path')
-        stem = f'.deck-master-{ident}-{index}'
+        stem = f'.deck-master-{namespace}-{index}'
         if step['backup'] != str(path.parent / (stem + '.before')) and kind != 'move':
             raise ValueError('invalid backup location')
         if kind == 'move':
@@ -257,17 +301,19 @@ def _validate_record(root, record, ident):
         if step['prepared']:
             required.append((step['prepared']['path'], step['prepared']['identity']))
     required.extend((row['path'], row['before']) for row in record['watched'])
+    if preparing:
+        required.extend((row['path'], row['identity']) for row in record['preparations'] if row['kind'] != 'witness')
     required = {(path, json.dumps(identity, sort_keys=True)) for path, identity in required if _needs_anchor(identity)}
     found = set()
     for index, anchor in enumerate(anchors):
         source = Path(anchor['source'])
-        if anchor['path'] != str(source.parent / f'.deck-master-{ident}-{index}.witness'):
+        if anchor['path'] != str(source.parent / f'.deck-master-{namespace}-{index}.witness'):
             raise ValueError('invalid inode witness location')
         item = (str(source), json.dumps(anchor['identity'], sort_keys=True))
         if item not in required or item in found:
             raise ValueError('inode witness disagrees with frozen managed plan')
         found.add(item)
-    if found != required:
+    if not preparing and found != required:
         raise ValueError('frozen managed path lacks its inode witness')
 
 
@@ -339,9 +385,16 @@ class Plan:
     def __init__(self, root, request):
         self.root = root
         self.record = {'schema_version': VERSION, 'transaction_id': request['transaction_id'],
-                       'prefix': str(root.parent), 'request': request, 'state': 'prepared',
+                       'prefix': str(root.parent), 'request': request, 'state': 'preparing',
+                       'preparation_id': transaction_id(), 'preparations': [],
                        'steps': [], 'created_directories': [], 'inode_anchors': []}
         self.virtual = {}
+
+    def intent(self, path, kind, expected):
+        item = {'path': str(path), 'kind': kind, 'expected': expected, 'identity': None}
+        self.record['preparations'].append(item)
+        save(self.root, self.record)
+        return item
 
     def anchor(self, path, identity):
         """Keep the inode allocated across death and unlink/recreate attacks."""
@@ -350,14 +403,18 @@ class Plan:
         if any(row['source'] == str(path) and row['identity'] == identity for row in self.record['inode_anchors']):
             return
         index = len(self.record['inode_anchors'])
-        anchor = path.parent / f'.deck-master-{self.record["transaction_id"]}-{index}.witness'
+        anchor = path.parent / f'.deck-master-{self.record["preparation_id"]}-{index}.witness'
+        item = self.intent(anchor, 'witness', identity)
         os.link(path, anchor, follow_symlinks=False)
         fsync_dir(path.parent)
+        checkpoint('witness_created', self.record, {'path': str(path), 'kind': 'witness'})
         if snapshot(path) != identity or snapshot(anchor) != identity:
             raise Failure('installation_recovery_conflict', 'path changed while preparing its inode witness',
                           transaction_id=self.record['transaction_id'], state='prepared',
                           details={'path': str(path), 'witness': str(anchor)})
         self.record['inode_anchors'].append({'source': str(path), 'path': str(anchor), 'identity': identity})
+        item['identity'] = identity
+        save(self.root, self.record)
 
     def mkdir(self, path):
         if path.is_dir():
@@ -376,7 +433,7 @@ class Plan:
     def add(self, kind, path, target=None, destination=None):
         self.mkdir(path.parent)
         index = str(len(self.record['steps']))
-        stem = f'.deck-master-{self.record["transaction_id"]}-{index}'
+        stem = f'.deck-master-{self.record["preparation_id"]}-{index}'
         before = self.virtual.get(str(path), snapshot(path))
         step = {'step_id': index, 'kind': kind, 'path': str(path), 'before': before,
                 'parent_identity': parent_identity(path), 'step_state': 'ready', 'observed': None,
@@ -387,6 +444,8 @@ class Plan:
         self.anchor(path, before)
         if kind in ('link', 'launcher'):
             prepared = path.parent / (stem + '.after')
+            item = self.intent(prepared, kind, {'target': str(target)} if kind == 'link' else
+                               {'sha256': hashlib.sha256(target.encode()).hexdigest(), 'mode': 0o755})
             if kind == 'link':
                 prepared.symlink_to(target)
             else:
@@ -396,14 +455,17 @@ class Plan:
                     os.fchmod(stream.fileno(), 0o755)
                     os.fsync(stream.fileno())
             fsync_dir(path.parent)
+            checkpoint('preparation_created', self.record, step)
             step['prepared'] = {'path': str(prepared), 'identity': snapshot(prepared)}
             step['expected_after'] = step['prepared']['identity']
+            item['identity'] = step['expected_after']
             self.anchor(prepared, step['expected_after'])
         self.record['steps'].append(step)
         self.virtual[str(path)] = step['expected_after']
+        save(self.root, self.record)
         return step
 
-    def persist(self):
+    def begin(self):
         # Persist directory entries for the journal itself before its pointer.
         directory = record_path(self.root, self.record['transaction_id']).parent
         missing = []
@@ -414,6 +476,10 @@ class Plan:
         for path in reversed(missing):
             path.mkdir()
             fsync_dir(path.parent)
+        save(self.root, self.record)
+
+    def persist(self):
+        self.record['state'] = 'prepared'
         save(self.root, self.record)
         checkpoint('prepared', self.record)
         pending(self.root, self.record)

@@ -478,10 +478,18 @@ def _registration_result(root, release, host):
     return result
 
 
-def _prepare_activation(root, verb, release_id, register_host, host, ident, parent_preparations=()):
+def _prepare_activation(root, verb, release_id, register_host, host, ident, parent_preparations=(), *, access_host=None, preparation=None):
     # All preflights run again under the Host registration lock.
     release = _checked_release(root, release_id)
     migration = _migrate_legacy_companion(root, dry_run=True, register_host=register_host)
+    if preparation is not None:
+        frozen = preparation['migration']
+        if (migration['migrated'] != frozen['migrated'] or
+                migration['removed_links'] != frozen['removed_links'] or
+                (migration['moved'] or {}).get('from') != (frozen['moved'] or {}).get('from')):
+            raise InstallationTransactionError('installation_recovery_conflict', 'legacy migration actions changed during preparation',
+                                               transaction_id=ident, state='preparing')
+        migration = preparation['migration']
     _preflight_activation(root, release_id, migrating=migration['migrated'])
     if register_host:
         _preflight_host_skill(root, removed_links=migration['removed_links'])
@@ -494,14 +502,41 @@ def _prepare_activation(root, verb, release_id, register_host, host, ident, pare
     old = os.readlink(root / 'current') if (root / 'current').is_symlink() else None
     previous = os.readlink(root / 'previous') if (root / 'previous').is_symlink() else None
     plan.record.update(old_current=old, old_previous=previous, migration=migration)
+    launcher = root / 'bin/deck-master'
+    plan.mkdir(launcher.parent)
+    target = 'releases/' + release_id
+    watched = [root / 'current', root / 'previous', launcher]
+    if host is not None:
+        watched.extend(host / name for name in PUBLIC_SKILLS)
+        watched.extend(host / name for name in migration['removed_links'])
+    plan.record['watched'] = [
+        {'path': str(path), 'before': journal.snapshot(path), 'parent_identity': journal.parent_identity(path)}
+        for path in dict.fromkeys(watched)]
+    result = {'status': 'already_active' if old == target else 'activated', 'release_id': release_id,
+              'cli_active': True, 'migration': migration}
+    if old != target:
+        result.update(previous=old, format_boundary='Older binaries must not write unsupported Document schemas; restore a compatible project copy.')
+    access_host = access_host or host
+    result.update(_registration_result(root, release, access_host))
+    if result['host_skill'] == 'registered':
+        result['skill_release_id'] = release_id
+    plan.record['planned_result'] = result
+    plan.record['host_identity'] = journal.snapshot(host) if host else None
+    plan.record['host_parent_identity'] = journal.parent_identity(host / '.deck-master-registration.lock') if host else None
+    plan.record['host_access_path'] = str(access_host) if host else None
+    plan.record['host_access_identity'] = journal.parent_identity(access_host / '.deck-master-registration.lock') if host else None
+    if preparation is not None:
+        if request != preparation['request']:
+            raise InstallationTransactionError('installation_transaction_conflict', 'frozen preparation request changed', transaction_id=ident, state='preparing')
+        plan.record['preparation_history'] = [*preparation.get('preparation_history', []), {
+            'preparation_id': preparation['preparation_id'], 'preparations': preparation['preparations']}]
+    plan.begin()  # Freeze request and old state before any .after/.witness creation.
     if migration['moved']:
         plan.add('move', Path(migration['moved']['from']), destination=Path(migration['moved']['to']))
     for name in migration['removed_links']:
         plan.add('remove', host / name)
-    launcher = root / 'bin/deck-master'
     if not launcher.exists() or stat.S_IMODE(launcher.stat().st_mode) != 0o755:
         plan.add('launcher', launcher, _LAUNCHER_TEXT)
-    target = 'releases/' + release_id
     if old != target:
         if old:
             plan.add('link', root / 'previous', old)
@@ -515,25 +550,8 @@ def _prepare_activation(root, verb, release_id, register_host, host, ident, pare
                     plan.add('link', path, _managed_target(root, name))
             elif before is not None:
                 plan.add('remove', path)
-    watched = [root / 'current', root / 'previous', launcher]
-    if host is not None:
-        watched.extend(host / name for name in PUBLIC_SKILLS)
-        watched.extend(host / name for name in migration['removed_links'])
-    plan.record['watched'] = [
-        {'path': str(path), 'before': journal.snapshot(path), 'parent_identity': journal.parent_identity(path)}
-        for path in dict.fromkeys(watched)]
     for watched_path in plan.record['watched']:
         plan.anchor(Path(watched_path['path']), watched_path['before'])
-    result = {'status': 'already_active' if old == target else 'activated', 'release_id': release_id,
-              'cli_active': True, 'migration': migration}
-    if old != target:
-        result.update(previous=old, format_boundary='Older binaries must not write unsupported Document schemas; restore a compatible project copy.')
-    result.update(_registration_result(root, release, host))
-    if result['host_skill'] == 'registered':
-        result['skill_release_id'] = release_id
-    plan.record['planned_result'] = result
-    plan.record['host_identity'] = journal.snapshot(host) if host else None
-    plan.record['host_parent_identity'] = journal.parent_identity(host / '.deck-master-registration.lock') if host else None
     return plan.persist()
 
 
@@ -551,8 +569,10 @@ def _check_request(record, root, verb, release_id, register_host, host, *, expli
 def _same_host_parent(record):
     host = Path(record['request']['host_root'])
     try:
+        access = record.get('host_access_path')
         return (journal.snapshot(host) == record['host_identity'] and
-                journal.parent_identity(host / '.deck-master-registration.lock') == record['host_parent_identity'])
+                journal.parent_identity(host / '.deck-master-registration.lock') == record['host_parent_identity'] and
+                (access is None or journal.parent_identity(Path(access) / '.deck-master-registration.lock') == record['host_access_identity']))
     except OSError:
         return False
 
@@ -566,6 +586,19 @@ def _verify_transaction_target(root, record):
     except (OSError, ValueError, KeyError) as exc:
         raise InstallationTransactionError('installation_recovery_conflict', 'target release resources changed or no longer verify: ' + str(exc),
                                            transaction_id=record['transaction_id'], state=record['state']) from exc
+
+
+def _resume_preparation(root, record):
+    _verify_transaction_target(root, record)
+    for watched in record['watched']:
+        path = Path(watched['path'])
+        if journal.snapshot(path) != watched['before'] or journal.parent_identity(path) != watched['parent_identity']:
+            raise InstallationTransactionError('installation_recovery_conflict', 'managed state changed during preparation; no activation was applied',
+                                               transaction_id=record['transaction_id'], state='preparing', details={'path': str(path)})
+    for item in record['preparations']:
+        if item['identity'] is not None and journal.snapshot(Path(item['path'])) != item['identity']:
+            raise InstallationTransactionError('installation_recovery_conflict', 'recorded preparation changed externally; preserve the artifact',
+                                               transaction_id=record['transaction_id'], state='preparing', details={'path': item['path']})
 
 
 def _run_activation(root, record, recovered):
@@ -620,6 +653,9 @@ def _run_activation(root, record, recovered):
                 _durable_step.reset(token)
         # Registration is now a read-only report; all mutations were planned.
         _sync_host_skill(root, register=request['register_host'])
+        if request['register_host'] and not _same_host_parent(record):
+            raise InstallationTransactionError('installation_recovery_conflict', 'Host access chain changed during activation',
+                                               transaction_id=record['transaction_id'], state=record['state'])
         # Final verification covers unchanged managed paths as well as actions.
         host = Path(request['host_root']) if request['register_host'] else None
         observed = _installation_observation(root, host)
@@ -692,7 +728,11 @@ def _activation(prefix, verb, release_id=None, *, register_host=True, transactio
     ident = journal.transaction_id(transaction_id)
     root = Path(prefix).resolve() / '.deck-master'
     # Opt-out never even resolves the Host path, including replay/compensation.
-    host = _codex_skill_root().absolute() if register_host else None
+    access_host = _codex_skill_root().absolute() if register_host else None
+    try:
+        host = access_host.resolve() if access_host else None
+    except (OSError, RuntimeError) as exc:
+        raise HostSkillConflict(str(access_host), 'invalid Codex Skill parent: ' + str(exc)) from exc
     with _locked(root):
         active = journal.discover(root)
         selected_path = journal.record_path(root, ident)
@@ -726,29 +766,44 @@ def _activation(prefix, verb, release_id=None, *, register_host=True, transactio
         if record is not None and host is not None and not _same_host_parent(record):
             # Never create a lock in a replacement external Host directory. The
             # persisted engine can compensate still-owned prefix paths only.
+            if record['state'] == 'preparing':
+                raise InstallationTransactionError('installation_recovery_conflict', 'Host access chain changed during preparation',
+                                                   transaction_id=record['transaction_id'], state='preparing')
             return _run_activation(root, record, True)
         parent_preparations = []
         if host is not None:
             _mkdir(host, prepared=parent_preparations)
         with locked_file(host / '.deck-master-registration.lock') if host else nullcontext():
-            if record is None:
+            if access_host and access_host.resolve() != host:
+                raise HostSkillConflict(str(access_host), 'Codex Skill directory target changed while waiting for registration lock')
+            if record is None or record['state'] == 'preparing':
+                preparation = record
+                if preparation is not None:
+                    ident = preparation['transaction_id']
+                    _resume_preparation(root, preparation)
+                    release_id = preparation['request']['target_release_id']
                 try:
-                    record = _prepare_activation(root, verb, release_id, register_host, host, ident, parent_preparations)
+                    record = _prepare_activation(root, verb, release_id, register_host, host, ident, parent_preparations,
+                                                 access_host=access_host, preparation=preparation)
                 except KeyboardInterrupt as exc:
                     path = journal.record_path(root, ident)
                     if not path.exists():
                         raise InstallationTransactionError('installation_interrupted', 'interrupted before a recoverable plan was published; no activation was applied',
                                                            transaction_id=ident, state='unknown', details={'old_state_verified': True}) from exc
                     record = journal.read(root, ident)
+                    if record['state'] == 'preparing':
+                        raise InstallationTransactionError('installation_interrupted', 'preparation interrupted before activation; resume the original request',
+                                                           transaction_id=ident, state='preparing', details={'old_state_verified': True}) from exc
                     record.update(state='compensating', failure={'code': 'installation_interrupted', 'message': 'installation preparation interrupted', 'type': 'KeyboardInterrupt'})
                     tx = journal.Transaction(root, record)
                     tx.save()
                     tx.compensate()
                     raise tx.failure(False) from exc
                 except OSError as exc:
+                    failed = journal.read(root, ident) if journal.record_path(root, ident).is_file() else None
                     raise InstallationTransactionError('installation_recovery_unavailable', 'could not publish the complete activation plan or pending pointer: ' + str(exc),
-                                                       transaction_id=ident, state='unknown') from exc
-                recovered = False
+                                                       transaction_id=ident, state='preparing' if failed and failed['state'] == 'preparing' else 'unknown') from exc
+                recovered = preparation is not None
             else:
                 recovered = True
             return _run_activation(root, record, recovered)

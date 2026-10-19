@@ -4,6 +4,10 @@ This increment makes ordinary input writes recoverable from committed receipts, 
 
 The [70-AC execution ledger](execution-ledger.json) is the sole acceptance registry. Its component findings, the complete engineering CI gate, the unfinished normal-task application, public release and actual HOME activation are separate facts. The content-only normal task now has actual Runtime-adopted full v2 content and completed status. User local real acceptance and trusted Host review receipt acceptance remain explicitly deferred, without claiming professional approval.
 
+## Designated review follow-up
+
+The designated review of head `53021ac8` requested changes for preparation-stage recovery, symlink Host directory compatibility, stale-coverage fallback and stale ledger summaries. The [review repair record](PR124-review-resolution.md) and sole ledger preserve each real counterexample, affected AC reassessment and targeted result. The earlier inode P1 remains closed. All four targeted repairs now have passing actual evidence; fresh build/installed identity and final new-head CI remain separate required gates.
+
 ## Candidate and distribution identity
 
 - Runtime and packaged-method source: `001c8f101e07cab1b230e0745a6f0b17fb54882e`, built from a clean worktree as `1.0.0rc4`.
@@ -24,7 +28,7 @@ The [70-AC execution ledger](execution-ledger.json) is the sole acceptance regis
 
 ## Verification and remaining gate
 
-Focused results overlap and must not be summed: N2 270 passed plus 47 real process-death cases; N3 final review/budget regression 118 passed; N4 history/recovery 166 passed, context/entry 64 passed, cache-disabled shared recovery 101 passed; N5 72 passed. Source Ruff and whitespace checks passed. Original Spec payload hashes remain 19/19 unchanged.
+Focused results overlap and must not be summed: N2 290 passed plus 47 real process-death cases; N3 final review/budget regression 118 passed; N4 history/recovery 166 passed, context/entry 64 passed, cache-disabled shared recovery 101 passed; N5 72 passed. Source Ruff and whitespace checks passed. Original Spec payload hashes remain 19/19 unchanged.
 
 The retained bc6bd55a exact-head CI failed three installation ownership cases and four shallow-checkout historical fixture setups. Same-filesystem persistent inode witnesses repair the product bug; CI now fetches the single fixed RC3 baseline for genuine old-writer tests. The original assertions, failed logs and repair evidence are retained.
 

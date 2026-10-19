@@ -50,6 +50,12 @@ actual old/new targets before switching. The durable journal lives under
 `activation-pending.json` in that installation root. These are installation
 facts, not a project Document or production authorization.
 
+`preparing` durably freezes the request, old managed state and each preparation
+intent before creating `.after` or `.witness` items. Retry the original ID and
+request after interruption. An item whose ownership was not durably established
+is preserved; that same transaction can prepare again in a separate recorded
+namespace without claiming or deleting the residual item.
+
 A matching unfinished request resumes even when the ID is omitted. A different
 request reports `installation_transaction_pending` with the original ID;
 same-ID/different-binding reports `installation_transaction_conflict`. Reuse
@@ -57,6 +63,9 @@ the original request. Recovery rechecks real pointers, launcher, four links,
 preparations and backups rather than trusting a recorded completed step.
 It holds the prefix lock, then the shared Host lock, and rechecks after waiting.
 The retained Host lock coordinates managed installers across prefixes.
+Directory symlinks for the Host Skill root retain their existing compatibility:
+the transaction locks and plans against the verified real directory, checks the
+original access chain, and keeps the logical `skill_link` paths in CLI results.
 
 An explicit completed ID only returns its original receipt. Original
 `cli_active` and `host_skill` describe that completed transaction;
@@ -69,9 +78,10 @@ Ctrl-C returns exit 130 with the observed transaction state. `compensating`
 continues reverse recovery; a terminal `rolled_back` ID replays its original
 failure, so a genuinely new attempt needs a new ID after the cause is resolved.
 `installation_recovery_conflict` preserves external content and the retained
-`.before`/`.after` or legacy backups for diagnosis; do not overwrite these or
-claim full restoration. Unverifiable records or persistence failures report
-an explicit unknown state. Preserve the journal and inspect the named paths.
+`.before`/`.after`/`.witness` or legacy backups for diagnosis; do not overwrite
+these or claim full restoration. Unverifiable records report unknown; a failure
+with a durable preparation record can report `preparing` and resume the original
+request. Preserve the journal and inspect the named paths.
 
 `--no-host-registration` never resolves, locks, scans, reads or writes Host
 paths, including interrupted legacy migration recovery. It changes only the
