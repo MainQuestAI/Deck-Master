@@ -34,7 +34,9 @@ class _Input:
         if method == 'initialize':
             self.process.response(message, {})
         elif method == 'config/read':
-            self.process.response(message, {'config': {'mcp_servers': {'name.with.dots': {}}}})
+            self.process.response(message, {'config': {'mcp_servers': {
+                name: {'command': '/fixture/must-not-run', 'args': []}
+                for name in ('ordinary', 'name.with.dots', 'name"quoted', '名称 with space')}}})
         elif method == 'thread/start':
             self.process.response(message, {'thread': {'id': 'fixture-native-thread'},
                 'modelProvider': self.process.provider, 'model': 'fixture-model',
@@ -113,7 +115,10 @@ def test_owned_transport_starts_fresh_restricted_thread_and_observes_final(nativ
     assert thread['sandbox'] == 'read-only'
     assert thread['approvalPolicy'] == 'never'
     assert thread['ephemeral'] is True
-    assert thread['config']['mcp_servers."name.with.dots".enabled'] is False
+    assert thread['config']['mcp_servers'] == {
+        name: {'enabled': False}
+        for name in ('ordinary', 'name.with.dots', 'name"quoted', '名称 with space')}
+    assert not any(key.startswith('mcp_servers.') for key in thread['config'])
     for key in ('shell_tool', 'unified_exec', 'apps', 'multi_agent', 'hooks', 'plugins', 'browser_use', 'computer_use'):
         assert thread['config']['features.' + key] is False
     assert 'modelProvider' not in thread and 'model' not in thread

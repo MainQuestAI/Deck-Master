@@ -57,9 +57,12 @@ class CodexReviewSession:
                          "features.browser_use": False, "features.computer_use": False,
                          "features.in_app_browser": False, "features.realtime_conversation": False,
                          "notify": [], "web_search": "disabled"}
-            for name in config.get("mcp_servers") or {}:
-                # Quote table keys; a configured server name may contain dots.
-                overrides[f"mcp_servers.{json.dumps(name)}.enabled"] = False
+            # Keep names literal in the JSON config tree. CLI-style hand
+            # quoting is retained as part of a key by app-server, creating a
+            # different server without its configured transport. Nested keys
+            # also preserve dots and other characters in existing names.
+            overrides["mcp_servers"] = {name: {"enabled": False}
+                                        for name in config.get("mcp_servers") or {}}
             result = self._request("thread/start", {
                 "cwd": self._directory.name, "ephemeral": True,
                 "sandbox": "read-only", "approvalPolicy": "never", "config": overrides,

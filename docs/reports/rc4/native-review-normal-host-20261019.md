@@ -67,3 +67,19 @@ accept the actual native findings/receipt, and continue its real full-deck task
 through delivery. This is an unresolved actual-execution check, not an added
 product policy or a reason to fabricate a pass. No tag, Release, merge,
 deployment or real-HOME activation is performed by this fix.
+
+## MCP configuration compatibility correction
+
+The local Host's Codex 0.163.0 found a deterministic pre-model defect in the
+first PR head: hand-quoted dotted MCP override keys produced `invalid transport`
+at `thread/start`. This is a configuration encoding bug, separate from the
+cloud native authentication limitation. The runner now sends the literal
+nested JSON tree `mcp_servers: {name: {enabled: false}}`, preserving existing
+server names and transports. Other thread restrictions remain unchanged.
+
+The regression fixture now uses the actual config/read server-table shape,
+including ordinary names, dots, quotes and Unicode/space characters. A real
+Codex 0.159.0-alpha.3 initialization-only probe also created the restricted
+thread and queried MCP status for that exact thread: all four configured names
+reported `runtimeStatus=disabled`, no tools and no startup errors. No
+`turn/start`, model judgment or receipt was produced by this structural check.
