@@ -29,6 +29,12 @@ plan. There is one durable execution engine, replacing the in-memory Undo list.
   same-filesystem rename even when Host and prefix are on different devices.
   The original validated legacy directory keeps its existing
   `legacy-companion-*` backup name instead.
+- `.deck-master-<UUIDv4>-<index>.witness`: a retained same-filesystem hard link
+  to each prepared symlink/file and existing watched symlink/file. These keep
+  the original inode allocated even after an external unlink, including for
+  unchanged public links and launcher. Witness identities and exact paths are
+  frozen as `inode_anchors`; missing or changed witnesses are refused rather
+  than recreated from a possibly substituted live path.
 
 Directories and preparations are fsync'd before the prepared journal; JSON uses
 `store._atomic_write_bytes` (file fsync, atomic replacement, parent fsync). Each
@@ -36,6 +42,18 @@ rename fsyncs its affected directories. No shell strings, pickle, or executable
 callbacks are stored. Unknown versions, invalid or foreign IDs/prefixes,
 unrecognized actions, escaped paths, and journal symlinks are refused and left
 in place.
+
+The inode witnesses close the same-content unlink/recreate gap exposed by three
+Python 3.11 CI cases at `bc6bd55a07b249660e6af8ab4b19a147bb2caf14`.
+Device/inode plus bytes can describe a recycled inode as though it were the
+original object. Keeping a second persistent link prevents that inode from
+being freed during the pending transaction. Legitimate rename and process-death
+recovery retain this proof without depending on ctime, which rename may change.
+Original failure assertions remain; deterministic lost/replaced-witness cases
+also simulate equal recycled dev/inode and require conflict. Earlier failed CI
+and pre-fix raw observations remain retained externally. An unfinished record
+without the required witnesses is preserved and refused; an old terminal
+receipt can still replay its historical result without a new ownership claim.
 
 All transaction backup, publish, unpublish and restoration renames use one
 atomic no-replace operation with a pinned adjacent parent directory descriptor.
@@ -140,7 +158,7 @@ They verify actual pointer/link/launcher inode, bytes, mode and durable state,
 including action-before-log windows and compensation dying again. The broader
 resource-inventory regression retains strict installed/wheel protections.
 
-Current focused result: **262 passed, 0 failed/errors/skips** in
+Current focused result: **270 passed, 0 failed/errors/skips** in
 `N2-focused-junit.xml`. `N2-install-recovery-evidence.json` records source hashes,
 the exact command, twelve AC-to-test mappings checked against that JUnit, and
 47 separately collected child-process exits: 25 forward, 16 retirement,

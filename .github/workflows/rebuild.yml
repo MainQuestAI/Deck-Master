@@ -27,6 +27,8 @@ jobs:
         node-version: ["22", "24"]
     steps:
       - uses: actions/checkout@v4
+      - name: Fetch fixed RC3 writer compatibility baseline
+        run: git fetch --no-tags --depth=1 origin a08bc68c1cbbbc806205104c2bb01f3f096305f0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}

@@ -27,6 +27,10 @@ STATES = {'prepared', 'applying', 'compensating', 'recovery_conflict', *TERMINAL
 KINDS = {'link', 'launcher', 'remove', 'move'}
 
 
+def _needs_anchor(identity):
+    return identity is not None and identity['type'] in (stat.S_IFLNK, stat.S_IFREG)
+
+
 def _renameat_noreplace(directory, source, destination):
     """One kernel operation; never emulate exclusivity with a path check."""
     libc = ctypes.CDLL(None, use_errno=True)
@@ -242,6 +246,29 @@ def _validate_record(root, record, ident):
         path = Path(row['path'])
         if path != root / 'bin' and not (host is not None and (path == host or path in host.parents)):
             raise ValueError('invalid prepared parent directory')
+    anchors = record.get('inode_anchors')
+    if anchors is None and record['state'] in TERMINAL:
+        return  # Historical terminal receipts require no new ownership claim.
+    if not isinstance(anchors, list):
+        raise ValueError('unfinished transaction lacks persistent inode witnesses')
+    required = []
+    for step in record['steps']:
+        required.append((step['path'], step['before']))
+        if step['prepared']:
+            required.append((step['prepared']['path'], step['prepared']['identity']))
+    required.extend((row['path'], row['before']) for row in record['watched'])
+    required = {(path, json.dumps(identity, sort_keys=True)) for path, identity in required if _needs_anchor(identity)}
+    found = set()
+    for index, anchor in enumerate(anchors):
+        source = Path(anchor['source'])
+        if anchor['path'] != str(source.parent / f'.deck-master-{ident}-{index}.witness'):
+            raise ValueError('invalid inode witness location')
+        item = (str(source), json.dumps(anchor['identity'], sort_keys=True))
+        if item not in required or item in found:
+            raise ValueError('inode witness disagrees with frozen managed plan')
+        found.add(item)
+    if found != required:
+        raise ValueError('frozen managed path lacks its inode witness')
 
 
 def read(root, ident):
@@ -313,8 +340,24 @@ class Plan:
         self.root = root
         self.record = {'schema_version': VERSION, 'transaction_id': request['transaction_id'],
                        'prefix': str(root.parent), 'request': request, 'state': 'prepared',
-                       'steps': [], 'created_directories': []}
+                       'steps': [], 'created_directories': [], 'inode_anchors': []}
         self.virtual = {}
+
+    def anchor(self, path, identity):
+        """Keep the inode allocated across death and unlink/recreate attacks."""
+        if not _needs_anchor(identity):
+            return
+        if any(row['source'] == str(path) and row['identity'] == identity for row in self.record['inode_anchors']):
+            return
+        index = len(self.record['inode_anchors'])
+        anchor = path.parent / f'.deck-master-{self.record["transaction_id"]}-{index}.witness'
+        os.link(path, anchor, follow_symlinks=False)
+        fsync_dir(path.parent)
+        if snapshot(path) != identity or snapshot(anchor) != identity:
+            raise Failure('installation_recovery_conflict', 'path changed while preparing its inode witness',
+                          transaction_id=self.record['transaction_id'], state='prepared',
+                          details={'path': str(path), 'witness': str(anchor)})
+        self.record['inode_anchors'].append({'source': str(path), 'path': str(anchor), 'identity': identity})
 
     def mkdir(self, path):
         if path.is_dir():
@@ -341,6 +384,7 @@ class Plan:
                 'expected_after': None}
         if snapshot(Path(step['backup'])) is not None:
             raise ValueError('transaction backup path occupied')
+        self.anchor(path, before)
         if kind in ('link', 'launcher'):
             prepared = path.parent / (stem + '.after')
             if kind == 'link':
@@ -354,6 +398,7 @@ class Plan:
             fsync_dir(path.parent)
             step['prepared'] = {'path': str(prepared), 'identity': snapshot(prepared)}
             step['expected_after'] = step['prepared']['identity']
+            self.anchor(prepared, step['expected_after'])
         self.record['steps'].append(step)
         self.virtual[str(path)] = step['expected_after']
         return step
@@ -399,6 +444,15 @@ class Transaction:
             actual = None
         if actual != step['parent_identity']:
             self.conflict(step, 'managed parent identity changed externally')
+        sources = [step['path']]
+        if step['prepared']:
+            sources.append(step['prepared']['path'])
+        if not self.anchors_intact(*sources):
+            self.conflict(step, 'persistent inode witness changed or disappeared')
+
+    def anchors_intact(self, *sources):
+        return all(snapshot(Path(anchor['path'])) == anchor['identity']
+                   for anchor in self.record['inode_anchors'] if anchor['source'] in sources)
 
     def move(self, step, source, destination):
         try:
@@ -524,7 +578,8 @@ class Transaction:
                               details={'conflicts': self.record['conflicts']})
         for watched in self.record.get('watched', []):
             try:
-                unchanged = parent_identity(Path(watched['path'])) == watched['parent_identity']
+                unchanged = (parent_identity(Path(watched['path'])) == watched['parent_identity'] and
+                             self.anchors_intact(watched['path']))
             except OSError:
                 unchanged = False
             if not unchanged:

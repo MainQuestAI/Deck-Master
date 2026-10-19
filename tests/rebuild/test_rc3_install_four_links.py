@@ -50,12 +50,12 @@ def _snapshot(prefix, host):
                         path == host / '.deck-master-registration.lock' or
                         (path.parent == prefix / '.deck-master' and
                          re.fullmatch(r'\.deck-master-pending-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(before|after)', path.name)) or
-                        re.fullmatch(r'\.deck-master-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}-[0-9]+\.(before|after)', path.name)):
+                        re.fullmatch(r'\.deck-master-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}-[0-9]+\.(before|after|witness)', path.name)):
                     continue
                 if path == prefix / '.deck-master/bin' and not (path / 'deck-master').exists():
                     # A new parent may be retained after an interrupted prepare;
                     # prove it contains only this installer's UUID preparations.
-                    assert all(re.fullmatch(r'\.deck-master-[0-9a-f-]{36}-[0-9]+\.after', item.name)
+                    assert all(re.fullmatch(r'\.deck-master-[0-9a-f-]{36}-[0-9]+\.(after|witness)', item.name)
                                for item in path.iterdir())
                     continue
                 if path.is_symlink():

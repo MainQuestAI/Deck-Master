@@ -300,6 +300,10 @@ def test_external_replacement_is_preserved_and_compensates_only_owned_paths(layo
     prefix, host = layout
     ident = str(uuid.uuid4())
     kill_at(prefix, host, point='after_action', name='deck-content', ident=ident)
+    pending = load(prefix, ident)
+    published = next(step for step in pending['steps'] if Path(step['path']).name == 'deck-content')
+    assert published['step_state'] == 'ready'  # Filesystem action preceded its state write.
+    assert journal.snapshot(host / 'deck-content') == published['expected_after']
     if mutation == 'parent':
         original = host.with_name('preserved-original-parent')
         host.rename(original)
@@ -310,12 +314,17 @@ def test_external_replacement_is_preserved_and_compensates_only_owned_paths(layo
         foreign = (root(prefix) / 'bin/deck-master' if mutation == 'launcher' else
                    host / ('deck-master' if mutation == 'unchanged-link' else 'deck-content'))
         previous = foreign.read_bytes() if mutation == 'launcher' else os.readlink(foreign)
+        original_identity = journal.snapshot(foreign)
+        witnesses = [Path(row['path']) for row in pending['inode_anchors'] if row['identity'] == original_identity]
+        assert witnesses and all(journal.snapshot(path) == original_identity for path in witnesses)
         foreign.unlink()
+        assert all(journal.snapshot(path) == original_identity for path in witnesses)
         if mutation == 'launcher':
-            foreign.write_bytes(previous)  # Equal bytes still belong to a new inode.
+            foreign.write_bytes(previous)  # Witness keeps the original inode allocated.
             foreign.chmod(0o755)
         else:
             foreign.symlink_to(previous)  # Same target is insufficient ownership.
+        assert foreign.lstat().st_ino != original_identity['ino']
     preserved = journal.snapshot(foreign)
     with pytest.raises(InstallationTransactionError) as caught:
         install.activate(prefix, 'new', transaction_id=ident)
@@ -331,6 +340,87 @@ def test_external_replacement_is_preserved_and_compensates_only_owned_paths(layo
     # the conflict record are the recovery evidence for this case.
     assert any(row['observed'] for row in record['steps'])
     assert current(prefix) == 'releases/old'  # Still-owned pointer compensation.
+
+
+@pytest.mark.parametrize('mutation', ['link', 'launcher', 'unchanged-link'])
+@pytest.mark.parametrize('damage', ['missing', 'replaced'])
+def test_lost_inode_witness_refuses_even_simulated_recycled_inode(layout, monkeypatch, mutation, damage):
+    prefix, host = layout
+    ident = str(uuid.uuid4())
+    kill_at(prefix, host, point='after_action', name='deck-content', ident=ident)
+    record = load(prefix, ident)
+    foreign = (root(prefix) / 'bin/deck-master' if mutation == 'launcher' else
+               host / ('deck-master' if mutation == 'unchanged-link' else 'deck-content'))
+    original = journal.snapshot(foreign)
+    anchor = Path(next(row for row in record['inode_anchors'] if row['identity'] == original)['path'])
+    previous = foreign.read_bytes() if mutation == 'launcher' else os.readlink(foreign)
+    foreign.unlink()
+    if mutation == 'launcher':
+        foreign.write_bytes(previous)
+        foreign.chmod(0o755)
+    else:
+        foreign.symlink_to(previous)
+    if damage == 'replaced':
+        anchor.rename(anchor.with_suffix('.preserved-witness'))
+        if mutation == 'launcher':
+            anchor.write_bytes(previous)
+            anchor.chmod(0o755)
+        else:
+            anchor.symlink_to(previous)
+        assert journal.snapshot(anchor) != original
+    else:
+        anchor.unlink()
+    real_snapshot = journal.snapshot
+    foreign_identity = real_snapshot(foreign)
+    anchor_identity = real_snapshot(anchor)
+
+    def recycled_snapshot(path):
+        actual = real_snapshot(path)
+        if path == foreign:
+            # Deterministically reproduce the indistinguishable dev/ino/bytes
+            # observation that occurred on the CI filesystem after recreation.
+            return {**actual, 'dev': original['dev'], 'ino': original['ino']}
+        return actual
+
+    monkeypatch.setattr(journal, 'snapshot', recycled_snapshot)
+    assert journal.snapshot(foreign) == original
+    with pytest.raises(InstallationTransactionError) as caught:
+        install.activate(prefix, 'new', transaction_id=ident)
+    assert caught.value.error_code == 'installation_recovery_conflict'
+    assert caught.value.transaction_state == 'recovery_conflict'
+    assert real_snapshot(foreign) == foreign_identity
+    assert real_snapshot(anchor) == anchor_identity
+    assert load(prefix, ident)['state'] == 'recovery_conflict'
+    assert current(prefix) == 'releases/old'
+
+
+def test_unfinished_record_without_inode_witnesses_is_preserved_and_refused(layout):
+    prefix, host = layout
+    ident = str(uuid.uuid4())
+    kill_at(prefix, host, point='prepared', ident=ident)
+    record = load(prefix, ident)
+    del record['inode_anchors']
+    path = journal.record_path(root(prefix), ident)
+    path.write_text(json.dumps(record))
+    preserved = path.read_bytes()
+    before = managed(prefix, host)
+    with pytest.raises(InstallationTransactionError) as caught:
+        install.activate(prefix, 'new', transaction_id=ident)
+    assert caught.value.error_code == 'installation_recovery_unavailable'
+    assert path.read_bytes() == preserved and managed(prefix, host) == before
+
+
+def test_historical_terminal_record_without_inode_witnesses_still_replays(layout):
+    prefix, host = layout
+    result = install.activate(prefix, 'new')
+    record = load(prefix, result['transaction_id'])
+    del record['inode_anchors']
+    path = journal.record_path(root(prefix), result['transaction_id'])
+    path.write_text(json.dumps(record))
+    before = managed(prefix, host)
+    replay = install.activate(prefix, 'new', transaction_id=result['transaction_id'])
+    assert replay['recovered'] and replay['transaction_state'] == 'completed'
+    assert managed(prefix, host) == before
 
 
 @pytest.mark.parametrize('changed', ['target', 'verb', 'host', 'registration'])

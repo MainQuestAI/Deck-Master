@@ -522,6 +522,8 @@ def _prepare_activation(root, verb, release_id, register_host, host, ident, pare
     plan.record['watched'] = [
         {'path': str(path), 'before': journal.snapshot(path), 'parent_identity': journal.parent_identity(path)}
         for path in dict.fromkeys(watched)]
+    for watched_path in plan.record['watched']:
+        plan.anchor(Path(watched_path['path']), watched_path['before'])
     result = {'status': 'already_active' if old == target else 'activated', 'release_id': release_id,
               'cli_active': True, 'migration': migration}
     if old != target:
@@ -639,7 +641,8 @@ def _run_activation(root, record, recovered):
         for watched in record.get('watched', []):
             path = Path(watched['path'])
             if str(path) not in finals and (journal.snapshot(path) != watched['before'] or
-                                           journal.parent_identity(path) != watched['parent_identity']):
+                                           journal.parent_identity(path) != watched['parent_identity'] or
+                                           not tx.anchors_intact(str(path))):
                 raise InstallationTransactionError('installation_recovery_conflict', 'unchanged managed path changed externally',
                                                    transaction_id=record['transaction_id'], state=record['state'],
                                                    details={'path': str(path), 'expected': watched['before'],
