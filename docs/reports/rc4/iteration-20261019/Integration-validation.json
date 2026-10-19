@@ -168,6 +168,25 @@
       "source_sha": "001c8f101e07cab1b230e0745a6f0b17fb54882e",
       "original_assertions_retained": true,
       "evidence": "N2-install-recovery-evidence.json"
+    },
+    {
+      "scope": "four observed browser historical-fixture setup errors",
+      "original_observation": "Old bc6 browser run cancelled after four setup errors; exact local reproduction4ERROR in3.44s.",
+      "cause": "Historical non-collaboration fixtures called current new_task constructor, introducing RC4 fields into old reader data.",
+      "repair": "Explicit historical=True only on five proved old-record calls in two browser modules; helper removes new manifest/policy and freezes RC3 selector digest. Six modern UX05 calls retain default current producer behavior.",
+      "source_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "result": "All four original browser cases plus one modern default contrast5PASS in21.70s with --require-browser,0skip; pure current/historical helper contrast passes.",
+      "guards_unchanged": [
+        "UI behavior assertions",
+        "required browser flag",
+        "timeouts",
+        "current producer RC4 behavior",
+        "legacy document compatibility"
+      ],
+      "record": {
+        "locator": "external-evidence/integration-browser-setup-repair-record.json",
+        "sha256": "1eaed43285f1a353331ad1a9ceeda0df75b1bcbca3e4b85d6ef749a1f1c38f93"
+      }
     }
   ],
   "final_gate": "Live exact-head Rebuilt Core Gate at PR124 remains separate and required.",
