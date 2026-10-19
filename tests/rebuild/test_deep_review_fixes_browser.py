@@ -46,7 +46,7 @@ def project_browser(tmp_path, page_count=3, *, prepare=None, historical=False):
         pages = [store.read_object_json(entry['page']) for entry in store.load_document()['pages']]
         path = historical_snapshot(tmp_path, scenario='Old task/version reader; no current execution', pages=pages)['project']
         store = Store(path)
-        add_task(store, 'historical-completed-compose', 'compose', 'completed', '旧版本内容整理已完成；只读事实。')
+        add_task(store, 'historical-completed-compose', 'compose', 'completed', '旧版本内容整理已完成；只读事实。', historical=True)
     if prepare is not None:
         prepare(path)
     server = WorkbenchServer(path)

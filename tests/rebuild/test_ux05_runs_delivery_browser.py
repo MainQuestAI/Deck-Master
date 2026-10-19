@@ -49,13 +49,24 @@ def ux05_browser(tmp_path):
             server.stop()
 
 
-def add_task(store, task_id, kind, status, instruction):
+def add_task(store, task_id, kind, status, instruction, *, historical=False):
     doc = store.load_document()
+    compatibility = copy.deepcopy(doc.get('compatibility'))
     task = tasks_mod.new_task(task_id=task_id, operation_id=f'op-{task_id}', kind=kind, scope_pages=['p01'],
                               instruction=instruction, inputs=[], dependencies=[],
                               dispatch_revision=doc['revision_id'], produced_against=content_identity(doc), status=status)
+    if historical:
+        # Explicit old reader record; current producer defaults are RC4 facts.
+        assert doc.get('collaboration') is None
+        task.pop('method_manifest', None)
+        task.pop('content_validation_policy', None)
+        from deck_master import method_resources
+        task['method_release'] = method_resources.method_release(
+            method_resources._read_ids(method_resources.rc3_method_ids_for(task['kind'])))
     doc['tasks'].append(store.put_json_object(task))
     commit(store, doc, str(uuid.uuid4()))
+    if historical:
+        assert store.load_document().get('compatibility') == compatibility
     return task
 
 
