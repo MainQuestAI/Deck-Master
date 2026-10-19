@@ -35,7 +35,11 @@ def test_real_death_before_prepared_record_resumes_original_request(layout, poin
     prefix, host = layout
     ident = str(uuid.uuid4())
     before = managed(prefix, host)
-    kill_at(prefix, host, point=point, ident=ident, target=target)
+    # A first old-object witness is now an explicitly incomplete proof. Keep
+    # this positive at the last old witness: all frozen old inodes are pinned,
+    # even though this final witness's identity acknowledgement is not saved.
+    stop = {'path': str(host / 'deck-master')} if point == 'witness_created' else {}
+    kill_at(prefix, host, point=point, ident=ident, target=target, **stop)
     interrupted = load(prefix, ident)
     assert interrupted['state'] == 'preparing'
     assert interrupted['request']['transaction_id'] == ident
@@ -64,7 +68,7 @@ def test_preparation_exception_preserves_intent_and_same_id_can_complete(layout,
     ident = str(uuid.uuid4())
     before = managed(prefix, host)
     def interrupt(where, record, step=None):
-        if where == point:
+        if where == point and (point != 'witness_created' or step['path'] == str(host / 'deck-master')):
             raise exception('failure after actual preparation creation')
     monkeypatch.setattr(journal, 'checkpoint', interrupt)
     with pytest.raises(InstallationTransactionError) as caught:
@@ -81,7 +85,8 @@ def test_preparing_request_binding_and_known_external_artifact_are_protected(lay
     prefix, host = layout
     ident = str(uuid.uuid4())
     before = managed(prefix, host)
-    kill_at(prefix, host, point='witness_created', ident=ident)
+    # Reach confirmed old-object preparations before replacing one externally.
+    kill_at(prefix, host, point='preparation_created', ident=ident)
     record = load(prefix, ident)
     record_bytes = journal.record_path(root(prefix), ident).read_bytes()
     with pytest.raises(InstallationTransactionError) as changed:

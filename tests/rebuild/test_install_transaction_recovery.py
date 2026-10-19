@@ -88,7 +88,8 @@ def checkpoint(point, record, step=None):
     name=Path(step['path']).name if step else None
     if p.get('interrupt_first') and point=='after_action' and name=='deck-review' and record['state']=='applying':
         raise KeyboardInterrupt('first interruption requests compensation')
-    if point==p['point'] and (p.get('name') is None or name==p['name']):
+    if (point==p['point'] and (p.get('name') is None or name==p['name']) and
+            (p.get('path') is None or (step is not None and step['path']==p['path']))):
         os._exit(91)
 journal.checkpoint=checkpoint
 kwargs={'register_host':p.get('register_host',True)}

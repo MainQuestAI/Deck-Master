@@ -531,6 +531,11 @@ def _prepare_activation(root, verb, release_id, register_host, host, ident, pare
         plan.record['preparation_history'] = [*preparation.get('preparation_history', []), {
             'preparation_id': preparation['preparation_id'], 'preparations': preparation['preparations']}]
     plan.begin()  # Freeze request and old state before any .after/.witness creation.
+    # Every existing managed inode must be pinned before replacement preparation
+    # can be recovered. Death during this pass preserves an incomplete proof;
+    # matching dev/inode/target alone cannot establish ownership on retry.
+    for watched_path in plan.record['watched']:
+        plan.anchor(Path(watched_path['path']), watched_path['before'])
     if migration['moved']:
         plan.add('move', Path(migration['moved']['from']), destination=Path(migration['moved']['to']))
     for name in migration['removed_links']:
@@ -550,8 +555,6 @@ def _prepare_activation(root, verb, release_id, register_host, host, ident, pare
                     plan.add('link', path, _managed_target(root, name))
             elif before is not None:
                 plan.add('remove', path)
-    for watched_path in plan.record['watched']:
-        plan.anchor(Path(watched_path['path']), watched_path['before'])
     return plan.persist()
 
 
@@ -594,6 +597,19 @@ def _verify_transaction_target(root, record):
 
 def _resume_preparation(root, record):
     _verify_transaction_target(root, record)
+    # The frozen watched set, rather than the possibly empty/partial intent
+    # list, determines which old objects require persistent inode evidence.
+    # An unacknowledged witness can prove its inode only while it still exists;
+    # an ordinary unconfirmed .after artifact never supplies this proof.
+    witnesses = [item for item in record['preparations'] if item['kind'] == 'witness']
+    for watched in record['watched']:
+        before = watched['before']
+        if (before is not None and before['type'] in (stat.S_IFLNK, stat.S_IFREG) and
+                not any(item['expected'] == before and journal.snapshot(Path(item['path'])) == before
+                        for item in witnesses)):
+            raise InstallationTransactionError('installation_recovery_conflict', 'frozen managed path lacks a surviving preparation witness; preserve the journal and artifacts',
+                                               transaction_id=record['transaction_id'], state='preparing',
+                                               details={'path': watched['path'], 'expected': before})
     for watched in record['watched']:
         path = Path(watched['path'])
         if journal.snapshot(path) != watched['before'] or journal.parent_identity(path) != watched['parent_identity']:
