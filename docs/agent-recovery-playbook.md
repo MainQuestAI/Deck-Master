@@ -89,6 +89,23 @@ without creating a second allowance or erasing the earlier observation.
 
 ## Review Blocked
 
+For a full-deck/edit manuscript waiting for independent content review, use the
+same installation's `deck-master review native --project <dir>` or Studio's
+“独立审阅当前内容”. It runs a fresh read-only native Codex session using an
+existing ChatGPT login, supplies the frozen complete packet and methods, then
+accepts only the directly observed completion through the standard bound
+receipt receiver. No API key, imported JSON, permanent issuer permission, or
+policy downgrade is created. Read the actual findings before continuing.
+The command's success means the review was recorded, not that it passed.
+Committed receipts remain usable by a later ordinary `continue` process.
+
+`needs_reviewer` still means the native client/login/transport is unavailable.
+An interrupted `running` Task is not retried automatically: inspect it, then
+explicitly cancel that Task before a new run. A failed Task preserves failure;
+only a new explicit run calls the model again. `basis_changed`/stale inputs
+require normal `continue` retirement/reissue. Missing professional/human review
+is a separate policy requirement and is not satisfied by native content review.
+
 - Detect by: `final-readiness` reports `review_status != "pass"`, or
   `export --purpose delivery` refuses with the unresolved dimensions list.
 - A `continue` result with `next_action == "repair_page_visual"` addresses only

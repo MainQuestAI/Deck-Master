@@ -1,6 +1,7 @@
 """SDK bridge to registered, authenticated review-event providers.
 
-No provider ships with the runtime. Registration is trusted service bootstrap,
+The normal native-review runner binds its owned execution temporarily.
+Other registration is trusted service bootstrap,
 not a CLI option or JSON input. A provider must authenticate its own transport
 (or an external issuer's signature) before returning claims. A trusted Host
 controller directly observing native subagent executions is a supported
