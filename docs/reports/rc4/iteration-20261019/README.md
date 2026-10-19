@@ -6,17 +6,17 @@ The [70-AC execution ledger](execution-ledger.json) is the sole acceptance regis
 
 ## Designated review follow-up
 
-The designated review of head `53021ac8` requested changes for preparation-stage recovery, symlink Host directory compatibility, stale-coverage fallback and stale ledger summaries. The [review repair record](PR124-review-resolution.md) and sole ledger preserve each real counterexample, affected AC reassessment and targeted result. The earlier inode P1 remains closed. All four targeted repairs have passing actual evidence and a verified3167 clean build. The later product topbar-reload repair also has a new clean0c08 build and fresh installation proof; final new-head CI remains a separate required gate. The prior001c8f10 package is superseded by these P2 repairs.
+The designated review of head `53021ac8` requested changes for preparation-stage recovery, symlink Host directory compatibility, stale-coverage fallback and stale ledger summaries. The [review repair record](PR124-review-resolution.md) and sole ledger preserve each real counterexample, affected AC reassessment and targeted result. The earlier inode P1 remains closed. The second review of87bbccab explicitly closed these four findings and found no new topbar blocker. Its two new installation P2 findings and low-cost traceability P3 are separately repaired in [the second-review record](PR124-review2-resolution.md); original closed findings stay closed. Final new-head CI remains a separate required gate. The prior001c8f10 package is superseded by these P2 repairs.
 
 ## Candidate and distribution identity
 
-- Runtime and packaged-method source: `0c08aa599a3e56651fd3522967368f4a5dd374b2`, built from a clean worktree as `1.0.0rc4` after the actual control-reload product fix.
-- Wheel: `deck_master-1.0.0rc4-py3-none-any.whl`, SHA256 `cdb99975fa9224e9d2189822e032a11e06c878cd1875c5628d48bf6301042009`.
-- Sdist: `deck_master-1.0.0rc4.tar.gz`, SHA256 `c91360fed3247ef3000845224ceb722a10b55b15fa6ab97db77daccb85807f47`.
-- Release manifest identity: `0c08aa599a3e-cdb99975fa92`. Later evidence-only changes retain these Runtime/Skill/build input bytes; the final exact PR head/tree and complete CI are recorded in the handoff/checks.
-- Earlier fe19205c/001c8f10/3167 builds retain their original provenance and are superseded. No tag or GitHub Release was created.
+- Runtime and packaged-method source: `158c8b3e944a11fc04629e935e089bfb5a7f66bd`, built from a clean worktree as `1.0.0rc4` after the second-review witness and historical-request repairs.
+- Wheel: `deck_master-1.0.0rc4-py3-none-any.whl`, SHA256 `9ee7ef6359b3d462cb24d65505b9da598f05c644cd57a56afdfc38b0e1d9a8d0`.
+- Sdist: `deck_master-1.0.0rc4.tar.gz`, SHA256 `4abc6c7025e1702494df7425a323acd77f4338bc84a5c1b12df1d6334a521dbc`.
+- Release manifest identity: `158c8b3e944a-9ee7ef6359b3`. Later evidence-only changes retain these Runtime/Skill/build input bytes; the final exact PR head/tree and complete CI are recorded in the handoff/checks.
+- Earlier fe19205c/001c8f10/3167/0c08 builds retain their original provenance and are superseded. No tag or GitHub Release was created.
 
-[Installed-resource-identity.json](Installed-resource-identity.json) verifies the new wheel in a fresh isolated prefix outside the checkout: actual version and metadata agree, 23 canonical resources/four Skills,69schemas,275package members,90source modules and I05 are verified. The changed `project.js` source, wheel and installed bytes are exactly equal (SHA256 `e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7`). Dependencies use observed system site packages; Deck Master loads from the new installed package. The N6 source execution retains its original identity. [Actual installed control-reload browser validation](Installed-control-reload-browser.json) passes all six policy/recovery cases with47 loaded Runtime files from this wheel and no checkout borrowing.
+[Installed-resource-identity.json](Installed-resource-identity.json) verifies the new wheel in a fresh isolated prefix outside the checkout: actual version and metadata agree, 23 canonical resources/four Skills,69schemas,275package members,90source modules and I05 are verified. The changed `project.js` source, wheel and installed bytes are exactly equal (SHA256 `e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7`). Dependencies use observed system site packages; Deck Master loads from the new installed package. The N6 source execution retains its original identity. The retained [six-case installed control-reload browser proof](Installed-control-reload-browser.json) belongs to the earlier0c08 wheel and keeps that identity. New installed N2 recovery evidence is separate; final complete CI also exercises browser/offline/installed UI on the new head.
 
 ## Behavior and compatibility
 
@@ -28,9 +28,9 @@ The designated review of head `53021ac8` requested changes for preparation-stage
 
 ## Verification and remaining gate
 
-Focused results overlap and must not be summed: N2 290 passed plus 47 real process-death cases; N3 final review/budget regression 118 passed; N4 original history/recovery166 passed, review-affected169 passed, context/entry 64 passed, cache-disabled shared recovery 101 passed; N5 72 passed. Source Ruff and whitespace checks passed. Original Spec payload hashes remain 19/19 unchanged.
+Focused results overlap and must not be summed: second-review N2 297 passed with no skips (the original290 collection plus7 new cases); second-review ledger9 passed. Original N2 evidence retains its290 passed plus47 real process-death cases; N3 final review/budget regression 118 passed; N4 original history/recovery166 passed, review-affected169 passed, context/entry 64 passed, cache-disabled shared recovery 101 passed; N5 72 passed. Source Ruff and whitespace checks passed. Original Spec payload hashes remain 19/19 unchanged.
 
-The retained bc6bd55a exact-head CI failed three installation ownership cases and four shallow-checkout historical fixture setups. Same-filesystem persistent inode witnesses repair the product bug; CI now fetches the single fixed RC3 baseline for genuine old-writer tests. The original assertions, failed logs and repair evidence are retained.
+The retained bc6bd55a exact-head CI failed three installation ownership cases and four shallow-checkout historical fixture setups. Same-filesystem persistent inode witnesses repair the product bug; CI fetches the fixed RC3 baseline for genuine old-writer tests; the new historical installer tests additionally fetch only their two exact fixed commits. The original assertions, failed logs and repair evidence are retained.
 
 A later review of the cancelled browser log exposed four setup errors. Explicit old-record fixture creation now retains historical semantics; all four affected browser cases plus a modern producer contrast passed with the required-browser flag, original UI assertions and timeouts unchanged. Those historical fixture repairs retained Runtime/Skill/build-input bytes. The later control-reload product fix is separately recorded in [its reproduction and regression evidence](Integration-control-reload-repair.json) and has a new clean build and fresh isolated installation proof.
 

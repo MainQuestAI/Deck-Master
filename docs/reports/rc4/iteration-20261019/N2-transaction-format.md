@@ -60,8 +60,13 @@ state and each `.after`/`.witness` intent are saved before creating the artifact
 its verified identity is saved afterward. A process exit between creation and
 identity persistence leaves a recoverable request rather than an unrecorded
 file collision. The original ID resumes after checking target resources, old
-managed state and all already-proven preparation identities. Unproven residuals
-remain untouched and listed in `preparation_history`; a fresh `preparation_id`
+managed state and all already-proven preparation identities. Every witness,
+including one with acknowledgement `identity=null`, must still match its frozen
+`expected` inode identity: it keeps the old managed inode allocated. A missing
+or replaced witness is a recovery conflict before any namespace is rebuilt;
+neither a matching target nor a recycled live inode supplies the missing proof.
+Ordinary unconfirmed `.after` residuals remain untouched and listed in
+`preparation_history`; a fresh `preparation_id`
 namespace prevents adopting or deleting them based only on a filename/target.
 The request UUID stays fixed. New preparations never restart formal actions.
 An interruption in this phase reports `preparing`; retry the original request.
@@ -82,6 +87,11 @@ Existing `skill_link`/`skill_links` success fields keep the logical access path.
 Terminal receipts remain historical and do not acquire a new alias-identity
 requirement. Previous prepared records without these optional new fields still
 use their frozen parent proof and request; they are not relabeled as preparing.
+For these actual old records, request matching retains the original logical
+Host path. A different logical Host request is refused even if both aliases
+resolve to the same real directory. New records keep their canonical-root
+binding. Matching a request is separate from proving its frozen parents and
+action ownership; replay does not normalize or rewrite the old journal.
 
 All transaction backup, publish, unpublish and restoration renames use one
 atomic no-replace operation with a pinned adjacent parent directory descriptor.
@@ -186,7 +196,7 @@ They verify actual pointer/link/launcher inode, bytes, mode and durable state,
 including action-before-log windows and compensation dying again. The broader
 resource-inventory regression retains strict installed/wheel protections.
 
-Current focused result: **290 passed, 0 failed/errors/skips** in
+Original pre-second-review focused result: **290 passed, 0 failed/errors/skips** in
 `N2-focused-junit.xml`. `N2-install-recovery-evidence.json` records source hashes,
 the exact command, twelve AC-to-test mappings checked against that JUnit, and
 47 separately collected child-process exits: 25 forward, 16 retirement,
@@ -214,3 +224,10 @@ This evidence does not substitute for installed-wheel/renderer release gates,
 actual power-loss testing, user HOME migration, loaded user Skills, or the
 ability of an old binary to write a project whose writer floor was raised. N2
 never reads or lowers a project's writer floor.
+
+The second-review preparation-witness/request fixes have297 source passes,
+47 actual child91 windows (42completed/5rolled_back), and242 real new-wheel
+installed passes with candidate/historical import identities kept separate.
+See [second-review evidence](N2-review2-evidence.json) and
+[the new installed regression](Installed-review2-N2.json); these retain the
+original failure history and do not relabel the earlier290/build evidence.

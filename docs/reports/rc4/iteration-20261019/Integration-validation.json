@@ -372,5 +372,26 @@
       "separate_from_designated_four_findings_and_style_test_sync": true,
       "record": "Integration-control-reload-repair.json"
     }
-  ]
+  ],
+  "second_designated_review": {
+    "reviewed_head": "87bbccab9c57af0e5bb981b8916c11e0d929462e",
+    "source_sha": "158c8b3e944a11fc04629e935e089bfb5a7f66bd",
+    "record": "PR124-review2-resolution.md",
+    "source297": "PASS",
+    "death47": "PASS42completed5rolled_back",
+    "installed242": "PASS",
+    "ledger9": "PASS",
+    "local_extra_packaging": {
+      "result": "STOPPED_WITH_FAILURES",
+      "passed": 249,
+      "failed": 3,
+      "setup_errors": 4,
+      "exit_code": 2,
+      "cause": "DNS Temporary failure in name resolution downloading setuptools>=77 and candidate dependencies",
+      "counted_as_pass": false,
+      "log": "raw-evidence/review2/install/n2-review2-focused.log",
+      "complete_final_ci_required": true
+    },
+    "new_exact_head_ci": "NOT_RUN_AT_ASSEMBLY"
+  }
 }
