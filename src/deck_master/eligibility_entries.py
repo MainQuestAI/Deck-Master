@@ -160,6 +160,7 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 
 
 PUBLIC_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
+    "native_review.run": ("dispatch.host_task", "native_review.run → content_review dispatch/service.task_start/service.accept_result; exact scope and current control before execution/adoption", None),
     "legacy.import_legacy": ("create", "legacy.import_legacy: canonical private create/import normalization; inspect_only remains a source read", None),
     "legacy.looks_like_legacy_run": (None, "-", READ_REASONS["read_model"]),
     "legacy.snapshot": (None, "-", READ_REASONS["read_model"]),
@@ -269,6 +270,7 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "eligibility": (None, "-", READ_REASONS["read_analysis"]),
     "review evaluate": (None, "-", READ_REASONS["external_report"]),
     "review import": ("review.import", "review_import.import_report", None),
+    "review native": ("dispatch.host_task", "native_review.run → content_review dispatch/service.task_start/service.accept_result", None),
     # -- creation and routing
     "create": ("create", "cli.create → service.create (routing gate)", None),
     "continue": ("continue_project", "cli.continue → service.continue_project (decision card)", None),
@@ -403,6 +405,7 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "POST /api/projects/{project_id}/continue": ("continue_project", "collaboration_api.invoke → service.continue_project; every real dispatch consumes the shared core gate", None),
     "GET /api/projects/{project_id}/delivery-eligibility": (None, "-", READ_REASONS["read_model"]),
     "POST /api/reviews/evaluate": (None, "-", READ_REASONS["external_report"]),
+    "/api/reviews/native": ("dispatch.host_task", "web.do_POST → native_review.run → gated dispatch/claim/adoption", None),
     # Launcher writes only its registry for register/remove/open. The explicit
     # create/sample endpoints additionally invoke canonical project creation.
     "/api/projects": (None, "-", READ_REASONS["read_model"]),
@@ -655,7 +658,7 @@ def public_surface() -> set[str]:
     """Other canonical business entries and their explicit nonbusiness helpers."""
     import inspect
     found = set()
-    for module_name in ('legacy', 'registry', 'samples', 'project_initialization'):
+    for module_name in ('legacy', 'registry', 'samples', 'project_initialization', 'native_review'):
         module = importlib.import_module(f'deck_master.{module_name}')
         for name, value in vars(module).items():
             if not name.startswith('_') and inspect.isfunction(value) and value.__module__ == module.__name__:

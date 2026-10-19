@@ -240,7 +240,13 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': {'code': 'unsupported_project_format', 'message': 'this action requires a workbench.v3 project'}}, 409)
                     return
             from . import editing, service
-            if self.path in ('/api/drafts/save', '/api/drafts/import', '/api/drafts/recovery', '/api/ui-state'):
+            if self.path == '/api/reviews/native':
+                from .native_review import run
+                if set(data) - {'task_id'} or ('task_id' in data and
+                        (not isinstance(data['task_id'], str) or not data['task_id'])):
+                    raise ModelError('native_review', 'provide only an optional nonempty task_id')
+                result = run(self.store.project_root, task_id=data.get('task_id'))
+            elif self.path in ('/api/drafts/save', '/api/drafts/import', '/api/drafts/recovery', '/api/ui-state'):
                 from . import ui_journal
                 action = {'/api/drafts/save': ui_journal.save, '/api/drafts/import': ui_journal.import_recovery,
                           '/api/drafts/recovery': ui_journal.recovery_file, '/api/ui-state': ui_journal.save_position}[self.path]
@@ -321,7 +327,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 payload, status = input_update_error(exc)
                 self._send_json(payload, status)
                 return
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/icons/', '/api/candidate-preview/', '/api/content/', '/api/export', '/api/history/')):
+            if self.path == '/api/reviews/native' and isinstance(exc, TypedServiceError):
+                self._send_json({'error': {'code': exc.error_code, 'message': exc.detail,
+                                          'field': exc.path, 'next_action': 'inspect current review task and native client status'}},
+                                409 if exc.exit_code == 5 else 422)
+                return
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/icons/', '/api/candidate-preview/', '/api/content/', '/api/export', '/api/history/', '/api/reviews/native')):
                 self._send_error(exc)
                 return
             from .store import ConflictError

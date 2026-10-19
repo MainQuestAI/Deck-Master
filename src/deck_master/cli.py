@@ -180,6 +180,9 @@ def build_parser() -> argparse.ArgumentParser:
     report_import.add_argument("--input", required=True)
     report_import.add_argument("--base-revision")
     report_import.add_argument("--operation-id")
+    native = review_sub.add_parser("native", help="Run an actual read-only native independent content review")
+    native.add_argument("--project", required=True)
+    native.add_argument("--task-id")
 
     doctor = sub.add_parser("doctor")
     doctor.add_argument("--step", choices=("compose","blueprint","compile","render","view","export"), default="view")
@@ -490,6 +493,10 @@ def main(argv: list[str] | None = None) -> int:
                 return _emit(collector.envelope({'methods': collector.methods(entries), 'tasks': []}))
             items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
+        if options.command == "review" and options.review_command == "native":
+            from .native_review import run
+            result = run(options.project, task_id=options.task_id)
+            return _emit_and_exit(result, 3) if result["status"] == "running" else _emit(result)
         if options.command in ("collaboration", "eligibility", "review"):
             from .collaboration_api import invoke, error_response
             try:

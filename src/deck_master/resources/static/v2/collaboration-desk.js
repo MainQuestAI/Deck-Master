@@ -191,6 +191,8 @@ export async function requestForm(app, {source = null, transition = null} = {}) 
 
 function stateDetails(app) {
   const state=app.info.collaboration, request=state?.request, completion=app.info.completion;
+  const nativeReviewNeeded=(state?.blocking_cards||[]).some(card=>(card.decision?.reason_codes||[])
+    .some(code=>['needs_reviewer','preproduction_blocked'].includes(code)));
   const body=el('div',{class:'stack'},el('p',{},'下面显示当前控制事实。正在阅读的历史稿和固定比较不会随控制变化而替换。'),
     scopeView(app,request?.scope),
     request?.pause_reason&&el('p',{class:'field-error'},'暂停原因：'+request.pause_reason),
@@ -198,6 +200,7 @@ function stateDetails(app) {
       el('p',{},'约定产物：'+(contentIntents[completion.content_intent]||intents[completion.intent]||'见当前请求')),
       completion.responsible_role&&el('p',{},'下一责任：'+(roles[completion.responsible_role]||completion.responsible_role)),
       completion.next_action&&el('p',{},'下一步：'+nextAction(completion.next_action,completion.state==='needs_reviewer'?['needs_reviewer']:[])),details('产物、检查与缺口',completion)),
+    nativeReviewNeeded&&app.summary.pages.length>0&&['full_deck','edit'].includes(request?.intent)&&!request?.closed&&!request?.paused&&!app.info.sample?.readonly&&button('独立审阅当前内容',()=>{document.querySelector('#modal').close();nativeReviewForm(app);}),
     el('section',{class:'stack'},el('h3',{},'决定与后续影响'),(state?.decisions||[]).length?(state.decisions.map(decision=>el('article',{class:'collaboration-record'},
       el('strong',{},topics[decision.topic]||'决定'),el('p',{},[dispositions[decision.disposition],dispositions[decision.status]].filter(Boolean).join(' · ')||'状态未记录'),
       el('p',{},typeof decision.value==='string'?decision.value:decision.rationale||decision.reason||'查看具体范围与依据'),scopeView(app,decision.scope),details('决定依据与影响',decision)))):el('p',{class:'muted'},'尚未记录可用决定；旧文本不会自动变成已确认。')),
@@ -216,6 +219,23 @@ function stateDetails(app) {
     app.health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',()=>{document.querySelector('#modal').close();externalReviewForm(app);}),
     details('当前控制与请求身份',{control_revision_id:app.info.control_revision_id,reading_revision_id:app.route.revision,...state}));
   modal('本次工作与范围',body);
+}
+
+function nativeReviewForm(app) {
+  const status=el('div',{role:'status',class:'stack'});
+  const body=el('div',{class:'stack'},el('p',{},'使用本机已登录的 Codex 新建独立只读会话，审阅当前完整稿件与来源。实际审阅结束后保存判断；有待修问题时继续修稿。'),
+    el('p',{class:'muted'},'这会调用现有 ChatGPT 登录的模型。审阅期间可以查看稿件；关闭窗口后请先核对任务状态，避免重复调用。'),status);
+  const start=button('开始独立审阅',async()=>{
+    start.disabled=true;status.replaceChildren(el('p',{},'独立审阅进行中，请等待实际结果。'));
+    try {
+      const result=await post('/api/reviews/native',{});
+      status.replaceChildren(el('p',{},result.status==='running'?'已有审阅执行，请核对任务状态。':
+        result.preproduction?.status==='pass'?'当前内容前审已通过，可按现有授权继续制作。':'审阅已完成，请处理报告中的具体问题。'),details('实际审阅结果',result),
+        button('重新读取当前状态',()=>{dialog.close();app.loadRoute({...app.route});}));
+      app.root.dispatchEvent(new CustomEvent('business-state-changed'));
+    } catch(error) {status.replaceChildren(admissionView(app,error));}
+  },true);
+  const dialog=modal('独立审阅当前内容',body,[start]);
 }
 
 export function budgetForm(app, {changePlanId=null}={}) {

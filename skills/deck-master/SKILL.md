@@ -28,6 +28,9 @@ description: 从任务、材料或已有项目协调内容、设计、制作和�
 
 本次 completion 已完成时返回其 outputs/checks；needs_reviewer/awaiting_decision 返回可读稿、具体缺口及下一责任。full_deck 交付按准备附上的实际文件执行 eligibility/handoff-check，工程与专业/人类/桌面状态分列。不得把旧 Desktop 记录称为本轮实际桌面已验。
 
+完整制作或局改在内容前审返回 needs_reviewer 时，正常安装可用同一发布版执行
+`review native --project <dir>`（已有待执行前审 Task 可加 `--task-id`）。此操作通过本机已登录 ChatGPT 的 Codex 原生客户端创建新的只读独立会话，发送完整固定稿件、材料及 Task 冻结方法，直接观察实际完成后接纳标准审查回执。它不会安装长期签发权限，也不接受调用方 JSON 作为完成证明。完成后读取实际前审结果：有问题则修稿并重新审阅，通过才按既有授权继续。没有 native 客户端、登录不可用或执行中断时保留 needs_reviewer/失败事实，不临时配置 API key，不自签通过；running 时先核对已有 Task，不能重复调用。此入口不替代明确适用的人类专业复核，也不把 content_only 扩大为整套生产。
+
 ## 同一发布版与方法
 
 先读取本次 Host 入口路径，不从 PATH 或 HOME 猜另一套安装。把 `skill_entry` 设为实际加载的 SKILL.md 路径（保留未解析的 Host 路径，升级/回退后重新解析），执行：
