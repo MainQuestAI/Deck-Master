@@ -43,7 +43,7 @@
 | AC | 建议与证据 | 仍需处理 |
 |---|---|---|
 | AC-N5-01 | 建议 PASS：当前入口/继承顺序、六卡、四职责与实际环境检测可导航。 | 最终候选入口快照由集成确认。 |
-| AC-N5-02 | 建议 BLOCKED：Quick Start 顺序/Task envelope 与实际 N6 阶段一致，但 [N6](N6-evidence.md) 尚未完成 Runtime Page 采用、返修及适用受信独立前审。 | 保留无新增授权/能力通道的窄阻断；不以 parser、fixture 或完整未采用稿冒充正常路径完成。 |
+| AC-N5-02 | PASS（实际正常路径证据）：Quick Start 顺序/Task envelope 与实际 N6 阶段一致；用户真实方向记录后，Narrative/Plan/六页 v2 由 Runtime 接纳，content_only continue 返回 completed。 | 实际路径见 [N6](N6-evidence.md) 与 [采用证据](N6-runtime-adoption.json)。本地真实效果/可信 Host receipt 验收单列延期，不虚标专业通过，也不将额外前审作为 content_only 门槛。 |
 | AC-N5-03 | 建议 PASS：六项恢复/读取/兼容说明已按 N1–N4 实现与 focused evidence 核对；N5 72 项含 frozen basis/v2/职责实际回归。 | 根 Owner 最终复核 N1/N2/N3/N4 收口证据。 |
 | AC-N5-04 | 建议 PASS：处置表、历史 bytes、原 19 payload 和产品声明保留原因均可核对。 | 不强迫完成可选归档。 |
 | AC-N5-05 | 建议 PASS：原有入口和 canonical refs 各守职责；四 Skill 无独立方法副本。 | 最终 wheel 验证另属 N5-08。 |

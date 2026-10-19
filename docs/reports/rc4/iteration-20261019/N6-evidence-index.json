@@ -202,6 +202,111 @@
       "path": "method-before/content-calibration.md",
       "bytes": 8216,
       "sha256": "a42e04f1d2ee7ccf9dac81d0fd8324ae9ac1431055e6b7aa1102f225b8c5f9ca"
+    },
+    {
+      "path": "resume_actual_direction.py",
+      "bytes": 9947,
+      "sha256": "b706cff59adbbcbf1f5acb8a56ce0c4afe8eba8e2f25d3414b8096585fb66f41"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/00-before.json",
+      "bytes": 17640,
+      "sha256": "12afe6c599b318834ac38d4af362b345410e05de827685ef5ad90e0e67d0f8f1"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/01-actual-instruction.json",
+      "bytes": 1741,
+      "sha256": "40f2d4d9062e445469c8415591f4979b16b38e4e12835f928f5ab267140a5164"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/02-decision-request.json",
+      "bytes": 2083,
+      "sha256": "fdacbfaeb9a73399afa2b8964ad23ceee35ff73bfefa821ca5e1238cd88d0b51"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/03-decision-result.json",
+      "bytes": 363,
+      "sha256": "f75719919120c12204abadd483ba19ee4d2d7aee624843cd11b8be0d9c88652f"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/04-adopt-narrative-request.json",
+      "bytes": 881,
+      "sha256": "440a52af306eb62533c001e0a94fd7e66f7201d1dd99b4cedc1eba7005aa8849"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/04-adopt-planned-plan-request.json",
+      "bytes": 876,
+      "sha256": "8c93436deea8a88e5852f8075c7b54e0499b10de6ceeeb5d7029b97745152fa6"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/05-adopt-narrative-result.json",
+      "bytes": 437,
+      "sha256": "9c839357fbee418be4024e8203995aecf583c9728bcd978ce77c96b0758da345"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/05-adopt-planned-plan-result.json",
+      "bytes": 440,
+      "sha256": "1d639d815fe8b93eed183f3cff630b0a1e4fbc5e8fba68b40811f5fefed4d870"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/06-continue-to-page-copy.json",
+      "bytes": 24704,
+      "sha256": "218cbd0a10d906f0d1cd808f86d797de7dc7b120c37190f34447183dc614905c"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/07-page-copy-task.json",
+      "bytes": 4304,
+      "sha256": "601eca56a7bf2b95e24cc455955ac705d97cc446d4e80b8fb223699b6c3130f4"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/08-page-copy-methods.json",
+      "bytes": 116508,
+      "sha256": "d5aaa4a596e6446faacd2bff320db9a2963f94fd5581a0c43a0e99f109ba0578"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/09-page-copy-start-request.json",
+      "bytes": 213,
+      "sha256": "2942c7e4fb0e8d55f819faac4d3a89514efce38b4f58cabc92765a03fe00b480"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/10-page-copy-start-result.json",
+      "bytes": 22991,
+      "sha256": "0bfa7103051a2cd1909ae5971ba8e76ad7885bffd09cf326f328e14cd288cf1b"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/11-page-copy-envelope.json",
+      "bytes": 141575,
+      "sha256": "afa5311d7cfa8295127fba9f0953c558ac94b8b56bd0eb3626e7bc720bde837b"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/12-page-copy-accept.json",
+      "bytes": 6834,
+      "sha256": "5254e0294ef05b37ffa9b3f0190fba11c680c78c0591d3cb68948c3bf0d3ace2"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/13-continue-to-review.json",
+      "bytes": 2706,
+      "sha256": "b2a4d3ee5068edd10ca10ea6584272448a0d4ebcda3ae635d000a9bef11d6896"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/14-after.json",
+      "bytes": 21309,
+      "sha256": "3b0dbd1e52ae523ab5c54869c7c2f7590b54e43ef21135c0e7faaa6ad562c5f4"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/15-summary.json",
+      "bytes": 4913,
+      "sha256": "72974446fc7d6df41fee3ed087c6274824aa08164f57cc092a47f11d623b2fb3"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/16-explicit-preproduction-review.json",
+      "bytes": 187484,
+      "sha256": "42708f55a56c6fecdcaa16998892220472082b105132ac0366d4476b3c76ba03"
+    },
+    {
+      "path": "runtime/actual-direction-20261019/17-final-summary.json",
+      "bytes": 5545,
+      "sha256": "dfe6376b1b28de0c4cb9267d2fdff35060878b0d98ec0386509e334e1e7b03ed"
     }
   ],
   "methods": {
@@ -218,7 +323,7 @@
       "after": "887046606283bd37bec51508408adf7a4ca931341b7e59374c49c09c2b266d70"
     }
   },
-  "current_status": "awaiting_decision; complete Host v2 Page/Plan payload and actual nonauthor content recheck exist; no Runtime Page adoption/revision or trusted review receipt",
+  "current_status": "content_only/content_full Runtime completed; real direct_user direction accepted, v2 six Pages and bound Plan adopted; user local effects/trusted Host acceptance deferred",
   "candidate_basis": {
     "head": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
     "dirty": true,
@@ -245,6 +350,24 @@
       "p03",
       "p05"
     ],
-    "record": "runtime/revised-v2-mechanical-checks.json"
-  }
+    "record": "runtime/revised-v2-mechanical-checks.json",
+    "identity": "Historical pre-adoption read-only verification at the recorded earlier revision; not the current Runtime head."
+  },
+  "current_runtime": {
+    "record": "N6-runtime-adoption.json",
+    "revision": "cd2fd8310b25487389f9efff18db186c",
+    "page_copy_task_id": "7e5ca2e5f1c6",
+    "content_completion": "completed",
+    "explicit_preproduction_review": "needs_reviewer",
+    "original_outputs_preserved": true,
+    "authorization_refs_unchanged": true,
+    "review_policy_unchanged": true,
+    "actual_source_dirty": true,
+    "actual_method_source": "canonical_checkout"
+  },
+  "first_successfully_adopted_page_draft": "host/page-copy-revised-v2.payload.json",
+  "deferred_user_local": [
+    "real effects and usability acceptance",
+    "trusted Host / independent-review receipt acceptance"
+  ]
 }

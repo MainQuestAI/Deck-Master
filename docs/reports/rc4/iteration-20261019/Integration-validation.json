@@ -161,7 +161,71 @@
       "scope": "actual isolated installed M02 image probe",
       "result": "6/6 scenarios,81/81 checks,524 function observations;275 wheel members verified; zero native/model/image/actor/render calls",
       "limits": "Reused already-built wheel and isolated installed prefix. Test dependencies appended as ordinary site directory without processing editable .pth; not a new wheel build or real Frozen experiment."
+    },
+    {
+      "scope": "CI filesystem inode reuse ownership",
+      "result": "270 passed;47 actual process-death checkpoints resumed with intact inode witnesses",
+      "source_sha": "001c8f101e07cab1b230e0745a6f0b17fb54882e",
+      "original_assertions_retained": true,
+      "evidence": "N2-install-recovery-evidence.json"
     }
   ],
-  "final_gate": "Live exact-head Rebuilt Core Gate at PR124 remains separate and required."
+  "final_gate": "Live exact-head Rebuilt Core Gate at PR124 remains separate and required.",
+  "subsequent_exact_head_failure_history": [
+    {
+      "head": "bc6bd55a07b249660e6af8ab4b19a147bb2caf14",
+      "runs": [
+        39199953272,
+        39199948070
+      ],
+      "status": "FAIL",
+      "observed_causes": [
+        {
+          "kind": "product_ownership_identity",
+          "tests": [
+            "test_external_replacement_is_preserved_and_compensates_only_owned_paths[link]",
+            "test_external_replacement_is_preserved_and_compensates_only_owned_paths[launcher]",
+            "test_external_replacement_is_preserved_and_compensates_only_owned_paths[unchanged-link]"
+          ],
+          "cause": "CI filesystem reused unlinked inode immediately; equal dev/ino/type/bytes were insufficient ownership evidence",
+          "repair": "Persistent same-filesystem hardlink inode witness for prepared and existing managed symlink/regular paths; missing/replaced witness refuses recovery; original assertions retained",
+          "state": "repaired: final270PASS plus47 real process-death checkpoints"
+        },
+        {
+          "kind": "shallow_CI_checkout",
+          "count": 4,
+          "cause": "Fixed genuine RC3 baseline a08bc68c1cbbbc806205104c2bb01f3f096305f0 not present for git archive",
+          "repair": "Fetch only exact fixed baseline before unit matrix; retain real old-writer negative tests",
+          "state": "workflow fetches exact fixed baseline; no old-writer skip/fallback"
+        }
+      ],
+      "observed_unit_result": {
+        "passed": 3314,
+        "failed": 3,
+        "errors": 4,
+        "skipped": 2,
+        "deselected": 625
+      },
+      "render_result": {
+        "passed": 133,
+        "skipped": 1,
+        "deselected": 3814,
+        "status": "PASS"
+      },
+      "logs": [
+        {
+          "locator": "ci-failure-117890655881.log",
+          "sha256": "69aa15f70c58540aff988c1183cf1b928ef93d9478133346dfb95b628f6de88a"
+        },
+        {
+          "locator": "ci-failure-117890640779.log",
+          "sha256": "8dbe3f440e674ba8c9bd3428a9059227e03b54d607f911e8bb026d0690173ea4"
+        },
+        {
+          "locator": "ci-render-pr.log",
+          "sha256": "c503af2a6189d403e5a4cc865f94d6a5fd4734c8a9e1cc417f0e8a75802a8d4e"
+        }
+      ]
+    }
+  ]
 }
