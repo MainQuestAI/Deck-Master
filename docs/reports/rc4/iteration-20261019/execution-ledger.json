@@ -1,0 +1,2935 @@
+{
+  "schema_version": "deck_master_iteration_ledger.v1",
+  "document_kind": "offline_development_record",
+  "is_runtime_state": false,
+  "spec_version": "1.0",
+  "status": "PARTIAL",
+  "candidate": {
+    "baseline_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+    "implementation_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+    "tree_sha": "d54463ec964f9d6191c78c2d4f272bb6dd964cf1",
+    "actual_package_version": "1.0.0rc4",
+    "intended_package_version": "1.0.0rc4",
+    "build_artifacts": [
+      {
+        "kind": "wheel",
+        "filename": "deck_master-1.0.0rc4-py3-none-any.whl",
+        "sha256": "9df19d761a6c19c11d72915c21d8280fed51ca363a65c68c0f60976c8fbbaa7d",
+        "build_source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+        "source_dirty": false
+      },
+      {
+        "kind": "sdist",
+        "filename": "deck_master-1.0.0rc4.tar.gz",
+        "sha256": "926ec1a29db81dbc1f62fd5a7301bbc28d138af209da501faafeb99518686b36",
+        "build_source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+        "source_dirty": false
+      }
+    ],
+    "installed_instances": [
+      {
+        "evidence": "Installed-resource-identity.json",
+        "status": "PASS",
+        "actual_user_home": false,
+        "build_source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+        "wheel_sha256": "9df19d761a6c19c11d72915c21d8280fed51ca363a65c68c0f60976c8fbbaa7d",
+        "installed_N2_regression": "Installed-review3-final-N2.json",
+        "installed_N2_passed": 254,
+        "installed_UI_regression": "Integration-pressure-navigation-repair.json",
+        "installed_UI_passed": 5
+      }
+    ],
+    "build_runtime_and_skill_bytes_match_candidate": true,
+    "identity_note": "implementation_sha/tree_sha pin clean2a8bef16 product/build inputs after narrow UI contention repair. N2 proof source97 and earlier builds/N6 retain original identities; latest actual installed254/UI5 are separately bound to this wheel.",
+    "fresh_build_required": false,
+    "previous_verified_builds": [
+      {
+        "source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
+        "wheel_sha256": "93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d",
+        "sdist_sha256": "ec9bf88635226a91221c76dc4501aec302e0aa92c0d0a5536dc53a41f71f884e",
+        "disposition": "Historical verified3167 build superseded because the later product control-reload repair changes project.js."
+      },
+      {
+        "source_sha": "0c08aa599a3e56651fd3522967368f4a5dd374b2",
+        "wheel_sha256": "cdb99975fa9224e9d2189822e032a11e06c878cd1875c5628d48bf6301042009",
+        "sdist_sha256": "c91360fed3247ef3000845224ceb722a10b55b15fa6ab97db77daccb85807f47",
+        "final_head": "87bbccab9c57af0e5bb981b8916c11e0d929462e",
+        "pr_run": 39216461582,
+        "push_run": 39216455341,
+        "successful_jobs": 14,
+        "disposition": "Historical verified0c08 build and87bb CI superseded by second-review installation ownership/request repairs; original evidence keeps its identity."
+      },
+      {
+        "source_sha": "158c8b3e944a11fc04629e935e089bfb5a7f66bd",
+        "wheel_sha256": "9ee7ef6359b3d462cb24d65505b9da598f05c644cd57a56afdfc38b0e1d9a8d0",
+        "sdist_sha256": "4abc6c7025e1702494df7425a323acd77f4338bc84a5c1b12df1d6334a521dbc",
+        "final_head": "72a1bde8247ac0a1933f5e4b8bbc8496675303e9",
+        "pr_run": 39225412240,
+        "push_run": 39225406982,
+        "successful_jobs": 14,
+        "disposition": "Historical verified158 build and72a1 CI superseded by complete witness-coverage repair; original evidence retained."
+      },
+      {
+        "source_sha": "97f41626771357ff51fcfdba7a510db9299233ac",
+        "wheel_sha256": "3cf22b1ee61cf5b4e1ec93dcc8506acfea90a18ae7a872bb392abcab94cc4f67",
+        "sdist_sha256": "6356bd9a11df2ac27d60ec3d605b0527df6d5d6e466dafdf3867e3d6e739d67c",
+        "final_head": "ff59ea5ceaed3694c32fb5f9f1eb298078282523",
+        "pr_run": 39258531644,
+        "push_run": 39258524157,
+        "ci_status": "FAIL",
+        "successful_jobs": 10,
+        "failed_jobs": 4,
+        "disposition": "Clean97 build verified N2 installed254 and resource identity; wholeff59 CI failed existing browser navigation case in both runs. Preserved, superseded by narrow UI contention repair."
+      }
+    ]
+  },
+  "environment_checks": [
+    {
+      "kind": "baseline",
+      "baseline_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+      "worktree": "clean at start",
+      "python": "3.12.14",
+      "node": "24.19.0",
+      "compose": "ready",
+      "export": "ready",
+      "render": "needs_tool: rsvg-convert unavailable",
+      "github": "existing app read verified with push permission; local gh token invalid",
+      "spec_integrity": "19/19 payload hashes and manifest hash verified; package validator passed"
+    }
+  ],
+  "inherited_evidence": [
+    {
+      "kind": "baseline_only",
+      "ruff": "passed",
+      "focused_regressions": "91 passed",
+      "broad_unit": "operator interrupted: 2056 passed, 2 failed, 3 errors, 2 skipped; isolated dependency installation failed DNS",
+      "not_current_candidate_acceptance": true
+    }
+  ],
+  "execution_events": [
+    {
+      "event": "original_spec_received_and_verified",
+      "source": "authorized delegated task text, including byte-checked repair segments",
+      "manifest_sha256": "de1939ea9179e3f774ab18cb104c274c31b1f76703a1fb46350fc62111ede1fc",
+      "file_count": 20,
+      "owner": "integration"
+    },
+    {
+      "event": "model_migration_completed_at_safe_checkpoint",
+      "old_implementation_agents": "all six completed before new writers",
+      "new_agent_creation": {
+        "fork_turns": "none",
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "xhigh",
+        "roles": [
+          "recovery",
+          "install",
+          "context/history",
+          "methods",
+          "docs",
+          "quality",
+          "integration tests"
+        ]
+      },
+      "serving_metadata": "not independently exposed; creation parameters are observable, old turns not relabeled"
+    },
+    {
+      "event": "draft_pr_created_and_source_pushed",
+      "url": "https://github.com/MainQuestAI/Deck-Master/pull/124",
+      "git_push": "succeeded with existing repository transport; no auth reconfiguration",
+      "source_build_sha": "fe19205c3c7c78574d46a39dd908fed4d716750b",
+      "current_validation_sha": "505330e20c46a0333e88dc85f5d87d57da9c1f0d"
+    },
+    {
+      "event": "designated_review_repairs_and_clean_rebuild",
+      "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+      "repair_source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
+      "release_id": "3167f123487c-93ce9a2d453a",
+      "wheel_sha256": "93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d",
+      "targeted_evidence": "PR124-review-resolution.md",
+      "status": "FINAL_CI_PENDING"
+    },
+    {
+      "event": "late_full_browser_historical_fixture_repair",
+      "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+      "observed_full_browser": "489PASS/2FAIL; both failures before browser launch at legitimate writer boundary",
+      "repair": "Only historical Task construction, with original UI/read-only assertions intact",
+      "targeted_result": "3PASS actual system Chromium with explicit command-only local path adaptation",
+      "record": "Integration-browser-legacy-repair.json",
+      "runtime_and_build_inputs_changed": false,
+      "status": "FINAL_EXACT_HEAD_CI_PENDING"
+    },
+    {
+      "event": "post_review_full_browser_callback_synchronization_repair",
+      "head_with_failure": "2b6867c5b65fca170f38df9fc92b5eeacdea0c5c",
+      "pr_run": 39206780847,
+      "observed_pr_browser": "490PASS1FAIL; previous two historical import cases pass",
+      "record": "Integration-style-plan-sync-repair.json",
+      "focused_result": "Before exact race1FAIL; same nonblocking delay after4PASS; normal4 plus original full flow5PASS",
+      "runtime_or_packaged_methods_changed": false,
+      "separate_from_designated_four_P2": true,
+      "status": "FINAL_NEW_HEAD_CI_NOT_RUN_AT_ASSEMBLY"
+    },
+    {
+      "event": "post_review_topbar_control_reload_race_requires_product_fix",
+      "observed_head": "ba14becbfe6bebd3b42ba590ef6dd33a59d9ca67",
+      "failed_run": 39210635966,
+      "failed_job": 117923094434,
+      "observation": "Mobile review-policy restore froze old base_revision because topbar controls remained actionable during loadRoute. CAS correctly rejected it.",
+      "before_reproduction": "True /api/project responses delayed1s reproduce same second409 with identical old base; no fabricated response.",
+      "product_change": "Freeze topbar controlSlot with existing inert/aria-busy lifecycle; current generation finally restores it.",
+      "new_clean_build_required": true,
+      "separate_from_designated_four_P2_and_style_callback_fix": true,
+      "status": "TARGETED_PRODUCT_REGRESSION_AND_FRESH_CLEAN_INSTALLED_IDENTITY_VERIFIED_PENDING_FINAL_CI",
+      "record": "Integration-control-reload-repair.json",
+      "targeted_results": "Delayed original2PASS; original2+new4+existing4=10PASS; final new4 tail-harness4PASS",
+      "clean_source_sha": "0c08aa599a3e56651fd3522967368f4a5dd374b2",
+      "release_id": "0c08aa599a3e-cdb99975fa92",
+      "wheel_sha256": "cdb99975fa9224e9d2189822e032a11e06c878cd1875c5628d48bf6301042009",
+      "installed_targeted_browser": "6PASS0skip16.25s;47loaded Runtime modules match fresh wheel; no checkout borrowing",
+      "installed_browser_record": "Installed-control-reload-browser.json"
+    },
+    {
+      "event": "second_review_repairs_clean_build_and_installed_regression",
+      "source_sha": "158c8b3e944a11fc04629e935e089bfb5a7f66bd",
+      "source_tree": "01bc716c597523ab8c846e37bcc02acb12f816c5",
+      "package_version": "1.0.0rc4",
+      "wheel_sha256": "9ee7ef6359b3d462cb24d65505b9da598f05c644cd57a56afdfc38b0e1d9a8d0",
+      "release_id": "158c8b3e944a-9ee7ef6359b3",
+      "source_regression": "297PASS0skip",
+      "real_death_windows": "47child91;42completed5rolled_back",
+      "installed_regression": "242PASS0skip;guarded main/child candidate wheel imports;real historical controls separate",
+      "ledger_mapping_regression": "9PASS",
+      "final_ci": "NOT_RUN_AT_ASSEMBLY"
+    },
+    {
+      "event": "third_review_complete_witness_coverage_repair",
+      "source_sha": "97f41626771357ff51fcfdba7a510db9299233ac",
+      "source_tree": "4f143eb92b9823dfb895538fc5b8c2749f3bddda",
+      "package_version": "1.0.0rc4",
+      "wheel_sha256": "3cf22b1ee61cf5b4e1ec93dcc8506acfea90a18ae7a872bb392abcab94cc4f67",
+      "release_id": "97f416267713-3cf22b1ee61c",
+      "source_regression": "309PASS0skip",
+      "real_death_windows": "47child91;42completed5rolled_back",
+      "installed_regression": "254PASS0skip;guarded main/child candidate imports;real historical controls separate",
+      "ledger_and_boundary_regression": "16PASS",
+      "final_ci": "NOT_RUN_AT_ASSEMBLY"
+    },
+    {
+      "event": "ff59_complete_CI_failed_shared_navigation",
+      "head_sha": "ff59ea5ceaed3694c32fb5f9f1eb298078282523",
+      "runs": [
+        39258531644,
+        39258524157
+      ],
+      "status": "FAIL",
+      "browser_each": "494PASS1FAIL",
+      "successful_jobs": 10,
+      "failed_jobs": 4,
+      "raw_record": "raw-evidence/review3/CI-ff59-terminal-FAILED.json"
+    },
+    {
+      "event": "shared_navigation_contention_repair_clean_build_and_installed",
+      "source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "source_tree": "d54463ec964f9d6191c78c2d4f272bb6dd964cf1",
+      "package_version": "1.0.0rc4",
+      "release_id": "2a8bef16f280-9df19d761a6c",
+      "wheel_sha256": "9df19d761a6c19c11d72915c21d8280fed51ca363a65c68c0f60976c8fbbaa7d",
+      "source_UI": "new4PASS/existing10PASS; original function/assertions/timeouts unchanged",
+      "installed_N2": "254PASS0skip",
+      "installed_UI": "5PASS0skip",
+      "record": "Integration-pressure-navigation-repair.json",
+      "final_ci": "NOT_RUN_AT_ASSEMBLY"
+    }
+  ],
+  "integration_checks": [
+    {
+      "kind": "current_candidate_ci",
+      "evidence": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
+      "state_at_assembly": "NOT_RUN",
+      "observed_at_utc": "2026-10-19T14:09:30.617400+00:00",
+      "note": "Assembly after clean2a8bef16 integration build/latest installedN2254/UI5. New evidence-head complete CI not yet started; ff59 failed browser logs are retained. Final handoff records actual subsequent terminal result."
+    },
+    {
+      "kind": "installed_resources",
+      "evidence": "Installed-resource-identity.json",
+      "status": "PASS"
+    },
+    {
+      "kind": "installed_N2",
+      "evidence": "Installed-review3-final-N2.json",
+      "status": "PASS"
+    },
+    {
+      "kind": "installed_UI",
+      "evidence": "Integration-pressure-navigation-repair.json",
+      "status": "PASS"
+    }
+  ],
+  "release_and_activation": {
+    "public_release": "NOT_RUN",
+    "user_home_activation": "NOT_RUN",
+    "reason": "Not authorized in this increment; no tag/Release/deploy or actual HOME activation performed.",
+    "draft_pr": "https://github.com/MainQuestAI/Deck-Master/pull/124",
+    "historical_release_observation": "release list exposed only prereleases v0.9.14-preview.2 and preview.1; latest stable endpoint404; no new release created"
+  },
+  "acceptance": [
+    {
+      "ac_id": "AC-N1-01",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "safe non-UUID IDs, same-commit receipt and original flat response",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_long_safe_id_atomic_flat_response_and_resolver_pure"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-02",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "six exact material replay variants with zero material/upload reads",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_replay_before_material_and_upload_reads"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-03",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "staging/revision/pointer/cache failure boundaries and committed receipt",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_atomic_fault_boundaries",
+            "test_workbench_operations.py::test_interruption_boundary"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-04",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "raw base/payload/path binding and Python/CLI/HTTP replay",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_raw_binding_preserves_base_whitespace_unicode_and_path_context",
+            "test_python_cli_http_cross_entry_replay_and_conflict"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-05",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "bidirectional operation-family occupancy and unchanged content digest",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_cross_family_occupancy_and_content_digest_unchanged",
+            "test_public_content_rejects_legacy_uuid_occupancy"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-06",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "legacy original digest/log/no-op replay and irrecoverable lost sole evidence",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_legacy_original_digest_replay_projection_and_occupancy",
+            "test_legacy_unknown_does_not_read_material_or_rewrite_files",
+            "test_lost_legacy_noop_is_indistinguishable_and_not_fabricated",
+            "test_legacy_log_only_corruption_and_source_bindings_are_unverified",
+            "test_legacy_file_normalization_does_not_reopen_old_sources",
+            "test_public_content_rejects_legacy_uuid_occupancy"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-07",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "receipt-only no-op preserves Page/basis/Task state",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_three_branches_atomic_and_replay_has_no_business_effects"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-08",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "independent-process same-ID race commits once",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_independent_process_same_id_race"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-09",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "typed compatible HTTP400/422/409/503 and no path leakage",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_http_cli_python_preserve_business_reasons",
+            "test_history_failure_is_unknown_unavailable_without_material_reads",
+            "test_http_invalid_shape_has_structured_compatible_error",
+            "test_legacy_log_only_corruption_and_source_bindings_are_unverified",
+            "test_old_http_json_and_field_status_mapping_is_preserved",
+            "test_ordinary_unsafe_id_keeps_invalid_input_status",
+            "test_material_parser_errors_do_not_publish_local_paths"
+          ]
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-10",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "fixed SDK/HTTP artifact/control boundaries, including full-schema corruption",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_current_and_history_sdk_http_equal_and_readonly",
+            "test_sdk_http_reject_same_snapshot_code_without_writes",
+            "test_foreign_or_cycle_in_canonical_chain_cannot_prove_absence",
+            "test_actual_http_eligibility_uses_same_errors_and_fixed_wrapper",
+            "test_http_duplicate_revision_query_cannot_fall_back_current",
+            "test_schema_corrupt_eligibility_snapshot_has_safe_sdk_http_error"
+          ]
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "schema-corrupt eligibility raised internal AttributeError",
+          "resolution": "full schema validation and typed revision_unavailable; positive/negative entry regressions pass"
+        }
+      ],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-11",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "fixed selected head/control under advance, cache enabled/disabled",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_control_capture_is_fixed_across_concurrent_pause",
+            "test_explicit_head_is_verified_and_fixed",
+            "test_replay_before_material_and_upload_reads",
+            "test_schema_corrupt_eligibility_snapshot_has_safe_sdk_http_error",
+            "test_operation_coverage.py::test_pointer_race_bounded_retry_and_unknown",
+            "test_operation_coverage.py::test_other_process_advances_during_read_then_retry_fixes_head",
+            "test_operation_coverage.py::test_explicit_head_is_validated_without_double_decode"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-validation.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N1-12",
+      "owner": "N1",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Task/content/freeze/receipt recovery and candidate-wide regression",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N1-operation-recovery-compatibility.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_task_receipt_recovery.py",
+            "test_workbench_operations.py",
+            "test_content_ops.py",
+            "test_legacy_original_digest_replay_projection_and_occupancy",
+            "test_task_receipt_recovery.py::test_lost_response_after_commit_recovers_across_later_commit",
+            "test_task_receipt_recovery.py::test_a_receipt_cannot_be_carried_into_a_different_revision",
+            "test_content_ops.py::test_receipt_replay_after_index_loss_and_concurrent_commit",
+            "test_generation_protocol.py::test_encoding_vector_and_freeze_replay_preserve_exact_input",
+            "test_generation_protocol.py::test_complete_request_vector_from_actual_cli_freeze",
+            "test_generation_protocol.py::test_cli_http_freeze_and_fixed_reads_are_the_same_contract",
+            "test_generation_protocol.py::test_freeze_rejects_legacy_or_missing_project_before_creating_layout"
+          ]
+        },
+        {
+          "kind": "STATIC_REVIEW",
+          "path": "README.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-validation.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "The applicable AC requires the mapped focused compatibility evidence; full existing CI is a separate engineering candidate gate, reported live at PR124 and in final handoff. No full-CI completion is inferred from focused results."
+      ],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N2-01",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Existing symlink Host directory works from real a08 installer baseline to four-Skill RC4; canonical directory/alias protection, logical CLI paths and terminal/legacy receipt compatibility verified.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_normal_contract_and_no_duplicate_same_target_actions",
+            "test_upgrade_four_links_rollback_single_and_return"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "P2-2",
+          "observed": "A symlink Host skills directory passes preflight but no-follow parent open fails during publication, producing recovery_conflict.",
+          "resolution": "Actual before reproductions retained;20 new targeted cases pass, full290PASS31.13s and47 actual process deaths42completed5rolled_back with intact witnesses. Four forged preparing migration negatives preserve external names/inodes/bytes and damaged records.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-02",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "KeyboardInterrupt compensation and structured exit130",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_keyboard_interrupt_each_addition_and_pointer_restores_original_inodes",
+            "test_cli_structured_interrupt_and_invalid_transaction_id"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-03",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Preparing checks the complete frozen old REG/LNK set, including empty/partial/unregistered/uncreated/lost-proof windows; absent proof conflicts without changing original journal or scene. Sufficient proof, ordinary unconfirmed .after and real historical compatibility remain passing.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_process_death_prepared_pointer_and_final_result_windows",
+            "test_process_death_each_addition_no_recreation_of_published_inode",
+            "test_death_between_backup_and_replacement_recovers_original_plan"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "P2-1",
+          "observed": "Preparation creates durable .after/.witness before any transaction record; two real death windows leave same UUID retry repeatedly unknown.",
+          "resolution": "Actual before reproductions retained;20 new targeted cases pass, full290PASS31.13s and47 actual process deaths42completed5rolled_back with intact witnesses. Four forged preparing migration negatives preserve external names/inodes/bytes and damaged records.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        },
+        {
+          "review_id": "R2-P2-1",
+          "reviewed_head": "87bbccab9c57af0e5bb981b8916c11e0d929462e",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9",
+          "observed_status": "FAIL",
+          "observed": "completed/verified incorrectly moved the external current into .before",
+          "resolution": "Before5FAIL; minimal install request/witness repair; source297PASS/0skip and new-wheel installed242PASS/0skip;47 actual child91 windows42completed/5rolled_back. Original before/after/journal bytes retained in N2-review2-evidence.json."
+        },
+        {
+          "review_id": "R3-P2-1",
+          "reviewed_head": "72a1bde8247ac0a1933f5e4b8bbc8496675303e9",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=25f7d858-fd3a-5752-8dd1-4beb88f4effa",
+          "observed_status": "FAIL",
+          "observed": "Original UUID incorrectly completed/verified; external old-target current or unwitnessed Host path was taken into the new plan.",
+          "resolution": "Complete required witness set enforced; before4FAIL/source309PASS/new-wheel installed254PASS; exact scene and journal preserved on missing proof."
+        }
+      ],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-04",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "original UUID recovered=true/verified; exact journal bytes and managed state unchanged; different logical alias to same real directory refused",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_exact_activate_and_rollback_replay_after_later_switch_changes_nothing",
+            "test_replay_reports_current_unknown_without_reapplying_history",
+            "test_historical_replay_does_not_clear_another_transactions_pending_pointer",
+            "test_historical_terminal_record_without_inode_witnesses_still_replays"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "R2-P2-2",
+          "reviewed_head": "87bbccab9c57af0e5bb981b8916c11e0d929462e",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9",
+          "observed_status": "FAIL",
+          "observed": "installation_transaction_conflict incorrectly refused both original logical-Host requests",
+          "resolution": "Before5FAIL; minimal install request/witness repair; source297PASS/0skip and new-wheel installed242PASS/0skip;47 actual child91 windows42completed/5rolled_back. Original before/after/journal bytes retained in N2-review2-evidence.json."
+        }
+      ],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-05",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "no-ID rollback is a new toggle; unfinished rollback uses frozen target",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_no_id_completed_rollback_toggles_but_unfinished_rollback_freezes_target"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-06",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "skillless removal and compensation crash recovery",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_rollback_death_each_removal_preserves_backup_and_converges",
+            "test_keyboard_interrupt_each_actual_removal_restores_original",
+            "test_link_retirement_compensation_dies_and_restores_original_link_inode"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-07",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Preparing checks the complete frozen old REG/LNK set, including empty/partial/unregistered/uncreated/lost-proof windows; absent proof conflicts without changing original journal or scene. Sufficient proof, ordinary unconfirmed .after and real historical compatibility remain passing.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_external_replacement_is_preserved_and_compensates_only_owned_paths",
+            "test_external_occupant_arriving_at_rename_boundary_is_never_overwritten",
+            "test_external_preparation_replacement_is_preserved_and_refused",
+            "test_occupied_retired_link_preserves_external_path_and_original_backup",
+            "test_atomic_rename_refuses_occupant_after_final_path_check",
+            "test_atomic_rename_pins_host_parent_when_ancestor_is_replaced",
+            "test_atomic_rename_primitive_preserves_both_source_and_existing_destination",
+            "test_unsupported_atomic_rename_never_uses_overwriting_fallback",
+            "test_lost_inode_witness_refuses_even_simulated_recycled_inode"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "Exact bc6bd55a CI three equal-content unlink/recreate tests failed because the filesystem immediately reused the freed inode.",
+          "resolution": "Persistent same-filesystem inode witnesses pin prepared and existing managed objects; original three failures and eight negative/compatibility additions pass in final270;47 actual process-death recoveries verify witnesses. Final exact-head CI remains separately reported.",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "review_id": "R2-P2-1",
+          "reviewed_head": "87bbccab9c57af0e5bb981b8916c11e0d929462e",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9",
+          "observed_status": "FAIL",
+          "observed": "completed/verified incorrectly moved the external current into .before",
+          "resolution": "Before5FAIL; minimal install request/witness repair; source297PASS/0skip and new-wheel installed242PASS/0skip;47 actual child91 windows42completed/5rolled_back. Original before/after/journal bytes retained in N2-review2-evidence.json."
+        },
+        {
+          "review_id": "R3-P2-1",
+          "reviewed_head": "72a1bde8247ac0a1933f5e4b8bbc8496675303e9",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=25f7d858-fd3a-5752-8dd1-4beb88f4effa",
+          "observed_status": "FAIL",
+          "observed": "Original UUID incorrectly completed/verified; external old-target current or unwitnessed Host path was taken into the new plan.",
+          "resolution": "Complete required witness set enforced; before4FAIL/source309PASS/new-wheel installed254PASS; exact scene and journal preserved on missing proof."
+        }
+      ],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-08",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "original UUID explicit and implicit recovery completed three actual Host rename actions with frozen request/step paths/inodes; replaced alias conflicts and is preserved; exact old logical Host request binding remains separate from frozen directory/action ownership.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_same_id_different_request_is_rejected_without_mutation",
+            "test_two_prefixes_share_host_lock_and_recheck_after_waiting"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "R2-P2-2",
+          "reviewed_head": "87bbccab9c57af0e5bb981b8916c11e0d929462e",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9",
+          "observed_status": "FAIL",
+          "observed": "installation_transaction_conflict incorrectly refused both original logical-Host requests",
+          "resolution": "Before5FAIL; minimal install request/witness repair; source297PASS/0skip and new-wheel installed242PASS/0skip;47 actual child91 windows42completed/5rolled_back. Original before/after/journal bytes retained in N2-review2-evidence.json."
+        }
+      ],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-09",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "opt-out never accesses Host during normal/recovery/compensation",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_opt_out_never_resolves_or_writes_host_including_recovery",
+            "test_legacy_optout_preserves_host_configuration_and_inodes_whole_lifecycle",
+            "test_legacy_companion_move_and_exact_retirement_survive_process_death"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-10",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Durable preparing request/old-state/intents precede every .after/.witness; both actual death windows resume original UUID or matching no-ID call, preserve uncertain residuals and replay without duplicate activation.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_compensation_process_dies_again_and_resumes_reverse_direction",
+            "test_second_keyboard_interrupt_leaves_compensating_until_original_retry",
+            "test_pending_write_failure_preserves_prepared_plan_and_recovers",
+            "test_record_write_failure_after_action_reports_unknown_then_recovers_original_transaction",
+            "test_completed_record_with_stale_pending_does_not_apply_again",
+            "test_replay_still_returns_completed_result_when_stale_pointer_unlink_repeatedly_fails",
+            "test_pending_cleanup_captures_and_preserves_racing_replacement",
+            "test_pending_publish_never_replaces_external_occupant_at_syscall_boundary",
+            "test_process_death_after_pending_capture_replays_completed_receipt"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "P2-1",
+          "observed": "Preparation creates durable .after/.witness before any transaction record; two real death windows leave same UUID retry repeatedly unknown.",
+          "resolution": "Actual before reproductions retained;20 new targeted cases pass, full290PASS31.13s and47 actual process deaths42completed5rolled_back with intact witnesses. Four forged preparing migration negatives preserve external names/inodes/bytes and damaged records.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-11",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "launcher bytes/mode/inode and explicit persistence/conflict states",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_damaged_or_foreign_records_and_changed_resources_are_never_reinterpreted",
+            "test_corrupt_pending_pointer_preserves_record_and_does_not_guess_new_transaction",
+            "test_copied_record_in_different_prefix_refuses_original_paths",
+            "test_strict_resource_change_after_prepared_is_recovery_conflict_with_safe_compensation",
+            "test_journal_symlink_is_refused_without_writing_its_external_target",
+            "test_unfinished_record_without_inode_witnesses_is_preserved_and_refused"
+          ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N2-12",
+      "owner": "N2",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Preparing checks the complete frozen old REG/LNK set, including empty/partial/unregistered/uncreated/lost-proof windows; absent proof conflicts without changing original journal or scene. Sufficient proof, ordinary unconfirmed .after and real historical compatibility remain passing.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-install-recovery-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-transaction-format.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "test_every_link_conflict_aborts_before_any_activation",
+            "test_failure_during_each_link_creation_compensates_every_pointer_and_link",
+            "test_strict_installed_release_validation_stays_in_force_before_activation",
+            "test_full_source_wheel_and_installer_mapping_is_exact",
+            "test_rollback_never_changes_any_project_writer_floor"
+          ]
+        },
+        {
+          "kind": "STATIC_REVIEW",
+          "path": "README.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review2-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N2-review3-evidence.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "R3-P2-1",
+          "reviewed_head": "72a1bde8247ac0a1933f5e4b8bbc8496675303e9",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=25f7d858-fd3a-5752-8dd1-4beb88f4effa",
+          "observed_status": "FAIL",
+          "observed": "Original UUID incorrectly completed/verified; external old-target current or unwitnessed Host path was taken into the new plan.",
+          "resolution": "Complete required witness set enforced; before4FAIL/source309PASS/new-wheel installed254PASS; exact scene and journal preserved on missing proof."
+        }
+      ],
+      "limitations": [
+        "The applicable AC requires the mapped focused compatibility evidence; full existing CI is a separate engineering candidate gate, reported live at PR124 and in final handoff. No full-CI completion is inferred from focused results.",
+        "Linux atomic no-replace implementation executed; Darwin branch not executed locally; unsupported filesystem/primitive refuses fallback. Synthetic temporary prefix/Host, never user HOME."
+      ],
+      "next_actions": [
+        "Finish final exact-head complete CI and designated external reassessment."
+      ]
+    },
+    {
+      "ac_id": "AC-N3-01",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "argument policy freezes and connectivity failure is atomic",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-02",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "single-center argument accepted without artificial edges",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-03",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "weak mixed-direction and qualification adjacency preserved",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-04",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "self-loops/shared sources/alternatives cannot hide disconnected nodes",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-05",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "real baseline committed proposal first adoption/replay; changed/forged/orphan negatives",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-06",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual review-unit union with stable order and scope-aware Task deduplication",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "Review Task dedup omitted review_units; method reissue lost fixed budget binding/action ceilings",
+          "resolution": "scope equivalence and retained credit accounting; final118PASS",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-07",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "visual-only method list excludes content calibration",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-08",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "same Task manifest across entries; no-Task reads do not apply methods",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-09",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual new producers freeze manifests and writer floor atomically",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "Review Task dedup omitted review_units; method reissue lost fixed budget binding/action ceilings",
+          "resolution": "scope equivalence and retained credit accounting; final118PASS",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-10",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "legacy frozen selector and formal reissue without budget reset",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-11",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "I05 is sole method list for v2 and drift gaps preserve dispatch hashes",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N3-12",
+      "owner": "N3",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Fresh clean2a8bef16 wheel1.0.0rc4:23canonical/fourSkills/69schemas/275members/90Python modules/I05 verified; actual guarded latest installed N2254PASS0skip and UI5PASS0skip. Earlier execution identities retained.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-content-review.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N3-final-review-tests.log"
+        },
+        {
+          "kind": "INSTALLED_RUNTIME",
+          "path": "Installed-resource-identity.json"
+        },
+        {
+          "kind": "INSTALLED_RUNTIME",
+          "path": "Installed-control-reload-browser.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        },
+        {
+          "kind": "INSTALLED_BROWSER_SYNTHETIC_ENGINEERING",
+          "path": "Integration-pressure-navigation-repair.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "status": "NOT_RUN",
+          "observed_result": "Current product static resource changed after3167 clean build. That installed proof is retained as historical; new candidate build/installation identity not run yet.",
+          "prior_status": "PASS",
+          "prior_candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3"
+        }
+      ],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-01",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "v2 opt-in negotiation before create/continue effects, v1 defaults intact",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-02",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual source/method/Task byte deduplication with full relationships",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-03",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "trusted observed-context delta, cold full fallback and manifest unready",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-04",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "exact N3 manifest and current/dispatch method identities",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-05",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "complete Page, notes, mapping, source inventory and immutable image facts",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-06",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual global decoder/read/stat/body measurements, no hidden helper work",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "earlier149PASS/1FAIL: show global expected1 decode vs actual2 on distinct current/historical revision",
+          "resolution": "current same-revision duplicate removed; all entry/I01 reads counted; final166PASS",
+          "path": "N4B-validation.txt"
+        }
+      ],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-07",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "four Skill/workorder and project-byte read-only equivalence",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-08",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "H100/500/1000 canonical cold coverage and enabled/canonical equality",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-09",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "hot negatives zero history decodes; positive match once, entry reads counted",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "earlier149PASS/1FAIL: show global expected1 decode vs actual2 on distinct current/historical revision",
+          "resolution": "current same-revision duplicate removed; all entry/I01 reads counted; final166PASS",
+          "path": "N4B-validation.txt"
+        }
+      ],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-10",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "delta1/10 decode only additions plus verified match",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-11",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "forged/truncated disposable hints cannot create facts or overwrite legacy logs",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-12",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "First enabled lookup discards unreadable unreachable old coverage and scans selected canonical ancestry; four branch cases match cache-off; nine damaged selected-chain controls remain unknown.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-cache-fallback.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-validation.txt"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "P2-3",
+          "observed": "Unreadable unreachable snapshots in old coverage cache turn first enabled query unknown while canonical disabled/second query is not_found.",
+          "resolution": "Original extended test2FAIL2PASS; fixed4PASS; final affected169PASS and cache-off shared101PASS with original controls and pointer/log bytes unchanged.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
+      "limitations": [],
+      "next_actions": [
+        "Bind frozen source/build/install identities and complete final exact-head CI."
+      ]
+    },
+    {
+      "ac_id": "AC-N4-13",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "independent-process pointer advance and newly committed target revalidation",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N4-14",
+      "owner": "N4",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "First enabled lookup discards unreadable unreachable old coverage and scans selected canonical ancestry; four branch cases match cache-off; nine damaged selected-chain controls remain unknown.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-acceptance-evidence.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4-validation-resumed.txt"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-cache-fallback.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-validation.txt"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "P2-3",
+          "observed": "Unreadable unreachable snapshots in old coverage cache turn first enabled query unknown while canonical disabled/second query is not_found.",
+          "resolution": "Original extended test2FAIL2PASS; fixed4PASS; final affected169PASS and cache-off shared101PASS with original controls and pointer/log bytes unchanged.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
+      "limitations": [],
+      "next_actions": [
+        "Bind frozen source/build/install identities and complete final exact-head CI."
+      ]
+    },
+    {
+      "ac_id": "AC-N5-01",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "single current increment entry, real environment facts and four role routing",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N5-02",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "normal content_only full content adopted via actual Task and continue completed; local real acceptance separate",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "Before actual followup, direction was not accepted and Runtime Pages/Plan were not adopted.",
+          "resolution": "Actual user direction recorded as direct_user/host_attested; real page_copy Task7e5ca2e5f1c6 adopts complete v2; continue completed at cd2fd8310b25487389f9efff18db186c. Content-only does not require the separately attempted preproduction gate.",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "limitations": [
+        "The formerly blocked direction/adoption facts changed after a real user instruction and actual Runtime execution; these findings are not upgraded merely by engineering test results.",
+        "The actual content_only/content_full continue returns completed/return_requested_content. Separately requested independent preproduction review returns needs_reviewer because providers=[] and trusted receipt capabilities are false; no new content-only gate, provider, downgrade or receipt is invented.",
+        "Real user effects/usability and trusted Host review receipt acceptance are explicitly DEFERRED_TO_USER_LOCAL_VALIDATION, not PASS. These observations are distinct from this AC wording and its actual completed application evidence."
+      ],
+      "next_actions": [
+        "Complete exact-head engineering CI and address user-requested PR findings; preserve current business controls.",
+        "User performs local real acceptance later; record actually available trusted review capability then, without invented receipts/providers or policy downgrade."
+      ],
+      "acceptance_disposition": "SPEC_EVIDENCE_MET_REAL_USER_ACCEPTANCE_DEFERRED",
+      "engineering_effect": "Actual content-only contract is completed; exact-head engineering CI remains separately required."
+    },
+    {
+      "ac_id": "AC-N5-03",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual ID/base/no-op/UUID/Task drift/v2 recovery documentation",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N5-04",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "historical SHA/failure records retained; legacy CLAUDE byte-exact archive",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N5-05",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "shared canonical methods and links instead of duplicate method bodies",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N5-06",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "active four-Skill/CLAUDE guards reject executable retired guidance",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N5-07",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "69 packaged schemas equal one controlled mirror each, exact bytes",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N5-08",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Fresh clean2a8bef16 wheel1.0.0rc4:23canonical/fourSkills/69schemas/275members/90Python modules/I05 verified; actual guarded latest installed N2254PASS0skip and UI5PASS0skip. Earlier execution identities retained.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        },
+        {
+          "kind": "INSTALLED_RUNTIME",
+          "path": "Installed-resource-identity.json"
+        },
+        {
+          "kind": "INSTALLED_RUNTIME",
+          "path": "Installed-control-reload-browser.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review2-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-N2.json"
+        },
+        {
+          "kind": "INSTALLED_SYNTHETIC_ENGINEERING",
+          "path": "Installed-review3-final-N2.json"
+        },
+        {
+          "kind": "INSTALLED_BROWSER_SYNTHETIC_ENGINEERING",
+          "path": "Integration-pressure-navigation-repair.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "status": "NOT_RUN",
+          "observed_result": "Current product static resource changed after3167 clean build. That installed proof is retained as historical; new candidate build/installation identity not run yet.",
+          "prior_status": "PASS",
+          "prior_candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3"
+        }
+      ],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N5-09",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "real focused commands plus existing unit/render/required-browser/installed CI duties",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N5-10",
+      "owner": "N5",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "Summary now validates the complete AC ID-to-Owner mapping directly against original traceability.json before deriving counts, unresolved rows and gates. Replace/omit/extra IDs and owner mismatches reject;9 regressions pass without changing real AC rows or deferred observations.",
+      "evidence": [
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-active-docs.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N5-document-evidence.json"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR113-disposition.md"
+        },
+        {
+          "kind": "STATIC_REVIEW",
+          "path": "README.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "test_names": [
+            "tests/rebuild/test_iteration_ledger.py"
+          ],
+          "path": "PR124-review-resolution.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "PR124-review2-resolution.md",
+          "tests": "tests/rebuild/test_iteration_ledger.py:9PASS"
+        }
+      ],
+      "failure_history": [
+        {
+          "review_id": "P2-4",
+          "observed": "70 PASS rows conflicted with NOT_RUN completion, unresolved list of all70 and null summary.",
+          "resolution": "Actual old report fails current-ledger guard (1FAIL4PASS); after derivation five regressions pass, preserving open FAIL/BLOCKED/NOT_RUN rows, evidence and deferred user acceptance.",
+          "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+          "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b"
+        }
+      ],
+      "limitations": [
+        "The applicable AC requires the mapped focused compatibility evidence; full existing CI is a separate engineering candidate gate, reported live at PR124 and in final handoff. No full-CI completion is inferred from focused results."
+      ],
+      "next_actions": [
+        "Preserve explicit remaining product adjudications; regenerate summary and validate after final candidate/build updates."
+      ]
+    },
+    {
+      "ac_id": "AC-N6-01",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "complete neutral commission and three self-contained sources",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N6-02",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "original Host first draft, author v1 and revised v2 preserve distinct hashes",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N6-03",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual historical repeated-premise defect and actionable canonical steps/example",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N6-04",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "current exact method manifests and actual Host six-page output accepted by real page_copy Task; source execution is not relabeled installed",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "Before actual followup, direction was not accepted and Runtime Pages/Plan were not adopted.",
+          "resolution": "Actual user direction recorded as direct_user/host_attested; real page_copy Task7e5ca2e5f1c6 adopts complete v2; continue completed at cd2fd8310b25487389f9efff18db186c. Content-only does not require the separately attempted preproduction gate.",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "limitations": [
+        "The formerly blocked direction/adoption facts changed after a real user instruction and actual Runtime execution; these findings are not upgraded merely by engineering test results.",
+        "The actual content_only/content_full continue returns completed/return_requested_content. Separately requested independent preproduction review returns needs_reviewer because providers=[] and trusted receipt capabilities are false; no new content-only gate, provider, downgrade or receipt is invented.",
+        "Real user effects/usability and trusted Host review receipt acceptance are explicitly DEFERRED_TO_USER_LOCAL_VALIDATION, not PASS. These observations are distinct from this AC wording and its actual completed application evidence.",
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": [
+        "Complete exact-head engineering CI and address user-requested PR findings; preserve current business controls.",
+        "User performs local real acceptance later; record actually available trusted review capability then, without invented receipts/providers or policy downgrade."
+      ],
+      "acceptance_disposition": "SPEC_EVIDENCE_MET_REAL_USER_ACCEPTANCE_DEFERRED",
+      "engineering_effect": "Actual content-only contract is completed; exact-head engineering CI remains separately required."
+    },
+    {
+      "ac_id": "AC-N6-05",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual adopted Narrative/bound Plan/six Pages have exact source/atom relations; user direction recorded through direct_user without grant",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "Before actual followup, direction was not accepted and Runtime Pages/Plan were not adopted.",
+          "resolution": "Actual user direction recorded as direct_user/host_attested; real page_copy Task7e5ca2e5f1c6 adopts complete v2; continue completed at cd2fd8310b25487389f9efff18db186c. Content-only does not require the separately attempted preproduction gate.",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "limitations": [
+        "The formerly blocked direction/adoption facts changed after a real user instruction and actual Runtime execution; these findings are not upgraded merely by engineering test results.",
+        "The actual content_only/content_full continue returns completed/return_requested_content. Separately requested independent preproduction review returns needs_reviewer because providers=[] and trusted receipt capabilities are false; no new content-only gate, provider, downgrade or receipt is invented.",
+        "Real user effects/usability and trusted Host review receipt acceptance are explicitly DEFERRED_TO_USER_LOCAL_VALIDATION, not PASS. These observations are distinct from this AC wording and its actual completed application evidence.",
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": [
+        "Complete exact-head engineering CI and address user-requested PR findings; preserve current business controls.",
+        "User performs local real acceptance later; record actually available trusted review capability then, without invented receipts/providers or policy downgrade."
+      ],
+      "acceptance_disposition": "SPEC_EVIDENCE_MET_REAL_USER_ACCEPTANCE_DEFERRED",
+      "engineering_effect": "Actual content-only contract is completed; exact-head engineering CI remains separately required."
+    },
+    {
+      "ac_id": "AC-N6-06",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual p04/p06 findings repaired in Host v2, actual nonauthor full recheck, then Runtime first accepts v2 Pages and revises bound Plan; no fictitious adopted-first-draft repair",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "Before actual followup, direction was not accepted and Runtime Pages/Plan were not adopted.",
+          "resolution": "Actual user direction recorded as direct_user/host_attested; real page_copy Task7e5ca2e5f1c6 adopts complete v2; continue completed at cd2fd8310b25487389f9efff18db186c. Content-only does not require the separately attempted preproduction gate.",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "limitations": [
+        "The formerly blocked direction/adoption facts changed after a real user instruction and actual Runtime execution; these findings are not upgraded merely by engineering test results.",
+        "The actual content_only/content_full continue returns completed/return_requested_content. Separately requested independent preproduction review returns needs_reviewer because providers=[] and trusted receipt capabilities are false; no new content-only gate, provider, downgrade or receipt is invented.",
+        "Real user effects/usability and trusted Host review receipt acceptance are explicitly DEFERRED_TO_USER_LOCAL_VALIDATION, not PASS. These observations are distinct from this AC wording and its actual completed application evidence.",
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": [
+        "Complete exact-head engineering CI and address user-requested PR findings; preserve current business controls.",
+        "User performs local real acceptance later; record actually available trusted review capability then, without invented receipts/providers or policy downgrade."
+      ],
+      "acceptance_disposition": "SPEC_EVIDENCE_MET_REAL_USER_ACCEPTANCE_DEFERRED",
+      "engineering_effect": "Actual content-only contract is completed; exact-head engineering CI remains separately required."
+    },
+    {
+      "ac_id": "AC-N6-07",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "content_only scope, six pages58 atoms, no visual/PPT/notes improvement claim",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N6-08",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "old methods/first draft identities retained; actual new Task manifests",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N6-09",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "engineering/actual review/unknown model metadata distinguished; no extra human gate",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [],
+      "limitations": [
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": []
+    },
+    {
+      "ac_id": "AC-N6-10",
+      "owner": "N6",
+      "status": "PASS",
+      "candidate_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+      "applicability_reason": null,
+      "observed_result": "actual method diff/full drafts/Runtime-adopted v2 and bounded repair report; separate user real acceptance remains deferred",
+      "evidence": [
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence.md"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-evidence-index.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        },
+        {
+          "kind": "NORMAL_TASK",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "failure_history": [
+        {
+          "observed": "Before actual followup, direction was not accepted and Runtime Pages/Plan were not adopted.",
+          "resolution": "Actual user direction recorded as direct_user/host_attested; real page_copy Task7e5ca2e5f1c6 adopts complete v2; continue completed at cd2fd8310b25487389f9efff18db186c. Content-only does not require the separately attempted preproduction gate.",
+          "path": "N6-runtime-adoption.json"
+        }
+      ],
+      "limitations": [
+        "The formerly blocked direction/adoption facts changed after a real user instruction and actual Runtime execution; these findings are not upgraded merely by engineering test results.",
+        "The actual content_only/content_full continue returns completed/return_requested_content. Separately requested independent preproduction review returns needs_reviewer because providers=[] and trusted receipt capabilities are false; no new content-only gate, provider, downgrade or receipt is invented.",
+        "Real user effects/usability and trusted Host review receipt acceptance are explicitly DEFERRED_TO_USER_LOCAL_VALIDATION, not PASS. These observations are distinct from this AC wording and its actual completed application evidence.",
+        "No comparative percentage, human signoff, visual outcome or universal model-effect improvement claimed. Original serving model metadata unavailable; requested new agent parameters recorded separately."
+      ],
+      "next_actions": [
+        "Complete exact-head engineering CI and address user-requested PR findings; preserve current business controls.",
+        "User performs local real acceptance later; record actually available trusted review capability then, without invented receipts/providers or policy downgrade."
+      ],
+      "acceptance_disposition": "SPEC_EVIDENCE_MET_REAL_USER_ACCEPTANCE_DEFERRED",
+      "engineering_effect": "Actual content-only contract is completed; exact-head engineering CI remains separately required."
+    }
+  ],
+  "completion": {
+    "engineering_candidate": "BLOCKED",
+    "all_six_tasks": "BLOCKED",
+    "unresolved_ac_ids": [],
+    "per_task_component_findings": {
+      "N1": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 12,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      },
+      "N2": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 12,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      },
+      "N3": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 12,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      },
+      "N4": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 14,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      },
+      "N5": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 10,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      },
+      "N6": {
+        "status": "PASS",
+        "counts": {
+          "PASS": 10,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT_RUN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "unresolved_ac_ids": []
+      }
+    },
+    "final_ci_state_at_assembly": "NOT_RUN",
+    "state_observed_at_utc": "2026-10-19T14:09:30.617400+00:00",
+    "observation_scope": "Assembly snapshot; the exact-head live checks and final PR handoff provide subsequent terminal CI evidence.",
+    "live_terminal_ci": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
+    "remaining_engineering_gates": [
+      "final_exact_head_ci"
+    ],
+    "real_acceptance": "DEFERRED_TO_USER_LOCAL_VALIDATION",
+    "summary": "70 AC: 70 PASS, 0 FAIL, 0 BLOCKED, 0 NOT_RUN, 0 NOT_APPLICABLE; 0 unresolved. Engineering candidate BLOCKED; exact-head CI NOT_RUN. User local effects/usability and trusted Host acceptance are separate observations, not inferred PASS."
+  },
+  "status_counts": {
+    "PASS": 70,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_RUN": 0,
+    "NOT_APPLICABLE": 0
+  },
+  "delivery_disposition": {
+    "engineering": "Complete witness coverage retains309source/47death proof and has latest-wheel254PASS. Shared navigation contention exposed byff59 fullCI has source4+10PASS and actual new-wheelUI5PASS. Fresh clean2a8bef16 identity verified; final new-head fullCI remains required; local real acceptance deferred.",
+    "real_acceptance": "DEFERRED_TO_USER_LOCAL_VALIDATION",
+    "user_instruction_utc": "2026-10-19T04:49:00Z",
+    "user_instruction": "先按照他的产出是 OK 的，然后按照这个方向先把所有开发动作做完。我们先评审，等实际真实验收，我到本地跑实际校验的时候，再做回复好了",
+    "effect": "Direction is accepted for continuing development. This does not claim real acceptance, grant new authorization, lower review policy, or supply a trusted receipt."
+  },
+  "deferred_observations": [
+    {
+      "observation": "User local real effects and usability acceptance",
+      "status": "DEFERRED_TO_USER_LOCAL_VALIDATION",
+      "not_claimed": "No user/professional signoff or comparative improvement score."
+    },
+    {
+      "observation": "Trusted Host independent review receipt acceptance",
+      "status": "DEFERRED_TO_USER_LOCAL_VALIDATION",
+      "not_claimed": "Actual nonauthor reading is not relabeled a trusted Runtime receipt; default policy unchanged."
+    }
+  ],
+  "review_findings": {
+    "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+    "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=03a38b4e-507a-5434-9701-f8e63884471b",
+    "verdict": "REQUEST_CHANGES",
+    "findings": [
+      {
+        "id": "P2-1",
+        "ac_ids": [
+          "AC-N2-03",
+          "AC-N2-10"
+        ],
+        "observed": "Preparation creates durable .after/.witness before any transaction record; two real death windows leave same UUID retry repeatedly unknown.",
+        "status": "CLOSED_BY_SECOND_DESIGNATED_REVIEW",
+        "closure_review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9"
+      },
+      {
+        "id": "P2-2",
+        "ac_ids": [
+          "AC-N2-01"
+        ],
+        "observed": "A symlink Host skills directory passes preflight but no-follow parent open fails during publication, producing recovery_conflict.",
+        "status": "CLOSED_BY_SECOND_DESIGNATED_REVIEW",
+        "closure_review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9"
+      },
+      {
+        "id": "P2-3",
+        "ac_ids": [
+          "AC-N4-12",
+          "AC-N4-14"
+        ],
+        "observed": "Unreadable unreachable snapshots in old coverage cache turn first enabled query unknown while canonical disabled/second query is not_found.",
+        "status": "CLOSED_BY_SECOND_DESIGNATED_REVIEW",
+        "closure_review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9"
+      },
+      {
+        "id": "P2-4",
+        "ac_ids": [
+          "AC-N5-10"
+        ],
+        "observed": "70 PASS rows conflicted with NOT_RUN completion, unresolved list of all70 and null summary.",
+        "status": "CLOSED_BY_SECOND_DESIGNATED_REVIEW",
+        "closure_review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9"
+      }
+    ],
+    "closed_prior_p1": "Persistent inode witnesses accepted by reviewer; not reopened.",
+    "followup_state": "ALL_FOUR_CLOSED_BY_SECOND_DESIGNATED_REVIEW",
+    "repair_source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
+    "latest_product_followup_source_sha": "0c08aa599a3e56651fd3522967368f4a5dd374b2"
+  },
+  "review_round2": {
+    "reviewed_head": "87bbccab9c57af0e5bb981b8916c11e0d929462e",
+    "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=bf975b08-4005-5363-bf22-233df3c31bc9",
+    "verdict": "REQUEST_CHANGES",
+    "original_four_P2": "CLOSED; not reopened",
+    "topbar": "NO_NEW_BLOCKER",
+    "findings": [
+      {
+        "id": "R2-P2-1",
+        "affected_ac_ids": [
+          "AC-N2-03",
+          "AC-N2-07"
+        ],
+        "observed": "Unconfirmed witness identity=null was skipped, permitting missing proof plus inode reuse to impersonate frozen ownership.",
+        "status": "CLOSED_BY_THIRD_DESIGNATED_REVIEW",
+        "source_sha": "158c8b3e944a11fc04629e935e089bfb5a7f66bd",
+        "closure_review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=25f7d858-fd3a-5752-8dd1-4beb88f4effa"
+      },
+      {
+        "id": "R2-P2-2",
+        "affected_ac_ids": [
+          "AC-N2-04",
+          "AC-N2-08"
+        ],
+        "observed": "Canonical Host normalization incorrectly changed true historical logical request replay semantics.",
+        "status": "CLOSED_BY_THIRD_DESIGNATED_REVIEW",
+        "source_sha": "158c8b3e944a11fc04629e935e089bfb5a7f66bd",
+        "closure_review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=25f7d858-fd3a-5752-8dd1-4beb88f4effa"
+      },
+      {
+        "id": "R2-P3",
+        "affected_ac_ids": [
+          "AC-N5-10"
+        ],
+        "observed": "Synthetic invalid ID/Owner sets passed; the actual70-row ledger was intact.",
+        "status": "CLOSED_BY_THIRD_DESIGNATED_REVIEW",
+        "source_sha": "158c8b3e944a11fc04629e935e089bfb5a7f66bd",
+        "closure_review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=25f7d858-fd3a-5752-8dd1-4beb88f4effa"
+      }
+    ],
+    "external_reassessment": "Prior registered-null witness, logical-Host and AC-to-Owner findings closed by latest designated review; complete-coverage gap tracked separately in review_round3."
+  },
+  "review_round3": {
+    "reviewed_head": "72a1bde8247ac0a1933f5e4b8bbc8496675303e9",
+    "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=25f7d858-fd3a-5752-8dd1-4beb88f4effa",
+    "verdict": "REQUEST_CHANGES",
+    "prior_findings": "CLOSED; not reopened",
+    "findings": [
+      {
+        "id": "R3-P2-1",
+        "affected_ac_ids": [
+          "AC-N2-03",
+          "AC-N2-07",
+          "AC-N2-12"
+        ],
+        "observed": "Original UUID incorrectly completed/verified; external old-target current or unwitnessed Host path was taken into the new plan.",
+        "status": "TARGETED_SOURCE_AND_FRESH_INSTALLED_VERIFIED_PENDING_FINAL_CI",
+        "source_sha": "97f41626771357ff51fcfdba7a510db9299233ac"
+      }
+    ],
+    "external_reassessment": "PENDING_FINAL_CURRENT_HEAD_REVIEW",
+    "latest_candidate_source_sha": "2a8bef16f2807b5841c09c87a5928346933b8486",
+    "post_review_integration_repair": "Integration-pressure-navigation-repair.json; complete old-witness finding source97 remains distinct; no prior closed finding reopened."
+  }
+}

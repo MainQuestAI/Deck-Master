@@ -141,7 +141,7 @@ loaded code version before service reuse. `port_conflict` never takes over
 another listener: choose `--port 0` or explicitly stop the matching service.
 `--stop` affects only the selected launcher/project and keeps business data.
 `core_ready_ui_unavailable` means the core runs but the v2 UI is not installed;
-use the explicit project `--ui legacy` until the frontend is available.
+use the matching complete package or the CLI and report the missing UI.
 
 A `local_state_conflict` is a personal draft ETag/target conflict. Retain the
 local buffer, read the saved draft, and keep an independent draft when needed.
@@ -275,9 +275,63 @@ Confirmation recovery uses the original UUID and proposal through `operations sh
 
 ## Content operations
 
-`content_basis_changed`: retain the body/outline draft and fixed sources. Read the current Document, Page refs and ContentPlan ref, compare the changed basis, then explicitly form a new content plan. Do not rebase an old payload silently. `content_invalid` identifies an invalid action/scope or provenance request. Unknown `content.commit` / `content.inputs` saves use the original UUID with `operations show`; replay only the exact original payload if no committed fact exists. Merge/split preserve old annotations on their original identity, and never reuse an old page ID.
+`content_basis_changed`: retain the body/outline draft and fixed sources. Read the current Document, Page refs and ContentPlan ref, compare the changed basis, then explicitly form a new content plan. Do not rebase an old payload silently. `content_invalid` identifies an invalid action/scope or provenance request. Unknown `content.commit` / `content.inputs` saves use the original UUID with `operations show`; committed requests replay their original result, not_found permits the original saved request after legacy checks, and unknown requires investigation. Merge/split preserve old annotations on their original identity, and never reuse an old page ID.
 
 `content-ops.v1` is a forward writer boundary for manual ContentPlan versions, derived-page records and bounded compose requests. Older cores must refuse writes; use the current core to continue or read a committed earlier snapshot. No in-place downgrade or actual HOME migration is performed by these operations.
+
+## Ordinary input update recovery
+
+Keep the exact parsed patch, original base, operation ID and relative-path
+context. `operations show` distinguishes verified committed facts, absence and
+unknown history. An exact committed replay returns the original revision/result
+plus the current revision without rereading missing material or dispatching
+tasks. Its pending_tasks are historical; run `continue` for current work.
+`operation_payload_conflict` requires the original binding for a retry; a
+genuinely changed request is a separate operation after current state is known.
+`operation_unverified` / `operation_unavailable` mean unknown, so never work
+around them with a new ID/base. Cache failure after commit is only
+`receipt_cache_unavailable` and does not undo the business change.
+
+New `status=unchanged` ordinary input updates can commit a receipt-only
+revision, preserving Page/input basis, tasks and calls. Ordinary safe IDs and
+`content.inputs` UUIDv4 requests remain different families/digest domains.
+Legacy logs retain their original contract: `legacy_recorded` no-op IDs stay
+occupied; damaged or unverifiable old bindings are not upgraded to atomic
+receipts. A completely lost old log-only no-op cannot be distinguished from
+an unused ID. The exact limitations and retry steps live in
+[input-update](../skills/deck-master/references/input-update.md#并发恢复与等待).
+
+## Frozen Task methods and reading context
+
+For `basis_changed`, retain the original Task, result draft and method hashes.
+Read its ordered frozen manifest through `methods --project … --task-id …
+--read`; do not replace it with current role defaults. Old Tasks without a
+manifest use their provable frozen RC3 selector/digest, or report
+`not_recorded`; they do not acquire new Review rules. Missing/hash-mismatched
+files remain explicit. Run `continue` to formally retire/reissue an active
+execution contract after outstanding/unknown calls are settled. This preserves
+the actual scope and authorization; upgrading methods does not expand either.
+
+New manifest/policy writes atomically require `rc4-content.v1` and
+`argument-connectivity.v1` where applicable. A structural argument failure
+reports concrete unreachable nodes/fields before object/Task adoption; retain
+and revise the proposal at its actual scope. Structure does not prove source
+adequacy, reasoning or approval. Historical reads, exact old result replay and
+proved committed RC3 proposal adoption retain their historical semantics;
+orphan or rewritten proposals cannot claim that exception. Old writers refuse
+new persistent facts, and installation rollback cannot lower the project floor.
+
+Check `capabilities.read_protocols` before v2. Unsupported explicit protocols
+return `read_protocol_unsupported`; omit options for v1 on an older runtime.
+`methods`, `create` and `continue` accept `--read-protocol work_context.v2
+--body-mode full`; full is the default and always permits re-fetch. Manifest
+has `context_ready=false`. A missing method/source/image also leaves precise
+gaps. Delta needs an actually observed Host session/context generation with
+retrievable exact bytes; CLI cache offers alone remain cold/full. Preserve
+complete sources, notes, qualifications, images and physical constraints.
+Returned or deduplicated bytes do not prove reading, application, review or
+authorization. Read-only negotiation does not persist a new Task protocol or
+writer floor.
 
 ## Versioned exports
 
@@ -318,10 +372,30 @@ neither a broad Narrative layer nor `within_scope` selects the initial direction
 Reload the actual loaded Host entry after activate/rollback, resolve its managed
 release and use that release's Python. Do not borrow PATH/HOME methods. All four
 managed links share current; a foreign/occupied path aborts the switch before
-any pointer change. An interrupted switch compensates launcher/pointers/links;
-external changes are reported instead of overwritten. `--no-host-registration`
-leaves all Host paths untouched. Rollback can retire managed links absent from
-an older release; it does not downgrade project writer floors or call facts.
+any pointer change. Preserve the canonical UUIDv4 transaction ID and original
+request; matching pending work resumes, while different requests report
+`installation_transaction_pending` or `installation_transaction_conflict`.
+Explicit completed replay returns historical `cli_active`/`host_skill`, with
+independent current installation observations. A no-ID rollback after completion
+is a new toggle, not a retry of the frozen old target.
+
+`preparing` records the frozen request and preparation intents before creating
+temporary files or inode witnesses. Resume its original ID/request; unproven
+residual preparations remain preserved while that transaction prepares in a
+separate recorded namespace. A symlink Host Skill directory uses its verified
+real directory for locking and actions, retains access-chain checks, and keeps
+logical CLI paths.
+
+Ctrl-C (exit 130) reports transaction state; `compensating` resumes reverse
+recovery and a terminal `rolled_back` ID returns the original failure.
+`installation_recovery_conflict` retains external paths and backup/preparation
+artifacts; do not delete them or claim restoration. Unverifiable journals and
+persistence problems without a verifiable phase retain unknown state. Prefix then shared Host locks
+coordinate managed switches. `--no-host-registration` never resolves, locks,
+scans, reads or writes Host, including migration recovery. Rollback can retire
+managed links absent from an older release; it does not downgrade project
+writer floors or call facts. Exact command and journal details live in
+[installation](../skills/deck-master/references/installation.md#durable-transaction-recovery).
 
 Read the current request, scope, decisions, pause/revoke and completion before
 resuming Content/Design/Review. Do not restart an already completed sub-intent,

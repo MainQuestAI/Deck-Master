@@ -1,0 +1,31 @@
+{
+  "scope": "SYNTHETIC_ENGINEERING",
+  "source_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "executed_files_sha256": {
+    "src/deck_master/operations.py": "19e657510526d6456d48a3a4042244f253fc071dd4ed4583d89205038752d4da",
+    "src/deck_master/snapshots.py": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1",
+    "src/deck_master/operation_coverage.py": "55726995059acec9e52930f4f930df0d399e915143d922e84675204afd23197e",
+    "tests/rebuild/test_operation_coverage.py": "3d100b33bc8b4315efff1842e500299e4deab894958813b6fe00ba28b3295609"
+  },
+  "damage": "pointer_symlink",
+  "outcome": {
+    "error": {
+      "code": "operation_unavailable",
+      "message": "operation could not be verified; keep its original payload and ID",
+      "field": "project",
+      "cause": "operation_unavailable",
+      "operation_id": "1955e6ab-76bd-4195-9713-39aca3664dd0",
+      "retryable": false,
+      "operation_state": "unknown",
+      "next_action": "inspect the original operation; preserve its payload, base and ID until verification succeeds",
+      "docs_ref": "docs/agent-recovery-playbook.md#workbench-operations"
+    }
+  },
+  "committed_revision_id": "58942603c12045429a6a9fbf8d1a84a0",
+  "pointer_bytes_sha256_before_after": "fa4fa3708b6168c10bcc1aa58d0208f1240f472ab7b0159c39d3cfd2dbf3c71a",
+  "receipt_bytes_sha256_before_after": "12657d33b5858c8f14dd4f142fef67f586ea881c45d8282773dc087a9ae361d1",
+  "lookup_calls": 0,
+  "index_publications": 0
+}

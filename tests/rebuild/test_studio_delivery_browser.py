@@ -77,6 +77,8 @@ def test_task_list_summary_only_transforms_verified_system_templates(tmp_path):
             "audience's open question and write complete visible copy as Page v2 with "
             'an explicit page order. Same source supports different framings; do not '
             'call a rule planner or fill pages from templates.'))
+    # This stored pre-RC4 template has no new producer manifest or writer floor.
+    initial.pop('method_manifest')
     historical['tasks']=[old.put_json_object(initial)]
     commit(old,historical,'record-historical-initial-task')
     initial_row=run_desk.task_row(initial)

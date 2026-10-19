@@ -86,10 +86,55 @@ def test_real_p5_task_full_methods_and_explicit_view(tmp_path, monkeypatch):
             if isinstance(p, dict) and "page_id" in p} == {"p5"}
     assert closure["opaque_binding_only"]  # actual full Plan binding remains opaque
     assert len(view["methods"]) == 4
+    assert view["method_manifest"] == task["method_manifest"] == [
+        {key: item[key] for key in ("id", "relative_path", "sha256")} for item in raw["methods"]]
+    assert view["method_basis_issues"] == [] and view["content_validation_policy"] is None
     for item in view["methods"]:
         assert Path(item["read_file"]["path"]).read_bytes() == Path(item["own_installed_path"]).read_bytes()
     assert m.status(root)["scope_used"]["sdk"] == 3  # create / real dispatch / methods
     assert c.store_for(state).load_document()["pages"][0]["page_id"] == "p1"
+
+
+@pytest.mark.parametrize("fault", ["order", "id", "relative_path", "sha256", "omitted", "unknown-field"])
+def test_bounded_packet_rejects_changed_manifest_and_unclassified_fields(tmp_path, monkeypatch, fault):
+    root, _, _, task = setup(tmp_path, monkeypatch)
+    read_methods = m.read_methods
+    def changed_response(*args):
+        response = deepcopy(read_methods(*args))
+        work = response["work_order"]
+        if fault == "order":
+            work["method_manifest"].reverse()
+        elif fault == "omitted":
+            work.pop("method_manifest")
+        elif fault == "unknown-field":
+            work["unclassified_execution_input"] = {"page_ids": ["p1", "p9"]}
+        else:
+            work["method_manifest"][0][fault] = "0" * 64 if fault == "sha256" else "unexpected"
+        return response
+    monkeypatch.setattr(m, "read_methods", changed_response)
+    with pytest.raises(m.Error, match="unclassified" if fault == "unknown-field" else "method manifest"):
+        m.prepare_task(root, "changed", task["task_id"], "production", "q4-p5")
+    directory = root / "stages/changed"
+    assert (directory / "preflight/quarantine/sdk-method-response.json").is_file()
+    assert not (directory / "dispatch.json").exists()
+    assert not (directory / "preflight/author-packet/workorder-view.json").exists()
+    assert not any(event["kind"] == "native_begun" for event in c.Journal(root).events())
+
+
+def test_historical_packet_without_manifest_keeps_original_method_adapter(tmp_path, monkeypatch):
+    root, state, _, task = setup(tmp_path, monkeypatch)
+    with m.resource_session(root) as (journal, _, _):
+        methods = m.read_methods(journal, state, task)
+        # Explicit historical response shape; this does not rewrite its live Task.
+        legacy_task, legacy_methods = deepcopy(task), deepcopy(methods)
+        for key in ("method_manifest", "content_validation_policy", "method_basis_issues"):
+            legacy_task.pop(key, None)
+            legacy_methods["work_order"].pop(key, None)
+        result = m.packet(journal, state, legacy_task, legacy_methods, tmp_path / "historical-packet", "q4-p5")
+    view = c.read(result["author_view_ref"]["path"])
+    assert "method_manifest" not in view
+    assert [item["sha256"] for item in view["methods"]] == [item["sha256"] for item in methods["methods"]]
+    assert view["scope_pages"] == ["p5"] and view["raw_response_read_permission"] is False
 
 
 def test_real_full_source_rejected_with_original_response_retained(tmp_path, monkeypatch):

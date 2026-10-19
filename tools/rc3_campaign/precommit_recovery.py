@@ -21,7 +21,7 @@ import sys
 import traceback
 import uuid
 
-SCOPED_SHA = "ce1b5a9f8deba92f7f2d468b2ddd977c9e2de1438d4bc32e2036eeb12da20cc0"
+SCOPED_SHA = "afd3e419dcc88b631347250239d33d83dec5c9d4ea69b7429a9f868c7ef0771d"
 COMMON_SHA = "d0b2b079afb7a714c4d7028b7e5eaa6be70cc0cef41db6c73d664c952f373261"
 SOURCE = Path(__file__).with_name("supplementary_recorder.py")
 if hashlib.sha256(SOURCE.read_bytes()).hexdigest() != SCOPED_SHA:

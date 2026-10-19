@@ -1,0 +1,6 @@
+SYNTHETIC_ENGINEERING
+COMMAND: ['.venv/bin/python', '-m', 'pytest', '-q', 'tests/rebuild/test_rc4_content_review.py', '--junitxml=docs/reports/rc4/iteration-20261019/N3-incremental-tests.xml']
+.........................................                                [100%]
+41 passed in 2.38s
+
+EXIT: 0

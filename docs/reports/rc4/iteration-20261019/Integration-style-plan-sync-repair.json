@@ -1,0 +1,84 @@
+{
+  "scope": "Only tests/rebuild/test_studio_style_browser.py test synchronization. Runtime, Skill, build inputs, UI behavior and test source browser launcher unchanged.",
+  "confirmed_ci": {
+    "commit": "2b6867c5b65fca170f38df9fc92b5eeacdea0c5c",
+    "run": "39206780847",
+    "job": "117911333684",
+    "passed": 490,
+    "failed": 1,
+    "deselected": 3493,
+    "seconds": 1892.73,
+    "case": "tests/rebuild/test_studio_style_browser.py::test_screenshot_plan_freezes_target_and_rejects_late_response[p02-False]",
+    "symptom": "assert held saw []; teardown disposed the pending route.fetch context.",
+    "shared_log": "ci-2b6867c5-browser-pr-failed.redacted.log",
+    "shared_log_sha256": "8e8b23a6cc4187b8ca9b5ec893000c8919a7f8aa7db64b769fb0ee58ae7d974b",
+    "shared_log_redaction": "Only ephemeral synthetic-test x-deck-token header values redacted; original private raw log SHA retained."
+  },
+  "cause": "Tuple expression route, route.fetch() must complete before held.append executes. Sync Playwright fetch cooperatively yields to other browser operations; disabled controls prove that the UI is pending, not that the callback obtained its actual response. A plain Python assertion does not wait for callback completion.",
+  "change": "A named route callback still fetches the real response and appends the original route/response pair. Only after that completes it sets a test-only HTML data attribute. Before reading held, the existing Playwright expect mechanism waits for this completion attribute using its unchanged default timeout. No fixed sleep or timeout extension added to test source.",
+  "unchanged_checks": [
+    "four p02/p03 x invalidate False/True parameters",
+    "all three target/expand controls disabled while plan pending",
+    "actual response fulfilled after optional navigation away",
+    "invalidated response produces no dispatch button or blueprint",
+    "valid response shows actual target page",
+    "adopted production Task has exact original one-page scope",
+    "require-browser and every pre-existing timeout"
+  ],
+  "delay_injection": {
+    "script": "verify-studio-plan-route-race.py",
+    "mechanism": "Command-only async Route.fetch wrapper delays only /api/styles/plan by await asyncio.sleep(1.0), then invokes original real fetch. The await permits the actual sync Playwright callback race; no fabricated response, core guard patch or timeout change. System Chromium is selected only in the verification command because local downloaded Playwright shell is absent.",
+    "seconds": 1.0
+  },
+  "before": {
+    "source": "integration-studio-plan-source-before.py",
+    "command": ".venv/bin/python -B /workspace/rc4-work/final/verify-studio-plan-route-race.py -q --tb=short --require-browser --basetemp=/workspace/rc4-work/final/studio-plan-race-before tests/rebuild/test_studio_style_browser.py::test_screenshot_plan_freezes_target_and_rejects_late_response[p02-False]",
+    "failed": 1,
+    "seconds": 3.05,
+    "exact_failure": "assert held / assert []",
+    "delay_observations": {
+      "delayed_plan_fetches": 1,
+      "actual_plan_fetches_started": 0,
+      "actual_plan_fetches_completed": 0
+    },
+    "log": "integration-studio-plan-race-before.log",
+    "notes": "Failure and teardown happen during the injected pending await; the pending callback is cancelled. Original CI independently observed request-context disposal while real fetch was pending."
+  },
+  "after_injected": {
+    "command": ".venv/bin/python -B /workspace/rc4-work/final/verify-studio-plan-route-race.py -q --tb=short --require-browser --basetemp=/workspace/rc4-work/final/studio-plan-race-after tests/rebuild/test_studio_style_browser.py::test_screenshot_plan_freezes_target_and_rejects_late_response",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 18.92,
+    "actual_plan_fetches_started": 4,
+    "actual_plan_fetches_completed": 4,
+    "fetch_failures": [],
+    "log": "integration-studio-plan-race-after.log"
+  },
+  "after_normal": {
+    "script": "verify-studio-plan-route-normal.py",
+    "command": ".venv/bin/python -B /workspace/rc4-work/final/verify-studio-plan-route-normal.py -q --tb=short --require-browser --basetemp=/workspace/rc4-work/final/studio-plan-normal-after tests/rebuild/test_studio_style_browser.py::test_screenshot_plan_freezes_target_and_rejects_late_response tests/rebuild/test_studio_style_browser.py::test_studio_style_two_routes_compare_adopt_expand_and_review[screenshot]",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 26.73,
+    "route_fetch_and_request_response_timing": "unmodified",
+    "control": "Original screenshot workflow including comparison/adoption/expansion and page-scope checks.",
+    "log": "integration-studio-plan-normal-after.log"
+  },
+  "static": {
+    "ruff_one_file": "PASS",
+    "git_diff_check_one_file": "PASS"
+  },
+  "artifacts_sha256": {
+    "ci-2b6867c5-browser-pr-failed.log": "15759334fe03a9371a22c05b38765608f3125d1a61d4f9dd11b8cffc1b1f8d0d",
+    "verify-studio-plan-route-race.py": "feff13c18f1f12b945613edfefc5cb47970c8a2ca59c801d0fd52340ba9e7fb6",
+    "verify-studio-plan-route-normal.py": "e0da462bd3f96e2e11f0e1996c741bf3be21c355a7d19077a4b6efc07d2f4a71",
+    "integration-studio-plan-source-before.py": "adf63b2d953a06ad096a653eb38bb43d7d6b805ec3d8b8c726478c9a171c1732",
+    "integration-studio-plan-source-after.py": "eb9c55a76efa7663aff819a2fdf7e7ff617b77569356dba8b5eef3b24c7adca6",
+    "integration-studio-plan-race-before.log": "fa92fe3bd45660078011c4786418b7b6c2570c0f635e6d5b0a50400323f53628",
+    "integration-studio-plan-race-after.log": "3b0956a5216310581330379a0b2176ae5cd54c4c2296b4bf0576c40d43e47c1d",
+    "integration-studio-plan-normal-after.log": "3d139f8ffa7f336cc9eaa5f26d47db529cc8192014e6460cd73d4e93791c1f32"
+  },
+  "status": "Synchronization-only repair frozen, original and delayed genuine browser evidence retained. Final exact-head full CI required. Existing clean3167 wheel remains actual build source; runtime/Skill/build input bytes unchanged."
+}

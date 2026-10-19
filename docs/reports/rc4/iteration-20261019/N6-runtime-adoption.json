@@ -1,0 +1,141 @@
+{
+  "schema_version": "N6-runtime-adoption-evidence.v1",
+  "evidence_boundary": "Actual source Runtime adoption of the previously Host-authored v2; no installed execution or professional approval claim.",
+  "actual_user_instruction": {
+    "locator": "N6/runtime/actual-direction-20261019/01-actual-instruction.json",
+    "sha256": "40f2d4d9062e445469c8415591f4979b16b38e4e12835f928f5ab267140a5164",
+    "reported_message_time_utc": "2026-10-19 04:49 UTC",
+    "assurance": "host_attested",
+    "interpretation": "Engineering direction accepted; real effects and trusted Host acceptance deferred to user local validation."
+  },
+  "status": "ENGINEERING_CONTENT_COMPLETE_TRUSTED_REVIEW_DEFERRED",
+  "project_id": "normal-task",
+  "request_id": "req-9c4e4f9321dd",
+  "revision": "cd2fd8310b25487389f9efff18db186c",
+  "continuation_status": "completed",
+  "next_action": "return_requested_content",
+  "completion": {
+    "state": "completed",
+    "request_id": "req-9c4e4f9321dd",
+    "intent": "content_only",
+    "content_intent": "content_full",
+    "artifact_revision_id": "cd2fd8310b25487389f9efff18db186c",
+    "effective_scope": {
+      "allow_page_membership_change": true,
+      "allow_page_order_change": true,
+      "external_artifact_ref": null,
+      "layers": [
+        "narrative",
+        "plan",
+        "page_copy",
+        "speech",
+        "review"
+      ],
+      "page_ids": [],
+      "page_manifest_ref": null,
+      "purpose": "working",
+      "subject": "deck"
+    },
+    "outputs": [
+      {
+        "path": ".deckmaster/objects/af/afb4961aafe0e9199c451a3800926d8a58585729450c4277b06d045e58e96c0d.json",
+        "sha256": "afb4961aafe0e9199c451a3800926d8a58585729450c4277b06d045e58e96c0d"
+      },
+      {
+        "path": ".deckmaster/objects/9c/9c7422d1781b99f6fb1e5513c9e94c0aae3ed4cb5e018cf372b7d2e7de3b36eb.json",
+        "sha256": "9c7422d1781b99f6fb1e5513c9e94c0aae3ed4cb5e018cf372b7d2e7de3b36eb"
+      }
+    ],
+    "checks": [
+      {
+        "kind": "requested_content",
+        "status": "pass",
+        "basis": "content phases are current"
+      }
+    ],
+    "missing": [],
+    "responsible_role": "caller",
+    "next_action": "return_requested_content"
+  },
+  "decision_ref": {
+    "path": ".deckmaster/objects/16/161e36d34f9133a4c4d944625cbb37eae9ba6de326692ed035c9f65153f05646.json",
+    "sha256": "161e36d34f9133a4c4d944625cbb37eae9ba6de326692ed035c9f65153f05646"
+  },
+  "direction_evidence_assurance": "host_attested",
+  "narrative_ref": {
+    "path": ".deckmaster/objects/af/afb4961aafe0e9199c451a3800926d8a58585729450c4277b06d045e58e96c0d.json",
+    "sha256": "afb4961aafe0e9199c451a3800926d8a58585729450c4277b06d045e58e96c0d"
+  },
+  "bound_plan_ref": {
+    "path": ".deckmaster/objects/9c/9c7422d1781b99f6fb1e5513c9e94c0aae3ed4cb5e018cf372b7d2e7de3b36eb.json",
+    "sha256": "9c7422d1781b99f6fb1e5513c9e94c0aae3ed4cb5e018cf372b7d2e7de3b36eb"
+  },
+  "page_refs": [
+    {
+      "path": ".deckmaster/objects/01/011a032f687940a5ca68a121cedf978565532c7cc7bc3c3000312c6e91c7ff47.json",
+      "sha256": "011a032f687940a5ca68a121cedf978565532c7cc7bc3c3000312c6e91c7ff47"
+    },
+    {
+      "path": ".deckmaster/objects/10/104185fdd01a222a06ba064a4d037cc7c0085aee9f4e068ad00eaddd0969bf8e.json",
+      "sha256": "104185fdd01a222a06ba064a4d037cc7c0085aee9f4e068ad00eaddd0969bf8e"
+    },
+    {
+      "path": ".deckmaster/objects/1b/1b08c3506e8cf16db07d7c5acac3dd704d44efab203ba90171cc598e4f5a59b1.json",
+      "sha256": "1b08c3506e8cf16db07d7c5acac3dd704d44efab203ba90171cc598e4f5a59b1"
+    },
+    {
+      "path": ".deckmaster/objects/76/76db193627f973e6aeca6845549d10840e162cd723349aa106b3a24bcea450da.json",
+      "sha256": "76db193627f973e6aeca6845549d10840e162cd723349aa106b3a24bcea450da"
+    },
+    {
+      "path": ".deckmaster/objects/eb/ebeca8ddb53e312e4eb62e129adaa266016acf73728f507a8afd931e3bbdf4ae.json",
+      "sha256": "ebeca8ddb53e312e4eb62e129adaa266016acf73728f507a8afd931e3bbdf4ae"
+    },
+    {
+      "path": ".deckmaster/objects/37/37ffa27c31eb8162fe6462537cdec793695b317853e31c46d82c7c490a1a79d6.json",
+      "sha256": "37ffa27c31eb8162fe6462537cdec793695b317853e31c46d82c7c490a1a79d6"
+    }
+  ],
+  "page_count": 6,
+  "page_copy_task_id": "7e5ca2e5f1c6",
+  "actual_transport_host": "codex:/root/rc4_methods",
+  "original_host_and_input_hashes_preserved": true,
+  "authorization_refs_unchanged": true,
+  "review_policy_unchanged": true,
+  "independent_review_receipt_created": false,
+  "external_calls": 0,
+  "actual_production_installation_identity": {
+    "module_path": "${SOURCE_CHECKOUT}/src/deck_master/__init__.py",
+    "module_sha256": "e41bf0a4aeb0e2b4c59d13b1f30f7f557891d1e383d3c9881d40af82e3e9886c",
+    "python_executable": "${SOURCE_CHECKOUT}/.venv/bin/python",
+    "python_prefix": "${SOURCE_CHECKOUT}/.venv",
+    "method_root": "${SOURCE_CHECKOUT}/skills/deck-master",
+    "method_source": "canonical_checkout",
+    "source": {
+      "sha": "001c8f101e07cab1b230e0745a6f0b17fb54882e",
+      "tree": "f3cedc0f7b5bd57ec66164ac58a1e42c3db43618",
+      "dirty": true
+    },
+    "install": null,
+    "metadata_version": "1.0.0.dev2"
+  },
+  "interpretation": "Engineering direction and current Host v2 accepted through existing Runtime. Trusted independent review and real effects remain deferred to user local validation; no professional PASS.",
+  "original_narrative_issue_note": "Original immutable proposal retains its at-proposal direction-unadopted issue; the current direction decision and adoption are separate Runtime facts. Its bytes were not relabeled.",
+  "explicit_preproduction_review_status": "needs_reviewer",
+  "preproduction_review_reason": "no independent reviewer capability is available; a self-declared reviewer name or a random execution_ref is not independence",
+  "review_draft_ref": {
+    "path": ".deckmaster/objects/b6/b648189856d74aa145ae02458ca09bac41d33202c2b1246a11b7a380e5814405.json",
+    "sha256": "b648189856d74aa145ae02458ca09bac41d33202c2b1246a11b7a380e5814405"
+  },
+  "applicable_review_requirement": "independent_model_or_human",
+  "review_next_action": "provide_reviewer_or_record_downgrade_decision",
+  "review_dispatch_current_revision_unchanged": true,
+  "actual_revision_sequence": "Host original complete draft -> author v1 -> actual nonauthor findings -> complete v2 -> new page_copy Task first successfully adopts v2 -> exact Page/Plan readback.",
+  "not_claimed": "No already-adopted first draft was repaired through a second Runtime revision; the first adopted Page draft is v2.",
+  "content_only_contract": "The actual content_only/content_full continue response is completed/return_requested_content. A separately requested preproduction review returns needs_reviewer; it does not change that content completion or add a new content-only gate.",
+  "deferred_user_local": [
+    "real user effects and usability acceptance",
+    "trusted Host/independent-review receipt acceptance"
+  ],
+  "remaining_product_blocker_for_this_content_only_contract": null
+}

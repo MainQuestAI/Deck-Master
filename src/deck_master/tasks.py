@@ -94,6 +94,28 @@ class TaskConflict(StoreError):
     """Late result, stale input, or a different output for a known operation."""
 
 
+class MethodBasisChanged(TaskConflict):
+    """The execution contract needs formal replacement before a new result."""
+    error_code = "basis_changed"
+    http_status = 409
+    exit_code = 5
+
+
+def task_method_contract_changed(task):
+    from .method_resources import method_ids_for, rc3_method_ids_for, resolve_task_methods
+    phase = (task.get("collaboration_binding") or {}).get("phase")
+    needs_policy = task.get("protocol_version") == "compose.v2" and (phase == "argument" or
+        task.get("intent") == "input_revision" and "narrative" in
+        (task.get("collaboration_binding") or {}).get("write_scope", {}).get("layers", []))
+    if needs_policy and task.get("content_validation_policy") != "argument-connectivity.v1":
+        return True
+    if "method_manifest" not in task:
+        kwargs = {"intent": task.get("intent") or task.get("review_stage"), "phase": phase}
+        if method_ids_for(task["kind"], review_units=task.get("review_units"), **kwargs) != rc3_method_ids_for(task["kind"], **kwargs):
+            return True
+    return resolve_task_methods(task)["basis_status"] != "current"
+
+
 class StaleInputContext(TaskConflict):
     """A result arrived after the task inputs moved on (exit 5,
     ``stale_input_context``): continue hands out a fresh task."""
@@ -784,6 +806,8 @@ def new_task(
         task['method_release'] = method_release
     if review_units is not None:
         task['review_units'] = review_units
+    from .method_resources import freeze_task_methods
+    freeze_task_methods(task)
     validate_task_semantics(task)
     return task
 
@@ -1240,6 +1264,10 @@ def _accept_result_locked(
             "(document)",
             "project content moved since dispatch; read the new inputs and rebase",
         )
+
+    if task_method_contract_changed(task):
+        raise MethodBasisChanged(f"(task {task_id})/method_manifest",
+                                 "execution contract changed; run continue to supersede and dispatch a new Task")
 
     # The adoption half of accept_result consumes the same judgement as every
     # other boundary (CONTRACTS §6.1 exception): the call facts above already
@@ -1999,3 +2027,105 @@ def _utc_now_iso() -> str:
     from datetime import datetime, timezone
 
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+@_project_transaction
+def reissue_changed_method_tasks(store):
+    """Formally supersede an obsolete active contract; never rewrite its digest.
+
+    Inputs, scope and ordinary dispatch eligibility are checked again. Unsettled
+    paid calls must be resolved first, so changing methods cannot create another
+    generation allowance or hide an in-flight invocation.
+    """
+    from . import collaboration_binding, eligibility
+    from .method_resources import freeze_task_methods
+    document = store.load_document()
+    prospective = copy.deepcopy(document)
+    replacements = []
+    for index, ref in enumerate(document.get("tasks") or []):
+        task = store.read_object_json(ref)
+        if (task.get("status") not in ("awaiting_host", "running", "queued")
+                or task.get("kind") not in HOST_TASK_KINDS
+                or not task_inputs_current(store, document, task)
+                or not task_method_contract_changed(task)):
+            continue
+        if any(a.get("state") in ("in_flight", "unknown") for a in task.get("call_allowances") or []):
+            raise MethodBasisChanged(f"(task {task['task_id']})/call_allowances",
+                                     "settle in-flight/unknown calls before replacing this method contract")
+        binding = task.get("collaboration_binding") or {}
+        action = ("change.commit" if task.get("change_binding") else "dispatch.compose" if task["kind"] == "compose"
+                  else "dispatch.blueprint" if task["kind"] == "blueprint" else "dispatch.host_task")
+        retired = {**task, "status": "superseded", "updated_at": _utc_now_iso()}
+        retired["call_allowances"] = [{**a, "state": "released"} if a.get("state") == "reserved" else a
+                                     for a in task.get("call_allowances") or []]
+        # Revalidate the original dispatch under the prospective release of its
+        # unspent reservations. Transferring them must not demand a second page
+        # credit or erase any already-consumed call fact.
+        prospective["tasks"][index] = store.put_json_object(retired)
+        layers = {"blueprint": ["blueprint"], "reconstruct": ["svg", "blueprint"],
+                  "repair": ["page_copy", "svg"], "review": ["review"], "style_analyze": ["design"]}.get(
+                      task["kind"], (binding.get("write_scope") or {}).get("layers") or [])
+        if task.get("change_binding"):
+            from .changes import action_for_task, _plan_layers
+            layers = _plan_layers({"actions": [action_for_task(store, document, task)]})
+        eligibility.guard(store, prospective, action, context={"targets": {
+            "page_ids": task.get("scope_pages") or [], "layers": layers}})
+        replacement = copy.deepcopy(task)
+        replacement.update(task_id=uuid.uuid4().hex[:12], operation_id=f"methods-{uuid.uuid4().hex[:12]}",
+                           status="awaiting_host", execution_ref=None, result_refs=[], error=None,
+                           dispatch_revision=document["revision_id"], created_at=_utc_now_iso(),
+                           updated_at=_utc_now_iso(), usage={"source": "not_reported", "external_calls": None},
+                           call_allowances=[copy.deepcopy(a) for a in task.get("call_allowances") or []
+                                            if a.get("state") == "reserved"])
+        for key in ("host_protocol", "execution_started_at", "generation_requests", "generation_attempts"):
+            replacement.pop(key, None)
+        if binding:
+            replacement["collaboration_binding"] = collaboration_binding.build_binding(
+                store, document, phase=binding["phase"], executor_type=binding["executor_type"],
+                write_scope=binding["write_scope"], adoption_policy=binding["adoption_policy"],
+                authorization_ref=binding.get("authorization_ref"), decision_refs=binding.get("decision_refs"),
+                include_manuscript=task["kind"] != "style_analyze")
+            if "budget_key" in binding:
+                replacement["collaboration_binding"]["budget_key"] = binding["budget_key"]
+        freeze_task_methods(replacement)
+        validate_task_semantics(replacement)
+        prospective["tasks"].append(store.put_json_object(replacement))
+        replacements.append((index, retired, replacement))
+    if not replacements:
+        return document
+    updated = bump_revision(document, {"operation_id": f"method-reissue-{uuid.uuid4().hex[:12]}",
+        "kind": "task_update", "description": "supersede obsolete method contracts and dispatch replacements",
+        "read_set": []})
+    # A committed change action names its Task id. A replacement gets a new
+    # immutable change record, preserving the old record and its retired Task.
+    change_groups = {}
+    for _, retired, replacement in replacements:
+        binding = replacement.get("change_binding")
+        if binding:
+            key = binding["change_ref"]["sha256"]
+            if key not in change_groups:
+                original = store.read_object_json(binding["change_ref"])
+                change_groups[key] = {**copy.deepcopy(original),
+                    "change_id": "change-" + uuid.uuid4().hex, "base_revision": document["revision_id"]}
+            change = change_groups[key]
+            action_index = change["task_ids"].index(retired["task_id"])
+            settled_slots = len(retired.get("call_allowances") or []) - len(replacement["call_allowances"])
+            change["actions"][action_index]["max_calls"] = max(
+                0, change["actions"][action_index]["max_calls"] - settled_slots)
+            change["task_ids"] = [replacement["task_id"] if tid == retired["task_id"] else tid
+                                  for tid in change["task_ids"]]
+    change_refs = {}
+    for key, change in change_groups.items():
+        from .models import validate_schema
+        validate_schema("change_set", change)
+        change_refs[key] = store.put_json_object(change)
+        updated.setdefault("changes", []).append(change_refs[key])
+    for index, retired, replacement in replacements:
+        if replacement.get("change_binding"):
+            old_ref = replacement["change_binding"]["change_ref"]
+            replacement["change_binding"]["change_ref"] = change_refs[old_ref["sha256"]]
+        updated["tasks"][index] = store.put_json_object(retired)
+        updated["tasks"].append(store.put_json_object(replacement))
+    store._commit_locked(base_revision=document["revision_id"], document=updated,
+                         operation_id=updated["change"]["operation_id"], blobs=[])
+    return store.load_document()

@@ -378,5 +378,10 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
     task["collaboration_binding"] = binding
     task.setdefault("protocol_version", "changes.v1")
     task["required_capabilities"] = list(dict.fromkeys([*task.get("required_capabilities", []), "collaboration.v1", "rc3-entry.v1"]))
+    if "method_manifest" in task:
+        # Producer finalization after the actual phase/scope has been bound.
+        # Historical Tasks without this field never acquire a new contract.
+        from .method_resources import freeze_task_methods
+        freeze_task_methods(task)
     require_binding(document, task)
     return task

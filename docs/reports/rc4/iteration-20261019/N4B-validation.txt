@@ -1,0 +1,70 @@
+Portable evidence: locator strings normalized; raw hashes and exact originals are recorded in N4-evidence-normalization.json.
+
+SYNTHETIC_ENGINEERING
+
+$ .venv/bin/python -m ruff check src/deck_master/operation_coverage.py src/deck_master/snapshots.py src/deck_master/operations.py tests/rebuild/test_operation_coverage.py
+All checks passed!
+
+exit_code=0
+
+$ .venv/bin/python -m pytest -q tests/rebuild/test_operation_coverage.py tests/rebuild/test_input_receipt_recovery.py tests/rebuild/test_workbench_operations.py tests/rebuild/test_task_receipt_recovery.py tests/rebuild/test_workbench_reads.py tests/rebuild/test_eligibility_snapshot_boundary.py
+........................F............................................... [ 48%]
+........................................................................ [ 96%]
+......                                                                   [100%]
+=================================== FAILURES ===================================
+_____________ test_show_reuses_single_lookup_and_matching_document _____________
+
+tmp_path = PosixPath('<synthetic-tests>/test_show_reuses_single_lookup0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7e9f5fdf10>
+
+    def test_show_reuses_single_lookup_and_matching_document(tmp_path, monkeypatch):
+        store = project(tmp_path); op = str(uuid.uuid4())
+        saved = submit(store, op, store.current_revision_id(), {}); append(store, 4)
+        operations.resolve_operation(store, 'absent')
+        counts = Counts(monkeypatch)
+        result, measured = counts.run(lambda: operations.show(store.project_root, operation_id=op))
+        assert result['operation_result'] == saved['operation_result']
+>       assert measured['snapshot_read'] == measured['snapshot_decode'] == 1
+E       assert 2 == 1
+
+tests/rebuild/test_operation_coverage.py:421: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_operation_coverage.py::test_show_reuses_single_lookup_and_matching_document
+1 failed, 149 passed in 45.58s
+
+exit_code=1
+
+Resumed final verification (earlier failure retained above)
+
+SYNTHETIC_ENGINEERING
+
+2026-10-19 resumed N4 verification; source baseline a08bc68c1cbbbc806205104c2bb01f3f096305f0; shared working tree, not committed candidate.
+Python 3.12.14; Linux-6.18.55-x86_64-with-glibc2.41
+
+N4B six-file affected regression
+$ N4B_EVIDENCE_DIR=docs/reports/rc4/iteration-20261019 .venv/bin/python -m pytest -q tests/rebuild/test_operation_coverage.py tests/rebuild/test_input_receipt_recovery.py tests/rebuild/test_workbench_operations.py tests/rebuild/test_task_receipt_recovery.py tests/rebuild/test_workbench_reads.py tests/rebuild/test_eligibility_snapshot_boundary.py --basetemp=<synthetic-tests>/dm-n4b-final-resumed
+........................................................................ [ 43%]
+........................................................................ [ 86%]
+......................                                                   [100%]
+166 passed in 49.58s
+
+exit_code=0
+
+N4A five-file regression
+$ .venv/bin/python -m pytest -q tests/rebuild/test_rc4_work_context.py tests/rebuild/test_rc3_early_methods.py tests/rebuild/test_rc3_content_methods.py tests/rebuild/test_cli.py tests/rebuild/test_package_boundary.py --disable-warnings --maxfail=1 --basetemp=<synthetic-tests>/dm-n4a-final-resumed
+................................................................         [100%]
+64 passed in 9.74s
+
+exit_code=0
+
+N1 shared interfaces, cache disabled
+$ DECK_MASTER_OPERATION_CACHE=0 .venv/bin/python -m pytest -q tests/rebuild/test_input_receipt_recovery.py tests/rebuild/test_eligibility_snapshot_boundary.py tests/rebuild/test_workbench_operations.py tests/rebuild/test_task_receipt_recovery.py --basetemp=<synthetic-tests>/dm-n4-n1-canonical-final
+........................................................................ [ 71%]
+.............................                                            [100%]
+101 passed in 22.19s
+
+exit_code=0
+
+Ruff on operation_coverage.py, snapshots.py, operations.py, work_context.py and the two N4 test modules: All checks passed (exit_code=0).
+git diff --check: exit_code=0.
+N4A-probe.py: exit_code=0; refreshed actual-byte counts/samples and exact executed source hashes.

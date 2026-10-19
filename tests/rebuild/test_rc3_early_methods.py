@@ -86,11 +86,12 @@ def test_real_host_work_order_method_read_and_basis_changed(tmp_path, capsys, mo
         target.parent.mkdir(exist_ok=True)
         target.write_text(item["content"] + "\nchanged method\n")
     monkeypatch.setattr(method_resources, "resolve_root", lambda: root)
-    assert cli.main(["methods", "--project", str(project), "--task-id", task["task_id"]]) == 0
-    changed = json.loads(capsys.readouterr().out)
-    assert changed["status"] == "basis_changed"
-    assert changed["dispatch_method_release"] == result["dispatch_method_release"]
-    assert changed["current_method_release"] != changed["dispatch_method_release"]
+    assert cli.main(["methods", "--project", str(project), "--task-id", task["task_id"]]) == 4
+    changed = json.loads(capsys.readouterr().err)
+    assert changed["error"]["code"] == "method_resource_missing"
+    resolved = method_resources.resolve_task_methods(task)
+    assert resolved["basis_status"] == "basis_changed"
+    assert resolved["method_manifest"] == task["method_manifest"]
     assert (store.project_root / ".deckmaster/current.json").read_bytes() == before_current
 
 

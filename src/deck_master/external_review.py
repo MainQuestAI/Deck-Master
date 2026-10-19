@@ -322,6 +322,18 @@ def evaluate(source, *, source_sha256=None, scope, persistence='none', report_ou
                              'methods': [], 'author_exclusion_set': {'status': 'unknown', 'execution_refs': []},
                              'renderer': {'available': renderer, 'executed': False}},
               'limitations': limitations, 'evidence_level': 'engineering'}
+    # Read-only handoff: these are returned bytes, never an executed review or
+    # provenance.methods application claim. Scope remains the caller's scope.
+    from .method_resources import read_methods, method_release
+    layers = set(scope.get('layers') or [])
+    units = set()
+    if layers & {'narrative', 'plan', 'page_copy'}:
+        units.add('content')
+    if 'speech' in layers:
+        units.add('speech')
+    if layers & {'design', 'blueprint', 'svg', 'output'}:
+        units.update({'blueprint_fidelity', 'readability'})
+    review_methods = read_methods('review', review_units=sorted(units) if units else None)
     external_report = {'report': report, 'report_sha256': sha256_bytes(canonical_json_bytes(report))}
     if target is not None:
         _output(target, roots)
@@ -333,5 +345,7 @@ def evaluate(source, *, source_sha256=None, scope, persistence='none', report_ou
     return {'status': status, 'source_hashes': entries, 'source_sha256': source_digest,
             'external_report': external_report, 'report_output': str(target) if target else None,
             'evidence_level': 'engineering', 'limitations': limitations,
+            'method_context': {'methods': review_methods, 'method_release': method_release(review_methods),
+                               'consumption': 'runtime_returned_bytes', 'host_application': 'not_recorded'},
             'artifact_revision_id': artifact_revision, 'control_revision_id': None,
             'next_action': 'repeat_from_fixed_source' if not unchanged else 'review_the_readable_packet'}

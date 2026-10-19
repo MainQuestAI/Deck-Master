@@ -1820,6 +1820,8 @@ class EligibilityBlocked(operations.OperationError):
             "next_action": self.decision.get("next_action") or base["error"]["next_action"],
             "decision_card": self.decision.get("decision_card_ref_or_projection"),
             "required_artifact_refs": self.decision.get("required_artifact_refs"),
+            "artifact_revision_id": self.decision.get("artifact_revision_id"),
+            "control_revision_id": self.decision.get("control_revision_id"),
         })
         return base
 
@@ -1847,8 +1849,8 @@ def describe(project, action: str, *, targets: dict | None = None, revision: str
     task, receipt or allowance."""
     from pathlib import Path
     store = Store(Path(project).expanduser())
-    control = store.load_document()
-    artifact = store.load_document(revision) if revision else control
+    from .snapshots import load_artifact_control
+    artifact, control = load_artifact_control(store, revision)
     payload = dict(context or {})
     if targets is not None:
         payload["targets"] = targets

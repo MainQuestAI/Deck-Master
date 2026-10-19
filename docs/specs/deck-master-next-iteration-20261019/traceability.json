@@ -1,0 +1,597 @@
+{
+  "schema_version": "deck_master_iteration_traceability.v1",
+  "document_kind": "offline_development_index",
+  "spec_version": "1.0",
+  "baseline_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "intended_candidate": "1.0.0rc4",
+  "implementation_status": "NOT_RUN",
+  "criterion_source": "task-cards",
+  "dependency_semantics": "Final prerequisites only; N5 drafts and N6 preparation may start early. N6 can consume v1 while N4 is in progress.",
+  "tasks": [
+    {
+      "id": "N1",
+      "final_owner": "N1",
+      "task_card": "task-cards/N1-operation-recovery.md",
+      "depends_on": [],
+      "test_targets": [
+        "tests/rebuild/test_flow_quality.py",
+        "tests/rebuild/test_task_receipt_recovery.py",
+        "tests/rebuild/test_workbench_operations.py",
+        "tests/rebuild/test_content_ops.py",
+        "tests/rebuild/test_eligibility_enforcement.py",
+        "proposed:test_input_receipt_recovery.py",
+        "proposed:test_eligibility_snapshot_boundary.py"
+      ],
+      "test_target_status": "planned; verify names and actual results during implementation"
+    },
+    {
+      "id": "N2",
+      "final_owner": "N2",
+      "task_card": "task-cards/N2-install-recovery.md",
+      "depends_on": [],
+      "test_targets": [
+        "tests/rebuild/test_rc3_install_four_links.py",
+        "tests/rebuild/test_install_host_skill.py",
+        "tests/rebuild/test_install.py",
+        "proposed:test_install_transaction_recovery.py"
+      ],
+      "test_target_status": "planned; verify names and actual results during implementation"
+    },
+    {
+      "id": "N3",
+      "final_owner": "N3",
+      "task_card": "task-cards/N3-content-review.md",
+      "depends_on": [],
+      "test_targets": [
+        "tests/rebuild/test_content_contracts.py",
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_rc3_content_methods.py",
+        "tests/rebuild/test_rc3_early_methods.py",
+        "required:producer-to-accept-and-old-writer-negative"
+      ],
+      "test_target_status": "planned; verify names and actual results during implementation"
+    },
+    {
+      "id": "N4",
+      "final_owner": "N4",
+      "task_card": "task-cards/N4-context-and-history.md",
+      "depends_on": [
+        "N1",
+        "N3"
+      ],
+      "test_targets": [
+        "required:v1-v2-full-dereference-equivalence",
+        "required:canonical-index-disabled-comparison",
+        "required:cold-hot-delta-json-stat-counters",
+        "required:corruption-forgery-multiprocess-boundaries"
+      ],
+      "test_target_status": "planned; verify names and actual results during implementation"
+    },
+    {
+      "id": "N5",
+      "final_owner": "N5",
+      "task_card": "task-cards/N5-docs-and-release.md",
+      "depends_on": [
+        "N1",
+        "N2",
+        "N3",
+        "N4",
+        "N6"
+      ],
+      "test_targets": [
+        "tests/rebuild/test_package_boundary.py",
+        "tests/rebuild/test_entry_capabilities.py",
+        "shared:N2-N3-installed-identity",
+        "shared:N6-normal-task"
+      ],
+      "test_target_status": "planned; verify names and actual results during implementation"
+    },
+    {
+      "id": "N6",
+      "final_owner": "N6",
+      "task_card": "task-cards/N6-quality-improvement.md",
+      "depends_on": [
+        "N3"
+      ],
+      "test_targets": [
+        "shared:N3-method-dispatch",
+        "shared:N4-context-equivalence",
+        "required:normal-host-task-and-complete-output",
+        "conditional:actual-layout-rendering-and-notes"
+      ],
+      "test_target_status": "planned; verify names and actual results during implementation"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC-N1-01",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "普通非UUID输入原子回执",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-02",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "重放不再读取源或上传",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-03",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "提交前后故障与缓存失败",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-04",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "同族跨入口与新请求摘要绑定",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-05",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "跨族ID冲突与中性查询",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-06",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "旧日志及log-only no-op兼容",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-07",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "名称/no-op/实际更新三分支",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-08",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "并发CAS和同ID竞争",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-09",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "旧HTTP错误投影",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-10",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "eligibility指定快照边界",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-11",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "固定artifact/control与索引对照",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N1-12",
+      "owner": "N1",
+      "criterion_file": "task-cards/N1-operation-recovery.md",
+      "verification_topic": "原回执和入口回归",
+      "test_plan": "N1"
+    },
+    {
+      "id": "AC-N2-01",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "正常/重复激活兼容",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-02",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "逐链接KeyboardInterrupt补偿",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-03",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "进程死亡后恢复",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-04",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "历史完成事务精确重放",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-05",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "无ID rollback原语义",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-06",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "四Skill向少Skill回退",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-07",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "外部所有权冲突",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-08",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "身份冲突和Host并发锁",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-09",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "no-host-registration全程隔离",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-10",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "补偿再中断与journal写失败",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-11",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "损坏/跨prefix事务拒绝",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N2-12",
+      "owner": "N2",
+      "criterion_file": "task-cards/N2-install-recovery.md",
+      "verification_topic": "旧安装与资源边界回归",
+      "test_plan": "N2"
+    },
+    {
+      "id": "AC-N3-01",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "新argument断连拒绝",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-02",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "单中心与framing正例",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-03",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "弱连通且保留原方向",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-04",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "qualification和元数据反例",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-05",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "旧对象/旧Task/旧proposal兼容",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-06",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "内容/前审/混合方法矩阵",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-07",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "纯视觉审查范围",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-08",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "四入口与无Task只读",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-09",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "真实producer写manifest和policy",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-10",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "旧Task方法basis恢复",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-11",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "N4投影等价",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N3-12",
+      "owner": "N3",
+      "criterion_file": "task-cards/N3-content-review.md",
+      "verification_topic": "writer floor及安装资源",
+      "test_plan": "N3"
+    },
+    {
+      "id": "AC-N4-01",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "v1兼容与写前协商",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-02",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "序列化正文去重",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-03",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "冷会话/缓存变化/取回",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-04",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "N3方法清单和旧Task",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-05",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "完整Page/原图/来源",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-06",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "请求级解码计数",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-07",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "只读与业务等价",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-08",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "冷态canonical扫描",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-09",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "同head热态查询",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-10",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "新增revision增量",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-11",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "伪造索引和legacy保护",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-12",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "损坏历史/孤儿/签名变化",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-13",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "并发与固定head",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N4-14",
+      "owner": "N4",
+      "criterion_file": "task-cards/N4-context-and-history.md",
+      "verification_topic": "N1回执和unknown保持",
+      "test_plan": "N4"
+    },
+    {
+      "id": "AC-N5-01",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "唯一活动入口",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-02",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "正常QuickStart路径",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-03",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "恢复/协议说明一致",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-04",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "历史处置与零引用归档",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-05",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "步骤和方法真源",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-06",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "四Skill和CLAUDE文档守卫",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-07",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "schema唯一镜像",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-08",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "候选与安装资源身份",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-09",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "聚焦测试与CI说明",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N5-10",
+      "owner": "N5",
+      "criterion_file": "task-cards/N5-docs-and-release.md",
+      "verification_topic": "台账投影及最终交接",
+      "test_plan": "N5"
+    },
+    {
+      "id": "AC-N6-01",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "完整材料与工作委托",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-02",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "首稿/接纳稿/修订身份",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-03",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "实质canonical方法改进",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-04",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "真实Host正常任务应用",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-05",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "内容主线与确认稿边界",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-06",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "具体缺陷修订与复查",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-07",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "适用产物与定向重做",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-08",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "旧方法/历史证据边界",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-09",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "普通交付无附加人类实验",
+      "test_plan": "N6"
+    },
+    {
+      "id": "AC-N6-10",
+      "owner": "N6",
+      "criterion_file": "task-cards/N6-quality-improvement.md",
+      "verification_topic": "真实成果与关闭结论",
+      "test_plan": "N6"
+    }
+  ]
+}

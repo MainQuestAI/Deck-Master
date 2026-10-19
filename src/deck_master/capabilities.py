@@ -80,6 +80,8 @@ def describe(adapter_context=None):
         "schema_version": "host_capabilities.v1",
         "package_version": __version__,
         "protocol_capabilities": list(RUNTIME_PROTOCOL_CAPABILITIES),
+        "read_protocols": [{"protocol": "work_context.v2", "body_modes": ["full", "delta", "manifest"],
+                            "default_body_mode": "full", "cache_offer_requires_observed_context": True}],
         "installation_identity": installation_identity(),
         "status": "ready" if all(r["available"] for r in resources) else "needs_tool",
         **available,

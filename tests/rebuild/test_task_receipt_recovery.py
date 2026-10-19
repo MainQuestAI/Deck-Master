@@ -134,6 +134,12 @@ def test_legacy_completed_task_without_digest_is_not_guessed(tmp_path):
         scope_pages=['p09'], instruction='Fixed historical completed Task without a receipt',
         inputs=[], dependencies=[], dispatch_revision=document['revision_id'],
         produced_against=content_identity(document), status='completed')
+    # This fixture represents a pre-RC4 Task, not a new producer invocation.
+    task.pop("method_manifest", None)
+    task.pop("content_validation_policy", None)
+    from deck_master import method_resources
+    historical_methods = method_resources._read_ids(method_resources.rc3_method_ids_for(task["kind"]))
+    task["method_release"] = method_resources.method_release(historical_methods)
     task['result_refs'] = [document['pages'][0]['page']]
     old = bump_revision(document, {'operation_id': 'historical-completed-fact', 'kind': 'task_update',
         'description': 'Explicit L1 pre-receipt historical Task, not an adoption through a legacy bypass', 'read_set': []})

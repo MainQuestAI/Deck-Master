@@ -145,7 +145,7 @@ def test_method_dispatch_mapping_by_kind_and_intent() -> None:
     assert method_ids_for("compose", intent="input_revision") == (
         "source-reading", "content-methods", "content-examples", "input-update")
     assert method_ids_for("blueprint") == method_ids_for("reconstruct") == ("blueprint-svg", "physical-units")
-    assert method_ids_for("review") == ("review-and-repair", "physical-units")
+    assert method_ids_for("review") == ("source-reading", "content-methods", "content-calibration", "review-and-repair", "physical-units")
     assert method_ids_for("repair") == ("review-and-repair", "content-methods", "blueprint-svg", "physical-units")
     assert method_ids_for("compile") == ()
     # The dispatched entry list stays different between compose and review (AC-02).
@@ -618,9 +618,9 @@ def test_inputs_update_supersedes_and_dispatches(tmp_path: Path) -> None:
 
     # Idempotent retry returns the original result without a new revision.
     replay = _inputs_update(
-        project, patch=patch, base_revision=result["revision_id"],
+        project, patch=patch, base_revision=before_revision,
         operation_id=operation_id, patch_dir=FIXTURES)
-    assert replay == result
+    assert replay == {**result, "current_revision_id": result["revision_id"], "replayed": True}
 
 
 def test_inputs_update_conflicts(tmp_path: Path) -> None:

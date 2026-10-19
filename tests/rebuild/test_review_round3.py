@@ -109,8 +109,10 @@ def test_registration_failure_restores_activation(tmp_path, monkeypatch, existin
     assert not (root / 'previous').is_symlink()
     assert not (home / 'skills/deck-master').is_symlink()
     if not existing:
-        assert not (root / 'bin').exists()
-    assert not home.exists()
+        assert not (root / 'bin/deck-master').exists()
+    # RC4 retains the shared Host lock and witnessed preparations; no public
+    # entry survives a rolled-back fresh activation.
+    assert not any((home / 'skills' / name).is_symlink() for name in install.PUBLIC_SKILLS)
 
 
 def test_import_reorder_refuses_old_result_and_continue_retires_it(tmp_path):
@@ -152,9 +154,8 @@ def test_failure_compensates_migration_and_rollback(tmp_path, monkeypatch, scena
         install.activate(prefix, 'old')
         install.activate(prefix, 'new')
     def snapshot():
-        paths = list((prefix / '.deck-master').rglob('*')) + list(home.rglob('*'))
-        return {str(p): ('link', os.readlink(p)) if p.is_symlink() else
-                ('file', p.read_bytes()) if p.is_file() else ('dir',) for p in paths if p.name != 'install.lock'}
+        from test_rc3_install_four_links import _snapshot
+        return _snapshot(prefix, home / 'skills')
     before = snapshot()
     if point == 'migration' and scenario != 'rollback':
         original = install._unlink
@@ -186,8 +187,13 @@ def test_compensation_preserves_external_occupant_and_reports(tmp_path, monkeypa
         current.write_text('external writer')
         raise OSError('original failure')
     monkeypatch.setattr(install, '_sync_host_skill', fail)
-    with pytest.raises(RuntimeError, match='original failure.*compensation incomplete.*current.*backups:'):
+    from deck_master.errors import InstallationTransactionError
+    with pytest.raises(InstallationTransactionError) as caught:
         install.activate(prefix, 'new')
+    assert caught.value.error_code == 'installation_recovery_conflict'
+    assert caught.value.details['original_failure']['message'] == 'original failure'
+    assert any(row['path'].endswith('/current') and 'backup' in row
+               for row in caught.value.details['conflicts'])
     assert (prefix / '.deck-master/current').read_text() == 'external writer'
 
 
@@ -282,6 +288,7 @@ def test_cli_reorder_then_late_accept_is_exit_five(tmp_path, monkeypatch, capsys
 
 
 def test_cli_install_conflict_and_compensation_failure_codes(tmp_path, monkeypatch, capsys):
+    import json
     from deck_master.cli import main
     prefix, home = tmp_path / 'prefix', tmp_path / 'host'
     monkeypatch.setenv('CODEX_HOME', str(home))
@@ -297,9 +304,11 @@ def test_cli_install_conflict_and_compensation_failure_codes(tmp_path, monkeypat
         current.mkdir()
         raise OSError('registration failed')
     monkeypatch.setattr(install, '_sync_host_skill', fail)
-    assert main(command) == 4
-    error = capsys.readouterr().err
-    assert 'compensation incomplete' in error and 'registration failed' in error
+    assert main(command) == 5
+    error = json.loads(capsys.readouterr().err)['error']
+    assert error['code'] == 'installation_recovery_conflict'
+    assert error['transaction_state'] == 'recovery_conflict'
+    assert error['original_failure']['message'] == 'registration failed'
     assert (prefix / '.deck-master/current').is_dir()
 
 

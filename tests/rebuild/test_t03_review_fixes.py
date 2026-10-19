@@ -42,6 +42,7 @@ def _adopt_new_narrative(project, store):
     narrative["narrative_id"] = "nar-swapped"
     for node in narrative["nodes"]:
         node["node_id"] = node["node_id"] + "-v2"
+        node["qualification_node_ids"] = [node_id + "-v2" for node_id in node["qualification_node_ids"]]
     narrative["central_node_id"] = "n1-v2"
     narrative["edges"] = [{"from_node_id": "q1-v2", "to_node_id": "n1-v2",
                            "relation": "qualifies"}]

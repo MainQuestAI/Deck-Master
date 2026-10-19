@@ -61,7 +61,7 @@ def test_authorized_first_two_initial_pages_reverse_arrival_remain_candidates(tm
     path,store,_=project(tmp_path)
     original=copy.deepcopy(store.load_document()['pages'])
     recipe=confirmed(path,store)
-    assert store.load_document()['compatibility']['minimum_writer']=='rc3-entry.v1'
+    assert store.load_document()['compatibility']['minimum_writer']=='rc4-content.v1'
     pair=dispatch(path,store,recipe,['p1','p2'])
     assert all(task['stage_request']['references']==[] for task in pair)
     assert all(task['collaboration_binding']['adoption_policy']=='candidate_only' for task in pair)

@@ -34,7 +34,7 @@
         "page_visual",
         "final"
       ],
-      "description": "Content collaboration v1.2 CONTRACTS \u00a76.3/\u00a711.6: a preproduction review is bound to the current Narrative/Plan/Page manuscript and its source dependencies."
+      "description": "Content collaboration v1.2 CONTRACTS §6.3/§11.6: a preproduction review is bound to the current Narrative/Plan/Page manuscript and its source dependencies."
     },
     "status": {
       "enum": [
@@ -347,7 +347,11 @@
               "blueprint_fidelity",
               "conversion",
               "readability",
-              "privacy"
+              "privacy",
+              "argument",
+              "page_copy",
+              "progression",
+              "speech"
             ]
           },
           "page_ids": {
@@ -375,7 +379,7 @@
         "compose.v2",
         "changes.v1"
       ],
-      "description": "compose.v2 selects the phased result protocol (CONTRACTS \u00a711.5); compose.v1 remains readable for historical tasks and receipts only."
+      "description": "compose.v2 selects the phased result protocol (CONTRACTS §11.5); compose.v1 remains readable for historical tasks and receipts only."
     },
     "required_capabilities": {
       "type": "array",
@@ -595,7 +599,7 @@
             "cue",
             "verbatim"
           ],
-          "description": "Content collaboration v1.2 CONTRACTS \u00a71.7/\u00a710.1: the speech segment kind this phase was dispatched for (cue = cues). The Runtime derives it from the plan speech policy or an explicit instruction; a Host result cannot pick it."
+          "description": "Content collaboration v1.2 CONTRACTS §1.7/§10.1: the speech segment kind this phase was dispatched for (cue = cues). The Runtime derives it from the plan speech policy or an explicit instruction; a Host result cannot pick it."
         }
       },
       "required": [
@@ -673,7 +677,7 @@
         },
         {
           "type": "object",
-          "description": "Task collaboration binding (CONTRACTS \u00a75). Required for newly dispatched tasks once the writer boundary is collaboration.v1.",
+          "description": "Task collaboration binding (CONTRACTS §5). Required for newly dispatched tasks once the writer boundary is collaboration.v1.",
           "additionalProperties": false,
           "required": [
             "request_id",
@@ -753,6 +757,36 @@
             }
           }
         }
+      ]
+    },
+    "method_manifest": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "relative_path",
+          "sha256"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "relative_path": {
+            "type": "string",
+            "pattern": "^references/[a-z0-9-]+\\.md$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "content_validation_policy": {
+      "enum": [
+        "argument-connectivity.v1"
       ]
     }
   },

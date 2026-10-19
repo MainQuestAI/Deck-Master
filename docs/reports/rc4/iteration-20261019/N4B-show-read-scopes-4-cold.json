@@ -1,0 +1,61 @@
+{
+  "scope": "SYNTHETIC_ENGINEERING",
+  "source_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "executed_files_sha256": {
+    "src/deck_master/operations.py": "19e657510526d6456d48a3a4042244f253fc071dd4ed4583d89205038752d4da",
+    "src/deck_master/snapshots.py": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1",
+    "src/deck_master/operation_coverage.py": "55726995059acec9e52930f4f930df0d399e915143d922e84675204afd23197e",
+    "tests/rebuild/test_operation_coverage.py": "3d100b33bc8b4315efff1842e500299e4deab894958813b6fe00ba28b3295609"
+  },
+  "cache_mode": "cold",
+  "newer_revisions": 4,
+  "public_entry_total": {
+    "snapshot_read": 6,
+    "snapshot_decode": 6,
+    "snapshot_bytes": 10461,
+    "snapshot_stat": 40,
+    "receipt_read": 0,
+    "receipt_bytes": 0,
+    "receipt_decode": 2,
+    "receipt_reader": 0,
+    "result_read": 0,
+    "result_bytes": 0,
+    "result_decode": 1,
+    "result_reader": 0,
+    "other_decode": 3,
+    "object_read": 1,
+    "object_bytes": 566,
+    "elapsed_seconds": 0.008784768000168697
+  },
+  "entry_current_validation": [
+    {
+      "snapshot_read": 1,
+      "snapshot_decode": 1
+    }
+  ],
+  "i01_resolver": [
+    {
+      "snapshot_read": 5,
+      "snapshot_decode": 5
+    }
+  ],
+  "snapshot_read_revisions": [
+    "7c3d6f1235314287a003223de4bc3aab",
+    "98a78c79c9424afeadf4a8a8b6a3a1ce",
+    "f0ffcbb2cd1a41ffb98afcd393e789cd",
+    "16248bede25f4128912211cc2dc6af93",
+    "b1a9a4caf19047e9956b8f5e5f0ff8d7",
+    "901b7979f4754828ac17ac4bd43c942c"
+  ],
+  "snapshot_decode_revisions": [
+    "7c3d6f1235314287a003223de4bc3aab",
+    "98a78c79c9424afeadf4a8a8b6a3a1ce",
+    "f0ffcbb2cd1a41ffb98afcd393e789cd",
+    "16248bede25f4128912211cc2dc6af93",
+    "b1a9a4caf19047e9956b8f5e5f0ff8d7",
+    "901b7979f4754828ac17ac4bd43c942c"
+  ],
+  "note": "one I01 call; every canonical snapshot read/decoded at most once across the complete public entry"
+}

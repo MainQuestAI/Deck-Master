@@ -102,7 +102,7 @@ def test_notes_edit_preserves_completed_visual_and_actual_review_bytes(tmp_path)
     result = editing.edit_page(project, page=page, base_revision=before['revision_id'],
                                page_hash=entry['page']['sha256'], operation_id='notes-change')
     after = store.load_document()
-    assert after['compatibility']['minimum_writer'] == 'rc3-entry.v1'
+    assert after['compatibility']['minimum_writer'] == 'rc4-content.v1'
     assert after['collaboration'] == before['collaboration']
     assert all(after['pages'][0][slot] == entry[slot] for slot in ('blueprint', 'svg', 'svg_preview'))
     assert after['pages'][0]['ppt_preview'] is None

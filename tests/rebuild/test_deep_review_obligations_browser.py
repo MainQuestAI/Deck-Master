@@ -145,9 +145,9 @@ def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(his
     """N13/AC18：历史 A 无待办、最新 B 有待办；顶栏入口到最新记录，历史仍可返回。"""
     from playwright.sync_api import expect
     page, server, path, store = historical_obligations_browser
-    add_task(store, 'done-task-1', 'compose', 'completed', '第一版整理已完成。')
+    add_task(store, 'done-task-1', 'compose', 'completed', '第一版整理已完成。', historical=True)
     historical = store.current_revision_id()
-    add_task(store, 'todo-task-1', 'reconstruct', 'awaiting_host', '新版本待交接的 SVG 重建。')
+    add_task(store, 'todo-task-1', 'reconstruct', 'awaiting_host', '新版本待交接的 SVG 重建。', historical=True)
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     topbar = page.get_by_role('button', name=re.compile(r'^查看待交接任务，(\d+) 项$'))
@@ -177,7 +177,7 @@ def test_topbar_pending_entry_always_lands_on_the_task_list(historical_obligatio
     """复审 F2/F4（跨模型一致）：顶栏承诺"查看待交接任务"，不被记住的子区劫持。"""
     from playwright.sync_api import expect
     page, server, path, store = historical_obligations_browser
-    add_task(store, 'todo-task-2', 'reconstruct', 'awaiting_host', '待接手任务用于顶栏入口核对。')
+    add_task(store, 'todo-task-2', 'reconstruct', 'awaiting_host', '待接手任务用于顶栏入口核对。', historical=True)
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     # 先把记住的子区切成「文件」——顶栏入口之后仍必须落在任务列表。
@@ -224,7 +224,7 @@ def test_persisting_a_non_task_area_drops_the_hidden_task_route(historical_oblig
     from playwright.sync_api import expect
     import urllib.parse
     page, server, path, store = historical_obligations_browser
-    add_task(store, 'task-route-1', 'reconstruct', 'awaiting_host', '用于子区持久化与任务路由核对。')
+    add_task(store, 'task-route-1', 'reconstruct', 'awaiting_host', '用于子区持久化与任务路由核对。', historical=True)
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='任务与交付', exact=True).click()

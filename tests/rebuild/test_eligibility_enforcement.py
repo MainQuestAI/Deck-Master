@@ -164,6 +164,11 @@ def _task(document, *, task_id="task-1", kind="compose", status="running",
         task["protocol_version"] = protocol
     if binding:
         task["collaboration_binding"] = binding
+    # Hand-built legacy compatible Tasks must prove the unchanged RC3 methods.
+    from deck_master import method_resources
+    methods = method_resources._read_ids(method_resources.rc3_method_ids_for(
+        kind, phase=(task.get("collaboration_binding") or {}).get("phase")))
+    task["method_release"] = method_resources.method_release(methods)
     return task
 
 
@@ -218,6 +223,9 @@ def _stamp_binding(store, task_id, *, phase="production", authorization_ref=None
                "eligibility_basis": [],
                "eligibility_digest": eligibility.binding_eligibility_digest(phase, scope, [])}
     updated = {**task, "collaboration_binding": binding}
+    from deck_master import method_resources
+    methods = method_resources._read_ids(method_resources.rc3_method_ids_for(task["kind"], phase=phase))
+    updated["method_release"] = method_resources.method_release(methods)
     task_ref = store.put_json_object(updated)
     operation_id = f"stamp-{uuid.uuid4().hex[:8]}"
     bumped = bump_revision(document, {"operation_id": operation_id, "kind": "task_update",

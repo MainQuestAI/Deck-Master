@@ -43,7 +43,7 @@ def compose_two(project, store, use):
 
 def seed(root, installation):
     import deck_master
-    from deck_master import service
+    from deck_master import method_resources, service
     from deck_master.store import Store
     from test_rc3_m02_recorder import common_argument, declare_and_start
     source = c.write_once(root / "material.txt", b"SYNTHETIC engineering: record an unknown field; no measured outcome.\n")
@@ -88,7 +88,8 @@ def seed(root, installation):
     doc = store.load_document()
     cfg = {"format": s11.FORMAT, "status": s11.ENGINEERING, "companion_sha256": c.digest(TOOL.read_bytes()),
         "common": c.reference(m.SOURCE), "m02_recorder": c.reference(s11.M02), "project": state["project"],
-        "experiment_id": old["experiment_id"], "supplemental_validation_id": "synthetic-s11-successor", "runtime_epoch": "1.0.0rc3",
+        "experiment_id": old["experiment_id"], "supplemental_validation_id": "synthetic-s11-successor",
+        "runtime_epoch": method_resources.method_release([])["release_id"],
         "group_id": doc["collaboration"]["request"]["variant"]["group_id"], "fixed_narrative": doc["narrative"],
         "predecessor": {"run": oldrun, "registration": oldreg, "event_count": len(hist.events()), "frontier": c.reference(historical_root / "journal" / f"{len(hist.events()):06d}.json")},
         "protected_refs": [oldrun, oldreg, source], "initial_content": s11.content_identity(doc), "initial_pages": doc["pages"], "initial_outputs": doc["outputs"], "blocked_stage": "old-11",

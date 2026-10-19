@@ -557,7 +557,8 @@ class Closure:
 
 VIEW_FIELDS = {"task_id", "operation_id", "kind", "intent", "method_release", "current_method_release", "method_basis_status",
                "review_stage", "status", "scope_pages", "dispatch_revision", "produced_against", "call_allowances", "staging_dir",
-               "execution_ref", "execution_started_at", "protocol_version", "required_capabilities", "host_protocol"}
+               "execution_ref", "execution_started_at", "protocol_version", "required_capabilities", "host_protocol",
+               "method_manifest", "method_basis_issues", "content_validation_policy"}
 BOUND_REQUIRED = {"inputs", "page_entries", "resolved_design_context", "production_request", "review_plan",
                   "prior_page_visual_findings", "prior_page_visual_evidence", "reference_images", "page_design_contexts",
                   "change_binding", "change_action", "candidate_refs"}
@@ -576,6 +577,13 @@ def packet(journal, state, task, methods, directory, profile):
     work = methods["work_order"]
     require(methods["status"] == "current" and methods["current_method_release"] == task["method_release"], "own current full methods required")
     require(work["task_id"] == task["task_id"], "actual workorder Task mismatch")
+    # RC4 method/policy fields are read-only metadata, never file-read grants.
+    # Historical responses without a manifest keep their original adapter path.
+    if work.get("method_manifest") is not None:
+        selected = [{key: item[key] for key in ("id", "relative_path", "sha256")} for item in methods["methods"]]
+        require(work["method_manifest"] == selected, "workorder method manifest differs from complete selected methods")
+    if task.get("method_manifest") is not None:
+        require(work.get("method_manifest") == task["method_manifest"], "workorder method manifest differs from frozen Task")
     target = None
     if bounded:
         require(task["scope_pages"] == state["page_ids"] and work["scope_pages"] == state["page_ids"], "actual Task scope exceeds target; never repair global reconciliation in P5 wrapper")

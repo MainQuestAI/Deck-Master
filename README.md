@@ -5,13 +5,17 @@ brief and real source material it drives content composition, blueprint
 generation, editable SVG/PPT production, review and repair — all through one
 CLI and a loopback review workbench.
 
-**Status:** rebuilt core (spec pack v1.1), Python package `1.0.0rc3`.
+**Status:** RC4 development candidate, Python package `1.0.0rc4`.
+Read the [current increment](docs/specs/deck-master-next-iteration-20261019/README.md)
+and its [single candidate ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
+for verified scope and remaining gaps. A source candidate, built wheel,
+isolated installation, active user installation and public Release are separate facts.
 **License:** Apache-2.0.
 
-Flow Quality v1.1 adds complete task context, directory sources and input
-revision updates that preserve unaffected pages. The development input and
-acceptance checklist are in [the specification pack](docs/specs/deck-master-flow-quality-v1.1/README.md).
-Engineering checks and the user-run Codex scenario are reported separately.
+RC4 extends the existing RC3 and Flow Quality contracts with recoverable input
+and installation operations, frozen Task methods, scoped content validation
+and negotiated reading contexts. Engineering checks, actual Host application
+and professional/user acceptance are recorded separately.
 
 The rebuilt core does not require a PPT Master backend binding, a slide
 library installation, or any first-run workspace setup: a plain material
@@ -50,33 +54,96 @@ registers all four Codex Skills (Master, Content, Design, Review); see [installa
 
 ## Quick Start
 
+Use your own complete material and brief. The commands below are staged:
+substitute IDs and hashes from the actual returned Task; do not paste the
+angle-bracket placeholders as values.
+
 ```bash
-# 1. Create a project from a brief and real source material (no library,
-#    workspace, or backend binding required).
-deck-master create --brief "Quarterly operations review"   --source path/to/material.txt --out ./my-deck
+# 1. New projects default to workbench.v3, with instruction evidence and
+#    proposal-only initial work; create does not grant production authority.
+deck-master capabilities
+deck-master create --brief-file ./brief.txt --source ./materials \
+  --out ./my-deck --no-open
+deck-master continue --project ./my-deck --no-open
 
-# 2. Hand the pending Host task to your agent, then submit the result envelope.
-deck-master continue --project ./my-deck
-deck-master task accept --project ./my-deck --task-id <id>   --operation-id <op> --produced-against <hash> --result result.json
+# 2. Read the Task's exact frozen methods and complete source/context.
+#    Use v2 only if capabilities.read_protocols declares it; otherwise omit
+#    the read options for v1. v2 defaults to full bodies.
+deck-master methods --project ./my-deck --task-id <task_id> --read \
+  --read-protocol work_context.v2 --body-mode full
 
-# 3. Open the loopback review workbench (four real views: content, blueprint,
-#    SVG, PPT). It reuses one service per project.
+# 3. Claim the actual Task before executing it. Repeat --capability for
+#    every required_capabilities value, declaring only actual Host support.
+deck-master task start --project ./my-deck --task-id <task_id> \
+  --execution-ref <actual_Host_execution> --supported-protocol <protocol_version> \
+  --capability <required_capability>
+
+# 4. Execute the returned scope, then submit its actual result envelope.
+deck-master task accept --project ./my-deck --task-id <task_id> \
+  --operation-id <operation_id> --produced-against <produced_against> \
+  --result ./result.json
+deck-master continue --project ./my-deck --no-open
+
+# 5. Open readable work and export the selected purpose.
 deck-master view --open --project ./my-deck
-
-# 4. Edit copy, review, and export — review purpose allows unfinished decks
-#    with an honest unresolved list; delivery requires passing checks.
 deck-master export --project ./my-deck --out ./out --purpose review
+```
 
-# 5. Persist changed requirements or materials before continuing the same deck.
+Follow each `continue` result: framing and argument are proposals, then
+page_copy, applicable speech and reviews proceed according to the current
+request. A `compose.v2` result uses `schema_version=compose_result.v2`, the
+Task's variant/IDs/produced_against/eligibility_digest, and that variant's
+payload; do not submit all phases as one draft. Inspect the actual
+[result contracts](src/deck_master/resources/contracts/) and
+[collaboration method](skills/deck-master/references/collaboration-routing.md).
+When `continue` asks for a direction decision, record the real decision via
+`collaboration decision --input decision.json`, then use
+`collaboration adopt-proposal --input adoption.json` with the current CAS
+and the exact proposal. A grant uses `collaboration grant` only when there
+is actual covering authorization. A copied handoff or a claim is not approval.
+Missing authority or a trusted independent review channel remains a named gap.
+
+For content alone, pass `create --request-input request.json` with
+`intent=content_only`, the requested `content_intent`
+(`plan_only|write_only|speech_only|content_full`), actual scope and instruction
+evidence. Follow `completion.state/outputs/checks/missing`; completed content
+returns its requested artifacts without starting design or PPT. A confirmed
+complete manuscript can use `create --draft draft.json` or `import-draft`
+with its real import instruction and `imported_mapping`; it need not invent
+a new Narrative. Teaching content need not contain a sales CTA.
+
+For `full_deck`, continue only within the actual production scope. Generation
+requires its frozen request, allocated call, begin → real tool call → settle
+→ accept chain. Inspect actual original images and PPT previews, page and
+final reviews, then run `final-readiness` and export `--purpose delivery`.
+`review` can return an unfinished readable copy with its unresolved list.
+`needs_tool` and `needs_reviewer` must retain their actual reasons.
+
+Persist changed requirements or materials before continuing the same project:
+
+```bash
 deck-master inputs show --project ./my-deck
 deck-master inputs update --project ./my-deck --patch update.json \
-  --base-revision <revision_id> --operation-id <unique_id>
+  --base-revision <original_revision_id> --operation-id <saved_unique_id>
+deck-master operations show --project ./my-deck --operation-id <saved_unique_id>
 ```
+
+After a lost response, preserve the original payload, base, ID and relative
+path context. Exact replay returns the original result alongside the current
+revision; use a fresh `continue` for current pending work. `unknown` does not
+permit retrying under a new ID. New unchanged input updates may advance a
+receipt-only revision while preserving Page/input basis and tasks. Ordinary
+`inputs update` and `content inputs` have distinct ID/digest contracts. Read
+[input recovery](skills/deck-master/references/input-update.md) before retrying.
+
+The [N6 normal-task evidence](docs/reports/rc4/iteration-20261019/N6-evidence.md)
+records the actual staged path and its remaining adoption/review gaps; it is
+not a claim that this candidate has completed an end-to-end delivery.
 
 ## Workbench
 
-RC3 的功能进度、试用入口及口播导出/审阅方式操作见
-[RC3 功能进度与试用](docs/rc3-tryout.md)。
+RC3 的功能试用与口播说明保留在
+[RC3 功能进度与试用](docs/rc3-tryout.md)，其记录属于该候选时点；当前状态见 RC4 台账。
 
 The workbench provides a project launcher, production overview, content and
 sources, gallery, style calibration, tasks and delivery. Each page retains its
@@ -116,6 +183,7 @@ reason; nothing silently falls back to fixtures.
 - [Agent Entry](AGENTS.md)
 - [Agent Task Index](docs/agent-task-index.md)
 - [Agent Recovery Playbook](docs/agent-recovery-playbook.md)
+- [Current RC4 Increment](docs/specs/deck-master-next-iteration-20261019/README.md)
 - [Migration to the Rebuilt Core](docs/migration-to-rebuilt-core.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)

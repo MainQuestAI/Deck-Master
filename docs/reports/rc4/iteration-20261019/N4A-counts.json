@@ -1,0 +1,70 @@
+{
+  "evidence_type": "SYNTHETIC_ENGINEERING",
+  "source_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "executed_files_sha256": {
+    "src/deck_master/work_context.py": "3a8986d039415a5840991d86c7d846a054a8355190b36e1047e2d62bfe77f72c",
+    "src/deck_master/service.py": "357bba1e06fbac7e8d6f9a4255fd141308d70a18380fd16e4e89360c1624c30d",
+    "src/deck_master/method_resources.py": "d3eac961d49a5b27030e74910674039aa76dc2a51a8e666940ab3f76f541ea0d",
+    "src/deck_master/capabilities.py": "912bb42757194bd33311df430662e183c8749ffc9a717485d84cd2a053fabe08",
+    "tests/rebuild/test_rc4_work_context.py": "e3ef7099e71763b54adfb86cf0df9bd2355eff00a2ff8aa182f6ae3edb867d43",
+    "docs/reports/rc4/iteration-20261019/N4A-probe.py": "bb7a92c9f5ecf60e2f844b6a4de43b0d4a70ed71e57fca8be00a3cd90815ee8e"
+  },
+  "working_tree_dirty": true,
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "cache_mode": "request-only full; no persistent or Host cache",
+  "tasks": 2,
+  "required_sources_per_task": 2,
+  "actual_immutable_bytes_reader_calls": {
+    ".deckmaster/objects/f1/f15d4b4ca8440ec79e7f61c57d74687783ae06ba4d768c3f070bdb0e4384ffc1.json": 1,
+    ".deckmaster/objects/58/580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388.json": 1,
+    ".deckmaster/objects/9a/9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225.json": 1,
+    ".deckmaster/objects/52/52540087419f663e5c0429330ffdc800bc24bcd3f16ecdb552b60a0315d5fb41.json": 1
+  },
+  "actual_immutable_json_decoder_calls": {
+    "f15d4b4ca8440ec79e7f61c57d74687783ae06ba4d768c3f070bdb0e4384ffc1": 1,
+    "580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388": 1,
+    "9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225": 1,
+    "52540087419f663e5c0429330ffdc800bc24bcd3f16ecdb552b60a0315d5fb41": 1
+  },
+  "actual_method_path_bytes_reader_calls": {
+    "references/source-reading.md": 1,
+    "references/content-methods.md": 1,
+    "references/content-examples.md": 1
+  },
+  "actual_dispatch_document_reads": {
+    "e6d4c46ac26d4cb3a811ed1b4be1d909": 1
+  },
+  "serialized_unique_body_occurrences": {
+    "method:sha256:44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08": 1,
+    "method:sha256:179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22": 1,
+    "method:sha256:fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a": 1,
+    "source_extract:sha256:580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388": 1,
+    "source_extract:sha256:9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225": 1
+  },
+  "v2_skill_unique_body_occurrences": {
+    "method:sha256:44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08": 1,
+    "method:sha256:179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22": 1,
+    "method:sha256:fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a": 1,
+    "source_extract:sha256:580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388": 1,
+    "source_extract:sha256:9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225": 1,
+    "method:sha256:4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11": 1
+  },
+  "v1_skill_method_body_occurrences": {
+    "source-reading": 2,
+    "content-methods": 2,
+    "content-examples": 2
+  },
+  "serialized_bytes": {
+    "v1_pending_summaries": 15218,
+    "v2_full_pending_context": 59415,
+    "v1_skill_task_methods": 100334,
+    "v2_skill_task_methods": 60424
+  },
+  "limits": [
+    "Synthetic engineering fixtures; no customer performance or model-quality claim",
+    "v1 pending summaries contain method metadata; v2 full adds method bytes, so those byte totals are not an equal-content compression ratio",
+    "Existing source extract format can repeat text in its locators; the immutable extract is transported once without rewriting its schema",
+    "A cache offer alone cannot establish an observed Host session; CLI delta is cold full"
+  ]
+}
