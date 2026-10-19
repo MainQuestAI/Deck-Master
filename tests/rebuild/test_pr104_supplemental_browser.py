@@ -197,3 +197,64 @@ def test_pressure_candidate_phase_opens_the_decisions_subarea(tmp_path):
         pressure.read_candidate_phase(page)
         expect(page.locator('.candidate-desk')).to_be_visible()
         expect(page.locator('.candidate-column').last.locator('[data-image-state=ready]')).to_be_visible()
+
+
+@pytest.mark.parametrize('click_timing', ['queued', 'loading'])
+@pytest.mark.parametrize('read_error', [False, True])
+def test_repeated_surface_navigation_shares_its_control_read_and_can_retry(flow, click_timing, read_error):
+    from playwright.sync_api import expect
+    with browser_for(flow.project) as (page, _):
+        held = []
+        def hold_project(route):
+            held.append((route, route.fetch()))
+            page.evaluate('count => window.heldProjectReads = count', len(held))
+        page.route('**/api/project', hold_project)
+        navigation = page.get_by_role('button', name='任务与交付', exact=True)
+        try:
+            if click_timing == 'queued':
+                # Both handlers run before the queued hashchange can begin.
+                navigation.evaluate('node => { node.click(); node.click(); }')
+            else:
+                navigation.click()
+                page.wait_for_function('() => window.heldProjectReads >= 1')
+                navigation.click()
+            page.wait_for_function('() => window.heldProjectReads >= 1')
+            page.evaluate('''() => {
+                const root = document.querySelector('#app');
+                root.addEventListener('summary-refreshed', () => window.navigationPollObserved = true, {once:true});
+                root.dispatchEvent(new CustomEvent('business-state-changed'));
+            }''')
+            page.wait_for_function('() => window.navigationPollObserved === true')
+            # Drain browser event dispatch after the real summary response. A
+            # passive control refresh must not add another held project read.
+            page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+            assert len(held) == 1
+            expect(page.locator('.navigation-status')).to_be_visible()
+            assert page.locator('#main').evaluate('node => node.inert')
+            route, response = held.pop()
+            if read_error:
+                route.fulfill(status=503, json={'error': {'code': 'project_unavailable', 'message': '暂不可读'}})
+                expect(page.locator('.notice')).to_contain_text('项目目前无法读取')
+                expect(page.get_by_role('heading', name='制作总览', exact=True)).to_be_visible()
+            else:
+                route.fulfill(response=response)
+                expect(page.get_by_role('button', name='待决定', exact=True)).to_be_visible()
+            expect(page.locator('.navigation-status')).to_be_hidden()
+            assert not page.locator('#main').evaluate('node => node.inert')
+            # A fresh click after success or failure is an explicit new read.
+            page.evaluate('window.heldProjectReads = 0')
+            navigation.click()
+            page.wait_for_function('() => window.heldProjectReads >= 1')
+            assert len(held) == 1
+            route, response = held.pop()
+            route.fulfill(response=response)
+            page.get_by_role('button', name='待决定', exact=True).click()
+            expect(page.locator('#runs-decisions')).to_be_visible()
+            page.unroute('**/api/project', hold_project)
+            # Subsequent passive control refreshes resume after navigation.
+            with page.expect_request(lambda request: request.url.endswith('/api/project')):
+                page.evaluate("document.querySelector('#app').dispatchEvent(new CustomEvent('business-state-changed'))")
+        finally:
+            for route, response in held:
+                route.fulfill(response=response)
+            page.unroute_all(behavior='ignoreErrors')

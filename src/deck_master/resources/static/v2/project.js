@@ -88,6 +88,9 @@ export class Project {
     }
   }
   async refreshControl() {
+    // Navigation already reads the same control facts. Do not queue passive
+    // reads behind it while the previous work surface is still displayed.
+    if (this.navigationPending) return;
     const serial = this.controlRead = (this.controlRead || 0) + 1;
     try {
       const info = await get('/api/project');
@@ -101,9 +104,14 @@ export class Project {
     } catch { /* Existing fixed reading and the regular sync recovery remain. */ }
   }
   async loadRoute(initial = null, focus = true) {
+    const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
+    // go() begins the read synchronously; its queued hashchange shares that
+    // read. Explicit initial-route/current calls still start a new generation.
+    if (!initial && this.navigationPending && this.navigationHash === requestedHash) return;
     const serial = ++this.generation;
     this.controlRead = (this.controlRead || 0) + 1;
-    const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
+    this.navigationHash = requestedHash;
+    this.navigationDestination = requestedRoute ? routeHash(this.info, requestedRoute) : requestedHash;
     this.navigationPending = true;
     // Keep the old snapshot visible, but do not accept actions against it while
     // the requested version is loading. Otherwise its handlers can supersede
@@ -179,6 +187,7 @@ export class Project {
     } finally {
       if (serial === this.generation) {
         this.navigationPending = false;
+        this.navigationHash = null; this.navigationDestination = null;
         if (this.navigationStatus) this.navigationStatus.hidden = true;
         if (this.main) { this.main.inert = false; this.main.removeAttribute('aria-busy'); }
         if (this.controlSlot) { this.controlSlot.inert = false; this.controlSlot.removeAttribute('aria-busy'); }
@@ -201,7 +210,14 @@ export class Project {
     // 只带 task_id: null 的导航保留记住的子区（链接里的 area）。
     if (patch.task_id && !('runs_area' in patch)) route.runs_area = 'tasks';
     const hash = routeHash(this.info, route);
-    if (location.hash === hash) this.loadRoute(route); else location.hash = hash;
+    if (this.navigationPending && this.navigationDestination === hash) return;
+    if (location.hash === hash) this.loadRoute(route);
+    else {
+      location.hash = hash;
+      // Mark the destination pending before another click or passive update
+      // can run, rather than waiting for the browser's hashchange task.
+      this.loadRoute();
+    }
   }
   current() { this.loadRoute({...this.route, revision: null, overview_preferences: null, task_id: null, action_id: null, review_id: null, candidate_id: null}); }
   savePosition() {
