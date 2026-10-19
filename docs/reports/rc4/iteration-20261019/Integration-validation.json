@@ -1,0 +1,167 @@
+{
+  "kind": "diagnostic_integration_run_not_final_candidate_gate",
+  "command": "PIP_DEFAULT_TIMEOUT=5 PIP_RETRIES=0 .venv/bin/python -m pytest -q tests/rebuild -m 'not render and not browser' --junitxml=<external-evidence>/local-unit.xml",
+  "result": {
+    "passed": 3258,
+    "failed": 48,
+    "errors": 7,
+    "deselected": 625,
+    "seconds": 893.15
+  },
+  "scope_note": "Run began before final fixture/tool integration repairs; a final N3 code correction and fixture changes happened during the loaded test process. Original outcomes are retained, not represented as final exact-tree acceptance. Service build identity may differ across that loaded process and its fresh subprocesses; no timeout was increased. Final frozen-source service regression passed20 tests.",
+  "groups": {
+    "new_Task_floor_expectation": {
+      "count": 22,
+      "tests": [
+        "tests.rebuild.test_candidates::test_trial_no_current_writes_and_atomic_idempotent_adoption",
+        "tests.rebuild.test_collaboration_restore::test_restore_to_pre_migration_snapshot_preserves_current_control",
+        "tests.rebuild.test_content_plan::test_explicit_imported_plan_is_adopted_and_restore_does_not_keep_the_wrong_plan",
+        "tests.rebuild.test_icon_quality::test_confirm_idempotency_writer_boundary_and_no_output_changes",
+        "tests.rebuild.test_rc3_adopted_design_handoff::test_formal_adoption_hands_full_immutable_context_to_every_visual_consumer[reconstruct-None]",
+        "tests.rebuild.test_rc3_adopted_design_handoff::test_formal_adoption_hands_full_immutable_context_to_every_visual_consumer[repair-None]",
+        "tests.rebuild.test_rc3_adopted_design_handoff::test_formal_adoption_hands_full_immutable_context_to_every_visual_consumer[review-page_visual]",
+        "tests.rebuild.test_rc3_adopted_design_handoff::test_legacy_generation_shape_without_requirements_remains_legacy_at_rc3_floor",
+        "tests.rebuild.test_rc3_design_workflows::test_authorized_first_two_initial_pages_reverse_arrival_remain_candidates",
+        "tests.rebuild.test_rc3_entry_transactions::test_default_new_and_manuscript_import_have_real_entry_control_without_grant",
+        "tests.rebuild.test_rc3_notes_visual_inputs::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[page]",
+        "tests.rebuild.test_rc3_notes_visual_inputs::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[content_update]",
+        "tests.rebuild.test_rc3_notes_visual_inputs::test_empty_notes_content_candidate_preserves_current_writer_floor",
+        "tests.rebuild.test_rc3_notes_visual_inputs::test_explicit_content_candidate_policy_consumption_protects_writer_even_without_notes[pptx_notes]",
+        "tests.rebuild.test_rc3_notes_visual_inputs::test_explicit_content_candidate_policy_consumption_protects_writer_even_without_notes[both]",
+        "tests.rebuild.test_rc3_notes_visual_inputs::test_explicit_content_candidate_policy_consumption_protects_writer_even_without_notes[separate_script]",
+        "tests.rebuild.test_run_desk::test_real_claim_time_survives_same_executor_and_unknown_call",
+        "tests.rebuild.test_run_desk::test_writer_boundary_survives_candidate_adoption_content_and_operation",
+        "tests.rebuild.test_styles::test_proposal_and_confirmation_preserve_pages_and_do_not_dispatch",
+        "tests.rebuild.test_styles::test_recipe_revision_has_diff_and_does_not_mutate_old_fixed_input",
+        "tests.rebuild.test_styles::test_first_trial_then_adoption_then_explicit_expansion",
+        "tests.rebuild.test_visual_styles::test_import_and_analysis_preserve_pages_outputs_and_recover_exact_receipt"
+      ]
+    },
+    "service_start_or_response": {
+      "count": 15,
+      "tests": [
+        "tests.rebuild.test_entry_capabilities::test_view_ui_flag_reuses_service_and_matches_workbench",
+        "tests.rebuild.test_studio_integration::test_studio_launcher_returns_studio_project_and_launcher_urls",
+        "tests.rebuild.test_ui_journal::test_actual_port_restart_restores_ack_but_not_unsent_and_can_import",
+        "tests.rebuild.test_web::test_cli_import_auto_opens_workbench_after_first_content",
+        "tests.rebuild.test_web::test_open_view_returns_real_url_without_browser",
+        "tests.rebuild.test_web::test_open_view_browser_refusal_reports_available",
+        "tests.rebuild.test_workbench_e2e::test_service_reuse_returns_same_url",
+        "tests.rebuild.test_workbench_services::test_empty_launcher_is_not_a_fake_project_and_does_not_scan",
+        "tests.rebuild.test_workbench_services::test_concurrent_starts_share_one_detached_instance",
+        "tests.rebuild.test_workbench_services::test_launcher_and_project_shutdown_are_independent",
+        "tests.rebuild.test_workbench_services::test_wrong_identity_pid_and_build_are_never_reused",
+        "tests.rebuild.test_workbench_services::test_stale_crashed_service_restarts_and_cleans_only_its_instance",
+        "tests.rebuild.test_workbench_services::test_repeated_idle_and_active_service_shutdown_keeps_registry",
+        "tests.rebuild.test_workbench_services::test_launcher_get_host_and_post_origin_instance_and_size_guards",
+        "tests.rebuild.test_workbench_services::test_cli_no_open_workbench_port_and_help"
+      ]
+    },
+    "isolated_dependency_source_unavailable": {
+      "count": 5,
+      "tests": [
+        "tests.rebuild.test_install::test_isolated_install_runs_full_local_flow[wheel_venv]",
+        "tests.rebuild.test_install::test_isolated_install_runs_full_local_flow[sdist_venv]",
+        "tests.rebuild.test_install::test_isolated_resources_resolve_inside_package",
+        "tests.rebuild.test_install::test_isolated_non_default_canvas_font_logo_and_relocation",
+        "tests.rebuild.test_install::test_isolated_call_budget_and_cancel_via_cli"
+      ]
+    },
+    "historical_Task_fixture_new_manifest": {
+      "count": 4,
+      "tests": [
+        "tests.rebuild.test_rc3_entry_transactions::test_rank12_without_region_is_not_a_migration_and_unreadable_tasks_do_not_vanish",
+        "tests.rebuild.test_rc3_review_repairs::test_classic_reader_keeps_original_preparation_floor_and_protocol[False]",
+        "tests.rebuild.test_rc3_review_repairs::test_classic_reader_keeps_original_preparation_floor_and_protocol[True]",
+        "tests.rebuild.test_studio_delivery_browser::test_task_list_summary_only_transforms_verified_system_templates"
+      ]
+    },
+    "synthetic_fixture_runtime_epoch": {
+      "count": 2,
+      "tests": [
+        "tests.rebuild.test_rc3_m02_image_transition::test_real_own_wheel_six_scenarios_run_in_isolated_interpreter",
+        "tests.rebuild.test_rc3_m02_runtime::test_all_m02_runtime_cases_run_in_an_actual_isolated_interpreter"
+      ]
+    },
+    "bounded_reader_new_readonly_metadata_and_integrity_pin": {
+      "count": 6,
+      "tests": [
+        "tests.rebuild.test_rc3_supplementary_recorder::test_real_p5_task_full_methods_and_explicit_view",
+        "tests.rebuild.test_rc3_supplementary_recorder::test_real_full_source_rejected_with_original_response_retained",
+        "tests.rebuild.test_rc3_supplementary_recorder::test_missing_independent_audit_stops_native_begin",
+        "tests.rebuild.test_rc3_supplementary_recorder::test_actual_claim_has_new_full_raw_and_same_p5_closure",
+        "tests.rebuild.test_rc3_supplementary_recorder::test_audit_cannot_launder_changed_closure_or_preparer_identity",
+        "tests.rebuild.test_rc3_supplied_p5_fidelity::test_all_supplied_p5_fidelity_cases_run_in_an_actual_isolated_interpreter"
+      ]
+    },
+    "fixture_qualification_node_reference": {
+      "count": 1,
+      "tests": [
+        "tests.rebuild.test_t03_review_fixes::test_speech_cannot_silently_rebind_a_superseded_mapping"
+      ]
+    }
+  },
+  "raw_evidence": [
+    {
+      "locator": "external-evidence/local-unit.log",
+      "sha256": "83134e7b649b16f2942abd35ee1b801cf547d624ba6300378e5d57f3d4588574"
+    },
+    {
+      "locator": "external-evidence/local-unit.xml",
+      "sha256": "b19bb783b2fdc41e2f7a6af507fcd4e9b959f2d9d151a66d3de1adcc1158bcec"
+    },
+    {
+      "locator": "external-evidence/local-failures.json",
+      "sha256": "4b9c7ca6a0961bdb9dea307ac7efc25f564c37ce668e45b117eb854449c4d534"
+    }
+  ],
+  "repair_checks": [
+    {
+      "scope": "exact initial floor failures",
+      "result": "3 passed",
+      "log": "early-failures.log records original failures; later exact rerun3PASS"
+    },
+    {
+      "scope": "floor migration and unchanged legacy contrast",
+      "result": "246 passed,1 historical fixture failure subsequently repaired,2 existing skips,7 deselected",
+      "log": "integration-floor-after.log"
+    },
+    {
+      "scope": "historical object corruption and migration contrast",
+      "result": "5 passed"
+    },
+    {
+      "scope": "current/legacy bounded workorder reader metadata",
+      "result": "61 passed",
+      "log": "integration-recorder-final.log"
+    },
+    {
+      "scope": "studio legacy Task and superseded mapping fixture",
+      "result": "12 passed,1 browser deselected",
+      "log": "N3-fixture-followup-tests.log"
+    },
+    {
+      "scope": "fresh frozen-source service processes",
+      "result": "20 passed in5.29s",
+      "log": "fresh-service-regression.log"
+    },
+    {
+      "scope": "nested M02 overrun fixture keeps actual runtime epoch",
+      "result": "1 passed in0.55s"
+    },
+    {
+      "scope": "P5 protected receipt and three source-scope refusals",
+      "result": "5 passed in4.04s"
+    },
+    {
+      "scope": "four current consumer helper integrity pins",
+      "result": "4 valid accepted;4 corrupt refused; exact new helper SHA retained"
+    },
+    {
+      "scope": "actual isolated installed M02 image probe",
+      "result": "6/6 scenarios,81/81 checks,524 function observations;275 wheel members verified; zero native/model/image/actor/render calls",
+      "limits": "Reused already-built wheel and isolated installed prefix. Test dependencies appended as ordinary site directory without processing editable .pth; not a new wheel build or real Frozen experiment."
+    }
+  ],
+  "final_gate": "Live exact-head Rebuilt Core Gate at PR124 remains separate and required."
+}

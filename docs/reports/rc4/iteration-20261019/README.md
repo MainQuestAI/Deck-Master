@@ -30,6 +30,8 @@ The existing [Rebuilt Core Gate](../../../../.github/workflows/rebuild.yml) rema
 
 The local full unit diagnostic retains its failures and repair chain separately from final CI. Old floor assertions were updated only for fixtures that actually create new RC4 Tasks; genuine historical fixtures preserve old fields and digests. Missing historical objects are simulated after a valid legacy commit rather than making a current writer accept nonexistent new references. The existing bounded campaign reader only classifies the new read-only metadata, validates its frozen manifest, and continues to reject unknown fields; its state machine, call budget and authorization remain unchanged.
 
+The [retained diagnostic and repair record](Integration-validation.json) reports the original local 3258 passes, 48 failures and seven setup errors without calling that a final gate. Each observed cause is classified. Required final CI runs on the frozen committed tree; successful focused repairs do not erase the earlier failures.
+
 ## Normal task and exact blockers
 
 [N6 evidence](N6-evidence.md) and its [hash index](N6-evidence-index.json) locate the complete neutral commission, three sources, actual framing/argument proposals, six-page first draft, separate revisions and actual nonauthor review. The current content has 58 atoms. The repaired p04/p06 wording preserves unknown contact time and its reason when records cannot be recovered, rather than implying missing historical facts must be filled. Plan and Page mappings were revised together; no image, SVG, PPT, notes or comparative percentage improvement is claimed.
