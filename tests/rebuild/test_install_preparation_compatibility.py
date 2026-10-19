@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import uuid
 
 import pytest
@@ -242,3 +243,173 @@ def test_damaged_preparing_migration_never_writes_external_paths(layout, tmp_pat
     assert caught.value.error_code == ('installation_recovery_conflict' if damage == 'invented_legacy_link' else 'installation_recovery_unavailable')
     assert {str(item): journal.snapshot(item) for item in (outside, *outside.rglob('*'))} == external
     assert managed(prefix, host) == before and path.read_bytes() == preserved
+
+
+@pytest.mark.parametrize('damage', ['missing', 'same_target_replacement'])
+def test_unconfirmed_current_witness_must_survive_inode_reuse(symlink_layout, monkeypatch, damage):
+    prefix, logical, _ = symlink_layout
+    ident = str(uuid.uuid4())
+    kill_at(prefix, logical, point='witness_created', name='current', ident=ident)
+    record = load(prefix, ident)
+    witness = record['preparations'][-1]
+    assert witness['kind'] == 'witness' and witness['identity'] is None
+    assert journal.snapshot(Path(witness['path'])) == witness['expected']
+    path = root(prefix) / 'current'
+    frozen = journal.snapshot(path)
+    Path(witness['path']).unlink()
+    path.unlink()
+    path.symlink_to(frozen['target'])
+    if damage == 'same_target_replacement':
+        Path(witness['path']).symlink_to(frozen['target'])
+    # Deterministically model legitimate dev/inode reuse after both hard links
+    # disappeared. Every real external inode is still checked independently.
+    snapshot = journal.snapshot
+    external_inode = snapshot(path)
+    def reused_inode(candidate):
+        actual = snapshot(candidate)
+        if actual is not None and (actual['dev'], actual['ino']) == (external_inode['dev'], external_inode['ino']):
+            return {**actual, 'dev': frozen['dev'], 'ino': frozen['ino']}
+        return actual
+    monkeypatch.setattr(journal, 'snapshot', reused_inode)
+    before = {str(item): snapshot(item) for item in (path, Path(witness['path']))}
+    before_managed = {key: snapshot(Path(key)) for key in managed(prefix, logical)}
+    journal_path = journal.record_path(root(prefix), ident)
+    preserved = journal_path.read_bytes()
+    with pytest.raises(InstallationTransactionError) as caught:
+        install.activate(prefix, 'new', transaction_id=ident)
+    assert caught.value.error_code == 'installation_recovery_conflict'
+    assert {str(item): snapshot(item) for item in (path, Path(witness['path']))} == before
+    assert {key: snapshot(Path(key)) for key in managed(prefix, logical)} == before_managed
+    assert journal_path.read_bytes() == preserved
+    assert current(prefix) == 'releases/old'
+
+
+def test_unconfirmed_after_external_file_is_preserved_without_claiming_ownership(layout):
+    prefix, host = layout
+    ident = str(uuid.uuid4())
+    kill_at(prefix, host, point='preparation_created', ident=ident)
+    original = load(prefix, ident)
+    item = original['preparations'][-1]
+    assert item['kind'] == 'link' and item['identity'] is None
+    path = Path(item['path'])
+    path.unlink()
+    path.write_bytes(b'external preparation occupant; preserve inode, mode and bytes\n')
+    external = journal.snapshot(path)
+    result = install.activate(prefix, 'new', transaction_id=ident)
+    assert result['transaction_state'] == 'completed' and result['recovered']
+    assert journal.snapshot(path) == external
+    assert load(prefix, ident)['preparation_history'][-1]['preparations'] == original['preparations']
+    assert_active(prefix, host, 'new')
+
+
+@pytest.fixture(scope='session')
+def historical_installers(tmp_path_factory):
+    """Execute actual historical packages, never manufacture their journals."""
+    repository = Path(__file__).resolve().parents[2]
+    exports = {}
+    for commit in ('bc6bd55a07b249660e6af8ab4b19a147bb2caf14', '001c8f101e07cab1b230e0745a6f0b17fb54882e'):
+        destination = tmp_path_factory.mktemp('installer-' + commit)
+        archive = subprocess.check_output(['git', 'archive', commit, 'src/deck_master'], cwd=repository)
+        subprocess.run(['tar', '-x', '-C', str(destination)], input=archive, check=True)
+        exports[commit[:8]] = destination / 'src'
+    return exports
+
+
+HISTORICAL_ACTIVATE = r'''
+import json, os, sys
+from deck_master import install, activation_transaction as journal
+params=json.loads(sys.argv[1])
+if params.get('point'):
+    def checkpoint(point, record, step=None):
+        if point==params['point']: os._exit(91)
+    journal.checkpoint=checkpoint
+result=install.activate(params['prefix'], params['target'], transaction_id=params['ident'])
+print(json.dumps(result))
+'''
+
+
+def historical_activate(source, prefix, target, ident, *, point=None):
+    env = {**os.environ, 'PYTHONPATH': str(source)}
+    params = {'prefix': str(prefix), 'target': target, 'ident': ident, 'point': point}
+    child = subprocess.run([sys.executable, '-c', HISTORICAL_ACTIVATE, json.dumps(params)],
+                           env=env, capture_output=True, text=True, timeout=20)
+    assert child.returncode == (91 if point else 0), child.stderr
+    return None if point else json.loads(child.stdout)
+
+
+def test_real_legacy_completed_logical_host_request_replays_without_mutation(symlink_layout, historical_installers, monkeypatch, tmp_path):
+    prefix, logical, actual = symlink_layout
+    ident = str(uuid.uuid4())
+    original = historical_activate(historical_installers['bc6bd55a'], prefix, 'old', ident)
+    assert original['status'] == 'already_active'
+    assert historical_activate(historical_installers['bc6bd55a'], prefix, 'old', ident)['recovered']
+    record = load(prefix, ident)
+    assert record['request']['host_root'] == str(logical) and 'host_access_path' not in record
+    assert record['state'] == 'completed'
+    before = managed(prefix, logical)
+    path = journal.record_path(root(prefix), ident)
+    preserved = path.read_bytes()
+    replay = install.activate(prefix, 'old', transaction_id=ident)
+    assert replay['recovered'] and replay['transaction_state'] == 'completed'
+    assert replay['skill_links'] == original['skill_links']
+    assert replay['current_install_state'] == 'verified'
+    assert path.read_bytes() == preserved and managed(prefix, logical) == before
+    # Even a second alias to the very same actual directory is a different
+    # legacy request binding. Never resolve arbitrary old paths into ownership.
+    other = tmp_path / 'other-host/skills'
+    other.parent.mkdir()
+    other.symlink_to(actual, target_is_directory=True)
+    monkeypatch.setenv('CODEX_HOME', str(other.parent))
+    with pytest.raises(InstallationTransactionError) as caught:
+        install.activate(prefix, 'old', transaction_id=ident)
+    assert caught.value.error_code == 'installation_transaction_conflict'
+    assert path.read_bytes() == preserved and managed(prefix, logical) == before
+
+
+@pytest.mark.parametrize('explicit', [True, False])
+def test_real_legacy_prepared_logical_host_request_keeps_ownership_checks(symlink_layout, historical_installers, monkeypatch, tmp_path, explicit):
+    prefix, logical, actual = symlink_layout
+    ident = str(uuid.uuid4())
+    historical_activate(historical_installers['001c8f10'], prefix, 'new', ident, point='prepared')
+    original = load(prefix, ident)
+    assert original['request']['host_root'] == str(logical) and 'host_access_path' not in original
+    assert original['state'] == 'prepared' and original['inode_anchors']
+    path = journal.record_path(root(prefix), ident)
+    preserved = path.read_bytes()
+    before = managed(prefix, logical)
+    other = tmp_path / 'other-host/skills'
+    other.parent.mkdir()
+    other.symlink_to(actual, target_is_directory=True)
+    monkeypatch.setenv('CODEX_HOME', str(other.parent))
+    with pytest.raises(InstallationTransactionError) as caught:
+        install.activate(prefix, 'new', transaction_id=ident if explicit else None)
+    assert caught.value.error_code == ('installation_transaction_conflict' if explicit else 'installation_transaction_pending')
+    assert path.read_bytes() == preserved and managed(prefix, logical) == before
+    monkeypatch.setenv('CODEX_HOME', str(logical.parent))
+    result = install.activate(prefix, 'new', transaction_id=ident if explicit else None)
+    assert result['recovered'] and result['transaction_id'] == ident
+    assert result['transaction_state'] == 'completed'
+    completed = load(prefix, ident)
+    assert completed['request'] == original['request']
+    assert [step['path'] for step in completed['steps'] if Path(step['path']).parent == logical] == [
+        str(logical / name) for name in install.PUBLIC_SKILLS[1:]]
+    for old, applied in zip(original['steps'], completed['steps'], strict=True):
+        assert {key: value for key, value in applied.items() if key not in ('step_state', 'observed')} == {
+            key: value for key, value in old.items() if key not in ('step_state', 'observed')}
+        assert applied['step_state'] == applied['observed']['state'] == 'applied'
+        assert journal.snapshot(Path(applied['path'])) == old['expected_after']
+    assert_active(prefix, logical, 'new')
+
+
+def test_real_legacy_prepared_replaced_host_alias_keeps_external_inode(symlink_layout, historical_installers):
+    prefix, logical, actual = symlink_layout
+    ident = str(uuid.uuid4())
+    historical_activate(historical_installers['001c8f10'], prefix, 'new', ident, point='prepared')
+    logical.rename(logical.with_name('preserved-original-alias'))
+    logical.symlink_to(actual, target_is_directory=True)
+    external = journal.snapshot(logical)
+    before = managed(prefix, logical)
+    with pytest.raises(InstallationTransactionError) as caught:
+        install.activate(prefix, 'new', transaction_id=ident)
+    assert caught.value.error_code == 'installation_recovery_conflict'
+    assert journal.snapshot(logical) == external and managed(prefix, logical) == before

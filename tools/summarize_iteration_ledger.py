@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 
 STATUSES = ('PASS', 'FAIL', 'BLOCKED', 'NOT_RUN', 'NOT_APPLICABLE')
+TRACEABILITY = (Path(__file__).resolve().parents[1]
+                / 'docs/specs/deck-master-next-iteration-20261019/traceability.json')
 
 
 def summarize(ledger, *, ci_status=None):
@@ -15,6 +17,15 @@ def summarize(ledger, *, ci_status=None):
     ids = [row['ac_id'] for row in rows]
     if len(ids) != len(set(ids)) or any(row['status'] not in STATUSES for row in rows):
         raise ValueError('acceptance IDs must be unique and statuses explicit')
+    expected_owners = {row['id']: row['owner']
+                       for row in json.loads(TRACEABILITY.read_text())['acceptance']}
+    missing_ids = sorted(expected_owners.keys() - set(ids))
+    unknown_ids = sorted(set(ids) - expected_owners.keys())
+    if missing_ids or unknown_ids:
+        raise ValueError(f'acceptance IDs must match traceability.json: missing={missing_ids}, unknown={unknown_ids}')
+    mismatched_owners = [row['ac_id'] for row in rows if row.get('owner') != expected_owners[row['ac_id']]]
+    if mismatched_owners:
+        raise ValueError(f'acceptance owners must match traceability.json: {mismatched_owners}')
     counts = {status: sum(row['status'] == status for row in rows) for status in STATUSES}
     unresolved = [row['ac_id'] for row in rows if row['status'] not in ('PASS', 'NOT_APPLICABLE')]
     ci_observation = next((check for check in result.get('integration_checks', [])

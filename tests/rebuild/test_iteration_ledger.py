@@ -9,15 +9,50 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SUMMARIZE = runpy.run_path(str(ROOT / 'tools/summarize_iteration_ledger.py'))['summarize']
 LEDGER = ROOT / 'docs/reports/rc4/iteration-20261019/execution-ledger.json'
+TRACEABILITY = ROOT / 'docs/specs/deck-master-next-iteration-20261019/traceability.json'
 
 
 def test_current_unique_ledger_has_no_stale_completion_template():
     ledger = json.loads(LEDGER.read_text())
     derived = SUMMARIZE(ledger)
     assert len(ledger['acceptance']) == 70
+    expected_owners = {row['id']: row['owner'] for row in json.loads(TRACEABILITY.read_text())['acceptance']}
+    assert {row['ac_id']: row['owner'] for row in ledger['acceptance']} == expected_owners
     assert ledger['status_counts'] == derived['status_counts']
     assert ledger['completion'] == derived['completion']
     assert ledger['completion']['summary']
+
+
+def test_summary_rejects_replaced_id_with_unchanged_acceptance_count():
+    ledger = json.loads(LEDGER.read_text())
+    next(row for row in ledger['acceptance'] if row['ac_id'] == 'AC-N6-10')['ac_id'] = 'AC-N6-11'
+    assert len(ledger['acceptance']) == 70
+    before = copy.deepcopy(ledger)
+    with pytest.raises(ValueError, match=r"missing=\['AC-N6-10'\], unknown=\['AC-N6-11'\]"):
+        SUMMARIZE(ledger, ci_status='PASS')
+    assert ledger == before
+
+
+def test_summary_rejects_missing_acceptance_id():
+    ledger = json.loads(LEDGER.read_text())
+    ledger['acceptance'] = [row for row in ledger['acceptance'] if row['ac_id'] != 'AC-N6-10']
+    with pytest.raises(ValueError, match=r"missing=\['AC-N6-10'\], unknown=\[\]"):
+        SUMMARIZE(ledger, ci_status='PASS')
+
+
+def test_summary_rejects_unknown_acceptance_id():
+    ledger = json.loads(LEDGER.read_text())
+    extra = dict(ledger['acceptance'][-1], ac_id='AC-N6-11')
+    ledger['acceptance'].append(extra)
+    with pytest.raises(ValueError, match=r"missing=\[\], unknown=\['AC-N6-11'\]"):
+        SUMMARIZE(ledger, ci_status='PASS')
+
+
+def test_summary_rejects_acceptance_owner_mismatch():
+    ledger = json.loads(LEDGER.read_text())
+    next(row for row in ledger['acceptance'] if row['ac_id'] == 'AC-N6-10')['owner'] = 'N1'
+    with pytest.raises(ValueError, match=r"acceptance owners must match traceability.json: \['AC-N6-10'\]"):
+        SUMMARIZE(ledger, ci_status='PASS')
 
 
 @pytest.mark.parametrize('status', ['FAIL', 'BLOCKED', 'NOT_RUN'])

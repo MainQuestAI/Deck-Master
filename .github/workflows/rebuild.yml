@@ -29,6 +29,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Fetch fixed RC3 writer compatibility baseline
         run: git fetch --no-tags --depth=1 origin a08bc68c1cbbbc806205104c2bb01f3f096305f0
+      - name: Fetch fixed historical installation journal baselines
+        run: git fetch --no-tags --depth=1 origin bc6bd55a07b249660e6af8ab4b19a147bb2caf14 001c8f101e07cab1b230e0745a6f0b17fb54882e
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}

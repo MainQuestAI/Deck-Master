@@ -555,10 +555,14 @@ def _prepare_activation(root, verb, release_id, register_host, host, ident, pare
     return plan.persist()
 
 
-def _check_request(record, root, verb, release_id, register_host, host, *, explicit):
+def _check_request(record, root, verb, release_id, register_host, host, *, explicit, access_host=None):
     request = record['request']
+    # Older journals bound the request to its logical Host path. Keep that
+    # exact binding; directory/action ownership is checked independently from
+    # the frozen identities, never inferred by resolving an old journal path.
+    request_host = access_host if 'host_access_path' not in record else host
     matches = (request['verb'] == verb and request['prefix'] == str(root.parent) and
-               request['register_host'] == register_host and request['host_root'] == (str(host) if host else None)
+               request['register_host'] == register_host and request['host_root'] == (str(request_host) if request_host else None)
                and (verb == 'rollback' or request['target_release_id'] == release_id))
     if not matches:
         code = 'installation_transaction_conflict' if explicit else 'installation_transaction_pending'
@@ -596,7 +600,11 @@ def _resume_preparation(root, record):
             raise InstallationTransactionError('installation_recovery_conflict', 'managed state changed during preparation; no activation was applied',
                                                transaction_id=record['transaction_id'], state='preparing', details={'path': str(path)})
     for item in record['preparations']:
-        if item['identity'] is not None and journal.snapshot(Path(item['path'])) != item['identity']:
+        # A witness pins a frozen inode even before its creation is acknowledged
+        # in the journal. Losing it permits inode reuse to impersonate the old
+        # managed path. Ordinary unconfirmed .after remnants remain unclaimed.
+        identity = item['expected'] if item['kind'] == 'witness' else item['identity']
+        if identity is not None and journal.snapshot(Path(item['path'])) != identity:
             raise InstallationTransactionError('installation_recovery_conflict', 'recorded preparation changed externally; preserve the artifact',
                                                transaction_id=record['transaction_id'], state='preparing', details={'path': item['path']})
 
@@ -738,12 +746,12 @@ def _activation(prefix, verb, release_id=None, *, register_host=True, transactio
         selected_path = journal.record_path(root, ident)
         record = journal.read(root, ident) if transaction_id and (selected_path.exists() or selected_path.is_symlink()) else None
         if record is not None:
-            _check_request(record, root, verb, release_id, register_host, host, explicit=True)
+            _check_request(record, root, verb, release_id, register_host, host, explicit=True, access_host=access_host)
         elif active is not None:
             if transaction_id and active['transaction_id'] != ident:
                 raise InstallationTransactionError('installation_transaction_pending', 'unfinished installation request must be resumed first',
                                                    transaction_id=active['transaction_id'], state=active['state'])
-            _check_request(active, root, verb, release_id, register_host, host, explicit=bool(transaction_id))
+            _check_request(active, root, verb, release_id, register_host, host, explicit=bool(transaction_id), access_host=access_host)
             record = active
         if record is not None and record['state'] in journal.TERMINAL:
             return _run_activation(root, record, True)
