@@ -21,3 +21,9 @@ python -m pytest -q tests/rebuild/test_iteration_ledger.py
 安装最终回归290PASS（20个新增针对case），47个实际child91断点恢复为42completed/5rolled_back且witness匹配。preparing额外4个越界/伪造迁移负例证明外部树与损坏记录不被修改；不会凭文件名或链接目标认领残留。准确命令/源码与raw hash见 [N2证据](N2-install-recovery-evidence.json)。文档/唯一台账守卫12PASS，原失败记录保留。
 
 四项修复已冻结，随后固定新源提交、干净 wheel/sdist、隔离安装身份及最终精确提交 CI。未合并、发版、部署、改授权或激活真实 HOME。
+
+## 修复候选与安装身份
+
+修复源提交 `3167f123487c3a2ea91848d0bec705743fbec2e3`，干净构建 `source_dirty=false`，版本 `1.0.0rc4`，release identity `3167f123487c-93ce9a2d453a`。新 wheel SHA256 `93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d`；sdist SHA256 `ec9bf88635226a91221c76dc4501aec302e0aa92c0d0a5536dc53a41f71f884e`。全新隔离安装核验23份canonical资源、四Skill、69schema、275package成员与90source模块；见 [安装身份](Installed-resource-identity.json)。N6原实际内容应用身份仍保留，不重标为此安装版运行。
+
+唯一台账保留实际反例的FAIL历史，再依各项修复/新安装证据恢复相关判定；completion由同一逐项状态派生。最终CI为另一个工程gate，组装时仍pending；实时精确head检查与PR最终交接记录其后续终态。用户本地真实验收继续延期，不虚标通过。

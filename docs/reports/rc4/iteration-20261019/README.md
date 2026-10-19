@@ -6,15 +6,15 @@ The [70-AC execution ledger](execution-ledger.json) is the sole acceptance regis
 
 ## Designated review follow-up
 
-The designated review of head `53021ac8` requested changes for preparation-stage recovery, symlink Host directory compatibility, stale-coverage fallback and stale ledger summaries. The [review repair record](PR124-review-resolution.md) and sole ledger preserve each real counterexample, affected AC reassessment and targeted result. The earlier inode P1 remains closed. All four targeted repairs now have passing actual evidence; fresh build/installed identity and final new-head CI remain separate required gates.
+The designated review of head `53021ac8` requested changes for preparation-stage recovery, symlink Host directory compatibility, stale-coverage fallback and stale ledger summaries. The [review repair record](PR124-review-resolution.md) and sole ledger preserve each real counterexample, affected AC reassessment and targeted result. The earlier inode P1 remains closed. All four targeted repairs now have passing actual evidence; the fresh clean build and isolated installed identity are verified; final new-head CI remains a separate required gate. The prior001c8f10 package is superseded by these P2 repairs.
 
 ## Candidate and distribution identity
 
-- Runtime and packaged-method source: `001c8f101e07cab1b230e0745a6f0b17fb54882e`, built from a clean worktree as `1.0.0rc4`.
+- Runtime and packaged-method source: `3167f123487c3a2ea91848d0bec705743fbec2e3`, built from a clean worktree as `1.0.0rc4`.
 - Subsequent evidence commits retain these runtime and packaged-method bytes. The prior fe19205c build is superseded after the real CI inode-reuse repair, rather than relabeled as the new package. The ledger records the exact validation basis; [Draft PR124](https://github.com/MainQuestAI/Deck-Master/pull/124) exposes its current head/tree and exact-head checks. Later test, tool-compatibility or evidence changes are not silently relabeled as the build's source commit.
-- Wheel: `deck_master-1.0.0rc4-py3-none-any.whl`, SHA256 `885577f33ebf6ea001d2f7d33b9d440fec1524849eeefa24127b3d6591a06040`.
-- Sdist: `deck_master-1.0.0rc4.tar.gz`, SHA256 `59aaecfdd99bd5e426b0dc0e8fa0baabb721442e34e252e164470d87ff78e08e`.
-- Release manifest identity: `001c8f101e07-885577f33ebf`. Build files are retained outside Git; the handoff includes their locations and hashes. No tag or GitHub Release was created.
+- Wheel: `deck_master-1.0.0rc4-py3-none-any.whl`, SHA256 `93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d`.
+- Sdist: `deck_master-1.0.0rc4.tar.gz`, SHA256 `ec9bf88635226a91221c76dc4501aec302e0aa92c0d0a5536dc53a41f71f884e`.
+- Release manifest identity: `3167f123487c-93ce9a2d453a`. Build files are retained outside Git; the handoff includes their locations and hashes. No tag or GitHub Release was created.
 
 [Installed-resource-identity.json](Installed-resource-identity.json) verifies the real wheel under an isolated interpreter outside the checkout: version and metadata agree, 23 canonical resources/four Skill entries and all 69 schemas match, 275 package members match the wheel, and I05 retains frozen method order and drift diagnostics. Dependencies use the observed system site packages; Deck Master and method bytes load from the new installed package. This is not user HOME activation or evidence that the earlier N6 source execution used that installed interpreter.
 

@@ -3,12 +3,12 @@
   "status": "PASS",
   "evidence_level": "INSTALLED_SYNTHETIC_ENGINEERING_READ_ONLY",
   "build_binding": {
-    "source_sha": "001c8f101e07cab1b230e0745a6f0b17fb54882e",
+    "source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
     "source_dirty": false,
     "package_version": "1.0.0rc4",
-    "release_id": "001c8f101e07-885577f33ebf",
+    "release_id": "3167f123487c-93ce9a2d453a",
     "wheel": "deck_master-1.0.0rc4-py3-none-any.whl",
-    "wheel_sha256": "885577f33ebf6ea001d2f7d33b9d440fec1524849eeefa24127b3d6591a06040"
+    "wheel_sha256": "93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d"
   },
   "execution": {
     "python_executable": "${INSTALLED_VENV}/bin/python",
@@ -34,7 +34,7 @@
         "from_installed_venv": false
       }
     ],
-    "probe_script_sha256": "632a58944568a9febc2891b6bd0ddba605182d1e8938c3e07ae3b41ceb729668",
+    "probe_script_sha256": "abee78eb113543d5629682bce6e4472f0313dc655ca801086fd617bd13d3ba98",
     "invocation": "${INSTALLED_VENV}/bin/python -I -B ${RAW_EVIDENCE}/verify_installed_resource_identity.py"
   },
   "installation_identity": {
@@ -132,8 +132,8 @@
       {
         "target": "deck_master/resources/skill/references/installation.md",
         "canonical_source": "skills/deck-master/references/installation.md",
-        "sha256": "301d56bceb9e2accb5391e2d6abf77e2b57ac98c183395a8927d9fe7c2f337ec",
-        "byte_length": 10982,
+        "sha256": "148404dda2f7476374846a933681969582580f7b8f7a3dd5928745f9098d8067",
+        "byte_length": 11666,
         "source_equals_wheel_equals_installed": true
       },
       {

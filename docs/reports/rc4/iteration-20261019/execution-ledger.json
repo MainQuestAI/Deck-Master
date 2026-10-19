@@ -6,38 +6,38 @@
   "status": "PARTIAL",
   "candidate": {
     "baseline_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
-    "implementation_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
-    "tree_sha": "ffb70f3e4b74883d6ee5bc2d363b5d0ae142568d",
+    "implementation_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
+    "tree_sha": "48dd73b9aa65d1e04eaa4513622e67ff1aed6320",
     "actual_package_version": "1.0.0rc4",
     "intended_package_version": "1.0.0rc4",
     "build_artifacts": [
       {
         "kind": "wheel",
         "filename": "deck_master-1.0.0rc4-py3-none-any.whl",
-        "sha256": "885577f33ebf6ea001d2f7d33b9d440fec1524849eeefa24127b3d6591a06040",
-        "build_source_sha": "001c8f101e07cab1b230e0745a6f0b17fb54882e",
+        "sha256": "93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d",
+        "build_source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
         "source_dirty": false
       },
       {
         "kind": "sdist",
         "filename": "deck_master-1.0.0rc4.tar.gz",
-        "sha256": "59aaecfdd99bd5e426b0dc0e8fa0baabb721442e34e252e164470d87ff78e08e",
-        "build_source_sha": "001c8f101e07cab1b230e0745a6f0b17fb54882e",
+        "sha256": "ec9bf88635226a91221c76dc4501aec302e0aa92c0d0a5536dc53a41f71f884e",
+        "build_source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
         "source_dirty": false
       }
     ],
     "installed_instances": [
       {
         "evidence": "Installed-resource-identity.json",
-        "status": "NOT_RUN",
+        "status": "PASS",
         "actual_user_home": false,
-        "prior_validation_status": "PASS",
-        "note": "Superseded by reviewed Runtime/Skill changes; fresh clean build and installed identity are pending."
+        "build_source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
+        "wheel_sha256": "93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d"
       }
     ],
     "build_runtime_and_skill_bytes_match_candidate": true,
     "identity_note": "implementation_sha/tree_sha pin the immutable integration evidence basis. Later report/legacy-fixture/readonly-tool commits retain runtime and packaged Skill bytes; exact final PR head/tree and terminal CI are exposed in PR124 handoff/checks.",
-    "fresh_build_required": true
+    "fresh_build_required": false
   },
   "environment_checks": [
     {
@@ -95,6 +95,15 @@
       "git_push": "succeeded with existing repository transport; no auth reconfiguration",
       "source_build_sha": "fe19205c3c7c78574d46a39dd908fed4d716750b",
       "current_validation_sha": "505330e20c46a0333e88dc85f5d87d57da9c1f0d"
+    },
+    {
+      "event": "designated_review_repairs_and_clean_rebuild",
+      "reviewed_head": "53021ac8e9d5a782d8033c976eff8cc02a5f2d17",
+      "repair_source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
+      "release_id": "3167f123487c-93ce9a2d453a",
+      "wheel_sha256": "93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d",
+      "targeted_evidence": "PR124-review-resolution.md",
+      "status": "FINAL_CI_PENDING"
     }
   ],
   "integration_checks": [
@@ -103,7 +112,7 @@
       "evidence": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
       "state_at_assembly": "in_progress",
       "note": "Timestamped assembly observation; live exact-head Actions checks and final PR handoff provide the later terminal result. AC component findings are separate from whole engineering gate completion.",
-      "observed_at_utc": "2026-10-19T05:32:12.452351+00:00"
+      "observed_at_utc": "2026-10-19T05:44:31.569775+00:00"
     },
     {
       "kind": "installed_resources",
@@ -123,7 +132,7 @@
       "ac_id": "AC-N1-01",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "safe non-UUID IDs, same-commit receipt and original flat response",
       "evidence": [
@@ -150,7 +159,7 @@
       "ac_id": "AC-N1-02",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "six exact material replay variants with zero material/upload reads",
       "evidence": [
@@ -177,7 +186,7 @@
       "ac_id": "AC-N1-03",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "staging/revision/pointer/cache failure boundaries and committed receipt",
       "evidence": [
@@ -205,7 +214,7 @@
       "ac_id": "AC-N1-04",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "raw base/payload/path binding and Python/CLI/HTTP replay",
       "evidence": [
@@ -233,7 +242,7 @@
       "ac_id": "AC-N1-05",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "bidirectional operation-family occupancy and unchanged content digest",
       "evidence": [
@@ -261,7 +270,7 @@
       "ac_id": "AC-N1-06",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "legacy original digest/log/no-op replay and irrecoverable lost sole evidence",
       "evidence": [
@@ -293,7 +302,7 @@
       "ac_id": "AC-N1-07",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "receipt-only no-op preserves Page/basis/Task state",
       "evidence": [
@@ -320,7 +329,7 @@
       "ac_id": "AC-N1-08",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "independent-process same-ID race commits once",
       "evidence": [
@@ -347,7 +356,7 @@
       "ac_id": "AC-N1-09",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "typed compatible HTTP400/422/409/503 and no path leakage",
       "evidence": [
@@ -380,7 +389,7 @@
       "ac_id": "AC-N1-10",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "fixed SDK/HTTP artifact/control boundaries, including full-schema corruption",
       "evidence": [
@@ -417,7 +426,7 @@
       "ac_id": "AC-N1-11",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "fixed selected head/control under advance, cache enabled/disabled",
       "evidence": [
@@ -440,6 +449,10 @@
             "test_operation_coverage.py::test_other_process_advances_during_read_then_retry_fixes_head",
             "test_operation_coverage.py::test_explicit_head_is_validated_without_double_decode"
           ]
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-validation.txt"
         }
       ],
       "failure_history": [],
@@ -450,7 +463,7 @@
       "ac_id": "AC-N1-12",
       "owner": "N1",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "Task/content/freeze/receipt recovery and candidate-wide regression",
       "evidence": [
@@ -481,6 +494,10 @@
         {
           "kind": "STATIC_REVIEW",
           "path": "README.md"
+        },
+        {
+          "kind": "SYNTHETIC_ENGINEERING",
+          "path": "N4B-review-P2-validation.txt"
         }
       ],
       "failure_history": [],
@@ -493,7 +510,7 @@
       "ac_id": "AC-N2-01",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "Existing symlink Host directory works from real a08 installer baseline to four-Skill RC4; canonical directory/alias protection, logical CLI paths and terminal/legacy receipt compatibility verified.",
       "evidence": [
@@ -533,7 +550,7 @@
       "ac_id": "AC-N2-02",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "KeyboardInterrupt compensation and structured exit130",
       "evidence": [
@@ -563,7 +580,7 @@
       "ac_id": "AC-N2-03",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "Durable preparing request/old-state/intents precede every .after/.witness; both actual death windows resume original UUID or matching no-ID call, preserve uncertain residuals and replay without duplicate activation.",
       "evidence": [
@@ -604,7 +621,7 @@
       "ac_id": "AC-N2-04",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "historical explicit transaction replay preserves later current",
       "evidence": [
@@ -636,7 +653,7 @@
       "ac_id": "AC-N2-05",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "no-ID rollback is a new toggle; unfinished rollback uses frozen target",
       "evidence": [
@@ -665,7 +682,7 @@
       "ac_id": "AC-N2-06",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "skillless removal and compensation crash recovery",
       "evidence": [
@@ -696,7 +713,7 @@
       "ac_id": "AC-N2-07",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "atomic no-replace, retained external occupant and original inode backups",
       "evidence": [
@@ -739,7 +756,7 @@
       "ac_id": "AC-N2-08",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "cross-prefix shared Host locking with post-wait recheck",
       "evidence": [
@@ -769,7 +786,7 @@
       "ac_id": "AC-N2-09",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "opt-out never accesses Host during normal/recovery/compensation",
       "evidence": [
@@ -800,7 +817,7 @@
       "ac_id": "AC-N2-10",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "Durable preparing request/old-state/intents precede every .after/.witness; both actual death windows resume original UUID or matching no-ID call, preserve uncertain residuals and replay without duplicate activation.",
       "evidence": [
@@ -847,7 +864,7 @@
       "ac_id": "AC-N2-11",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "launcher bytes/mode/inode and explicit persistence/conflict states",
       "evidence": [
@@ -881,7 +898,7 @@
       "ac_id": "AC-N2-12",
       "owner": "N2",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "isolated installation failure matrix plus current candidate gates",
       "evidence": [
@@ -919,7 +936,7 @@
       "ac_id": "AC-N3-01",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "argument policy freezes and connectivity failure is atomic",
       "evidence": [
@@ -940,7 +957,7 @@
       "ac_id": "AC-N3-02",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "single-center argument accepted without artificial edges",
       "evidence": [
@@ -961,7 +978,7 @@
       "ac_id": "AC-N3-03",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "weak mixed-direction and qualification adjacency preserved",
       "evidence": [
@@ -982,7 +999,7 @@
       "ac_id": "AC-N3-04",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "self-loops/shared sources/alternatives cannot hide disconnected nodes",
       "evidence": [
@@ -1003,7 +1020,7 @@
       "ac_id": "AC-N3-05",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "real baseline committed proposal first adoption/replay; changed/forged/orphan negatives",
       "evidence": [
@@ -1024,7 +1041,7 @@
       "ac_id": "AC-N3-06",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual review-unit union with stable order and scope-aware Task deduplication",
       "evidence": [
@@ -1051,7 +1068,7 @@
       "ac_id": "AC-N3-07",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "visual-only method list excludes content calibration",
       "evidence": [
@@ -1072,7 +1089,7 @@
       "ac_id": "AC-N3-08",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "same Task manifest across entries; no-Task reads do not apply methods",
       "evidence": [
@@ -1093,7 +1110,7 @@
       "ac_id": "AC-N3-09",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual new producers freeze manifests and writer floor atomically",
       "evidence": [
@@ -1120,7 +1137,7 @@
       "ac_id": "AC-N3-10",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "legacy frozen selector and formal reissue without budget reset",
       "evidence": [
@@ -1141,7 +1158,7 @@
       "ac_id": "AC-N3-11",
       "owner": "N3",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "I05 is sole method list for v2 and drift gaps preserve dispatch hashes",
       "evidence": [
@@ -1161,10 +1178,10 @@
     {
       "ac_id": "AC-N3-12",
       "owner": "N3",
-      "status": "NOT_RUN",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "status": "PASS",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
-      "observed_result": "old writer refusal, first-floor failure atomicity and installed identity",
+      "observed_result": "Fresh clean repaired wheel installed in a new isolated prefix: version1.0.0rc4,23canonical resources/fourSkills/69schemas/275package members/90source modules and I05 identities verified.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -1181,15 +1198,13 @@
       ],
       "failure_history": [],
       "limitations": [],
-      "next_actions": [
-        "Verify fresh repaired wheel in a new isolated installed environment; retain prior evidence as superseded."
-      ]
+      "next_actions": []
     },
     {
       "ac_id": "AC-N4-01",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "v2 opt-in negotiation before create/continue effects, v1 defaults intact",
       "evidence": [
@@ -1210,7 +1225,7 @@
       "ac_id": "AC-N4-02",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual source/method/Task byte deduplication with full relationships",
       "evidence": [
@@ -1231,7 +1246,7 @@
       "ac_id": "AC-N4-03",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "trusted observed-context delta, cold full fallback and manifest unready",
       "evidence": [
@@ -1252,7 +1267,7 @@
       "ac_id": "AC-N4-04",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "exact N3 manifest and current/dispatch method identities",
       "evidence": [
@@ -1273,7 +1288,7 @@
       "ac_id": "AC-N4-05",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "complete Page, notes, mapping, source inventory and immutable image facts",
       "evidence": [
@@ -1294,7 +1309,7 @@
       "ac_id": "AC-N4-06",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual global decoder/read/stat/body measurements, no hidden helper work",
       "evidence": [
@@ -1321,7 +1336,7 @@
       "ac_id": "AC-N4-07",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "four Skill/workorder and project-byte read-only equivalence",
       "evidence": [
@@ -1342,7 +1357,7 @@
       "ac_id": "AC-N4-08",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "H100/500/1000 canonical cold coverage and enabled/canonical equality",
       "evidence": [
@@ -1363,7 +1378,7 @@
       "ac_id": "AC-N4-09",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "hot negatives zero history decodes; positive match once, entry reads counted",
       "evidence": [
@@ -1390,7 +1405,7 @@
       "ac_id": "AC-N4-10",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "delta1/10 decode only additions plus verified match",
       "evidence": [
@@ -1411,7 +1426,7 @@
       "ac_id": "AC-N4-11",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "forged/truncated disposable hints cannot create facts or overwrite legacy logs",
       "evidence": [
@@ -1432,7 +1447,7 @@
       "ac_id": "AC-N4-12",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "First enabled lookup discards unreadable unreachable old coverage and scans selected canonical ancestry; four branch cases match cache-off; nine damaged selected-chain controls remain unknown.",
       "evidence": [
@@ -1475,7 +1490,7 @@
       "ac_id": "AC-N4-13",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "independent-process pointer advance and newly committed target revalidation",
       "evidence": [
@@ -1496,7 +1511,7 @@
       "ac_id": "AC-N4-14",
       "owner": "N4",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "First enabled lookup discards unreadable unreachable old coverage and scans selected canonical ancestry; four branch cases match cache-off; nine damaged selected-chain controls remain unknown.",
       "evidence": [
@@ -1539,7 +1554,7 @@
       "ac_id": "AC-N5-01",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "single current increment entry, real environment facts and four role routing",
       "evidence": [
@@ -1564,7 +1579,7 @@
       "ac_id": "AC-N5-02",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "normal content_only full content adopted via actual Task and continue completed; local real acceptance separate",
       "evidence": [
@@ -1608,7 +1623,7 @@
       "ac_id": "AC-N5-03",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual ID/base/no-op/UUID/Task drift/v2 recovery documentation",
       "evidence": [
@@ -1633,7 +1648,7 @@
       "ac_id": "AC-N5-04",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "historical SHA/failure records retained; legacy CLAUDE byte-exact archive",
       "evidence": [
@@ -1658,7 +1673,7 @@
       "ac_id": "AC-N5-05",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "shared canonical methods and links instead of duplicate method bodies",
       "evidence": [
@@ -1683,7 +1698,7 @@
       "ac_id": "AC-N5-06",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "active four-Skill/CLAUDE guards reject executable retired guidance",
       "evidence": [
@@ -1708,7 +1723,7 @@
       "ac_id": "AC-N5-07",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "69 packaged schemas equal one controlled mirror each, exact bytes",
       "evidence": [
@@ -1732,10 +1747,10 @@
     {
       "ac_id": "AC-N5-08",
       "owner": "N5",
-      "status": "NOT_RUN",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "status": "PASS",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
-      "observed_result": "built/isolated installed version and all canonical resource identities",
+      "observed_result": "Fresh clean repaired wheel installed in a new isolated prefix: version1.0.0rc4,23canonical resources/fourSkills/69schemas/275package members/90source modules and I05 identities verified.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -1756,15 +1771,13 @@
       ],
       "failure_history": [],
       "limitations": [],
-      "next_actions": [
-        "Verify fresh repaired wheel in a new isolated installed environment; retain prior evidence as superseded."
-      ]
+      "next_actions": []
     },
     {
       "ac_id": "AC-N5-09",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "real focused commands plus existing unit/render/required-browser/installed CI duties",
       "evidence": [
@@ -1789,7 +1802,7 @@
       "ac_id": "AC-N5-10",
       "owner": "N5",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "Summary, unresolved IDs, per-card counts and completion gates are derived from actual explicit AC adjudications; known product counterexamples remain FAIL rather than cleared.",
       "evidence": [
@@ -1837,7 +1850,7 @@
       "ac_id": "AC-N6-01",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "complete neutral commission and three self-contained sources",
       "evidence": [
@@ -1864,7 +1877,7 @@
       "ac_id": "AC-N6-02",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "original Host first draft, author v1 and revised v2 preserve distinct hashes",
       "evidence": [
@@ -1891,7 +1904,7 @@
       "ac_id": "AC-N6-03",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual historical repeated-premise defect and actionable canonical steps/example",
       "evidence": [
@@ -1918,7 +1931,7 @@
       "ac_id": "AC-N6-04",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "current exact method manifests and actual Host six-page output accepted by real page_copy Task; source execution is not relabeled installed",
       "evidence": [
@@ -1963,7 +1976,7 @@
       "ac_id": "AC-N6-05",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual adopted Narrative/bound Plan/six Pages have exact source/atom relations; user direction recorded through direct_user without grant",
       "evidence": [
@@ -2008,7 +2021,7 @@
       "ac_id": "AC-N6-06",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual p04/p06 findings repaired in Host v2, actual nonauthor full recheck, then Runtime first accepts v2 Pages and revises bound Plan; no fictitious adopted-first-draft repair",
       "evidence": [
@@ -2053,7 +2066,7 @@
       "ac_id": "AC-N6-07",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "content_only scope, six pages58 atoms, no visual/PPT/notes improvement claim",
       "evidence": [
@@ -2080,7 +2093,7 @@
       "ac_id": "AC-N6-08",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "old methods/first draft identities retained; actual new Task manifests",
       "evidence": [
@@ -2107,7 +2120,7 @@
       "ac_id": "AC-N6-09",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "engineering/actual review/unknown model metadata distinguished; no extra human gate",
       "evidence": [
@@ -2134,7 +2147,7 @@
       "ac_id": "AC-N6-10",
       "owner": "N6",
       "status": "PASS",
-      "candidate_sha": "9ef4d53df58d114b758b7e83d92dd85fe6aa5c06",
+      "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
       "observed_result": "actual method diff/full drafts/Runtime-adopted v2 and bounded repair report; separate user real acceptance remains deferred",
       "evidence": [
@@ -2179,10 +2192,7 @@
   "completion": {
     "engineering_candidate": "BLOCKED",
     "all_six_tasks": "BLOCKED",
-    "unresolved_ac_ids": [
-      "AC-N3-12",
-      "AC-N5-08"
-    ],
+    "unresolved_ac_ids": [],
     "per_task_component_findings": {
       "N1": {
         "status": "PASS",
@@ -2207,17 +2217,15 @@
         "unresolved_ac_ids": []
       },
       "N3": {
-        "status": "BLOCKED",
+        "status": "PASS",
         "counts": {
-          "PASS": 11,
+          "PASS": 12,
           "FAIL": 0,
           "BLOCKED": 0,
-          "NOT_RUN": 1,
+          "NOT_RUN": 0,
           "NOT_APPLICABLE": 0
         },
-        "unresolved_ac_ids": [
-          "AC-N3-12"
-        ]
+        "unresolved_ac_ids": []
       },
       "N4": {
         "status": "PASS",
@@ -2231,17 +2239,15 @@
         "unresolved_ac_ids": []
       },
       "N5": {
-        "status": "BLOCKED",
+        "status": "PASS",
         "counts": {
-          "PASS": 9,
+          "PASS": 10,
           "FAIL": 0,
           "BLOCKED": 0,
-          "NOT_RUN": 1,
+          "NOT_RUN": 0,
           "NOT_APPLICABLE": 0
         },
-        "unresolved_ac_ids": [
-          "AC-N5-08"
-        ]
+        "unresolved_ac_ids": []
       },
       "N6": {
         "status": "PASS",
@@ -2256,27 +2262,24 @@
       }
     },
     "final_ci_state_at_assembly": "in_progress",
-    "state_observed_at_utc": "2026-10-19T05:32:12.452351+00:00",
+    "state_observed_at_utc": "2026-10-19T05:44:31.569775+00:00",
     "observation_scope": "Assembly snapshot; the exact-head live checks and final PR handoff provide subsequent terminal CI evidence.",
     "live_terminal_ci": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
     "remaining_engineering_gates": [
-      "unresolved_acceptance",
-      "final_exact_head_ci",
-      "current_build_identity",
-      "installed_resource_identity"
+      "final_exact_head_ci"
     ],
     "real_acceptance": "DEFERRED_TO_USER_LOCAL_VALIDATION",
-    "summary": "70 AC: 68 PASS, 0 FAIL, 0 BLOCKED, 2 NOT_RUN, 0 NOT_APPLICABLE; 2 unresolved. Engineering candidate BLOCKED; exact-head CI in_progress. User local effects/usability and trusted Host acceptance are separate observations, not inferred PASS."
+    "summary": "70 AC: 70 PASS, 0 FAIL, 0 BLOCKED, 0 NOT_RUN, 0 NOT_APPLICABLE; 0 unresolved. Engineering candidate BLOCKED; exact-head CI in_progress. User local effects/usability and trusted Host acceptance are separate observations, not inferred PASS."
   },
   "status_counts": {
-    "PASS": 68,
+    "PASS": 70,
     "FAIL": 0,
     "BLOCKED": 0,
-    "NOT_RUN": 2,
+    "NOT_RUN": 0,
     "NOT_APPLICABLE": 0
   },
   "delivery_disposition": {
-    "engineering": "All four designated review findings have actual targeted repair evidence. Fresh clean build, installed-resource identity and final new-head CI remain required.",
+    "engineering": "All four designated review findings have actual targeted evidence, with a fresh clean wheel/sdist and isolated installed identity verified. Final exact-head CI remains separately required.",
     "real_acceptance": "DEFERRED_TO_USER_LOCAL_VALIDATION",
     "user_instruction_utc": "2026-10-19T04:49:00Z",
     "user_instruction": "先按照他的产出是 OK 的，然后按照这个方向先把所有开发动作做完。我们先评审，等实际真实验收，我到本地跑实际校验的时候，再做回复好了",
@@ -2335,6 +2338,7 @@
       }
     ],
     "closed_prior_p1": "Persistent inode witnesses accepted by reviewer; not reopened.",
-    "followup_state": "TARGETED_FIXES_COMPLETE_PENDING_FRESH_BUILD_AND_FINAL_CI"
+    "followup_state": "ALL_FOUR_TARGETED_REPAIRS_AND_FRESH_INSTALL_VERIFIED_PENDING_FINAL_CI",
+    "repair_source_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3"
   }
 }
