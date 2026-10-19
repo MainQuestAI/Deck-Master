@@ -24,7 +24,8 @@ directory is enough to start; no PPT Master backend or slide library is needed.
   supply them or authorize their calls.
 - Real previews/rendering require `rsvg-convert`, LibreOffice `soffice`,
   Poppler `pdftoppm`, Fontconfig `fc-match`, and the fonts selected by the
-  design. Run `deck-master doctor --step render --font "<actual font family>"`.
+  design. Use the installed launcher's
+  `doctor --step render --font "<actual font family>"` command.
   The normal Python PPT compiler does not require an external PPT backend.
 
 CLI inspection and the bundled read-only sample need no model call. Genuine
@@ -64,8 +65,10 @@ Activation changes the selected prefix and registers all four managed Skills und
 `$CODEX_HOME/skills` (default `~/.codex/skills`). Existing foreign files/links
 are preserved and reported as conflicts. Use another prefix for an isolated
 installation, and `--no-host-registration` if you explicitly want CLI-only
-activation. Add the selected `.deck-master/bin` to your own PATH if desired;
-otherwise use its absolute launcher. Start a new Codex session or reload its
+activation. The remaining examples use the default prefix's absolute launcher,
+`"$HOME/.deck-master/bin/deck-master"`; substitute your chosen prefix's launcher
+if different. Adding `.deck-master/bin` to PATH is optional for these examples.
+Start a new Codex session or reload its
 Skills, then use the Python belonging to the actual loaded Skill release.
 See the [installation and recovery reference](../skills/deck-master/references/installation.md).
 
@@ -74,7 +77,7 @@ See the [installation and recovery reference](../skills/deck-master/references/i
 Open the local launcher with a registry you choose:
 
 ```bash
-deck-master workbench --registry ./deck-master-projects.json --no-open
+"$HOME/.deck-master/bin/deck-master" workbench --registry ./deck-master-projects.json --no-open
 ```
 
 Open the returned loopback URL. **打开只读示例** displays a bundled synthetic
@@ -93,8 +96,8 @@ When a current authorized full-deck/edit request needs independent content
 review, use **独立审阅当前内容** in the Workbench or:
 
 ```bash
-deck-master review native --project ./my-deck --json
-deck-master continue --project ./my-deck --no-open
+"$HOME/.deck-master/bin/deck-master" review native --project ./my-deck --json
+"$HOME/.deck-master/bin/deck-master" continue --project ./my-deck --no-open
 ```
 
 The runner performs an actual independent native session; it accepts no
@@ -102,8 +105,17 @@ handwritten receipt JSON. A failed/unavailable session remains a named gap.
 Inspect its Task before retrying an uncertain or running call.
 
 Before formal delivery, complete the current image/page/final reviews, run
-`final-readiness`, export `--purpose delivery`, and run `handoff-check` on the
-actual file being handed over. `--purpose review` can produce an unfinished
+`final-readiness`, export `--purpose delivery`, and check the actual file with
+an explicit delivery purpose:
+
+```bash
+"$HOME/.deck-master/bin/deck-master" handoff-check --project ./my-deck \
+  --file /path/to/actual-exported.pptx --purpose delivery --json
+```
+
+Replace the file path with the actual PPTX returned by your delivery export.
+Always pass `--purpose delivery` for this check; the CLI defaults to `review`.
+`--purpose review` can produce an unfinished
 reading copy with its real unresolved list. Content-only completion does not
 start design or PPT production. See the [task index](agent-task-index.md).
 
@@ -115,7 +127,7 @@ using the new returned release ID and a new transaction ID. Reload the Host's
 Skill entry after switching. Keep each transaction's original ID and arguments
 for exact recovery after interruption; a timeout is not proof of failure.
 
-`deck-master install rollback --prefix <prefix> --transaction-id <new_UUIDv4>`
+`"$HOME/.deck-master/bin/deck-master" install rollback --prefix "$HOME" --transaction-id <new_UUIDv4>`
 switches to the recorded previous managed release. It does not roll back project
 data, recorded calls or writer floors. An older runtime may refuse a project
 that has acquired newer protocol facts. Follow the
@@ -145,7 +157,7 @@ if [ -r /opt/homebrew/etc/fonts/fonts.conf ] && [ -d /opt/homebrew/etc/fonts ]; 
   FONTCONFIG_FILE=/opt/homebrew/etc/fonts/fonts.conf \
   FONTCONFIG_PATH=/opt/homebrew/etc/fonts \
   XDG_CACHE_HOME="$PWD/render-cache" \
-    deck-master continue --project ./my-deck --no-open
+    "$HOME/.deck-master/bin/deck-master" continue --project ./my-deck --no-open
 fi
 ```
 

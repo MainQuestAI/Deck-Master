@@ -61,6 +61,9 @@ registers all four Codex Skills (Master, Content, Design, Review); see [installa
 Use your own complete material and brief. The commands below are staged:
 substitute IDs and hashes from the actual returned Task; do not paste the
 angle-bracket placeholders as values.
+They assume `deck-master` is on PATH, for example after activating the source
+venv above. For a managed release, substitute the selected prefix's absolute
+`.deck-master/bin/deck-master` launcher or add that directory to PATH first.
 
 ```bash
 # 1. New projects default to workbench.v3, with instruction evidence and
@@ -119,7 +122,8 @@ a new Narrative. Teaching content need not contain a sales CTA.
 For `full_deck`, continue only within the actual production scope. Generation
 requires its frozen request, allocated call, begin → real tool call → settle
 → accept chain. Inspect actual original images and PPT previews, page and
-final reviews, then run `final-readiness` and export `--purpose delivery`.
+final reviews, then run `final-readiness`, export `--purpose delivery`, and
+check the actual exported PPTX with `handoff-check --purpose delivery`.
 `review` can return an unfinished readable copy with its unresolved list.
 `needs_tool` and `needs_reviewer` must retain their actual reasons.
 
