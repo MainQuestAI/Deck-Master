@@ -1,0 +1,358 @@
+{
+  "scope": "Agent edited only tests/rebuild/test_rc3_review_policy_browser.py and external evidence. Root owns production Project.loadRoute controlSlot inert/aria-busy fix, fresh build/install, ledger and CI.",
+  "confirmed_ci": {
+    "commit": "ba14becbfe6bebd3b42ba590ef6dd33a59d9ca67",
+    "run": "39210635966",
+    "job": "117923094434",
+    "passed": 490,
+    "failed": 1,
+    "case": "test_user_can_explicitly_choose_and_restore_content_review_requirement[390-844]",
+    "shared_log": "ci-ba14becb-browser-push-failed.redacted.log",
+    "finding": "Second explicit policy selection was correctly refused with base_revision conflict.",
+    "deselected": 3493,
+    "seconds": 2195.78
+  },
+  "judgment": "Product reload interaction race. The prior controlSlot remained clickable while loadRoute was reading current project facts. User could reopen reviewPolicyForm with old app.info basis; valid pinned historical summary read did not make that basis current. Core CAS refusal was correct. A test-only wait would hide the real exposed interaction.",
+  "root_production_fix_observed": "Root extended existing current-generation loadRoute busy/inert lifecycle from main to controlSlot. Agent did not edit production files.",
+  "test_changes": {
+    "original_complete_policy_test_identical": true,
+    "new_case": "test_pending_work_surface_read_blocks_control_dialog_and_restores",
+    "parameters": "1440x900 and 390x844, each successful real response or true route.abort transport failure",
+    "guards": [
+      "real /api/project response fetched then held with test-only completion marker",
+      "pending current-control-facts aria-busy and inert",
+      "real coordinate mouse click cannot open obsolete control dialog",
+      "Document remains identical while pending",
+      "successful real response or aborted read restores controls in current-generation finally",
+      "actual scope and review-policy dialogs can reopen after either result",
+      "Document unchanged, no policy/authorization/Page write, viewport does not overflow, no pageerror"
+    ],
+    "unchanged": "Original complete host_self/independent policy workflow, missing-instruction negative, policy/authorizations/pages/viewport assertions, CAS guard, require-browser and timeouts remain unchanged."
+  },
+  "before": {
+    "command": ".venv/bin/python -B /workspace/rc4-work/final/verify-review-policy-reload-delay.py -q --tb=short --require-browser --basetemp=/workspace/rc4-work/final/review-policy-reload-before tests/rebuild/test_rc3_review_policy_browser.py::test_user_can_explicitly_choose_and_restore_content_review_requirement[390-844]",
+    "failed": 1,
+    "seconds": 7.9,
+    "actual_observations": {
+      "delay_ms": 1000,
+      "delayed_project_responses": [
+        {
+          "control_revision_id": "fa450a4226fd4add8a25c5c8f6c2b03a",
+          "revision_id": "fa450a4226fd4add8a25c5c8f6c2b03a",
+          "status": 200
+        },
+        {
+          "control_revision_id": "fa450a4226fd4add8a25c5c8f6c2b03a",
+          "revision_id": "fa450a4226fd4add8a25c5c8f6c2b03a",
+          "status": 200
+        }
+      ],
+      "policy_requests": [
+        {
+          "base_revision": "0a1cf6e063844807a6e5f50c5c80c344",
+          "requirement": "host_self"
+        },
+        {
+          "base_revision": "0a1cf6e063844807a6e5f50c5c80c344",
+          "requirement": "independent_model_or_human"
+        }
+      ],
+      "policy_responses": [
+        {
+          "current_revision_id": null,
+          "error_code": null,
+          "revision_id": null,
+          "status": 200
+        },
+        {
+          "current_revision_id": null,
+          "error_code": "conflict",
+          "revision_id": null,
+          "status": 409
+        }
+      ],
+      "policy_summary_reads": [
+        {
+          "personal": [
+            "1"
+          ]
+        },
+        {
+          "revision": [
+            "0a1cf6e063844807a6e5f50c5c80c344"
+          ]
+        },
+        {
+          "personal": [
+            "1"
+          ],
+          "revision": [
+            "0a1cf6e063844807a6e5f50c5c80c344"
+          ]
+        },
+        {
+          "personal": [
+            "1"
+          ]
+        }
+      ]
+    },
+    "log": "integration-review-policy-reload-before.log"
+  },
+  "delay_method": "Command-only page route fetches actual project GET responses and holds them for 1000ms after first successful policy commit. No fabricated response/body and no timeout extension. Per-page corrected recorder independently delays both viewport cases.",
+  "after_delayed_original": {
+    "command": ".venv/bin/python -B /workspace/rc4-work/final/verify-review-policy-reload-delay-per-page.py -q --tb=short --require-browser --basetemp=/workspace/rc4-work/final/review-policy-reload-both-after tests/rebuild/test_rc3_review_policy_browser.py::test_user_can_explicitly_choose_and_restore_content_review_requirement",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 8.62,
+    "post_base_validation": [
+      {
+        "viewport": [
+          1440,
+          900
+        ],
+        "delayed_responses": 2,
+        "first_policy_base": "1fe9599f2a94415b9127c83407a17eca",
+        "second_policy_base": "576028f319374748b8ce910478d01918",
+        "second_base_matches_real_delayed_current_control": true
+      },
+      {
+        "viewport": [
+          390,
+          844
+        ],
+        "delayed_responses": 2,
+        "first_policy_base": "6e615f85f3be4363be217b814b1c4d73",
+        "second_policy_base": "67a2718fc3b446f0a0f1140f7323ee0a",
+        "second_base_matches_real_delayed_current_control": true
+      }
+    ],
+    "actual_observations": {
+      "delay_ms": 1000,
+      "delayed_project_responses": [
+        {
+          "control_revision_id": "576028f319374748b8ce910478d01918",
+          "revision_id": "576028f319374748b8ce910478d01918",
+          "status": 200,
+          "viewport": {
+            "height": 900,
+            "width": 1440
+          }
+        },
+        {
+          "control_revision_id": "576028f319374748b8ce910478d01918",
+          "revision_id": "576028f319374748b8ce910478d01918",
+          "status": 200,
+          "viewport": {
+            "height": 900,
+            "width": 1440
+          }
+        },
+        {
+          "control_revision_id": "67a2718fc3b446f0a0f1140f7323ee0a",
+          "revision_id": "67a2718fc3b446f0a0f1140f7323ee0a",
+          "status": 200,
+          "viewport": {
+            "height": 844,
+            "width": 390
+          }
+        },
+        {
+          "control_revision_id": "67a2718fc3b446f0a0f1140f7323ee0a",
+          "revision_id": "67a2718fc3b446f0a0f1140f7323ee0a",
+          "status": 200,
+          "viewport": {
+            "height": 844,
+            "width": 390
+          }
+        }
+      ],
+      "policy_requests": [
+        {
+          "base_revision": "1fe9599f2a94415b9127c83407a17eca",
+          "requirement": "host_self",
+          "viewport": {
+            "height": 900,
+            "width": 1440
+          }
+        },
+        {
+          "base_revision": "576028f319374748b8ce910478d01918",
+          "requirement": "independent_model_or_human",
+          "viewport": {
+            "height": 900,
+            "width": 1440
+          }
+        },
+        {
+          "base_revision": "6e615f85f3be4363be217b814b1c4d73",
+          "requirement": "host_self",
+          "viewport": {
+            "height": 844,
+            "width": 390
+          }
+        },
+        {
+          "base_revision": "67a2718fc3b446f0a0f1140f7323ee0a",
+          "requirement": "independent_model_or_human",
+          "viewport": {
+            "height": 844,
+            "width": 390
+          }
+        }
+      ],
+      "policy_responses": [
+        {
+          "current_revision_id": null,
+          "error_code": null,
+          "revision_id": null,
+          "status": 200
+        },
+        {
+          "current_revision_id": null,
+          "error_code": null,
+          "revision_id": null,
+          "status": 200
+        },
+        {
+          "current_revision_id": null,
+          "error_code": null,
+          "revision_id": null,
+          "status": 200
+        },
+        {
+          "current_revision_id": null,
+          "error_code": null,
+          "revision_id": null,
+          "status": 200
+        }
+      ],
+      "policy_summary_reads": [
+        {
+          "personal": [
+            "1"
+          ]
+        },
+        {
+          "personal": [
+            "1"
+          ],
+          "revision": [
+            "1fe9599f2a94415b9127c83407a17eca"
+          ]
+        },
+        {
+          "revision": [
+            "576028f319374748b8ce910478d01918"
+          ]
+        },
+        {
+          "personal": [
+            "1"
+          ]
+        },
+        {
+          "personal": [
+            "1"
+          ]
+        },
+        {
+          "personal": [
+            "1"
+          ],
+          "revision": [
+            "6e615f85f3be4363be217b814b1c4d73"
+          ]
+        },
+        {
+          "revision": [
+            "67a2718fc3b446f0a0f1140f7323ee0a"
+          ]
+        },
+        {
+          "personal": [
+            "1"
+          ]
+        }
+      ]
+    },
+    "log": "integration-review-policy-reload-both-after.log"
+  },
+  "after_normal_and_recovery": {
+    "command": ".venv/bin/python -B /workspace/rc4-work/final/verify-studio-plan-route-normal.py -q --tb=short --require-browser --basetemp=/workspace/rc4-work/final/review-control-slot-final2 tests/rebuild/test_rc3_review_policy_browser.py tests/rebuild/test_navigation_usability_browser.py::test_current_version_read_blocks_obsolete_actions_and_restores_controls",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 28.98,
+    "composition": "2 original policy + 4 new controlSlot success/error x viewport + 4 existing main pending/error controls",
+    "launcher_only_note": "Existing navigation helper needs local /usr/bin/chromium because downloaded Playwright shell is absent. Command wrapper changes browser executable defaults only; original request/response timing is not injected. New regression itself holds real responses or aborts the transport as specified.",
+    "log": "integration-review-control-slot-final2.log"
+  },
+  "intermediate_authoring_results": [
+    {
+      "log": "integration-review-policy-reload-original-after.log",
+      "outcome": "2 pass/7.49s; first recorder aggregated policy counts across pages, so delay only applied to first viewport. Superseded by independently validated per-page recorder above."
+    },
+    {
+      "log": "integration-review-control-slot-final.log",
+      "outcome": "2 original pass, 4 new fixture authoring failures because unroute preceded release, 4 existing navigation local downloaded-browser errors. Fixture now releases handled routes before unregistering; final run uses genuine system Chromium."
+    }
+  ],
+  "static": {
+    "ruff_owned_test": "PASS",
+    "git_diff_check_owned_test": "PASS"
+  },
+  "artifacts_sha256": {
+    "review-policy-reload-before-test.py": "223f2ed3891370de5eef805c01ee188919c2d756f83ce3051c1f29cbc9779dde",
+    "review-policy-reload-before-project.js": "815f840b9c9976d7d71aeade09e3c50c075ff5f2263ded1607d6898bf6532299",
+    "review-policy-reload-before-collaboration.js": "7b90c326d83fe2011c42c5ebff7a30423063fd5514502c2385dd9f6550b12846",
+    "review-policy-reload-after-test.py": "8cfb7058e7f90e34757f2e826721065d8a60c2119c79f7e84d399f937b07f5d0",
+    "review-policy-reload-after-project.js": "e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7",
+    "verify-review-policy-reload-delay.py": "a3387e64d1edcd19c6e640f26d4a6adbb5a37f5b91a95cd94f1ca930ca889630",
+    "verify-review-policy-reload-delay-per-page.py": "2d5618ae023cf14f1318690b7f604030df486e33d30c196acfc18fca0a2c40c0",
+    "integration-review-policy-reload-before.log": "f7fca23038edb7afc7f7c548176a301c1d03879ca9b7ae88abc1251f2b9d7425",
+    "integration-review-policy-reload-original-after.log": "6384602b65cd03e8bfaff550fd6198c74db8355e7151c252118f9cd32d06c180",
+    "integration-review-policy-reload-both-after.log": "30b9de56d30f559f6dd622016de915b097845cb109d157d646ce06868050066f",
+    "integration-review-control-slot-final.log": "ec7107f25c9c4e09ab7086310f9b5408372d6f41d917ce40adba80124160963a",
+    "integration-review-control-slot-final2.log": "65bfe69eea3e0ffadc72ed31e9e9bc75a1f1872c9deefde1a2d8a73cffefe212",
+    "ci-ba14becb-browser-push-failed.redacted.log": "a93e6c59cfc0c230e87bfb66606c6fa342d485e536d9d630c19dc39506e821a8",
+    "integration-review-policy-control-before-tail-review.json": "3f14f77ed06e1ed59ff6cbd2328108bce158adb94cd8b65f18a48e2520929373",
+    "review-policy-control-final-test.py": "a0c740ccfef5a68f4b0dd41d4c32d46fd953e6546d44bf57b1e41d16ef75d460",
+    "integration-review-control-slot-tail-final.log": "843411d22e6581a4f953d8c78b6bb7633ba4df9a95e42f3b4bf9021b11003a9a"
+  },
+  "status": "Assigned test file frozen after final harness review. Product patch and fresh clean wheel/sdist/installation/exact CI belong to root; no cancellation, authorization, budget or timeout changes by this agent. No full-suite or fresh-install pass claim.",
+  "followup_harness_review": {
+    "finding": "Root identified a potential fetch yield between reading holding=True and appending to held, allowing a late response to miss the release loop.",
+    "correction": "Callback obtains actual route.fetch response before checking holding. If holding is already False it immediately fulfills the route with that exact real response; otherwise it appends and signals readiness. The permanent regression only unregisters routing after navigation completes.",
+    "command": ".venv/bin/python -m pytest -q --tb=short --require-browser --basetemp=/workspace/rc4-work/final/review-control-slot-tail-final tests/rebuild/test_rc3_review_policy_browser.py::test_pending_work_surface_read_blocks_control_dialog_and_restores",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 9.76,
+    "log": "integration-review-control-slot-tail-final.log",
+    "source": "review-policy-control-final-test.py",
+    "verification_scope": "Only new four cases repeated after this harness-only correction; original two policy cases and four existing navigation cases remain the preceding 10-pass evidence for unchanged product bytes. Original full policy test remains unchanged.",
+    "ruff_owned_test": "PASS",
+    "git_diff_check_owned_test": "PASS"
+  },
+  "existing_parallel_ci_parent_report": {
+    "previous_head_PR": {
+      "run_id": 39210642216,
+      "status": "success",
+      "jobs": "7/7 success",
+      "browser": "491PASS3493deselected1591.43s",
+      "offline_UI": "9 verified checks",
+      "installed_recovery": "240PASS780.38s",
+      "log": "ci-ba14becb-browser-pr-success.log",
+      "sha256": "ec9b53480f689471f92d2597f29cf4af74e03181dfa980a31e711b7329e43eee"
+    },
+    "previous_head_push": {
+      "run_id": 39210635966,
+      "browser": "490PASS1FAIL; stale control basis real product interaction race"
+    },
+    "limitation": "These previous-head runs do not certify the new project.js product fix. A new clean build and exact-head CI remain required."
+  },
+  "final_owned_test_sha256": "a0c740ccfef5a68f4b0dd41d4c32d46fd953e6546d44bf57b1e41d16ef75d460",
+  "new_candidate_build": "NOT_RUN: new static asset requires new clean wheel/sdist and fresh isolated installation; source3167 remains retained historical evidence."
+}

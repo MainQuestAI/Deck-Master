@@ -201,6 +201,14 @@
       "before": "Original exact assert held==[] reproduced with command-only1s nonblocking delay",
       "after": "Identical delay4PASS with4 actual fetch completions; normal4 parameters plus original full screenshot flow5PASS; original UI/scope/late/timeout assertions retained",
       "runtime_changed": false
+    },
+    {
+      "scope": "product topbar control lifecycle during current-state reload",
+      "record": "Integration-control-reload-repair.json",
+      "before": "True1s project-response delay reproduces old second base_revision and correct409 conflict",
+      "after": "Original two viewports with per-page real delay2PASS; original2+new4+existing navigation4=10PASS; final harness-tail correction new4 reverified4PASS",
+      "runtime_changed": "project.js: existing inert/aria-busy lifecycle now includes topbar controlSlot",
+      "fresh_build_required": true
     }
   ],
   "final_gate": "Live exact-head Rebuilt Core Gate at PR124 remains separate and required.",
@@ -321,6 +329,39 @@
         "installed_recovery": "in_progress; not a whole-gate success claim",
         "superseding_source": "Only confirmed test synchronization repair and report evidence; runtime/Skill/build inputs unchanged3167"
       }
+    },
+    {
+      "head": "ba14becbfe6bebd3b42ba590ef6dd33a59d9ca67",
+      "runs": [
+        39210642216,
+        39210635966
+      ],
+      "status": "PR_SUCCESS_PUSH_FAILURE",
+      "pr_results": {
+        "unit": "4jobs each3357PASS2existing skips625deselected",
+        "renderer": "133PASS1existing skip3850deselected",
+        "browser": "491PASS3493deselected",
+        "offline_UI": "9 checks verified",
+        "installed_recovery": "240PASS",
+        "group_report": "success"
+      },
+      "push_browser_result": {
+        "passed": 490,
+        "failed": 1,
+        "deselected": 3493,
+        "seconds": 2195.78
+      },
+      "observed_causes": [
+        {
+          "kind": "product_topbar_reload_control_basis",
+          "case": "test_user_can_explicitly_choose_and_restore_content_review_requirement[390-844]",
+          "cause": "loadRoute blocked main actions while topbar control dialogs could still freeze old control facts",
+          "repair": "Reuse existing current-generation busy/inert lifecycle for controlSlot; keep pinned open-form basis and core CAS unchanged",
+          "state": "Actual before1FAIL, delayed original after2PASS; final new4 regressionPASS; fresh build and new exact-head CI pending"
+        }
+      ],
+      "separate_from_designated_four_findings_and_style_test_sync": true,
+      "record": "Integration-control-reload-repair.json"
     }
   ]
 }

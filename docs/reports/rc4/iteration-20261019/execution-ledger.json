@@ -35,9 +35,10 @@
         "wheel_sha256": "93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d"
       }
     ],
-    "build_runtime_and_skill_bytes_match_candidate": true,
+    "build_runtime_and_skill_bytes_match_candidate": false,
     "identity_note": "implementation_sha/tree_sha pin the immutable integration evidence basis. Later report/legacy-fixture/readonly-tool commits retain runtime and packaged Skill bytes; exact final PR head/tree and terminal CI are exposed in PR124 handoff/checks.",
-    "fresh_build_required": false
+    "fresh_build_required": true,
+    "pending_runtime_change": "Control topbar now becomes inert during loadRoute. Existing3167 wheel is a historical verified build; this changed static asset requires a new clean build and installation proof."
   },
   "environment_checks": [
     {
@@ -125,6 +126,20 @@
       "runtime_or_packaged_methods_changed": false,
       "separate_from_designated_four_P2": true,
       "status": "FINAL_NEW_HEAD_CI_NOT_RUN_AT_ASSEMBLY"
+    },
+    {
+      "event": "post_review_topbar_control_reload_race_requires_product_fix",
+      "observed_head": "ba14becbfe6bebd3b42ba590ef6dd33a59d9ca67",
+      "failed_run": 39210635966,
+      "failed_job": 117923094434,
+      "observation": "Mobile review-policy restore froze old base_revision because topbar controls remained actionable during loadRoute. CAS correctly rejected it.",
+      "before_reproduction": "True /api/project responses delayed1s reproduce same second409 with identical old base; no fabricated response.",
+      "product_change": "Freeze topbar controlSlot with existing inert/aria-busy lifecycle; current generation finally restores it.",
+      "new_clean_build_required": true,
+      "separate_from_designated_four_P2_and_style_callback_fix": true,
+      "status": "TARGETED_PRODUCT_REGRESSION_PASSED_NEW_CLEAN_BUILD_PENDING",
+      "record": "Integration-control-reload-repair.json",
+      "targeted_results": "Delayed original2PASS; original2+new4+existing4=10PASS; final new4 tail-harness4PASS"
     }
   ],
   "integration_checks": [
@@ -132,8 +147,8 @@
       "kind": "current_candidate_ci",
       "evidence": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
       "state_at_assembly": "NOT_RUN",
-      "note": "Assembly before the new synchronization-fix commit: its exact-head CI has not yet started. Prior2b PR full browser490PASS1FAIL, eight unit and two render successes retained separately. Runtime/Skill/build inputs match3167. Live final PR checks/handoff provide later terminal result.",
-      "observed_at_utc": "2026-10-19T06:32:18.075878+00:00"
+      "note": "Assembly for new product control-reload fix: final new-head CI not started. Prior ba14 PR full browser passed and installed recovery is running; push full browser490PASS1FAIL. Current code change needs a new clean build/installed proof.",
+      "observed_at_utc": "2026-10-19T07:17:33.721544+00:00"
     },
     {
       "kind": "installed_resources",
@@ -1199,10 +1214,10 @@
     {
       "ac_id": "AC-N3-12",
       "owner": "N3",
-      "status": "PASS",
+      "status": "NOT_RUN",
       "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
-      "observed_result": "Fresh clean repaired wheel installed in a new isolated prefix: version1.0.0rc4,23canonical resources/fourSkills/69schemas/275package members/90source modules and I05 identities verified.",
+      "observed_result": "New control-reload static asset awaits a new clean build and fresh installed identity; older3167 proof is not relabeled.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -1217,9 +1232,18 @@
           "path": "Installed-resource-identity.json"
         }
       ],
-      "failure_history": [],
+      "failure_history": [
+        {
+          "status": "NOT_RUN",
+          "observed_result": "Current product static resource changed after3167 clean build. That installed proof is retained as historical; new candidate build/installation identity not run yet.",
+          "prior_status": "PASS",
+          "prior_candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3"
+        }
+      ],
       "limitations": [],
-      "next_actions": []
+      "next_actions": [
+        "Build a clean new wheel/sdist from the frozen product fix; verify a fresh isolated install."
+      ]
     },
     {
       "ac_id": "AC-N4-01",
@@ -1768,10 +1792,10 @@
     {
       "ac_id": "AC-N5-08",
       "owner": "N5",
-      "status": "PASS",
+      "status": "NOT_RUN",
       "candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3",
       "applicability_reason": null,
-      "observed_result": "Fresh clean repaired wheel installed in a new isolated prefix: version1.0.0rc4,23canonical resources/fourSkills/69schemas/275package members/90source modules and I05 identities verified.",
+      "observed_result": "New control-reload static asset awaits a new clean build and fresh installed identity; older3167 proof is not relabeled.",
       "evidence": [
         {
           "kind": "SYNTHETIC_ENGINEERING",
@@ -1790,9 +1814,18 @@
           "path": "Installed-resource-identity.json"
         }
       ],
-      "failure_history": [],
+      "failure_history": [
+        {
+          "status": "NOT_RUN",
+          "observed_result": "Current product static resource changed after3167 clean build. That installed proof is retained as historical; new candidate build/installation identity not run yet.",
+          "prior_status": "PASS",
+          "prior_candidate_sha": "3167f123487c3a2ea91848d0bec705743fbec2e3"
+        }
+      ],
       "limitations": [],
-      "next_actions": []
+      "next_actions": [
+        "Build a clean new wheel/sdist from the frozen product fix; verify a fresh isolated install."
+      ]
     },
     {
       "ac_id": "AC-N5-09",
@@ -2213,7 +2246,10 @@
   "completion": {
     "engineering_candidate": "BLOCKED",
     "all_six_tasks": "BLOCKED",
-    "unresolved_ac_ids": [],
+    "unresolved_ac_ids": [
+      "AC-N3-12",
+      "AC-N5-08"
+    ],
     "per_task_component_findings": {
       "N1": {
         "status": "PASS",
@@ -2238,15 +2274,17 @@
         "unresolved_ac_ids": []
       },
       "N3": {
-        "status": "PASS",
+        "status": "BLOCKED",
         "counts": {
-          "PASS": 12,
+          "PASS": 11,
           "FAIL": 0,
           "BLOCKED": 0,
-          "NOT_RUN": 0,
+          "NOT_RUN": 1,
           "NOT_APPLICABLE": 0
         },
-        "unresolved_ac_ids": []
+        "unresolved_ac_ids": [
+          "AC-N3-12"
+        ]
       },
       "N4": {
         "status": "PASS",
@@ -2260,15 +2298,17 @@
         "unresolved_ac_ids": []
       },
       "N5": {
-        "status": "PASS",
+        "status": "BLOCKED",
         "counts": {
-          "PASS": 10,
+          "PASS": 9,
           "FAIL": 0,
           "BLOCKED": 0,
-          "NOT_RUN": 0,
+          "NOT_RUN": 1,
           "NOT_APPLICABLE": 0
         },
-        "unresolved_ac_ids": []
+        "unresolved_ac_ids": [
+          "AC-N5-08"
+        ]
       },
       "N6": {
         "status": "PASS",
@@ -2283,20 +2323,22 @@
       }
     },
     "final_ci_state_at_assembly": "NOT_RUN",
-    "state_observed_at_utc": "2026-10-19T06:32:18.075878+00:00",
+    "state_observed_at_utc": "2026-10-19T07:17:33.721544+00:00",
     "observation_scope": "Assembly snapshot; the exact-head live checks and final PR handoff provide subsequent terminal CI evidence.",
     "live_terminal_ci": "https://github.com/MainQuestAI/Deck-Master/pull/124/checks",
     "remaining_engineering_gates": [
-      "final_exact_head_ci"
+      "unresolved_acceptance",
+      "final_exact_head_ci",
+      "current_build_identity"
     ],
     "real_acceptance": "DEFERRED_TO_USER_LOCAL_VALIDATION",
-    "summary": "70 AC: 70 PASS, 0 FAIL, 0 BLOCKED, 0 NOT_RUN, 0 NOT_APPLICABLE; 0 unresolved. Engineering candidate BLOCKED; exact-head CI NOT_RUN. User local effects/usability and trusted Host acceptance are separate observations, not inferred PASS."
+    "summary": "70 AC: 68 PASS, 0 FAIL, 0 BLOCKED, 2 NOT_RUN, 0 NOT_APPLICABLE; 2 unresolved. Engineering candidate BLOCKED; exact-head CI NOT_RUN. User local effects/usability and trusted Host acceptance are separate observations, not inferred PASS."
   },
   "status_counts": {
-    "PASS": 70,
+    "PASS": 68,
     "FAIL": 0,
     "BLOCKED": 0,
-    "NOT_RUN": 0,
+    "NOT_RUN": 2,
     "NOT_APPLICABLE": 0
   },
   "delivery_disposition": {

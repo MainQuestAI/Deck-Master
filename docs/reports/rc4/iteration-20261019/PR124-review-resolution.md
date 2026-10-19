@@ -33,3 +33,7 @@ python -m pytest -q tests/rebuild/test_iteration_ledger.py
 53021ac8 的完整 required-browser job 实际为489PASS/2FAIL，非取消。两项历史 import fixture 调用当前Task构造器后保留RC4 manifest，运行时正确拒绝无collaboration旧Document。后续仅在该历史构造中剥离manifest/policy并冻结实际RC3选择摘要；完整搜索/详情/只读断言、required-browser、timeout与业务writer边界保持。真实系统Chromium聚焦3PASS/0skip；本地临时浏览器路径适配和原失败完整保留在 [修复记录](Integration-browser-legacy-repair.json)。此项为CI后续测试数据修复，与指定四个P2分别记录；完整新head CI仍须终态核验。Runtime/Skill/构建输入保持3167源字节，干净wheel身份不重标。
 
 后续2b6867c5完整PR浏览器得到490PASS/1FAIL，原两个历史import case已通过。新增失败是样式plan测试的真实fetch回调完成竞态，独立于指定四项P2。命令级1秒非阻塞延迟在原source精确复现assert held为空；仅用测试完成事件和已有expect默认超时同步后，同注入四参数4PASS、未注入四参数及原完整截图流程5PASS。Runtime/Skill/构建输入与干净3167包仍一致；证据见 [同步修复记录](Integration-style-plan-sync-repair.json)。新的完整精确head CI仍须通过。
+
+## 读取当前状态的顶栏控制竞态
+
+ba14becb的PR整套CI为成功（491浏览器、9项离线UI、240安装恢复），同head push却在移动端第二次恢复审阅要求出现490PASS/1FAIL。真实1秒project响应延迟证明：loadRoute仅锁main，顶栏仍能打开冻结旧control base的表单；Runtime CAS正确拒绝。产品修复将现有inert/aria-busy生命周期扩展到controlSlot，并由当前读取generation的finally恢复，保持已打开表单的固定basis、政策、授权及CAS。原完整policy两视口不改；同延迟2PASS，控件/真实鼠标/成功或abort恢复及既有main恢复聚焦10PASS，最终测试handler尾部修正后新四例4PASS。见 [实际反例与证据](Integration-control-reload-repair.json)。这次实际静态资源变动另需新干净构建与安装证明；3167包保留历史身份，不重标为新包。原四项P2与两项后续CI问题分别记录。

@@ -109,6 +109,9 @@ export class Project {
     // the requested version is loading. Otherwise its handlers can supersede
     // the new read with an old revision or lose a subarea choice on remount.
     if (this.main) { this.main.inert = true; this.main.setAttribute('aria-busy', 'true'); }
+    // Topbar decisions freeze the control revision too. Reopening them during
+    // this read must wait for the new control facts, just like main actions.
+    if (this.controlSlot) { this.controlSlot.inert = true; this.controlSlot.setAttribute('aria-busy', 'true'); }
     if (this.navigationStatus) this.navigationStatus.hidden = false;
     announce('正在读取工作面');
     try {
@@ -178,6 +181,7 @@ export class Project {
         this.navigationPending = false;
         if (this.navigationStatus) this.navigationStatus.hidden = true;
         if (this.main) { this.main.inert = false; this.main.removeAttribute('aria-busy'); }
+        if (this.controlSlot) { this.controlSlot.inert = false; this.controlSlot.removeAttribute('aria-busy'); }
       }
     }
   }
